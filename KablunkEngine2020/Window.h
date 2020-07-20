@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-namespace kablunkEngine { namespace graphics {
+namespace kablunk { namespace graphics {
 
 #define MAX_KEYS 1024
 #define MAX_BUTTONS 32

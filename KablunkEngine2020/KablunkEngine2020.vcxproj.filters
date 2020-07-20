@@ -5,62 +5,80 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\shaders">
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{193549a8-a5d8-45d2-9622-3c4298bd43bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\shaders">
       <UniqueIdentifier>{d8263dae-cec3-4fc6-b4f0-848c2f94cd39}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\graphics">
+    <Filter Include="Source Files\core\graphics">
       <UniqueIdentifier>{0cef973c-2c9c-486c-9982-93659bafc350}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\input">
+    <Filter Include="Source Files\core\input">
       <UniqueIdentifier>{df53c728-0b21-43ee-a702-a04774d890ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math">
+    <Filter Include="Source Files\core\math">
       <UniqueIdentifier>{9686d2dc-5abd-4a3c-8141-6d4d1ace1032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Application.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
     <ClCompile Include="glad.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="window.cpp">
-      <Filter>Source Files\graphics</Filter>
+      <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="vec2.cpp">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\core\math</Filter>
     </ClCompile>
     <ClCompile Include="vec3.cpp">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\core\math</Filter>
     </ClCompile>
     <ClCompile Include="vec4.cpp">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\core\math</Filter>
+    </ClCompile>
+    <ClCompile Include="window.cpp">
+      <Filter>Source Files\core\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vec2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vec4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vec3.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Kablunk.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="math.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vec4.h">
+      <Filter>Source Files\core\math</Filter>
+    </ClInclude>
+    <ClInclude Include="vec2.h">
+      <Filter>Source Files\core\math</Filter>
+    </ClInclude>
+    <ClInclude Include="vec3.h">
+      <Filter>Source Files\core\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Source Files\core\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="EntryPoint.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

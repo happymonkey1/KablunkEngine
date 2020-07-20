@@ -1,4 +1,4 @@
-// KablunkEngine2020.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// kablunk2020.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 
@@ -11,11 +11,11 @@
 
 #define LOG(x) std::cout << x << std::endl;
 
-
+/*
 int main()
 {
 
-    using namespace kablunkEngine;
+    using namespace kablunk;
     using namespace graphics;
     using namespace math;
 
@@ -25,7 +25,7 @@ int main()
 
     vec3 c = a + b;
 
-    Window window = Window("KablunkEngine", 800, 600);
+    Window window = Window("kablunk", 800, 600);
     glClearColor(.2f, .3f, .8f, 1.0f);
 
     while (!window.closed()) {
@@ -48,4 +48,4 @@ int main()
 
     return 0;
 
-}
+}*/

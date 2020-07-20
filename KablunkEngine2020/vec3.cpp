@@ -1,7 +1,7 @@
 #include "vec3.h"
 
 
-namespace kablunkEngine { namespace math {
+namespace kablunk { namespace math {
 
 	vec3::vec3() {
 		x = 0.0f;

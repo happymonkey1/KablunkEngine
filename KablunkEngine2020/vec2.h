@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 
-namespace kablunkEngine { namespace math { 
+namespace kablunk { namespace math { 
 	
 	struct vec2
 	{
