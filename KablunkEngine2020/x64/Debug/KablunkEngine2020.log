@@ -1,0 +1,5 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(467,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (KablunkEngine2020.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  main.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': macro redefinition
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\include\glad\glad.h(32): message : see previous definition of 'APIENTRY'
+  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\x64\Debug\KablunkEngine-core.exe
