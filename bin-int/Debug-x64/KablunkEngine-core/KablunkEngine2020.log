@@ -1,12 +1,1 @@
-﻿  Application.cpp
-  main.cpp
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': macro redefinition
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\include\glad\glad.h(32): message : see previous definition of 'APIENTRY'
-  vec2.cpp
-  vec3.cpp
-  vec4.cpp
-  window.cpp
-  Generating Code...
-     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
+﻿  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
