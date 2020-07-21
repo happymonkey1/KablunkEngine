@@ -1,3 +1,8 @@
-﻿  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
+﻿  Application.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(8,1): warning C4005: 'LOGURU_THREADNAME_WIDTH': macro redefinition
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\loguru\loguru.hpp(124): message : see previous definition of 'LOGURU_THREADNAME_WIDTH'
+     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
+  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
   ECHO is on.
-  0 File(s) copied
+  C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
+  1 File(s) copied

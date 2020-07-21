@@ -47,7 +47,7 @@ namespace kablunk {
 		bool m_Handled = false;
 	};
 
-	class EventDispatcher {
+	class KABLUNK_API EventDispatcher {
 		template<typename T>
 		using EventFn = std::function<bool(T&)>;
 	public:
@@ -58,7 +58,7 @@ namespace kablunk {
 		template<typename T>
 		bool Dispatch(EventFn<T> func) {
 			if (EventFn.GetEventType() == T::GetStaticType()) {
-				m_event.m_Handled = func(*(T*)&m_Event);
+				m_Event.m_Handled = func(*(T*)&m_Event);
 				return true;
 			}
 			return false;
@@ -66,5 +66,9 @@ namespace kablunk {
 	private:
 		Event& m_Event;
 	};
+
+	inline std::ostream& operator<<(std::ostream& os, const Event& e) {
+		return os << e.ToString();
+	}
 }
 

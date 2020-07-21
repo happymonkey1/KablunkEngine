@@ -1,2 +1,4 @@
 ﻿  SandboxApp.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(8,1): warning C4005: 'LOGURU_THREADNAME_WIDTH': macro redefinition
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\loguru\loguru.hpp(124): message : see previous definition of 'LOGURU_THREADNAME_WIDTH'
   Sandbox.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\Sandbox\Sandbox.exe
