@@ -33,19 +33,25 @@
     <ClCompile Include="Application.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Kablunk.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Core.h">
       <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Application.h">
       <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Kablunk.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
     <ClInclude Include="EntryPoint.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
