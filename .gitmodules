@@ -1,0 +1,3 @@
+[submodule "KablunkEngine2020/vendor/loguru"]
+	path = KablunkEngine2020/vendor/loguru
+	url = https://github.com/emilk/loguru
