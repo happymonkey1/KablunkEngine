@@ -106,10 +106,14 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="ApplicationEvent.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="EntryPoint.h" />
+    <ClInclude Include="Event.h" />
     <ClInclude Include="Kablunk.h" />
+    <ClInclude Include="KeyEvent.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="MouseEvent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
