@@ -10,10 +10,10 @@ namespace kablunk {
 		inline unsigned int GetWidth() { return m_Width; }
 		inline unsigned int GetHeight() { return m_Height; }
 
-		const char* ToString() const override {
+		std::string ToString() const override {
 			std::stringstream ss;
 			ss << "WindowResizeEvent: " << m_Width << ", " << m_Height;
-			return ss.str().c_str();
+			return ss.str();
 		}
 
 		EVENT_CLASS_TYPE(WindowResize)

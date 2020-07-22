@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.h"
-
+#include "spdlog/fmt/bundled/ostream.h"
 
 
 namespace kablunk {
@@ -36,7 +36,7 @@ namespace kablunk {
 		//make this debug only
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
-		virtual const char* ToString() const { return GetName(); }
+		virtual std::string ToString() const { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 	protected:
