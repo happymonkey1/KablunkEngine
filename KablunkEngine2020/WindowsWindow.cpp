@@ -24,7 +24,7 @@ namespace kablunk {
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
 
-        KABLUNK_CORE_INFO("Creating Window", props.Title, props.Width, props.Height);
+        KABLUNK_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
 
         if (!s_GLFWInitialized) {
             int success = glfwInit();

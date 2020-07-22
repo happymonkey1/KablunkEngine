@@ -2,7 +2,6 @@
 #include "Application.h"
 #include "Event.h"
 #include "ApplicationEvent.h"
-#include <loguru.cpp>
 
 #include <GLFW/glfw3.h>
 
@@ -20,7 +19,7 @@ namespace kablunk {
 	}
 
 	void Application::OnEvent(Event& e) {
-		KABLUNK_CORE_INFO(e.ToString())
+		KABLUNK_CORE_INFO(e);
 	}
 
 	void Application::Run() {
