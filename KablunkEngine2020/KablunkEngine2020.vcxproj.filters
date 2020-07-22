@@ -28,12 +28,21 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Source Files\core\events">
+      <UniqueIdentifier>{fe508764-01cf-4b34-97d1-a764b4a549bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\window">
+      <UniqueIdentifier>{13f4546d-4f56-4b8a-8dd5-d1bb1878fd2f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="Log.cpp">
+    <ClCompile Include="kablunkpch.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsWindow.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,13 +53,34 @@
     <ClInclude Include="Application.h">
       <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Kablunk.h">
-      <Filter>Source Files\core</Filter>
+      <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EntryPoint.h">
-      <Filter>Source Files\core</Filter>
+      <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Log.h">
+    <ClInclude Include="Event.h">
+      <Filter>Source Files\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyEvent.h">
+      <Filter>Source Files\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseEvent.h">
+      <Filter>Source Files\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationEvent.h">
+      <Filter>Source Files\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="kablunkpch.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Source Files\core\window</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsWindow.h">
       <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

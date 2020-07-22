@@ -1,2 +1,6 @@
 ﻿  SandboxApp.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(8,1): warning C4005: 'LOGURU_THREADNAME_WIDTH': macro redefinition
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\loguru\loguru.hpp(124): message : see previous definition of 'LOGURU_THREADNAME_WIDTH'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(16,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(16): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
   Sandbox.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\Sandbox\Sandbox.exe

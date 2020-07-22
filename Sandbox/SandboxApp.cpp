@@ -1,5 +1,6 @@
-
+#include <kablunkpch.h>
 #include <Kablunk.h>
+#include <loguru.cpp>
 
 class Sandbox : public kablunk::Application {
 public:
