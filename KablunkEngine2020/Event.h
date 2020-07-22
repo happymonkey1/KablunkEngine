@@ -1,9 +1,5 @@
 #pragma once
-
 #include "Core.h"
-
-#include <string>
-#include <functional>
 
 
 
@@ -40,7 +36,7 @@ namespace kablunk {
 		//make this debug only
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
-		virtual std::string ToString() const { return GetName(); }
+		virtual const char* ToString() const { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 	protected:

@@ -14,10 +14,10 @@ namespace kablunk {
 		inline float GetX() const { return m_MouseX; }
 		inline float GetY() const { return m_MouseY; }
 
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "MouseMovedEvent: " << m_MouseX << ", " << m_MouseY;
-			return ss.str();
+			return ss.str().c_str();
 		}
 
 		EVENT_CLASS_TYPE(MouseMoved)
@@ -56,10 +56,11 @@ namespace kablunk {
 	public:
 		MouseButtonPressedEvent(int button) : MouseButtonEvent(button) {}
 		
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "MouseButtonPressedEvent: " << m_Button;
-			return ss.str();
+			const char* str = ss.str().c_str();
+			return str;
 		}
 
 		EVENT_CLASS_TYPE(MouseButtonPressed)
@@ -69,10 +70,10 @@ namespace kablunk {
 	public:
 		MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) {}
 
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "MouseButtonReleaseEvent: " << m_Button;
-			return ss.str();
+			return ss.str().c_str();
 		}
 
 		EVENT_CLASS_TYPE(MouseButtonReleased)

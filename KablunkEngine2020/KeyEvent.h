@@ -25,10 +25,10 @@ namespace kablunk {
 		
 		inline int GetRepeatCount() const { return m_RepeatCount; }
 
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "KeyPressedEvent: " << m_KeyCode << " (" << m_RepeatCount << " repeats)";
-			return ss.str();
+			return ss.str().c_str();
 		}
 
 		EVENT_CLASS_TYPE(KeyPressed)
@@ -41,10 +41,10 @@ namespace kablunk {
 	public:
 		KeyReleasedEvent(int keycode) : KeyEvent(keycode) { }
 
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "KeyReleasedEvent: " << m_KeyCode;
-			return ss.str();
+			return ss.str().c_str();
 		}
 
 		EVENT_CLASS_TYPE(KeyReleased)

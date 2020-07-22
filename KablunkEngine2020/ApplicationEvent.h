@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Event.h"
-#include <sstream>
 
 namespace kablunk {
 	class KABLUNK_API WindowResizeEvent : public Event {
@@ -11,10 +10,10 @@ namespace kablunk {
 		inline unsigned int GetWidth() { return m_Width; }
 		inline unsigned int GetHeight() { return m_Height; }
 
-		std::string ToString() const override {
+		const char* ToString() const override {
 			std::stringstream ss;
 			ss << "WindowResizeEvent: " << m_Width << ", " << m_Height;
-			return ss.str();
+			return ss.str().c_str();
 		}
 
 		EVENT_CLASS_TYPE(WindowResize)
