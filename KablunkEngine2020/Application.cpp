@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Application.h"
 #include "Event.h"
-#include "ApplicationEvent.h"
+
 
 #include <GLFW/glfw3.h>
 
@@ -19,7 +19,15 @@ namespace kablunk {
 	}
 
 	void Application::OnEvent(Event& e) {
-		KABLUNK_CORE_INFO(e);
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClosed));
+
+		KABLUNK_CORE_TRACE("{0}", e);
+	}
+
+	bool Application::OnWindowClosed(WindowCloseEvent& e) {
+		m_Running = false;
+		return true;
 	}
 
 	void Application::Run() {
