@@ -8,9 +8,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KablunkEngine-core", "KablunkEngine2020\KablunkEngine2020.vcxproj", "{EAA9846B-484B-4D46-AAEA-9BDF61C31D24}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD} = {4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD}
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE} = {EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLAD", "GLAD\GLAD.vcxproj", "{4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Imgui", "Imgui\Imgui.vcxproj", "{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +45,14 @@ Global
 		{4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD}.Release|x64.Build.0 = Release|x64
 		{4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD}.Release|x86.ActiveCfg = Release|Win32
 		{4F2D8147-C153-4A0C-BFDD-8011A4C5A8AD}.Release|x86.Build.0 = Release|Win32
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Debug|x64.ActiveCfg = Debug|x64
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Debug|x64.Build.0 = Debug|x64
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Debug|x86.ActiveCfg = Debug|Win32
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Debug|x86.Build.0 = Debug|Win32
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Release|x64.ActiveCfg = Release|x64
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Release|x64.Build.0 = Release|x64
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Release|x86.ActiveCfg = Release|Win32
+		{EFA74185-DFDE-4EF3-ABAC-2EA07FAD41FE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

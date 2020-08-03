@@ -19,6 +19,7 @@ class Sandbox : public kablunk::Application {
 public:
 	Sandbox() {
 		PushLayer(new TestLayer());
+		PushOverlay(new kablunk::ImGuiLayer());
 	}
 
 	~Sandbox() {
