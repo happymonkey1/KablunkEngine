@@ -46,7 +46,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(LibraryPath); KablunkEngine2020\vendor\GLFW</LibraryPath>
+    <LibraryPath>$(SolutionDir)KablunkEngine2020\vendor\GLFW;$(LibraryPath);KablunkEngine2020\vendor\GLFW</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
@@ -54,7 +54,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath)$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath); KablunkEngine2020\vendor\GLFW</LibraryPath>
+    <LibraryPath>$(SolutionDir)KablunkEngine2020\vendor\GLFW;$(LibraryPath);KablunkEngine2020\vendor\GLFW</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -64,7 +64,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch; </PrecompiledHeaderOutputFile>
@@ -72,9 +72,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib; opengl32.lib; %(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>GLAD.lib; glfw3.lib; opengl32.lib; %(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLFW</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLFW;$(SolutionDir)KablunkEngine2020\vendor\GLAD</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo
@@ -89,7 +89,7 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch; </PrecompiledHeaderOutputFile>
@@ -99,9 +99,9 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib; opengl32.lib; %(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>GLAD.lib; glfw3.lib; opengl32.lib; %(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLFW</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLFW;$(SolutionDir)KablunkEngine2020\vendor\GLAD</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo
@@ -114,6 +114,8 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Layer.cpp" />
+    <ClCompile Include="LayerStack.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="WindowsWindow.cpp" />
   </ItemGroup>
@@ -126,6 +128,8 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
     <ClInclude Include="Kablunk.h" />
     <ClInclude Include="kablunkpch.h" />
     <ClInclude Include="KeyEvent.h" />
+    <ClInclude Include="Layer.h" />
+    <ClInclude Include="LayerStack.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MouseEvent.h" />
     <ClInclude Include="Window.h" />

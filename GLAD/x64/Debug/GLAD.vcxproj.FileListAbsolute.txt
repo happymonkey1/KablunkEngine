@@ -1,0 +1,2 @@
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\x64\Debug\GLAD.pdb
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\GLAD\x64\Debug\GLAD.pdb

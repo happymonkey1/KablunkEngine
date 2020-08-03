@@ -48,6 +48,12 @@
     <ClCompile Include="Log.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="Layer.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerStack.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h">
@@ -84,6 +90,12 @@
       <Filter>Source Files\core\window</Filter>
     </ClInclude>
     <ClInclude Include="WindowsWindow.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerStack.h">
       <Filter>Source Files\core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

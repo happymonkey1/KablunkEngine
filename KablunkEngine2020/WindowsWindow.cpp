@@ -6,12 +6,16 @@
 #include "MouseEvent.h"
 #include "ApplicationEvent.h"
 
+
+
 namespace kablunk {
 
     static bool s_GLFWInitialized = false;
+
     static void GLFWErrorCallback(int error, const char* desc) {
         KABLUNK_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
     }
+
     Window* Window::Create(const WindowProps& props) {
         return new WindowsWindow(props);
     }
@@ -36,7 +40,7 @@ namespace kablunk {
         if (!s_GLFWInitialized) {
             int success = glfwInit();
             if (!success)
-                KABLUNK_CORE_ERROR("COULD NOT INITIALIZE GLFW");
+                KABLUNK_CORE_FATAL("COULD NOT INITIALIZE GLFW");
 
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitialized = true;
@@ -44,6 +48,10 @@ namespace kablunk {
 
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
         glfwMakeContextCurrent(m_Window);
+
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+            KABLUNK_CORE_FATAL("GLAD FAILED TO INITIALIZE");
+        
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVsync(true);
 
@@ -53,7 +61,7 @@ namespace kablunk {
 
             WindowResizeEvent event(width, height);
             data.EventCallback(event);
-            });
+        });
 
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);

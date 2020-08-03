@@ -39,6 +39,7 @@ namespace kablunk {
 		virtual std::string ToString() const { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
+		inline bool GetStatus() const { return m_Handled; }
 	protected:
 		bool m_Handled = false;
 	};
