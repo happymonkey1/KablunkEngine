@@ -39,6 +39,7 @@ namespace kablunk {
 		virtual std::string ToString() const { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
+		inline bool GetStatus() const { return m_Handled; }
 	protected:
 		bool m_Handled = false;
 	};
@@ -53,7 +54,7 @@ namespace kablunk {
 
 		template<typename T>
 		bool Dispatch(EventFn<T> func) {
-			if (EventFn.GetEventType() == T::GetStaticType()) {
+			if (m_Event.GetEventType() == T::GetStaticType()) {
 				m_Event.m_Handled = func(*(T*)&m_Event);
 				return true;
 			}
