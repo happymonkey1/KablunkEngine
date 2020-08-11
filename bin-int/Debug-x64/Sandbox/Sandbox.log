@@ -17,6 +17,6 @@ C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.2
           [
               _Ty=kablunk::Layer *
           ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(24,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(24): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
   Sandbox.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\Sandbox\Sandbox.exe

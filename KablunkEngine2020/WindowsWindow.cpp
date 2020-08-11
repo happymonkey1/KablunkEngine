@@ -61,6 +61,8 @@ namespace kablunk {
 
             WindowResizeEvent event(width, height);
             data.EventCallback(event);
+            data.Width = width;
+            data.Height = height;
         });
 
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
@@ -68,6 +70,7 @@ namespace kablunk {
 
             WindowCloseEvent event;
             data.EventCallback(event);
+            
         });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -99,18 +102,18 @@ namespace kablunk {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             switch (action) {
-            case GLFW_PRESS:
-            {
-                MouseButtonPressedEvent event(button);
-                data.EventCallback(event);
-                break;
-            }
-            case GLFW_RELEASE:
-            {
-                MouseButtonReleasedEvent event(button);
-                data.EventCallback(event);
-                break;
-            }
+                case GLFW_PRESS:
+                {
+                    MouseButtonPressedEvent event(button);
+                    data.EventCallback(event);
+                    break;
+                }
+                case GLFW_RELEASE:
+                {
+                    MouseButtonReleasedEvent event(button);
+                    data.EventCallback(event);
+                    break;
+                }
             }
         });
 

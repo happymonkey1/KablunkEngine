@@ -4,3 +4,6 @@
 [submodule "spdlog1"]
 	path = spdlog1
 	url = https://github.com/gabime/spdlog
+[submodule "KablunkEngine2020/vendor/imgui"]
+	path = KablunkEngine2020/vendor/imgui
+	url = https://github.com/ocornut/imgui
