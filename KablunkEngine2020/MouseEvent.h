@@ -32,7 +32,7 @@ namespace kablunk {
 		MouseScrolledEvent(float xOffset, float yOffset) : m_XOffset(xOffset), m_YOffset(yOffset) {}
 
 		inline float GetXOffset() const { return m_XOffset; }
-		inline float GetyOffset() const { return m_YOffset; }
+		inline float GetYOffset() const { return m_YOffset; }
 
 		EVENT_CLASS_TYPE(MouseScrolled)
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)

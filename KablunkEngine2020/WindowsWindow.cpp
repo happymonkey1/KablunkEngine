@@ -61,6 +61,8 @@ namespace kablunk {
 
             WindowResizeEvent event(width, height);
             data.EventCallback(event);
+            data.Width = width;
+            data.Height = height;
         });
 
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
@@ -68,6 +70,7 @@ namespace kablunk {
 
             WindowCloseEvent event;
             data.EventCallback(event);
+            
         });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
