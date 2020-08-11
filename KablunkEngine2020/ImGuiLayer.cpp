@@ -151,6 +151,11 @@ namespace kablunk {
 	}
 	bool ImGuiLayer::OnKeyTypedEvent(KeyTypedEvent& e)
 	{
+		ImGuiIO& io = ImGui::GetIO();
+		int keycode = e.GetKeyCode();
+		if (keycode > 0 && keycode < 0x10000)
+			io.AddInputCharacter((unsigned short)keycode);
+
 		return false;
 	}
 	bool ImGuiLayer::OnWindowResizedEvent(WindowResizeEvent& e)

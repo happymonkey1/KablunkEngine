@@ -75,6 +75,9 @@
     <ClCompile Include="ImGui_impl_glfw_kablunk.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsInput.cpp">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h">
@@ -127,6 +130,12 @@
     </ClInclude>
     <ClInclude Include="ImGui_impl_glfw_kablunk.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsInput.h">
+      <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
