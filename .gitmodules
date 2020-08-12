@@ -7,3 +7,6 @@
 [submodule "KablunkEngine2020/vendor/imgui"]
 	path = KablunkEngine2020/vendor/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "KablunkEngine2020/vendor/glm"]
+	path = KablunkEngine2020/vendor/glm
+	url = https://github.com/g-truc/glm

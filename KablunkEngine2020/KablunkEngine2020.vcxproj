@@ -64,7 +64,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch; </PrecompiledHeaderOutputFile>
@@ -90,7 +90,7 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch; </PrecompiledHeaderOutputFile>
@@ -137,10 +137,12 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
     <ClInclude Include="Input.h" />
     <ClInclude Include="Kablunk.h" />
     <ClInclude Include="kablunkpch.h" />
+    <ClInclude Include="KeyCodes.h" />
     <ClInclude Include="KeyEvent.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerStack.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="MouseButtonCodes.h" />
     <ClInclude Include="MouseEvent.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsInput.h" />

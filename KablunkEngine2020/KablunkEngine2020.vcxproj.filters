@@ -137,5 +137,11 @@
     <ClInclude Include="WindowsInput.h">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="KeyCodes.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseButtonCodes.h">
+      <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
