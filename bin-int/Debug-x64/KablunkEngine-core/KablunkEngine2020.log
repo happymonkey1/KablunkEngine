@@ -1,4 +1,26 @@
-﻿  ImGuiLayer.cpp
+﻿  kablunkpch.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(15,54): warning C4251: 'kablunk::Log::s_CoreLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(16,56): warning C4251: 'kablunk::Log::s_ClientLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
+  Application.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
+  ImGuiLayer.cpp
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
@@ -17,10 +39,48 @@ C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Applica
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(73,80): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(73,51): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(159,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(159,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(164,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(164,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+  ImGuiOpenGLRenderer.cpp
+  ImGui_impl_glfw_kablunk.cpp
+  Layer.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+  LayerStack.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+  Log.cpp
+  WindowsInput.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
+          with
+          [
+              _Ty=kablunk::Layer *
+          ]
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
+  WindowsWindow.cpp
+  Generating Code...
   KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
   ECHO is on.
   C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll

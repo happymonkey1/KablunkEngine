@@ -13,7 +13,7 @@ namespace kablunk {
     static bool s_GLFWInitialized = false;
 
     static void GLFWErrorCallback(int error, const char* desc) {
-        KABLUNK_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
+        KB_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
     }
 
     Window* Window::Create(const WindowProps& props) {
@@ -35,12 +35,12 @@ namespace kablunk {
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
 
-        KABLUNK_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
+        //KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
 
         if (!s_GLFWInitialized) {
             int success = glfwInit();
             if (!success)
-                KABLUNK_CORE_FATAL("COULD NOT INITIALIZE GLFW");
+                KB_CORE_FATAL("COULD NOT INITIALIZE GLFW");
 
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitialized = true;
@@ -50,7 +50,7 @@ namespace kablunk {
         glfwMakeContextCurrent(m_Window);
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            KABLUNK_CORE_FATAL("GLAD FAILED TO INITIALIZE");
+            KB_CORE_FATAL("GLAD FAILED TO INITIALIZE");
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVsync(true);
@@ -98,6 +98,12 @@ namespace kablunk {
             }
         });
 
+        glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode) {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+            KeyTypedEvent event(keycode);
+            data.EventCallback(event);
+            });
+
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -133,7 +139,7 @@ namespace kablunk {
     }
     void WindowsWindow::Shutdown()
     {
-        KABLUNK_CLIENT_WARN("NEED TO IMPLEMENT WINDOWS WINDOW SHUTDOWN");
+        KB_CORE_WARN("NEED TO IMPLEMENT WINDOWS WINDOW SHUTDOWN");
     }
 
     void WindowsWindow::OnUpdate()

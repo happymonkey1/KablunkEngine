@@ -10,7 +10,6 @@ int main(int argc, char** argv) {
 	kablunk::Log::Init();
 	kablunk::Log::GetCoreLogger()->warn("test");
 
-	KABLUNK_CORE_INFO("TEST");
 
 	kablunk::Application* app = kablunk::CreateApplication();
 	app->Run();

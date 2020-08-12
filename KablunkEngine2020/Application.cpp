@@ -5,6 +5,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include "WindowsInput.h"
 
 namespace kablunk {
 
@@ -34,7 +35,7 @@ namespace kablunk {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(KABLUNK_BIND_EVENT_FN(Application::OnWindowClosed));
 
-		KABLUNK_CORE_TRACE("{0}", e);
+		//KB_CORE_TRACE("{0}", e);
 
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();) {
 			(*--it)->OnEvent(e);
@@ -55,7 +56,7 @@ namespace kablunk {
 		while (m_Running) {
 			glClearColor(1, 0, 0, 1);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
+
 			for (Layer* layer : m_LayerStack)
 				layer->OnUpdate();
 
