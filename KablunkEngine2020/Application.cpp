@@ -2,8 +2,7 @@
 #include "Application.h"
 #include "Event.h"
 
-
-#include <GLFW/glfw3.h>
+#include "glad\glad.h"
 
 #include "WindowsInput.h"
 

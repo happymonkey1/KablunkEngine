@@ -1,7 +1,9 @@
 #pragma once
 #include "Window.h"
 #include "glad/glad.h"
-#include "GLFW/glfw3.h"
+
+
+struct GLFWwindow;
 
 namespace kablunk {
 	class KABLUNK_API WindowsWindow : public Window

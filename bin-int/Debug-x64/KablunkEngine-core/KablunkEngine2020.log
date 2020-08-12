@@ -1,9 +1,4 @@
-﻿  kablunkpch.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(15,54): warning C4251: 'kablunk::Log::s_CoreLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(16,56): warning C4251: 'kablunk::Log::s_ClientLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
-  Application.cpp
+﻿  ImGuiLayer.cpp
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
@@ -20,68 +15,27 @@ C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.2
           ]
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-  ImGuiLayer.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(73,80): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(73,51): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(164,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(164,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-  ImGuiOpenGLRenderer.cpp
-  ImGui_impl_glfw_kablunk.cpp
-  Layer.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-  LayerStack.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-  Log.cpp
-  WindowsInput.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-  WindowsWindow.cpp
-  Generating Code...
-  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
-  ECHO is on.
-  C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
-  1 File(s) copied
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(72,80): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(72,51): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(163,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(163,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+  LINK : C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll not found or not built by the last incremental link; performing full link
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_CharCallback(struct GLFWwindow *,unsigned int)" (?ImGui_ImplGlfw_CharCallback@@YAXPEAUGLFWwindow@@I@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "bool __cdecl ImGui_ImplGlfw_InitForOpenGL(struct GLFWwindow *,bool)" (?ImGui_ImplGlfw_InitForOpenGL@@YA_NPEAUGLFWwindow@@_N@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "bool __cdecl ImGui_ImplGlfw_InitForVulkan(struct GLFWwindow *,bool)" (?ImGui_ImplGlfw_InitForVulkan@@YA_NPEAUGLFWwindow@@_N@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_KeyCallback(struct GLFWwindow *,int,int,int,int)" (?ImGui_ImplGlfw_KeyCallback@@YAXPEAUGLFWwindow@@HHHH@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_MouseButtonCallback(struct GLFWwindow *,int,int,int)" (?ImGui_ImplGlfw_MouseButtonCallback@@YAXPEAUGLFWwindow@@HHH@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_NewFrame(void)" (?ImGui_ImplGlfw_NewFrame@@YAXXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_ScrollCallback(struct GLFWwindow *,double,double)" (?ImGui_ImplGlfw_ScrollCallback@@YAXPEAUGLFWwindow@@NN@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplGlfw_Shutdown(void)" (?ImGui_ImplGlfw_Shutdown@@YAXXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "bool __cdecl ImGui_ImplOpenGL3_CreateDeviceObjects(void)" (?ImGui_ImplOpenGL3_CreateDeviceObjects@@YA_NXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "bool __cdecl ImGui_ImplOpenGL3_CreateFontsTexture(void)" (?ImGui_ImplOpenGL3_CreateFontsTexture@@YA_NXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplOpenGL3_DestroyDeviceObjects(void)" (?ImGui_ImplOpenGL3_DestroyDeviceObjects@@YAXXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplOpenGL3_DestroyFontsTexture(void)" (?ImGui_ImplOpenGL3_DestroyFontsTexture@@YAXXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "bool __cdecl ImGui_ImplOpenGL3_Init(char const *)" (?ImGui_ImplOpenGL3_Init@@YA_NPEBD@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplOpenGL3_NewFrame(void)" (?ImGui_ImplOpenGL3_NewFrame@@YAXXZ) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplOpenGL3_RenderDrawData(struct ImDrawData *)" (?ImGui_ImplOpenGL3_RenderDrawData@@YAXPEAUImDrawData@@@Z) already defined in ImGuiBuild.obj
+ImGuiLayer.obj : error LNK2005: "void __cdecl ImGui_ImplOpenGL3_Shutdown(void)" (?ImGui_ImplOpenGL3_Shutdown@@YAXXZ) already defined in ImGuiBuild.obj
+     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll : fatal error LNK1169: one or more multiply defined symbols found

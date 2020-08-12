@@ -112,9 +112,8 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="ImGuiBuild.cpp" />
     <ClCompile Include="ImGuiLayer.cpp" />
-    <ClCompile Include="ImGuiOpenGLRenderer.cpp" />
-    <ClCompile Include="ImGui_impl_glfw_kablunk.cpp" />
     <ClCompile Include="kablunkpch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -132,8 +131,6 @@ xcopy /y /d "$(SolutionDir)\bin\$(Configuration)-$(Platform)\$(ProjectName)\*.dl
     <ClInclude Include="EntryPoint.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="ImGuiLayer.h" />
-    <ClInclude Include="ImGuiOpenGLRenderer.h" />
-    <ClInclude Include="ImGui_impl_glfw_kablunk.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Kablunk.h" />
     <ClInclude Include="kablunkpch.h" />
