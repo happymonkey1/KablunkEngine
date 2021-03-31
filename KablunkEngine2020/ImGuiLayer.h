@@ -16,7 +16,9 @@ namespace kablunk {
 
 		virtual void OnDetach() override;
 		virtual void OnAttach() override;
-		virtual void OnUpdate() override;
+		virtual void OnImGuiRender() override;
+		void Begin();
+		void End();
 	private:
 		float m_Time;
 	};

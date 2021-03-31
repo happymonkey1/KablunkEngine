@@ -1,129 +1,13 @@
-﻿  kablunkpch.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(15,54): warning C4251: 'kablunk::Log::s_CoreLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Log.h(16,56): warning C4251: 'kablunk::Log::s_ClientLogger': class 'std::shared_ptr<spdlog::logger>' needs to have dll-interface to be used by clients of class 'kablunk::Log'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\spdlog\include\spdlog\details\registry.h(34): message : see declaration of 'std::shared_ptr<spdlog::logger>'
-  Application.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+﻿  Application.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(21,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-  ImGuiBuild.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\imgui\examples\imgui_impl_opengl3.cpp(186,5): error C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\imgui\examples\imgui_impl_opengl3.cpp(187,5): error C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\vendor\imgui\examples\imgui_impl_opengl3.cpp(515,5): error C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  ImGuiLayer.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(84,80): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(84,51): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-  Layer.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-  LayerStack.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-  Log.cpp
-  WindowsInput.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(20,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(21,46): warning C4251: 'kablunk::LayerStack::m_LayerInsert': class 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\vector(439): message : see declaration of 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>'
-          with
-          [
-              _Ty=kablunk::Layer *
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(27): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
-  WindowsWindow.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(41,27): error C3861: 'glfwInit': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(45,13): error C3861: 'glfwSetErrorCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(49,20): error C3861: 'glfwCreateWindow': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(50,9): error C3861: 'glfwMakeContextCurrent': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(52,45): error C2065: 'glfwGetProcAddress': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(55,9): error C3861: 'glfwSetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(60,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(59,9): error C3861: 'glfwSetWindowSizeCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(69,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(68,9): error C3861: 'glfwSetWindowCloseCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(77,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(80,22): error C2065: 'GLFW_PRESS': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(80,22): error C2131: expression did not evaluate to a constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(80,22): message : a non-constant (sub-)expression was encountered
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(86,22): error C2065: 'GLFW_RELEASE': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(86,22): error C2131: expression did not evaluate to a constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(86,22): message : a non-constant (sub-)expression was encountered
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(92,22): error C2065: 'GLFW_REPEAT': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(92,22): error C2131: expression did not evaluate to a constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(92,22): message : a non-constant (sub-)expression was encountered
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(80,1): error C2051: case expression not constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(86,1): error C2051: case expression not constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(92,1): error C2051: case expression not constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(98,1): warning C4060: switch statement contains no 'case' or 'default' labels
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(76,9): error C3861: 'glfwSetKeyCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(102,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(101,9): error C3861: 'glfwSetCharCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(108,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(111,22): error C2065: 'GLFW_PRESS': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(111,22): error C2131: expression did not evaluate to a constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(111,22): message : a non-constant (sub-)expression was encountered
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(117,22): error C2065: 'GLFW_RELEASE': undeclared identifier
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(117,22): error C2131: expression did not evaluate to a constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(117,22): message : a non-constant (sub-)expression was encountered
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(111,1): error C2051: case expression not constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(117,1): error C2051: case expression not constant
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(123,1): warning C4060: switch statement contains no 'case' or 'default' labels
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(107,9): error C3861: 'glfwSetMouseButtonCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(127,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(126,9): error C3861: 'glfwSetScrollCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(134,46): error C3861: 'glfwGetWindowUserPointer': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(133,9): error C3861: 'glfwSetCursorPosCallback': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(147,9): error C3861: 'glfwPollEvents': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(148,9): error C3861: 'glfwSwapBuffers': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(154,13): error C3861: 'glfwSwapInterval': identifier not found
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\WindowsWindow.cpp(156,13): error C3861: 'glfwSwapInterval': identifier not found
-  Generating Code...
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(28,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(28): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
+     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
+  ECHO is on.
+  C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
+  1 File(s) copied

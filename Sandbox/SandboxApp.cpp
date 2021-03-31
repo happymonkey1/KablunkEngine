@@ -1,23 +1,22 @@
 #include <kablunkpch.h>
 #include <Kablunk.h>
 
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
-#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
-#include <glm/ext/scalar_constants.hpp> // glm::pi
+#include "imgui.h"
 
-
+//#include "imgui.h"
 class ExampleLayer : public kablunk::Layer {
 public:
 	ExampleLayer() { }
 
 	void OnUpdate() override {
-		/*KB_CLIENT_INFO("ExampleLayer::Update");
+		//KB_CLIENT_INFO("ExampleLayer::Update");
 
 		if (kablunk::Input::IsKeyPressed(KB_KEY_TAB))
-			KB_CLIENT_INFO("Tab key is pressed");*/
+			KB_CLIENT_INFO("Tab key is pressed");
+	}
+
+	virtual void OnImGuiRender() override {
+	
 	}
 
 	void OnEvent(kablunk::Event& e) {
@@ -37,7 +36,6 @@ class Sandbox : public kablunk::Application {
 public:
 	Sandbox() {
 		PushLayer(new ExampleLayer());
-		PushOverlay(new kablunk::ImGuiLayer());
 	}
 
 	~Sandbox() {
