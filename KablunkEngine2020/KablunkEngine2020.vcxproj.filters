@@ -69,14 +69,11 @@
     <ClCompile Include="WindowsWindow.cpp">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="ImGuiOpenGLRenderer.cpp">
-      <Filter>Source Files\Platform\OpenGL</Filter>
-    </ClCompile>
-    <ClCompile Include="ImGui_impl_glfw_kablunk.cpp">
-      <Filter>Source Files\Platform\OpenGL</Filter>
-    </ClCompile>
     <ClCompile Include="WindowsInput.cpp">
       <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGuiBuild.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -124,12 +121,6 @@
     </ClInclude>
     <ClInclude Include="WindowsWindow.h">
       <Filter>Source Files\Platform\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="ImGuiOpenGLRenderer.h">
-      <Filter>Source Files\Platform\OpenGL</Filter>
-    </ClInclude>
-    <ClInclude Include="ImGui_impl_glfw_kablunk.h">
-      <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Input.h">
       <Filter>Source Files\core\Header Files</Filter>

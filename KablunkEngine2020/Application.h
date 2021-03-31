@@ -4,6 +4,7 @@
 #include "ApplicationEvent.h"
 #include "LayerStack.h"
 
+#include "ImGuiLayer.h"
 
 namespace kablunk {
 
@@ -25,6 +26,7 @@ namespace kablunk {
 		bool OnWindowClosed(WindowCloseEvent& e);
 
 		std::unique_ptr<Window> m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 

@@ -6,6 +6,7 @@
 #include "MouseEvent.h"
 #include "ApplicationEvent.h"
 
+#include "GLFW/glfw3.h"
 
 
 namespace kablunk {
