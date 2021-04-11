@@ -165,6 +165,7 @@
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui.cpp" />
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\misc\fonts\binary_to_compressed_c.cpp" />

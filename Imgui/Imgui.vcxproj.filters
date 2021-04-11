@@ -62,5 +62,8 @@
     <ClCompile Include="..\KablunkEngine2020\vendor\imgui\misc\fonts\binary_to_compressed_c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
