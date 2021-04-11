@@ -16,9 +16,9 @@ public:
 	}
 
 	virtual void OnImGuiRender() override {
-		ImGui::Begin("Test");
+		/*ImGui::Begin("Test");
 		ImGui::TextUnformatted("Hello World");
-		ImGui::End();
+		ImGui::End();*/
 	}
 
 	void OnEvent(kablunk::Event& e) {
