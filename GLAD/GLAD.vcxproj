@@ -134,7 +134,7 @@
       <AdditionalLibraryDirectories>glfw3.lib; opengl32.lib</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>xcopy /y "$(OutDir)GLAD.lib"  "$(SolutionDir)KablunkEngine2020\vendor\GLAD"</Command>
+      <Command>xcopy /y "$(OutDir)GLAD.lib"  "$(SolutionDir)libs\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -157,7 +157,7 @@
       <AdditionalLibraryDirectories>glfw3.lib; opengl32.lib</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>xcopy /y "$(OutDir)GLAD.lib"  "$(SolutionDir)KablunkEngine2020\vendor\GLAD"</Command>
+      <Command>xcopy /y "$(OutDir)GLAD.lib"  "$(SolutionDir)libs\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
