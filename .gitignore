@@ -376,3 +376,10 @@ bin-int/Debug-x64/Sandbox/SandboxApp.obj
 bin-int/Debug-x64/Sandbox/vc142.idb
 bin-int/Debug-x64/Sandbox/vc142.pdb
 bin/Debug-x64/Sandbox/Sandbox.pdb
+bin-int/Debug-x64/KablunkEngine-core/vc142.pdb
+bin-int/Debug-x64/KablunkEngine-core/vc142.idb
+bin-int/Debug-x64/KablunkEngine-core/KablunkEngine2020.log
+bin-int/Debug-x64/KablunkEngine-core/KablunkE.eaa9846b.tlog/CL.write.1.tlog
+bin-int/Debug-x64/KablunkEngine-core/KablunkE.eaa9846b.tlog/CL.read.1.tlog
+bin-int/Debug-x64/KablunkEngine-core/KablunkE.eaa9846b.tlog/CL.command.1.tlog
+KablunkEngine2020/vendor/imgui

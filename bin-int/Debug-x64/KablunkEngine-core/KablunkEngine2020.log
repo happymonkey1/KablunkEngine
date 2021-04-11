@@ -1,6 +1,12 @@
-﻿     Creating library C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.lib and object C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.exp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-GLAD.lib(glad.obj) : warning LNK4099: PDB 'GLAD.pdb' was not found with 'GLAD.lib(glad.obj)' or at 'C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\GLAD.pdb'; linking object as if no debug info
+﻿  ImGuiLayer.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Layer.h(21,26): warning C4251: 'kablunk::Layer::m_DebugName': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of class 'kablunk::Layer'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\include\xstring(4575): message : see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(20,31): warning C4251: 'kablunk::LayerStack::m_Layers': class 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>' needs to have dll-interface to be used by clients of class 'kablunk::LayerStack'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\LayerStack.h(17): message : see declaration of 'std::vector<kablunk::Layer *,std::allocator<kablunk::Layer *>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(28,35): warning C4251: 'kablunk::Application::m_Window': class 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>' needs to have dll-interface to be used by clients of class 'kablunk::Application'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\Application.h(28): message : see declaration of 'std::unique_ptr<kablunk::Window,std::default_delete<kablunk::Window>>'
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(79,80): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\ImGuiLayer.cpp(79,51): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
   KablunkEngine2020.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
   ECHO is on.
   C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\\bin\Debug-x64\KablunkEngine-core\KablunkEngine-core.dll
