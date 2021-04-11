@@ -6,7 +6,9 @@
 #include "MouseEvent.h"
 #include "ApplicationEvent.h"
 
+#include "OpenGLContext.h"
 #include "GLFW/glfw3.h"
+
 
 
 namespace kablunk {
@@ -36,7 +38,9 @@ namespace kablunk {
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
 
+        
         //KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
+        
 
         if (!s_GLFWInitialized) {
             int success = glfwInit();
@@ -48,10 +52,10 @@ namespace kablunk {
         }
 
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
-        glfwMakeContextCurrent(m_Window);
 
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            KB_CORE_FATAL("GLAD FAILED TO INITIALIZE");
+        m_Context = new OpenGLContext(m_Window);
+        m_Context->Init();
+        
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVsync(true);
@@ -148,19 +152,9 @@ namespace kablunk {
     void WindowsWindow::OnUpdate()
     {
         glfwPollEvents();
-        glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
     }
 
-    void WindowsWindow::OnDraw(const bool& forceBufferSwap)
-    {
-		glClearColor(1, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (forceBufferSwap)
-        {
-            glfwSwapBuffers(m_Window);
-            KB_CORE_WARN("NEED TO ALSO REDRAW IMGUI WINDOWS");
-        }
-    }
 
     void WindowsWindow::SetVsync(bool enabled)
     {

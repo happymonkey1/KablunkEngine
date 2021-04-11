@@ -119,6 +119,7 @@
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="LayerStack.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="OpenGLContext.cpp" />
     <ClCompile Include="WindowsInput.cpp" />
     <ClCompile Include="WindowsWindow.cpp" />
   </ItemGroup>
@@ -128,6 +129,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="EntryPoint.h" />
     <ClInclude Include="Event.h" />
+    <ClInclude Include="GraphicsContext.h" />
     <ClInclude Include="ImGuiLayer.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Kablunk.h" />
@@ -139,6 +141,7 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="MouseButtonCodes.h" />
     <ClInclude Include="MouseEvent.h" />
+    <ClInclude Include="OpenGLContext.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsInput.h" />
     <ClInclude Include="WindowsWindow.h" />

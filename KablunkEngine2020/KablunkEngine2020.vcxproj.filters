@@ -46,6 +46,9 @@
     <Filter Include="Source Files\Platform\OpenGL">
       <UniqueIdentifier>{45e2b91d-cdbe-49f9-8169-415b0088de94}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\core\Renderer">
+      <UniqueIdentifier>{7fb1dd80-3b9a-4997-8a17-30722ba36164}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -74,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="ImGuiBuild.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLContext.cpp">
+      <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="MouseButtonCodes.h">
       <Filter>Source Files\core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsContext.h">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLContext.h">
+      <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
