@@ -22,6 +22,7 @@ namespace kablunk {
 		virtual ~Window() {}
 
 		virtual void OnUpdate() = 0;
+		virtual void OnDraw(const bool& forceBufferSwap = false) = 0;
 
 		virtual unsigned int GetWidth() const = 0;
 		virtual unsigned int GetHeight() const = 0;

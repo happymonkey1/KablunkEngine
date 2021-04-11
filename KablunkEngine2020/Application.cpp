@@ -42,6 +42,10 @@ namespace kablunk {
 			(*--it)->OnEvent(e);
 			if (e.GetStatus())
 				break;
+
+			if (e.GetEventType() == EventType::WindowResize)
+				m_Window->OnDraw(true);
+			
 		}
 	}
 
@@ -55,8 +59,7 @@ namespace kablunk {
 
 	void Application::Run() {
 		while (m_Running) {
-			glClearColor(1, 0, 0, 1);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			m_Window->OnDraw();
 
 			for (Layer* layer : m_LayerStack)
 				layer->OnUpdate();
