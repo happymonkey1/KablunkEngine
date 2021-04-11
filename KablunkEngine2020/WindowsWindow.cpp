@@ -57,13 +57,15 @@ namespace kablunk {
         SetVsync(true);
 
         //GLFW Callbacks
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow * window, int width, int height){
+        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height){
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             WindowResizeEvent event(width, height);
             data.EventCallback(event);
             data.Width = width;
             data.Height = height;
+
+            
         });
 
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
@@ -103,7 +105,7 @@ namespace kablunk {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
             KeyTypedEvent event(keycode);
             data.EventCallback(event);
-            });
+        });
 
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -147,6 +149,17 @@ namespace kablunk {
     {
         glfwPollEvents();
         glfwSwapBuffers(m_Window);
+    }
+
+    void WindowsWindow::OnDraw(const bool& forceBufferSwap)
+    {
+		glClearColor(1, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (forceBufferSwap)
+        {
+            glfwSwapBuffers(m_Window);
+            KB_CORE_WARN("NEED TO ALSO REDRAW IMGUI WINDOWS");
+        }
     }
 
     void WindowsWindow::SetVsync(bool enabled)
