@@ -9,34 +9,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\core">
-      <UniqueIdentifier>{193549a8-a5d8-45d2-9622-3c4298bd43bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\shaders">
-      <UniqueIdentifier>{d8263dae-cec3-4fc6-b4f0-848c2f94cd39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\graphics">
-      <UniqueIdentifier>{0cef973c-2c9c-486c-9982-93659bafc350}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\input">
-      <UniqueIdentifier>{df53c728-0b21-43ee-a702-a04774d890ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\math">
-      <UniqueIdentifier>{9686d2dc-5abd-4a3c-8141-6d4d1ace1032}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Source Files\core\events">
-      <UniqueIdentifier>{fe508764-01cf-4b34-97d1-a764b4a549bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\core\window">
-      <UniqueIdentifier>{13f4546d-4f56-4b8a-8dd5-d1bb1878fd2f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\imgui">
-      <UniqueIdentifier>{91d91050-ea4f-4251-acbf-435cf8685288}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Platform">
       <UniqueIdentifier>{c7bfbf92-432b-4e4b-b01f-c4d43c86e464}</UniqueIdentifier>
     </Filter>
@@ -46,28 +18,44 @@
     <Filter Include="Source Files\Platform\OpenGL">
       <UniqueIdentifier>{45e2b91d-cdbe-49f9-8169-415b0088de94}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\core\Renderer">
+    <Filter Include="Source Files\Platform\DirectX">
+      <UniqueIdentifier>{22fcf0c5-ceff-40a8-b4b6-2cd8afd67f60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{193549a8-a5d8-45d2-9622-3c4298bd43bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Graphics">
+      <UniqueIdentifier>{0cef973c-2c9c-486c-9982-93659bafc350}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Input">
+      <UniqueIdentifier>{df53c728-0b21-43ee-a702-a04774d890ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Math">
+      <UniqueIdentifier>{9686d2dc-5abd-4a3c-8141-6d4d1ace1032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Core\Events">
+      <UniqueIdentifier>{fe508764-01cf-4b34-97d1-a764b4a549bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\window">
+      <UniqueIdentifier>{13f4546d-4f56-4b8a-8dd5-d1bb1878fd2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Renderer">
       <UniqueIdentifier>{7fb1dd80-3b9a-4997-8a17-30722ba36164}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Renderer\Shaders">
+      <UniqueIdentifier>{d8263dae-cec3-4fc6-b4f0-848c2f94cd39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Imgui">
+      <UniqueIdentifier>{91d91050-ea4f-4251-acbf-435cf8685288}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="kablunkpch.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="Layer.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="LayerStack.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="ImGuiLayer.cpp">
-      <Filter>Source Files\imgui</Filter>
+      <Filter>Source Files\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="WindowsWindow.cpp">
       <Filter>Source Files\Platform\Windows</Filter>
@@ -76,105 +64,120 @@
       <Filter>Source Files\Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="ImGuiBuild.cpp">
-      <Filter>Source Files\imgui</Filter>
+      <Filter>Source Files\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLContext.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files\core\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Buffer.cpp">
-      <Filter>Source Files\core\Renderer</Filter>
+      <Filter>Source Files\Core\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLBuffer.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files\core\Renderer</Filter>
+      <Filter>Source Files\Core\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLShader.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="Application.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="kablunkpch.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\Core\Renderer\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Layer.cpp">
+      <Filter>Source Files\Core\window</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerStack.cpp">
+      <Filter>Source Files\Core\window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Application.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Log.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Kablunk.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EntryPoint.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Event.h">
-      <Filter>Source Files\core\events</Filter>
+      <Filter>Source Files\Core\Events</Filter>
     </ClInclude>
     <ClInclude Include="KeyEvent.h">
-      <Filter>Source Files\core\events</Filter>
+      <Filter>Source Files\Core\Events</Filter>
     </ClInclude>
     <ClInclude Include="MouseEvent.h">
-      <Filter>Source Files\core\events</Filter>
+      <Filter>Source Files\Core\Events</Filter>
     </ClInclude>
     <ClInclude Include="ApplicationEvent.h">
-      <Filter>Source Files\core\events</Filter>
+      <Filter>Source Files\Core\Events</Filter>
     </ClInclude>
     <ClInclude Include="kablunkpch.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Window.h">
-      <Filter>Source Files\core\window</Filter>
-    </ClInclude>
-    <ClInclude Include="Layer.h">
-      <Filter>Source Files\core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LayerStack.h">
-      <Filter>Source Files\core\Header Files</Filter>
+      <Filter>Source Files\Core\window</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiLayer.h">
-      <Filter>Source Files\imgui</Filter>
+      <Filter>Source Files\Imgui</Filter>
     </ClInclude>
     <ClInclude Include="WindowsWindow.h">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>Source Files\core\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WindowsInput.h">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="KeyCodes.h">
-      <Filter>Source Files\core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseButtonCodes.h">
-      <Filter>Source Files\core\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicsContext.h">
-      <Filter>Source Files\core\Renderer</Filter>
+      <Filter>Source Files\Core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLContext.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Source Files\core\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Buffer.h">
-      <Filter>Source Files\core\Renderer</Filter>
+      <Filter>Source Files\Core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLBuffer.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h">
-      <Filter>Source Files\core\Renderer</Filter>
+      <Filter>Source Files\Core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLShader.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Source Files\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyCodes.h">
+      <Filter>Source Files\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseButtonCodes.h">
+      <Filter>Source Files\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Source Files\Core\Renderer\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerStack.h">
+      <Filter>Source Files\Core\window</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer.h">
+      <Filter>Source Files\Core\window</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
