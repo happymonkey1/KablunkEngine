@@ -81,6 +81,21 @@
     <ClCompile Include="OpenGLContext.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLBuffer.cpp">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLShader.cpp">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h">
@@ -144,6 +159,21 @@
       <Filter>Source Files\core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLContext.h">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLBuffer.h">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Source Files\core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLShader.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
   </ItemGroup>

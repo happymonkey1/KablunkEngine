@@ -8,8 +8,7 @@ extern kablunk::Application* kablunk::CreateApplication();
 
 int main(int argc, char** argv) {
 	kablunk::Log::Init();
-	kablunk::Log::GetCoreLogger()->warn("test");
-
+	KB_CORE_WARN("test");
 
 	kablunk::Application* app = kablunk::CreateApplication();
 	app->Run();

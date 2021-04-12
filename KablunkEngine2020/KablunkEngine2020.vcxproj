@@ -110,6 +110,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="ImGuiBuild.cpp" />
     <ClCompile Include="ImGuiLayer.cpp" />
     <ClCompile Include="kablunkpch.cpp">
@@ -119,13 +120,18 @@
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="LayerStack.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="OpenGLBuffer.cpp" />
     <ClCompile Include="OpenGLContext.cpp" />
+    <ClCompile Include="OpenGLShader.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="WindowsInput.cpp" />
     <ClCompile Include="WindowsWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="ApplicationEvent.h" />
+    <ClInclude Include="Buffer.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="EntryPoint.h" />
     <ClInclude Include="Event.h" />
@@ -141,7 +147,11 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="MouseButtonCodes.h" />
     <ClInclude Include="MouseEvent.h" />
+    <ClInclude Include="OpenGLBuffer.h" />
     <ClInclude Include="OpenGLContext.h" />
+    <ClInclude Include="OpenGLShader.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsInput.h" />
     <ClInclude Include="WindowsWindow.h" />
