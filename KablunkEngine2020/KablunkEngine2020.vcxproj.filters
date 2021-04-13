@@ -179,5 +179,8 @@
     <ClInclude Include="Layer.h">
       <Filter>Source Files\Core\window</Filter>
     </ClInclude>
+    <ClInclude Include="VertexArray.h">
+      <Filter>Source Files\Core\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -152,6 +152,7 @@
     <ClInclude Include="OpenGLShader.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="VertexArray.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsInput.h" />
     <ClInclude Include="WindowsWindow.h" />
