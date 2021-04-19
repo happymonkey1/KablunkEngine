@@ -1,11 +1,11 @@
 #include <kablunkpch.h>
-#include <Kablunk.h>
+#include <kablunk.h>
 
 #include "imgui.h"
-#include "Shader.h"
-#include "VertexArray.h"
-#include "Buffer.h"
-#include "Renderer.h"
+#include "Kablunk/Renderer/Shader.h"
+#include "Kablunk/Renderer/VertexArray.h"
+#include "Kablunk/Renderer/Buffer.h"
+#include "Kablunk/Renderer/Renderer.h"
 
 //#include "imgui.h"
 class ExampleLayer : public Kablunk::Layer {

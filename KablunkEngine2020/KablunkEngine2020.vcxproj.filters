@@ -10,204 +10,188 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\Platform">
-      <UniqueIdentifier>{c7bfbf92-432b-4e4b-b01f-c4d43c86e464}</UniqueIdentifier>
+      <UniqueIdentifier>{19df3ae7-2fb7-4828-a4e3-50a8e3a40656}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kablunk">
+      <UniqueIdentifier>{0319f4f6-f4d0-4178-944d-e03a89720d47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kablunk\Core">
+      <UniqueIdentifier>{343224e3-4273-4d81-a308-0c51619bf778}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kablunk\Renderer">
+      <UniqueIdentifier>{cb6406dd-12ea-4f7b-bc70-f70389fe43e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kablunk\Imgui">
+      <UniqueIdentifier>{d6cedb3d-b4fd-4e3f-8dfc-4483eedbedd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kablunk\Events">
+      <UniqueIdentifier>{feed9c43-7c57-4e2f-8c2c-84c5a593938b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Platform\Windows">
-      <UniqueIdentifier>{d6fc79c4-a803-4e45-bc3e-753b878e6fd3}</UniqueIdentifier>
+      <UniqueIdentifier>{d37a5f99-6366-453d-aaa5-ce3e0b4b4c83}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Platform\OpenGL">
-      <UniqueIdentifier>{45e2b91d-cdbe-49f9-8169-415b0088de94}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Platform\DirectX">
-      <UniqueIdentifier>{22fcf0c5-ceff-40a8-b4b6-2cd8afd67f60}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core">
-      <UniqueIdentifier>{193549a8-a5d8-45d2-9622-3c4298bd43bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Graphics">
-      <UniqueIdentifier>{0cef973c-2c9c-486c-9982-93659bafc350}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Input">
-      <UniqueIdentifier>{df53c728-0b21-43ee-a702-a04774d890ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Math">
-      <UniqueIdentifier>{9686d2dc-5abd-4a3c-8141-6d4d1ace1032}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Source Files\Core\Events">
-      <UniqueIdentifier>{fe508764-01cf-4b34-97d1-a764b4a549bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\window">
-      <UniqueIdentifier>{13f4546d-4f56-4b8a-8dd5-d1bb1878fd2f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Renderer">
-      <UniqueIdentifier>{7fb1dd80-3b9a-4997-8a17-30722ba36164}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Renderer\Shaders">
-      <UniqueIdentifier>{d8263dae-cec3-4fc6-b4f0-848c2f94cd39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Imgui">
-      <UniqueIdentifier>{91d91050-ea4f-4251-acbf-435cf8685288}</UniqueIdentifier>
+      <UniqueIdentifier>{c7e2ec34-3515-4e4a-9e7b-73e2ee4a618b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ImGuiLayer.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowsWindow.cpp">
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsInput.cpp">
+    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="ImGuiBuild.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLContext.cpp">
+    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Buffer.cpp">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLBuffer.cpp">
+    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLShader.cpp">
+    <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="kablunkpch.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files\Core\Renderer\Shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="Layer.cpp">
-      <Filter>Source Files\Core\window</Filter>
-    </ClCompile>
-    <ClCompile Include="LayerStack.cpp">
-      <Filter>Source Files\Core\window</Filter>
-    </ClCompile>
-    <ClCompile Include="VertexArray.cpp">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLVertexArray.cpp">
+    <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="RendererAPI.cpp">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCommand.cpp">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLRendererAPI.cpp">
+    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Buffer.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\RenderCommand.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Renderer.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\RendererAPI.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Shader.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\VertexArray.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Imgui\ImGuiBuild.cpp">
+      <Filter>Source Files\Kablunk\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Imgui\ImGuiLayer.cpp">
+      <Filter>Source Files\Kablunk\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Core\Application.cpp">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Core\Layer.cpp">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Core\LayerStack.cpp">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Core\Log.cpp">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\kablunkpch.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Core.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Application.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Log.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Kablunk.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EntryPoint.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Event.h">
-      <Filter>Source Files\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyEvent.h">
-      <Filter>Source Files\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseEvent.h">
-      <Filter>Source Files\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="ApplicationEvent.h">
-      <Filter>Source Files\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="kablunkpch.h">
-      <Filter>Source Files\Core\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Source Files\Core\window</Filter>
-    </ClInclude>
-    <ClInclude Include="ImGuiLayer.h">
-      <Filter>Source Files\Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsWindow.h">
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsInput.h">
+    <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
       <Filter>Source Files\Platform\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsContext.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLContext.h">
+    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Buffer.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLBuffer.h">
+    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLShader.h">
+    <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>Source Files\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyCodes.h">
-      <Filter>Source Files\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseButtonCodes.h">
-      <Filter>Source Files\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Source Files\Core\Renderer\Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="LayerStack.h">
-      <Filter>Source Files\Core\window</Filter>
-    </ClInclude>
-    <ClInclude Include="Layer.h">
-      <Filter>Source Files\Core\window</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexArray.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLVertexArray.h">
+    <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="RendererAPI.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderCommand.h">
-      <Filter>Source Files\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLRendererAPI.h">
+    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\Buffer.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\GraphicsContext.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\RenderCommand.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\Renderer.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\RendererAPI.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\Shader.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\VertexArray.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Events\ApplicationEvent.h">
+      <Filter>Source Files\Kablunk\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Events\Event.h">
+      <Filter>Source Files\Kablunk\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Events\KeyEvent.h">
+      <Filter>Source Files\Kablunk\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Events\MouseEvent.h">
+      <Filter>Source Files\Kablunk\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Imgui\ImGuiBuildConfig.h">
+      <Filter>Source Files\Kablunk\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Imgui\ImGuiLayer.h">
+      <Filter>Source Files\Kablunk\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Application.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Core.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\EntryPoint.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Input.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\KeyCodes.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Layer.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\LayerStack.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Log.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\MouseButtonCodes.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\Window.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\kablunkpch.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
