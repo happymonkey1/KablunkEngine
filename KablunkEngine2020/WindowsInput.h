@@ -2,7 +2,7 @@
 
 #include "Input.h"
 
-namespace kablunk {
+namespace Kablunk {
 	class WindowsInput : public Input {
 	protected:
 		virtual bool IsKeyPressedImpl(int keycode) override;

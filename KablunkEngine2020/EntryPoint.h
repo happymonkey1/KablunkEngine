@@ -1,16 +1,16 @@
 #pragma once
 
-#ifdef KABLUNK_PLATFORM_WINDOWS
+#ifdef KB_PLATFORM_WINDOWS
 
 
-extern kablunk::Application* kablunk::CreateApplication();
+extern Kablunk::Application* Kablunk::CreateApplication();
 
 
 int main(int argc, char** argv) {
-	kablunk::Log::Init();
+	Kablunk::Log::Init();
 	KB_CORE_WARN("test");
 
-	kablunk::Application* app = kablunk::CreateApplication();
+	Kablunk::Application* app = Kablunk::CreateApplication();
 	app->Run();
 
 	delete app;

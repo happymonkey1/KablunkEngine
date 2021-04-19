@@ -4,20 +4,20 @@
 #include "Renderer.h"
 #include "OpenGLVertexArray.h"
 
-namespace kablunk
+namespace Kablunk
 {
 	VertexArray* VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::None:
-			KB_CORE_FATAL("RendererAPI::NONE is not supported!");
+		case RendererAPI::API::None:
+			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
-		case RendererAPI::OpenGL:
+		case RendererAPI::API::OpenGL:
 			return new OpenGLVertexArray();
 		default:
-			KB_CORE_FATAL("Unkown RenderAPI!");
+			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
 			return nullptr;
 		}
 	}

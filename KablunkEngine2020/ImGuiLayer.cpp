@@ -16,7 +16,7 @@
 #include <GLFW/glfw3.h>
 
 
-namespace kablunk {
+namespace Kablunk {
 	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") {
 		m_Time = 0.0f;
 	}

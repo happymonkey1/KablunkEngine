@@ -3,7 +3,7 @@
 #include "Shader.h"
 #include "Renderer.h"
 
-namespace kablunk
+namespace Kablunk
 {
 	class OpenGLShader : public Shader
 	{

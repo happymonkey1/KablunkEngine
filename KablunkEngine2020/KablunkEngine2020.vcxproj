@@ -62,7 +62,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUG_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -87,7 +87,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>KABLUNK_PLATFORM_WINDOWS;KABLUNK_BUILD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUGNDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -122,9 +122,14 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="OpenGLBuffer.cpp" />
     <ClCompile Include="OpenGLContext.cpp" />
+    <ClCompile Include="OpenGLRendererAPI.cpp" />
     <ClCompile Include="OpenGLShader.cpp" />
+    <ClCompile Include="OpenGLVertexArray.cpp" />
+    <ClCompile Include="RenderCommand.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RendererAPI.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="VertexArray.cpp" />
     <ClCompile Include="WindowsInput.cpp" />
     <ClCompile Include="WindowsWindow.cpp" />
   </ItemGroup>
@@ -149,8 +154,12 @@
     <ClInclude Include="MouseEvent.h" />
     <ClInclude Include="OpenGLBuffer.h" />
     <ClInclude Include="OpenGLContext.h" />
+    <ClInclude Include="OpenGLRendererAPI.h" />
     <ClInclude Include="OpenGLShader.h" />
+    <ClInclude Include="OpenGLVertexArray.h" />
+    <ClInclude Include="RenderCommand.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RendererAPI.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="VertexArray.h" />
     <ClInclude Include="Window.h" />

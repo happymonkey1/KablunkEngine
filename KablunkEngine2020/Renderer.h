@@ -1,22 +1,26 @@
 #ifndef RENDERER_H
 #define RENDERER_H
+#include "RenderCommand.h"
 
-namespace kablunk
+
+namespace Kablunk
 {
-	enum class RendererAPI
-	{
-		None = 0, OpenGL = 1
-	};
+	
 
 	
 
 	class Renderer
 	{
 	public:
+		static void BeginScene();
+		static void EndScene();
+
+		static void Submit(const std::shared_ptr<VertexArray>& vertexArray);
+
 		using RendererID = uint32_t;
-		inline static RendererAPI GetAPI() { return s_RendererAPI; };
+		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); };
 	private:
-		static RendererAPI s_RendererAPI;
+
 	};
 
 	

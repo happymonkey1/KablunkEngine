@@ -4,7 +4,7 @@
 #include "KeyCodes.h"
 #include "MouseButtonCodes.h"
 
-namespace kablunk {
+namespace Kablunk {
 
 	class KABLUNK_API Input {
 	public:

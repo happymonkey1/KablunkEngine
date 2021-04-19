@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "LayerStack.h"
 
-namespace kablunk {
+namespace Kablunk {
 	LayerStack::LayerStack() {}
 
 	LayerStack::~LayerStack() {

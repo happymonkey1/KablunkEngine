@@ -11,7 +11,7 @@
 
 
 
-namespace kablunk {
+namespace Kablunk {
 
     static bool s_GLFWInitialized = false;
 
@@ -43,9 +43,7 @@ namespace kablunk {
         
 
         if (!s_GLFWInitialized) {
-            int success = glfwInit();
-            if (!success)
-                KB_CORE_FATAL("COULD NOT INITIALIZE GLFW");
+            KB_CORE_ASSERT(glfwInit(), "COULD NOT INITIALIZE GLFW");
 
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitialized = true;

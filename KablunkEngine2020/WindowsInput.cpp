@@ -4,7 +4,7 @@
 #include "Application.h"
 #include <GLFW/glfw3.h>
 
-namespace kablunk {
+namespace Kablunk {
 
 	Input* Input::s_Instance = new WindowsInput;
 

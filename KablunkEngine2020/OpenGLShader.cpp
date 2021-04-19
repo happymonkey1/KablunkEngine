@@ -3,7 +3,7 @@
 
 #include "glad/glad.h"
 
-namespace kablunk
+namespace Kablunk
 {
 
 	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)

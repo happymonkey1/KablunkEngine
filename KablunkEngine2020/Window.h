@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "Event.h"
 
-namespace kablunk {
+namespace Kablunk {
 
 	struct WindowProps {
 		std::string Title;

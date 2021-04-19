@@ -4,7 +4,7 @@
 #include "Buffer.h"
 #include "Renderer.h"
 
-namespace kablunk
+namespace Kablunk
 {
 	/*
 	* ========================================

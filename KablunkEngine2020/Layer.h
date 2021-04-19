@@ -3,7 +3,7 @@
 #include "Event.h"
 
 
-namespace kablunk {
+namespace Kablunk {
 	class KABLUNK_API Layer
 	{
 	public:

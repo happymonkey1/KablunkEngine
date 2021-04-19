@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace kablunk {
+namespace Kablunk {
 	class Shader {
 	public:
 		virtual ~Shader() {}

@@ -4,19 +4,19 @@
 #include "Renderer.h"
 #include "OpenGLShader.h"
 
-namespace kablunk
+namespace Kablunk
 {
 	Shader* Shader::Create(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::None:
-			KB_CORE_FATAL("RendererAPI::None is not supported when creating Shader!");
+		case RendererAPI::API::None:
+			KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!");
 			return nullptr;
-		case RendererAPI::OpenGL:
+		case RendererAPI::API::OpenGL:
 			return new OpenGLShader(vertexSrc, fragmentSrc);;
 		default:
-			KB_CORE_FATAL("Unkown RenderAPI!");
+			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
 			return nullptr;
 		}
 	}

@@ -3,7 +3,7 @@
 #include "spdlog/spdlog.h"
 
 
-namespace kablunk {
+namespace Kablunk {
 
 	class KABLUNK_API Log {
 	public:
@@ -20,14 +20,14 @@ namespace kablunk {
 }
 
 
-#define KB_CORE_ERROR(...) ::kablunk::Log::GetCoreLogger()->error(__VA_ARGS__)
-#define KB_CORE_WARN(...) ::kablunk::Log::GetCoreLogger()->warn(__VA_ARGS__)
-#define KB_CORE_INFO(...) ::kablunk::Log::GetCoreLogger()->info(__VA_ARGS__)
-#define KB_CORE_TRACE(...) ::kablunk::Log::GetCoreLogger()->trace(__VA_ARGS__)
-#define KB_CORE_FATAL(...) ::kablunk::Log::GetCoreLogger()->critical(__VA_ARGS__)
+#define KB_CORE_ERROR(...)   ::Kablunk::Log::GetCoreLogger()->error(__VA_ARGS__)
+#define KB_CORE_WARN(...)    ::Kablunk::Log::GetCoreLogger()->warn(__VA_ARGS__)
+#define KB_CORE_INFO(...)    ::Kablunk::Log::GetCoreLogger()->info(__VA_ARGS__)
+#define KB_CORE_TRACE(...)   ::Kablunk::Log::GetCoreLogger()->trace(__VA_ARGS__)
+#define KB_CORE_FATAL(...)   ::Kablunk::Log::GetCoreLogger()->critical(__VA_ARGS__)
 
-#define KB_CLIENT_ERROR(...) ::kablunk::Log::GetClientLogger()->error(__VA_ARGS__)
-#define KB_CLIENT_WARN(...) ::kablunk::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define KB_CLIENT_INFO(...) ::kablunk::Log::GetClientLogger()->info(__VA_ARGS__)
-#define KB_CLIENT_TRACE(...) ::kablunk::Log::GetClientLogger()->trace(__VA_ARGS__)
-#define KB_CLIENT_FATAL(...) ::kablunk::Log::GetClientLogger()->critical(__VA_ARGS__)
+#define KB_CLIENT_ERROR(...) ::Kablunk::Log::GetClientLogger()->error(__VA_ARGS__)
+#define KB_CLIENT_WARN(...)  ::Kablunk::Log::GetClientLogger()->warn(__VA_ARGS__)
+#define KB_CLIENT_INFO(...)  ::Kablunk::Log::GetClientLogger()->info(__VA_ARGS__)
+#define KB_CLIENT_TRACE(...) ::Kablunk::Log::GetClientLogger()->trace(__VA_ARGS__)
+#define KB_CLIENT_FATAL(...) ::Kablunk::Log::GetClientLogger()->critical(__VA_ARGS__)

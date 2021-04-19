@@ -7,7 +7,7 @@
 
 
 
-namespace kablunk {
+namespace Kablunk {
 	class KABLUNK_API ImGuiLayer : public Layer
 	{
 	public:

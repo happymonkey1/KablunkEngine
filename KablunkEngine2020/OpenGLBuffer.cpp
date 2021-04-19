@@ -2,7 +2,7 @@
 #include "OpenGLBuffer.h"
 
 #include "glad/glad.h"
-namespace kablunk
+namespace Kablunk
 {
 	/*
 	* ========================================

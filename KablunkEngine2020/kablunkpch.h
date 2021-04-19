@@ -14,8 +14,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Core.h"
 #include "Log.h"
 
-#ifdef KABLUNK_PLATFORM_WINDOWS
+#ifdef KB_PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif

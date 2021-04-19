@@ -1,7 +1,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-namespace kablunk 
+namespace Kablunk 
 {
 
 	enum class ShaderDataType

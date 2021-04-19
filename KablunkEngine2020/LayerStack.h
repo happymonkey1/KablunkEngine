@@ -2,7 +2,7 @@
 #include "Core.h"
 #include "Layer.h"
 
-namespace kablunk {
+namespace Kablunk {
 	class KABLUNK_API LayerStack
 	{
 	public: 
