@@ -1,16 +1,12 @@
 #include <kablunkpch.h>
 #include <kablunk.h>
 
-#include "imgui.h"
-#include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/VertexArray.h"
-#include "Kablunk/Renderer/Buffer.h"
-#include "Kablunk/Renderer/Renderer.h"
 
 //#include "imgui.h"
 class ExampleLayer : public Kablunk::Layer {
 public:
 	ExampleLayer() 
+		: Layer("Example"), m_Camera{-1.6f, 1.6f, -0.9f, 0.9f}, m_CameraPosition{0.0f}
 	{
 		m_TriangleVA.reset(Kablunk::VertexArray::Create());
 		m_SquareVA.reset(Kablunk::VertexArray::Create());
@@ -64,15 +60,17 @@ public:
 			
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
+
+			uniform mat4 u_ViewProjection;
 			
 			out vec3 v_Position;
 			out vec4 v_Color;
 
 			void main()
 			{
-				gl_Position = vec4(a_Position, 1.0);
 				v_Position = a_Position;
 				v_Color = a_Color;
+				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
 			}
 
 		)";
@@ -97,11 +95,13 @@ public:
 			
 			layout(location = 0) in vec3 a_Position;
 			
+			uniform mat4 u_ViewProjection;
+
 			out vec3 v_Position;
 
 			void main()
 			{
-				gl_Position = vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
 				v_Position = a_Position;
 			}
 
@@ -124,19 +124,37 @@ public:
 		m_BlueShader.reset(Kablunk::Shader::Create(blueVertexSrc, blueFragmentSrc));
 	}
 
-	void OnUpdate() override {
+	void OnUpdate(Kablunk::Timestep ts) override {
 		//KB_CLIENT_INFO("ExampleLayer::Update");
+
+		KB_CLIENT_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMiliseconds());
+
+		if (Kablunk::Input::IsKeyPressed(KB_KEY_LEFT))
+			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
+		else if (Kablunk::Input::IsKeyPressed(KB_KEY_RIGHT))
+			m_CameraPosition.x += m_CameraMoveSpeed * ts;
+
+
+		if (Kablunk::Input::IsKeyPressed(KB_KEY_UP))
+			m_CameraPosition.y += m_CameraMoveSpeed * ts;
+		else if (Kablunk::Input::IsKeyPressed(KB_KEY_DOWN))
+			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
+
+		if (Kablunk::Input::IsKeyPressed(KB_KEY_A))
+			m_CameraRotation += m_CameraRotationSpeed * ts;
+		else if (Kablunk::Input::IsKeyPressed(KB_KEY_D))
+			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Kablunk::RenderCommand::Clear();
 
-		Kablunk::Renderer::BeginScene();
+		m_Camera.SetPosition(m_CameraPosition);
+		m_Camera.SetRotation(m_CameraRotation);
 
-		m_BlueShader->Bind();
-		Kablunk::Renderer::Submit(m_SquareVA);
+		Kablunk::Renderer::BeginScene(m_Camera);
 
-		m_TriangleShader->Bind();
-		Kablunk::Renderer::Submit(m_TriangleVA);
+		Kablunk::Renderer::Submit(m_BlueShader, m_SquareVA);
+		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA);
 
 		Kablunk::Renderer::EndScene();
 
@@ -153,12 +171,15 @@ public:
 	void OnEvent(Kablunk::Event& e) {
 		//KABLUNK_CLIENT_TRACE("{0}", e);
 
+		/*Kablunk::EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<Kablunk::KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(ExampleLayer::OnKeyPressedEvent));
+
 		if (e.GetEventType() == Kablunk::EventType::KeyPressed) {
 			Kablunk::KeyPressedEvent& keyEvent = (Kablunk::KeyPressedEvent&)e;
 
 			if (keyEvent.GetKeyCode() == KB_KEY_TAB)
 				KB_CLIENT_TRACE("Tab key pressed");
-		}
+		}*/
 	}
 private:
 	std::shared_ptr<Kablunk::Shader> m_TriangleShader;
@@ -166,6 +187,13 @@ private:
 
 	std::shared_ptr<Kablunk::VertexArray> m_TriangleVA;
 	std::shared_ptr<Kablunk::VertexArray> m_SquareVA;
+
+	Kablunk::OrthographicCamera m_Camera;
+	glm::vec3 m_CameraPosition;
+	float m_CameraRotation = 0.0f;
+
+	float m_CameraMoveSpeed = 1.0f;
+	float m_CameraRotationSpeed = 10.0f;
 };
 
 

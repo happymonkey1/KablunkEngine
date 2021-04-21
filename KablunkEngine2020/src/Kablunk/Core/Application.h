@@ -2,6 +2,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Window.h"
 #include "Kablunk/Core/LayerStack.h"
+#include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Events/ApplicationEvent.h"
 
@@ -30,11 +31,13 @@ namespace Kablunk {
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 
+	private:
 		std::unique_ptr<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
-
+		
+		float m_LastFrameTime = 0.0f;
 		
 		
 	private:

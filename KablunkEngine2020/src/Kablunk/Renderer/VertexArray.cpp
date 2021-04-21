@@ -17,7 +17,7 @@ namespace Kablunk
 		case RendererAPI::API::OpenGL:
 			return new OpenGLVertexArray();
 		default:
-			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
+			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
 			return nullptr;
 		}
 	}
