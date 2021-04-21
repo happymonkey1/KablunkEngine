@@ -21,8 +21,10 @@ namespace Kablunk
 		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
 
 		static inline API GetAPI() { return s_API; };
+		static inline bool GetVsync() { return s_VSYNC; };
 	private:
 		static API s_API;
+		static bool s_VSYNC;
 	};
 
 }

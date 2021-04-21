@@ -6,6 +6,8 @@
 #include "Kablunk/Events/MouseEvent.h"
 #include "Kablunk/Events/ApplicationEvent.h"
 
+#include "Kablunk/Renderer/RendererAPI.h"
+
 #include "Platform/OpenGL/OpenGLContext.h"
 #include "GLFW/glfw3.h"
 

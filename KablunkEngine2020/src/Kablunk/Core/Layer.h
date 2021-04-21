@@ -1,7 +1,7 @@
 #pragma once
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Events/Event.h"
-
+#include "Kablunk/Core/Timestep.h"
 
 namespace Kablunk {
 	class KABLUNK_API Layer
@@ -12,7 +12,7 @@ namespace Kablunk {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 
