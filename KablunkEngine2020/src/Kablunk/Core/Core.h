@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 
 #ifdef KB_PLATFORM_WINDOWS
 	#if KB_DYNAMIC_LINK
@@ -31,3 +32,12 @@
 #define BIT(x) (1 << x)
 
 #define KABLUNK_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+
+namespace Kablunk
+{
+	template <typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template <typename T>
+	using Ref = std::shared_ptr<T>;
+}

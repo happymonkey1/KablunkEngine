@@ -32,10 +32,10 @@ public:
 			-0.5f,  0.5f, 0.0f
 		};
 
-		std::shared_ptr<Kablunk::VertexBuffer> triangleVB;
+		Kablunk::Ref<Kablunk::VertexBuffer> triangleVB;
 		triangleVB.reset(Kablunk::VertexBuffer::Create(vertices, sizeof(vertices)));
 
-		std::shared_ptr<Kablunk::VertexBuffer> squareVB;
+		Kablunk::Ref<Kablunk::VertexBuffer> squareVB;
 		squareVB.reset(Kablunk::VertexBuffer::Create(sqrVertices, sizeof(sqrVertices)));
 
 		triangleVB->SetLayout({
@@ -50,13 +50,13 @@ public:
 		m_SquareVA->AddVertexBuffer(squareVB);
 
 		uint32_t indices[3]{ 0, 1, 2 };
-		std::shared_ptr<Kablunk::IndexBuffer> triangleIB;
+		Kablunk::Ref<Kablunk::IndexBuffer> triangleIB;
 		triangleIB.reset(Kablunk::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 
 		m_TriangleVA->SetIndexBuffer(triangleIB);
 
 		uint32_t squareIndices[6]{ 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<Kablunk::IndexBuffer> squareIB;
+		Kablunk::Ref<Kablunk::IndexBuffer> squareIB;
 		squareIB.reset(Kablunk::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 
 		m_SquareVA->SetIndexBuffer(squareIB);
@@ -248,11 +248,11 @@ public:
 		}*/
 	}
 private:
-	std::shared_ptr<Kablunk::Shader> m_TriangleShader;
-	std::shared_ptr<Kablunk::Shader> m_FlatColorShader;
+	Kablunk::Ref<Kablunk::Shader> m_TriangleShader;
+	Kablunk::Ref<Kablunk::Shader> m_FlatColorShader;
 
-	std::shared_ptr<Kablunk::VertexArray> m_TriangleVA;
-	std::shared_ptr<Kablunk::VertexArray> m_SquareVA;
+	Kablunk::Ref<Kablunk::VertexArray> m_TriangleVA;
+	Kablunk::Ref<Kablunk::VertexArray> m_SquareVA;
 
 	Kablunk::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
