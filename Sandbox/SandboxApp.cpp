@@ -1,13 +1,19 @@
 #include <kablunkpch.h>
 #include <kablunk.h>
 
+#include "Platform/OpenGL/OpenGLShader.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 //#include "imgui.h"
 class ExampleLayer : public Kablunk::Layer {
 public:
-	ExampleLayer() 
-		: Layer("Example"), m_Camera{-1.6f, 1.6f, -0.9f, 0.9f}, m_CameraPosition{0.0f}
+	ExampleLayer()
+		: Layer("Example"), m_Camera{ -1.6f, 1.6f, -0.9f, 0.9f }, m_CameraPosition{ 0.0f }, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
 	{
+
 		m_TriangleVA.reset(Kablunk::VertexArray::Create());
 		m_SquareVA.reset(Kablunk::VertexArray::Create());
 
@@ -20,10 +26,10 @@ public:
 
 		float sqrVertices[3 * 4]
 		{
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.5f,  0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f
 		};
 
 		std::shared_ptr<Kablunk::VertexBuffer> triangleVB;
@@ -62,6 +68,7 @@ public:
 			layout(location = 1) in vec4 a_Color;
 
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 			
 			out vec3 v_Position;
 			out vec4 v_Color;
@@ -70,7 +77,7 @@ public:
 			{
 				v_Position = a_Position;
 				v_Color = a_Color;
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 			}
 
 		)";
@@ -96,38 +103,50 @@ public:
 			layout(location = 0) in vec3 a_Position;
 			
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 
 			out vec3 v_Position;
 
 			void main()
 			{
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjection * u_Transform  * vec4(a_Position, 1.0);
 				v_Position = a_Position;
 			}
 
 		)";
 
-		std::string blueFragmentSrc = R"(
+		std::string flatColorFragmentSrc = R"(
 			#version 450 core
 			
 			layout(location = 0) out vec4 o_Color;
 			in vec3 v_Position;
+			uniform vec3 u_Color;
 
 			void main()
 			{
-				o_Color = vec4(0.2, 0.3, 0.8, 1.0);
+				o_Color = vec4(u_Color, 1.0f);
 			}
 
 		)";
 
 		m_TriangleShader.reset(Kablunk::Shader::Create(vertexSrc, fragmentSrc));
-		m_BlueShader.reset(Kablunk::Shader::Create(blueVertexSrc, blueFragmentSrc));
+		m_FlatColorShader.reset(Kablunk::Shader::Create(blueVertexSrc, flatColorFragmentSrc));
 	}
+
+	~ExampleLayer()
+	{
+
+	}
+
 
 	void OnUpdate(Kablunk::Timestep ts) override {
 		//KB_CLIENT_INFO("ExampleLayer::Update");
 
-		KB_CLIENT_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMiliseconds());
+		
+
+		// ==========
+		//   Camera
+		// ==========
 
 		if (Kablunk::Input::IsKeyPressed(KB_KEY_LEFT))
 			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
@@ -140,9 +159,10 @@ public:
 		else if (Kablunk::Input::IsKeyPressed(KB_KEY_DOWN))
 			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
 
-		if (Kablunk::Input::IsKeyPressed(KB_KEY_A))
+
+		if (Kablunk::Input::IsKeyPressed(KB_KEY_Q))
 			m_CameraRotation += m_CameraRotationSpeed * ts;
-		else if (Kablunk::Input::IsKeyPressed(KB_KEY_D))
+		else if (Kablunk::Input::IsKeyPressed(KB_KEY_E))
 			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
@@ -153,18 +173,64 @@ public:
 
 		Kablunk::Renderer::BeginScene(m_Camera);
 
-		Kablunk::Renderer::Submit(m_BlueShader, m_SquareVA);
-		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA);
+		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(.1f));
 
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TriangleShader)->Bind();
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->Bind();
+
+		for (int y = 0; y < 20; ++y)
+		{
+			for (int x = 0; x < 20; ++x)
+			{
+				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
+				glm::mat4 squareTransform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				if (y % 2 == 0)
+				{
+					if (x % 2 == 0)
+						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileAColor);
+					else
+						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileBColor);
+				}
+				else
+				{
+					if (x % 2 == 1)
+						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileAColor);
+					else
+						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileBColor);
+				}
+				Kablunk::Renderer::Submit(m_FlatColorShader, m_SquareVA, squareTransform);
+			}
+		}
+
+		glm::mat4 triangleTransform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
+		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA, triangleTransform);
+		
 		Kablunk::Renderer::EndScene();
-
-		if (Kablunk::Input::IsKeyPressed(KB_KEY_TAB))
-			KB_CLIENT_INFO("Tab key is pressed");
 	}
 
-	virtual void OnImGuiRender() override {
-		ImGui::Begin("Test");
-		ImGui::Text("Hello World");
+	void OnImGuiRender(Kablunk::Timestep ts) override {
+		if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
+		{
+			float miliseconds = ts.GetMiliseconds();
+			m_ImguiDeltaTime = miliseconds;
+			m_ImguiFPS = 1000.0f / miliseconds;
+			m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
+		}
+		else
+			m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
+
+		ImGui::Begin("Debug Information");
+		
+		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
+		ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
+
+		ImGui::End();
+
+		ImGui::Begin("Tileset Colors");
+
+		ImGui::ColorEdit3("TileA", glm::value_ptr(m_TileAColor));
+		ImGui::ColorEdit3("TileB", glm::value_ptr(m_TileBColor));
+
 		ImGui::End();
 	}
 
@@ -183,7 +249,7 @@ public:
 	}
 private:
 	std::shared_ptr<Kablunk::Shader> m_TriangleShader;
-	std::shared_ptr<Kablunk::Shader> m_BlueShader;
+	std::shared_ptr<Kablunk::Shader> m_FlatColorShader;
 
 	std::shared_ptr<Kablunk::VertexArray> m_TriangleVA;
 	std::shared_ptr<Kablunk::VertexArray> m_SquareVA;
@@ -192,8 +258,17 @@ private:
 	glm::vec3 m_CameraPosition;
 	float m_CameraRotation = 0.0f;
 
-	float m_CameraMoveSpeed = 1.0f;
+	float m_CameraMoveSpeed = 5.0f;
 	float m_CameraRotationSpeed = 10.0f;
+	glm::vec3 m_TrianglePosition;
+
+	float m_ImguiUpdateCounter = 0.0f;
+	float m_ImguiUpdateCounterMax = .1f;
+	float m_ImguiDeltaTime = 10.0f;
+	float m_ImguiFPS = 10.0f;
+
+	glm::vec3 m_TileAColor;
+	glm::vec3 m_TileBColor;
 };
 
 

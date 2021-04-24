@@ -16,7 +16,7 @@ namespace Kablunk {
 
 		virtual void OnDetach() override;
 		virtual void OnAttach() override;
-		virtual void OnImGuiRender() override;
+		virtual void OnImGuiRender(Timestep ts) override;
 		void Begin();
 		void End();
 	private:
