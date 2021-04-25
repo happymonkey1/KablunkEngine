@@ -20,6 +20,9 @@ namespace Kablunk {
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 			KB_CORE_FATAL("GLAD FAILED TO INITIALIZE");
 
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		KB_CORE_ASSERT(status, "Failed to initialize Glad!");
+
 		KB_CORE_INFO("OpengGL Info:");
 		KB_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
 		KB_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));

@@ -41,7 +41,7 @@ namespace Kablunk {
         m_Data.Height = props.Height;
 
         
-        //KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
+        KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
         
 
         if (!s_GLFWInitialized) {
@@ -55,6 +55,7 @@ namespace Kablunk {
 
         m_Context = new OpenGLContext(m_Window);
         m_Context->Init();
+        KB_CORE_INFO("Context created!");
         
         
         glfwSetWindowUserPointer(m_Window, &m_Data);

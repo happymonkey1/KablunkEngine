@@ -19,17 +19,17 @@ public:
 
 		float vertices[3 * 7]
 		{
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-			0.0f, 0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 0.5f,
+			0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 0.5f,
+			0.0f, 0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 0.5f
 		};
 
-		float sqrVertices[3 * 4]
+		float sqrVertices[5 * 4]
 		{
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
 		Kablunk::Ref<Kablunk::VertexBuffer> triangleVB;
@@ -45,7 +45,8 @@ public:
 		m_TriangleVA->AddVertexBuffer(triangleVB);
 
 		squareVB->SetLayout({
-			{ Kablunk::ShaderDataType::Float3, "a_Position" }
+			{ Kablunk::ShaderDataType::Float3, "a_Position" },
+			{ Kablunk::ShaderDataType::Float2, "a_TexCoord" }
 			});
 		m_SquareVA->AddVertexBuffer(squareVB);
 
@@ -91,11 +92,53 @@ public:
 
 			void main()
 			{
-				o_Color = vec4(v_Position * 0.5 + 0.5, 1.0);
+				o_Color = vec4(v_Position * 0.5 + 0.5, 0.5);
 				o_Color = v_Color;
 			}
 
 		)";
+
+		// ==================
+		//   Texture Shader
+		// ==================
+
+		std::string textureVertexSrc = R"(
+			#version 450 core
+			
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec2 a_TexCoord;
+
+			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
+			
+			out vec2 v_TexCoord;
+
+			void main()
+			{
+				v_TexCoord = a_TexCoord;
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
+			}
+
+		)";
+
+		std::string textureFragmentSrc = R"(
+			#version 450 core
+			
+			layout(location = 0) out vec4 o_Color;
+			
+			in vec2 v_TexCoord;
+			
+
+			uniform sampler2D u_Texture;
+
+			void main()
+			{
+				o_Color = texture(u_Texture, v_TexCoord);
+			}
+
+		)";
+
+		// ===============
 
 		std::string blueVertexSrc = R"(
 			#version 450 core
@@ -131,6 +174,13 @@ public:
 
 		m_TriangleShader.reset(Kablunk::Shader::Create(vertexSrc, fragmentSrc));
 		m_FlatColorShader.reset(Kablunk::Shader::Create(blueVertexSrc, flatColorFragmentSrc));
+		m_TextureShader.reset(Kablunk::Shader::Create(textureVertexSrc, textureFragmentSrc));
+
+		m_Texture = Kablunk::Texture2D::Create("assets/textures/missing_texture_64x.png");
+		m_Logo = Kablunk::Texture2D::Create("assets/textures/test_logo2.png");
+
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->Bind();
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	~ExampleLayer()
@@ -165,7 +215,7 @@ public:
 		else if (Kablunk::Input::IsKeyPressed(KB_KEY_E))
 			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
-		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Kablunk::RenderCommand::Clear();
 
 		m_Camera.SetPosition(m_CameraPosition);
@@ -177,6 +227,7 @@ public:
 
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TriangleShader)->Bind();
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->Bind();
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->Bind();
 
 		for (int y = 0; y < 20; ++y)
 		{
@@ -201,6 +252,12 @@ public:
 				Kablunk::Renderer::Submit(m_FlatColorShader, m_SquareVA, squareTransform);
 			}
 		}
+
+		m_Texture->Bind();
+		Kablunk::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		m_Logo->Bind();
+		Kablunk::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.25f)));
+		
 
 		glm::mat4 triangleTransform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
 		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA, triangleTransform);
@@ -250,9 +307,13 @@ public:
 private:
 	Kablunk::Ref<Kablunk::Shader> m_TriangleShader;
 	Kablunk::Ref<Kablunk::Shader> m_FlatColorShader;
+	Kablunk::Ref<Kablunk::Shader> m_TextureShader;
 
 	Kablunk::Ref<Kablunk::VertexArray> m_TriangleVA;
 	Kablunk::Ref<Kablunk::VertexArray> m_SquareVA;
+
+	Kablunk::Ref<Kablunk::Texture2D> m_Texture;
+	Kablunk::Ref<Kablunk::Texture2D> m_Logo;
 
 	Kablunk::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;

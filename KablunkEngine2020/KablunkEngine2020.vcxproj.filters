@@ -33,6 +33,12 @@
     <Filter Include="Source Files\Platform\OpenGL">
       <UniqueIdentifier>{c7e2ec34-3515-4e4a-9e7b-73e2ee4a618b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="vendor">
+      <UniqueIdentifier>{1a44f799-0b49-4c5c-9ba1-7a0632c2543a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\stb_image">
+      <UniqueIdentifier>{140ab378-1282-47eb-b652-e7cec5944931}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
@@ -106,6 +112,15 @@
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLTimer.cpp">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Texture.cpp">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\stb_image\stb_image.cpp">
+      <Filter>vendor\stb_image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -222,6 +237,15 @@
     </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLTimer.h">
       <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\Texture.h">
+      <Filter>Source Files\Kablunk\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
+      <Filter>Source Files\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\stb_image\stb_image.h">
+      <Filter>vendor\stb_image</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

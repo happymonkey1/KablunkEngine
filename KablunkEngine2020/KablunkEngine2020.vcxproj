@@ -27,17 +27,20 @@
     <ClCompile Include="src\Kablunk\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\RendererAPI.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Kablunk\Renderer\Texture.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLTimer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Platform\PlatformAPI.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsTimer.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Kablunk.h" />
@@ -67,17 +70,20 @@
     <ClInclude Include="src\Kablunk\Renderer\Renderer.h" />
     <ClInclude Include="src\Kablunk\Renderer\RendererAPI.h" />
     <ClInclude Include="src\Kablunk\Renderer\Shader.h" />
+    <ClInclude Include="src\Kablunk\Renderer\Texture.h" />
     <ClInclude Include="src\Kablunk\Renderer\VertexArray.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLTimer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Platform\PlatformAPI.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsTimer.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -133,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUG_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -158,7 +164,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUGNDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
