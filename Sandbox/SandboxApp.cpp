@@ -177,7 +177,7 @@ public:
 		m_TextureShader.reset(Kablunk::Shader::Create(textureVertexSrc, textureFragmentSrc));
 
 		m_Texture = Kablunk::Texture2D::Create("assets/textures/missing_texture_64x.png");
-		m_Logo = Kablunk::Texture2D::Create("assets/textures/test_logo2.png");
+		m_Logo = Kablunk::Texture2D::Create("assets/textures/kablunk_logo.png");
 
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->Bind();
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
@@ -259,8 +259,8 @@ public:
 		Kablunk::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.25f)));
 		
 
-		glm::mat4 triangleTransform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
-		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA, triangleTransform);
+		/*glm::mat4 triangleTransform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
+		Kablunk::Renderer::Submit(m_TriangleShader, m_TriangleVA, triangleTransform);*/
 		
 		Kablunk::Renderer::EndScene();
 	}

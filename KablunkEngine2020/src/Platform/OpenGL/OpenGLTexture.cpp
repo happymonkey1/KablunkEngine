@@ -12,18 +12,16 @@ namespace Kablunk
 	{
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
-		stbi_uc* imageData = stbi_load(path.c_str(), &width, &height, &channels, 0);
-		KB_CORE_ASSERT(imageData, "Failed to load image!");
-
+		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+		KB_CORE_ASSERT(data, "Failed to load image!");
 		m_Width = width;
 		m_Height = height;
 
 		GLenum internalFormat = 0, dataFormat = 0;
 		if (channels == 4)
 		{
-			internalFormat = GL_RGB8;
+			internalFormat = GL_RGBA8;
 			dataFormat = GL_RGBA;
-			KB_CORE_INFO("RGBA TEXTURE LOADED");
 		}
 		else if (channels == 3)
 		{
@@ -31,9 +29,7 @@ namespace Kablunk
 			dataFormat = GL_RGB;
 		}
 
-		KB_CORE_ASSERT(internalFormat && dataFormat, "Format not currently supported!");
-
-
+		KB_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
@@ -44,10 +40,9 @@ namespace Kablunk
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, imageData);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
 
-		// deallocate memory from CPU
-		stbi_image_free(imageData);
+		stbi_image_free(data);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()
