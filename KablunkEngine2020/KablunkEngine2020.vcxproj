@@ -143,7 +143,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUG_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -168,7 +168,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_PLATFORM_WINDOWS;KB_DEBUG;KB_DEBUGKB_DEBUGNDEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
