@@ -10,3 +10,6 @@
 [submodule "KablunkEngine2020/vendor/glm"]
 	path = KablunkEngine2020/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "KablunkEngine2020/vendor/spdlog"]
+	path = KablunkEngine2020/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
