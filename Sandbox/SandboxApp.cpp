@@ -10,7 +10,7 @@
 class ExampleLayer : public Kablunk::Layer {
 public:
 	ExampleLayer()
-		: Layer("Example"), m_Camera{ -1.6f, 1.6f, -0.9f, 0.9f }, m_CameraPosition{ 0.0f }, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
+		: Layer("Example"), m_CameraController{1.7778f, true}, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
 	{
 
 		m_TriangleVA.reset(Kablunk::VertexArray::Create());
@@ -155,21 +155,17 @@ public:
 	void OnUpdate(Kablunk::Timestep ts) override {
 		//KB_CLIENT_INFO("ExampleLayer::Update");
 
-		
-
 		// ==========
-		//   Camera
+		//   Update
 		// ==========
 
+		m_CameraController.OnUpdate(ts);
 		
 
 		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Kablunk::RenderCommand::Clear();
 
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
-
-		Kablunk::Renderer::BeginScene(m_Camera);
+		Kablunk::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(.1f));
 
@@ -244,6 +240,8 @@ public:
 	void OnEvent(Kablunk::Event& e) {
 		//KABLUNK_CLIENT_TRACE("{0}", e);
 
+		m_CameraController.OnEvent(e);
+
 		/*Kablunk::EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<Kablunk::KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(ExampleLayer::OnKeyPressedEvent));
 
@@ -265,12 +263,8 @@ private:
 	Kablunk::Ref<Kablunk::Texture2D> m_Texture;
 	Kablunk::Ref<Kablunk::Texture2D> m_Logo;
 
-	Kablunk::OrthographicCamera m_Camera;
-	glm::vec3 m_CameraPosition;
-	float m_CameraRotation = 0.0f;
-
-	float m_CameraMoveSpeed = 5.0f;
-	float m_CameraRotationSpeed = 10.0f;
+	Kablunk::OrthographicCameraController m_CameraController;
+	
 	glm::vec3 m_TrianglePosition;
 
 	float m_ImguiUpdateCounter = 0.0f;

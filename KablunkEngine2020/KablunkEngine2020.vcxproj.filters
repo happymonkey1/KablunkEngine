@@ -122,6 +122,9 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kablunk\Core\OrthographicCameraController.cpp">
+      <Filter>Source Files\Kablunk\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
@@ -246,6 +249,9 @@
     </ClInclude>
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kablunk\Core\OrthographicCameraController.h">
+      <Filter>Source Files\Kablunk\Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

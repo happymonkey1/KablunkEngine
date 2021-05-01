@@ -19,6 +19,7 @@
     <ClCompile Include="src\Kablunk\Core\Layer.cpp" />
     <ClCompile Include="src\Kablunk\Core\LayerStack.cpp" />
     <ClCompile Include="src\Kablunk\Core\Log.cpp" />
+    <ClCompile Include="src\Kablunk\Core\OrthographicCameraController.cpp" />
     <ClCompile Include="src\Kablunk\Imgui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Kablunk\Imgui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\Buffer.cpp" />
@@ -54,6 +55,7 @@
     <ClInclude Include="src\Kablunk\Core\LayerStack.h" />
     <ClInclude Include="src\Kablunk\Core\Log.h" />
     <ClInclude Include="src\Kablunk\Core\MouseButtonCodes.h" />
+    <ClInclude Include="src\Kablunk\Core\OrthographicCameraController.h" />
     <ClInclude Include="src\Kablunk\Core\Timer.h" />
     <ClInclude Include="src\Kablunk\Core\Timestep.h" />
     <ClInclude Include="src\Kablunk\Core\Window.h" />

@@ -11,6 +11,8 @@
 #include "Kablunk/Core/Timer.h"
 #include "Kablunk/Core/Timestep.h"
 
+#include "Kablunk/Core/OrthographicCameraController.h"
+
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/VertexArray.h"
