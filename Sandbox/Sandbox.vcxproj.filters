@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="assets">
+      <UniqueIdentifier>{3a70782b-0d09-4f19-9025-fb241333c546}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\shaders">
+      <UniqueIdentifier>{25f4dca9-3db6-47d5-8b4e-8a255c626757}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SandboxApp.cpp">
@@ -36,5 +42,10 @@
     <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\Texture.glsl">
+      <Filter>assets\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

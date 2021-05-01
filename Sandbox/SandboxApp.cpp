@@ -6,7 +6,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
 //#include "imgui.h"
 class ExampleLayer : public Kablunk::Layer {
 public:
@@ -98,47 +97,9 @@ public:
 
 		)";
 
-		// ==================
-		//   Texture Shader
-		// ==================
-
-		std::string textureVertexSrc = R"(
-			#version 450 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec2 a_TexCoord;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-			
-			out vec2 v_TexCoord;
-
-			void main()
-			{
-				v_TexCoord = a_TexCoord;
-				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
-			}
-
-		)";
-
-		std::string textureFragmentSrc = R"(
-			#version 450 core
-			
-			layout(location = 0) out vec4 o_Color;
-			
-			in vec2 v_TexCoord;
-			
-
-			uniform sampler2D u_Texture;
-
-			void main()
-			{
-				o_Color = texture(u_Texture, v_TexCoord);
-			}
-
-		)";
-
-		// ===============
+		// =====================
+		//   Flat Color Shader
+		// =====================
 
 		std::string blueVertexSrc = R"(
 			#version 450 core
@@ -172,15 +133,17 @@ public:
 
 		)";
 
-		m_TriangleShader.reset(Kablunk::Shader::Create(vertexSrc, fragmentSrc));
-		m_FlatColorShader.reset(Kablunk::Shader::Create(blueVertexSrc, flatColorFragmentSrc));
-		m_TextureShader.reset(Kablunk::Shader::Create(textureVertexSrc, textureFragmentSrc));
+		// ===============
+
+		m_TriangleShader = Kablunk::Shader::Create("VertexColorTriangle", vertexSrc, fragmentSrc);
+		m_FlatColorShader = Kablunk::Shader::Create("FlatColor", blueVertexSrc, flatColorFragmentSrc);
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
 		m_Texture = Kablunk::Texture2D::Create("assets/textures/missing_texture_64x.png");
 		m_Logo = Kablunk::Texture2D::Create("assets/textures/kablunk_logo.png");
 
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	~ExampleLayer()
@@ -198,22 +161,7 @@ public:
 		//   Camera
 		// ==========
 
-		if (Kablunk::Input::IsKeyPressed(KB_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-		else if (Kablunk::Input::IsKeyPressed(KB_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraMoveSpeed * ts;
-
-
-		if (Kablunk::Input::IsKeyPressed(KB_KEY_UP))
-			m_CameraPosition.y += m_CameraMoveSpeed * ts;
-		else if (Kablunk::Input::IsKeyPressed(KB_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
-
-
-		if (Kablunk::Input::IsKeyPressed(KB_KEY_Q))
-			m_CameraRotation += m_CameraRotationSpeed * ts;
-		else if (Kablunk::Input::IsKeyPressed(KB_KEY_E))
-			m_CameraRotation -= m_CameraRotationSpeed * ts;
+		
 
 		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Kablunk::RenderCommand::Clear();
@@ -227,7 +175,9 @@ public:
 
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TriangleShader)->Bind();
 		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->Bind();
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TextureShader)->Bind();
+
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->Bind();
 
 		for (int y = 0; y < 20; ++y)
 		{
@@ -254,9 +204,9 @@ public:
 		}
 
 		m_Texture->Bind();
-		Kablunk::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Kablunk::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 		m_Logo->Bind();
-		Kablunk::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.25f)));
+		Kablunk::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.25f)));
 		
 
 		/*glm::mat4 triangleTransform = glm::translate(glm::mat4(1.0f), m_TrianglePosition);
@@ -305,9 +255,9 @@ public:
 		}*/
 	}
 private:
+	Kablunk::ShaderLibrary m_ShaderLibrary;
 	Kablunk::Ref<Kablunk::Shader> m_TriangleShader;
 	Kablunk::Ref<Kablunk::Shader> m_FlatColorShader;
-	Kablunk::Ref<Kablunk::Shader> m_TextureShader;
 
 	Kablunk::Ref<Kablunk::VertexArray> m_TriangleVA;
 	Kablunk::Ref<Kablunk::VertexArray> m_SquareVA;
