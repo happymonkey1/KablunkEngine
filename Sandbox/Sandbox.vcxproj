@@ -153,10 +153,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Sandbox2D.cpp" />
     <ClCompile Include="SandboxApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="Sandbox2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox1.rc" />

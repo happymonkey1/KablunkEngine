@@ -1,5 +1,7 @@
-#include <kablunkpch.h>
 #include <kablunk.h>
+#include <Kablunk/Core/EntryPoint.h>
+
+#include "Sandbox2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
@@ -292,8 +294,8 @@ private:
 class Sandbox : public Kablunk::Application {
 public:
 	Sandbox() {
-		PushLayer(new ExampleLayer());
-
+		//PushLayer(new ExampleLayer());
+		PushLayer(new Sandbox2D());
 		
 	}
 
