@@ -40,21 +40,21 @@ namespace Kablunk
 	}
 
 	
-	Kablunk::Ref<Kablunk::Shader> ShaderLibrary::Load(const std::string& filepath)
+	Ref<Kablunk::Shader> ShaderLibrary::Load(const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(shader);
 		return shader;
 	}
 
-	Kablunk::Ref<Kablunk::Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+	Ref<Kablunk::Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(name, shader);
 		return shader;
 	}
 
-	Kablunk::Ref<Kablunk::Shader> ShaderLibrary::Get(const std::string& name)
+	Ref<Kablunk::Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		KB_CORE_ASSERT(Exists(name), "Shader does not exist!");
 		return m_Shaders[name];

@@ -10,7 +10,7 @@
 class ExampleLayer : public Kablunk::Layer {
 public:
 	ExampleLayer()
-		: Layer("Example"), m_CameraController{1.7778f}, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
+		: Layer("Example"), m_CameraController{1.7778f, true}, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
 	{
 
 		m_TriangleVA.reset(Kablunk::VertexArray::Create());

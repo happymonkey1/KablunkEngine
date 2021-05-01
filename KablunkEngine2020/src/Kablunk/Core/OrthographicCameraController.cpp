@@ -16,15 +16,26 @@ namespace Kablunk
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
 		if (Input::IsKeyPressed(KB_KEY_A))
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts; 
+		{
+			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+		}
 		else if (Input::IsKeyPressed(KB_KEY_D))
-			m_CameraPosition.x += m_CameraMoveSpeed * ts; 
+		{
+			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+		}
 
 		if (Input::IsKeyPressed(KB_KEY_W))
-			m_CameraPosition.y += m_CameraMoveSpeed * ts;
-
+		{
+			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts; 
+			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+		}
 		else if (Input::IsKeyPressed(KB_KEY_S))
-			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
+		{
+			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+		}
 
 		if (m_Rotation)
 		{
@@ -32,6 +43,11 @@ namespace Kablunk
 				m_CameraRotation += m_CameraRotationSpeed * ts;
 			else if (Input::IsKeyPressed(KB_KEY_E))
 				m_CameraRotation -= m_CameraRotationSpeed * ts;
+
+			if (m_CameraRotation > 180.0f)
+				m_CameraRotation -= 360.0f;
+			else if (m_CameraRotation <= -180.0f)
+				m_CameraRotation += 360.0f;
 
 			m_Camera.SetRotation(m_CameraRotation);
 		}
