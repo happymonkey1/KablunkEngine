@@ -161,6 +161,9 @@ public:
 
 		m_CameraController.OnUpdate(ts);
 		
+		// ==========
+		//   Render
+		// ==========
 
 		Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Kablunk::RenderCommand::Clear();
@@ -241,6 +244,15 @@ public:
 		//KABLUNK_CLIENT_TRACE("{0}", e);
 
 		m_CameraController.OnEvent(e);
+
+		/*if (e.GetEventType() == Kablunk::EventType::WindowResize)
+		{
+			auto& re = (Kablunk::WindowResizeEvent&)e;
+
+			float zoom = (float)re.GetWidth() / 1280.0f;
+			m_CameraController.SetZoomLevel(zoom);
+
+		}*/
 
 		/*Kablunk::EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<Kablunk::KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(ExampleLayer::OnKeyPressedEvent));
