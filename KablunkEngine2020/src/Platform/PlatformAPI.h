@@ -3,10 +3,10 @@
 
 namespace Kablunk
 {
-	class KABLUNK_API PlatformAPI
+	class PlatformAPI
 	{
 	public:
-		enum class KABLUNK_API PLATFORM
+		enum class PLATFORM
 		{
 			None = 0,
 			Windows = 1, 

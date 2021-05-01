@@ -5,7 +5,7 @@
 
 namespace Kablunk
 {
-	class KABLUNK_API OpenGLTimer : public Timer
+	class OpenGLTimer : public Timer
 	{
 	public:
 		OpenGLTimer();

@@ -14,7 +14,7 @@
 
 namespace Kablunk {
 
-	class KABLUNK_API Application
+	class Application
 	{
 	public:
 		Application();

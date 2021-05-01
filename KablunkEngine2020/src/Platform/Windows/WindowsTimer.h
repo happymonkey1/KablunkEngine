@@ -5,7 +5,7 @@
 
 namespace Kablunk
 {
-	class KABLUNK_API WindowsTimer : public Timer
+	class WindowsTimer : public Timer
 	{
 		WindowsTimer();
 		~WindowsTimer() {};

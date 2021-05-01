@@ -14,7 +14,7 @@ namespace Kablunk {
 			: Title(title), Width(width), Height(height) { }
 	};
 
-	class KABLUNK_API Window
+	class Window
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;

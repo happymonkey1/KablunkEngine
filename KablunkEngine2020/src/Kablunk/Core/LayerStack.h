@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Layer.h"
 
 namespace Kablunk {
-	class KABLUNK_API LayerStack
+	class LayerStack
 	{
 	public: 
 		LayerStack();

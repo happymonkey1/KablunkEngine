@@ -3,7 +3,7 @@
 
 namespace Kablunk
 {
-	class KABLUNK_API Timer
+	class Timer
 	{
 	public:
 		virtual ~Timer() {};

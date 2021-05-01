@@ -125,6 +125,9 @@
     <ClCompile Include="src\Kablunk\Core\OrthographicCameraController.cpp">
       <Filter>Source Files\Kablunk\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Renderer2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
@@ -253,5 +256,6 @@
     <ClInclude Include="src\Kablunk\Core\OrthographicCameraController.h">
       <Filter>Source Files\Kablunk\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Kablunk\Renderer\Renderer2D.h" />
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 #include "Kablunk/Core/Timestep.h"
 
 namespace Kablunk {
-	class KABLUNK_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");

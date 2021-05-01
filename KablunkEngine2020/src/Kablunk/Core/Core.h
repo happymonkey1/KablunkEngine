@@ -2,19 +2,19 @@
 
 #include <memory>
 
-#ifdef KB_PLATFORM_WINDOWS
-	#if KB_DYNAMIC_LINK
-		#ifdef KB_BUILD_DLL
-			#define KABLUNK_API __declspec(dllexport)
-		#else
-			#define KABLUNK_API __declspec(dllimport)
-		#endif
-	#else
-		#define KABLUNK_API
-	#endif
-#else
-	#error Kablunk Engine only supports Windows! :)
-#endif
+//#ifdef KB_PLATFORM_WINDOWS
+//	#if KB_DYNAMIC_LINK
+//		#ifdef KB_BUILD_DLL
+//			#define KABLUNK_API __declspec(dllexport)
+//		#else
+//			#define KABLUNK_API __declspec(dllimport)
+//		#endif
+//	#else
+//		#define KABLUNK_API
+//	#endif
+//#else
+//	#error Kablunk Engine only supports Windows! :)
+//#endif
 
 #ifdef KB_DEBUG
 	#define KB_ENABLE_ASSERTS

@@ -6,7 +6,7 @@
 
 namespace Kablunk {
 
-	class KABLUNK_API Input {
+	class Input {
 	protected:
 		Input() = default;
 	public:

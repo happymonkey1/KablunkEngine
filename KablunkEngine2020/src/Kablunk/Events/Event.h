@@ -29,7 +29,7 @@ namespace Kablunk {
 
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
-	class KABLUNK_API Event
+	class Event
 	{
 		friend class EventDispatcher;
 	public:
@@ -45,7 +45,7 @@ namespace Kablunk {
 		bool m_Handled = false;
 	};
 
-	class KABLUNK_API EventDispatcher {
+	class EventDispatcher {
 	public:
 		EventDispatcher(Event& event) : m_Event(event) {
 
