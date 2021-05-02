@@ -8,12 +8,18 @@ extern Kablunk::Application* Kablunk::CreateApplication();
 
 int main(int argc, char** argv) {
 	Kablunk::Log::Init();
-	KB_CORE_WARN("test");
 
+	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");
 	Kablunk::Application* app = Kablunk::CreateApplication();
-	app->Run();
+	KB_END_SESSION();
 
+	KB_BEGIN_SESSION("Runtime", "KablunkProfile-Runtime.json");
+	app->Run();
+	KB_END_SESSION();
+
+	KB_BEGIN_SESSION("Shutdown", "KablunkProfile-Shutdown.json");
 	delete app;
+	KB_END_SESSION();
 }
 
 #endif

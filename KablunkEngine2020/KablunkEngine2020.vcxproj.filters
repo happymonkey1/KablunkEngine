@@ -232,9 +232,6 @@
     <ClInclude Include="src\Kablunk\Core\Timestep.h">
       <Filter>Source Files\Kablunk\Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Kablunk\Core\Timer.h">
-      <Filter>Source Files\Kablunk\Core</Filter>
-    </ClInclude>
     <ClInclude Include="src\Platform\PlatformAPI.h">
       <Filter>Source Files\Platform</Filter>
     </ClInclude>
@@ -257,5 +254,7 @@
       <Filter>Source Files\Kablunk\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Kablunk\Renderer\Renderer2D.h" />
+    <ClInclude Include="src\Kablunk\Core\Timing.h" />
+    <ClInclude Include="src\Kablunk\Debug\Instrumentor.h" />
   </ItemGroup>
 </Project>

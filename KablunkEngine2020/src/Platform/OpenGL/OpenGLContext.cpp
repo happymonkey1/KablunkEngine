@@ -15,6 +15,8 @@ namespace Kablunk {
 
 	void OpenGLContext::Init()
 	{
+		KB_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
 
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -40,6 +42,8 @@ namespace Kablunk {
 
 	void OpenGLContext::SwapBuffers()
 	{
+		KB_PROFILE_FUNCTION();
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
 

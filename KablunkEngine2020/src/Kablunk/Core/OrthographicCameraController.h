@@ -19,8 +19,14 @@ namespace Kablunk
 		OrthographicCamera& GetCamera() { return m_Camera; };
 		const OrthographicCamera& GetCamera() const { return m_Camera; };
 
-		void SetZoomLevel(float level) { m_ZoomLevel = level; };
+		void SetZoomLevel(float level) {
+			m_ZoomLevel = level; 
+			m_CameraMoveSpeed = m_ZoomLevel * 0.5f;
+			m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+		};
 		float GetZoomLevel() { return m_ZoomLevel; };
+
+		void SetPosition(const glm::vec3& pos) { m_CameraPosition = pos; m_Camera.SetPosition(m_CameraPosition); }
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);

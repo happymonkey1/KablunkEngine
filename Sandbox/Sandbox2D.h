@@ -21,6 +21,13 @@ private:
 
 	Kablunk::Ref<Kablunk::Texture2D> m_MissingTexture;
 
+	struct ProfileResult
+	{
+		const char* Name;
+		float Time;
+	};
+
+
 	float m_ImguiUpdateCounter = 0.0f;
 	float m_ImguiUpdateCounterMax = .1f;
 	float m_ImguiDeltaTime = 10.0f;

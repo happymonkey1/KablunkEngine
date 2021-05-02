@@ -12,24 +12,26 @@ namespace Kablunk
 	struct Renderer2DStorage
 	{
 		Ref <VertexArray> QuadVertexArray;
-		Ref <Shader> FlatColorShader;
 		Ref <Shader> TextureShader;
+		Ref <Texture2D> WhiteTexture;
 	};
 
 	static Renderer2DStorage* s_RendererData;
 
 	void Renderer2D::Init()
 	{
+		KB_PROFILE_FUNCTION();
+
 		s_RendererData = new Renderer2DStorage{};
 
 		s_RendererData->QuadVertexArray = VertexArray::Create();
 
 		float sqrVertices[5 * 4]
 		{
-			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
 		Ref<VertexBuffer> squareVB;
@@ -47,7 +49,10 @@ namespace Kablunk
 
 		s_RendererData->QuadVertexArray->SetIndexBuffer(squareIB);
 
-		s_RendererData->FlatColorShader = Shader::Create("assets/shaders/FlatColor.glsl");
+		s_RendererData->WhiteTexture = Texture2D::Create(1, 1);
+		uint32_t whiteTextureData = 0xffffffff;
+		s_RendererData->WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
+
 		s_RendererData->TextureShader = Shader::Create("assets/shaders/Texture.glsl");
 
 		s_RendererData->TextureShader->Bind();
@@ -56,13 +61,14 @@ namespace Kablunk
 
 	void Renderer2D::Shutdown()
 	{
+		KB_PROFILE_FUNCTION();
+
 		delete s_RendererData;
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
-		s_RendererData->FlatColorShader->Bind();
-		s_RendererData->FlatColorShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		KB_PROFILE_FUNCTION();
 
 		s_RendererData->TextureShader->Bind();
 		s_RendererData->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
@@ -84,12 +90,18 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		s_RendererData->FlatColorShader->Bind();
-		s_RendererData->FlatColorShader->SetFloat4("u_Color", color);
+		KB_PROFILE_FUNCTION();
 
-		glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position) 
-			* glm::scale(glm::mat4{1.0f}, glm::vec3{ size.x, size.y, 1.0f });
-		s_RendererData->FlatColorShader->SetMat4("u_Transform", transform);
+		s_RendererData->TextureShader->SetFloat4("u_Color", color);
+		s_RendererData->WhiteTexture->Bind();
+
+		glm::mat4 transform;
+		{
+			KB_PROFILE_SCOPE("Matrix math - Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)");
+			transform = glm::translate(glm::mat4{ 1.0f }, position)
+				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+		}
+		s_RendererData->TextureShader->SetMat4("u_Transform", transform);
 
 		s_RendererData->QuadVertexArray->Bind();
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
@@ -106,13 +118,21 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
 	{
-		s_RendererData->TextureShader->Bind();
+		KB_PROFILE_FUNCTION();
 
-		glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
-			* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+		s_RendererData->TextureShader->SetFloat4("u_Color", glm::vec4{ 1.0f });
+		texture->Bind();
+
+
+		glm::mat4 transform;
+		{
+			KB_PROFILE_SCOPE("Matrix Math - Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)");
+			transform = glm::translate(glm::mat4{ 1.0f }, position)
+				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+		}
 		s_RendererData->TextureShader->SetMat4("u_Transform", transform);
 
-		texture->Bind();
+		
 
 		s_RendererData->QuadVertexArray->Bind();
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);
@@ -129,15 +149,21 @@ namespace Kablunk
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float rotation)
 	{
-		s_RendererData->FlatColorShader->Bind();
+		KB_PROFILE_FUNCTION();
 
-		s_RendererData->FlatColorShader->SetFloat4("u_Color", color);
+		s_RendererData->TextureShader->Bind();
 
-		glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position) 
-			* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f }) 
-			* glm::rotate(glm::mat4{ 1.0f }, glm::radians(rotation), {0.0f, 0.0f, 1.0f});
+		s_RendererData->TextureShader->SetFloat4("u_Color", color);
+		s_RendererData->WhiteTexture->Bind();
 
-		s_RendererData->FlatColorShader->SetMat4("u_Transform", transform);
+		glm::mat4 transform;
+		{
+			KB_PROFILE_SCOPE("Matrix Math - Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float rotation)");
+			transform = glm::translate(glm::mat4{ 1.0f }, position)
+				* glm::rotate(glm::mat4{ 1.0f }, glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+		}
+		s_RendererData->TextureShader->SetMat4("u_Transform", transform);
 
 		s_RendererData->QuadVertexArray->Bind();
 		RenderCommand::DrawIndexed(s_RendererData->QuadVertexArray);

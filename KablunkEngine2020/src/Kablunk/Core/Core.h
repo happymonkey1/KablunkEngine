@@ -18,6 +18,7 @@
 
 #ifdef KB_DEBUG
 	#define KB_ENABLE_ASSERTS
+	#define KB_PROFILE
 #endif
 
 #ifdef KB_ENABLE_ASSERTS
@@ -32,6 +33,8 @@
 #define BIT(x) (1 << x)
 
 #define KABLUNK_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+
+
 
 namespace Kablunk
 {

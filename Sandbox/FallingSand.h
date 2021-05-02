@@ -24,22 +24,20 @@ public:
 private:
 	void InitTileData(uint32_t width, uint32_t height);
 	void UpdateAllTiles();
-	uint32_t CoordToIndex(const glm::vec2& pos);
+	uint32_t CoordToIndex(const glm::ivec2& pos);
 	uint32_t CoordToIndex(uint32_t x, uint32_t y);
 
-	bool IsInside(const glm::vec2& pos);
+	bool IsInside(const glm::ivec2& pos);
 	bool IsInside(uint32_t x, uint32_t y);
 
-	bool Empty(const glm::vec2& pos);
+	bool Empty(const glm::ivec2& pos);
 	bool Empty(uint32_t x, uint32_t y);
 
-	bool MouseInsideSimulation(const glm::vec2& pos);
+	bool MouseInsideSimulation(const glm::ivec2& pos);
 	bool MouseInsideSimulation(uint32_t x, uint32_t y);
 
-	void SetTile(const glm::vec2& pos, TILE_BIT_DATA data);
+	void SetTile(const glm::ivec2& pos, TILE_BIT_DATA data);
 	void SetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data);
-	
-	glm::vec2 WorldToScreenPos(const glm::vec2& pos);
 	
 	bool UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData);
 	glm::vec4 TileDataToColor(TILE_BIT_DATA bitData) const;

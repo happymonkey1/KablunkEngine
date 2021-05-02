@@ -1,61 +1,19 @@
 ﻿  FallingSand.cpp
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(35,32): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(35,29): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(127,34): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(128,36): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(139,34): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(140,36): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(143,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(145,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(177,86): warning C4244: 'return': conversion from 'T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(182,28): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(182,21): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(187,12): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(187,39): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(192,25): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(192,18): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(204,41): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(204,34): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(209,24): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(210,25): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(211,23): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(212,26): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(218,20): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(218,13): warning C4244: 'argument': conversion from 'const T' to 'uint32_t', possible loss of data
-          with
-          [
-              T=float
-          ]
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(39,32): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(39,29): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(131,34): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(132,36): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(143,34): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(144,36): warning C4244: '=': conversion from 'uint32_t' to 'float', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(147,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(149,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(186,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(186,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(208,24): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(209,25): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(210,23): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\FallingSand.cpp(211,26): warning C4244: 'initializing': conversion from 'float' to 'uint32_t', possible loss of data
+  Sandbox2D.cpp
+  SandboxApp.cpp
+  Generating Code...
   Sandbox.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\Sandbox\Sandbox.exe

@@ -8,7 +8,7 @@
 #include "Kablunk/Imgui/ImGuiLayer.h"
 #include "Kablunk/Core/Input.h"
 
-#include "Kablunk/Core/Timer.h"
+#include "Kablunk/Core/Timing.h"
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/OrthographicCameraController.h"

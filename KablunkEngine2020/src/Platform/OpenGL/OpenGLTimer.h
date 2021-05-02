@@ -1,7 +1,7 @@
 #ifndef KABLUNK_PLATFORM_OPENGL_TIMER_H
 #define KABLUNK_PLATFORM_OPENGL_TIMER_H
 
-#include "Kablunk/Core/Timer.h"
+#include "Kablunk/Core/Timing.h"
 
 namespace Kablunk
 {

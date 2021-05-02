@@ -17,21 +17,28 @@ namespace Kablunk {
 
     static bool s_GLFWInitialized = false;
 
-    static void GLFWErrorCallback(int error, const char* desc) {
+    static void GLFWErrorCallback(int error, const char* desc) 
+    {
         KB_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
     }
 
-    Window* Window::Create(const WindowProps& props) {
-        return new WindowsWindow(props);
+    Scope<Window> Window::Create(const WindowProps& props) 
+    {
+        return CreateScope<WindowsWindow>(props);
     }
 
     WindowsWindow::WindowsWindow(const WindowProps& props)
     {
+        KB_PROFILE_FUNCTION();
+
         Init(props);
     }
 
     WindowsWindow::~WindowsWindow()
     {
+        KB_PROFILE_FUNCTION();
+
+        Shutdown();
     }
 
     void WindowsWindow::Init(const WindowProps& props)
@@ -45,17 +52,21 @@ namespace Kablunk {
         
 
         if (!s_GLFWInitialized) {
+            KB_PROFILE_SCOPE("glfwInit")
+
             KB_CORE_ASSERT(glfwInit(), "COULD NOT INITIALIZE GLFW");
 
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitialized = true;
         }
 
-        m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
-
-        m_Context = CreateScope<OpenGLContext>(m_Window);
-        m_Context->Init();
-        KB_CORE_INFO("Context created!");
+        {
+            KB_PROFILE_SCOPE("glfwCreateWindow")
+            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
+        }
+            m_Context = CreateScope<OpenGLContext>(m_Window);
+            m_Context->Init();
+            KB_CORE_INFO("Context created!");
         
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -147,11 +158,17 @@ namespace Kablunk {
     }
     void WindowsWindow::Shutdown()
     {
-        KB_CORE_WARN("NEED TO IMPLEMENT WINDOWS WINDOW SHUTDOWN");
+        KB_PROFILE_FUNCTION();
+
+        glfwDestroyWindow(m_Window);
+
+        glfwTerminate();
     }
 
     void WindowsWindow::OnUpdate()
     {
+        KB_PROFILE_FUNCTION();
+
         glfwPollEvents();
         m_Context->SwapBuffers();
     }

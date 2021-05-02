@@ -15,6 +15,8 @@ namespace Kablunk
 
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
+		KB_PROFILE_FUNCTION();
+
 		if (Input::IsKeyPressed(KB_KEY_A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
@@ -57,6 +59,8 @@ namespace Kablunk
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		KB_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher{ e };
 		dispatcher.Dispatch<MouseScrolledEvent>(KABLUNK_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(KABLUNK_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
@@ -65,6 +69,8 @@ namespace Kablunk
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		KB_PROFILE_FUNCTION();
+
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -75,6 +81,8 @@ namespace Kablunk
 
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		KB_PROFILE_FUNCTION();
+
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;

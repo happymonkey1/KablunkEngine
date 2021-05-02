@@ -10,7 +10,8 @@ FallingSand::FallingSand()
 
 void FallingSand::OnAttach()
 {
-	InitTileData(128, 72);
+
+	InitTileData(100, 100);
 }
 
 void FallingSand::OnDetach()
@@ -28,15 +29,18 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 	m_CameraController.OnUpdate(ts);
 
 	float rows{ (float)m_TileRows }, cols{ (float)m_TileCols };
+	
+	float simStartX = (float)(m_ScreenWidth - m_SimulationWidth) / 2.0f;
+	float simStartY = (float)(m_ScreenHeight - m_SimulationHeight) / 2.0f;
 	if (Kablunk::Input::IsMouseButtonPressed(KB_MOUSE_BUTTON_1))
 	{
 		float x = Kablunk::Input::GetMouseX(), y = Kablunk::Input::GetMouseY();
 		
 		if (MouseInsideSimulation(x, y))
 		{
-			glm::vec2 position = {
-			((int)(float)(x / m_TileWidth) - ((float)m_SimulationWidth / 2.0f)),
-			((int)((float)(m_ScreenHeight - y) / m_TileHeight))
+			glm::ivec2 position = {
+				(int)(x - simStartX) / (int)m_TileWidth,
+				(int)(y) / (int)m_TileHeight
 			};
 
 			if (Empty(position))
@@ -48,7 +52,7 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 
 	if (m_TickCounter >= m_TicksPerSecond)
 	{
-		UpdateAllTiles();
+		//UpdateAllTiles();
 		m_TickCounter -= m_TicksPerSecond;
 	}
 	else
@@ -58,15 +62,15 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 	//   Render
 	// ==========
 
+	
+
 	Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 	Kablunk::RenderCommand::Clear();
 
 	Kablunk::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-	glm::vec2 size{m_TileWidth / m_ScreenWidth, m_TileWidth / m_ScreenWidth };
+	glm::vec2 size{ m_TileWidth / (float)m_SimulationWidth, m_TileHeight / (float)m_SimulationHeight};
 	
-	float simStartX = (float)(m_ScreenWidth - m_SimulationWidth) / 2.0f;
-	float simStartY = (float)(m_ScreenHeight - m_SimulationHeight) / 2.0f;
 	for (int y = 0; y < m_TileCols; ++y)
 	{
 		for (int x = 0; x < m_TileRows; ++x)
@@ -75,10 +79,10 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 			if (tile != TILE_BIT_DATA::Air)
 			{
 				glm::vec2 position = {
-					simStartX + (float)x * m_TileWidth,
-					simStartY + (float)y * m_TileHeight
+					(float)x * m_TileWidth * (size.x / 7.0f),
+					(float)y * m_TileHeight * (size.y / 7.0f)
 				};
-				Kablunk::Renderer2D::DrawQuad(WorldToScreenPos(position), size, TileDataToColor(tile));
+				Kablunk::Renderer2D::DrawQuad(position, size, TileDataToColor(tile));
 			}
 		}
 	}
@@ -151,12 +155,7 @@ void FallingSand::InitTileData(uint32_t width, uint32_t height)
 		}
 	}
 
-	m_TileData[CoordToIndex(65, 32)] = TILE_BIT_DATA::Sand;
-	m_TileData[CoordToIndex(100, 0)] = TILE_BIT_DATA::Sand;
-	//m_TileData[CoordToIndex(0, 0)] = TILE_BIT_DATA::Sand;
-	m_TileData[CoordToIndex(24, 55)] = TILE_BIT_DATA::Sand;
-	m_TileData[CoordToIndex(112, 43)] = TILE_BIT_DATA::Sand;
-	m_TileData[CoordToIndex(127, 71)] = TILE_BIT_DATA::Water;
+	SetTile(99, 99, TILE_BIT_DATA::Water);
 }
 
 void FallingSand::UpdateAllTiles()
@@ -174,10 +173,10 @@ void FallingSand::UpdateAllTiles()
 	}
 }
 
-uint32_t FallingSand::CoordToIndex(const glm::vec2& pos) { return pos.y * m_TileRows + pos.x; }
+uint32_t FallingSand::CoordToIndex(const glm::ivec2& pos) { return pos.y * m_TileRows + pos.x; }
 uint32_t FallingSand::CoordToIndex(uint32_t x, uint32_t y) { return y * m_TileRows + x; }
 
-bool FallingSand::IsInside(const glm::vec2& pos)
+bool FallingSand::IsInside(const glm::ivec2& pos)
 {
 	return IsInside(pos.x, pos.y);
 }
@@ -187,7 +186,7 @@ bool FallingSand::IsInside(uint32_t x, uint32_t y)
 	return (x < m_TileRows&& x >= 0 && y < m_TileCols&& y >= 0);
 }
 
-bool FallingSand::Empty(const glm::vec2& pos)
+bool FallingSand::Empty(const glm::ivec2& pos)
 {
 	return Empty(pos.x, pos.y);
 }
@@ -199,7 +198,7 @@ bool FallingSand::Empty(uint32_t x, uint32_t y)
 	return m_TileData[CoordToIndex(x, y)] == TILE_BIT_DATA::Air;
 }
 
-bool FallingSand::MouseInsideSimulation(const glm::vec2& pos)
+bool FallingSand::MouseInsideSimulation(const glm::ivec2& pos)
 {
 	return MouseInsideSimulation(pos.x, pos.y);
 }
@@ -213,7 +212,7 @@ bool FallingSand::MouseInsideSimulation(uint32_t x, uint32_t y)
 	return (x > simLeftBound && x < simRightBound && y > simBottomBound && y < simTopBound);
 }
 
-void FallingSand::SetTile(const glm::vec2& pos, TILE_BIT_DATA data)
+void FallingSand::SetTile(const glm::ivec2& pos, TILE_BIT_DATA data)
 {
 	SetTile(pos.x, pos.y, data);
 }
@@ -224,13 +223,6 @@ void FallingSand::SetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data)
 	m_TileData[CoordToIndex(x, y)] = data;
 }
 
-glm::vec2 FallingSand::WorldToScreenPos(const glm::vec2& pos)
-{
-	return {
-		(pos.x - (float)m_ScreenWidth / 2.0f) / ((float)m_ScreenWidth / 2.0f),
-		(pos.y - (float)m_ScreenHeight / 2.0f) / ((float)m_ScreenHeight / 2.0f)
-	};
-}
 
 bool FallingSand::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 {
@@ -250,6 +242,30 @@ bool FallingSand::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
 			return true;
 		}
+
+		// choose randomly between left and right
+		int xDir = 1;
+		if (rand() % 100 < 50)
+			xDir = -1;
+		
+		// Try one direction
+		move = { x + xDir, y - 1 };
+		if (Empty(move))
+		{
+			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			return true;
+		}
+
+		// Then try other
+		move = { x + xDir * -1, y - 1 };
+		if (Empty(move))
+		{
+			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			return true;
+		}
+
 		return false;
 	}
 	case TILE_BIT_DATA::Water:   

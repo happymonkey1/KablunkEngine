@@ -10,6 +10,8 @@ namespace Kablunk
 
 	void Renderer::Init()
 	{
+		KB_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}
