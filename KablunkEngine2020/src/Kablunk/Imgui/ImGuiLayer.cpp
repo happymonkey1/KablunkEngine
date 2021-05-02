@@ -83,7 +83,7 @@ namespace Kablunk {
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();
-
+			
 			// WINDOWS SPECIFIC CODE
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();

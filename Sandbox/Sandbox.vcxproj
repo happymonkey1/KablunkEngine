@@ -153,21 +153,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FallingSand.cpp" />
     <ClCompile Include="Sandbox2D.cpp" />
     <ClCompile Include="SandboxApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource1.h" />
+    <ClInclude Include="FallingSand.h" />
     <ClInclude Include="Sandbox2D.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Sandbox1.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="assets\textures\kablunk_logo_256.png" />
-    <Image Include="icon1.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\FlatColor.glsl" />
     <None Include="assets\shaders\Texture.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

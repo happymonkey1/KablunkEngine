@@ -2,11 +2,14 @@
 #include <Kablunk/Core/EntryPoint.h>
 
 #include "Sandbox2D.h"
+#include "FallingSand.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+
 
 //#include "imgui.h"
 class ExampleLayer : public Kablunk::Layer {
@@ -15,8 +18,8 @@ public:
 		: Layer("Example"), m_CameraController{1.7778f, true}, m_TrianglePosition{ 0.0f }, m_TileAColor{ 0.8f, 0.2f, 0.3f}, m_TileBColor{ 0.2f, 0.3f, 0.8f}
 	{
 
-		m_TriangleVA.reset(Kablunk::VertexArray::Create());
-		m_SquareVA.reset(Kablunk::VertexArray::Create());
+		m_TriangleVA = Kablunk::VertexArray::Create();
+		m_SquareVA = Kablunk::VertexArray::Create();
 
 		float vertices[3 * 7]
 		{
@@ -34,10 +37,10 @@ public:
 		};
 
 		Kablunk::Ref<Kablunk::VertexBuffer> triangleVB;
-		triangleVB.reset(Kablunk::VertexBuffer::Create(vertices, sizeof(vertices)));
+		triangleVB = Kablunk::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		Kablunk::Ref<Kablunk::VertexBuffer> squareVB;
-		squareVB.reset(Kablunk::VertexBuffer::Create(sqrVertices, sizeof(sqrVertices)));
+		squareVB = Kablunk::VertexBuffer::Create(sqrVertices, sizeof(sqrVertices));
 
 		triangleVB->SetLayout({
 			{ Kablunk::ShaderDataType::Float3, "a_Position" },
@@ -53,13 +56,13 @@ public:
 
 		uint32_t indices[3]{ 0, 1, 2 };
 		Kablunk::Ref<Kablunk::IndexBuffer> triangleIB;
-		triangleIB.reset(Kablunk::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		triangleIB = Kablunk::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 
 		m_TriangleVA->SetIndexBuffer(triangleIB);
 
 		uint32_t squareIndices[6]{ 0, 1, 2, 2, 3, 0 };
 		Kablunk::Ref<Kablunk::IndexBuffer> squareIB;
-		squareIB.reset(Kablunk::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+		squareIB = Kablunk::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 
 		m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -144,8 +147,8 @@ public:
 		m_Texture = Kablunk::Texture2D::Create("assets/textures/missing_texture_64x.png");
 		m_Logo = Kablunk::Texture2D::Create("assets/textures/kablunk_logo.png");
 
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->Bind();
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
+		textureShader->Bind();
+		textureShader->SetInt("u_Texture", 0);
 	}
 
 	~ExampleLayer()
@@ -174,11 +177,11 @@ public:
 
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(.1f));
 
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_TriangleShader)->Bind();
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->Bind();
+		m_TriangleShader->Bind();
+		m_FlatColorShader->Bind();
 
 		auto textureShader = m_ShaderLibrary.Get("Texture");
-		std::dynamic_pointer_cast<Kablunk::OpenGLShader>(textureShader)->Bind();
+		textureShader->Bind();
 
 		for (int y = 0; y < 20; ++y)
 		{
@@ -189,16 +192,16 @@ public:
 				if (y % 2 == 0)
 				{
 					if (x % 2 == 0)
-						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileAColor);
+						m_FlatColorShader->SetFloat3("u_Color", m_TileAColor);
 					else
-						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileBColor);
+						m_FlatColorShader->SetFloat3("u_Color", m_TileBColor);
 				}
 				else
 				{
 					if (x % 2 == 1)
-						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileAColor);
+						m_FlatColorShader->SetFloat3("u_Color", m_TileAColor);
 					else
-						std::dynamic_pointer_cast<Kablunk::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_TileBColor);
+						m_FlatColorShader->SetFloat3("u_Color", m_TileBColor);
 				}
 				Kablunk::Renderer::Submit(m_FlatColorShader, m_SquareVA, squareTransform);
 			}
@@ -295,8 +298,8 @@ class Sandbox : public Kablunk::Application {
 public:
 	Sandbox() {
 		//PushLayer(new ExampleLayer());
-		PushLayer(new Sandbox2D());
-		
+		//PushLayer(new Sandbox2D());
+		PushLayer(new FallingSand());
 	}
 
 	~Sandbox() {

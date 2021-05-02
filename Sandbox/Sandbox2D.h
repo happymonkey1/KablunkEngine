@@ -14,13 +14,12 @@ public:
 	virtual void OnImGuiRender(Kablunk::Timestep ts) override;
 	virtual void OnEvent(Kablunk::Event& e);
 private:
-	Kablunk::ShaderLibrary m_ShaderLibrary;
-	Kablunk::Ref<Kablunk::VertexArray> m_SquareVA;
 
-	Kablunk::Ref<Kablunk::Texture2D> m_Texture;
-	Kablunk::Ref<Kablunk::Texture2D> m_Logo;
+	glm::vec4 m_SquareColor{ 0.8f, 0.2f, 0.3f, 1.0f };
 
 	Kablunk::OrthographicCameraController m_CameraController;
+
+	Kablunk::Ref<Kablunk::Texture2D> m_MissingTexture;
 
 	float m_ImguiUpdateCounter = 0.0f;
 	float m_ImguiUpdateCounterMax = .1f;

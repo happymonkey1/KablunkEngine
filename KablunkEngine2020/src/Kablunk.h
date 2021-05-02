@@ -21,6 +21,7 @@
 #include "Kablunk/Renderer/OrthographicCamera.h"
 
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 
 #include "Kablunk/Renderer/Texture.h"

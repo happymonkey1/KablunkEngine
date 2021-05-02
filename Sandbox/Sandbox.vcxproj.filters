@@ -27,25 +27,20 @@
     <ClCompile Include="Sandbox2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FallingSand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Sandbox2D.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Sandbox1.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <ClInclude Include="FallingSand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\kablunk_logo_256.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -53,5 +48,6 @@
     <None Include="assets\shaders\Texture.glsl">
       <Filter>assets\shaders</Filter>
     </None>
+    <None Include="assets\shaders\FlatColor.glsl" />
   </ItemGroup>
 </Project>

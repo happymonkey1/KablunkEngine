@@ -6,7 +6,7 @@
 
 namespace Kablunk
 {
-	VertexArray* VertexArray::Create()
+	Ref<VertexArray> VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,7 +15,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return new OpenGLVertexArray();
+			return CreateRef<OpenGLVertexArray>();
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
 			return nullptr;
