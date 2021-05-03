@@ -9,23 +9,34 @@
 
 namespace Kablunk
 {
+
+	struct QuadVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 TexCoord;
+
+		// TODO color, texid
+	};
+
+
 	struct Renderer2DData
 	{
 		const uint32_t MaxQuads = 10000;
 		const uint32_t MaxVertices = MaxQuads * 4;
 		const uint32_t MaxIndices = MaxQuads * 6;
+
 		Ref <VertexArray> QuadVertexArray;
+		Ref <VertexBuffer> QuadVertexBuffer;
 		Ref <Shader> TextureShader;
 		Ref <Texture2D> WhiteTexture;
+
+		uint32_t QuadIndexCount = 0;
+		QuadVertex* QuadVertexBufferBase = nullptr;
+		QuadVertex* QuadVertexBufferPtr = nullptr;
 	};
 
-	struct QuadVertex
-	{
-		glm::vec3 Position;
-		glm::vec2 TexCoord;
-
-		// TODO color, texid
-	};
+	
 
 	static Renderer2DData s_RendererData;
 
@@ -35,18 +46,35 @@ namespace Kablunk
 
 		s_RendererData.QuadVertexArray = VertexArray::Create();
 
-		Ref<VertexBuffer> quadVB = VertexBuffer::Create(s_RendererData.MaxVertices * sizeof(QuadVertex));
+		s_RendererData.QuadVertexBuffer = VertexBuffer::Create(s_RendererData.MaxVertices * sizeof(QuadVertex));
 
-		quadVB->SetLayout({
+		s_RendererData.QuadVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color"},
 			{ ShaderDataType::Float2, "a_TexCoord" }
-			});
-		s_RendererData.QuadVertexArray->AddVertexBuffer(quadVB);
+		});
+		s_RendererData.QuadVertexArray->AddVertexBuffer(s_RendererData.QuadVertexBuffer);
+
+		s_RendererData.QuadVertexBufferBase = new QuadVertex[s_RendererData.MaxVertices];
 
 		uint32_t* quadIndices = new uint32_t[s_RendererData.MaxIndices];
 
-		Ref<IndexBuffer> squareIB = IndexBuffer::Create(quadIndices, s_RendererData.MaxIndices);
-		s_RendererData.QuadVertexArray->SetIndexBuffer(squareIB);
+		uint32_t offset = 0;
+		for (uint32_t i = 0; i < s_RendererData.MaxIndices; i += 6)
+		{
+			quadIndices[i + 0] = offset + static_cast<uint32_t>(0);
+			quadIndices[i + 1] = offset + static_cast<uint32_t>(1);
+			quadIndices[i + 2] = offset + static_cast<uint32_t>(2);
+										  						 
+			quadIndices[i + 3] = offset + static_cast<uint32_t>(2);
+			quadIndices[i + 4] = offset + static_cast<uint32_t>(3);
+			quadIndices[i + 5] = offset + static_cast<uint32_t>(0);
+
+			offset += static_cast<uint32_t>(4);
+		}
+
+		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_RendererData.MaxIndices);
+		s_RendererData.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
 		s_RendererData.WhiteTexture = Texture2D::Create(1, 1);
@@ -62,19 +90,43 @@ namespace Kablunk
 	void Renderer2D::Shutdown()
 	{
 		KB_PROFILE_FUNCTION();
+
+		delete[] s_RendererData.QuadVertexBufferBase;
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		KB_PROFILE_FUNCTION();
 
+
+
 		s_RendererData.TextureShader->Bind();
 		s_RendererData.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+
+		s_RendererData.QuadIndexCount = 0;
+		s_RendererData.QuadVertexBufferPtr = s_RendererData.QuadVertexBufferBase;
 	}
 
 	void Renderer2D::EndScene()
 	{
+		KB_PROFILE_FUNCTION();
 
+		
+
+		Flush();
+	}
+
+	void Renderer2D::Flush()
+	{
+		KB_PROFILE_FUNCTION();
+
+		if (s_RendererData.QuadIndexCount == 0)
+			return;
+
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_RendererData.QuadVertexBufferPtr - (uint8_t*)s_RendererData.QuadVertexBufferBase);
+		s_RendererData.QuadVertexBuffer->SetData(s_RendererData.QuadVertexBufferBase, dataSize);
+
+		RenderCommand::DrawIndexed(s_RendererData.QuadVertexArray, s_RendererData.QuadIndexCount);
 	}
 
 	// ========================
@@ -90,20 +142,34 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		s_RendererData.TextureShader->SetFloat4("u_Color", color);
-		s_RendererData.TextureShader->SetFloat("u_TilingFactor", 1.0f);
-		s_RendererData.WhiteTexture->Bind();
+		/*constexpr size_t quadVertexCount = 4;
 
-		glm::mat4 transform;
+		for (size_t i = 0; i < quadVertexCount; ++i)
 		{
-			KB_PROFILE_SCOPE("Matrix math - Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)");
-			transform = glm::translate(glm::mat4{ 1.0f }, position)
-				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
-		}
-		s_RendererData.TextureShader->SetMat4("u_Transform", transform);
+			
+		}*/
 
-		s_RendererData.QuadVertexArray->Bind();
-		RenderCommand::DrawIndexed(s_RendererData.QuadVertexArray);
+		s_RendererData.QuadVertexBufferPtr->Position = position;
+		s_RendererData.QuadVertexBufferPtr->Color = color;
+		s_RendererData.QuadVertexBufferPtr->TexCoord = { 0.0f, 0.0f };
+		s_RendererData.QuadVertexBufferPtr++;
+
+		s_RendererData.QuadVertexBufferPtr->Position = {position.x + size.x, position.y, 0.0f};
+		s_RendererData.QuadVertexBufferPtr->Color = color;
+		s_RendererData.QuadVertexBufferPtr->TexCoord = { 1.0f, 0.0f };
+		s_RendererData.QuadVertexBufferPtr++;
+
+		s_RendererData.QuadVertexBufferPtr->Position = {position.x + size.x, position.y + size.y, 0.0f};
+		s_RendererData.QuadVertexBufferPtr->Color = color;
+		s_RendererData.QuadVertexBufferPtr->TexCoord = { 1.0f, 1.0f };
+		s_RendererData.QuadVertexBufferPtr++;
+
+		s_RendererData.QuadVertexBufferPtr->Position = { position.x, position.y + size.y, 0.0f };
+		s_RendererData.QuadVertexBufferPtr->Color = color;
+		s_RendererData.QuadVertexBufferPtr->TexCoord = { 0.0f, 1.0f };
+		s_RendererData.QuadVertexBufferPtr++;
+
+		s_RendererData.QuadIndexCount += 6;
 	}
 
 	// ==========================

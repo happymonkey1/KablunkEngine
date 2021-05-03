@@ -40,8 +40,16 @@ void Sandbox2D::OnUpdate(Kablunk::Timestep ts)
 
 		Kablunk::Renderer2D::BeginScene(m_CameraController.GetCamera());
 		Kablunk::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-		Kablunk::Renderer2D::DrawRotatedQuad({ 0.5f, 0.5f }, { 0.5f, 0.5f }, m_SquareColor, 45.0f);
-		Kablunk::Renderer2D::DrawQuad({ 1.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_MissingTexture, 1.0f);
+		Kablunk::Renderer2D::DrawQuad({ 0.5f, 0.5f }, { 0.5f, 0.5f }, m_SquareColor);
+
+		/*for (int y = 0; y < 100; ++y)
+		{
+			for (int x = 0; x < 100; ++x)
+			{
+				Kablunk::Renderer2D::DrawQuad({ x, y }, { 0.5f, 0.5f }, { 0.2f, 0.3f, 0.8f, 1.0f });
+			}
+		}*/
+		//Kablunk::Renderer2D::DrawQuad({ 1.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_MissingTexture, 1.0f);
 		Kablunk::Renderer2D::EndScene();
 	}
 }
