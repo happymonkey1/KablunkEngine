@@ -16,6 +16,9 @@ namespace Kablunk
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
 		KB_PROFILE_FUNCTION();
+		
+		if (m_TranslationInputLocked)
+			return;
 
 		if (Input::IsKeyPressed(KB_KEY_A))
 		{
@@ -30,7 +33,7 @@ namespace Kablunk
 
 		if (Input::IsKeyPressed(KB_KEY_W))
 		{
-			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts; 
+			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
 			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
 		}
 		else if (Input::IsKeyPressed(KB_KEY_S))
@@ -38,7 +41,8 @@ namespace Kablunk
 			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
 			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
 		}
-
+		
+		
 		if (m_Rotation)
 		{
 			if (Input::IsKeyPressed(KB_KEY_Q))
@@ -69,6 +73,9 @@ namespace Kablunk
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		if (m_ScalingInputLocked)
+			return false;
+
 		KB_PROFILE_FUNCTION();
 
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;

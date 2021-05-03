@@ -6,6 +6,21 @@
 
 namespace Kablunk
 {
+	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:
+			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
+			return nullptr;
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLVertexBuffer>(size);
+		default:
+			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
+			return nullptr;
+		}
+	}
+
 	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())

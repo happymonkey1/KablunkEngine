@@ -27,6 +27,15 @@ namespace Kablunk
 		float GetZoomLevel() { return m_ZoomLevel; };
 
 		void SetPosition(const glm::vec3& pos) { m_CameraPosition = pos; m_Camera.SetPosition(m_CameraPosition); }
+		const glm::vec3& GetPosition() const { return m_CameraPosition; }
+
+		float GetAspectRatio() const { return m_AspectRatio; }
+
+		void SetTranslationInputLocked(bool locked) { m_TranslationInputLocked = locked; }
+		bool GetTranslationInputLocked() { return m_TranslationInputLocked; }
+
+		void SetScalingInputLocked(bool locked) { m_ScalingInputLocked = locked; }
+		bool GetScalingInputLocked() { return m_ScalingInputLocked; }
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
@@ -41,6 +50,9 @@ namespace Kablunk
 
 		float m_CameraMoveSpeed{ 1.0f };
 		float m_CameraRotationSpeed{ 180.0f };
+
+		bool m_TranslationInputLocked{ false };
+		bool m_ScalingInputLocked{ false };
 	};
 }
 

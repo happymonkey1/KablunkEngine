@@ -15,12 +15,10 @@ namespace Kablunk
 		void SetProjection(float left, float right, float bottom, float top);
 
 		void SetPosition(const glm::vec3& position) { m_Position = position; RecalculateViewMatrix(); };
-		const glm::vec3& getPosition() const { return m_Position; };
+		const glm::vec3& GetPosition() const { return m_Position; };
 
 		void SetRotation(const float& rotation) { m_Rotation = rotation; RecalculateViewMatrix(); };
-		float getRotation() const { return m_Rotation; };
-
-
+		float GetRotation() const { return m_Rotation; };
 
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }

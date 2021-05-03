@@ -27,7 +27,10 @@
     <ClCompile Include="Sandbox2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FallingSand.cpp">
+    <ClCompile Include="src\FallingSand\FallingSand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FallingSand\TileMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +38,10 @@
     <ClInclude Include="Sandbox2D.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="FallingSand.h">
+    <ClInclude Include="src\FallingSand\FallingSand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FallingSand\TileMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
