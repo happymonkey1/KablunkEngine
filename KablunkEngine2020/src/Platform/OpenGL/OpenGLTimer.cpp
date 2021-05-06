@@ -13,7 +13,7 @@ namespace Kablunk
 
 	float OpenGLTimer::GetTime() const
 	{
-		return glfwGetTime();
+		return static_cast<float>(glfwGetTime());
 	}
 
 }

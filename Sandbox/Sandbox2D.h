@@ -20,6 +20,7 @@ private:
 	Kablunk::OrthographicCameraController m_CameraController;
 
 	Kablunk::Ref<Kablunk::Texture2D> m_MissingTexture;
+	Kablunk::Ref<Kablunk::Texture2D> m_KablunkLogo;
 
 	struct ProfileResult
 	{
@@ -32,5 +33,7 @@ private:
 	float m_ImguiUpdateCounterMax = .1f;
 	float m_ImguiDeltaTime = 10.0f;
 	float m_ImguiFPS = 10.0f;
+
+	unsigned m_RandSeed;
 };
 

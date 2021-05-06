@@ -18,7 +18,7 @@
 
 #ifdef KB_DEBUG
 	#define KB_ENABLE_ASSERTS
-	//#define KB_PROFILE
+	#define KB_PROFILE 0
 #endif
 
 #ifdef KB_ENABLE_ASSERTS
