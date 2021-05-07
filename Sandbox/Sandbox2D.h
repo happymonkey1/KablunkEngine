@@ -34,6 +34,9 @@ private:
 	float m_ImguiDeltaTime = 10.0f;
 	float m_ImguiFPS = 10.0f;
 
+	static const uint32_t SPRITE_COUNT = 200'000;
+	glm::vec4 m_SpriteColors[SPRITE_COUNT];
+
 	unsigned m_RandSeed;
 };
 

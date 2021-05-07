@@ -37,6 +37,8 @@ namespace Kablunk
 
 	void OpenGLVertexArray::Bind() const
 	{
+		KB_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 	}
 
@@ -47,6 +49,8 @@ namespace Kablunk
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
+		KB_PROFILE_FUNCTION();
+
 		//make sure buffer is bound before adding vertex buffer
 		KB_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
@@ -59,7 +63,6 @@ namespace Kablunk
 		for (const auto& element : layout)
 		{
 			glEnableVertexAttribArray(m_VertexBufferIndex);
-			uint8_t count = element.GetComponentCount();
 			glVertexAttribPointer(
 				m_VertexBufferIndex,
 				element.GetComponentCount(),
@@ -75,6 +78,8 @@ namespace Kablunk
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
+		KB_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();
 

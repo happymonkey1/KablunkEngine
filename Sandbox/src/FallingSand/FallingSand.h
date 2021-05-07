@@ -32,6 +32,8 @@ private:
 
 	Kablunk::OrthographicCameraController m_CameraController;
 
+	TileMap::TILE_BIT_DATA m_CurrentTileTypeSelected = TileMap::Sand;
+
 	float m_ImguiUpdateCounter = 0.0f;
 	float m_ImguiUpdateCounterMax = .1f;
 	float m_ImguiDeltaTime = 10.0f;

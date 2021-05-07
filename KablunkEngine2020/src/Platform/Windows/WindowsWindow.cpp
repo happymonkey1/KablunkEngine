@@ -64,9 +64,9 @@ namespace Kablunk {
             KB_PROFILE_SCOPE("glfwCreateWindow")
             m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
         }
-            m_Context = CreateScope<OpenGLContext>(m_Window);
-            m_Context->Init();
-            KB_CORE_INFO("Context created!");
+		m_Context = CreateScope<OpenGLContext>(m_Window);
+		m_Context->Init();
+		KB_CORE_INFO("Context created!");
         
         
         glfwSetWindowUserPointer(m_Window, &m_Data);

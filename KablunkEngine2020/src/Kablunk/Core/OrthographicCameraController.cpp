@@ -20,35 +20,36 @@ namespace Kablunk
 		if (m_TranslationInputLocked)
 			return;
 
+		float speedMult = (Input::IsKeyPressed(KB_KEY_LEFT_SHIFT)) ? 5.0f : 1.0f;
 		if (Input::IsKeyPressed(KB_KEY_A))
 		{
-			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
-			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
+			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
 		else if (Input::IsKeyPressed(KB_KEY_D))
 		{
-			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
-			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
+			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
 
 		if (Input::IsKeyPressed(KB_KEY_W))
 		{
-			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
-			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
+			m_CameraPosition.y +=  cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
 		else if (Input::IsKeyPressed(KB_KEY_S))
 		{
-			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
-			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts;
+			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
+			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
 		
 		
 		if (m_Rotation)
 		{
 			if (Input::IsKeyPressed(KB_KEY_Q))
-				m_CameraRotation += m_CameraRotationSpeed * ts;
-			else if (Input::IsKeyPressed(KB_KEY_E))
-				m_CameraRotation -= m_CameraRotationSpeed * ts;
+				m_CameraRotation += m_CameraRotationSpeed * ts * speedMult;
+			else if (Input::IsKeyPressed(KB_KEY_E))			  
+				m_CameraRotation -= m_CameraRotationSpeed * ts * speedMult;
 
 			if (m_CameraRotation > 180.0f)
 				m_CameraRotation -= 360.0f;
@@ -58,6 +59,8 @@ namespace Kablunk
 			m_Camera.SetRotation(m_CameraRotation);
 		}
 		
+		
+
 		m_Camera.SetPosition(m_CameraPosition);
 	}
 
@@ -77,11 +80,12 @@ namespace Kablunk
 			return false;
 
 		KB_PROFILE_FUNCTION();
-
-		m_ZoomLevel -= e.GetYOffset() * 0.25f;
+		float speedMult = (Input::IsKeyPressed(KB_KEY_LEFT_SHIFT)) ? 5.0f : 1.0f;
+		m_ZoomLevel -= e.GetYOffset() * 0.25f * speedMult;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 
+		
 		m_CameraMoveSpeed = m_ZoomLevel * 0.5f;
 		return false;
 	}

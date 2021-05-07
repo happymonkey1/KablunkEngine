@@ -10,7 +10,19 @@ public:
 	{
 		Air = 0,
 		Sand = 1,
-		Water = 2
+		Water = 2,
+		Lava = 3,
+		Steam = 4,
+		Smoke = 5,
+		Stone = 6,
+		Wood = 7,
+		Fire = 8
+	};
+
+	static constexpr uint32_t TILES_LIST[9] { 
+		TILE_BIT_DATA::Air, TILE_BIT_DATA::Sand, TILE_BIT_DATA::Water, 
+		TILE_BIT_DATA::Lava, TILE_BIT_DATA::Steam, TILE_BIT_DATA::Smoke, 
+		TILE_BIT_DATA::Stone, TILE_BIT_DATA::Wood, TILE_BIT_DATA::Fire 
 	};
 
 	struct Tile
@@ -21,7 +33,6 @@ public:
 		Tile(const glm::ivec2& p, const glm::vec4& c) : Position{ p }, Color{ c } { };
 	};
 
-public:
 	class ConstIterator
 	{
 	public:
@@ -59,15 +70,17 @@ public:
 
 			while (*m_CurrentTile == TILE_BIT_DATA::Air && m_Index != -1)
 			{
-				if (m_Index >= m_Rows * m_Cols)
-				{
-					m_CurrentTile = nullptr;
-					m_Index == -1;
-					return *this;
-				}
+				
 
 				m_CurrentTile++;
 				m_Index++;
+
+				if (m_Index >= m_Rows * m_Cols)
+				{
+					m_CurrentTile = nullptr;
+					m_Index = -1;
+					return *this;
+				}
 			}
 
 			
@@ -76,15 +89,13 @@ public:
 
 		bool operator==(const ConstIterator& other) { 
 			
-			if (m_Index != other.m_Index)
+			if (m_Index == -1 && other.m_Index == -1)
+				return true;
+			else if (m_Index != other.m_Index)
 				return false;
 			else
-			{
-				if (m_Index == -1)
-					return true;
-
 				return *m_CurrentTile == *other.m_CurrentTile;
-			}
+			
 		}
 		
 		bool operator!=(const ConstIterator& other) { return !(*this == other); }
@@ -104,6 +115,7 @@ public:
 
 	void InitTileData();
 	void UpdateAllTiles();
+	void Reset();
 
 	int32_t GetRows() { return m_TileRows; }
 	int32_t GetCols() { return m_TileCols; }
@@ -123,6 +135,8 @@ public:
 	bool Empty(const glm::ivec2& pos) { return Empty(pos.x, pos.y); }
 	bool Empty(uint32_t x, uint32_t y);
 	
+	TILE_BIT_DATA At(const glm::ivec2& pos) { return At(pos.x, pos.y); }
+	TILE_BIT_DATA At(uint32_t x, uint32_t y);
 
 	void SetTile(const glm::ivec2& pos, TILE_BIT_DATA data) { SetTile(pos.x, pos.y, data); }
 	void SetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data);
@@ -134,7 +148,10 @@ public:
 	ConstIterator Begin() { return ConstIterator{ *this }; }
 	ConstIterator End() { return ConstIterator{ TileMap{} }; }
 
-
+	bool IsGas(TILE_BIT_DATA data) { return data == Steam || data == Smoke || data == Air; }
+	bool IsLiquid(TILE_BIT_DATA data) { return data == Water || data == Lava; }
+	bool IsSolid(TILE_BIT_DATA data) { return data == Sand || data == Stone; }
+	bool IsFlammable(TILE_BIT_DATA data) { return data == Wood; }
 
 private:
 	TILE_BIT_DATA* m_TileData;
@@ -151,6 +168,8 @@ private:
 private:
 	bool UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData);
 	static const glm::vec4 TileDataToColor(TILE_BIT_DATA bitData);
+
+
 
 
 

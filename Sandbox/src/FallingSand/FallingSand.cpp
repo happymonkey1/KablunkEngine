@@ -6,6 +6,10 @@ FallingSand::FallingSand()
 {
 	m_CameraController.SetTranslationInputLocked(true);
 	m_CameraController.SetScalingInputLocked(true);
+
+	glm::vec3 oldPos = m_CameraController.GetPosition();
+	m_CameraController.SetZoomLevel(0.5f);
+	m_CameraController.SetPosition({ 0.5f, 0.5f, oldPos.z });
 }
 
 
@@ -41,10 +45,13 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 		{
 			glm::ivec2 position = {
 				(int)(x - simStartX) / (int)m_TileMap.GetTileWidth(),
-				(int)(y) / (int)m_TileMap.GetTileHeight()
+				(int)(m_ScreenHeight - y) / (int)m_TileMap.GetTileHeight()
 			};
 
-			m_TileMap.TrySetTile(position, TileMap::TILE_BIT_DATA::Sand);
+			for (int y = -1; y <= 1; ++y)
+				for (int x = -1; x <= 1; ++x)
+					if (std::abs(x) != std::abs(y) || (x == 0 && y == 0))
+						m_TileMap.TrySetTile({position.x + x, position.y + y}, m_CurrentTileTypeSelected);
 			
 		}
 	}
@@ -62,10 +69,11 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 	// ==========
 
 	
-
+	
 	Kablunk::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 	Kablunk::RenderCommand::Clear();
 
+	Kablunk::Renderer2D::ResetStats();
 	Kablunk::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 	float tileWidth = m_TileMap.GetTileWidth(), tileHeight = m_TileMap.GetTileHeight();
@@ -106,6 +114,41 @@ void FallingSand::OnImGuiRender(Kablunk::Timestep ts)
 	ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
 	ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
 
+	Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+
+	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+	ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
+	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+	ImGui::Text("Quad Count: %d", stats.QuadCount);
+
+	ImGui::End();
+
+	ImGui::Begin("Tile");
+
+	const char* tiles[] = { "Air", "Sand", "Water", "Lava", "Steam", "Smoke", "Stone", "Wood", "Fire"};
+	static const char* currentItem = tiles[1];
+	if (ImGui::BeginCombo("##Tiles", currentItem))
+	{
+		size_t s = sizeof(tiles) / sizeof(char*);
+		for (int i = 0; i < s; ++i)
+		{
+			bool isSelected = currentItem == tiles[i];
+			if (ImGui::Selectable(tiles[i], isSelected))
+			{
+				currentItem = tiles[i];
+				m_CurrentTileTypeSelected = static_cast<TileMap::TILE_BIT_DATA>(TileMap::TILES_LIST[i]);
+			}
+			if (isSelected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	if (ImGui::Button("Reset Map"))
+	{
+		m_TileMap.Reset();
+	}
+
 	ImGui::End();
 }
 
@@ -128,12 +171,6 @@ bool FallingSand::OnWindowResize(Kablunk::WindowResizeEvent& e)
 	KB_CLIENT_INFO("Window resize called");
 	return false;
 }
-
-
-
-
-
-
 
 bool FallingSand::MouseInsideSimulation(const glm::ivec2& pos)
 {

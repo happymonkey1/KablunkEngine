@@ -9,9 +9,6 @@
 
 namespace Kablunk
 {
-
-	Scope<Renderer2D::Renderer2DStats> Renderer2D::s_RendererStats = CreateScope<Renderer2D::Renderer2DStats>();
-
 	struct QuadVertex
 	{
 		glm::vec3 Position;
@@ -25,9 +22,9 @@ namespace Kablunk
 
 	struct Renderer2DData
 	{
-		const uint32_t MaxQuads = 100'000;
-		const uint32_t MaxVertices = MaxQuads * 4;
-		const uint32_t MaxIndices = MaxQuads * 6;
+		static const uint32_t MaxQuads = 40'000;
+		static const uint32_t MaxVertices = MaxQuads * 4;
+		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32;
 		glm::vec4 QuadVertexPositions[4];
 
@@ -45,6 +42,8 @@ namespace Kablunk
 		// TODO: change to asset handle when implemented
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; //0 = white texture
+
+		Renderer2D::Renderer2DStats Stats;
 	};
 
 	
@@ -108,13 +107,9 @@ namespace Kablunk
 		s_RendererData.TextureSlots[0] = s_RendererData.WhiteTexture;
 
 		s_RendererData.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
-		s_RendererData.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
-		s_RendererData.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
+		s_RendererData.QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
+		s_RendererData.QuadVertexPositions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 		s_RendererData.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
-
-		s_RendererStats->Batches = 0;
-		s_RendererStats->DrawCalls = 0;
-		s_RendererStats->Vertices = 0;
 	}
 
 	void Renderer2D::Shutdown()
@@ -133,7 +128,7 @@ namespace Kablunk
 		s_RendererData.TextureShader->Bind();
 		s_RendererData.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		StartBatch();
+		StartNewBatch();
 	}
 
 	void Renderer2D::EndScene()
@@ -147,14 +142,14 @@ namespace Kablunk
 
 	void Renderer2D::Flush()
 	{
-		KB_PROFILE_FUNCTION();
-
 		if (s_RendererData.QuadIndexCount == 0)
 			return;
 
+		KB_PROFILE_FUNCTION();
+
 		uint32_t dataSize = (uint32_t)((uint8_t*)s_RendererData.QuadVertexBufferPtr - (uint8_t*)s_RendererData.QuadVertexBufferBase);
 		s_RendererData.QuadVertexBuffer->SetData(s_RendererData.QuadVertexBufferBase, dataSize);
-
+		
 		for (uint32_t i = 0; i < s_RendererData.TextureSlotIndex; ++i)
 		{
 			s_RendererData.TextureSlots[i]->Bind(i);
@@ -174,13 +169,41 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		KB_PROFILE_FUNCTION();
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+		/*glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawQuad(transform, color);
+		DrawQuad(transform, color);*/
 		
+		if (s_RendererData.QuadCount >= s_RendererData.MaxQuads)
+			EndBatch();
+
+		const float KTexIndex = 0.0f;
+		const float kTilingFactor = 1.0f;
+
+		glm::vec3 positionCoords[4] = {
+			{ position.x, position.y, position.z },
+			{ position.x + size.x, position.y, position.z},
+			{ position.x + size.x, position.y + size.y, position.z},
+			{ position.x, position.y + size.y, position.z}
+		};
+
+		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+		constexpr size_t quadVertexCount = 4;
+
+		for (uint32_t i = 0; i < quadVertexCount; ++i)
+		{
+			s_RendererData.QuadVertexBufferPtr->Position = positionCoords[i];
+			s_RendererData.QuadVertexBufferPtr->Color = color;
+			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_RendererData.QuadVertexBufferPtr->TexIndex = KTexIndex;
+			s_RendererData.QuadVertexBufferPtr->TilingFactor = kTilingFactor;
+			s_RendererData.QuadVertexBufferPtr++;
+		}
+
+		s_RendererData.QuadIndexCount += 6;
+		s_RendererData.QuadCount++;
+
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
@@ -207,8 +230,7 @@ namespace Kablunk
 		s_RendererData.QuadIndexCount += 6;
 		s_RendererData.QuadCount++;
 
-		s_RendererStats->DrawCalls++;
-		s_RendererStats->Vertices += 4;
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
 	// ==========================
@@ -222,12 +244,58 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		KB_PROFILE_FUNCTION();
-		
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+		/*glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		
+		DrawQuad(transform, texture, tilingFactor, tintColor);*/
 
-		DrawQuad(transform, texture, tilingFactor, tintColor);
+		
+		if (s_RendererData.QuadCount + 1 > s_RendererData.MaxQuads)
+			EndBatch();
+
+
+		//constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float textureIndex = 0.0f;
+		for (uint32_t i = 1; i < s_RendererData.TextureSlotIndex; ++i)
+		{
+			// Dereference shared_ptrs and compare the textures
+			if (*s_RendererData.TextureSlots[i].get() == *texture.get())
+			{
+				textureIndex = (float)i;
+			}
+		}
+
+		if (textureIndex == 0.0f)
+		{
+			textureIndex = (float)s_RendererData.TextureSlotIndex;
+			s_RendererData.TextureSlots[s_RendererData.TextureSlotIndex++] = texture;
+		}
+
+		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+		constexpr size_t quadVertexCount = 4;
+
+		glm::vec3 positionCoords[4] = {
+			{ position.x, position.y, position.z },
+			{ position.x + size.x, position.y, position.z},
+			{ position.x + size.x, position.y + size.y, position.z},
+			{ position.x, position.y + size.y, position.z}
+		};
+
+		for (uint32_t i = 0; i < quadVertexCount; ++i)
+		{
+			s_RendererData.QuadVertexBufferPtr->Position = positionCoords[i];
+			s_RendererData.QuadVertexBufferPtr->Color = tintColor;
+			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_RendererData.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData.QuadVertexBufferPtr++;
+		
+		}
+
+		s_RendererData.QuadIndexCount += 6;
+		s_RendererData.QuadCount++;
+
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -268,39 +336,53 @@ namespace Kablunk
 		s_RendererData.QuadIndexCount += 6;
 		s_RendererData.QuadCount++;
 
-		s_RendererStats->DrawCalls++;
-		s_RendererStats->Vertices += 4;
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
 	// ================================
 	//   Draw Rotated Quad with Color
 	// ================================
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float rotation)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		DrawRotatedQuad({ position.x, position.y, 1.0f }, size, color, rotation);
+		DrawRotatedQuad({ position.x, position.y, 1.0f }, size, rotation, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float rotation)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		KB_PROFILE_FUNCTION();
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		s_RendererData.TextureShader->Bind();
-		s_RendererData.TextureShader->SetFloat4("u_Color", color);
-		s_RendererData.TextureShader->SetFloat("u_TilingFactor", 1.0f);
-		s_RendererData.WhiteTexture->Bind();
+		DrawRotatedQuad(transform, color);
+	}
 
-		glm::mat4 transform;
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color)
+	{
+		if (s_RendererData.QuadCount + 1 > s_RendererData.MaxQuads)
+			EndBatch();
+
+		constexpr float kTextureIndex = 0.0f;
+		constexpr float kTilingFactor = 1.0f;
+
+		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+		constexpr size_t quadVertexCount = 4;
+
+		for (uint32_t i = 0; i < quadVertexCount; ++i)
 		{
-			KB_PROFILE_SCOPE("Matrix Math - Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float rotation)");
-			transform = glm::translate(glm::mat4{ 1.0f }, position)
-				* glm::rotate(glm::mat4{ 1.0f }, glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
-				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
-		}
-		s_RendererData.TextureShader->SetMat4("u_Transform", transform);
+			s_RendererData.QuadVertexBufferPtr->Position = transform * s_RendererData.QuadVertexPositions[i];
+			s_RendererData.QuadVertexBufferPtr->Color = color;
+			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_RendererData.QuadVertexBufferPtr->TexIndex = kTextureIndex;
+			s_RendererData.QuadVertexBufferPtr->TilingFactor = kTilingFactor;
+			s_RendererData.QuadVertexBufferPtr++;
 
-		s_RendererData.QuadVertexArray->Bind();
-		RenderCommand::DrawIndexed(s_RendererData.QuadVertexArray);
+		}
+
+		s_RendererData.QuadIndexCount += 6;
+		s_RendererData.QuadCount++;
+
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -310,34 +392,62 @@ namespace Kablunk
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		KB_PROFILE_FUNCTION();
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), {0.0f, 0.0f, 1.0f})
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		s_RendererData.TextureShader->Bind();
-		s_RendererData.TextureShader->SetFloat4("u_Color", tintColor);
-		s_RendererData.TextureShader->SetFloat("u_TilingFactor", tilingFactor);
-		texture->Bind();
-
-		glm::mat4 transform;
-		{
-			KB_PROFILE_SCOPE("Matrix Math - Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor)");
-			transform = glm::translate(glm::mat4{ 1.0f }, position)
-				* glm::rotate(glm::mat4{ 1.0f }, glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
-				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
-		}
-		s_RendererData.TextureShader->SetMat4("u_Transform", transform);
-
-		s_RendererData.QuadVertexArray->Bind();
-		RenderCommand::DrawIndexed(s_RendererData.QuadVertexArray);
+		DrawRotatedQuad(transform, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::StartNewFrameStats()
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		s_RendererStats->DrawCalls = 0;
-		s_RendererStats->Batches = 0;
-		s_RendererStats->Vertices = 0;
+		if (s_RendererData.QuadCount + 1 > s_RendererData.MaxQuads)
+			EndBatch();
+
+		float textureIndex = 0.0f;
+		for (uint32_t i = 1; i < s_RendererData.TextureSlotIndex; ++i)
+		{
+			// Dereference shared_ptrs and compare the textures
+			if (*s_RendererData.TextureSlots[i].get() == *texture.get())
+			{
+				textureIndex = (float)i;
+			}
+		}
+
+		if (textureIndex == 0.0f)
+		{
+			textureIndex = (float)s_RendererData.TextureSlotIndex;
+			s_RendererData.TextureSlots[s_RendererData.TextureSlotIndex++] = texture;
+		}
+
+		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+		constexpr size_t quadVertexCount = 4;
+		for (uint32_t i = 0; i < quadVertexCount; ++i)
+		{
+			s_RendererData.QuadVertexBufferPtr->Position = transform * s_RendererData.QuadVertexPositions[i];
+			s_RendererData.QuadVertexBufferPtr->Color = tintColor;
+			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_RendererData.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_RendererData.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_RendererData.QuadVertexBufferPtr++;
+
+		}
+
+		s_RendererData.QuadIndexCount += 6;
+		s_RendererData.QuadCount++;
+
+		s_RendererData.Stats.QuadCount += 1;
 	}
 
-	void Renderer2D::StartBatch()
+	void Renderer2D::ResetStats()
+	{
+		s_RendererData.Stats.DrawCalls = 0;
+		s_RendererData.Stats.QuadCount = 0;
+	}
+
+	Renderer2D::Renderer2DStats Renderer2D::GetStats() { return s_RendererData.Stats; }
+
+	void Renderer2D::StartNewBatch()
 	{
 		s_RendererData.QuadCount = 0;
 		s_RendererData.QuadIndexCount = 0;
@@ -345,13 +455,13 @@ namespace Kablunk
 
 		s_RendererData.TextureSlotIndex = 1;
 
-		s_RendererStats->Batches++;
+		s_RendererData.Stats.DrawCalls++;
 	}
 
 	void Renderer2D::EndBatch()
 	{
 		Flush();
-		StartBatch();
+		StartNewBatch();
 	}
 
 }

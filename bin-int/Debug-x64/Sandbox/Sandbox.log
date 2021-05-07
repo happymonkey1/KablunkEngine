@@ -1,3 +1,34 @@
-﻿  Sandbox2D.cpp
+﻿  SandboxApp.cpp
 C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\src\Kablunk\Debug\Instrumentor.h(130,1): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(33,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(56,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,52): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,80): warning C4018: '<': signed/unsigned mismatch
+  FallingSand.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\src\Kablunk\Debug\Instrumentor.h(130,1): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(33,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(56,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,52): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,80): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\FallingSand.cpp(44,32): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\FallingSand.cpp(44,29): warning C4244: 'argument': conversion from 'float' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\FallingSand.cpp(190,13): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\FallingSand.cpp(191,13): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+  TileMap.cpp
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEngine2020\src\Kablunk\Debug\Instrumentor.h(130,1): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(33,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(56,19): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,52): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.h(122,80): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.cpp(26,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\Sandbox\src\FallingSand\TileMap.cpp(28,26): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
   Sandbox.vcxproj -> C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\bin\Debug-x64\Sandbox\Sandbox.exe
