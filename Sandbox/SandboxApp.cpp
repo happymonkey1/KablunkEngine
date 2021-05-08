@@ -44,6 +44,8 @@ public:
 		//PushLayer(new ExampleLayer());
 		//PushLayer(new Sandbox2D());
 		PushLayer(new FallingSand());
+
+		SetWindowTitle("Sandbox 2D");
 	}
 
 	~Sandbox() {

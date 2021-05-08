@@ -10,8 +10,8 @@ TileMap::TileMap()
 TileMap::TileMap(int rows, int cols)
 	: m_TileData{ nullptr }, m_TileRows{rows}, m_TileCols{ cols }
 {
-	m_TileWidth = m_SimulationWidth / (float)rows;
-	m_TileHeight = m_SimulationHeight / (float)cols;
+	m_TileWidth = m_SimulationWidth / static_cast<float>(rows);
+	m_TileHeight = m_SimulationHeight / static_cast<float>(cols);
 	InitTileData();
 }
 
@@ -22,7 +22,7 @@ TileMap::~TileMap()
 
 void TileMap::InitTileData()
 {
-	m_TileData = new TILE_BIT_DATA[(uint64_t)(m_TileRows * m_TileCols)];
+	m_TileData = new TILE_BIT_DATA[m_TileRows * m_TileCols];
 	for (uint32_t y = 0; y < m_TileCols; ++y)
 	{
 		for (uint32_t x = 0; x < m_TileRows; ++x)
@@ -66,7 +66,7 @@ void TileMap::UpdateAllTiles()
 
 void TileMap::Reset()
 {
-	memset(m_TileData, Air, sizeof(TILE_BIT_DATA) * m_TileRows * m_TileCols);
+	memset(m_TileData, 0, sizeof(TILE_BIT_DATA) * m_TileRows * m_TileCols);
 }
 
 bool TileMap::Empty(uint32_t x, uint32_t y)
@@ -904,7 +904,7 @@ const glm::vec4 TileMap::TileDataToColor(TILE_BIT_DATA bitData)
 {
 	switch (bitData)
 	{
-	case TILE_BIT_DATA::Air:     return { 0.0f, 0.0f, 0.0f, 1.0f };
+	case TILE_BIT_DATA::Air:     return { 0.000f, 0.000f, 0.000f, 1.0f };
 	case TILE_BIT_DATA::Sand:    return { 0.760f, 0.698f, 0.502f, 1.0f };
 	case TILE_BIT_DATA::Water:   return { 0.678f, 0.847f, 0.902f, 1.0f };
 	case TILE_BIT_DATA::Lava:    return { 0.812f, 0.063f, 0.125f, 1.0f };

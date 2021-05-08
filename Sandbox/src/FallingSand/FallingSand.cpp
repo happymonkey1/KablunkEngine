@@ -2,7 +2,7 @@
 
 
 FallingSand::FallingSand()
-	: Layer("FallingSand"), m_TileMap{100, 100}, m_CameraController{ 1.7778f }
+	: Layer("FallingSand"), m_TileMap{250, 250}, m_CameraController{ 1.7778f }
 {
 	m_CameraController.SetTranslationInputLocked(true);
 	m_CameraController.SetScalingInputLocked(true);
@@ -44,14 +44,13 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 		if (MouseInsideSimulation(x, y))
 		{
 			glm::ivec2 position = {
-				(int)(x - simStartX) / (int)m_TileMap.GetTileWidth(),
-				(int)(m_ScreenHeight - y) / (int)m_TileMap.GetTileHeight()
+				(x - simStartX) / m_TileMap.GetTileWidth(),
+				((static_cast<float>(m_ScreenHeight) - y) / m_TileMap.GetTileHeight()) - 1
 			};
 
-			for (int y = -1; y <= 1; ++y)
-				for (int x = -1; x <= 1; ++x)
-					if (std::abs(x) != std::abs(y) || (x == 0 && y == 0))
-						m_TileMap.TrySetTile({position.x + x, position.y + y}, m_CurrentTileTypeSelected);
+			for (int y = -m_BrushRadius; y <= m_BrushRadius; ++y)
+				for (int x = -m_BrushRadius; x <= m_BrushRadius; ++x)
+					m_TileMap.TrySetTile({position.x + x, position.y + y}, m_CurrentTileTypeSelected);
 			
 		}
 	}
@@ -85,8 +84,8 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 		{
 			TileMap::Tile t = *it;
 			glm::vec2 worldPosition = {
-				(float)t.Position.x * tileWidth  * (size.x / 7.0f),
-				(float)t.Position.y * tileHeight * (size.y / 7.0f)
+				(float)t.Position.x * tileWidth  * (size.x / (m_TileMap.GetSimulationWidthInPixels() / static_cast<float>(m_TileMap.GetRows()) )),
+				(float)t.Position.y * tileHeight * (size.y / (m_TileMap.GetSimulationHeightInPixels() / static_cast<float>(m_TileMap.GetCols() )))
 			};
 
 			Kablunk::Renderer2D::DrawQuad(worldPosition, size, t.Color);
@@ -123,7 +122,7 @@ void FallingSand::OnImGuiRender(Kablunk::Timestep ts)
 
 	ImGui::End();
 
-	ImGui::Begin("Tile");
+	ImGui::Begin("Brush Settings");
 
 	const char* tiles[] = { "Air", "Sand", "Water", "Lava", "Steam", "Smoke", "Stone", "Wood", "Fire"};
 	static const char* currentItem = tiles[1];
@@ -137,6 +136,27 @@ void FallingSand::OnImGuiRender(Kablunk::Timestep ts)
 			{
 				currentItem = tiles[i];
 				m_CurrentTileTypeSelected = static_cast<TileMap::TILE_BIT_DATA>(TileMap::TILES_LIST[i]);
+			}
+			if (isSelected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	const char* brushNames[] = { "1", "2", "5", "10", "20", "50", "100"};
+	int brushSizes[] = { 1, 2, 5, 10, 20, 50, 100 };
+	static const char* currentBrushSize = brushNames[0];
+	std::string brushSizeTitle = "Brush size: " + std::to_string(m_BrushRadius);
+	if (ImGui::BeginCombo(brushSizeTitle.c_str(), currentBrushSize, ImGuiComboFlags_NoPreview))
+	{
+		size_t s = sizeof(brushNames) / sizeof(char*);
+		for (int i = 0; i < s; ++i)
+		{
+			bool isSelected = currentBrushSize == brushNames[i];
+			if (ImGui::Selectable(brushNames[i], isSelected))
+			{
+				currentBrushSize = brushNames[i];
+				m_BrushRadius = brushSizes[i];
 			}
 			if (isSelected)
 				ImGui::SetItemDefaultFocus();
@@ -182,11 +202,11 @@ bool FallingSand::MouseInsideSimulation(uint32_t x, uint32_t y)
 	const glm::vec3& camPos = m_CameraController.GetPosition();
 	float camAspectRatio = m_CameraController.GetAspectRatio();
 
-	float simWidth = m_TileMap.GetSimulationWidthInPixels(), simHeight = m_TileMap.GetSimulationHeightInPixels();
-	glm::vec2 size{ simWidth / m_TileMap.GetTileWidth() / 12.0f, simHeight / m_TileMap.GetTileHeight() / 12.0f};
+	
 
-	int worldX = ((camPos.x + (camAspectRatio) * ((float)x / (float)m_ScreenWidth) + (simWidth / 2.0f)) * size.x ) / m_TileMap.GetTileWidth();
-	int worldY = (camPos.x + (camAspectRatio) * ((float)x / (float)m_ScreenWidth)) * size.y / m_TileMap.GetTileHeight();
-	return (worldX > 0 && worldX < simWidth && worldY > 0 && worldY < simHeight);
+	float simWidth = m_TileMap.GetSimulationWidthInPixels(), simHeight = m_TileMap.GetSimulationHeightInPixels();
+	float simStartX = (m_ScreenWidth - simWidth) / 2.0f, simStartY = (m_ScreenHeight - simHeight) / 2.0f;
+
+	return (x >= simStartX && x < simStartX + simWidth && y >= simStartY && y < simStartY + simHeight);
 }
 
