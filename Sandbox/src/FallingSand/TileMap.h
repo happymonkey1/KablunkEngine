@@ -2,35 +2,62 @@
 #define FALLINGSAND_TILEMAP_H
 
 #include <glm/glm.hpp>
+#include <unordered_map>
+
+
+
+enum class TileType
+{
+	Air = 0,
+	Sand = 1,
+	Water = 2,
+	Lava = 3,
+	Steam = 4,
+	Smoke = 5,
+	Stone = 6,
+	Wood = 7,
+	Fire = 8
+};
+
+enum class MoveProps
+{
+	None = 0b00000000,
+	MoveDown = 0b00000001,
+	MoveDownSide = 0b00000010,
+	MoveSide = 0b00000100,
+	Gas = 0b00001000,
+	SpreadRandom = 0b00010000
+};
+
+inline MoveProps operator|(MoveProps a, MoveProps b) { return MoveProps(int(a) | int(b)); }
+inline auto operator&(MoveProps a, MoveProps b) { return int(a) & int(b); }
+
 
 class TileMap
 {
 public:
-	enum TILE_BIT_DATA
-	{
-		Air = 0,
-		Sand = 1,
-		Water = 2,
-		Lava = 3,
-		Steam = 4,
-		Smoke = 5,
-		Stone = 6,
-		Wood = 7,
-		Fire = 8
+	static constexpr TileType TILES_LIST[9] { 
+		TileType::Air, TileType::Sand, TileType::Water, 
+		TileType::Lava, TileType::Steam, TileType::Smoke, 
+		TileType::Stone, TileType::Wood, TileType::Fire 
 	};
 
-	static constexpr uint32_t TILES_LIST[9] { 
-		TILE_BIT_DATA::Air, TILE_BIT_DATA::Sand, TILE_BIT_DATA::Water, 
-		TILE_BIT_DATA::Lava, TILE_BIT_DATA::Steam, TILE_BIT_DATA::Smoke, 
-		TILE_BIT_DATA::Stone, TILE_BIT_DATA::Wood, TILE_BIT_DATA::Fire 
+	struct Tile {
+		TileType Type{ TileType::Air };
+		MoveProps MoveProperties{ MoveProps::None };
+
+		glm::vec4 Color;
+
+		bool operator==(const Tile& t) const { return Type == t.Type; }
+		bool operator==(TileType t) const { return Type == t; }
 	};
 
-	struct Tile
+	struct TileEntity
 	{
 		glm::ivec2 Position;
 		glm::vec4 Color;
 
-		Tile(const glm::ivec2& p, const glm::vec4& c) : Position{ p }, Color{ c } { };
+		TileEntity(const glm::ivec2& p, const glm::vec4& c) : Position{ p }, Color{ c } { };
 	};
 
 	class ConstIterator
@@ -40,7 +67,7 @@ public:
 		{
 			if (tileMap.m_TileCols == 0 || tileMap.m_TileRows == 0)
 			{
-				m_CurrentTile == nullptr;
+				m_CurrentTile = nullptr;
 				m_Index = -1;
 			}
 			else
@@ -63,12 +90,12 @@ public:
 
 			if (m_Index >= m_Rows * m_Cols)
 			{
-				m_CurrentTile == nullptr;
+				m_CurrentTile = nullptr;
 				m_Index = -1;
 				return *this;
 			}
 
-			while (*m_CurrentTile == TILE_BIT_DATA::Air && m_Index != -1)
+			while (*m_CurrentTile == TileType::Air && m_Index != -1)
 			{
 				
 
@@ -99,9 +126,9 @@ public:
 		}
 		
 		bool operator!=(const ConstIterator& other) { return !(*this == other); }
-		Tile operator*() const { return Tile{ glm::ivec2{m_Index % m_Rows, m_Index / m_Cols}, TileDataToColor(*m_CurrentTile) };};
+		TileEntity operator*() const { return TileEntity{ glm::ivec2{m_Index % m_Rows, m_Index / m_Cols}, TileDataToColor(m_CurrentTile->Type) };};
 	private:
-		TILE_BIT_DATA* m_CurrentTile;
+		Tile* m_CurrentTile;
 
 		int m_Index;
 		int m_Rows;
@@ -117,14 +144,18 @@ public:
 	void UpdateAllTiles();
 	void Reset();
 
-	int32_t GetRows() { return m_TileRows; }
-	int32_t GetCols() { return m_TileCols; }
+	int32_t GetRows() const { return m_TileRows; }
+	int32_t GetCols() const { return m_TileCols; }
 
-	float GetTileWidth() { return m_TileWidth; }
-	float GetTileHeight() { return m_TileHeight; }
+	float GetTileWidth() const { return m_TileWidth; }
+	float GetTileHeight() const { return m_TileHeight; }
+	glm::vec2 GetTileSize() const { return {m_TileWidth, m_TileHeight}; }
 
 	float GetSimulationWidthInPixels() { return m_SimulationWidth; }
 	float GetSimulationHeightInPixels() { return m_SimulationHeight; }
+	glm::vec2 GetSimulationResolution() const { return { m_SimulationWidth, m_SimulationHeight }; }
+
+	
 
 	uint32_t CoordToIndex(const glm::ivec2& pos) { return CoordToIndex(pos.x, pos.y); }
 	uint32_t CoordToIndex(uint32_t x, uint32_t y) { return y * m_TileRows + x; }
@@ -135,26 +166,29 @@ public:
 	bool Empty(const glm::ivec2& pos) { return Empty(pos.x, pos.y); }
 	bool Empty(uint32_t x, uint32_t y);
 	
-	TILE_BIT_DATA At(const glm::ivec2& pos) { return At(pos.x, pos.y); }
-	TILE_BIT_DATA At(uint32_t x, uint32_t y);
+	const Tile& At(const glm::ivec2& pos) { return At(pos.x, pos.y); }
+	const Tile& At(uint32_t x, uint32_t y);
 
-	void SetTile(const glm::ivec2& pos, TILE_BIT_DATA data) { SetTile(pos.x, pos.y, data); }
-	void SetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data);
+	TileType GetTypeAt(const glm::ivec2& pos) { return GetTypeAt(pos.x, pos.y); }
+	TileType GetTypeAt(uint32_t x, uint32_t y) { return At(x, y).Type; }
 
-	bool TrySetTile(const glm::ivec2& pos, TILE_BIT_DATA data) { return TrySetTile(pos.x, pos.y, data); }
-	bool TrySetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data);
+	void SetTile(const glm::ivec2& pos, TileType data) { SetTile(pos.x, pos.y, data); }
+	void SetTile(uint32_t x, uint32_t y, TileType data);
+
+	bool TrySetTile(const glm::ivec2& pos, TileType data) { return TrySetTile(pos.x, pos.y, data); }
+	bool TrySetTile(uint32_t x, uint32_t y, TileType data);
 
 	// TODO: Create Iterators
 	ConstIterator Begin() { return ConstIterator{ *this }; }
 	ConstIterator End() { return ConstIterator{ TileMap{} }; }
 
-	bool IsGas(TILE_BIT_DATA data) { return data == Steam || data == Smoke || data == Air; }
-	bool IsLiquid(TILE_BIT_DATA data) { return data == Water || data == Lava; }
-	bool IsSolid(TILE_BIT_DATA data) { return data == Sand || data == Stone; }
-	bool IsFlammable(TILE_BIT_DATA data) { return data == Wood; }
+	bool IsGas(TileType data) { return data == TileType::Steam || data == TileType::Smoke || data == TileType::Air; }
+	bool IsLiquid(TileType data) { return data == TileType::Water || data == TileType::Lava; }
+	bool IsSolid(TileType data) { return data == TileType::Sand || data == TileType::Stone; }
+	bool IsFlammable(TileType data) { return data == TileType::Wood; }
 
 private:
-	TILE_BIT_DATA* m_TileData;
+	Tile* m_TileData;
 
 	int32_t m_TileRows{ 0 };
 	int32_t m_TileCols{ 0 };
@@ -165,14 +199,23 @@ private:
 	float m_TileWidth;
 	float m_TileHeight;
 
+	std::unordered_map<TileType, TileMap::Tile> DefaultTiles{
+		{ TileType::Air, {TileType::Air, MoveProps::None} },
+		{ TileType::Stone, {TileType::Stone, MoveProps::None} },
+		{ TileType::Wood, {TileType::Wood, MoveProps::None} },
+		{ TileType::Sand, {TileType::Sand, MoveProps::MoveDown | MoveProps::MoveDownSide} },
+		{ TileType::Water, {TileType::Water, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide} },
+		{ TileType::Lava, {TileType::Lava, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide} },
+		{ TileType::Steam, {TileType::Steam, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
+		{ TileType::Smoke, {TileType::Smoke, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
+		{ TileType::Fire, {TileType::Fire, MoveProps::SpreadRandom} },
+	};
+
 private:
-	bool UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData);
-	static const glm::vec4 TileDataToColor(TILE_BIT_DATA bitData);
-
-
-
-
-
+	bool UpdateTile(uint32_t x, uint32_t y, TileType bitData);
+	static const glm::vec4 TileDataToColor(TileType bitData);
 };
+
+
 
 #endif

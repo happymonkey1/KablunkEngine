@@ -153,12 +153,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FallingSand\Entities.cpp" />
     <ClCompile Include="src\FallingSand\FallingSand.cpp" />
     <ClCompile Include="Sandbox2D.cpp" />
     <ClCompile Include="SandboxApp.cpp" />
     <ClCompile Include="src\FallingSand\TileMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FallingSand\Entities.h" />
     <ClInclude Include="src\FallingSand\FallingSand.h" />
     <ClInclude Include="Sandbox2D.h" />
     <ClInclude Include="src\FallingSand\TileMap.h" />

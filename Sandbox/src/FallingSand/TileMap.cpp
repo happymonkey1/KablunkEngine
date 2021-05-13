@@ -22,34 +22,34 @@ TileMap::~TileMap()
 
 void TileMap::InitTileData()
 {
-	m_TileData = new TILE_BIT_DATA[m_TileRows * m_TileCols];
+	m_TileData = new Tile[m_TileRows * m_TileCols];
 	for (uint32_t y = 0; y < m_TileCols; ++y)
 	{
 		for (uint32_t x = 0; x < m_TileRows; ++x)
 		{
 			if (y == 0)
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Sand;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Sand];
 			else
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 		}
 	}
 
-	SetTile(99, 99, TILE_BIT_DATA::Water);
+	SetTile(99, 99, TileType::Water);
 }
 
 void TileMap::UpdateAllTiles()
 {
-	std::vector <std::pair<glm::vec2, TILE_BIT_DATA>> gasTiles;
+	std::vector <std::pair<glm::vec2, TileType>> gasTiles;
 	for (int32_t y = 0; y < m_TileCols; ++y)//for (int32_t y = m_TileCols - 1; y >= 0; --y)
 	{
 		for (int32_t x = 0; x < m_TileRows; ++x)//for (int32_t x = m_TileRows - 1; x >= 0; --x)
 		{
-			TILE_BIT_DATA tile = m_TileData[CoordToIndex(x, y)];
-			if (tile != TILE_BIT_DATA::Air && tile != Smoke && tile != Steam)
+			TileType tile = GetTypeAt(x, y);
+			if (tile != TileType::Air && tile != TileType::Smoke && tile != TileType::Steam)
 			{
 				UpdateTile(x, y, tile);
 			}
-			else if (tile == Smoke || tile == Steam)
+			else if (tile == TileType::Smoke || tile == TileType::Steam)
 			{
 				gasTiles.push_back(std::make_pair(glm::vec2{ x, y }, tile));
 			}
@@ -66,55 +66,55 @@ void TileMap::UpdateAllTiles()
 
 void TileMap::Reset()
 {
-	memset(m_TileData, 0, sizeof(TILE_BIT_DATA) * m_TileRows * m_TileCols);
+	memset(m_TileData, 0, sizeof(TileType) * m_TileRows * m_TileCols);
 }
 
 bool TileMap::Empty(uint32_t x, uint32_t y)
 {
 	KB_ASSERT(m_TileData != nullptr, "TileData not initialized!");
 	if (!IsInside(x, y)) return false;
-	return m_TileData[CoordToIndex(x, y)] == TILE_BIT_DATA::Air;
+	return m_TileData[CoordToIndex(x, y)] == TileType::Air;
 }
 
-TileMap::TILE_BIT_DATA TileMap::At(uint32_t x, uint32_t y)
+const TileMap::Tile& TileMap::At(uint32_t x, uint32_t y)
 {
 	if (!IsInside(x, y)) KB_CORE_ASSERT(false, "Trying to get a tile that is not inside the map.");
 	return m_TileData[CoordToIndex(x, y)];
 }
 
-void TileMap::SetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data)
+void TileMap::SetTile(uint32_t x, uint32_t y, TileType data)
 {
 	KB_ASSERT(IsInside(x, y), "Tile not inside map!");
-	m_TileData[CoordToIndex(x, y)] = data;
+	m_TileData[CoordToIndex(x, y)].Type = data;
 }
 
-bool TileMap::TrySetTile(uint32_t x, uint32_t y, TILE_BIT_DATA data)
+bool TileMap::TrySetTile(uint32_t x, uint32_t y, TileType data)
 {
 	if (IsInside(x, y))
 	{
-		m_TileData[CoordToIndex(x, y)] = data;
+		m_TileData[CoordToIndex(x, y)].Type = data;
 		return true;
 	}
 	else
 		return false;
 }
 
-bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
+bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 {
 	switch (bitData)
 	{
-	case TILE_BIT_DATA::Air:    
+	case TileType::Air:    
 		return false;
-	case TILE_BIT_DATA::Sand:  // TODO: Make sand randomly disperse in water
+	case TileType::Sand:  // TODO: Make sand randomly disperse in water
 	{
 		// Directly below
 		glm::vec2 move{ x, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
@@ -133,10 +133,10 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 					move = { x + xDir, y - 1 };
 					if (IsInside(move))
 					{
-						TILE_BIT_DATA dispersedTile = m_TileData[CoordToIndex(move)];
+						TileType dispersedTile = GetTypeAt(move);
 						if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
 						{
-							TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+							Tile old = At(move);
 							m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 							m_TileData[CoordToIndex(x, y)] = old;
 							return true;
@@ -155,10 +155,10 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t) || IsLiquid(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
@@ -169,10 +169,10 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir * -1, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t) || IsLiquid(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
@@ -181,24 +181,24 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 
 		return false;
 	}
-	case TILE_BIT_DATA::Water:  // TODO: Make water more realistic
+	case TileType::Water:  // TODO: Make water more realistic
 	{
 		// Directly below
 		glm::vec2 move{ x, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(x, y - 1);
+			TileType t = GetTypeAt(move);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+			else if (t == TileType::Lava) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 				return true;
 			}
 		}
@@ -211,18 +211,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+			else if (t == TileType::Lava) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 				return true;
 			}
 		}
@@ -230,18 +230,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir * -1, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+			else if (t == TileType::Lava) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 			}
 		}
 
@@ -252,7 +252,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y - 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t))
 			{
 				foundAirLeft = true;
@@ -268,7 +268,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y - 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t))
 			{
 				foundAirRight = true;
@@ -298,18 +298,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x + xDir, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+				else if (t == TileType::Lava) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -319,18 +319,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x - 1, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+				else if (t == TileType::Lava) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -340,18 +340,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x + 1, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Lava) // WATER + LAVA = STEAM
+				else if (t == TileType::Lava) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -359,7 +359,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 
 		return false;
 	}
-	case Lava:
+	case TileType::Lava:
 	{
 		bool startedFire = false;
 		for (int32_t moveY = -1; moveY <= 1; ++moveY)
@@ -369,14 +369,14 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 				glm::ivec2 move{ x + moveX, y + moveY };
 				if (IsInside(move))
 				{
-					TILE_BIT_DATA t = At(move);
+					TileType t = GetTypeAt(move);
 					if (IsFlammable(t))
 					{
 						// If tile around is flammable, 
 						// 10 % chance it catches fire
 						if (rand() % 1000 < 5)
 						{
-							SetTile(move, Fire);
+							SetTile(move, TileType::Fire);
 							startedFire = true;
 							break;
 						}
@@ -394,18 +394,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		glm::vec2 move{ x, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(x, y - 1);
+			TileType t = GetTypeAt(x, y - 1);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+			else if (t == TileType::Water) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 				return true;
 			}
 		}
@@ -418,18 +418,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+			else if (t == TileType::Water) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 				return true;
 			}
 		}
@@ -437,18 +437,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		move = { x + xDir * -1, y - 1 };
 		if (IsInside(move))
 		{
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (Empty(move) || IsGas(t))
 			{
-				TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+				Tile old = At(move);
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 				m_TileData[CoordToIndex(x, y)] = old;
 				return true;
 			}
-			else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+			else if (t == TileType::Water) // WATER + LAVA = STEAM
 			{
-				m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 			}
 		}
 
@@ -459,7 +459,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y - 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t))
 			{
 				foundAirLeft = true;
@@ -475,7 +475,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y - 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
+			TileType t = GetTypeAt(move);
 			if (IsGas(t))
 			{
 				foundAirRight = true;
@@ -505,18 +505,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x + xDir, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+				else if (t == TileType::Water) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -526,18 +526,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x - 1, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+				else if (t == TileType::Water) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -547,18 +547,18 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { x + 1, y };
 			if (IsInside(move))
 			{
-				TILE_BIT_DATA t = At(move);
+				TileType t = GetTypeAt(move);
 				if (Empty(move) || IsGas(t))
 				{
-					TILE_BIT_DATA old = m_TileData[CoordToIndex(move)];
+					Tile old = At(move);
 					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
 					m_TileData[CoordToIndex(x, y)] = old;
 					return true;
 				}
-				else if (t == TILE_BIT_DATA::Water) // WATER + LAVA = STEAM
+				else if (t == TileType::Water) // WATER + LAVA = STEAM
 				{
-					m_TileData[CoordToIndex(move)] = TILE_BIT_DATA::Steam;
-					m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Stone;
+					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
+					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
 					return true;
 				}
 			}
@@ -566,7 +566,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 
 		return false;
 	}
-	case Steam:
+	case TileType::Steam:
 	{
 		// choose randomly between up, up left, and up right
 		int xDir = 0;
@@ -581,7 +581,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -604,7 +604,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -614,7 +614,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -625,8 +625,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y + 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
-			if (t == TILE_BIT_DATA::Air)
+			TileType t = GetTypeAt(move);
+			if (t == TileType::Air)
 			{
 				foundAirLeft = true;
 				xPosLeft = nextRowX;
@@ -641,8 +641,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y + 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
-			if (t == TILE_BIT_DATA::Air)
+			TileType t = GetTypeAt(move);
+			if (t == TileType::Air)
 			{
 				foundAirRight = true;
 				xPosRight = nextRowX;
@@ -672,7 +672,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
@@ -682,7 +682,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
@@ -692,14 +692,14 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
 
 		return false;
 	}
-	case Smoke:
+	case TileType::Smoke:
 	{
 		// choose randomly between up, up left, and up right
 		int xDir = 0;
@@ -714,7 +714,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -737,7 +737,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -747,7 +747,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 		if (Empty(move))
 		{
 			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 			return true;
 		}
 
@@ -758,8 +758,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y + 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
-			if (t == TILE_BIT_DATA::Air)
+			TileType t = GetTypeAt(move);
+			if (t == TileType::Air)
 			{
 				foundAirLeft = true;
 				xPosLeft = nextRowX;
@@ -774,8 +774,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			move = { nextRowX, y + 1 };
 			if (!IsInside(move))
 				break;
-			TILE_BIT_DATA t = At(move);
-			if (t == TILE_BIT_DATA::Air)
+			TileType t = GetTypeAt(move);
+			if (t == TileType::Air)
 			{
 				foundAirRight = true;
 				xPosRight = nextRowX;
@@ -805,7 +805,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
@@ -815,7 +815,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
@@ -825,23 +825,23 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			if (Empty(move))
 			{
 				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = TILE_BIT_DATA::Air;
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
 				return true;
 			}
 		}
 
 		return false;
 	}
-	case Stone:
+	case TileType::Stone:
 		return false;
-	case Wood:
+	case TileType::Wood:
 		return false;
-	case Fire:
+	case TileType::Fire:
 	{
 		// 5 % chance fire dies out
 		if (rand() % 100 < 2)
 		{
-			m_TileData[CoordToIndex(x, y)] = Smoke;
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Smoke];
 			return true;
 		}
 
@@ -853,7 +853,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 			{
 				if (Empty(move))
 				{
-					SetTile(x, y, Smoke);
+					SetTile(x, y, TileType::Smoke);
 				}
 			}
 		}
@@ -867,14 +867,14 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 				glm::ivec2 move{ x + moveX, y + moveY };
 				if (IsInside(move))
 				{
-					TILE_BIT_DATA t = At(move);
+					TileType t = GetTypeAt(move);
 					if (IsFlammable(t))
 					{
 						// If tile around is flammable, 
 						// 10 % chance it catches fire
 						if (rand() % 100 < 7)
 						{
-							SetTile(move, Fire);
+							SetTile(move, TileType::Fire);
 							startedFire = true;
 							break;
 						}
@@ -900,19 +900,19 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TILE_BIT_DATA bitData)
 	}
 }
 
-const glm::vec4 TileMap::TileDataToColor(TILE_BIT_DATA bitData)
+const glm::vec4 TileMap::TileDataToColor(TileType bitData)
 {
 	switch (bitData)
 	{
-	case TILE_BIT_DATA::Air:     return { 0.000f, 0.000f, 0.000f, 1.0f };
-	case TILE_BIT_DATA::Sand:    return { 0.760f, 0.698f, 0.502f, 1.0f };
-	case TILE_BIT_DATA::Water:   return { 0.678f, 0.847f, 0.902f, 1.0f };
-	case TILE_BIT_DATA::Lava:    return { 0.812f, 0.063f, 0.125f, 1.0f };
-	case TILE_BIT_DATA::Steam:   return { 0.533f, 0.549f, 0.553f, 1.0f }; 
-	case TILE_BIT_DATA::Smoke:   return { 0.961f, 0.961f, 0.961f, 0.1f }; 
-	case TILE_BIT_DATA::Stone:   return { 0.533f, 0.549f, 0.553f, 0.1f };
-	case TILE_BIT_DATA::Wood:    return { 0.572f, 0.526f, 0.271f, 1.0f };
-	case TILE_BIT_DATA::Fire:    return { 0.886f, 0.345f, 0.133f, 1.0f };
+	case TileType::Air:     return { 0.000f, 0.000f, 0.000f, 1.0f };
+	case TileType::Sand:    return { 0.760f, 0.698f, 0.502f, 1.0f };
+	case TileType::Water:   return { 0.678f, 0.847f, 0.902f, 1.0f };
+	case TileType::Lava:    return { 0.812f, 0.063f, 0.125f, 1.0f };
+	case TileType::Steam:   return { 0.533f, 0.549f, 0.553f, 1.0f }; 
+	case TileType::Smoke:   return { 0.961f, 0.961f, 0.961f, 0.1f }; 
+	case TileType::Stone:   return { 0.533f, 0.549f, 0.553f, 0.1f };
+	case TileType::Wood:    return { 0.572f, 0.526f, 0.271f, 1.0f };
+	case TileType::Fire:    return { 0.886f, 0.345f, 0.133f, 1.0f };
 	default:					 KB_ASSERT(false, "TILE NOT IMPLEMENTED");  return { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 }

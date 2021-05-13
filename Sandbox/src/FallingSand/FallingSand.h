@@ -1,6 +1,7 @@
 #pragma once
 #include <Kablunk.h>
 #include "FallingSand/TileMap.h"
+#include "FallingSand/Entities.h"
 
 class FallingSand : public Kablunk::Layer
 {
@@ -32,8 +33,10 @@ private:
 
 	Kablunk::OrthographicCameraController m_CameraController;
 
-	TileMap::TILE_BIT_DATA m_CurrentTileTypeSelected = TileMap::Sand;
+	TileType m_CurrentTileTypeSelected = TileType::Sand;
 	int32_t m_BrushRadius{ 1 };
+
+	Frog m_Frog1{ glm::vec3{0.0f}, glm::vec2{0.0f}, glm::vec2{0.0f} };
 
 	float m_ImguiUpdateCounter = 0.0f;
 	float m_ImguiUpdateCounterMax = .1f;

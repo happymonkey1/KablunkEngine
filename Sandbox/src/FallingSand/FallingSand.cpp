@@ -2,7 +2,7 @@
 
 
 FallingSand::FallingSand()
-	: Layer("FallingSand"), m_TileMap{250, 250}, m_CameraController{ 1.7778f }
+	: Layer("FallingSand"), m_TileMap{100, 100}, m_CameraController{ 1.7778f }
 {
 	m_CameraController.SetTranslationInputLocked(true);
 	m_CameraController.SetScalingInputLocked(true);
@@ -10,6 +10,8 @@ FallingSand::FallingSand()
 	glm::vec3 oldPos = m_CameraController.GetPosition();
 	m_CameraController.SetZoomLevel(0.5f);
 	m_CameraController.SetPosition({ 0.5f, 0.5f, oldPos.z });
+
+	m_Frog1 = { {0.5f, 0.5f}, m_TileMap.GetTileSize() / m_TileMap.GetSimulationResolution() * 10.0f, {0.0f, 0.0f} };
 }
 
 
@@ -51,13 +53,15 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 			for (int y = -m_BrushRadius; y <= m_BrushRadius; ++y)
 				for (int x = -m_BrushRadius; x <= m_BrushRadius; ++x)
 					m_TileMap.TrySetTile({position.x + x, position.y + y}, m_CurrentTileTypeSelected);
-			
 		}
 	}
 
 	if (m_TickCounter >= m_TicksPerSecond)
 	{
 		m_TileMap.UpdateAllTiles();
+		
+
+		m_Frog1.OnUpdate(Kablunk::Timestep{m_TickCounter});
 		m_TickCounter -= m_TicksPerSecond;
 	}
 	else
@@ -82,7 +86,7 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 		
 		for (auto it = m_TileMap.Begin(), end = m_TileMap.End(); it != end; ++it)
 		{
-			TileMap::Tile t = *it;
+			TileMap::TileEntity t = *it;
 			glm::vec2 worldPosition = {
 				(float)t.Position.x * tileWidth  * (size.x / (m_TileMap.GetSimulationWidthInPixels() / static_cast<float>(m_TileMap.GetRows()) )),
 				(float)t.Position.y * tileHeight * (size.y / (m_TileMap.GetSimulationHeightInPixels() / static_cast<float>(m_TileMap.GetCols() )))
@@ -92,6 +96,8 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 		}
 	}
 	//Kablunk::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f,1.0f }, TileDataToColor(TILE_BIT_DATA::Sand));
+
+	m_Frog1.OnRender();
 
 	Kablunk::Renderer2D::EndScene();
 }
@@ -135,7 +141,7 @@ void FallingSand::OnImGuiRender(Kablunk::Timestep ts)
 			if (ImGui::Selectable(tiles[i], isSelected))
 			{
 				currentItem = tiles[i];
-				m_CurrentTileTypeSelected = static_cast<TileMap::TILE_BIT_DATA>(TileMap::TILES_LIST[i]);
+				m_CurrentTileTypeSelected = static_cast<TileType>(TileMap::TILES_LIST[i]);
 			}
 			if (isSelected)
 				ImGui::SetItemDefaultFocus();
