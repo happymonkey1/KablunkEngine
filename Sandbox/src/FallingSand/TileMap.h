@@ -47,6 +47,11 @@ public:
 		TileType Type{ TileType::Air };
 		MoveProps MoveProperties{ MoveProps::None };
 
+		glm::ivec2 Position{ 0 };
+
+		void SetPosition(const glm::ivec2& p) { Position = p; }
+		void SetPosition(uint32_t x, uint32_t y) { Position = { x, y }; }
+
 		glm::vec4 GetColor() const { return TileDataToColor(Type); }
 		bool HasUpdated = false;
 
@@ -190,6 +195,13 @@ public:
 	bool IsFlammable(TileType data) { return data == TileType::Wood; }
 	bool IsMixable(TileType a, TileType b) { return (a == TileType::Water && b == TileType::Lava) || (a == TileType::Lava && b == TileType::Water); }
 
+private:
+	struct TileSettings
+	{
+		static const int Gravity = 1;
+		static const int FluidDispersion = 5;
+		static constexpr float Friction = 0.2f;
+	};
 
 private:
 	Tile* m_TileData;
@@ -197,11 +209,15 @@ private:
 	int32_t m_TileRows{ 0 };
 	int32_t m_TileCols{ 0 };
 
+	const TileSettings m_TileSettings{};
+
 	float m_SimulationWidth{ 700.0f };
 	float m_SimulationHeight{ 700.0f };
 
 	float m_TileWidth;
 	float m_TileHeight;
+
+	bool m_NeedToFlagTilesForUpdate;
 
 	std::unordered_map<TileType, TileMap::Tile> DefaultTiles{
 		{ TileType::Air,   {TileType::Air,	  MoveProps::None} },
@@ -217,7 +233,8 @@ private:
 
 private:
 	bool UpdateTile(uint32_t x, uint32_t y, TileType bitData);
-	bool m_NeedToFlagTilesForUpdate;
+	
+	void SwapTiles(glm::vec2 start, glm::vec2 move);
 
 	bool MoveDown(uint32_t x, uint32_t y, bool reversedGravity = false);
 	bool MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity = false);

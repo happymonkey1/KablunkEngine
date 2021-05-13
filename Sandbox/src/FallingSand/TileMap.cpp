@@ -27,10 +27,13 @@ void TileMap::InitTileData()
 	{
 		for (uint32_t x = 0; x < m_TileRows; ++x)
 		{
+			int i = CoordToIndex(x, y);
 			if (y == 0)
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Sand];
+				m_TileData[i] = DefaultTiles[TileType::Sand];
 			else
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
+				m_TileData[i] = DefaultTiles[TileType::Air];
+
+			m_TileData[i].SetPosition(x, y);
 		}
 	}
 
@@ -117,14 +120,12 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 		return false;
 	case TileType::Sand:  
 	{
-		// Directly below
 		if (MoveDown(x, y))
 			return true;
 		else if (MoveDownSide(x, y))
 			return true;
 		else
 			return false;
-
 	}
 	case TileType::Water:  // TODO: Make water more realistic
 	{
@@ -267,48 +268,58 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 	}
 }
 
+void TileMap::SwapTiles(glm::vec2 start, glm::vec2 move)
+{
+	Tile old = At(move);
+	m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(start)];
+	m_TileData[CoordToIndex(start)] = old;
+	m_TileData[CoordToIndex(move)].SetPosition(move);
+	m_TileData[CoordToIndex(start)].SetPosition(start);
+}
+
 bool TileMap::MoveDown(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
 {
-	glm::vec2 move{ x, y - (!reversedGravity ? 1 : -1) };
-	if (IsInside(move))
+	Tile start = At(x, y);
+	for (int i = 0; i < m_TileSettings.Gravity; ++i)
 	{
-		TileType t = GetTypeAt(move);
-		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
-		else if (!IsGas(GetTypeAt(x, y)) && IsGas(t) || (IsGas(GetTypeAt(x, y)) && IsLiquid(t)))
+		glm::vec2 move{ start.Position.x, start.Position.y - (!reversedGravity ? 1 : -1) };
+		if (IsInside(move))
 		{
-			Tile old = At(move);
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
-			return true;
-		}
-		else if (GetTypeAt(x, y) != t && (IsLiquid(t) || (IsGas(t) && !IsGas(GetTypeAt(x, y))) ))
-		{
-			while (true)  // FIND BETTER WAY TO DO THIS
-			{
-				int r = rand() % 100;
-				int xDir = 1;
-				if (r <= 33)
-					xDir = -1;
-				else if (r > 33 && r <= 66)
-					xDir = 0;
 
-				move = { x + xDir, y - (!reversedGravity ? 1 : -1) };
-				if (IsInside(move))
+			TileType t = GetTypeAt(move);
+			if (IsMixable(start.Type, t)) return MoveMix(start.Position.x, start.Position.y, move.x, move.y);
+			else if (!IsGas(start.Type) && IsGas(t) || (IsGas(start.Type) && IsLiquid(t)))
+			{
+				SwapTiles(start.Position, move);
+			}
+			else if (GetTypeAt(start.Position) != t && (IsLiquid(t) || (IsGas(t) && !IsGas(GetTypeAt(start.Position)))))
+			{
+				while (true)  // FIND BETTER WAY TO DO THIS
 				{
-					TileType dispersedTile = GetTypeAt(move);
-					if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
+					int r = rand() % 100;
+					int xDir = 1;
+					if (r <= 33)	xDir = -1;
+					else if (r > 33 && r <= 66) xDir = 0;
+
+					move = { start.Position.x + xDir, start.Position.y };
+					if (IsInside(move))
 					{
-						Tile old = At(move);
-						m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-						m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
-						return true;
+						TileType dispersedTile = GetTypeAt(move);
+						if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
+						{
+							SwapTiles(start.Position, move);
+						}
 					}
 				}
 			}
+			else
+				return false;
 		}
+		else
+			return false;
 	}
 
-	return false;
+	return true;
 }
 
 bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
@@ -325,9 +336,7 @@ bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= fals
 		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
 		else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)))
 		{
-			Tile old = At(move);
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+			SwapTiles({x, y}, move);
 			return true;
 		}
 		
@@ -341,9 +350,7 @@ bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= fals
 		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
 		else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)))
 		{
-			Tile old = At(move);
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+			SwapTiles({ x, y }, move);
 			return true;
 		}
 	}
@@ -411,9 +418,7 @@ bool TileMap::MoveSide(uint32_t x, uint32_t y)
 			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
 			else if (IsGas(t))
 			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				SwapTiles({ x, y }, move);
 				return true;
 			}
 			
@@ -428,9 +433,7 @@ bool TileMap::MoveSide(uint32_t x, uint32_t y)
 			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
 			else if (IsGas(t))
 			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				SwapTiles({ x, y }, move);
 				return true;
 			}
 			
@@ -445,8 +448,7 @@ bool TileMap::MoveSide(uint32_t x, uint32_t y)
 			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
 			else if (Empty(move) || IsGas(t))
 			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				SwapTiles({ x, y }, move);
 				return true;
 			}
 		}
