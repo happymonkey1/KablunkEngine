@@ -21,12 +21,13 @@ enum class TileType
 
 enum class MoveProps
 {
-	None = 0b00000000,
-	MoveDown = 0b00000001,
-	MoveDownSide = 0b00000010,
-	MoveSide = 0b00000100,
-	Gas = 0b00001000,
-	SpreadRandom = 0b00010000
+	None			= 0b00000000,
+	MoveDown		= 0b00000001,
+	MoveDownSide	= 0b00000010,
+	MoveSide		= 0b00000100,
+	Gas				= 0b00001000,
+	SpreadRandom	= 0b00010000,
+	CanMix			= 0b00100000
 };
 
 inline MoveProps operator|(MoveProps a, MoveProps b) { return MoveProps(int(a) | int(b)); }
@@ -46,7 +47,8 @@ public:
 		TileType Type{ TileType::Air };
 		MoveProps MoveProperties{ MoveProps::None };
 
-		glm::vec4 Color;
+		glm::vec4 GetColor() const { return TileDataToColor(Type); }
+		bool HasUpdated = false;
 
 		bool operator==(const Tile& t) const { return Type == t.Type; }
 		bool operator==(TileType t) const { return Type == t; }
@@ -155,7 +157,7 @@ public:
 	float GetSimulationHeightInPixels() { return m_SimulationHeight; }
 	glm::vec2 GetSimulationResolution() const { return { m_SimulationWidth, m_SimulationHeight }; }
 
-	
+	void FlagTilesForUpdate();
 
 	uint32_t CoordToIndex(const glm::ivec2& pos) { return CoordToIndex(pos.x, pos.y); }
 	uint32_t CoordToIndex(uint32_t x, uint32_t y) { return y * m_TileRows + x; }
@@ -186,6 +188,8 @@ public:
 	bool IsLiquid(TileType data) { return data == TileType::Water || data == TileType::Lava; }
 	bool IsSolid(TileType data) { return data == TileType::Sand || data == TileType::Stone; }
 	bool IsFlammable(TileType data) { return data == TileType::Wood; }
+	bool IsMixable(TileType a, TileType b) { return (a == TileType::Water && b == TileType::Lava) || (a == TileType::Lava && b == TileType::Water); }
+
 
 private:
 	Tile* m_TileData;
@@ -200,19 +204,26 @@ private:
 	float m_TileHeight;
 
 	std::unordered_map<TileType, TileMap::Tile> DefaultTiles{
-		{ TileType::Air, {TileType::Air, MoveProps::None} },
-		{ TileType::Stone, {TileType::Stone, MoveProps::None} },
-		{ TileType::Wood, {TileType::Wood, MoveProps::None} },
-		{ TileType::Sand, {TileType::Sand, MoveProps::MoveDown | MoveProps::MoveDownSide} },
-		{ TileType::Water, {TileType::Water, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide} },
-		{ TileType::Lava, {TileType::Lava, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide} },
-		{ TileType::Steam, {TileType::Steam, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
-		{ TileType::Smoke, {TileType::Smoke, MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
-		{ TileType::Fire, {TileType::Fire, MoveProps::SpreadRandom} },
+		{ TileType::Air,   {TileType::Air,	  MoveProps::None} },
+		{ TileType::Stone, {TileType::Stone,  MoveProps::None} },
+		{ TileType::Wood,  {TileType::Wood,   MoveProps::None} },
+		{ TileType::Sand,  {TileType::Sand,   MoveProps::MoveDown | MoveProps::MoveDownSide} },
+		{ TileType::Water, {TileType::Water,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix} },
+		{ TileType::Lava,  {TileType::Lava,   MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix  } },
+		{ TileType::Steam, {TileType::Steam,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
+		{ TileType::Smoke, {TileType::Smoke,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
+		{ TileType::Fire,  {TileType::Fire,   MoveProps::SpreadRandom} },
 	};
 
 private:
 	bool UpdateTile(uint32_t x, uint32_t y, TileType bitData);
+	bool m_NeedToFlagTilesForUpdate;
+
+	bool MoveDown(uint32_t x, uint32_t y, bool reversedGravity = false);
+	bool MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity = false);
+	bool MoveSide(uint32_t x, uint32_t y);
+	bool SpreadRandom(uint32_t x, uint32_t y);
+	bool MoveMix(uint32_t sX, uint32_t sY, uint32_t mX, uint32_t mY);
 	static const glm::vec4 TileDataToColor(TileType bitData);
 };
 

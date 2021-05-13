@@ -67,6 +67,8 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 	else
 		m_TickCounter += ts.GetMiliseconds() / 1000.0f;
 
+	m_TileMap.FlagTilesForUpdate();
+
 	// ==========
 	//   Render
 	// ==========

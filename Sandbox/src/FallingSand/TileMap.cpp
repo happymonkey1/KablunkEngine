@@ -44,29 +44,39 @@ void TileMap::UpdateAllTiles()
 	{
 		for (int32_t x = 0; x < m_TileRows; ++x)//for (int32_t x = m_TileRows - 1; x >= 0; --x)
 		{
-			TileType tile = GetTypeAt(x, y);
-			if (tile != TileType::Air && tile != TileType::Smoke && tile != TileType::Steam)
+			Tile tile = At(x, y);
+			if (tile.Type != TileType::Air && !tile.HasUpdated)
 			{
-				UpdateTile(x, y, tile);
-			}
-			else if (tile == TileType::Smoke || tile == TileType::Steam)
-			{
-				gasTiles.push_back(std::make_pair(glm::vec2{ x, y }, tile));
+				m_TileData[CoordToIndex(x, y)].HasUpdated = true;
+				UpdateTile(x, y, tile.Type);
 			}
 		}
 	}
 
-	// Reverse order for gases
-	size_t s = gasTiles.size();
-	for (int i = s - 1; i >= 0; --i)
-	{
-		UpdateTile(gasTiles[i].first.x, gasTiles[i].first.y, gasTiles[i].second);
-	}
+	m_NeedToFlagTilesForUpdate = true;
 }
 
 void TileMap::Reset()
 {
 	memset(m_TileData, 0, sizeof(TileType) * m_TileRows * m_TileCols);
+}
+
+void TileMap::FlagTilesForUpdate()
+{
+	if (!m_NeedToFlagTilesForUpdate) return;
+
+	for (int32_t y = 0; y < m_TileCols; ++y)
+	{
+		for (int32_t x = 0; x < m_TileRows; ++x)
+		{
+			if (GetTypeAt(x, y) != TileType::Air)
+			{
+				m_TileData[CoordToIndex(x, y)].HasUpdated = false;
+			}
+		}
+	}
+
+	m_NeedToFlagTilesForUpdate = false;
 }
 
 bool TileMap::Empty(uint32_t x, uint32_t y)
@@ -105,259 +115,27 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 	{
 	case TileType::Air:    
 		return false;
-	case TileType::Sand:  // TODO: Make sand randomly disperse in water
+	case TileType::Sand:  
 	{
 		// Directly below
-		glm::vec2 move{ x, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (IsLiquid(t))
-			{
-				while (true)  // FIND BETTER WAY TO DO THIS
-				{
-					int r = rand() % 100;
-					int xDir = 1;
-					if (r <= 33)
-						xDir = -1;
-					else if (r > 33 && r <= 66)
-						xDir = 0;
-					
-					move = { x + xDir, y - 1 };
-					if (IsInside(move))
-					{
-						TileType dispersedTile = GetTypeAt(move);
-						if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
-						{
-							Tile old = At(move);
-							m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-							m_TileData[CoordToIndex(x, y)] = old;
-							return true;
-						}
-					}
-				}
-			}
-		}
+		if (MoveDown(x, y))
+			return true;
+		else if (MoveDownSide(x, y))
+			return true;
+		else
+			return false;
 
-		// choose randomly between left and right
-		int xDir = 1;
-		if (rand() % 100 < 50)
-			xDir = -1;
-
-		// Try one direction
-		move = { x + xDir, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (IsGas(t) || IsLiquid(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-		}
-
-		// Then try other
-		move = { x + xDir * -1, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (IsGas(t) || IsLiquid(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-		}
-
-		return false;
 	}
 	case TileType::Water:  // TODO: Make water more realistic
 	{
-		// Directly below
-		glm::vec2 move{ x, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Lava) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-				return true;
-			}
-		}
-		// choose randomly between down left and down right
-		int xDir = 1;
-		if (rand() % 100 < 50)
-			xDir = -1;
-
-		// Try one direction
-		move = { x + xDir, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Lava) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-				return true;
-			}
-		}
-		// Then try other
-		move = { x + xDir * -1, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Lava) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-			}
-		}
-
-		bool foundAirLeft = false;
-		int32_t xPosLeft = x;
-		for (int nextRowX = x - 1; nextRowX >= 0; --nextRowX)
-		{
-			move = { nextRowX, y - 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (IsGas(t))
-			{
-				foundAirLeft = true;
-				xPosLeft = nextRowX;
-				break;
-			}
-		}
-
-		bool foundAirRight = false;
-		int32_t xPosRight = x;
-		for (int nextRowX = x + 1; nextRowX < m_TileRows; ++nextRowX)
-		{
-			move = { nextRowX, y - 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (IsGas(t))
-			{
-				foundAirRight = true;
-				xPosRight = nextRowX;
-				break;
-			}
-		}
-		if (!foundAirLeft && !foundAirRight)
+		if (MoveDown(x, y))
+			return true;
+		else if (MoveDownSide(x, y))
+			return true;
+		else if (MoveSide(x, y))
+			return true;
+		else
 			return false;
-		else if (foundAirRight && foundAirLeft)
-		{
-			// now try randomly choosing between horizontal left and horizontal right
-			uint32_t distToLeft = std::abs(static_cast<int32_t>(x) - xPosLeft);
-			uint32_t distToRight = std::abs(static_cast<int32_t>(x) - xPosRight);
-
-			int xDir = 1;
-			if (distToRight < distToLeft)
-				xDir = 1;
-			else if (distToLeft < distToRight)
-				xDir = -1;
-			else
-			{
-				if (rand() % 100 < 50)
-					xDir = -1;
-			}
-			// Try one direction
-			move = { x + xDir, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Lava) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-		else if (foundAirLeft)
-		{
-			move = { x - 1, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Lava) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-		else if (foundAirRight)
-		{
-			move = { x + 1, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Lava) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 	case TileType::Lava:
 	{
@@ -390,447 +168,36 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 		}
 
 
-		// Directly below
-		glm::vec2 move{ x, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(x, y - 1);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Water) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-				return true;
-			}
-		}
-		// choose randomly between down left and down right
-		int xDir = 1;
-		if (rand() % 100 < 50)
-			xDir = -1;
-
-		// Try one direction
-		move = { x + xDir, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Water) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-				return true;
-			}
-		}
-		// Then try other
-		move = { x + xDir * -1, y - 1 };
-		if (IsInside(move))
-		{
-			TileType t = GetTypeAt(move);
-			if (Empty(move) || IsGas(t))
-			{
-				Tile old = At(move);
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = old;
-				return true;
-			}
-			else if (t == TileType::Water) // WATER + LAVA = STEAM
-			{
-				m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-			}
-		}
-
-		bool foundAirLeft = false;
-		int32_t xPosLeft = x;
-		for (int nextRowX = x - 1; nextRowX >= 0; --nextRowX)
-		{
-			move = { nextRowX, y - 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (IsGas(t))
-			{
-				foundAirLeft = true;
-				xPosLeft = nextRowX;
-				break;
-			}
-		}
-
-		bool foundAirRight = false;
-		int32_t xPosRight = x;
-		for (int nextRowX = x + 1; nextRowX < m_TileRows; ++nextRowX)
-		{
-			move = { nextRowX, y - 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (IsGas(t))
-			{
-				foundAirRight = true;
-				xPosRight = nextRowX;
-				break;
-			}
-		}
-		if (!foundAirLeft && !foundAirRight)
+		if (MoveDown(x, y))
+			return true;
+		else if (MoveDownSide(x, y))
+			return true;
+		else if (MoveSide(x, y))
+			return true;
+		else
 			return false;
-		else if (foundAirRight && foundAirLeft)
-		{
-			// now try randomly choosing between horizontal left and horizontal right
-			uint32_t distToLeft = std::abs(static_cast<int32_t>(x) - xPosLeft);
-			uint32_t distToRight = std::abs(static_cast<int32_t>(x) - xPosRight);
-
-			int xDir = 1;
-			if (distToRight < distToLeft)
-				xDir = 1;
-			else if (distToLeft < distToRight)
-				xDir = -1;
-			else
-			{
-				if (rand() % 100 < 50)
-					xDir = -1;
-			}
-			// Try one direction
-			move = { x + xDir, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Water) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-		else if (foundAirLeft)
-		{
-			move = { x - 1, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Water) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-		else if (foundAirRight)
-		{
-			move = { x + 1, y };
-			if (IsInside(move))
-			{
-				TileType t = GetTypeAt(move);
-				if (Empty(move) || IsGas(t))
-				{
-					Tile old = At(move);
-					m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-					m_TileData[CoordToIndex(x, y)] = old;
-					return true;
-				}
-				else if (t == TileType::Water) // WATER + LAVA = STEAM
-				{
-					m_TileData[CoordToIndex(move)] = DefaultTiles[TileType::Steam];
-					m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Stone];
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 	case TileType::Steam:
 	{
-		// choose randomly between up, up left, and up right
-		int xDir = 0;
-		int r = rand() % 100;
-		if (r < 33)
-			xDir = -1;
-		else if (r >= 33 && r < 66)
-			xDir = 1;
-
-		// Try one direction
-		glm::vec2 move = { x + xDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
+		if (MoveDown(x, y, true))
 			return true;
-		}
-
-		int newXDir;
-		if (xDir == 0)
-		{
-			newXDir = 1;
-			if (rand() % 100 < 50)
-				newXDir = -1;
-		}
+		else if (MoveDownSide(x, y, true))
+			return true;
+		else if (MoveSide(x, y))
+			return true;
 		else
-		{
-			newXDir = xDir * -1;
-			if (rand() % 100 < 50)
-				newXDir = 0;
-		}
-
-		// Then try other
-		move = { x + newXDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-			return true;
-		}
-
-		//Finally try last direction
-		int finalXDir = (newXDir + xDir) * -1;
-		move = { x + finalXDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-			return true;
-		}
-
-		bool foundAirLeft = false;
-		int32_t xPosLeft = x;
-		for (int nextRowX = x - 1; nextRowX >= 0; --nextRowX)
-		{
-			move = { nextRowX, y + 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (t == TileType::Air)
-			{
-				foundAirLeft = true;
-				xPosLeft = nextRowX;
-				break;
-			}
-		}
-
-		bool foundAirRight = false;
-		int32_t xPosRight = x;
-		for (int nextRowX = x + 1; nextRowX < m_TileRows; ++nextRowX)
-		{
-			move = { nextRowX, y + 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (t == TileType::Air)
-			{
-				foundAirRight = true;
-				xPosRight = nextRowX;
-				break;
-			}
-		}
-		if (!foundAirLeft && !foundAirRight)
 			return false;
-		else if (foundAirRight && foundAirLeft)
-		{
-			// now try randomly choosing between horizontal left and horizontal right
-			uint32_t distToLeft = std::abs(static_cast<int32_t>(x) - xPosLeft);
-			uint32_t distToRight = std::abs(static_cast<int32_t>(x) - xPosRight);
-
-			int xDir = 1;
-			if (distToRight < distToLeft)
-				xDir = 1;
-			else if (distToLeft < distToRight)
-				xDir = -1;
-			else
-			{
-				if (rand() % 100 < 50)
-					xDir = -1;
-			}
-			// Try one direction
-			move = { x + xDir, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-		else if (foundAirLeft)
-		{
-			move = { x - 1, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-		else if (foundAirRight)
-		{
-			move = { x + 1, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-
-		return false;
 	}
 	case TileType::Smoke:
 	{
-		// choose randomly between up, up left, and up right
-		int xDir = 0;
-		int r = rand() % 100;
-		if (r < 33)
-			xDir = -1;
-		else if (r >= 33 && r < 66)
-			xDir = 1;
-
-		// Try one direction
-		glm::vec2 move = { x + xDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
+		if (MoveDown(x, y, true))
 			return true;
-		}
-
-		int newXDir;
-		if (xDir == 0)
-		{
-			newXDir = 1;
-			if (rand() % 100 < 50)
-				newXDir = -1;
-		}
+		else if (MoveDownSide(x, y, true))
+			return true;
+		else if (MoveSide(x, y))
+			return true;
 		else
-		{
-			newXDir = xDir * -1;
-			if (rand() % 100 < 50)
-				newXDir = 0;
-		}
-
-		// Then try other
-		move = { x + newXDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-			return true;
-		}
-
-		//Finally try last direction
-		int finalXDir = (newXDir + xDir) * -1;
-		move = { x + finalXDir, y + 1 };
-		if (Empty(move))
-		{
-			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-			m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-			return true;
-		}
-
-		bool foundAirLeft = false;
-		int32_t xPosLeft = x;
-		for (int nextRowX = x - 1; nextRowX >= 0; --nextRowX)
-		{
-			move = { nextRowX, y + 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (t == TileType::Air)
-			{
-				foundAirLeft = true;
-				xPosLeft = nextRowX;
-				break;
-			}
-		}
-
-		bool foundAirRight = false;
-		int32_t xPosRight = x;
-		for (int nextRowX = x + 1; nextRowX < m_TileRows; ++nextRowX)
-		{
-			move = { nextRowX, y + 1 };
-			if (!IsInside(move))
-				break;
-			TileType t = GetTypeAt(move);
-			if (t == TileType::Air)
-			{
-				foundAirRight = true;
-				xPosRight = nextRowX;
-				break;
-			}
-		}
-		if (!foundAirLeft && !foundAirRight)
 			return false;
-		else if (foundAirRight && foundAirLeft)
-		{
-			// now try randomly choosing between horizontal left and horizontal right
-			uint32_t distToLeft = std::abs(static_cast<int32_t>(x) - xPosLeft);
-			uint32_t distToRight = std::abs(static_cast<int32_t>(x) - xPosRight);
-
-			int xDir = 1;
-			if (distToRight < distToLeft)
-				xDir = 1;
-			else if (distToLeft < distToRight)
-				xDir = -1;
-			else
-			{
-				if (rand() % 100 < 50)
-					xDir = -1;
-			}
-			// Try one direction
-			move = { x + xDir, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-		else if (foundAirLeft)
-		{
-			move = { x - 1, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-		else if (foundAirRight)
-		{
-			move = { x + 1, y };
-			if (Empty(move))
-			{
-				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
-				m_TileData[CoordToIndex(x, y)] = DefaultTiles[TileType::Air];
-				return true;
-			}
-		}
-
-		return false;
 	}
 	case TileType::Stone:
 		return false;
@@ -898,6 +265,221 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 		return false;
 	}
 	}
+}
+
+bool TileMap::MoveDown(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
+{
+	glm::vec2 move{ x, y - (!reversedGravity ? 1 : -1) };
+	if (IsInside(move))
+	{
+		TileType t = GetTypeAt(move);
+		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+		else if (!IsGas(GetTypeAt(x, y)) && IsGas(t) || (IsGas(GetTypeAt(x, y)) && IsLiquid(t)))
+		{
+			Tile old = At(move);
+			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+			return true;
+		}
+		else if (GetTypeAt(x, y) != t && (IsLiquid(t) || (IsGas(t) && !IsGas(GetTypeAt(x, y))) ))
+		{
+			while (true)  // FIND BETTER WAY TO DO THIS
+			{
+				int r = rand() % 100;
+				int xDir = 1;
+				if (r <= 33)
+					xDir = -1;
+				else if (r > 33 && r <= 66)
+					xDir = 0;
+
+				move = { x + xDir, y - (!reversedGravity ? 1 : -1) };
+				if (IsInside(move))
+				{
+					TileType dispersedTile = GetTypeAt(move);
+					if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
+					{
+						Tile old = At(move);
+						m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+						m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
+{
+	int xDir = 1;
+	if (rand() % 100 < 50)
+		xDir = -1;
+
+	// Try one direction
+	glm::vec2 move = { x + xDir, y - (!reversedGravity ? 1 : -1) };
+	if (IsInside(move))
+	{
+		TileType t = GetTypeAt(move);
+		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+		else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)))
+		{
+			Tile old = At(move);
+			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+			return true;
+		}
+		
+	}
+
+	// Then try other
+	move = { x + xDir * -1, y - (!reversedGravity ? 1 : -1) };
+	if (IsInside(move))
+	{
+		TileType t = GetTypeAt(move);
+		if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+		else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)))
+		{
+			Tile old = At(move);
+			m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+			m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool TileMap::MoveSide(uint32_t x, uint32_t y)
+{
+	glm::vec2 move;
+	bool foundAirLeft = false;
+	int32_t xPosLeft = x;
+	for (int nextRowX = x - 1; nextRowX >= 0; --nextRowX)
+	{
+		move = { nextRowX, y - 1 };
+		if (!IsInside(move))
+			break;
+		TileType t = GetTypeAt(move);
+		if (IsGas(t))
+		{
+			foundAirLeft = true;
+			xPosLeft = nextRowX;
+			break;
+		}
+	}
+
+	bool foundAirRight = false;
+	int32_t xPosRight = x;
+	for (int nextRowX = x + 1; nextRowX < m_TileRows; ++nextRowX)
+	{
+		move = { nextRowX, y - 1 };
+		if (!IsInside(move))
+			break;
+		TileType t = GetTypeAt(move);
+		if (IsGas(t))
+		{
+			foundAirRight = true;
+			xPosRight = nextRowX;
+			break;
+		}
+	}
+	if (!foundAirLeft && !foundAirRight)
+		return false;
+	else if (foundAirRight && foundAirLeft)
+	{
+		// now try randomly choosing between horizontal left and horizontal right
+		uint32_t distToLeft = std::abs(static_cast<int32_t>(x) - xPosLeft);
+		uint32_t distToRight = std::abs(static_cast<int32_t>(x) - xPosRight);
+
+		int xDir = 1;
+		if (distToRight < distToLeft)
+			xDir = 1;
+		else if (distToLeft < distToRight)
+			xDir = -1;
+		else
+		{
+			if (rand() % 100 < 50)
+				xDir = -1;
+		}
+		// Try one direction
+		move = { x + xDir, y };
+		if (IsInside(move))
+		{
+			TileType t = GetTypeAt(move);
+			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+			else if (IsGas(t))
+			{
+				Tile old = At(move);
+				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				return true;
+			}
+			
+		}
+	}
+	else if (foundAirLeft)
+	{
+		move = { x - 1, y };
+		if (IsInside(move))
+		{
+			TileType t = GetTypeAt(move);
+			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+			else if (IsGas(t))
+			{
+				Tile old = At(move);
+				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				return true;
+			}
+			
+		}
+	}
+	else if (foundAirRight)
+	{
+		move = { x + 1, y };
+		if (IsInside(move))
+		{
+			TileType t = GetTypeAt(move);
+			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+			else if (Empty(move) || IsGas(t))
+			{
+				m_TileData[CoordToIndex(move)] = m_TileData[CoordToIndex(x, y)];
+				m_TileData[CoordToIndex(x, y)] = DefaultTiles[t];
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool TileMap::SpreadRandom(uint32_t x, uint32_t y)
+{
+
+	return false;
+}
+
+bool TileMap::MoveMix(uint32_t sX, uint32_t sY, uint32_t mX, uint32_t mY)
+{
+	uint32_t topX{ 0 }, topY{ 0 };
+	uint32_t bottomX{ 0 }, bottomY{ 0 };
+	if (sY > mY)
+	{
+		topX = sX, topY = sY;
+		bottomX = mX, bottomY = mY;
+	}
+	else
+	{
+		topY = mX, bottomY = mY;
+		bottomX = sX, topY = sY;
+	}
+
+	m_TileData[CoordToIndex(topX, topY)] = DefaultTiles[TileType::Steam];
+	m_TileData[CoordToIndex(bottomX, bottomY)] = DefaultTiles[TileType::Stone];
+
+	return true;
 }
 
 const glm::vec4 TileMap::TileDataToColor(TileType bitData)
