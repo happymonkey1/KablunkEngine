@@ -2,7 +2,7 @@
 
 Personal project to develop a basic game engine
 
-###Features
+### Features
 
 - [x] 3D rendering
 - [x] 2D renderer
