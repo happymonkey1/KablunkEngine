@@ -10,7 +10,7 @@ Personal project to develop a basic game engine
 - [x] 2D renderer
 - [x] Window manager
 - [x] Event system
-- [ ] Basic Orthographic Camera System
+- [x] Basic Orthographic Camera System
 
 ### Planned
 - [ ] ECS and components
