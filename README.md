@@ -14,7 +14,7 @@ Personal project to develop a basic game engine
 
 ### Planned
 - [ ] Line Renderer
-- [ ] ECS and components
+- [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
 - [ ] Frame Buffer / Viewports
 - [ ] Better Camera System
