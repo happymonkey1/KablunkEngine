@@ -20,6 +20,7 @@ Personal project to develop a basic game engine
 - [ ] Task / Threading Abstraction
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
+- [ ] Virtual File System
 
 ## Editor
 
@@ -32,4 +33,4 @@ Personal project to develop a basic game engine
 - [ ] Scene Heirarchy
 - [ ] Scene Loading and Unloading
 - [ ] Gismos
-- [ ] Virtual File System
+
