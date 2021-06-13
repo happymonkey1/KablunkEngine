@@ -22,6 +22,8 @@ Personal project to develop a basic game engine
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
 - [ ] Virtual File System
+- [ ] Runtime Builds
+- [ ] Multiplatform support - Development and Packaging
 
 ## Editor
 
