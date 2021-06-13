@@ -6,8 +6,8 @@ Personal project to develop a basic game engine
 
 ### Implemented
 
-- [x] 3D rendering
-- [x] 2D renderer
+- [x] Basic 3D rendering
+- [x] Functional 2D renderer
 - [x] Window manager
 - [x] Event system
 - [x] Basic Orthographic Camera System
