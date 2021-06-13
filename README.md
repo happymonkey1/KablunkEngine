@@ -13,6 +13,7 @@ Personal project to develop a basic game engine
 - [x] Basic Orthographic Camera System
 
 ### Planned
+- [ ] Line Renderer
 - [ ] ECS and components
 - [ ] Scripting - C#, python, lua, etc
 - [ ] Frame Buffer / Viewports
