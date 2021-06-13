@@ -24,6 +24,8 @@ Personal project to develop a basic game engine
 - [ ] Virtual File System
 - [ ] Runtime Builds
 - [ ] Multiplatform support - Development and Packaging
+- [ ] Audio Engine
+- [ ] 2D / 3D Lighting
 
 ## Editor
 
