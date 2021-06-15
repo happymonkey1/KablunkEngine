@@ -4,7 +4,7 @@ Personal project to develop a basic game engine.
 
 ## Engine
 
-### Implemented
+### Satisfactory Implemention
 
 - [x] Basic 3D rendering
 - [x] Functional 2D renderer
@@ -13,6 +13,7 @@ Personal project to develop a basic game engine.
 - [x] Basic Orthographic Camera System
 
 ### Planned (In no particular order)
+- [ ] Makefile implementation - Premake
 - [ ] Line Renderer
 - [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
@@ -29,14 +30,14 @@ Personal project to develop a basic game engine.
 
 ## Editor
 
-### Implemented
+### Satisfactory Implemention
 
 Nothing as of yet.
 
 ### Planned (In no particular order)
 
 - [ ] Editor
-- [ ] Dockspaces
+- [x] Dockspace
 - [ ] Scene Heirarchy
 - [ ] Scene Loading and Unloading
 - [ ] Gismos
