@@ -12,12 +12,13 @@ Personal project to develop a basic game engine.
 - [x] Event system
 - [x] Basic Orthographic Camera System
 
-### Planned (In no particular order)
+### Planned / In Progress (In no particular order)
 - [ ] Makefile implementation - Premake
 - [ ] Line Renderer
 - [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
-- [ ] Frame Buffer / Viewports
+- [x] Framebuffer
+- [ ] Viewports
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
 - [ ] Particle System
@@ -34,7 +35,7 @@ Personal project to develop a basic game engine.
 
 Nothing as of yet.
 
-### Planned (In no particular order)
+### Planned / In Progress (In no particular order)
 
 - [ ] Editor
 - [x] Dockspace
