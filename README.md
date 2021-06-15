@@ -12,7 +12,7 @@ Personal project to develop a basic game engine.
 - [x] Event system
 - [x] Basic Orthographic Camera System
 
-### Planned
+### Planned (In no particular order)
 - [ ] Line Renderer
 - [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
@@ -33,7 +33,7 @@ Personal project to develop a basic game engine.
 
 Nothing as of yet.
 
-### Planned
+### Planned (In no particular order)
 
 - [ ] Editor
 - [ ] Dockspaces
