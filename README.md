@@ -1,6 +1,6 @@
 # KablunkEngine
 
-Personal project to develop a basic game engine. 
+Personal project to develop a basic 2D game engine. 
 
 ## Engine
 
