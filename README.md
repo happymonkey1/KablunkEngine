@@ -31,6 +31,8 @@ Personal project to develop a basic game engine.
 
 ### Implemented
 
+Nothing as of yet.
+
 ### Planned
 
 - [ ] Editor
