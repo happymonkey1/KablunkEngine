@@ -41,6 +41,7 @@ namespace Kablunk {
 
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 		inline bool GetStatus() const { return m_Handled; }
+		inline bool SetStatus(bool handled) { m_Handled = handled; }
 	protected:
 		bool m_Handled = false;
 	};

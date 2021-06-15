@@ -254,7 +254,6 @@ namespace Kablunk
 			EndBatch();
 
 
-		//constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_RendererData.TextureSlotIndex; ++i)
 		{

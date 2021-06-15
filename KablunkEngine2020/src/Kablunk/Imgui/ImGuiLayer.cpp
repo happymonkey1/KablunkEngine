@@ -98,6 +98,16 @@ namespace Kablunk {
 		}
 	}
 
+	void ImGuiLayer::OnEvent(Event& e)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		
+		auto handled = e.GetStatus() | (e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse);
+		handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		
+		e.SetStatus(handled);
+	}
+
 	void ImGuiLayer::OnImGuiRender(Timestep ts)
 	{
 		/*static bool show = false;
