@@ -19,6 +19,7 @@ private:
 
 	Kablunk::OrthographicCameraController m_CameraController;
 
+	Kablunk::Ref<Kablunk::Framebuffer> m_frame_buffer;
 	Kablunk::Ref<Kablunk::Texture2D> m_MissingTexture;
 	Kablunk::Ref<Kablunk::Texture2D> m_KablunkLogo;
 
@@ -28,7 +29,7 @@ private:
 		float Time;
 	};
 
-	static const uint32_t SPRITE_COUNT = 200'000;
+	static const uint32_t SPRITE_COUNT = 100;
 	glm::vec4 m_SpriteColors[SPRITE_COUNT];
 
 	unsigned m_RandSeed;

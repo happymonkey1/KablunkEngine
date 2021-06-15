@@ -102,8 +102,9 @@ namespace Kablunk {
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		
-		auto handled = e.GetStatus() | (e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse);
-		handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		auto handled = e.GetStatus(); 
+		handled		|= e.IsInCategory(EventCategoryMouse)    & io.WantCaptureMouse;
+		handled		|= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
 		
 		e.SetStatus(handled);
 	}

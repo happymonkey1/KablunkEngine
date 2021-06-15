@@ -73,8 +73,8 @@ class Sandbox : public Kablunk::Application {
 public:
 	Sandbox() {
 		PushLayer(new ExampleLayer());
-		//PushLayer(new Sandbox2D());
-		PushLayer(new FallingSand());
+		PushLayer(new Sandbox2D());
+		//PushLayer(new FallingSand());
 		//PushLayer(new PathfindingLayer());
 
 		SetWindowTitle("Sandbox 2D");

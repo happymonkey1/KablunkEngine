@@ -128,6 +128,12 @@
     <ClCompile Include="src\Kablunk\Renderer\Renderer2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kablunk\Renderer\Framebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
@@ -256,5 +262,7 @@
     <ClInclude Include="src\Kablunk\Renderer\Renderer2D.h" />
     <ClInclude Include="src\Kablunk\Core\Timing.h" />
     <ClInclude Include="src\Kablunk\Debug\Instrumentor.h" />
+    <ClInclude Include="src\Kablunk\Renderer\Framebuffer.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
   </ItemGroup>
 </Project>

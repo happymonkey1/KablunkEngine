@@ -29,6 +29,8 @@ namespace Kablunk {
 		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
 
+		void Close();
+
 		inline void SetWindowTitle(const std::string& title) { m_Window->SetWindowTitle(title); }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);

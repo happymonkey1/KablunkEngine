@@ -53,6 +53,11 @@ namespace Kablunk
 		overlay->OnAttach();
 	}
 
+	void Application::Close()
+	{
+		m_Running = false;
+	}
+
 	void Application::OnEvent(Event& e) {
 		KB_PROFILE_FUNCTION();
 
