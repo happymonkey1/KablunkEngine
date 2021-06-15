@@ -45,6 +45,7 @@ Nothing as of yet.
 
 Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
 
-### Todo:
+### Todo
 
-Cleanup codebase and standardize style
+Cleanup codebase and standardize style 
+Mostly [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) with some personal preferences.
