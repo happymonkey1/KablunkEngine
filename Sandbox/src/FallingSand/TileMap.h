@@ -27,7 +27,8 @@ enum class MoveProps
 	MoveSide		= 0b00000100,
 	Gas				= 0b00001000,
 	SpreadRandom	= 0b00010000,
-	CanMix			= 0b00100000
+	CanMix			= 0b00100000,
+	Disperse		= 0b01000000,
 };
 
 inline MoveProps operator|(MoveProps a, MoveProps b) { return MoveProps(int(a) | int(b)); }
@@ -198,9 +199,9 @@ public:
 private:
 	struct TileSettings
 	{
-		static const int Gravity = 1;
+		static const int Gravity = 3;
 		static const int FluidDispersion = 5;
-		static constexpr float Friction = 0.2f;
+		static constexpr float Friction = 0.0f;
 	};
 
 private:
@@ -223,11 +224,11 @@ private:
 		{ TileType::Air,   {TileType::Air,	  MoveProps::None} },
 		{ TileType::Stone, {TileType::Stone,  MoveProps::None} },
 		{ TileType::Wood,  {TileType::Wood,   MoveProps::None} },
-		{ TileType::Sand,  {TileType::Sand,   MoveProps::MoveDown | MoveProps::MoveDownSide} },
-		{ TileType::Water, {TileType::Water,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix} },
-		{ TileType::Lava,  {TileType::Lava,   MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix  } },
-		{ TileType::Steam, {TileType::Steam,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
-		{ TileType::Smoke, {TileType::Smoke,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas} },
+		{ TileType::Sand,  {TileType::Sand,   MoveProps::MoveDown | MoveProps::MoveDownSide											  | MoveProps::Disperse} },
+		{ TileType::Water, {TileType::Water,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix                      } },
+		{ TileType::Lava,  {TileType::Lava,   MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::CanMix                      } },
+		{ TileType::Steam, {TileType::Steam,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas    | MoveProps::Disperse} },
+		{ TileType::Smoke, {TileType::Smoke,  MoveProps::MoveDown | MoveProps::MoveDownSide | MoveProps::MoveSide | MoveProps::Gas    | MoveProps::Disperse} },
 		{ TileType::Fire,  {TileType::Fire,   MoveProps::SpreadRandom} },
 	};
 

@@ -38,11 +38,6 @@ private:
 
 	Frog m_Frog1{ glm::vec3{0.0f}, glm::vec2{0.0f}, glm::vec2{0.0f} };
 
-	float m_ImguiUpdateCounter = 0.0f;
-	float m_ImguiUpdateCounterMax = .1f;
-	float m_ImguiDeltaTime = 10.0f;
-	float m_ImguiFPS = 10.0f;
-
 	const float m_TicksPerSecond{ 1.0f / 20.0f };
 	float m_TickCounter = 0.0f;
 };

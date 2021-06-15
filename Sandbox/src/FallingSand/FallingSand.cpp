@@ -2,7 +2,7 @@
 
 
 FallingSand::FallingSand()
-	: Layer("FallingSand"), m_TileMap{100, 100}, m_CameraController{ 1.7778f }
+	: Layer("FallingSand"), m_TileMap{500, 500}, m_CameraController{ 1.7778f }
 {
 	m_CameraController.SetTranslationInputLocked(true);
 	m_CameraController.SetScalingInputLocked(true);
@@ -50,8 +50,8 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 				((static_cast<float>(m_ScreenHeight) - y) / m_TileMap.GetTileHeight()) - 1
 			};
 
-			for (int y = -m_BrushRadius; y <= m_BrushRadius; ++y)
-				for (int x = -m_BrushRadius; x <= m_BrushRadius; ++x)
+			for (int y = -m_BrushRadius + 1; y <= m_BrushRadius - 1; ++y)
+				for (int x = -m_BrushRadius + 1; x <= m_BrushRadius - 1; ++x)
 					m_TileMap.TrySetTile({position.x + x, position.y + y}, m_CurrentTileTypeSelected);
 		}
 	}
@@ -106,30 +106,6 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 
 void FallingSand::OnImGuiRender(Kablunk::Timestep ts)
 {
-	if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
-	{
-		float miliseconds = ts.GetMiliseconds();
-		m_ImguiDeltaTime = miliseconds;
-		m_ImguiFPS = 1000.0f / miliseconds;
-		m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
-	}
-	else
-		m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
-
-	ImGui::Begin("Debug Information");
-
-	ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
-	ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
-
-	Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
-
-	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-	ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
-	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-	ImGui::Text("Quad Count: %d", stats.QuadCount);
-
-	ImGui::End();
-
 	ImGui::Begin("Brush Settings");
 
 	const char* tiles[] = { "Air", "Sand", "Water", "Lava", "Steam", "Smoke", "Stone", "Wood", "Fire"};

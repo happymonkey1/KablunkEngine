@@ -96,38 +96,13 @@ void Sandbox2D::OnImGuiRender(Kablunk::Timestep ts)
 {
 	KB_PROFILE_FUNCTION();
 
-	if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
-	{
-		float miliseconds = ts.GetMiliseconds();
-		m_ImguiDeltaTime = miliseconds;
-		m_ImguiFPS = 1000.0f / miliseconds;
-		m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
-	}
-	else
-		m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
+	
+	ImGui::Begin("Square Color");
 
-	{
-		KB_PROFILE_SCOPE("Imgui windows");
-		ImGui::Begin("Debug Information");
+	ImGui::ColorEdit4("Square", glm::value_ptr(m_SquareColor));
 
-		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
-		ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
-
-		Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
-
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-		ImGui::Text("Quad Count: %d", stats.QuadCount);
-
-		ImGui::End();
-
-		ImGui::Begin("Square Color");
-
-		ImGui::ColorEdit4("Square", glm::value_ptr(m_SquareColor));
-
-		ImGui::End();
-	}
+	ImGui::End();
+	
 }
 
 void Sandbox2D::OnEvent(Kablunk::Event& e)

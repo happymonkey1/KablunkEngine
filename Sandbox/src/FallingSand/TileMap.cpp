@@ -140,34 +140,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 	}
 	case TileType::Lava:
 	{
-		bool startedFire = false;
-		for (int32_t moveY = -1; moveY <= 1; ++moveY)
-		{
-			for (int32_t moveX = -1; moveX <= 1; ++moveX)
-			{
-				glm::ivec2 move{ x + moveX, y + moveY };
-				if (IsInside(move))
-				{
-					TileType t = GetTypeAt(move);
-					if (IsFlammable(t))
-					{
-						// If tile around is flammable, 
-						// 10 % chance it catches fire
-						if (rand() % 1000 < 5)
-						{
-							SetTile(move, TileType::Fire);
-							startedFire = true;
-							break;
-						}
-					}
-				}
-
-			}
-
-			if (startedFire)
-				break;
-		}
-
+		
+		SpreadRandom(x, y);
 
 		if (MoveDown(x, y))
 			return true;
@@ -200,10 +174,8 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 		else
 			return false;
 	}
-	case TileType::Stone:
-		return false;
-	case TileType::Wood:
-		return false;
+	case TileType::Stone:   return false;
+	case TileType::Wood:    return false;
 	case TileType::Fire:
 	{
 		// 5 % chance fire dies out
@@ -226,39 +198,7 @@ bool TileMap::UpdateTile(uint32_t x, uint32_t y, TileType bitData)
 			}
 		}
 
-		// 35 % chance fire dies out
-		bool startedFire = false;
-		for (int32_t moveY = -1; moveY <= 1; ++moveY)
-		{
-			for (int32_t moveX = -1; moveX <= 1; ++moveX)
-			{
-				glm::ivec2 move{ x + moveX, y + moveY };
-				if (IsInside(move))
-				{
-					TileType t = GetTypeAt(move);
-					if (IsFlammable(t))
-					{
-						// If tile around is flammable, 
-						// 10 % chance it catches fire
-						if (rand() % 100 < 7)
-						{
-							SetTile(move, TileType::Fire);
-							startedFire = true;
-							break;
-						}
-					}
-				}
-				
-			}
-
-			if (startedFire)
-				break;
-		}
-
-		
-
-
-		return false;
+		return SpreadRandom(x, y);
 	}
 	default:
 	{
@@ -280,46 +220,59 @@ void TileMap::SwapTiles(glm::vec2 start, glm::vec2 move)
 bool TileMap::MoveDown(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
 {
 	Tile start = At(x, y);
-	for (int i = 0; i < m_TileSettings.Gravity; ++i)
+	glm::vec2 move = start.Position;
+	auto potential_move = move;
+	for (int i = 1; i < m_TileSettings.Gravity+1; ++i)
 	{
-		glm::vec2 move{ start.Position.x, start.Position.y - (!reversedGravity ? 1 : -1) };
-		if (IsInside(move))
+		potential_move.y -= !reversedGravity ? 1 : -1;
+		if (IsInside(potential_move))
 		{
-
-			TileType t = GetTypeAt(move);
-			if (IsMixable(start.Type, t)) return MoveMix(start.Position.x, start.Position.y, move.x, move.y);
+			TileType t = GetTypeAt(potential_move);
+			if (IsMixable(start.Type, t)) return MoveMix(potential_move.x, potential_move.y + i * (!reversedGravity ? 1 : -1), potential_move.x, potential_move.y);
 			else if (!IsGas(start.Type) && IsGas(t) || (IsGas(start.Type) && IsLiquid(t)))
 			{
-				SwapTiles(start.Position, move);
+				move = potential_move;
+				continue;
 			}
-			else if (GetTypeAt(start.Position) != t && (IsLiquid(t) || (IsGas(t) && !IsGas(GetTypeAt(start.Position)))))
+			else if (start.MoveProperties & MoveProps::Disperse)
 			{
+				int count = 0;
 				while (true)  // FIND BETTER WAY TO DO THIS
 				{
+					if (count >= 4)
+						break;
 					int r = rand() % 100;
 					int xDir = 1;
 					if (r <= 33)	xDir = -1;
 					else if (r > 33 && r <= 66) xDir = 0;
 
-					move = { start.Position.x + xDir, start.Position.y };
-					if (IsInside(move))
+					glm::vec2 dispersedMove = { potential_move.x + xDir, potential_move.y };
+					if (IsInside(dispersedMove))
 					{
-						TileType dispersedTile = GetTypeAt(move);
+						TileType dispersedTile = GetTypeAt(dispersedMove);
 						if (IsGas(dispersedTile) || IsLiquid(dispersedTile))
 						{
-							SwapTiles(start.Position, move);
+							SwapTiles({ potential_move.x, potential_move.y }, dispersedMove);
+							return true;
 						}
 					}
+					count++;
 				}
 			}
 			else
-				return false;
+				break;
 		}
 		else
-			return false;
+			break;
 	}
 
-	return true;
+	if (IsInside(move) && move != static_cast<glm::vec2>(start.Position))
+	{
+		SwapTiles(start.Position, move);
+		return true;
+	}
+	else
+		return false;
 }
 
 bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= false*/)
@@ -329,7 +282,80 @@ bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= fals
 		xDir = -1;
 
 	// Try one direction
-	glm::vec2 move = { x + xDir, y - (!reversedGravity ? 1 : -1) };
+	Tile start = At(x, y);
+	glm::vec2 move;
+	int slipFactor = std::max(1, static_cast<int>(std::round(static_cast<float>(m_TileSettings.Gravity) * (1 - m_TileSettings.Friction))));
+	bool foundMove = false;
+	for (int i = 1; i < slipFactor + 1; ++i)
+	{
+		move = { x + xDir * i, y - i * (!reversedGravity ? 1 : -1) };
+		if (IsInside(move))
+		{
+			TileType t = GetTypeAt(move);
+			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+			else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)) && !IsGas(GetTypeAt({ move.x, move.y - 1 * (!reversedGravity ? 1 : -1) })))
+			{
+				foundMove = true; continue;
+			}
+			else
+			{
+				move.x -= xDir;
+				move.y += 1 * (!reversedGravity ? 1 : -1);  
+				break;
+			}
+		}
+		else
+		{
+			move.x -= xDir;
+			move.y += 1 * (!reversedGravity ? 1 : -1);
+			break;
+		}
+	}
+
+	if (foundMove && IsInside(move))
+	{
+		SwapTiles(start.Position, move);
+		return true;
+	}
+
+
+
+	foundMove = false;
+	for (int i = 1; i < slipFactor + 1; ++i)
+	{
+		move = { x + xDir * -1 * i, y - i * (!reversedGravity ? 1 : -1) };
+		if (IsInside(move))
+		{
+			TileType t = GetTypeAt(move);
+			if (IsMixable(GetTypeAt(x, y), t)) return MoveMix(x, y, move.x, move.y);
+			else if (GetTypeAt(x, y) != t && (IsGas(t) || IsLiquid(t)) && !IsGas(GetTypeAt({ move.x, move.y - 1 * (!reversedGravity ? 1 : -1) })))
+			{
+				foundMove = true; continue;
+			}
+			else
+			{
+				move.x -= xDir * -1;
+				move.y += 1 * (!reversedGravity ? 1 : -1);
+				break;
+			}
+		}
+		else
+		{
+			move.x -= xDir * -1;
+			move.y += 1 * (!reversedGravity ? 1 : -1);
+			break;
+		}
+	}
+
+	if (foundMove && IsInside(move))
+	{
+		SwapTiles(start.Position, move);
+		return true;
+	}
+	else
+		return false;
+
+#ifdef OLD_PATH
 	if (IsInside(move))
 	{
 		TileType t = GetTypeAt(move);
@@ -356,6 +382,7 @@ bool TileMap::MoveDownSide(uint32_t x, uint32_t y, bool reversedGravity /*= fals
 	}
 
 	return false;
+#endif
 }
 
 bool TileMap::MoveSide(uint32_t x, uint32_t y)
@@ -459,8 +486,35 @@ bool TileMap::MoveSide(uint32_t x, uint32_t y)
 
 bool TileMap::SpreadRandom(uint32_t x, uint32_t y)
 {
+	bool startedFire = false;
+	for (int32_t moveY = -1; moveY <= 1; ++moveY)
+	{
+		for (int32_t moveX = -1; moveX <= 1; ++moveX)
+		{
+			glm::ivec2 move{ x + moveX, y + moveY };
+			if (IsInside(move))
+			{
+				TileType t = GetTypeAt(move);
+				if (IsFlammable(t))
+				{
+					// If tile around is flammable, 
+					// 10 % chance it catches fire
+					if (rand() % 1000 < 5)
+					{
+						SetTile(move, TileType::Fire);
+						startedFire = true;
+						break;
+					}
+				}
+			}
 
-	return false;
+		}
+
+		if (startedFire)
+			break;
+	}
+
+	return startedFire;
 }
 
 bool TileMap::MoveMix(uint32_t sX, uint32_t sY, uint32_t mX, uint32_t mY)
