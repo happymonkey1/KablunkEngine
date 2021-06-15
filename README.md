@@ -1,6 +1,6 @@
 # KablunkEngine
 
-Personal project to develop a basic game engine
+Personal project to develop a basic game engine. 
 
 ## Engine
 
@@ -39,3 +39,4 @@ Personal project to develop a basic game engine
 - [ ] Scene Loading and Unloading
 - [ ] Gismos
 
+Much inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
