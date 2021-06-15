@@ -44,3 +44,7 @@ Nothing as of yet.
 ### Credits
 
 Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
+
+### Todo:
+
+Cleanup codebase and standardize style
