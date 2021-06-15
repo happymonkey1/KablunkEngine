@@ -27,7 +27,7 @@ Personal project to develop a basic 2D game engine.
 - [ ] Runtime Builds
 - [ ] Multiplatform support - Development and Packaging
 - [ ] Audio Engine
-- [ ] 2D / 3D Lighting
+- [ ] 2D / 3D? Lighting
 
 ## Editor
 
