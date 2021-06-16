@@ -14,7 +14,6 @@ public:
 	virtual void OnImGuiRender(Kablunk::Timestep ts) override;
 	virtual void OnEvent(Kablunk::Event& e);
 private:
-
 	glm::vec4 m_SquareColor{ 0.8f, 0.2f, 0.3f, 1.0f };
 
 	Kablunk::OrthographicCameraController m_CameraController;
