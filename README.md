@@ -1,10 +1,10 @@
 # KablunkEngine
 
-Personal project to develop a basic game engine. 
+Personal project to develop a basic 2D game engine. 
 
 ## Engine
 
-### Implemented
+### Satisfactory Implemention
 
 - [x] Basic 3D rendering
 - [x] Functional 2D renderer
@@ -12,11 +12,13 @@ Personal project to develop a basic game engine.
 - [x] Event system
 - [x] Basic Orthographic Camera System
 
-### Planned (In no particular order)
+### Planned / In Progress (In no particular order)
+- [ ] Makefile implementation - Premake
 - [ ] Line Renderer
 - [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
-- [ ] Frame Buffer / Viewports
+- [x] Framebuffer
+- [ ] Viewports
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
 - [ ] Particle System
@@ -25,18 +27,18 @@ Personal project to develop a basic game engine.
 - [ ] Runtime Builds
 - [ ] Multiplatform support - Development and Packaging
 - [ ] Audio Engine
-- [ ] 2D / 3D Lighting
+- [ ] 2D / 3D? Lighting
 
 ## Editor
 
-### Implemented
+### Satisfactory Implemention
 
 Nothing as of yet.
 
-### Planned (In no particular order)
+### Planned / In Progress (In no particular order)
 
 - [ ] Editor
-- [ ] Dockspaces
+- [x] Dockspace
 - [ ] Scene Heirarchy
 - [ ] Scene Loading and Unloading
 - [ ] Gismos
