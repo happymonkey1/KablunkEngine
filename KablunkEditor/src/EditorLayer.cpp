@@ -55,10 +55,10 @@ namespace Kablunk
 			rotation += ts * 50.0f;
 
 			Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-			Renderer2D::DrawRotatedQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, rotation, { 0.2f, 0.8f, 0.3f, 0.5f });
 			Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 1.0f, 1.0f }, 45.0f, m_missing_texture);
 			Renderer2D::DrawQuad({ 0.5f, 0.5f }, { 0.5f, 0.5f }, m_square_color);
 			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_missing_texture, 10.0f);
+			Renderer2D::DrawRotatedQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, rotation, { 0.2f, 0.8f, 0.3f, 0.5f });
 
 			Renderer2D::EndScene();
 
@@ -109,7 +109,8 @@ namespace Kablunk
 
 		if (!opt_padding)
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin("DockSpace Demo", &dockspace_open, window_flags);
+		
+		ImGui::Begin("KablunkEditor Dockspace", &dockspace_open, window_flags);
 		if (!opt_padding)
 			ImGui::PopStyleVar();
 
@@ -120,7 +121,7 @@ namespace Kablunk
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
-			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+			ImGuiID dockspace_id = ImGui::GetID("kablunk_editor_dockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
@@ -138,26 +139,28 @@ namespace Kablunk
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::Begin("Square Color");
+		if (ImGui::Begin("Square Color"))
+		{
+			ImGui::ColorEdit4("Square", glm::value_ptr(m_square_color));
 
-		ImGui::ColorEdit4("Square", glm::value_ptr(m_square_color));
+			ImGui::End();
+		}
 
-		ImGui::End();
+		
+		if (ImGui::Begin("Debug Information"))
+		{
+			ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
+			ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
 
-		ImGui::Begin("Debug Information");
+			Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
 
-		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
-		ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
+			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+			ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
+			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+			ImGui::Text("Quad Count: %d", stats.QuadCount);
 
-		Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
-
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-		ImGui::Text("Quad Count: %d", stats.QuadCount);
-
-		ImGui::End();
-
+			ImGui::End();
+		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");

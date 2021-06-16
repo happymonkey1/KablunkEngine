@@ -33,6 +33,8 @@ namespace Kablunk {
 	{
 		friend class EventDispatcher;
 	public:
+		virtual ~Event() = default;
+
 		virtual EventType GetEventType() const = 0;
 		//make this debug only
 		virtual const char* GetName() const = 0;

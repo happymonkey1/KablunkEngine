@@ -169,41 +169,10 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		/*glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawQuad(transform, color);*/
-		
-		if (s_RendererData.QuadCount >= s_RendererData.MaxQuads)
-			EndBatch();
-
-		const float KTexIndex = 0.0f;
-		const float kTilingFactor = 1.0f;
-
-		glm::vec3 positionCoords[4] = {
-			{ position.x, position.y, position.z },
-			{ position.x + size.x, position.y, position.z},
-			{ position.x + size.x, position.y + size.y, position.z},
-			{ position.x, position.y + size.y, position.z}
-		};
-
-		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		constexpr size_t quadVertexCount = 4;
-
-		for (uint32_t i = 0; i < quadVertexCount; ++i)
-		{
-			s_RendererData.QuadVertexBufferPtr->Position = positionCoords[i];
-			s_RendererData.QuadVertexBufferPtr->Color = color;
-			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_RendererData.QuadVertexBufferPtr->TexIndex = KTexIndex;
-			s_RendererData.QuadVertexBufferPtr->TilingFactor = kTilingFactor;
-			s_RendererData.QuadVertexBufferPtr++;
-		}
-
-		s_RendererData.QuadIndexCount += 6;
-		s_RendererData.QuadCount++;
-
-		s_RendererData.Stats.QuadCount += 1;
+		DrawQuad(transform, color);
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
@@ -244,57 +213,10 @@ namespace Kablunk
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		/*glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		
-		DrawQuad(transform, texture, tilingFactor, tintColor);*/
-
-		
-		if (s_RendererData.QuadCount + 1 > s_RendererData.MaxQuads)
-			EndBatch();
-
-
-		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_RendererData.TextureSlotIndex; ++i)
-		{
-			// Dereference shared_ptrs and compare the textures
-			if (*s_RendererData.TextureSlots[i].get() == *texture.get())
-			{
-				textureIndex = (float)i;
-			}
-		}
-
-		if (textureIndex == 0.0f)
-		{
-			textureIndex = (float)s_RendererData.TextureSlotIndex;
-			s_RendererData.TextureSlots[s_RendererData.TextureSlotIndex++] = texture;
-		}
-
-		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		constexpr size_t quadVertexCount = 4;
-
-		glm::vec3 positionCoords[4] = {
-			{ position.x, position.y, position.z },
-			{ position.x + size.x, position.y, position.z},
-			{ position.x + size.x, position.y + size.y, position.z},
-			{ position.x, position.y + size.y, position.z}
-		};
-
-		for (uint32_t i = 0; i < quadVertexCount; ++i)
-		{
-			s_RendererData.QuadVertexBufferPtr->Position = positionCoords[i];
-			s_RendererData.QuadVertexBufferPtr->Color = tintColor;
-			s_RendererData.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_RendererData.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_RendererData.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_RendererData.QuadVertexBufferPtr++;
-		
-		}
-
-		s_RendererData.QuadIndexCount += 6;
-		s_RendererData.QuadCount++;
-
-		s_RendererData.Stats.QuadCount += 1;
+		DrawQuad(transform, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
