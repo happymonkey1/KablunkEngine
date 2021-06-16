@@ -25,11 +25,18 @@ namespace Kablunk
 		Ref<Texture2D> m_missing_texture;
 		Ref<Texture2D> m_kablunk_logo;
 
+		glm::vec2 m_viewport_size{ 0.0f };
+
 		struct ProfileResult
 		{
 			const char* name;
 			float time;
 		};
+
+		float m_ImguiUpdateCounter = 0.0f;
+		float m_ImguiUpdateCounterMax = .1f;
+		float m_ImguiDeltaTime = 10.0f;
+		float m_ImguiFPS = 10.0f;
 	};
 }
 #endif

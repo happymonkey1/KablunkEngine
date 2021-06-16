@@ -6,17 +6,20 @@
 namespace Kablunk
 {
 	OpenGLFramebuffer::OpenGLFramebuffer(const FrameBufferSpecification& specs)
-		: m_specifications{ specs }, m_color_attachment{ 0 }, m_depth_attachment{ 0 }
+		: m_specifications{ specs }, m_renderer_id{ 0 }, m_color_attachment{ 0 }, m_depth_attachment{ 0 }
 	{
 		Invalidate();
 	}
 
 	OpenGLFramebuffer::~OpenGLFramebuffer()
 	{
-		glDeleteFramebuffers(1, &m_renderer_id);
+		DeleteBuffer();
 	}
 	void OpenGLFramebuffer::Invalidate()
 	{
+		if (m_renderer_id)
+			DeleteBuffer();
+
 		glCreateFramebuffers(1, &m_renderer_id);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_renderer_id);
 
@@ -42,11 +45,27 @@ namespace Kablunk
 	void OpenGLFramebuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_renderer_id);
+		glViewport(0, 0, m_specifications.width, m_specifications.height);
 	}
 
 	void OpenGLFramebuffer::Unbind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
+	{
+		m_specifications.width = width;
+		m_specifications.height = height;
+
+		Invalidate();
+	}
+
+	void OpenGLFramebuffer::DeleteBuffer()
+	{
+		glDeleteFramebuffers(1, &m_renderer_id);
+		glDeleteTextures(1, &m_color_attachment);
+		glDeleteTextures(1, &m_depth_attachment);
 	}
 
 }
