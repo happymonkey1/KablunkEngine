@@ -18,7 +18,6 @@ Personal project to develop a basic 2D game engine.
 - [ ] ECS
 - [ ] Scripting - C#, python, lua, etc
 - [x] Framebuffer
-- [ ] Viewports
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
 - [ ] Particle System
@@ -28,6 +27,8 @@ Personal project to develop a basic 2D game engine.
 - [ ] Multiplatform support - Development and Packaging
 - [ ] Audio Engine
 - [ ] 2D / 3D? Lighting
+- [ ] 2D Physics
+- [ ] Better shader system - SPIR-V
 
 ## Editor
 
@@ -37,11 +38,14 @@ Nothing as of yet.
 
 ### Planned / In Progress (In no particular order)
 
-- [ ] Editor
+- [x] Editor
 - [x] Dockspace
+- [x] Viewports
+- [x] Theme
 - [ ] Scene Heirarchy
 - [ ] Scene Loading and Unloading
 - [ ] Gismos
+- [ ] Content Manager
 
 ### Credits
 
