@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 
-#include "Platform/Windows/WindowsInput.h"
+#include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
 namespace Kablunk 
@@ -66,10 +66,11 @@ namespace Kablunk
 		dispatcher.Dispatch<WindowResizeEvent>(KABLUNK_BIND_EVENT_FN(Application::OnWindowResize));
 
 
-		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();) {
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
 			if (e.GetStatus())
 				break;
-			(*--it)->OnEvent(e);
+
+			(*it)->OnEvent(e);
 		}
 	}
 

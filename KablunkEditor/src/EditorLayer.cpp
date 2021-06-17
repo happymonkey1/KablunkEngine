@@ -36,7 +36,7 @@ namespace Kablunk
 		// ==========
 		{
 			KB_PROFILE_SCOPE("CameraController::Update");
-			m_camera_controller.OnUpdate(ts);
+			if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
 		}
 		// ==========
 		//   Render
@@ -56,8 +56,8 @@ namespace Kablunk
 
 			Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.2f, 0.3f, 0.8f, 1.0f });
 			Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 1.0f, 1.0f }, 45.0f, m_missing_texture);
-			Renderer2D::DrawQuad({ 0.5f, 0.5f }, { 0.5f, 0.5f }, m_square_color);
 			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_missing_texture, 10.0f);
+			Renderer2D::DrawRotatedQuad(m_square_pos, m_square_size, m_square_rotation, m_square_color);
 			Renderer2D::DrawRotatedQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, rotation, { 0.2f, 0.8f, 0.3f, 0.5f });
 
 			Renderer2D::EndScene();
@@ -139,9 +139,13 @@ namespace Kablunk
 			ImGui::EndMenuBar();
 		}
 
-		if (ImGui::Begin("Square Color"))
+		if (ImGui::Begin("Square Settings"))
 		{
-			ImGui::ColorEdit4("Square", glm::value_ptr(m_square_color));
+			ImGui::ColorEdit4("Color", glm::value_ptr(m_square_color));
+			ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
+			
+			ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
+			ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
 
 			ImGui::End();
 		}
@@ -164,7 +168,11 @@ namespace Kablunk
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
-			
+		
+		m_viewport_focused = ImGui::IsWindowFocused();
+		m_viewport_hovered = ImGui::IsWindowHovered();
+		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused && m_viewport_hovered);
+
 		auto panel_size = ImGui::GetContentRegionAvail();
 			
 

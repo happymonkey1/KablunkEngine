@@ -31,6 +31,8 @@ namespace Kablunk {
 
 		void Close();
 
+		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
 		inline void SetWindowTitle(const std::string& title) { m_Window->SetWindowTitle(title); }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);

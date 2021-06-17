@@ -17,8 +17,10 @@
 
 
 namespace Kablunk {
-	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") {
-		m_Time = 0.0f;
+	ImGuiLayer::ImGuiLayer() 
+		: Layer{ "ImGuiLayer" }, m_time{ 0.0f } 
+	{
+
 	}
 
 	ImGuiLayer::~ImGuiLayer()
@@ -100,13 +102,16 @@ namespace Kablunk {
 
 	void ImGuiLayer::OnEvent(Event& e)
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		
-		auto handled = e.GetStatus(); 
-		handled		|= e.IsInCategory(EventCategoryMouse)    & io.WantCaptureMouse;
-		handled		|= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
-		
-		e.SetStatus(handled);
+		if (!m_allow_event_passing)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+
+			auto handled = e.GetStatus();
+			handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+
+			e.SetStatus(handled);
+		}
 	}
 
 	void ImGuiLayer::OnImGuiRender(Timestep ts)

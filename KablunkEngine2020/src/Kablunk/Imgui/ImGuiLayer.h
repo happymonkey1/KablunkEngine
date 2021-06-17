@@ -20,8 +20,11 @@ namespace Kablunk {
 		virtual void OnImGuiRender(Timestep ts) override;
 		void Begin();
 		void End();
+
+		void SetAllowEventPassing(bool allow) { m_allow_event_passing = allow; }
 	private:
-		float m_Time;
+		bool m_allow_event_passing{ true };
+		float m_time;
 	};
 }
 
