@@ -5,6 +5,9 @@
 
 namespace Kablunk
 {
+
+	static const uint32_t s_max_frame_buffer_size{ 8192 }; // Should be determined by gpu capabilities during runtime 
+
 	OpenGLFramebuffer::OpenGLFramebuffer(const FrameBufferSpecification& specs)
 		: m_specifications{ specs }, m_renderer_id{ 0 }, m_color_attachment{ 0 }, m_depth_attachment{ 0 }
 	{
@@ -55,6 +58,11 @@ namespace Kablunk
 
 	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 	{
+		if (width == 0 || height == 0 || width > s_max_frame_buffer_size || height > s_max_frame_buffer_size)
+		{
+			KB_CORE_WARN("Attempt to resize framebuffer to invalid size, ({0}, {1})", width, height);
+			return;
+		}
 		m_specifications.width = width;
 		m_specifications.height = height;
 

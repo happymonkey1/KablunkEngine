@@ -113,15 +113,16 @@ namespace Kablunk
 					for (Layer* layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
-			}
+			
 
-			m_ImGuiLayer->Begin();
-			{
-				KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
-				for (Layer* layer : m_LayerStack)
-					layer->OnImGuiRender(timestep);
+				m_ImGuiLayer->Begin();
+				{
+					KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
+						for (Layer* layer : m_LayerStack)
+							layer->OnImGuiRender(timestep);
+				}
+				m_ImGuiLayer->End();
 			}
-			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}

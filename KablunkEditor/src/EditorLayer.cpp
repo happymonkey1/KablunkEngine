@@ -174,8 +174,6 @@ namespace Kablunk
 		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused && m_viewport_hovered);
 
 		auto panel_size = ImGui::GetContentRegionAvail();
-			
-
 		if (m_viewport_size != *((glm::vec2*)&panel_size))
 		{
 			int width = panel_size.x, height = panel_size.y;
@@ -198,6 +196,11 @@ namespace Kablunk
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_camera_controller.OnEvent(e);
+
+		if (e.GetEventType() == EventType::WindowMinimized)
+		{
+			m_viewport_size = { 0.0f, 0.0f };
+		}
 	}
 
 }

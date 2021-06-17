@@ -30,6 +30,15 @@ namespace Kablunk {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
+	class WindowMinimizeEvent : public Event 
+	{
+	public:
+		WindowMinimizeEvent() { }
+
+		EVENT_CLASS_TYPE(WindowMinimized)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
 	class AppTickEvent : public Event {
 	public:
 		AppTickEvent() {}

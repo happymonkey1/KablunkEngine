@@ -81,7 +81,11 @@ namespace Kablunk {
             data.Width = width;
             data.Height = height;
 
-            
+            if (width == 0 || height == 0)
+            {
+                WindowMinimizeEvent event;
+                data.EventCallback(event);
+            }
         });
 
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
