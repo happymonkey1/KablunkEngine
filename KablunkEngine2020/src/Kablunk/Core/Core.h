@@ -2,29 +2,38 @@
 
 #include <memory>
 
-//#ifdef KB_PLATFORM_WINDOWS
-//	#if KB_DYNAMIC_LINK
-//		#ifdef KB_BUILD_DLL
-//			#define KABLUNK_API __declspec(dllexport)
-//		#else
-//			#define KABLUNK_API __declspec(dllimport)
-//		#endif
-//	#else
-//		#define KABLUNK_API
-//	#endif
-//#else
-//	#error Kablunk Engine only supports Windows! :)
-//#endif
+// Platform detection
+#ifdef _WIN32
+	#ifdef _WIN64
+		#define KB_PLATFORM_WINDOWS
+	#else
+		#error "x86 is not supported!"
+	#endif
+#elif TARGET_OS_MAC
+	//defined(__APPLE__) || defined(__MACH__)
+	#error "MacOS is not supported!"
+#elif defined(__ANDROID__)
+	#error "Android is not supported"
+#elif defined(__linux__)
+	#error "Linux is not supported!"
+#else
+	#error "Unknown platform"
+#endif
+
 
 #ifdef KB_DEBUG
+	#ifdef KB_PLATFORM_WINDOWS
+		#define KB_DEBUG_BREAK() __debugbreak()
+	#else
+		#error "Platform doesn't support debugbreak!"
+	#endif	
 	#define KB_ENABLE_ASSERTS
 	#define KB_PROFILE 0
 #endif
 
 #ifdef KB_ENABLE_ASSERTS
-
-	#define KB_ASSERT(x, ...) {      if(!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define KB_CORE_ASSERT(x, ...) { if(!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } } 
+	#define KB_ASSERT(x, ...)      { if(!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } }
+	#define KB_CORE_ASSERT(x, ...) { if(!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } } 
 #else
 	#define KB_ASSERT(x, ...)
 	#define KB_CORE_ASSERT(x, ...)

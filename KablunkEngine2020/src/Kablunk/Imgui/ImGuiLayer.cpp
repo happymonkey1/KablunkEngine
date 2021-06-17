@@ -45,7 +45,6 @@ namespace Kablunk {
 		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
 		ImGui::StyleColorsDark();
-
 		
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -118,6 +117,7 @@ namespace Kablunk {
 	{
 		/*static bool show = false;
 		ImGui::ShowDemoWindow(&show);*/
+		//ImGui::ShowStyleEditor();
 	}
 
 
