@@ -12,7 +12,7 @@ namespace Kablunk
 		{
 
 		case RendererAPI::API::None:
-			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
+			KB_CORE_ASSERT(false, "RendererAPI::None is not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLVertexArray>();
