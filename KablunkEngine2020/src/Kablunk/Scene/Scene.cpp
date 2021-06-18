@@ -44,11 +44,14 @@ namespace Kablunk
 
 	void Scene::OnUpdate(Timestep ts)
 	{
-		// Update
+		// ==========
+		//	 Update
+		// ==========
+
 		m_registry.view<NativeScriptComponent>().each(
 			[&](auto entity, NativeScriptComponent native_script_component)
 			{
-				/* #TODO
+				/*	#TODO
 				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
 				*	function if the instance has not been set
 				*/ 
@@ -62,8 +65,11 @@ namespace Kablunk
 				native_script_component.OnUpdateFunction(ts);
 			}
 		);
-			
-		// Render
+		
+		// ==========	
+		//	 Render
+		// ==========
+
 		auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (auto entity : group)
 		{

@@ -91,7 +91,6 @@ namespace Kablunk
 		delete[] quadIndices;
 
 		s_RendererData.WhiteTexture = Texture2D::Create(1, 1);
-		
 
 		int32_t samplers[s_RendererData.MaxTextureSlots];
 		for (int32_t i = 0; i < s_RendererData.MaxTextureSlots; ++i)
