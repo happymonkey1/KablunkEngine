@@ -1,7 +1,7 @@
 # KablunkEngine 
 
 [![Build status](https://ci.appveyor.com/api/projects/status/wmtieejd651lye65?svg=true)](https://ci.appveyor.com/project/happymonkey1/kablunkengine)
-
+[![Release](/github/v/release/:user/:repo?include_prereleases)]
 Personal project to develop a basic 2D game engine. 
 
 ## Engine
