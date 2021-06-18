@@ -52,6 +52,7 @@ Nothing as of yet.
 ### Other
 
 - [ ] Fix Continuous Integration
+- [ ] Add unit testing
 
 ### Credits
 
