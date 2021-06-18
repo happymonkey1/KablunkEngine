@@ -59,6 +59,13 @@ namespace Kablunk
 		else
 			m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
 
+		auto spec = m_frame_buffer->GetSpecification();
+		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
+			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
+		{
+			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
+			m_camera_controller.OnResize(m_viewport_size.x, m_viewport_size.y);
+		}
 		
 		// ==========
 		//   Render
@@ -198,17 +205,11 @@ namespace Kablunk
 		
 		m_viewport_focused = ImGui::IsWindowFocused();
 		m_viewport_hovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused&& m_viewport_hovered);
+		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused && m_viewport_hovered);
 
 		auto panel_size = ImGui::GetContentRegionAvail();
-		if (m_viewport_size != *((glm::vec2*)&panel_size))
-		{
-			auto width = panel_size.x, height = panel_size.y;
-			m_frame_buffer->Resize(width, height);
-			m_viewport_size = { width, height };
-
-			m_camera_controller.OnResize(width, height);
-		}
+		auto width = panel_size.x, height = panel_size.y;
+		m_viewport_size = { width, height };
 
 		auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(frame_buffer_id), { m_viewport_size.x, m_viewport_size.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
