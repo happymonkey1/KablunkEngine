@@ -49,6 +49,10 @@ Nothing as of yet.
 - [ ] Gismos
 - [ ] Content Manager
 
+### Other
+
+- [ ] Fix Continuous Integration
+
 ### Credits
 
 Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
