@@ -13,10 +13,7 @@ namespace Kablunk
 	{
 	public:
 		Entity() = default;
-		Entity(EntityHandle handle, Scene* scene) : m_entity_handle{ handle }, m_scene{ scene }
-		{
-
-		}
+		Entity(EntityHandle handle, Scene* scene) : m_entity_handle{ handle }, m_scene{ scene } { }
 
 		Entity(const Entity&) = default;
 

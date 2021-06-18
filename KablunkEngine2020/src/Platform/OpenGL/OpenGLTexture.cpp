@@ -23,6 +23,9 @@ namespace Kablunk
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		uint32_t whiteTextureData = 0xffffffff;
+		SetData(&whiteTextureData, sizeof(uint32_t));
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
