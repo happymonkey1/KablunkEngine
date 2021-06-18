@@ -18,8 +18,11 @@ namespace Kablunk {
 		virtual void OnAttach() override;
 		virtual void OnEvent(Event& e) override;
 		virtual void OnImGuiRender(Timestep ts) override;
+
 		void Begin();
 		void End();
+
+		void SetDarkTheme();
 
 		void SetAllowEventPassing(bool allow) { m_allow_event_passing = allow; }
 	private:

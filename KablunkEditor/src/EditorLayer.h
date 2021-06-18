@@ -28,6 +28,10 @@ namespace Kablunk
 		Ref<Texture2D> m_missing_texture;
 		Ref<Texture2D> m_kablunk_logo;
 
+		Ref<Texture2D> m_icon_play;
+
+		bool m_application_paused{ true };
+
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };
 
 		glm::vec2 m_viewport_size{ 0.0f };
@@ -42,6 +46,9 @@ namespace Kablunk
 		float m_ImguiUpdateCounterMax = .1f;
 		float m_ImguiDeltaTime = 10.0f;
 		float m_ImguiFPS = 10.0f;
+
+
+		ImFont* m_imgui_font{ nullptr };
 	};
 }
 #endif

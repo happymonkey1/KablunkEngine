@@ -46,19 +46,24 @@ namespace Kablunk
 		GLenum internalFormat = 0, dataFormat = 0;
 		if (channels == 4)
 		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_RGBA;
+			internalFormat	= GL_RGBA8;
+			dataFormat		= GL_RGBA;
 		}
 		else if (channels == 3)
 		{
-			internalFormat = GL_RGB8;
-			dataFormat = GL_RGB;
+			internalFormat	= GL_RGB8;
+			dataFormat		= GL_RGB;
+		}
+		else if (channels == 2)
+		{
+			internalFormat	= GL_LUMINANCE8_ALPHA8;
+			dataFormat		= GL_LUMINANCE_ALPHA;
 		}
 
 		m_InternalFormat = internalFormat;
 		m_DataFormat = dataFormat;
 
-		KB_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+		KB_CORE_ASSERT(internalFormat != 0 && dataFormat != 0, "Format not supported!");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);

@@ -8,13 +8,17 @@ namespace Kablunk
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_camera_controller{ 1.7778f, true }
 	{
+		ImGuiIO& io = ImGui::GetIO();
+		m_imgui_font = io.Fonts->AddFontFromFileTTF("assets/fonts/Roboto-Medium.ttf", 16);
 
+		io.Fonts->Build();
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		m_missing_texture = Texture2D::Create("assets/textures/missing_texture.png");
-		m_kablunk_logo = Texture2D::Create("assets/textures/kablunk_logo.png");
+		m_missing_texture	= Texture2D::Create("assets/textures/missing_texture.png");
+		m_kablunk_logo		= Texture2D::Create("assets/textures/kablunk_logo.png");
+		m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
 		FrameBufferSpecification frame_buffer_specs;
 		frame_buffer_specs.width = 1280;
@@ -37,6 +41,16 @@ namespace Kablunk
 		{
 			KB_PROFILE_SCOPE("CameraController::Update");
 			if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
+
+			if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
+			{
+				float miliseconds = ts.GetMiliseconds();
+				m_ImguiDeltaTime = miliseconds;
+				m_ImguiFPS = 1000.0f / miliseconds;
+				m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
+			}
+			else
+				m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
 		}
 		// ==========
 		//   Render
@@ -70,17 +84,6 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
-		{
-			float miliseconds = ts.GetMiliseconds();
-			m_ImguiDeltaTime = miliseconds;
-			m_ImguiFPS = 1000.0f / miliseconds;
-			m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
-		}
-		else
-			m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
-
-		
 		static bool dockspace_open = true;
 		static bool opt_fullscreen = true;
 		static bool opt_padding = false;
@@ -109,22 +112,38 @@ namespace Kablunk
 
 		if (!opt_padding)
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		
-		ImGui::Begin("KablunkEditor Dockspace", &dockspace_open, window_flags);
+
+		ImGui::Begin("##kablunk_editor_dockspace", NULL, window_flags);
+		ImGui::PushFont(m_imgui_font);
+
 		if (!opt_padding)
 			ImGui::PopStyleVar();
 
 		if (opt_fullscreen)
 			ImGui::PopStyleVar(2);
 
+		/*auto secondary_toolbar_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
+		static float padding = 10.0f;
+		if (ImGui::Begin("##secondary_toolbar", NULL, secondary_toolbar_flags))
+		{
+			auto play_button_icon_id = m_icon_play->GetRendererID();
+			ImGui::ImageButton((void*)play_button_icon_id, { 30.0f, 30.0f });
+
+
+			ImGui::End();
+		}*/
+
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
-			ImGuiID dockspace_id = ImGui::GetID("kablunk_editor_dockspace");
+			ImGuiID dockspace_id = ImGui::GetID("##kablunk_editor_dockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
+
+
+		float main_menu_window_height{ -1.0f };
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
@@ -136,42 +155,47 @@ namespace Kablunk
 				ImGui::EndMenu();
 			}
 
+			main_menu_window_height = ImGui::GetFrameHeight();
 			ImGui::EndMenuBar();
 		}
+		
+		
+		//ImGui::PopStyleVar();
 
-		if (ImGui::Begin("Square Settings"))
-		{
-			ImGui::ColorEdit4("Color", glm::value_ptr(m_square_color));
-			ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
-			
-			ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
-			ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
+		//ImGui::Dummy({ 0.0f, 200.0f });
 
-			ImGui::End();
-		}
+		ImGui::Begin("Square Settings");
+		
+		ImGui::ColorEdit4("Color", glm::value_ptr(m_square_color));
+		ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
+
+		ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
+		ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
+		
+		ImGui::End();
+		
 
 		
-		if (ImGui::Begin("Debug Information"))
-		{
-			ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
-			ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
+		ImGui::Begin("Debug Information");
+		
+		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
+		ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
 
-			Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+		Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
 
-			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-			ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
-			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-			ImGui::Text("Quad Count: %d", stats.QuadCount);
-
-			ImGui::End();
-		}
+		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
+		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+		ImGui::Text("Quad Count: %d", stats.QuadCount);
+		
+		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
 		
 		m_viewport_focused = ImGui::IsWindowFocused();
 		m_viewport_hovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused && m_viewport_hovered);
+		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused&& m_viewport_hovered);
 
 		auto panel_size = ImGui::GetContentRegionAvail();
 		if (m_viewport_size != *((glm::vec2*)&panel_size))
@@ -185,10 +209,11 @@ namespace Kablunk
 
 		auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
 		ImGui::Image((void*)frame_buffer_id, { m_viewport_size.x, m_viewport_size.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
-
-		ImGui::End();
+		
 		ImGui::PopStyleVar();
+		ImGui::End();
 
+		ImGui::PopFont();
 		ImGui::End();
 		
 	}
