@@ -134,6 +134,9 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kablunk\Scene\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
@@ -261,5 +264,8 @@
     <ClInclude Include="src\Kablunk\Debug\Instrumentor.h" />
     <ClInclude Include="src\Kablunk\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
+    <ClInclude Include="src\Kablunk\Scene\Scene.h" />
+    <ClInclude Include="src\Kablunk\Scene\Components.h" />
+    <ClInclude Include="src\Kablunk\Scene\Entity.h" />
   </ItemGroup>
 </Project>

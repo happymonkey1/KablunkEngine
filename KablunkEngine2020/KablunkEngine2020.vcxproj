@@ -32,6 +32,7 @@
     <ClCompile Include="src\Kablunk\Renderer\Shader.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\Texture.cpp" />
     <ClCompile Include="src\Kablunk\Renderer\VertexArray.cpp" />
+    <ClCompile Include="src\Kablunk\Scene\Scene.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp" />
@@ -80,6 +81,9 @@
     <ClInclude Include="src\Kablunk\Renderer\Shader.h" />
     <ClInclude Include="src\Kablunk\Renderer\Texture.h" />
     <ClInclude Include="src\Kablunk\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Kablunk\Scene\Components.h" />
+    <ClInclude Include="src\Kablunk\Scene\Entity.h" />
+    <ClInclude Include="src\Kablunk\Scene\Scene.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
@@ -147,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\vendor\entt\include;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -174,7 +178,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>KB_DEBUG;_CONSOLE;%(PreprocessorDefinitions);KABLUNK_PLATFORM_WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\GLAD\include;$(SolutionDir)KablunkEngine2020\vendor\spdlog\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;$(SolutionDir)KablunkEngine2020\vendor\GLFW\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\vendor\entt\include;$(SolutionDir)KablunkEngine2020\src\Kablunk\Core</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kablunkpch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>

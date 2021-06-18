@@ -2,6 +2,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+
 namespace Kablunk
 {
 
@@ -10,8 +11,15 @@ namespace Kablunk
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		m_imgui_font = io.Fonts->AddFontFromFileTTF("assets/fonts/Roboto-Medium.ttf", 16);
-
 		io.Fonts->Build();
+
+		m_active_scene = CreateRef<Scene>();
+
+		auto square = m_active_scene->CreateEntity("Square Entity");
+
+		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+	
+		m_square_entity = square;
 	}
 
 	void EditorLayer::OnAttach()
@@ -38,46 +46,36 @@ namespace Kablunk
 		// ==========
 		//   Update
 		// ==========
-		{
-			KB_PROFILE_SCOPE("CameraController::Update");
-			if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
+		
+		if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
 
-			if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
-			{
-				float miliseconds = ts.GetMiliseconds();
-				m_ImguiDeltaTime = miliseconds;
-				m_ImguiFPS = 1000.0f / miliseconds;
-				m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
-			}
-			else
-				m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
+		if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
+		{
+			float miliseconds = ts.GetMiliseconds();
+			m_ImguiDeltaTime = miliseconds;
+			m_ImguiFPS = 1000.0f / miliseconds;
+			m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
 		}
+		else
+			m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
+
+		
 		// ==========
 		//   Render
 		// ==========
-		{
-			KB_PROFILE_SCOPE("Renderer Draw");
-			m_frame_buffer->Bind();
-			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-			RenderCommand::Clear();
+		m_frame_buffer->Bind();
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+		RenderCommand::Clear();
 
 
-			Renderer2D::ResetStats();
-			Renderer2D::BeginScene(m_camera_controller.GetCamera());
+		Renderer2D::ResetStats();
+		Renderer2D::BeginScene(m_camera_controller.GetCamera());
 
-			static float rotation = 0.0f;
-			rotation += ts * 50.0f;
+		m_active_scene->OnUpdate(ts);
+			
+		Renderer2D::EndScene();
 
-			Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-			Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 1.0f, 1.0f }, 45.0f, m_missing_texture);
-			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_missing_texture, 10.0f);
-			Renderer2D::DrawRotatedQuad(m_square_pos, m_square_size, m_square_rotation, m_square_color);
-			Renderer2D::DrawRotatedQuad({ -1.0f, 0.0f }, { 1.0f, 1.0f }, rotation, { 0.2f, 0.8f, 0.3f, 0.5f });
-
-			Renderer2D::EndScene();
-
-			m_frame_buffer->Unbind();
-		}
+		m_frame_buffer->Unbind();
 	}
 
 	void EditorLayer::OnImGuiRender(Timestep ts)
@@ -164,16 +162,20 @@ namespace Kablunk
 
 		//ImGui::Dummy({ 0.0f, 200.0f });
 
-		ImGui::Begin("Square Settings");
-		
-		ImGui::ColorEdit4("Color", glm::value_ptr(m_square_color));
-		ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
+		if (m_square_entity)
+		{
+			const std::string& tag = m_square_entity.GetComponent<TagComponent>();
+			ImGui::Begin(tag.c_str());
 
-		ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
-		ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
-		
-		ImGui::End();
-		
+			auto& square_color = m_square_entity.GetComponent<SpriteRendererComponent>().Color;
+			ImGui::ColorEdit4("Color", glm::value_ptr(square_color));
+			ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
+
+			ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
+			ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
+
+			ImGui::End();
+		}
 
 		
 		ImGui::Begin("Debug Information");
@@ -200,7 +202,7 @@ namespace Kablunk
 		auto panel_size = ImGui::GetContentRegionAvail();
 		if (m_viewport_size != *((glm::vec2*)&panel_size))
 		{
-			int width = panel_size.x, height = panel_size.y;
+			auto width = panel_size.x, height = panel_size.y;
 			m_frame_buffer->Resize(width, height);
 			m_viewport_size = { width, height };
 
@@ -208,7 +210,7 @@ namespace Kablunk
 		}
 
 		auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
-		ImGui::Image((void*)frame_buffer_id, { m_viewport_size.x, m_viewport_size.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+		ImGui::Image(reinterpret_cast<void*>(frame_buffer_id), { m_viewport_size.x, m_viewport_size.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 		
 		ImGui::PopStyleVar();
 		ImGui::End();

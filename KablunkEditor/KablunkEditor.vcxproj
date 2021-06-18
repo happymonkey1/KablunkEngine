@@ -138,7 +138,7 @@
       <PreprocessorDefinitions>KB_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\src;$(SolutionDir)KablunkEngine2020\vendor\entt\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,7 +156,7 @@
       <PreprocessorDefinitions>KB_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\vendor\stb_image;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\src;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(SolutionDir)KablunkEngine2020\vendor\glm;$(SolutionDir)KablunkEngine2020\src;$(SolutionDir)KablunkEngine2020\vendor\entt\include;$(SolutionDir)KablunkEngine2020\vendor\imgui;$(SolutionDir)KablunkEngine2020\vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

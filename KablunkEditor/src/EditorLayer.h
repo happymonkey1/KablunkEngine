@@ -3,6 +3,7 @@
 
 #include <Kablunk.h>
 
+
 namespace Kablunk
 {
 	class EditorLayer : public Layer
@@ -29,6 +30,9 @@ namespace Kablunk
 		Ref<Texture2D> m_kablunk_logo;
 
 		Ref<Texture2D> m_icon_play;
+
+		Ref<Scene> m_active_scene;
+		Kablunk::Entity m_square_entity;
 
 		bool m_application_paused{ true };
 
