@@ -17,8 +17,8 @@ Personal project to develop a basic 2D game engine.
 ### Planned / In Progress (In no particular order)
 - [ ] Makefile implementation - Premake
 - [ ] Line Renderer
-- [ ] ECS
-- [ ] Scripting - C#, python, lua, etc
+- [x] ECS
+- [x] Scripting - C#, python, lua, etc
 - [x] Framebuffer
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
