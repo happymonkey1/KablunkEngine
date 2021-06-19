@@ -117,6 +117,22 @@ namespace Kablunk
 		delete[] s_RendererData.QuadVertexBufferBase;
 	}
 
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		BeginScene(RenderCamera{ camera.GetProjection(), transform });
+	}
+
+
+	void Renderer2D::BeginScene(const RenderCamera& render_camera)
+	{
+		glm::mat4 view_projection = render_camera.Projection * glm::inverse(render_camera.Transform);
+
+		s_RendererData.TextureShader->Bind();
+		s_RendererData.TextureShader->SetMat4("u_ViewProjection", view_projection);
+
+		StartNewBatch();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		KB_PROFILE_FUNCTION();

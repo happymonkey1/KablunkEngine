@@ -49,7 +49,7 @@ namespace Kablunk
 		// ==========
 
 		m_registry.view<NativeScriptComponent>().each(
-			[&](auto entity, NativeScriptComponent native_script_component)
+			[=](auto entity, auto& native_script_component)
 			{
 				/*	#TODO
 				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
@@ -69,13 +69,36 @@ namespace Kablunk
 		// ==========	
 		//	 Render
 		// ==========
-
-		auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		Camera*		main_camera{ nullptr };
+		glm::mat4*	main_camera_transform{ nullptr };
+		auto group = m_registry.group<CameraComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{
-			const auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			const auto& [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
 			
-			Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling_factor, sprite.Color);
+			// Find main camera in scene
+			if (camera.Primary)
+			{
+				main_camera = &camera.Camera;
+				main_camera_transform = &transform.Transform;
+				break;
+			}
+		}
+
+		if (main_camera)
+		{
+			Renderer2D::BeginScene(*main_camera, *main_camera_transform);
+
+
+			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				const auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+				Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling_factor, sprite.Color);
+			}
+
+			Renderer2D::EndScene();
 		}
 	}
 

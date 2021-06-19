@@ -2,8 +2,10 @@
 #define KABLUNK_SCENE_COMPONENT_H
 
 #include <glm/glm.hpp>
+
 #include "Kablunk/Scene/ScriptableEntity.h"
 #include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/Camera.h"
 
 namespace Kablunk
 {
@@ -43,6 +45,17 @@ namespace Kablunk
 			: Color{ color } { }
 		SpriteRendererComponent(const Ref<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
 			: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
+	};
+
+	struct CameraComponent
+	{
+		Kablunk::Camera Camera;
+		bool Primary{ true };
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent& projection) = default;
+		CameraComponent(const glm::mat4& projection) : Camera{ projection } { }
+		
 	};
 
 	struct NativeScriptComponent : ScriptableEntity

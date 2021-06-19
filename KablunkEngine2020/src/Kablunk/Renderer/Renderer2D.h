@@ -3,12 +3,19 @@
 
 #include "Kablunk/Renderer/Texture.h"
 #include "OrthographicCamera.h"
+#include "Camera.h"
 
 namespace Kablunk
 {
 	class Renderer2D
 	{
 	public:
+		struct RenderCamera
+		{
+			glm::mat4 Projection;
+			glm::mat4 Transform;
+		};
+
 		struct Renderer2DStats
 		{
 			Renderer2DStats() : DrawCalls{ 0 }, QuadCount{ 0 } { }
@@ -19,10 +26,11 @@ namespace Kablunk
 			uint32_t GetTotalIndexCount() { return QuadCount * 6; }
 		};
 
-	public:
 		static void Init();
 		static void Shutdown();
 
+		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const RenderCamera& render_camera);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 		static void Flush();

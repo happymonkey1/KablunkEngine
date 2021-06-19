@@ -24,6 +24,7 @@
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
 
+#include "Kablunk/Renderer/Camera.h"
 #include "Kablunk/Renderer/OrthographicCamera.h"
 
 // ----------------------------------------------

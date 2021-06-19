@@ -34,6 +34,10 @@ namespace Kablunk
 		Ref<Scene> m_active_scene;
 		Kablunk::Entity m_square_entity;
 
+		Kablunk::Entity m_primary_camera_entity;
+		Kablunk::Entity m_secondary_camera_entity;
+		bool m_primary_camera_selected{ true };
+
 		bool m_application_paused{ true };
 
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };

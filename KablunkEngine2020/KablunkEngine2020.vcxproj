@@ -71,6 +71,7 @@
     <ClInclude Include="src\Kablunk\Imgui\ImGuiBuildConfig.h" />
     <ClInclude Include="src\Kablunk\Imgui\ImGuiLayer.h" />
     <ClInclude Include="src\Kablunk\Renderer\Buffer.h" />
+    <ClInclude Include="src\Kablunk\Renderer\Camera.h" />
     <ClInclude Include="src\Kablunk\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Kablunk\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Kablunk\Renderer\OrthographicCamera.h" />

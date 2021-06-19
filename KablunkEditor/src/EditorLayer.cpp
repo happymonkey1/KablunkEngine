@@ -5,6 +5,33 @@
 
 namespace Kablunk
 {
+	struct CameraControllerScript : ScriptableEntity
+	{
+		void OnCreate() 
+		{
+			KB_CORE_INFO("CameraController::OnCreate()");
+		}
+
+		void OnUpdate(Timestep ts)
+		{
+			auto& transform = GetComponent<TransformComponent>().Transform;
+			static float speed = 10.0f;
+			if (Input::IsKeyPressed(KB_KEY_W))
+				transform[3][1] += speed * ts;
+			if (Input::IsKeyPressed(KB_KEY_S))
+				transform[3][1] -= speed * ts;
+			if (Input::IsKeyPressed(KB_KEY_A))
+				transform[3][0] -= speed * ts;
+			if (Input::IsKeyPressed(KB_KEY_D))
+				transform[3][0] += speed * ts;
+		}
+
+		void OnDestroy()
+		{
+			KB_CORE_INFO("CameraController::OnDestroy()");
+		}
+	};
+
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_camera_controller{ 1.7778f, true }
@@ -20,6 +47,14 @@ namespace Kablunk
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
 	
 		m_square_entity = square;
+
+		m_primary_camera_entity = m_active_scene->CreateEntity("Camera Entity");
+		m_primary_camera_entity.AddComponent<CameraComponent>(glm::ortho(-16.0f, 16.0f, -9.0f, 9.0f, -1.0f, 1.0f));
+		m_primary_camera_entity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
+
+		m_secondary_camera_entity = m_active_scene->CreateEntity("Secondary Entity");
+		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>(glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f));
+		camera_comp.Primary = false;
 	}
 
 	void EditorLayer::OnAttach()
@@ -70,18 +105,14 @@ namespace Kablunk
 		// ==========
 		//   Render
 		// ==========
+		Renderer2D::ResetStats();
 
 		m_frame_buffer->Bind();
+
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-
-		Renderer2D::ResetStats();
-		Renderer2D::BeginScene(m_camera_controller.GetCamera());
-
 		m_active_scene->OnUpdate(ts);
-			
-		Renderer2D::EndScene();
 
 		m_frame_buffer->Unbind();
 	}
@@ -185,7 +216,18 @@ namespace Kablunk
 			ImGui::End();
 		}
 
+		const std::string& tag = m_primary_camera_entity.GetComponent<TagComponent>();
+		ImGui::Begin(tag.c_str());
+		auto& camera_transform = m_primary_camera_entity.GetComponent<TransformComponent>().Transform[3];
+		ImGui::DragFloat3("Camera Transform", glm::value_ptr(camera_transform));
+		if (ImGui::Checkbox("Primary Camera", &m_primary_camera_selected))
+		{
+			m_primary_camera_entity.GetComponent<CameraComponent>().Primary = m_primary_camera_selected;
+			m_secondary_camera_entity.GetComponent<CameraComponent>().Primary = !m_primary_camera_selected;
+		}
+		ImGui::End();
 		
+
 		ImGui::Begin("Debug Information");
 		
 		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
