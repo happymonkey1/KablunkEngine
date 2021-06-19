@@ -65,8 +65,9 @@ namespace Kablunk
 		m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
 		FrameBufferSpecification frame_buffer_specs;
-		frame_buffer_specs.width = 1280;
-		frame_buffer_specs.height = 720;
+		const auto& window_dimensions = Application::Get().GetWindowDimensions();
+		frame_buffer_specs.width = window_dimensions.x;
+		frame_buffer_specs.height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
 	}
 

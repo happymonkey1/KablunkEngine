@@ -8,9 +8,6 @@
 
 #include "Kablunk/Imgui/ImGuiLayer.h"
 
-#include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/Buffer.h"
-#include "Kablunk/Renderer/VertexArray.h"
 
 namespace Kablunk {
 
@@ -26,14 +23,15 @@ namespace Kablunk {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		inline static Application& Get() { return *s_Instance; }
-		inline Window& GetWindow() { return *m_Window; }
+		static Application& Get() { return *s_Instance; }
+		Window& GetWindow() { return *m_Window; }
 
 		void Close();
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
-		inline void SetWindowTitle(const std::string& title) { m_Window->SetWindowTitle(title); }
+		void SetWindowTitle(const std::string& title) { m_Window->SetWindowTitle(title); }
+		const glm::vec2& GetWindowDimensions() const { return m_Window->GetDimensions(); }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
