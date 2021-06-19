@@ -16,13 +16,14 @@ namespace Kablunk
 		{
 			auto& transform = GetComponent<TransformComponent>().Transform;
 			static float speed = 10.0f;
+
 			if (Input::IsKeyPressed(KB_KEY_W))
 				transform[3][1] += speed * ts;
-			if (Input::IsKeyPressed(KB_KEY_S))
+			else if (Input::IsKeyPressed(KB_KEY_S))
 				transform[3][1] -= speed * ts;
 			if (Input::IsKeyPressed(KB_KEY_A))
 				transform[3][0] -= speed * ts;
-			if (Input::IsKeyPressed(KB_KEY_D))
+			else if (Input::IsKeyPressed(KB_KEY_D))
 				transform[3][0] += speed * ts;
 		}
 

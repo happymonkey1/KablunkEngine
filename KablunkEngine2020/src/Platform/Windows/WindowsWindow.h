@@ -17,16 +17,17 @@ namespace Kablunk {
 
 		void OnUpdate() override;
 
-		inline unsigned int GetWidth() const override { return m_Data.Width; }
-		inline unsigned int GetHeight() const override { return m_Data.Height; }
-
-		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
-		void SetVsync(bool enabled) override;
-		bool IsVsync() const override;
+		virtual unsigned int GetWidth() const override { return m_Data.Width; }
+		virtual unsigned int GetHeight()	const override { return m_Data.Height; }
+		virtual const glm::vec2& GetDimensions() const override { return { m_Data.Width, m_Data.Height }; }
+		virtual 
+		virtual void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
+		virtual void SetVsync(bool enabled) override;
+		virtual bool IsVsync() const override;
 
 		virtual void SetWindowTitle(const std::string& title) override;
 
-		inline virtual void* GetNativeWindow() const { return m_Window; }
+		virtual void* GetNativeWindow() const { return m_Window; }
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
