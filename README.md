@@ -18,7 +18,7 @@ Personal project to develop a basic 2D game engine.
 - [ ] Makefile implementation - Premake
 - [ ] Line Renderer
 - [x] ECS
-- [x] Scripting - C#, python, lua, etc
+- [x] Scripting - Native, C#, python, lua, etc
 - [x] Framebuffer
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
@@ -61,4 +61,4 @@ Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W
 ### Todo
 
 Cleanup codebase and standardize style.
-Mostly [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) with some personal preferences.
+Mostly follows [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) style with some personal preferences.
