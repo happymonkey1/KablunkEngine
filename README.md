@@ -17,8 +17,8 @@ Personal project to develop a basic 2D game engine.
 ### Planned / In Progress (In no particular order)
 - [ ] Makefile implementation - Premake
 - [ ] Line Renderer
-- [ ] ECS
-- [ ] Scripting - C#, python, lua, etc
+- [x] ECS
+- [x] Scripting - Native, C#, python, lua, etc
 - [x] Framebuffer
 - [ ] Better Camera System
 - [ ] Task / Threading Abstraction
@@ -30,7 +30,8 @@ Personal project to develop a basic 2D game engine.
 - [ ] Audio Engine
 - [ ] 2D / 3D? Lighting
 - [ ] 2D Physics
-- [ ] Better shader system - SPIR-V
+- [ ] Better Shader System - SPIR-V
+- [ ] Refactor Input Code Situation
 
 ## Editor
 
@@ -61,4 +62,4 @@ Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W
 ### Todo
 
 Cleanup codebase and standardize style.
-Mostly [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) with some personal preferences.
+Mostly follows [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) style with some personal preferences.
