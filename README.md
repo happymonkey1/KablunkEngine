@@ -30,7 +30,8 @@ Personal project to develop a basic 2D game engine.
 - [ ] Audio Engine
 - [ ] 2D / 3D? Lighting
 - [ ] 2D Physics
-- [ ] Better shader system - SPIR-V
+- [ ] Better Shader System - SPIR-V
+- [ ] Refactor Input Code Situation
 
 ## Editor
 
