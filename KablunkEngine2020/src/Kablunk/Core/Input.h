@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/KeyCodes.h"
-#include "Kablunk/Core/MouseButtonCodes.h"
+#include "Kablunk/Core/MouseCodes.h"
 
 namespace Kablunk {
 

@@ -58,7 +58,7 @@
     <ClInclude Include="src\Kablunk\Core\Layer.h" />
     <ClInclude Include="src\Kablunk\Core\LayerStack.h" />
     <ClInclude Include="src\Kablunk\Core\Log.h" />
-    <ClInclude Include="src\Kablunk\Core\MouseButtonCodes.h" />
+    <ClInclude Include="src\Kablunk\Core\MouseCodes.h" />
     <ClInclude Include="src\Kablunk\Core\OrthographicCameraController.h" />
     <ClInclude Include="src\Kablunk\Core\Timing.h" />
     <ClInclude Include="src\Kablunk\Core\Timestep.h" />

@@ -50,11 +50,15 @@ namespace Kablunk
 			float time;
 		};
 
-		float m_ImguiUpdateCounter = 0.0f;
-		float m_ImguiUpdateCounterMax = .1f;
-		float m_ImguiDeltaTime = 10.0f;
-		float m_ImguiFPS = 10.0f;
+		struct ImGuiProfilerStats
+		{
+			float Counter{ 0.0f };
+			float Counter_max{ 0.1f };
 
+			float Delta_time{ 10.0f };
+			float Fps{ 10.0f };
+		};
+		ImGuiProfilerStats m_imgui_profiler_stats;
 
 		ImFont* m_imgui_font{ nullptr };
 	};

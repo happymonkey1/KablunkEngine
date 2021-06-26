@@ -2,6 +2,7 @@
 
 //FOR USE BY CLIENT APPLICATIONS
 
+// ---Core---------------------------------------
 #include "Kablunk/Core/Log.h"
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Layer.h"
@@ -12,6 +13,8 @@
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/OrthographicCameraController.h"
+// ----------------------------------------------
+
 
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Renderer.h"
@@ -26,21 +29,22 @@
 
 #include "Kablunk/Renderer/Camera.h"
 #include "Kablunk/Renderer/OrthographicCamera.h"
-
 // ----------------------------------------------
 
-// ---ECS----------------------------------------
 
+// ---ECS----------------------------------------
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/ScriptableEntity.h"
 #include "Kablunk/Scene/Scene.h"
 #include "Kablunk/Scene/Components.h"
-
 // ----------------------------------------------
 
-#include "Platform/PlatformAPI.h"
 
+// ---Misc---------------------------------------
+#include "Platform/PlatformAPI.h"
 #include "imgui.h"
 //#include "imgui_internal.h"
+// ----------------------------------------------
+
 
 

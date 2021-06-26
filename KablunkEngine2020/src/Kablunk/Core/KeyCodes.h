@@ -1,54 +1,75 @@
 #pragma once
 
-//FROM glfw3.h
-#define KB_KEY_SPACE              32
-#define KB_KEY_APOSTROPHE         39  /* ' */
-#define KB_KEY_COMMA              44  /* , */
-#define KB_KEY_MINUS              45  /* - */
-#define KB_KEY_PERIOD             46  /* . */
-#define KB_KEY_SLASH              47  /* / */
-#define KB_KEY_0                  48
-#define KB_KEY_1                  49
-#define KB_KEY_2                  50
-#define KB_KEY_3                  51
-#define KB_KEY_4                  52
-#define KB_KEY_5                  53
-#define KB_KEY_6                  54
-#define KB_KEY_7                  55
-#define KB_KEY_8                  56
-#define KB_KEY_9                  57
-#define KB_KEY_SEMICOLON          59  /* ; */
-#define KB_KEY_EQUAL              61  /* = */
-#define KB_KEY_A                  65
-#define KB_KEY_B                  66
-#define KB_KEY_C                  67
-#define KB_KEY_D                  68
-#define KB_KEY_E                  69
-#define KB_KEY_F                  70
-#define KB_KEY_G                  71
-#define KB_KEY_H                  72
-#define KB_KEY_I                  73
-#define KB_KEY_J                  74
-#define KB_KEY_K                  75
-#define KB_KEY_L                  76
-#define KB_KEY_M                  77
-#define KB_KEY_N                  78
-#define KB_KEY_O                  79
-#define KB_KEY_P                  80
-#define KB_KEY_Q                  81
-#define KB_KEY_R                  82
-#define KB_KEY_S                  83
-#define KB_KEY_T                  84
-#define KB_KEY_U                  85
-#define KB_KEY_V                  86
-#define KB_KEY_W                  87
-#define KB_KEY_X                  88
-#define KB_KEY_Y                  89
-#define KB_KEY_Z                  90
-#define KB_KEY_LEFT_BRACKET       91  /* [ */
-#define KB_KEY_BACKSLASH          92  /* \ */
-#define KB_KEY_RIGHT_BRACKET      93  /* ] */
-#define KB_KEY_GRAVE_ACCENT       96  /* ` */
+namespace Kablunk
+{
+	using KeyCode = uint16_t;
+
+	namespace Key
+	{
+		enum : KeyCode
+		{
+			//FROM glfw3.h
+			Space			= 32,
+			Apostrophe		= 39,
+			Comma			= 44,
+			Minus			= 45,
+			Period			= 46,
+			Slash			= 47,
+
+			Zero			= 48,
+			One				= 49,
+			Two				= 50,
+			Three			= 51,
+			Four			= 52,
+			Five			= 53,
+			Six				= 54,
+			Seven			= 55,
+			Eight			= 56,
+			Nine			= 57,
+
+			Semicolon		= 59,
+			Equal			= 61,
+
+			A				= 65,
+			B				= 66,
+			C				= 67,
+			D				= 68, 
+			E				= 69,
+			F				= 70,
+			G				= 71,
+			H				= 72,
+			I				= 73,
+			J				= 74,
+			K				= 75,
+			L				= 76,
+			M				= 77,
+			N				= 78,
+			O				= 79,
+			P				= 80,
+			Q				= 81,
+			R				= 82,
+			S				= 83,
+			T				= 84,
+			U				= 85,
+			V				= 86,
+			W				= 87,
+			X				= 88,
+			Y				= 89,
+			Z				= 90,
+
+			LeftBracket		= 91,
+			RightBracket	= 93,
+			Backslash		= 92,
+			Grave			= 96
+
+			// #TODO do rest of keycodes you lazy ass
+		};
+
+	}
+}
+
+
+
 #define KB_KEY_WORLD_1            161 /* non-US #1 */
 #define KB_KEY_WORLD_2            162 /* non-US #2 */
 

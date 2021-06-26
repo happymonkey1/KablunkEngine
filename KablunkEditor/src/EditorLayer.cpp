@@ -14,17 +14,13 @@ namespace Kablunk
 
 		void OnUpdate(Timestep ts)
 		{
-			auto& transform = GetComponent<TransformComponent>().Transform;
+			auto& transform = GetComponent<TransformComponent>();
 			static float speed = 10.0f;
 
-			if (Input::IsKeyPressed(KB_KEY_W))
-				transform[3][1] += speed * ts;
-			else if (Input::IsKeyPressed(KB_KEY_S))
-				transform[3][1] -= speed * ts;
-			if (Input::IsKeyPressed(KB_KEY_A))
-				transform[3][0] -= speed * ts;
-			else if (Input::IsKeyPressed(KB_KEY_D))
-				transform[3][0] += speed * ts;
+				 if (Input::IsKeyPressed(Key::W))		transform.Translation.y += speed * ts;
+			else if (Input::IsKeyPressed(Key::S))		transform.Translation.y -= speed * ts;
+				 if (Input::IsKeyPressed(Key::A))		transform.Translation.x -= speed * ts;
+			else if (Input::IsKeyPressed(Key::D))		transform.Translation.x += speed * ts;
 		}
 
 		void OnDestroy()
@@ -66,7 +62,7 @@ namespace Kablunk
 
 		FrameBufferSpecification frame_buffer_specs;
 		const auto& window_dimensions = Application::Get().GetWindowDimensions();
-		frame_buffer_specs.width = window_dimensions.x;
+		frame_buffer_specs.width  = window_dimensions.x;
 		frame_buffer_specs.height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
 	}
@@ -86,15 +82,15 @@ namespace Kablunk
 		
 		if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
 
-		if (m_ImguiUpdateCounter >= m_ImguiUpdateCounterMax)
+		if (m_imgui_profiler_stats.Counter >= m_imgui_profiler_stats.Counter_max)
 		{
 			float miliseconds = ts.GetMiliseconds();
-			m_ImguiDeltaTime = miliseconds;
-			m_ImguiFPS = 1000.0f / miliseconds;
-			m_ImguiUpdateCounter -= m_ImguiUpdateCounterMax;
+			m_imgui_profiler_stats.Delta_time = miliseconds;
+			m_imgui_profiler_stats.Fps = 1000.0f / miliseconds;
+			m_imgui_profiler_stats.Counter -= m_imgui_profiler_stats.Counter_max;
 		}
 		else
-			m_ImguiUpdateCounter += ts.GetMiliseconds() / 1000.0f;
+			m_imgui_profiler_stats.Counter += ts.GetMiliseconds() / 1000.0f;
 
 		auto spec = m_frame_buffer->GetSpecification();
 		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
@@ -218,24 +214,26 @@ namespace Kablunk
 			ImGui::End();
 		}
 
-		const std::string& tag = m_primary_camera_entity.GetComponent<TagComponent>();
-		ImGui::Begin(tag.c_str());
-		auto& camera_transform = m_primary_camera_entity.GetComponent<TransformComponent>().Transform[3];
-		ImGui::DragFloat3("Camera Transform", glm::value_ptr(camera_transform));
-		if (ImGui::Checkbox("Primary Camera", &m_primary_camera_selected))
+		if (m_primary_camera_entity)
 		{
-			m_primary_camera_entity.GetComponent<CameraComponent>().Primary = m_primary_camera_selected;
-			m_secondary_camera_entity.GetComponent<CameraComponent>().Primary = !m_primary_camera_selected;
+			const std::string& tag = m_primary_camera_entity.GetComponent<TagComponent>();
+			ImGui::Begin(tag.c_str());
+			auto& camera_transform = m_primary_camera_entity.GetComponent<TransformComponent>().Translation;
+			ImGui::DragFloat3("Camera Translation", glm::value_ptr(camera_transform));
+			if (ImGui::Checkbox("Primary Camera", &m_primary_camera_selected))
+			{
+				m_primary_camera_entity.GetComponent<CameraComponent>().Primary = m_primary_camera_selected;
+				m_secondary_camera_entity.GetComponent<CameraComponent>().Primary = !m_primary_camera_selected;
+			}
+			ImGui::End();
 		}
-		ImGui::End();
-		
 
 		ImGui::Begin("Debug Information");
 		
-		ImGui::Text("Frame time: %.*f", 4, m_ImguiDeltaTime);
-		ImGui::Text("FPS: %.*f", 4, m_ImguiFPS);
+		ImGui::Text("Frame time: %.*f", 4, m_imgui_profiler_stats.Delta_time);
+		ImGui::Text("FPS: %.*f", 4, m_imgui_profiler_stats.Fps);
 
-		Kablunk::Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+		Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
 
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
@@ -271,9 +269,8 @@ namespace Kablunk
 		m_camera_controller.OnEvent(e);
 
 		if (e.GetEventType() == EventType::WindowMinimized)
-		{
 			m_viewport_size = { 0.0f, 0.0f };
-		}
+		
 	}
 
 }

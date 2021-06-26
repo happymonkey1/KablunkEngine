@@ -70,7 +70,7 @@ namespace Kablunk
 		//	 Render
 		// ==========
 		Camera*		main_camera{ nullptr };
-		glm::mat4*	main_camera_transform{ nullptr };
+		glm::mat4	main_camera_transform;
 		auto group = m_registry.group<CameraComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{
@@ -80,15 +80,14 @@ namespace Kablunk
 			if (camera.Primary)
 			{
 				main_camera = &camera.Camera;
-				main_camera_transform = &transform.Transform;
+				main_camera_transform = transform.GetTransform();
 				break;
 			}
 		}
 
 		if (main_camera)
 		{
-			Renderer2D::BeginScene(*main_camera, *main_camera_transform);
-
+			Renderer2D::BeginScene(*main_camera, main_camera_transform);
 
 			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
