@@ -18,12 +18,12 @@ namespace Kablunk
 
 		struct Renderer2DStats
 		{
-			Renderer2DStats() : DrawCalls{ 0 }, QuadCount{ 0 } { }
-			uint32_t DrawCalls{ 0 };
-			uint32_t QuadCount{ 0 };
+			Renderer2DStats() : Draw_calls{ 0 }, Quad_count{ 0 } { }
+			uint32_t Draw_calls{ 0 };
+			uint32_t Quad_count{ 0 };
 
-			uint32_t GetTotalVertexCount() { return QuadCount * 4; }
-			uint32_t GetTotalIndexCount() { return QuadCount * 6; }
+			uint32_t GetTotalVertexCount() { return Quad_count * 4; }
+			uint32_t GetTotalIndexCount() { return Quad_count * 6; }
 		};
 
 		static void Init();
@@ -35,6 +35,12 @@ namespace Kablunk
 		static void EndScene();
 		static void Flush();
 
+		/* 
+		* #TODO Cleanup DrawQuad 'situation' 
+		* Since all drawing now uses transforms, there might not be a need to differentiate between DrawQuad and DrawRotatedQuad
+		* Somehow consolidate the functions 
+		*/
+		
 		// Color
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);

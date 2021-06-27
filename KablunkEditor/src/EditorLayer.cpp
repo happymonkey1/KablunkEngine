@@ -235,10 +235,10 @@ namespace Kablunk
 
 		Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
 
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+		ImGui::Text("Draw Calls: %d", stats.Draw_calls);
 		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-		ImGui::Text("Quad Count: %d", stats.QuadCount);
+		ImGui::Text("Quad Count: %d", stats.Quad_count);
 		
 		ImGui::End();
 
