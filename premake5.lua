@@ -24,13 +24,15 @@ workspace "KablunkEngine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+
+
 group "Dependencies"
     include "vendor/premake"
-    include "KablunkEngine2020/vendor/GLFW"
-    include "KablunkEngine2020/vendor/Glad"
-    include "KablunkEngine2020/vendor/imgui"
+    include "KablunkEngine/vendor/GLFW"
+    include "KablunkEngine/vendor/Glad"
+    include "KablunkEngine/vendor/imgui"
 group ""
 
 include "KablunkEngine"
-include "Sandbox"
 include "KablunkEditor"
+include "Sandbox"
