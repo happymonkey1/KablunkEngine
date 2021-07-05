@@ -15,11 +15,12 @@ project "KablunkEditor"
 
     includedirs
     {
-        "%{wks.location}/KablunkEngine2020/vendor/spdlog/include",
-		"%{wks.location}/KablunkEngine2020/src",
-		"%{wks.location}/KablunkEngine2020/vendor",
+        "%{wks.location}/KablunkEngine/vendor/spdlog/include",
+		"%{wks.location}/KablunkEngine/src",
+		"%{wks.location}/KablunkEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
+		"%{IncludeDir.ImGui}"
     }
 
     links
@@ -27,7 +28,7 @@ project "KablunkEditor"
         "KablunkEngine"
     }
 
-    filer "system:windows"
+    filter "system:windows"
 		systemversion "latest"
 
 		defines 

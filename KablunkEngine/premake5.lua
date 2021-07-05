@@ -32,7 +32,7 @@ project "KablunkEngine"
 		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
-		"%{IncludeDir.imgui}",
+		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}"
@@ -46,7 +46,7 @@ project "KablunkEngine"
 		"opengl32.lib"
 	}
 
-	filer "system:windows"
+	filter "system:windows"
 		systemversion "latest"
 
 		defines 
