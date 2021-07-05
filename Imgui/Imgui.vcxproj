@@ -18,6 +18,21 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imconfig.h" />
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imgui.h" />
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imgui_internal.h" />
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\KablunkEngine\vendor\imgui\imstb_truetype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\KablunkEngine\vendor\imgui\imgui.cpp" />
+    <ClCompile Include="..\KablunkEngine\vendor\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\KablunkEngine\vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\KablunkEngine\vendor\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\KablunkEngine\vendor\imgui\imgui_widgets.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -80,13 +95,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)KablunkEngine2020\vendor\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)KablunkEngine\vendor\imgui;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)KablunkEngine2020\vendor\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)KablunkEngine\vendor\imgui;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -155,26 +170,6 @@
       <Command>xcopy /y "$(OutDir)Imgui.lib"  "$(SolutionDir)libs\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imconfig.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imgui.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imgui_internal.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\misc\cpp\imgui_stdlib.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\misc\freetype\imgui_freetype.h" />
-    <ClInclude Include="..\KablunkEngine2020\vendor\imgui\misc\single_file\imgui_single_file.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\misc\cpp\imgui_stdlib.cpp" />
-    <ClCompile Include="..\KablunkEngine2020\vendor\imgui\misc\fonts\binary_to_compressed_c.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

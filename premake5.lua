@@ -1,3 +1,4 @@
+include "./vendor/premake/premake_customization/solution_items.lua"
 include "Dependencies.lua"
 
 workspace "KablunkEngine"
@@ -6,8 +7,8 @@ workspace "KablunkEngine"
 
     configurations
     {
-        "Debug"
-        "Release"
+        "Debug",
+        "Release",
         "Distribution"
     }
 

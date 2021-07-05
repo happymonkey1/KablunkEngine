@@ -18,9 +18,9 @@ namespace Kablunk {
 		void OnUpdate() override;
 
 		virtual unsigned int GetWidth() const override { return m_Data.Width; }
+
 		virtual unsigned int GetHeight()	const override { return m_Data.Height; }
-		virtual const glm::vec2& GetDimensions() const override { return { m_Data.Width, m_Data.Height }; }
-		virtual 
+		virtual glm::vec2 GetDimensions() const override { return { m_Data.Width, m_Data.Height }; }
 		virtual void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		virtual void SetVsync(bool enabled) override;
 		virtual bool IsVsync() const override;

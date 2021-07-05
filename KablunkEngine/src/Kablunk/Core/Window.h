@@ -27,7 +27,7 @@ namespace Kablunk {
 
 		virtual unsigned int GetWidth() const = 0;
 		virtual unsigned int GetHeight() const = 0;
-		virtual const glm::vec2& GetDimensions() const = 0;
+		virtual glm::vec2 GetDimensions() const = 0;
 
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVsync(bool enabled) = 0;
