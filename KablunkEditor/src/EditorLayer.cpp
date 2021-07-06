@@ -5,29 +5,7 @@
 
 namespace Kablunk
 {
-	struct CameraControllerScript : ScriptableEntity
-	{
-		void OnCreate() 
-		{
-			KB_CORE_INFO("CameraController::OnCreate()");
-		}
-
-		void OnUpdate(Timestep ts)
-		{
-			auto& transform = GetComponent<TransformComponent>();
-			static float speed = 10.0f;
-
-				 if (Input::IsKeyPressed(Key::W))		transform.Translation.y += speed * ts;
-			else if (Input::IsKeyPressed(Key::S))		transform.Translation.y -= speed * ts;
-				 if (Input::IsKeyPressed(Key::A))		transform.Translation.x -= speed * ts;
-			else if (Input::IsKeyPressed(Key::D))		transform.Translation.x += speed * ts;
-		}
-
-		void OnDestroy()
-		{
-			KB_CORE_INFO("CameraController::OnDestroy()");
-		}
-	};
+	
 
 
 	EditorLayer::EditorLayer()
@@ -40,17 +18,41 @@ namespace Kablunk
 		m_active_scene = CreateRef<Scene>();
 
 		auto square = m_active_scene->CreateEntity("Square Entity");
-
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+
+		auto red_square = m_active_scene->CreateEntity("Square Entity");
+		red_square.AddComponent<SpriteRendererComponent>(glm::vec4{ 8.0f, 0.2f, 0.3f, 1.0f });
 	
 		m_square_entity = square;
 
-		m_primary_camera_entity = m_active_scene->CreateEntity("Camera Entity");
+		m_primary_camera_entity = m_active_scene->CreateEntity("Primary Camera");
 		m_primary_camera_entity.AddComponent<CameraComponent>();
+		m_secondary_camera_entity = m_active_scene->CreateEntity("Secondary Camera");
+		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>();
+
+
+		class CameraControllerScript : public ScriptableEntity
+		{
+		public:
+			virtual void OnCreate() override
+			{
+
+			}
+			
+			virtual void OnUpdate(Timestep ts) override
+			{
+				auto& transform = GetComponent<TransformComponent>();
+				static float speed = 10.0f;
+
+				if (Input::IsKeyPressed(Key::W))			transform.Translation.y += speed * ts;
+				else if (Input::IsKeyPressed(Key::S))		transform.Translation.y -= speed * ts;
+				if (Input::IsKeyPressed(Key::A))			transform.Translation.x -= speed * ts;
+				else if (Input::IsKeyPressed(Key::D))		transform.Translation.x += speed * ts;
+			}
+		};
+
 		m_primary_camera_entity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
 
-		m_secondary_camera_entity = m_active_scene->CreateEntity("Secondary Entity");
-		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>();
 		camera_comp.Primary = false;
 	}
 
@@ -65,6 +67,8 @@ namespace Kablunk
 		frame_buffer_specs.width  = window_dimensions.x;
 		frame_buffer_specs.height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
+
+		m_hierarchy_panel.SetContext(m_active_scene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -201,6 +205,9 @@ namespace Kablunk
 
 		//ImGui::Dummy({ 0.0f, 200.0f });
 
+		m_hierarchy_panel.OnImGuiRender();
+
+		/*
 		if (m_square_entity)
 		{
 			const std::string& tag = m_square_entity.GetComponent<TagComponent>();
@@ -220,15 +227,20 @@ namespace Kablunk
 		{
 			const std::string& tag = m_primary_camera_entity.GetComponent<TagComponent>();
 			ImGui::Begin(tag.c_str());
-			auto& camera_transform = m_primary_camera_entity.GetComponent<TransformComponent>().Translation;
-			ImGui::DragFloat3("Camera Translation", glm::value_ptr(camera_transform));
+			
+			auto& primary_camera_component = m_primary_camera_entity.GetComponent<CameraComponent>();
+			
 			if (ImGui::Checkbox("Primary Camera", &m_primary_camera_selected))
 			{
-				m_primary_camera_entity.GetComponent<CameraComponent>().Primary = m_primary_camera_selected;
+				primary_camera_component.Primary = m_primary_camera_selected;
 				m_secondary_camera_entity.GetComponent<CameraComponent>().Primary = !m_primary_camera_selected;
 			}
+			float ortho_size = primary_camera_component.Camera.GetOrthographicSize();
+			if (ImGui::DragFloat("Primary Camera Size", &ortho_size, 0.25f, 1.0f, 50.0f))
+				primary_camera_component.Camera.SetOrthographicSize(ortho_size);
 			ImGui::End();
 		}
+		*/
 
 		ImGui::Begin("Debug Information");
 		

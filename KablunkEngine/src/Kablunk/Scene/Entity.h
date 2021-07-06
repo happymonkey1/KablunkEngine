@@ -17,6 +17,9 @@ namespace Kablunk
 
 		Entity(const Entity&) = default;
 
+		void SetParent(Entity* parent) { m_parent_entity = parent; }
+		Entity* GetParent() const { return m_parent_entity; }
+
 		template <typename T>
 		bool HasComponent() const;
 
@@ -30,13 +33,19 @@ namespace Kablunk
 		void RemoveComponent();
 
 		bool Valid() const { return m_entity_handle != null_entity; }
+		operator uint32_t() const { return static_cast<uint32_t>(m_entity_handle); }
 
 		operator bool() const { return Valid(); }
+		bool operator==(const Entity& other) const { return m_entity_handle == other.m_entity_handle && m_scene == other.m_scene; }
+		bool operator!=(const Entity& other) const { return !(*this == other); }
+
 	private:
 		EntityHandle m_entity_handle{ null_entity };
 		
 		// TODO: replace with weak ref in the future
 		Scene* m_scene{ nullptr };
+
+		Entity* m_parent_entity{ nullptr };
 	};
 
 	template <typename T>

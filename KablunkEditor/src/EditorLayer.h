@@ -2,7 +2,7 @@
 #define EDITOR_EDITORLAYER_H
 
 #include <Kablunk.h>
-
+#include "Panels/SceneHierarchyPanel.h"
 
 namespace Kablunk
 {
@@ -43,6 +43,8 @@ namespace Kablunk
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };
 
 		glm::vec2 m_viewport_size{ 0.0f };
+
+		SceneHierarchyPanel m_hierarchy_panel;
 
 		struct ProfileResult
 		{

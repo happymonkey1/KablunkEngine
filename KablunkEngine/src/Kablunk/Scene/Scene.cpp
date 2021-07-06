@@ -11,11 +11,6 @@ namespace Kablunk
 	Scene::Scene()
 	{
 
-		entt::entity e = m_registry.create();
-
-		m_registry.emplace<TransformComponent>(e);
-
-
 	}
 
 	Scene::~Scene()
@@ -25,8 +20,8 @@ namespace Kablunk
 			{
 				if (native_script_component.Instance)
 				{
-					native_script_component.OnDestroyFunction();
-					native_script_component.DestroyFunction();
+					native_script_component.Instance->OnDestroy();
+					native_script_component.DestroyScript(&native_script_component);
 				}
 			}
 		);
@@ -36,6 +31,7 @@ namespace Kablunk
 	{
 		Entity entity = { m_registry.create(), this };
 		entity.AddComponent<TransformComponent>();
+		
 		auto& tag = entity.AddComponent<TagComponent>(name);
 		tag = name.empty() ? "Blank Entity" : name;
 
@@ -57,24 +53,25 @@ namespace Kablunk
 				*/ 
 				if (!native_script_component.Instance)
 				{
-					native_script_component.InstantiateFunction();
+					native_script_component.Instance = native_script_component.InstantiateScript();
 					native_script_component.Instance->m_entity = Entity{ entity, this };
-					native_script_component.OnCreateFunction();
+					native_script_component.Instance->OnCreate();
 				}
 
-				native_script_component.OnUpdateFunction(ts);
+				native_script_component.Instance->OnUpdate(ts);
 			}
 		);
 		
 		// ==========	
 		//	 Render
 		// ==========
+
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_transform;
-		auto group = m_registry.group<CameraComponent>(entt::get<TransformComponent>);
-		for (auto entity : group)
+		auto view = m_registry.view<CameraComponent, TransformComponent>();
+		for (auto entity : view)
 		{
-			auto& [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
+			auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
 			
 			// Find main camera in scene
 			if (camera.Primary)
@@ -92,7 +89,7 @@ namespace Kablunk
 			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
 			{
-				const auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
 				Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling_factor, sprite.Color);
 			}

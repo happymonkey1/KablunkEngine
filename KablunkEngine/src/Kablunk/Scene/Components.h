@@ -117,26 +117,19 @@ namespace Kablunk
 		CameraComponent(const CameraComponent& projection) = default;
 	};
 
-	struct NativeScriptComponent : ScriptableEntity
+	struct NativeScriptComponent
 	{
 		ScriptableEntity* Instance{ nullptr };
 
-		std::function<void()>				InstantiateFunction;
-		std::function<void()>				DestroyFunction;
-
-		std::function<void()>				OnCreateFunction;
-		std::function<void(Timestep)>		OnUpdateFunction;
-		std::function<void()>				OnDestroyFunction;
+		// Function pointers instead of std::function bc of potential memory allocations
+		ScriptableEntity* (*InstantiateScript)();
+		void (*DestroyScript)(NativeScriptComponent*);
 
 		template <typename T>
 		void Bind()
 		{
-			InstantiateFunction	= [&]() { Instance = new T(); };
-			DestroyFunction		= [&]() { delete static_cast<T*>(Instance); Instance = nullptr; };
-
-			OnCreateFunction	= [&]()				{ ((T*)Instance)->OnCreate(); };
-			OnUpdateFunction	= [&](Timestep ts)	{ ((T*)Instance)->OnUpdate(ts); };
-			OnDestroyFunction	= [&]()				{ ((T*)Instance)->OnDestroy(); };
+			InstantiateScript	= []() { return static_cast<ScriptableEntity*>(new T()); };
+			DestroyScript		= [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 		
 		friend class Scene;

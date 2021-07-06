@@ -15,6 +15,7 @@ project "KablunkEditor"
 
     includedirs
     {
+        "src",
         "%{wks.location}/KablunkEngine/vendor/spdlog/include",
 		"%{wks.location}/KablunkEngine/src",
 		"%{wks.location}/KablunkEngine/vendor",

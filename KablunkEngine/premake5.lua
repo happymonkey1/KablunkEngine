@@ -49,33 +49,17 @@ project "KablunkEngine"
 	filter "system:windows"
 		systemversion "latest"
 
-		defines 
-		{
-		}
-
 	filter "configurations:Debug"
 		defines "KB_DEBUG"
 		runtime "Debug"
 		symbols "on"
-
-		links
-		{
-		}
 	
 	filter "configurations:Release"
 		defines "KB_RELEASE"
 		runtime "Release"
-		symbols "on"
-
-		links
-		{
-		}
+		optimize "on"
 	
 	filter "configurations:Distribution"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
-
-		links
-		{
-		}

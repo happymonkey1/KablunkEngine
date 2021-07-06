@@ -8,21 +8,25 @@ namespace Kablunk
 	class ScriptableEntity
 	{
 	public:
-		ScriptableEntity() = default;
+		virtual ~ScriptableEntity() = default;
 		
 		template <typename T>
-		T& GetComponent();
+		T& GetComponent()
+		{
+			return m_entity.GetComponent<T>();
+		}
+
+	protected:
+		virtual void OnCreate()				{ }
+		virtual void OnUpdate(Timestep ts)	{ }
+		virtual void OnDestroy()			{ }
+
 	private:
 		Entity m_entity;
 
 		friend class Scene;
 	};
-
-	template <typename T>
-	T& ScriptableEntity::GetComponent()
-	{
-		return m_entity.GetComponent<T>();
-	}
+	
 }
 
 #endif
