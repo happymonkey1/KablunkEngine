@@ -76,7 +76,7 @@ Run scripts/Windows-GetProjects.bat to generate project files
 
 Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
 
-## Other
+## Conventions
 
 Mostly follows [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) style with some personal preferences.
 
