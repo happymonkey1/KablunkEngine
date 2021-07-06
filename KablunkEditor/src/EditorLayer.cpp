@@ -54,6 +54,9 @@ namespace Kablunk
 		m_primary_camera_entity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
 
 		camera_comp.Primary = false;
+
+		auto dummy_child_test_ent = m_active_scene->CreateEntity("Dummy Child");
+		m_primary_camera_entity.AddChild(dummy_child_test_ent);
 	}
 
 	void EditorLayer::OnAttach()
@@ -63,7 +66,7 @@ namespace Kablunk
 		m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
 		FrameBufferSpecification frame_buffer_specs;
-		const auto& window_dimensions = Application::Get().GetWindowDimensions();
+		auto window_dimensions = Application::Get().GetWindowDimensions();
 		frame_buffer_specs.width  = window_dimensions.x;
 		frame_buffer_specs.height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
@@ -268,7 +271,11 @@ namespace Kablunk
 		m_viewport_size = { width, height };
 
 		auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
-		ImGui::Image(reinterpret_cast<void*>(frame_buffer_id), { m_viewport_size.x, m_viewport_size.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+		ImGui::Image(
+			reinterpret_cast<void*>(static_cast<uint64_t>(frame_buffer_id)), 
+			{ m_viewport_size.x, m_viewport_size.y }, 
+			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+		);
 		
 		ImGui::PopStyleVar();
 		ImGui::End();

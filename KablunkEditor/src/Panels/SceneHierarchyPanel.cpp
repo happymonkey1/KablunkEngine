@@ -25,6 +25,7 @@ namespace Kablunk
 			{
 				Entity entity{ entity_id, m_context.get() };
 				DrawEntityNode(entity);
+				
 			}
 		);
 
@@ -42,11 +43,18 @@ namespace Kablunk
 		ImGui::End();
 	}
 
-	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
+	void SceneHierarchyPanel::DrawEntityNode(Entity entity, bool draw_child_node)
 	{
+		
+
+		// Should probably refactor code so unparented entities do not have a ChildEntityComponent attached
+		// Look at entt docs for performance issues
+		// Also currently cannot have a child of a child
+		if (entity.HasComponent<ChildEntityComponent>() && entity.GetComponent<ChildEntityComponent>().Parent_entity_handle != null_entity) 
+			if (!draw_child_node)
+				return;
+
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
-
-
 		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 
 		// Pointer voodo magic
@@ -57,6 +65,14 @@ namespace Kablunk
 
 		if (opened)
 		{
+			if (entity.HasComponent<ParentEntityComponent>())
+			{
+				auto& parent_entity_comp = entity.GetComponent<ParentEntityComponent>();
+				for (auto child_handle : parent_entity_comp)
+				{
+					DrawEntityNode({ child_handle, m_context.get() }, true);
+				}
+			}
 			ImGui::TreePop();
 		}
 	}
@@ -166,6 +182,41 @@ namespace Kablunk
 				}
 
 				ImGui::TreePop();
+			}
+		}
+
+		if (m_display_debug_properties && entity.HasComponent<ParentEntityComponent>())
+		{
+			if (ImGui::TreeNodeEx((void*)typeid(ParentEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Children"))
+			{
+				auto& parent_comp = entity.GetComponent<ParentEntityComponent>();
+				for (auto child_handle : parent_comp)
+				{
+					auto child_entity = Entity{ child_handle, m_context.get() };
+					auto child_handle_str = child_entity.GetHandleAsString();
+					auto child_tag = child_entity.GetComponent<TagComponent>().Tag;
+					ImGui::Text("%s (%s)", child_tag.c_str(), child_handle_str.c_str());
+				}
+
+				ImGui::TreePop();
+			}
+		}
+
+		if (m_display_debug_properties && entity.HasComponent<ChildEntityComponent>())
+		{
+			auto& child_comp = entity.GetComponent<ChildEntityComponent>();
+			if (child_comp.HasParent())
+			{
+				if (ImGui::TreeNodeEx((void*)typeid(ChildEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Parent"))
+				{
+					auto parent_entity = Entity{ child_comp.GetParent(), m_context.get() };
+					auto parent_handle_str = parent_entity.GetHandleAsString();
+					auto parent_tag = parent_entity.GetComponent<TagComponent>().Tag;
+					ImGui::Text("%s (%s)", parent_tag.c_str(), parent_handle_str.c_str());
+
+
+					ImGui::TreePop();
+				}
 			}
 		}
 	}

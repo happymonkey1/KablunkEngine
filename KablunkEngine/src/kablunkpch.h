@@ -1,7 +1,7 @@
-#pragma once
+#ifndef KABLUNK_PCH_H
+#define KABLUNK_PCH_H
 
 
-#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -22,4 +22,6 @@
 
 #ifdef KB_PLATFORM_WINDOWS
 	#include <Windows.h>
+#endif
+
 #endif

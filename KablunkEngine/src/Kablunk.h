@@ -37,6 +37,7 @@
 #include "Kablunk/Scene/ScriptableEntity.h"
 #include "Kablunk/Scene/Scene.h"
 #include "Kablunk/Scene/Components.h"
+#include "Kablunk/Scene/SceneCamera.h"
 // ----------------------------------------------
 
 

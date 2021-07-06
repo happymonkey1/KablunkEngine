@@ -13,12 +13,15 @@ namespace Kablunk
 	{
 	public:
 		Entity() = default;
-		Entity(EntityHandle handle, Scene* scene) : m_entity_handle{ handle }, m_scene{ scene } { }
+		Entity(EntityHandle handle, Scene* scene);
 
 		Entity(const Entity&) = default;
 
-		void SetParent(Entity* parent) { m_parent_entity = parent; }
-		Entity* GetParent() const { return m_parent_entity; }
+		void AddChild(EntityHandle child);
+		void RemoveChild(EntityHandle child);
+
+		// #TODO add something to remove parent ref from ChildCompent is destroyed
+		//		 either destroy child entity or unparent.
 
 		template <typename T>
 		bool HasComponent() const;
@@ -33,7 +36,11 @@ namespace Kablunk
 		void RemoveComponent();
 
 		bool Valid() const { return m_entity_handle != null_entity; }
+
+		std::string GetHandleAsString() const { return std::to_string(static_cast<uint32_t>(m_entity_handle)); }
+
 		operator uint32_t() const { return static_cast<uint32_t>(m_entity_handle); }
+		operator EntityHandle() const { return m_entity_handle; }
 
 		operator bool() const { return Valid(); }
 		bool operator==(const Entity& other) const { return m_entity_handle == other.m_entity_handle && m_scene == other.m_scene; }
@@ -44,8 +51,6 @@ namespace Kablunk
 		
 		// TODO: replace with weak ref in the future
 		Scene* m_scene{ nullptr };
-
-		Entity* m_parent_entity{ nullptr };
 	};
 
 	template <typename T>

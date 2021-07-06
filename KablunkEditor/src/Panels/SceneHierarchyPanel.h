@@ -18,11 +18,14 @@ namespace Kablunk
 		
 		void OnImGuiRender();
 	private:
-		void DrawEntityNode(Entity entity);
+		void DrawEntityNode(Entity entity, bool draw_child_node = false);
 		void DrawComponents(Entity entity);
 	private:
 		Ref<Scene> m_context;
 		Entity m_selection_context;
+
+		// #TODO move to properties panel class
+		bool m_display_debug_properties{ true };
 	};
 }
 

@@ -23,8 +23,41 @@ namespace Kablunk
 		TagComponent(const TagComponent&) = default;
 		TagComponent(const std::string& tag) : Tag{ tag } { }
 
-		operator std::string& ()				{ return Tag; }
-		operator const std::string& () const	{ return Tag; }
+		operator std::string&()				{ return Tag; }
+		operator const std::string&() const	{ return Tag; }
+	};
+
+	// #TODO make children transforms relative to parents
+	struct ParentEntityComponent
+	{
+		// #TODO should probably switch to a hashmap or something faster
+		std::vector<EntityHandle> Child_entities_handles;
+
+		ParentEntityComponent() = default;
+		ParentEntityComponent(const ParentEntityComponent&) = default;
+		ParentEntityComponent(std::initializer_list<EntityHandle> l) : Child_entities_handles{ l } { }
+		
+		void AddChildHandle(EntityHandle child_handle) { Child_entities_handles.push_back(child_handle); }
+		void AddChildrenHandles(std::initializer_list<EntityHandle> l) { Child_entities_handles.insert(Child_entities_handles.end(), l.begin(), l.end()); }
+		void RemoveChildHandle(EntityHandle child_handle) { Child_entities_handles.erase(std::find(Child_entities_handles.begin(), Child_entities_handles.end(), child_handle)); }
+		bool ContainsHandle(EntityHandle child_handle) { return std::find(Child_entities_handles.begin(), Child_entities_handles.end(), child_handle) != Child_entities_handles.end(); }
+
+		std::vector<EntityHandle>::const_iterator begin() const { return Child_entities_handles.begin(); }
+		std::vector<EntityHandle>::const_iterator end() const { return Child_entities_handles.end(); }
+		//std::vector<Entity*>::iterator begin() { return Child_entities_ptrs.begin(); }
+		//std::vector<Entity*>::iterator end() { return Child_entities_ptrs.end(); }
+	};
+
+	struct ChildEntityComponent
+	{
+		EntityHandle Parent_entity_handle{ null_entity };
+
+		ChildEntityComponent() = default;
+		ChildEntityComponent(const ChildEntityComponent&) = default;
+
+		bool HasParent() const { return Parent_entity_handle != null_entity; }
+		void SetParent(EntityHandle parent_handle) { Parent_entity_handle = parent_handle; }
+		EntityHandle GetParent() const { return Parent_entity_handle; }
 	};
 
 	/*class Transform
