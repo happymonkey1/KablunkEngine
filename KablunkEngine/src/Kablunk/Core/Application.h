@@ -8,6 +8,7 @@
 
 #include "Kablunk/Imgui/ImGuiLayer.h"
 
+int main(int argc, char** argv);
 
 namespace Kablunk {
 
@@ -24,27 +25,26 @@ namespace Kablunk {
 		void PushOverlay(Layer* layer);
 
 		static Application& Get() { return *s_Instance; }
-		Window& GetWindow() { return *m_Window; }
+		Window& GetWindow() { return *m_window; }
 
 		void Close();
 
-		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+		ImGuiLayer* GetImGuiLayer() { return m_imgui_layer; }
 
-		void SetWindowTitle(const std::string& title) { m_Window->SetWindowTitle(title); }
-		glm::vec2 GetWindowDimensions() const { return m_Window->GetDimensions(); }
+		void SetWindowTitle(const std::string& title) { m_window->SetWindowTitle(title); }
+		glm::vec2 GetWindowDimensions() const { return m_window->GetDimensions(); }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
-	private:
-		Scope<Window> m_Window;
-		ImGuiLayer* m_ImGuiLayer;
-		bool m_Running = true;
-		bool m_Minimized = false;
-		LayerStack m_LayerStack;
+		Scope<Window> m_window;
+		ImGuiLayer* m_imgui_layer;
+		bool m_running = true;
+		bool m_minimized = false;
+		LayerStack m_layer_stack;
 		
-		float m_LastFrameTime = 0.0f;
-		
+		float m_last_frame_time = 0.0f;
+		friend int ::main(int argc, char** argv);
 		
 	private:
 		static Application* s_Instance;

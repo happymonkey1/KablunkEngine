@@ -8,7 +8,9 @@ namespace Kablunk
 	class Camera
 	{
 	public:
+		Camera() = default;
 		Camera(const glm::mat4& projection) : m_projection{ projection } { }
+		virtual ~Camera() = default;
 
 		const glm::mat4& GetProjection() const { return m_projection; }
 		
@@ -22,8 +24,8 @@ namespace Kablunk
 			out_coords.z /= out_coords.w;
 			return out_coords;
 		}
-	private:
-		glm::mat4 m_projection;
+	protected:
+		glm::mat4 m_projection{ 1.0f };
 	};
 }
 

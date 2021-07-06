@@ -23,14 +23,14 @@ namespace Kablunk
 		KB_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		{
-			m_Window = Window::Create();
-			m_Window->SetEventCallback(KABLUNK_BIND_EVENT_FN(Application::OnEvent));
-			m_Window->SetVsync(false);
+			m_window = Window::Create();
+			m_window->SetEventCallback(KABLUNK_BIND_EVENT_FN(Application::OnEvent));
+			m_window->SetVsync(false);
 		}
 		
 
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverlay(m_ImGuiLayer);
+		m_imgui_layer = new ImGuiLayer();
+		PushOverlay(m_imgui_layer);
 
 		Renderer::Init();
 	}
@@ -42,20 +42,20 @@ namespace Kablunk
 	void Application::PushLayer(Layer* layer) {
 		KB_PROFILE_FUNCTION();
 
-		m_LayerStack.PushLayer(layer);
+		m_layer_stack.PushLayer(layer);
 		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* overlay) {
 		KB_PROFILE_FUNCTION();
 
-		m_LayerStack.PushOverlay(overlay);
+		m_layer_stack.PushOverlay(overlay);
 		overlay->OnAttach();
 	}
 
 	void Application::Close()
 	{
-		m_Running = false;
+		m_running = false;
 	}
 
 	void Application::OnEvent(Event& e) {
@@ -66,7 +66,7 @@ namespace Kablunk
 		dispatcher.Dispatch<WindowResizeEvent>(KABLUNK_BIND_EVENT_FN(Application::OnWindowResize));
 
 
-		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
+		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) {
 			if (e.GetStatus())
 				break;
 
@@ -75,7 +75,7 @@ namespace Kablunk
 	}
 
 	bool Application::OnWindowClosed(WindowCloseEvent& e) {
-		m_Running = false;
+		m_running = false;
 		return true;
 	}
 
@@ -84,11 +84,11 @@ namespace Kablunk
 
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
-			m_Minimized = true;
+			m_minimized = true;
 			return false;
 		}
 
-		m_Minimized = false;
+		m_minimized = false;
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
@@ -98,33 +98,33 @@ namespace Kablunk
 	void Application::Run() {
 		KB_PROFILE_FUNCTION();
 
-		while (m_Running) 
+		while (m_running) 
 		{
 			KB_PROFILE_SCOPE("RunLoop - Application::Run")
 
 			float time = PlatformAPI::GetTime(); // Platform::GetTime
-			Timestep timestep = time - m_LastFrameTime;
-			m_LastFrameTime = time;
+			Timestep timestep = time - m_last_frame_time;
+			m_last_frame_time = time;
 
-			if (!m_Minimized)
+			if (!m_minimized)
 			{
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
-					for (Layer* layer : m_LayerStack)
+					for (Layer* layer : m_layer_stack)
 						layer->OnUpdate(timestep);
 				}
 			
 
-				m_ImGuiLayer->Begin();
+				m_imgui_layer->Begin();
 				{
 					KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
-						for (Layer* layer : m_LayerStack)
+						for (Layer* layer : m_layer_stack)
 							layer->OnImGuiRender(timestep);
 				}
-				m_ImGuiLayer->End();
+				m_imgui_layer->End();
 			}
 
-			m_Window->OnUpdate();
+			m_window->OnUpdate();
 		}
 	}
 }

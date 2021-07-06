@@ -74,7 +74,7 @@ namespace Kablunk
 		auto group = m_registry.group<CameraComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{
-			const auto& [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
+			auto& [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
 			
 			// Find main camera in scene
 			if (camera.Primary)
@@ -101,5 +101,20 @@ namespace Kablunk
 		}
 	}
 
+	void Scene::OnViewportResize(uint32_t width, uint32_t height)
+	{
+		m_viewport_width = width; 
+		m_viewport_height = height;
+
+		// resize camera(s) which do not have fixed aspect ratios
+		auto view = m_registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			auto& camera_component = view.get<CameraComponent>(entity);
+			if (!camera_component.Fixed_aspect_ratio)
+				camera_component.Camera.SetViewportSize(width, height);
+			
+		}
+	}
 }
 

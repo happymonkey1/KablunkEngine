@@ -46,11 +46,11 @@ namespace Kablunk
 		m_square_entity = square;
 
 		m_primary_camera_entity = m_active_scene->CreateEntity("Camera Entity");
-		m_primary_camera_entity.AddComponent<CameraComponent>(glm::ortho(-16.0f, 16.0f, -9.0f, 9.0f, -1.0f, 1.0f));
+		m_primary_camera_entity.AddComponent<CameraComponent>();
 		m_primary_camera_entity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
 
 		m_secondary_camera_entity = m_active_scene->CreateEntity("Secondary Entity");
-		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>(glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f));
+		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>();
 		camera_comp.Primary = false;
 	}
 
@@ -98,6 +98,8 @@ namespace Kablunk
 		{
 			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 			m_camera_controller.OnResize(m_viewport_size.x, m_viewport_size.y);
+
+			m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		}
 		
 		// ==========

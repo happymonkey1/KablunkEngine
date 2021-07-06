@@ -10,7 +10,7 @@
 
 #include "Kablunk/Scene/ScriptableEntity.h"
 #include "Kablunk/Renderer/Texture.h"
-#include "Kablunk/Renderer/Camera.h"
+#include "Kablunk/Scene/SceneCamera.h"
 
 
 namespace Kablunk
@@ -109,13 +109,12 @@ namespace Kablunk
 
 	struct CameraComponent
 	{
-		Kablunk::Camera Camera;
+		SceneCamera Camera;
 		bool Primary{ true };
+		bool Fixed_aspect_ratio = false;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& projection) = default;
-		CameraComponent(const glm::mat4& projection) : Camera{ projection } { }
-		
 	};
 
 	struct NativeScriptComponent : ScriptableEntity

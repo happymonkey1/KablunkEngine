@@ -18,8 +18,11 @@ namespace Kablunk
 		Entity CreateEntity(const std::string& name = std::string{});
 
 		void OnUpdate(Timestep ts);
+		void OnViewportResize(uint32_t x, uint32_t y);
 	private:
 		entt::registry m_registry;
+
+		uint32_t m_viewport_width = 0, m_viewport_height = 0;
 
 		friend class Entity;
 	};

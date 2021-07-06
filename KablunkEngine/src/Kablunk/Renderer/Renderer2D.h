@@ -10,11 +10,6 @@ namespace Kablunk
 	class Renderer2D
 	{
 	public:
-		struct RenderCamera
-		{
-			glm::mat4 Projection;
-			glm::mat4 Transform;
-		};
 
 		struct Renderer2DStats
 		{
@@ -30,7 +25,6 @@ namespace Kablunk
 		static void Shutdown();
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void BeginScene(const RenderCamera& render_camera);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 		static void Flush();

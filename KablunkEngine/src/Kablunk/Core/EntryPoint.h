@@ -6,7 +6,8 @@
 extern Kablunk::Application* Kablunk::CreateApplication();
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
 	Kablunk::Log::Init();
 
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");

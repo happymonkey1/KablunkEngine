@@ -120,13 +120,7 @@ namespace Kablunk
 
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		BeginScene(RenderCamera{ camera.GetProjection(), transform });
-	}
-
-
-	void Renderer2D::BeginScene(const RenderCamera& render_camera)
-	{
-		glm::mat4 view_projection = render_camera.Projection * glm::inverse(render_camera.Transform);
+		glm::mat4 view_projection = camera.GetProjection() * glm::inverse(transform);
 
 		s_renderer_data.Texture_shader->Bind();
 		s_renderer_data.Texture_shader->SetMat4("u_ViewProjection", view_projection);
