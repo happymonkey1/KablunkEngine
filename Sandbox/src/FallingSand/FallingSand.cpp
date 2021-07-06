@@ -39,7 +39,7 @@ void FallingSand::OnUpdate(Kablunk::Timestep ts)
 	
 	float simStartX = (float)(m_ScreenWidth - m_TileMap.GetSimulationWidthInPixels()) / 2.0f;
 	float simStartY = (float)(m_ScreenHeight - m_TileMap.GetSimulationHeightInPixels()) / 2.0f;
-	if (Kablunk::Input::IsMouseButtonPressed(KB_MOUSE_BUTTON_1))
+	if (Kablunk::Input::IsMouseButtonPressed(Kablunk::Mouse::Button1))
 	{
 		float x = Kablunk::Input::GetMouseX(), y = Kablunk::Input::GetMouseY();
 		

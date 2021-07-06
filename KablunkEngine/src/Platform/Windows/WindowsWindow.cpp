@@ -15,7 +15,7 @@
 
 namespace Kablunk {
 
-    static bool s_GLFWInitialized = false;
+    static uint8_t s_glfw_window_count = 0;
 
     static void GLFWErrorCallback(int error, const char* desc) 
     {
@@ -51,18 +51,20 @@ namespace Kablunk {
         KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
         
 
-        if (!s_GLFWInitialized) {
-            KB_PROFILE_SCOPE("glfwInit")
+        if (s_glfw_window_count == 0) {
+			KB_PROFILE_SCOPE("glfwInit");
 
-            KB_CORE_ASSERT(glfwInit(), "COULD NOT INITIALIZE GLFW");
+			int success = glfwInit();
+            KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
 
             glfwSetErrorCallback(GLFWErrorCallback);
-            s_GLFWInitialized = true;
         }
 
         {
-            KB_PROFILE_SCOPE("glfwCreateWindow")
-            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), NULL, NULL);
+			KB_PROFILE_SCOPE("glfwCreateWindow");
+
+            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			++s_glfw_window_count;
         }
 		m_Context = CreateScope<OpenGLContext>(m_Window);
 		m_Context->Init();
@@ -165,8 +167,10 @@ namespace Kablunk {
         KB_PROFILE_FUNCTION();
 
         glfwDestroyWindow(m_Window);
+		--s_glfw_window_count;
 
-        glfwTerminate();
+		if (s_glfw_window_count == 0)
+			glfwTerminate();
     }
 
     void WindowsWindow::OnUpdate()

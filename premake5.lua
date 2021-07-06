@@ -30,7 +30,7 @@ group "Dependencies"
     include "vendor/premake"
     include "KablunkEngine/vendor/GLFW"
     include "KablunkEngine/vendor/Glad"
-    include "KablunkEngine/vendor/ImGui"
+    include "KablunkEngine/vendor/imgui"
 group ""
 
 include "KablunkEngine"
