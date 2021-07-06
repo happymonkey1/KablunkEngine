@@ -17,54 +17,66 @@ Run scripts/Windows-GetProjects.bat to generate project files
 - [x] Window manager
 - [x] Event system
 - [x] Basic Orthographic Camera System
+- [x] Framebuffer
+- [x] Makefile implementation - Premake
+- [x] ECS
+- [x] Native Scripting
 
 ### Planned / In Progress (In no particular order)
-- [ ] Makefile implementation - Premake
+
 - [ ] Line Renderer
-- [x] ECS
-- [x] Scripting - Native, C#, python, lua, etc
-- [x] Framebuffer
-- [ ] Better Camera System
+- [ ] Scripting -  C#, python, lua, etc
+- [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
 - [ ] Task / Threading Abstraction
+- [ ] Multithreading Parts of Engine - Move rendering to seperate thread
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
 - [ ] Virtual File System
 - [ ] Runtime Builds
 - [ ] Multiplatform support - Development and Packaging
-- [ ] Audio Engine
+- [ ] Audio Support - OpenAL
 - [ ] 2D / 3D? Lighting
-- [ ] 2D Physics
+- [ ] 2D Physics - Box2D
+- [ ] 3D Physics - PhysX, Bullet
 - [ ] Better Shader System - SPIR-V
-- [ ] Refactor Input Code Situation
-- [ ] Networking
+- [ ] Networking - LOL
+- [ ] Material System
+- [ ] 3D Model to 2D Texture System (what is this called?)
+
+### Cleanup
+
+- [x] Refactor Input Code Situation
+- [ ] Code Review - Member variable renaming, etc
+- [ ] Improve Camera System
 
 ## Editor
 
 ### Satisfactory Implemention
 
-Nothing as of yet.
-
-### Planned / In Progress (In no particular order)
-
-- [x] Editor
 - [x] Dockspace
 - [x] Viewports
 - [x] Theme
-- [ ] Scene Heirarchy
-- [ ] Scene Loading and Unloading
-- [ ] Gismos
-- [ ] Content Manager
+- [x] Scene Camera
 
-### Other
+### Planned / In Progress (In no particular order)
+
+- [x] Scene Heirarchy
+- [ ] Scene Loading and Unloading
+- [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
+- [ ] Component Gismos
+- [ ] Content Manager
+- [ ] Asset Manager
+
+## Other
 
 - [ ] Fix Continuous Integration
 - [ ] Add unit testing
 
-### Credits
+## Credits
 
 Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
 
-### Todo
+## Other
 
-Cleanup codebase and standardize style.
 Mostly follows [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) style with some personal preferences.
+
