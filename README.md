@@ -42,6 +42,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Networking - LOL
 - [ ] Material System
 - [ ] 3D Model to 2D Texture System (what is this called?)
+- [ ] Inhouse UI system (Either abstracting over ImGui or whatever)
 
 ### Cleanup
 
@@ -62,6 +63,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 - [x] Scene Heirarchy
 - [ ] Scene Loading and Unloading
+- [ ] Scene Play and Stop
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
 - [ ] Content Manager
