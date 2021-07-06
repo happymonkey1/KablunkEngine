@@ -4,6 +4,10 @@
 
 Personal project to develop a basic 2D game engine. 
 
+## Setup
+
+Run scripts/Windows-GetProjects.bat to generate project files
+
 ## Engine
 
 ### Satisfactory Implemention
