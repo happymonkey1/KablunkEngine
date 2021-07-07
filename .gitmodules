@@ -13,3 +13,6 @@
 [submodule "KablunkEngine/vendor/spdlog"]
 	path = KablunkEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "KablunkEngine/vendor/yaml-cpp"]
+	path = KablunkEngine/vendor/yaml-cpp
+	url = https://github.com/happymonkey1/yaml-cpp.git
