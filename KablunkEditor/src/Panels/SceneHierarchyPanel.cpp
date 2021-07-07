@@ -25,7 +25,6 @@ namespace Kablunk
 			{
 				Entity entity{ entity_id, m_context.get() };
 				DrawEntityNode(entity);
-				
 			}
 		);
 
@@ -83,26 +82,23 @@ namespace Kablunk
 	*/
 	void SceneHierarchyPanel::DrawComponents(Entity entity)
 	{
+		// Tag
 		if (entity.HasComponent<TagComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(TagComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Tag"))
+			auto& tag = entity.GetComponent<TagComponent>().Tag;
+
+			const uint16_t k_buffer_size = 256;
+			char buffer[k_buffer_size];
+			// Allocate room for tag + extra buffer
+			memset(buffer, 0, k_buffer_size);
+			strcpy_s(buffer, k_buffer_size, tag.c_str());
+			if (ImGui::InputText("##Tag", buffer, k_buffer_size))
 			{
-				auto& tag = entity.GetComponent<TagComponent>().Tag;
-
-				const uint16_t k_buffer_size = 256;
-				char buffer[k_buffer_size];
-				// Allocate room for tag + extra buffer
-				memset(buffer, 0, k_buffer_size);
-				strcpy_s(buffer, k_buffer_size, tag.c_str());
-				if (ImGui::InputText("", buffer, k_buffer_size))
-				{
-					tag = std::string(buffer);
-				}
-
-				ImGui::TreePop();
+				tag = std::string(buffer);
 			}
 		}
 
+		// Transform
 		if (entity.HasComponent<TransformComponent>())
 		{
 			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
@@ -117,6 +113,7 @@ namespace Kablunk
 			}
 		}
 
+		// Camera
 		if (entity.HasComponent<CameraComponent>())
 		{
 			if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
@@ -185,40 +182,69 @@ namespace Kablunk
 			}
 		}
 
-		if (m_display_debug_properties && entity.HasComponent<ParentEntityComponent>())
+		// Sprite Renderer
+		if (entity.HasComponent<SpriteRendererComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(ParentEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Children"))
+			if (ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
 			{
-				auto& parent_comp = entity.GetComponent<ParentEntityComponent>();
-				for (auto child_handle : parent_comp)
+
+				auto& sprite_comp = entity.GetComponent<SpriteRendererComponent>();
+				ImGui::ColorEdit4("Tint Color", glm::value_ptr(sprite_comp.Color));
+
+				Ref<Texture2D> sprite_texture = sprite_comp.Texture;
+				auto sprite_texture_renderer_id = sprite_texture->GetRendererID();
+				if (ImGui::ImageButton(reinterpret_cast<void*>(static_cast<uint64_t>(sprite_texture_renderer_id)), { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 				{
-					auto child_entity = Entity{ child_handle, m_context.get() };
-					auto child_handle_str = child_entity.GetHandleAsString();
-					auto child_tag = child_entity.GetComponent<TagComponent>().Tag;
-					ImGui::Text("%s (%s)", child_tag.c_str(), child_handle_str.c_str());
+					// #TODO change texture dynamically
 				}
+
+				float tiling_factor = sprite_comp.Tiling_factor;
+				if (ImGui::DragFloat("Tiling Factor", &tiling_factor, 0.1f))
+					sprite_comp.Tiling_factor = tiling_factor;
 
 				ImGui::TreePop();
 			}
 		}
 
-		if (m_display_debug_properties && entity.HasComponent<ChildEntityComponent>())
+		// Debug Panels
+		if (m_display_debug_properties)
 		{
-			auto& child_comp = entity.GetComponent<ChildEntityComponent>();
-			if (child_comp.HasParent())
+			if (entity.HasComponent<ParentEntityComponent>())
 			{
-				if (ImGui::TreeNodeEx((void*)typeid(ChildEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Parent"))
+				if (ImGui::TreeNodeEx((void*)typeid(ParentEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Children"))
 				{
-					auto parent_entity = Entity{ child_comp.GetParent(), m_context.get() };
-					auto parent_handle_str = parent_entity.GetHandleAsString();
-					auto parent_tag = parent_entity.GetComponent<TagComponent>().Tag;
-					ImGui::Text("%s (%s)", parent_tag.c_str(), parent_handle_str.c_str());
-
+					auto& parent_comp = entity.GetComponent<ParentEntityComponent>();
+					for (auto child_handle : parent_comp)
+					{
+						auto child_entity = Entity{ child_handle, m_context.get() };
+						auto child_handle_str = child_entity.GetHandleAsString();
+						auto child_tag = child_entity.GetComponent<TagComponent>().Tag;
+						ImGui::Text("%s (%s)", child_tag.c_str(), child_handle_str.c_str());
+					}
 
 					ImGui::TreePop();
 				}
 			}
+
+			if (entity.HasComponent<ChildEntityComponent>())
+			{
+				auto& child_comp = entity.GetComponent<ChildEntityComponent>();
+				if (child_comp.HasParent())
+				{
+					if (ImGui::TreeNodeEx((void*)typeid(ChildEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Parent"))
+					{
+						auto parent_entity = Entity{ child_comp.GetParent(), m_context.get() };
+						auto parent_handle_str = parent_entity.GetHandleAsString();
+						auto parent_tag = parent_entity.GetComponent<TagComponent>().Tag;
+						ImGui::Text("%s (%s)", parent_tag.c_str(), parent_handle_str.c_str());
+
+
+						ImGui::TreePop();
+					}
+				}
+			}
 		}
+
 	}
 
 }
