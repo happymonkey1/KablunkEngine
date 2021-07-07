@@ -9,7 +9,9 @@ namespace Kablunk
 	void OpenGLRendererAPI::Init()
 	{
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Interpolative blending
+		//glBlendFunc(GL_ONE, GL_ONE); //Additive blending
+		//glBlendFunc(GL_DST_COLOR, GL_ZERO); // Multiplicative blending
 
 		glEnable(GL_DEPTH_TEST);
 	}

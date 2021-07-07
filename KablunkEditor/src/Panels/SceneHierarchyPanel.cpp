@@ -3,6 +3,8 @@
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "imgui/imgui_internal.h"
+
 namespace Kablunk
 {
 
@@ -76,6 +78,83 @@ namespace Kablunk
 		}
 	}
 
+	static bool DrawVec3Control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float value_tuning = 0.1f, float column_width = 100.0f)
+	{
+		ImGui::PushID(label.c_str());
+
+		ImGui::Columns(2);
+
+		ImGui::SetColumnWidth(0, column_width);
+		ImGui::Text(label.c_str());
+		ImGui::NextColumn();
+
+		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
+
+		float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		auto button_size = ImVec2{ line_height + 3.0f, line_height };
+		bool updated = false;
+
+		// Red
+		ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered,	{ 0.9f, 0.2f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive,	{ 0.8f, 0.1f, 0.15f, 1.0f });
+		
+		if (ImGui::Button("X", button_size))
+		{
+			values.x = reset_value;
+			updated = true;
+		}
+		ImGui::PopStyleColor(3);
+
+
+		ImGui::SameLine();
+		if (ImGui::DragFloat("##X", &values.x, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		// Green
+		ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.2f, 0.7f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered,   { 0.3f, 0.8f, 0.4f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive,    { 0.2f, 0.7f, 0.3f, 1.0f });
+
+		if (ImGui::Button("Y", button_size))
+		{
+			values.y = reset_value;
+			updated = true;
+		}
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		if (ImGui::DragFloat("##Y", &values.y, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		// Blue
+		ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered,	{ 0.2f, 0.35f, 0.9f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive,	{ 0.1f, 0.25f, 0.8f, 1.0f });
+
+		if (ImGui::Button("Z", button_size))
+		{
+			values.z = reset_value;
+			updated = true;
+		}
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		if (ImGui::DragFloat("##Z", &values.z, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+		ImGui::PopItemWidth();
+
+		ImGui::PopStyleVar();
+
+		ImGui::Columns(1);
+
+		ImGui::PopID();
+
+		return updated;
+	}
+
 	/*
 		#TODO 
 		Move to separate file and class
@@ -105,9 +184,15 @@ namespace Kablunk
 			{
 
 				auto& transform = entity.GetComponent<TransformComponent>();
-				ImGui::DragFloat3("Translation", glm::value_ptr(transform.Translation), 0.1f);
-				ImGui::DragFloat3("Rotation", glm::value_ptr(transform.Rotation), 1.0f);
-				ImGui::DragFloat3("Scale", glm::value_ptr(transform.Scale), 0.1f);
+				//ImGui::DragFloat3("Translation", glm::value_ptr(transform.Translation), 0.1f);
+
+				DrawVec3Control("Translation", transform.Translation);
+
+				auto rotation = glm::degrees(transform.Rotation);
+				if (DrawVec3Control("Rotation", rotation, 0.0f, 1.0f))
+					transform.Rotation = glm::radians(rotation);
+				
+				DrawVec3Control("Scale", transform.Scale, 1.0f);
 				
 				ImGui::TreePop();
 			}
