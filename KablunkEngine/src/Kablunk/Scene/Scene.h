@@ -31,6 +31,7 @@ namespace Kablunk
 		uint32_t m_viewport_width = 0, m_viewport_height = 0;
 
 		friend class Entity;
+		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
 	};
 }

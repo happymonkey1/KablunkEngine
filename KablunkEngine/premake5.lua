@@ -36,7 +36,7 @@ project "KablunkEngine"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml-cpp}"
+		"%{IncludeDir.yaml_cpp}"
 	}
 
 	links
@@ -44,6 +44,7 @@ project "KablunkEngine"
 		"GLFW",
 		"Glad",
 		"ImGui",
+		"yaml-cpp",
 		"opengl32.lib"
 	}
 

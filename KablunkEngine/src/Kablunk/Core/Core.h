@@ -1,6 +1,8 @@
-#pragma once
+#ifndef KABLUNK_CORE_CORE_H
+#define KABLUNK_CORE_CORE_H
 
 #include <memory>
+#include "Kablunk/Utilities/StaticReflection.h"
 
 // Platform detection
 #ifdef _WIN32
@@ -63,3 +65,5 @@ namespace Kablunk
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 }
+
+#endif

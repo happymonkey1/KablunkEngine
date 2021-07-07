@@ -1,0 +1,45 @@
+Scene: Untitled
+Entities:
+  - Entity: EntityID HERE
+    TagComponent:
+      Tag: Dummy Child
+    TransformComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+  - Entity: EntityID HERE
+    TagComponent:
+      Tag: Secondary Camera
+    TransformComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+    CameraComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+  - Entity: EntityID HERE
+    TagComponent:
+      Tag: Primary Camera
+    TransformComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+    CameraComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+  - Entity: EntityID HERE
+    TagComponent:
+      Tag: Square Entity
+    TransformComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000
+  - Entity: EntityID HERE
+    TagComponent:
+      Tag: Square Entity
+    TransformComponent:
+      Translation: 0.000000,0.000000,0.000000
+      Rotation: 0.000000,0.000000,0.000000
+      Scale: 1.000000,1.000000,1.000000

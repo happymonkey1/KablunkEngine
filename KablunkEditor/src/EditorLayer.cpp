@@ -2,6 +2,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <Kablunk/Scene/SceneSerializer.h>
 
 namespace Kablunk
 {
@@ -68,6 +69,9 @@ namespace Kablunk
 		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
 
 		m_hierarchy_panel.SetContext(m_active_scene);
+
+		auto serializer = SceneSerializer{ m_active_scene };
+		serializer.Serialize("assets/scenes/Example.scene");
 	}
 
 	void EditorLayer::OnDetach()
@@ -160,6 +164,8 @@ namespace Kablunk
 
 		if (opt_fullscreen)
 			ImGui::PopStyleVar(2);
+
+		
 
 		/*auto secondary_toolbar_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
 		static float padding = 10.0f;
