@@ -11,10 +11,6 @@ namespace Kablunk
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_camera_controller{ 1.7778f, true }
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		m_imgui_font = io.Fonts->AddFontFromFileTTF("assets/fonts/Roboto-Medium.ttf", 16);
-		io.Fonts->Build();
-
 		m_active_scene = CreateRef<Scene>();
 
 		auto square = m_active_scene->CreateEntity("Square Entity");
@@ -158,7 +154,6 @@ namespace Kablunk
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
 		ImGui::Begin("##kablunk_editor_dockspace", NULL, window_flags);
-		ImGui::PushFont(m_imgui_font);
 
 		if (!opt_padding)
 			ImGui::PopStyleVar();
@@ -179,11 +174,16 @@ namespace Kablunk
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
+		auto& style = ImGui::GetStyle();
+		float min_window_size = style.WindowMinSize.x;
+		style.WindowMinSize.x = 375.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("##kablunk_editor_dockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
+
+		style.WindowMinSize.x = min_window_size;
 
 
 
@@ -280,7 +280,6 @@ namespace Kablunk
 		ImGui::PopStyleVar();
 		ImGui::End();
 
-		ImGui::PopFont();
 		ImGui::End();
 		
 	}

@@ -44,6 +44,11 @@ namespace Kablunk {
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
+		// #TODO build font library to load fonts instead of current way
+		io.Fonts->AddFontFromFileTTF("assets/fonts/poppins/Poppins-Bold.ttf", 18.0f);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/poppins/Poppins-Medium.ttf", 18.0f);
+		//io.Fonts->Build();
+
 		//ImGui::StyleColorsDark();
 		SetDarkTheme();
 
@@ -135,7 +140,7 @@ namespace Kablunk {
 		style.Colors[ImGuiCol_TitleBgActive]		= { 0.381f, 0.381f, 0.381f, 1.0f };	// #515151
 		style.Colors[ImGuiCol_TitleBgCollapsed]		= { 0.15f, 0.1505f, 0.151f, 1.0f };
 
-		style.Colors[ImGuiCol_Button]				= { 0.200f, 0.205f, 0.210f, 1.0f };
+		style.Colors[ImGuiCol_Button]				= { 0.494f, 0.494f, 0.494f, 1.0f };
 		style.Colors[ImGuiCol_ButtonHovered]		= { 0.300f, 0.305f, 0.310f, 1.0f };
 		style.Colors[ImGuiCol_ButtonActive]			= { 0.15f, 0.1505f, 0.151f, 1.0f };
 

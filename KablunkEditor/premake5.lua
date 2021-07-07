@@ -21,7 +21,8 @@ project "KablunkEditor"
 		"%{wks.location}/KablunkEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+        "%{IncludeDir.yaml-cpp}"
     }
 
     links

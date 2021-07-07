@@ -61,8 +61,6 @@ namespace Kablunk
 			float Fps{ 10.0f };
 		};
 		ImGuiProfilerStats m_imgui_profiler_stats;
-
-		ImFont* m_imgui_font{ nullptr };
 	};
 }
 #endif

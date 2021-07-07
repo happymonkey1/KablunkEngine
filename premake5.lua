@@ -31,6 +31,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/GLFW"
     include "KablunkEngine/vendor/Glad"
     include "KablunkEngine/vendor/imgui"
+    include "KablunkEngine/vendor/yaml-cpp"
 group ""
 
 include "KablunkEngine"
