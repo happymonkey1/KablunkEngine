@@ -3,6 +3,7 @@
 
 #include "entt.hpp"
 
+
 #include "Kablunk/Core/Timestep.h"
 
 namespace Kablunk
@@ -16,9 +17,14 @@ namespace Kablunk
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string{});
+		void DestroyEntity(Entity entity);
 
 		void OnUpdate(Timestep ts);
 		void OnViewportResize(uint32_t x, uint32_t y);
+	private:
+		template <typename T>
+		void OnComponentAdded(Entity entity, T& component);
+	
 	private:
 		entt::registry m_registry;
 

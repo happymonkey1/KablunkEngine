@@ -64,7 +64,9 @@ namespace Kablunk
 	{
 		KB_CORE_ASSERT(!HasComponent<T>(), "Trying to add component that already exists!");
 
-		return m_scene->m_registry.emplace<T>(m_entity_handle, std::forward<Args>(args)...);
+		T& component = m_scene->m_registry.emplace<T>(m_entity_handle, std::forward<Args>(args)...);
+		m_scene->OnComponentAdded<T>(*this, component);
+		return component;
 	}
 
 	template <typename T>

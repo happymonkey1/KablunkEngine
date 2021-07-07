@@ -2,6 +2,7 @@
 #define KABLUNK_SCENE_SCRIPTABLE_ENTITY_H
 
 #include "Kablunk/Scene/Entity.h"
+#include "Kablunk/Core/Timestep.h"
 
 namespace Kablunk
 {

@@ -32,6 +32,17 @@ namespace Kablunk
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) m_selection_context = {};
 
+		// Context menu for right-clicking blank space
+		if (ImGui::BeginPopupContextWindow(0, 1, false))
+		{
+			if (ImGui::MenuItem("Create Blank Entity"))
+			{
+				m_context->CreateEntity();
+			}
+
+			ImGui::EndPopup();
+		}
+
 		ImGui::End();
 
 		ImGui::Begin("Properties");
@@ -39,6 +50,26 @@ namespace Kablunk
 		if (m_selection_context)
 		{
 			DrawComponents(m_selection_context);
+
+			if (ImGui::Button("Add Component"))
+				ImGui::OpenPopup("##AddComponent");
+
+			if (ImGui::BeginPopup("##AddComponent"))
+			{
+				if (ImGui::MenuItem("Camera"))
+				{
+					m_selection_context.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Sprite Renderer"))
+				{
+					m_selection_context.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndPopup();
+			}
 		}
 
 		ImGui::End();
@@ -48,7 +79,7 @@ namespace Kablunk
 	{
 		
 
-		// Should probably refactor code so unparented entities do not have a ChildEntityComponent attached
+		// Should probably refactor code so un-parented entities do not have a ChildEntityComponent attached
 		// Look at entt docs for performance issues
 		// Also currently cannot have a child of a child
 		if (entity.HasComponent<ChildEntityComponent>() && entity.GetComponent<ChildEntityComponent>().Parent_entity_handle != null_entity) 
@@ -64,6 +95,19 @@ namespace Kablunk
 		if (ImGui::IsItemClicked())
 			m_selection_context = entity;
 
+
+		bool entity_deleted = false;
+		// Context menu for right-clicking entity in hierarchy
+		if (ImGui::BeginPopupContextItem(0, 1))
+		{
+			if (ImGui::MenuItem("Delete Entity"))
+				entity_deleted = true;
+			
+
+			ImGui::EndPopup();
+		}
+
+
 		if (opened)
 		{
 			if (entity.HasComponent<ParentEntityComponent>())
@@ -76,10 +120,20 @@ namespace Kablunk
 			}
 			ImGui::TreePop();
 		}
+
+		// Deferred deletion so ui and other stuff can still happen
+		if (entity_deleted)
+		{
+			m_context->DestroyEntity(entity);
+
+			if (m_selection_context == entity) m_selection_context = { };
+		}
 	}
 
 	static bool DrawVec3Control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float value_tuning = 0.1f, float column_width = 100.0f)
 	{
+		// #TODO check values before clamping format to 2 decimal places.
+
 		ImGui::PushID(label.c_str());
 
 		ImGui::Columns(2);
@@ -177,12 +231,15 @@ namespace Kablunk
 			}
 		}
 
+		const ImGuiTreeNodeFlags tree_node_flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
+
 		// Transform
 		if (entity.HasComponent<TransformComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
+			bool open = ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), tree_node_flags, "Transform");
+			
+			if (open)
 			{
-
 				auto& transform = entity.GetComponent<TransformComponent>();
 				//ImGui::DragFloat3("Translation", glm::value_ptr(transform.Translation), 0.1f);
 
@@ -201,7 +258,7 @@ namespace Kablunk
 		// Camera
 		if (entity.HasComponent<CameraComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
+			if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), tree_node_flags, "Camera"))
 			{
 
 				auto& camera_component = entity.GetComponent<CameraComponent>();
@@ -234,22 +291,22 @@ namespace Kablunk
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
 					float vertical_fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
-					if (ImGui::DragFloat("Size", &vertical_fov, 1.0f, 1.0f, 180.0f))
+					if (ImGui::DragFloat("Size", &vertical_fov, 1.0f, 1.0f, 200.0f))
 						camera.SetPerspectiveVerticalFOV(glm::radians(vertical_fov));
 
 					float near_clip = camera.GetPerspectiveNearClip();
-					if (ImGui::DragFloat("Near Clip", &near_clip, 0.1f))
+					if (ImGui::DragFloat("Near Clip", &near_clip, 0.1f, 0.001f, 10000.0f))
 						camera.SetPerspectiveNearClip(near_clip);
 
 					float far_clip = camera.GetPerspectiveFarClip();
-					if (ImGui::DragFloat("Far Clip", &far_clip, 0.1f))
+					if (ImGui::DragFloat("Far Clip", &far_clip, 0.1f, 0.001f, 10000.0f))
 						camera.SetPerspectiveFarClip(far_clip);
 				}
 
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 				{
 					float ortho_size = camera.GetOrthographicSize();
-					if (ImGui::DragFloat("Size", &ortho_size, 0.25f, 1.0f, 10000.0f))
+					if (ImGui::DragFloat("Size", &ortho_size, 0.25f, 0.1f, 0.0f))
 						camera.SetOrthographicSize(ortho_size);
 
 					float near_clip = camera.GetOrthographicNearClip();
@@ -270,7 +327,26 @@ namespace Kablunk
 		// Sprite Renderer
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4, 4 });
+
+			bool open = ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), tree_node_flags, "Sprite Renderer");
+
+			const float button_padding_left = 50.0f;
+			ImGui::SameLine(ImGui::GetWindowWidth() - button_padding_left);
+			if (ImGui::Button("...", { 20, 20 }))	ImGui::OpenPopup("##ComponentSettings");
+
+			ImGui::PopStyleVar();
+
+			bool remove_component = false;
+			if (ImGui::BeginPopup("##ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove Component"))
+					remove_component = true;
+
+				ImGui::EndPopup();
+			}
+
+			if (open)
 			{
 
 				auto& sprite_comp = entity.GetComponent<SpriteRendererComponent>();
@@ -289,6 +365,11 @@ namespace Kablunk
 
 				ImGui::TreePop();
 			}
+
+			if (remove_component)
+			{
+				entity.RemoveComponent<SpriteRendererComponent>();
+			}
 		}
 
 		// Debug Panels
@@ -296,7 +377,7 @@ namespace Kablunk
 		{
 			if (entity.HasComponent<ParentEntityComponent>())
 			{
-				if (ImGui::TreeNodeEx((void*)typeid(ParentEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Children"))
+				if (ImGui::TreeNodeEx((void*)typeid(ParentEntityComponent).hash_code(), tree_node_flags, "Children"))
 				{
 					auto& parent_comp = entity.GetComponent<ParentEntityComponent>();
 					for (auto child_handle : parent_comp)
@@ -316,7 +397,7 @@ namespace Kablunk
 				auto& child_comp = entity.GetComponent<ChildEntityComponent>();
 				if (child_comp.HasParent())
 				{
-					if (ImGui::TreeNodeEx((void*)typeid(ChildEntityComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Parent"))
+					if (ImGui::TreeNodeEx((void*)typeid(ChildEntityComponent).hash_code(), tree_node_flags, "Parent"))
 					{
 						auto parent_entity = Entity{ child_comp.GetParent(), m_context.get() };
 						auto parent_handle_str = parent_entity.GetHandleAsString();

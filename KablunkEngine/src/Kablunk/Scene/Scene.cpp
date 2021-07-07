@@ -10,7 +10,7 @@ namespace Kablunk
 {
 	Scene::Scene()
 	{
-
+		// m_registry.on_construct<CameraComponent>().connect<>();
 	}
 
 	Scene::~Scene()
@@ -36,6 +36,11 @@ namespace Kablunk
 		tag = name.empty() ? "Blank Entity" : name;
 
 		return entity;
+	}
+
+	void Scene::DestroyEntity(Entity entity)
+	{
+		m_registry.destroy(entity);
 	}
 
 	void Scene::OnUpdate(Timestep ts)
@@ -112,6 +117,60 @@ namespace Kablunk
 				camera_component.Camera.SetViewportSize(width, height);
 			
 		}
+	}
+
+	// #WARNING Templated code SHOULD be written in the header file, BUT since we are declaring specializations,
+	//			the compiler will not complain. However, this means that every new component added needs to have
+	//			the template specialization added. seems bad and a waste of time. 
+
+	// #TODO	Long story short, figure out a better way to do this.
+
+	template <typename T>
+	void Scene::OnComponentAdded(Entity entity, T& component)
+	{
+		KB_CORE_ASSERT(false, "No default OnComponentAdded!");
+	}
+
+	template <>
+	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+	{
+
+	}
+
+	template <>
+	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+	{
+
+	}
+	
+	template <>
+	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	{
+		component.Camera.SetViewportSize(m_viewport_width, m_viewport_height);
+	}
+
+	template <>
+	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+	{
+		
+	}
+
+	template <>
+	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+	{
+
+	}
+
+	template <>
+	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component)
+	{
+
+	}
+
+	template <>
+	void Scene::OnComponentAdded<ChildEntityComponent>(Entity entity, ChildEntityComponent& component)
+	{
+
 	}
 }
 
