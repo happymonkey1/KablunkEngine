@@ -62,7 +62,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 ### Planned / In Progress (In no particular order)
 
 - [x] Scene Heirarchy
-- [ ] Scene Loading and Unloading
+- [x] Scene Loading and Unloading - Needs Refactor
 - [ ] Scene Play and Stop
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
