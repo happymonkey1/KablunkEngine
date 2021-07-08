@@ -4,42 +4,66 @@ Entities:
     TagComponent:
       Tag: Dummy Child
     TransformComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
   - Entity: EntityID HERE
     TagComponent:
       Tag: Secondary Camera
     TransformComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     CameraComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Camera:
+        m_projection_type: 1
+        m_perspective_fov: 0.785398185
+        m_perspective_near: 0.00999999978
+        m_perspective_far: 1000
+        m_orthographic_size: 10
+        m_orthographic_near: -1
+        m_orthographic_far: 1
+        m_aspect_ratio: .nan
+      Primary: false
+      Fixed_aspect_ratio: false
   - Entity: EntityID HERE
     TagComponent:
       Tag: Primary Camera
     TransformComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     CameraComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Camera:
+        m_projection_type: 1
+        m_perspective_fov: 0.785398185
+        m_perspective_near: 0.00999999978
+        m_perspective_far: 1000
+        m_orthographic_size: 10
+        m_orthographic_near: -1
+        m_orthographic_far: 1
+        m_aspect_ratio: .nan
+      Primary: true
+      Fixed_aspect_ratio: false
   - Entity: EntityID HERE
     TagComponent:
       Tag: Square Entity
     TransformComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Texture: AssetID HERE
+      Color: [8, 0.200000003, 0.300000012, 1]
+      Tiling_factor: 1
   - Entity: EntityID HERE
     TagComponent:
       Tag: Square Entity
     TransformComponent:
-      Translation: 0.000000,0.000000,0.000000
-      Rotation: 0.000000,0.000000,0.000000
-      Scale: 1.000000,1.000000,1.000000
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Texture: AssetID HERE
+      Color: [0, 1, 0, 1]
+      Tiling_factor: 1

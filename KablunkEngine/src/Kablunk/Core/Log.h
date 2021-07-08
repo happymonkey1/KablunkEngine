@@ -4,7 +4,7 @@
 
 // ignore warnings raises in external headers
 #pragma warning(push, 0)
-#include <spdlog/spdlog.h>
+#include <spdlog/spdlog-inl.h>
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 

@@ -20,6 +20,9 @@ namespace Kablunk
 		ProjectionType GetProjectionType() const { return m_projection_type; }
 		void SetProjectionType(ProjectionType new_projection_type);
 
+		void SetAspectRatio(float aspect_ratio) { m_aspect_ratio = aspect_ratio; }
+		float GetAspectRatio() const { return m_aspect_ratio; }
+
 		void SetOrthographic(float size, float near_clip, float far_clip);
 		void SetPerspective(float vertical_fov, float near_clip, float far_clip);
 		void SetViewportSize(uint32_t width, uint32_t height);

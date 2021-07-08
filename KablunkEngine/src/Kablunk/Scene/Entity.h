@@ -29,6 +29,9 @@ namespace Kablunk
 		template <typename T>
 		T& GetComponent();
 
+		template <typename T>
+		T& GetOrAddComponent();
+
 		template <typename T, typename... Args>
 		T& AddComponent(Args&&... args);
 
@@ -74,6 +77,15 @@ namespace Kablunk
 	{
 		KB_CORE_ASSERT(HasComponent<T>(), "Component does not exist on entity!");
 		return m_scene->m_registry.get<T>(m_entity_handle);
+	}
+
+	template <typename T>
+	T& Entity::GetOrAddComponent()
+	{
+		if (HasComponent<T>()) 
+			return GetComponent<T>();
+		else
+			return AddComponent<T>();
 	}
 
 	template <typename T>
