@@ -64,7 +64,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 ### Planned / In Progress (In no particular order)
 
 - [x] Scene Heirarchy
-- [x] Scene Loading and Unloading - Needs Refactor
+- [x] Scene Loading and Unloading
 - [ ] Scene Play and Stop
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
@@ -75,6 +75,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 - [ ] Fix Continuous Integration
 - [ ] Add unit testing
+- [ ] Refactor Serialization
 
 ## Credits
 
