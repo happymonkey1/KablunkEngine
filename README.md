@@ -29,7 +29,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Scripting -  C#, python, lua, etc
 - [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
 - [ ] Task / Threading Abstraction
-- [ ] Multithreading Parts of Engine - Move rendering to seperate thread
+- [ ] Multithreading Parts of Engine - Rendering and Physics
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
 - [ ] Virtual File System
