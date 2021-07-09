@@ -25,7 +25,6 @@ Run scripts/Windows-GenProjects.bat to generate project files
 ### Planned / In Progress (In no particular order)
 
 - [ ] Line Renderer
-- [ ] UUID Generator
 - [ ] Scripting -  C#, python, lua, etc
 - [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
 - [ ] Task / Threading Abstraction
