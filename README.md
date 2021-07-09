@@ -45,6 +45,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] 3D Model to 2D Texture System (what is this called?)
 - [ ] Inhouse UI system (Either abstracting over ImGui or whatever)
 - [ ] Asset Manager
+- [ ] UUIDs
 
 ### Cleanup
 
