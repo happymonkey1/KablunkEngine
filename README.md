@@ -44,6 +44,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Material System
 - [ ] 3D Model to 2D Texture System (what is this called?)
 - [ ] Inhouse UI system (Either abstracting over ImGui or whatever)
+- [ ] Asset Manager
 
 ### Cleanup
 
@@ -68,7 +69,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
 - [ ] Content Manager
-- [ ] Asset Manager
+- [ ] Asset browser
 
 ## Other
 
