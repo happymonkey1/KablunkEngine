@@ -69,7 +69,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
 - [ ] Content Manager
-- [ ] Asset browser
+- [ ] Asset Browser
 
 ## Other
 
