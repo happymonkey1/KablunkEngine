@@ -28,7 +28,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Scripting -  C#, python, lua, etc
 - [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
 - [ ] Task / Threading Abstraction
-- [ ] Multithreading Parts of Engine - Move rendering to seperate thread
+- [ ] Multithreading Parts of Engine - Rendering and Physics
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
 - [ ] Virtual File System
@@ -42,7 +42,10 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Networking - LOL
 - [ ] Material System
 - [ ] 3D Model to 2D Texture System (what is this called?)
-- [ ] Inhouse UI system (Either abstracting over ImGui or whatever)
+- [ ] UI system (Either abstracting over ImGui or inhouse)
+- [ ] Asset Manager
+- [ ] UUIDs
+- [ ] Binary Serialization - Cereal
 
 ### Cleanup
 
@@ -62,17 +65,18 @@ Run scripts/Windows-GenProjects.bat to generate project files
 ### Planned / In Progress (In no particular order)
 
 - [x] Scene Heirarchy
-- [ ] Scene Loading and Unloading
+- [x] Scene Loading and Unloading
 - [ ] Scene Play and Stop
 - [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [ ] Component Gismos
 - [ ] Content Manager
-- [ ] Asset Manager
+- [ ] Asset Browser
 
 ## Other
 
 - [ ] Fix Continuous Integration
 - [ ] Add unit testing
+- [ ] Refactor Serialization
 
 ## Credits
 
