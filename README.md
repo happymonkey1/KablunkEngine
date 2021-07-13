@@ -45,6 +45,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] UI system (Either abstracting over ImGui or inhouse)
 - [ ] Asset Manager
 - [ ] UUIDs
+- [ ] Binary Serialization - Cereal
 
 ### Cleanup
 
