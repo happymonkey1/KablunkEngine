@@ -1,0 +1,61 @@
+Scene: Untitled
+Entities:
+  - Entity: 654621321
+    TagComponent:
+      Tag: Dummy Child
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 654621321
+    TagComponent:
+      Tag: Top
+    TransformComponent:
+      Translation: [0, 0.5, 0]
+      Rotation: [1.57079637, 0.785398185, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Texture: AssetID HERE
+      Color: [0.563706577, 0.154529616, 0.173487946, 1]
+      Tiling_factor: 1
+  - Entity: 654621321
+    TagComponent:
+      Tag: Primary Camera
+    TransformComponent:
+      Translation: [0, 2.20000005, 3.70000005]
+      Rotation: [-0.561996043, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        m_projection_type: 0
+        m_perspective_fov: 0.785398185
+        m_perspective_near: 0.00999999978
+        m_perspective_far: 1000
+        m_orthographic_size: 10
+        m_orthographic_near: -1
+        m_orthographic_far: 1
+        m_aspect_ratio: 0.965753436
+      Primary: true
+      Fixed_aspect_ratio: false
+  - Entity: 654621321
+    TagComponent:
+      Tag: Right
+    TransformComponent:
+      Translation: [0.356000006, 0, 0.349999994]
+      Rotation: [0, 0.785398185, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Texture: AssetID HERE
+      Color: [0.498069525, 0.0230765883, 0.0231051166, 1]
+      Tiling_factor: 1
+  - Entity: 654621321
+    TagComponent:
+      Tag: Left
+    TransformComponent:
+      Translation: [-0.349999994, 0, 0.349999994]
+      Rotation: [0, -0.785398185, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Texture: AssetID HERE
+      Color: [0.691119671, 0.181452274, 0.181482881, 1]
+      Tiling_factor: 1

@@ -18,7 +18,7 @@ namespace Kablunk
 		bool Deserialize(const std::string& filepath);
 		bool DeserializeBinary(const std::string& filepath);
 	private:
-		void DeserializeEntity(YAML::detail::iterator_value entity);
+		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
 		Ref<Scene> m_scene;
 	};

@@ -20,7 +20,7 @@ namespace Kablunk
 		if (m_TranslationInputLocked)
 			return;
 
-		float speedMult = (Input::IsKeyPressed(KB_KEY_LEFT_SHIFT)) ? 5.0f : 1.0f;
+		float speedMult = (Input::IsKeyPressed(Key::LeftShift)) ? 5.0f : 1.0f;
 		if (Input::IsKeyPressed(Key::A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
@@ -86,7 +86,7 @@ namespace Kablunk
 			return false;
 
 		KB_PROFILE_FUNCTION();
-		float speedMult = (Input::IsKeyPressed(KB_KEY_LEFT_SHIFT)) ? 5.0f : 1.0f;
+		float speedMult = (Input::IsKeyPressed(Key::LeftShift)) ? 5.0f : 1.0f;
 		m_ZoomLevel -= e.GetYOffset() * 0.25f * speedMult;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);

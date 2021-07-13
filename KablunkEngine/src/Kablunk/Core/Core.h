@@ -2,7 +2,6 @@
 #define KABLUNK_CORE_CORE_H
 
 #include <memory>
-#include "Kablunk/Utilities/StaticReflection.h"
 
 // Platform detection
 #ifdef _WIN32

@@ -1,73 +1,128 @@
 #ifndef KABLUNK_UTILITIES_STATIC_REFLECTION_H
 #define KABLUNK_UTILITIES_STATIC_REFLECTION_H
 
+#include "Kablunk/Core/Core.h"
+#include "Kablunk/Core/Log.h"
+
+#include <vector>
 #include <string>
-#include <array>
 
 namespace Kablunk
 {
-	// Large number of possible fields
-	static constexpr uint32_t k_max_number_of_fields = 256;
-
-	enum class TypeName
+	namespace Reflect
 	{
-		TYPE = 0
-	};
+		struct TypeDescription
+		{
+			const char* Name;
+			size_t Size;
 
-	struct TypeTraits
-	{
-		std::string Name;
-		TypeName Identifier;
-		size_t Size;
-	};
+			TypeDescription(const char* name, size_t size) 
+				: Name{ name }, Size{ size }
+			{
 
-	struct Field
-	{
-		std::string Name;
-		TypeTraits* Type;
-		size_t Offset;
-	};
+			}
 
-	struct Class
-	{
-		std::array<Field, k_max_number_of_fields> fields;
-	};
+			virtual ~TypeDescription() = default;
+			virtual std::string GetName() const { return Name; }
+		};
 
-	// ==========
-	//   Macros
-	// ==========
+		struct ReflectionContainer : TypeDescription
+		{
+			struct Member
+			{
+				const char* Name;
+				size_t Offset;
+				TypeDescription* Type;
+			};
 
-	// instantiate new type
-	#define DEFINE_TYPE(TYPE) \
-	template<> \
-	TypeTraits* GetType<TYPE>() \
-	{ \
-		static TypeTraits type; \
-		type.Name = #TYPE; \
-		type.Identifier = TypeName::TYPE \
-		type.Size = sizeof(TYPE); \
-		return &type; \
-	} \
+			std::vector<Member> Members;
 
-	// instantiate new class
-	#define BEGIN_ATTRIBUTES_FOR(CLASS) \
-	template<> \
-	Class* GetClass<CLASS>() \
-	{ \
-		using ClassType = CLASS; \
-		static Class local_class; \
-		enum { BASE = __COUNTER__ }; \
+			ReflectionContainer()
+				: TypeDescription{ nullptr, 0 }
+			{
 
-		#define DEFINE_MEMBER(NAME) \
-			enum { NAME##Index = __COUNTER__ - BASE - 1 }; \
-			local_class.fields[NAME##Index].Name = { #NAME }; \
-			local_class.fields[NAME##Index].Type = GetType<decltype>(ClassType::NAME)>(); \
-			local_class.fields[NAME##INDEX].Offset = offsetof(ClassType, NAME); \
+			}
 
-		#define END_ATTRIBUTES \
-			return &local_class; \
-	} \
+			ReflectionContainer(void (*init)(ReflectionContainer*))
+				: TypeDescription{ nullptr, 0 }
+			{
+				init(this);
+			}
+			ReflectionContainer(const char* name, size_t size, const std::initializer_list<Member>& members)
+				: TypeDescription{ nullptr, 0 }, Members{ members }
+			{
+			}
+		};
 
+		// Forward declaration
+		template <typename T>
+		TypeDescription* GetPrimitiveTypeDescription();
+
+
+		class Resolver
+		{
+		public:
+			// Use SFINAE to determine if T::Relfection is a member
+			// https://en.cppreference.com/w/cpp/language/sfinae
+
+			using Defined = uint16_t;
+			using NotDefined = uint8_t;
+
+			template <typename T>
+			static Defined f(typename T::Reflection*);
+
+			// fallback template 
+			template <typename T>
+			static NotDefined f(T*);
+
+			template <typename T>
+			struct IsReflectionDefined
+			{
+				enum { Defined = sizeof(f<T>(nullptr)) == sizeof(Defined); };
+			};
+
+		public:
+			// Reflection defined for struct
+			template <typename T, typename std::enable_if<IsReflectionDefined<T>::Defined, int>::type = 0>
+			static TypeDescription* Get()
+			{
+				return &T::Reflection;
+			}
+
+			// Reflection for types like int, char, std::string, etc
+			template <typename T, typename std::enable_if<!IsReflectionDefined<T>::Defined, int>::type = 0>
+			static TypeDescription* Get()
+			{
+				return GetPrimitiveTypeDescription();
+			}
+		};
+
+		// ==========
+		//   Macros
+		// ==========
+		
+		// Use to declare Reflection for a user defined struct
+		#define REFLECT() \
+			friend struct reflect::Resolver; \ 
+			static Reflect::ReflectionContainer Reflection; \
+			static void InitReflection(Reflect::ReflectionContainer*);
+
+		#define REFLECT_BEGIN_STRUCT(type) \
+			Reflect::ReflectionContainer type::Reflection{ type::InitReflection }; \
+			void type::InitReflection(Reflect::ReflectionContainer* type_description) \
+			{ \
+				using T = type; \
+				type_description->Name = #type; \
+				type_description->Size = sizeof(T); \
+				type_description->Members = { 
+
+		#define REFLECT_DEFINE_MEMBER(name) \
+					{ #name, offsetof(T, name), Reflect::Resolver::Get<T>(); },
+
+		#define REFLECT_END_STRUCT() \
+				}; \
+			}
+	}
 }
 
 

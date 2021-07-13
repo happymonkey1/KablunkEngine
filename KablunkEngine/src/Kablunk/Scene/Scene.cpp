@@ -146,7 +146,9 @@ namespace Kablunk
 	template <>
 	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
 	{
-		component.Camera.SetViewportSize(m_viewport_width, m_viewport_height);
+		if (!component.Fixed_aspect_ratio)
+			component.Camera.SetViewportSize(m_viewport_width, m_viewport_height);
+		KB_CORE_TRACE("CameraComponent Camera initialization code running!");
 	}
 
 	template <>

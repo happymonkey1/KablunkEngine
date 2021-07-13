@@ -1,32 +1,28 @@
 Scene: Untitled
 Entities:
-  - Entity: EntityID HERE
+  - Entity: 654621321
     TagComponent:
-      Tag: Dummy Child
+      Tag: Green Square
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [1.89999998, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-  - Entity: EntityID HERE
+    SpriteRendererComponent:
+      Texture: AssetID HERE
+      Color: [0, 1, 0, 1]
+      Tiling_factor: 1
+  - Entity: 654621321
     TagComponent:
-      Tag: Secondary Camera
+      Tag: Red Square
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [-2.79999995, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        m_projection_type: 1
-        m_perspective_fov: 0.785398185
-        m_perspective_near: 0.00999999978
-        m_perspective_far: 1000
-        m_orthographic_size: 10
-        m_orthographic_near: -1
-        m_orthographic_far: 1
-        m_aspect_ratio: .nan
-      Primary: false
-      Fixed_aspect_ratio: false
-  - Entity: EntityID HERE
+    SpriteRendererComponent:
+      Texture: AssetID HERE
+      Color: [8, 0.200000003, 0.300000012, 1]
+      Tiling_factor: 1
+  - Entity: 654621321
     TagComponent:
       Tag: Primary Camera
     TransformComponent:
@@ -42,28 +38,32 @@ Entities:
         m_orthographic_size: 10
         m_orthographic_near: -1
         m_orthographic_far: 1
-        m_aspect_ratio: .nan
+        m_aspect_ratio: 0.992009103
       Primary: true
       Fixed_aspect_ratio: false
-  - Entity: EntityID HERE
+  - Entity: 654621321
     TagComponent:
-      Tag: Square Entity
+      Tag: Secondary Camera
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
-      Texture: AssetID HERE
-      Color: [8, 0.200000003, 0.300000012, 1]
-      Tiling_factor: 1
-  - Entity: EntityID HERE
+      Camera:
+        m_projection_type: 1
+        m_perspective_fov: 0.785398185
+        m_perspective_near: 0.00999999978
+        m_perspective_far: 1000
+        m_orthographic_size: 10
+        m_orthographic_near: -1
+        m_orthographic_far: 1
+        m_aspect_ratio: 0.992009103
+      Primary: false
+      Fixed_aspect_ratio: false
+  - Entity: 654621321
     TagComponent:
-      Tag: Square Entity
+      Tag: Dummy Child
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    CameraComponent:
-      Texture: AssetID HERE
-      Color: [0, 1, 0, 1]
-      Tiling_factor: 1

@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include "Kablunk/Utilities/PlatformUtils.h"
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Kablunk/Scene/SceneSerializer.h>
@@ -14,6 +16,7 @@ namespace Kablunk
 	{
 		m_active_scene = CreateRef<Scene>();
 
+#if 0
 		auto square = m_active_scene->CreateEntity("Square Entity");
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
 
@@ -54,6 +57,7 @@ namespace Kablunk
 
 		auto dummy_child_test_ent = m_active_scene->CreateEntity("Dummy Child");
 		m_primary_camera_entity.AddChild(dummy_child_test_ent);
+#endif
 	}
 
 	void EditorLayer::OnAttach()
@@ -70,8 +74,9 @@ namespace Kablunk
 
 		m_hierarchy_panel.SetContext(m_active_scene);
 
-		auto serializer = SceneSerializer{ m_active_scene };
-		serializer.Serialize("assets/scenes/Example.scene");
+		
+
+		
 	}
 
 	void EditorLayer::OnDetach()
@@ -198,7 +203,20 @@ namespace Kablunk
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				ImGui::MenuItem("Open");
+				if (ImGui::MenuItem("New", "Crtl+N"))
+				{
+					NewScene();
+				}
+
+				if (ImGui::MenuItem("Open...", "Crtl+O"))
+				{
+					OpenScene();
+				}
+
+				if (ImGui::MenuItem("Save As...", "Crtl+Shift+S"))
+				{
+					SaveSceneAs();
+				}
 
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 
@@ -296,7 +314,74 @@ namespace Kablunk
 
 		if (e.GetEventType() == EventType::WindowMinimized)
 			m_viewport_size = { 0.0f, 0.0f };
-		
+
+		EventDispatcher dispatcher{ e };
+		dispatcher.Dispatch<KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 	}
 
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	{
+		// Shortcuts
+		if (e.GetRepeatCount() > 0)
+			return false;
+
+		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) | Input::IsKeyPressed(Key::RightControl);
+		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift) | Input::IsKeyPressed(Key::RightShift);
+
+		switch (e.GetKeyCode())
+		{
+		case Key::N:
+		{
+			if (ctrl_pressed)
+				NewScene();
+
+			break;
+		}
+		case Key::O:
+		{
+			if (ctrl_pressed)
+				OpenScene();
+
+			break;
+		}
+		case Key::S:
+		{
+			if (ctrl_pressed && shift_pressed)
+				SaveSceneAs();
+
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
+	void EditorLayer::NewScene()
+	{
+		m_active_scene = CreateRef<Scene>();
+		m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
+		m_hierarchy_panel.SetContext(m_active_scene);
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		auto filepath = FileDialog::SaveFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
+		if (!filepath.empty())
+		{
+			auto serializer = SceneSerializer{ m_active_scene };
+			serializer.Serialize(filepath);
+		}
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		auto filepath = FileDialog::OpenFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
+		if (!filepath.empty())
+		{
+			NewScene();
+
+			auto serializer = SceneSerializer{ m_active_scene };
+			serializer.Deserialize(filepath);
+		}
+	}
 }

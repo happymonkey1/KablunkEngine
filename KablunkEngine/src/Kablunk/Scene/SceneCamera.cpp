@@ -1,6 +1,5 @@
 #include "kablunkpch.h"
 #include "Kablunk/Scene/SceneCamera.h"
-
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Kablunk
@@ -52,19 +51,23 @@ namespace Kablunk
 	{
 		switch (m_projection_type)
 		{
-		case ProjectionType::Perspective:
-			m_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
+			case ProjectionType::Perspective:
+			{
+				m_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 
-			break;
-		case ProjectionType::Orthographic:
-			float ortho_left = -m_orthographic_size * m_aspect_ratio * 0.5f;
-			float ortho_right = m_orthographic_size * m_aspect_ratio * 0.5f;
-			float ortho_top = m_orthographic_size * 0.5f;
-			float ortho_bottom = -m_orthographic_size * 0.5f;
+				break;
+			}
+			case ProjectionType::Orthographic:
+			{
+				float ortho_left = -m_orthographic_size * m_aspect_ratio * 0.5f;
+				float ortho_right = m_orthographic_size * m_aspect_ratio * 0.5f;
+				float ortho_top = m_orthographic_size * 0.5f;
+				float ortho_bottom = -m_orthographic_size * 0.5f;
 
-			m_projection = glm::ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, m_orthographic_near, m_orthographic_far);
+				m_projection = glm::ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, m_orthographic_near, m_orthographic_far);
 
-			break;
+				break;
+			}
 		}
 	}
 }

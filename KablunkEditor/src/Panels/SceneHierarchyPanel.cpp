@@ -11,6 +11,8 @@ namespace Kablunk
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
+		m_selection_context = {};
+		KB_CORE_WARN("Selection context cleared!");
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -361,8 +363,6 @@ namespace Kablunk
 					float far_clip = camera.GetOrthographicFarClip();
 					if (ImGui::DragFloat("Far Clip", &far_clip, 0.1f))
 						camera.SetOrthographicFarClip(far_clip);
-
-					ImGui::Checkbox("Primary", &component.Fixed_aspect_ratio);
 				}
 			});
 

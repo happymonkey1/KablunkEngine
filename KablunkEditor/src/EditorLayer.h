@@ -18,6 +18,12 @@ namespace Kablunk
 		virtual void OnImGuiRender(Timestep ts) override;
 		virtual void OnEvent(Event& e);
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
+
+		void NewScene();
+		void SaveSceneAs();
+		void OpenScene();
+	private:
 		glm::vec2 m_square_pos{ 0.5f, 0.5f };
 		glm::vec2 m_square_size{ 0.5f, 0.5f };
 		float m_square_rotation{ 0.0 };
@@ -55,7 +61,7 @@ namespace Kablunk
 		struct ImGuiProfilerStats
 		{
 			float Counter{ 0.0f };
-			float Counter_max{ 0.1f };
+			float Counter_max{ 0.05f };
 
 			float Delta_time{ 10.0f };
 			float Fps{ 10.0f };

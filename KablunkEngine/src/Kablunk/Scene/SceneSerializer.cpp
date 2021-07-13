@@ -1,7 +1,8 @@
 #include "kablunkpch.h"
+
 #include "Kablunk/Scene/SceneSerializer.h"
 
-#include "Kablunk/Scene/SerializeComponent.h"
+#include "Kablunk/Scene/YamlSpecializedSerialization.h"
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/Components.h"
 
@@ -10,13 +11,15 @@
 namespace Kablunk
 {
 
+	// #TODO almost all of the serialization code is garbage, just there for an MVP
+	// please refactor to use reflection.
+
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
 		: m_scene{ scene }
 	{
 		
 	}
 
-	// #TODO refactor to use reflection instead of hard coding you lazy fuck
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
@@ -26,7 +29,6 @@ namespace Kablunk
 		return out;
 	}
 
-	// #TODO refactor to use reflection instead of hard coding you lazy fuck
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
@@ -36,7 +38,6 @@ namespace Kablunk
 		return out;
 	}
 
-	// #TODO refactor to use reflection instead of hard coding you lazy fuck
 	static void SerializeComponents(YAML::Emitter& out, Entity entity)
 	{
 		if (entity.HasComponent<TagComponent>())
@@ -98,7 +99,7 @@ namespace Kablunk
 		{
 			auto& comp = entity.GetComponent<SpriteRendererComponent>();
 			
-			out << YAML::Key << "CameraComponent";
+			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap;
 
 			out << YAML::Key << "Texture"		<< YAML::Value << "AssetID HERE";
@@ -113,19 +114,19 @@ namespace Kablunk
 	{
 		out << YAML::BeginMap;
 		// #TODO add entity id instead of random number
-		out << YAML::Key << "Entity" << YAML::Value << "EntityID HERE";
+		out << YAML::Key << "Entity" << YAML::Value << "654621321";
 
 		SerializeComponents(out, entity);
 
 		out << YAML::EndMap; 
 	}
 
-	void SceneSerializer::DeserializeEntity(YAML::detail::iterator_value entity)
+	void SceneSerializer::DeserializeEntity(YAML::detail::iterator_value& entity)
 	{
 		uint64_t uuid = entity["Entity"].as<uint64_t>();
 
 		std::string name;
-		auto tag_comp = entity["TagComponenet"];
+		auto tag_comp = entity["TagComponent"];
 		if (tag_comp)
 			name = tag_comp["Tag"].as<std::string>();
 
@@ -133,6 +134,7 @@ namespace Kablunk
 		KB_CORE_WARN("uuid not passed in when deserializing entity!");
 		Entity deserialized_entity = m_scene->CreateEntity(name);
 
+		// Beyond this is pretty much garbage just to have a 'usable' deserialization feature
 
 		auto transform_data = entity["TransformComponent"];
 		if (transform_data)
@@ -159,7 +161,7 @@ namespace Kablunk
 
 				auto orthographic_size	= scene_camera_data["m_orthographic_size"].as<float>();
 				auto orthographic_near	= scene_camera_data["m_orthographic_near"].as<float>();
-				auto orthographic_far	= scene_camera_data["m_orhtographic_far"].as<float>();
+				auto orthographic_far	= scene_camera_data["m_orthographic_far"].as<float>();
 
 				auto aspect_ratio		= scene_camera_data["m_aspect_ratio"].as<float>();
 				auto projection_type	= scene_camera_data["m_projection_type"].as<int>();

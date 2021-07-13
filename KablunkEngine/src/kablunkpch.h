@@ -19,6 +19,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Log.h"
 #include "Kablunk/Debug/Instrumentor.h"
+#include "Kablunk/Utilities/StaticReflection.h"
 
 #ifdef KB_PLATFORM_WINDOWS
 	#include <Windows.h>
