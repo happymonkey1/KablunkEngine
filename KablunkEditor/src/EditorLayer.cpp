@@ -63,7 +63,7 @@ namespace Kablunk
 	void EditorLayer::OnAttach()
 	{
 		m_missing_texture	= Texture2D::Create("assets/textures/missing_texture.png");
-		m_kablunk_logo		= Texture2D::Create("assets/textures/kablunk_logo.png");
+		m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
 		FrameBufferSpecification frame_buffer_specs;

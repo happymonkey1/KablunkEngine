@@ -33,7 +33,7 @@ namespace Kablunk
 
 		Ref<Framebuffer> m_frame_buffer;
 		Ref<Texture2D> m_missing_texture;
-		Ref<Texture2D> m_kablunk_logo;
+		Asset<Texture2D> m_kablunk_logo;
 
 		Ref<Texture2D> m_icon_play;
 

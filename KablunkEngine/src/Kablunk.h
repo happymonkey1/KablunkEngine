@@ -13,6 +13,8 @@
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/OrthographicCameraController.h"
+
+#include "Kablunk/Core/AssetManager.h"
 // ----------------------------------------------
 
 
