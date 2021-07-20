@@ -1,8 +1,9 @@
 #ifndef KABLUNK_CORE_ASSET_MANAGER_H
 #define KABLUNK_CORE_ASSET_MANAGER_H
 
-#include "Kablunk/Renderer/Texture.h"
 #include <uuid.h>
+
+#include "Kablunk/Renderer/Texture.h"
 
 #include <unordered_map>
 
@@ -17,7 +18,10 @@ namespace Kablunk
 	public:
 		BaseAsset() = default;
 		BaseAsset(const std::string& filepath) 
-			: m_uuid{ uuids::uuid_random_generator{ std::mt19937{} }() }, m_filepath{ filepath } { }
+			: m_uuid{ uuids::uuid_random_generator{ std::mt19937{} }() }, m_filepath{ filepath } 
+		{ 
+			KB_CORE_WARN("Generating new random engine to create uuid!");
+		}
 		BaseAsset(const std::string& filepath, const UUID& uuid) 
 			: m_uuid{ uuid }, m_filepath{ filepath } { }
 

@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define GLM_ENABLE_EXPERIMENTAL // 
+#include <uuid.h>
+
+#define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
 
@@ -18,10 +20,18 @@ namespace Kablunk
 	struct TagComponent
 	{
 		std::string Tag;
+		uuids::uuid Id;
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag) : Tag{ tag } { }
+		TagComponent(const std::string& tag) : Tag{ tag }, Id{ uuids::uuid_random_generator{ std::mt19937{} }() } 
+		{ 
+			KB_CORE_WARN("Generating new random engine to create uuid!");
+		}
+		TagComponent(const std::string& tag, uuids::uuid id) : Tag{ tag }, Id{ id }
+		{
+
+		}
 
 		operator std::string&()				{ return Tag; }
 		operator const std::string&() const	{ return Tag; }

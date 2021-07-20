@@ -6,6 +6,8 @@
 
 #include <Kablunk/Scene/SceneSerializer.h>
 
+#include "Kablunk/Core/Uuid64.h"
+
 namespace Kablunk
 {
 	
@@ -74,9 +76,11 @@ namespace Kablunk
 
 		m_hierarchy_panel.SetContext(m_active_scene);
 
-		
-
-		
+		for (int i = 0; i < 20; ++i)
+		{
+			auto test_uuid = uuid::generate();
+			KB_CORE_INFO("{0}", uuid::to_string(test_uuid));
+		}
 	}
 
 	void EditorLayer::OnDetach()

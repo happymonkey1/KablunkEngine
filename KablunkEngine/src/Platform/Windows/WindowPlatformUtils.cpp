@@ -8,6 +8,12 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+
+#include <stdio.h>
+#include <Iphlpapi.h>
+#include <Assert.h>
+#pragma comment(lib, "iphlpapi.lib")
+
 namespace Kablunk
 {
 	std::string FileDialog::OpenFile(const char* filter)
@@ -63,5 +69,45 @@ namespace Kablunk
 		
 
 		return { };
+	}
+
+
+	// Adapted from https://stackoverflow.com/questions/13646621/how-to-get-mac-address-in-windows-with-c
+	uint64_t MacAddress::Get()
+	{
+		PIP_ADAPTER_INFO AdapterInfo;
+		DWORD dwBufLen = sizeof(IP_ADAPTER_INFO);
+
+		AdapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO));
+		if (AdapterInfo == NULL) {
+			KB_CORE_ERROR("Failed to find mac address");
+			return 0; 
+		}
+
+		// Make an initial call to GetAdaptersInfo to get the necessary size into the dwBufLen variable
+		if (GetAdaptersInfo(AdapterInfo, &dwBufLen) == ERROR_BUFFER_OVERFLOW) {
+			free(AdapterInfo);
+			AdapterInfo = (IP_ADAPTER_INFO*)malloc(dwBufLen);
+			if (AdapterInfo == NULL) {
+				KB_CORE_ERROR("MacAddress buffer overflow!");
+				return 0;
+			}
+		}
+
+		uint64_t mac_address{ 0 };
+		if (GetAdaptersInfo(AdapterInfo, &dwBufLen) == NO_ERROR) {
+			// Contains pointer to current adapter info
+			PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+			
+			for (int i = 0; i < 6; ++i)
+			{
+				uint64_t part = static_cast<uint64_t>(pAdapterInfo->Address[i]) << (48 - i * 8);
+				mac_address |= part;
+			}
+			
+		}
+		free(AdapterInfo);
+
+		return mac_address;
 	}
 }

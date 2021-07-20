@@ -11,6 +11,12 @@ namespace Kablunk
 		static std::string OpenFile(const char* filter);
 		static std::string SaveFile(const char* filter);
 	};
+
+	class MacAddress
+	{
+	public:
+		static uint64_t Get();
+	};
 }
 
 #endif
