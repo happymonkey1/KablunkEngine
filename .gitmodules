@@ -16,3 +16,6 @@
 [submodule "KablunkEngine/vendor/yaml-cpp"]
 	path = KablunkEngine/vendor/yaml-cpp
 	url = https://github.com/happymonkey1/yaml-cpp.git
+[submodule "KablunkEngine/vendor/stduuid"]
+	path = KablunkEngine/vendor/stduuid
+	url = https://github.com/happymonkey1/stduuid.git

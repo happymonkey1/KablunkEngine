@@ -21,6 +21,9 @@
 #include "Kablunk/Debug/Instrumentor.h"
 #include "Kablunk/Utilities/StaticReflection.h"
 
+// #TODO Would prefer to include via <stduuid/uuid.h>
+#include <uuid.h>
+
 #ifdef KB_PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif

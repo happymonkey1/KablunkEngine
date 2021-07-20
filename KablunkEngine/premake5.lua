@@ -17,7 +17,8 @@ project "KablunkEngine"
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
-		"vendor/glm/glm/**.inl"
+		"vendor/glm/glm/**.inl",
+		"vendor/stduuid/include/uuid.h"
 	}
 
 	defines
@@ -37,7 +38,9 @@ project "KablunkEngine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.spdlog}"
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stduuid}",
+		"%{IncludeDir.gsl}"
 	}
 
 	links

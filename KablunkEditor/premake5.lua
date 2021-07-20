@@ -22,7 +22,9 @@ project "KablunkEditor"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
-        "%{IncludeDir.yaml_cpp}"
+        "%{IncludeDir.yaml_cpp}",
+        "%{IncludeDir.stduuid}",
+        "%{IncludeDir.gsl}"
     }
 
     links

@@ -8,6 +8,7 @@
 namespace Kablunk
 {
 	using UUID = uint64_t;
+	constexpr UUID null_uuid = 0;
 
 
 	class BaseAsset
@@ -20,7 +21,7 @@ namespace Kablunk
 		const std::string& GetFilepath() const { return m_filepath; }
 
 	protected:
-		UUID m_uuid{ 0 };
+		UUID m_uuid{ null_uuid };
 		std::string m_filepath{ "" };
 	};
 
@@ -34,8 +35,8 @@ namespace Kablunk
 		static constexpr Asset<T> null_asset{};
 	public:
 		Asset() = default;
-		Asset(const std::string& filepath) 
-			: m_uuid{ 0 }, m_filepath{ filepath }
+		Asset(const std::string& filepath, UUID uuid = null_uuid) 
+			: m_uuid{ uuid }, m_filepath{ filepath }
 		{
 			KB_CORE_WARN("UUID generator not used for asset uuid, initialized to 0 instead!");
 		}
@@ -63,15 +64,71 @@ namespace Kablunk
 	{
 	public:
 		template <typename T>
-		static void Create(const std::string& filepath)
+		static Asset<T> Create(const std::string& filepath)
+		{
+			return create_asset(filepath);
+		}
+
+		template <typename T>
+		static Asset<T> Create(const std::string& filepath, UUID uuid)
+		{
+
+			auto it = s_asset_store.find(uuid);
+			if (it == s_asset_store.end())
+				return create_asset(filepath, uuid);
+			else
+			{
+				KB_CORE_ERROR("uuid: {0} already found in asset store!", uuid);
+				KB_CORE_WARN("Returning asset with uuid: {0} instead!", uuid);
+
+				return create_asset(filepath, uuid);
+			}
+			
+		}
+
+		template <typename T>
+		static Asset<T> Get(const UUID& uuid)
+		{
+			auto it = s_asset_store.find(uuid);
+			if (it == s_asset_store.end())
+			{
+				KB_CORE_ERROR("uuid: {0} not found in asset store!", uuid);
+				KB_CORE_WARN("Returning null asset instead!");
+				return Asset<T>{};
+			}
+			else
+			{
+				return get_asset(it);
+			}
+		}
+
+		template <typename T>
+		static Asset<T> Get(const std::string& filepath)
+		{
+			for (auto it : s_asset_store)
+			{
+				auto& asset = it->second;
+				if (asset && asset->GetFilepath() == filepath)
+					return get_asset(it);
+				
+			}
+
+			KB_CORE_ERROR("could not find file with path: '{0}' in asset store!", filepath);
+			KB_CORE_WARN("Creating new asset instead!");
+			return Create<T>(filepath);
+		}
+
+	private:
+		template <typename T>
+		static Asset<T> create_asset(const std::string& filepath, UUID uuid = null_uuid)
 		{
 			switch (typeid(T))
 			{
 				case typeid(Texture):
 				{
-					auto asset = Asset<T>{ filepath };
+					auto asset = Asset<T>{ filepath, uuid };
 					asset.m_asset = Texture::Create(filepath);
-					m_asset_store.emplace({ asset.GetUUID(), &asset })
+					s_asset_store.emplace({ asset.GetUUID(), &asset });
 					return asset;
 				}
 				default:
@@ -84,65 +141,26 @@ namespace Kablunk
 		}
 
 		template <typename T>
-		static Asset<T> Get(const UUID& uuid)
+		static Asset<T> get_asset(std::unordered_map<UUID, BaseAsset*>::iterator it)
 		{
-			auto it = m_asset_store.find(uuid);
-			if (it == m_asset_store.end())
+			auto& asset = it->second;
+			auto uuid = asset->GetUUID();
+			try
 			{
-				KB_CORE_ERROR("uuid: {0} not found in asset store!");
+				return dynamic_cast<T>(*asset);
+			}
+			catch (...)
+			{
+				KB_CORE_ERROR("Failed to cast type {0} while returning asset with uuid: {1}. Most likely incorrect type!",
+					typeid(T).name(), uuid);
 				KB_CORE_WARN("Returning null asset instead!");
 				return Asset<T>{};
 			}
-			else
-			{
-				try
-				{
-					return dynamic_cast<T>(*it);
-				}
-				catch (...)
-				{
-					KB_CORE_ERROR("Failed to cast type {0} while returning asset with uuid: {1}. Most likely incorrect type!",
-						typeid(T).name(), uuid);
-					KB_CORE_WARN("Returning null asset instead!");
-					return Asset<T>{};
-				}
-			}
 		}
 
-		template <typename T>
-		static Asset<T> Get(const std::string& filepath)
-		{
-			for (auto it : m_asset_store)
-			{
-				auto& asset = it->second;
-				if (asset)
-				{
-					if (asset->GetFilepath() != filepath) continue;
-					else
-					{
-						auto uuid = asset->GetUUID();
-						try
-						{
-							return dynamic_cast<T>(*asset);
-						}
-						catch (...)
-						{
-							KB_CORE_ERROR("Failed to cast type {0} while returning asset with uuid: {1}. Most likely incorrect type!",
-								typeid(T).name(), uuid);
-							KB_CORE_WARN("Returning null asset instead!");
-							return Asset<T>{};
-						}
-					}
-				}
-			}
-
-			KB_CORE_ERROR("could not find file with path: '{0}' in asset store!", filepath);
-			KB_CORE_WARN("Creating new asset instead!");
-			return Create<T>(filepath);
-		}
 
 	private:
-		std::unordered_map<UUID, BaseAsset*> m_asset_store;
+		static std::unordered_map<UUID, BaseAsset*> s_asset_store;
 
 		template <typename T>
 		friend class Asset;
