@@ -27,11 +27,17 @@ namespace Kablunk
 		);
 	}
 
-	Entity Scene::CreateEntity(const std::string& name)
+	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
 	{
 		Entity entity = { m_registry.create(), this };
 		entity.AddComponent<TransformComponent>();
 		
+		// Check if we should use uuid passed into when creating the id component
+		if (uuid::is_nil(id))
+			entity.AddComponent<IdComponent>();
+		else
+			entity.AddComponent<IdComponent>(id);
+
 		auto& tag = entity.AddComponent<TagComponent>(name);
 		tag = name.empty() ? "Blank Entity" : name;
 
@@ -133,6 +139,12 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+	{
+
+	}
+
+	template <>
+	void Scene::OnComponentAdded<IdComponent>(Entity entity, IdComponent& component)
 	{
 
 	}

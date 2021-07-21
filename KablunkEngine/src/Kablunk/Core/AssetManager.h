@@ -1,16 +1,14 @@
 #ifndef KABLUNK_CORE_ASSET_MANAGER_H
 #define KABLUNK_CORE_ASSET_MANAGER_H
 
-#include <uuid.h>
-
+#include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Texture.h"
 
 #include <unordered_map>
 
 namespace Kablunk
 {
-	using UUID = uuids::uuid;
-	constexpr UUID null_uuid = {};
+	using UUID = uuid::uuid64;
 
 
 	class BaseAsset
@@ -18,9 +16,9 @@ namespace Kablunk
 	public:
 		BaseAsset() = default;
 		BaseAsset(const std::string& filepath) 
-			: m_uuid{ uuids::uuid_random_generator{ std::mt19937{} }() }, m_filepath{ filepath } 
+			: m_uuid{ uuid::generate() }, m_filepath{ filepath }
 		{ 
-			KB_CORE_WARN("Generating new random engine to create uuid!");
+
 		}
 		BaseAsset(const std::string& filepath, const UUID& uuid) 
 			: m_uuid{ uuid }, m_filepath{ filepath } { }
@@ -55,7 +53,7 @@ namespace Kablunk
 		// Returns raw pointer to content
 		Content* Raw() { return m_asset.get(); }
 
-		operator bool() const { return !m_uuid.is_nil() && m_asset.get() != nullptr; }
+		operator bool() const { return !uuid::is_nil(m_uuid) && m_asset.get() != nullptr; }
 		bool operator==(const Asset<Content>& rhs) const { return m_uuid != rhs.m_uuid; }
 		bool operator!=(const Asset<Content>& rhs) const { return !(*this == rhs); }
 
@@ -169,10 +167,10 @@ namespace Kablunk
 
 	private:
 		template <typename T>
-		static Asset<T> create_asset(const std::string& filepath, const UUID& uuid = null_uuid)
+		static Asset<T> create_asset(const std::string& filepath, const UUID& uuid = uuid::nil_uuid)
 		{
 			Asset<T> asset;
-			if (!uuid.is_nil()) 
+			if (!uuid::is_nil(uuid)) 
 				asset = Asset<T>{ filepath, uuid };
 			else
 				asset = Asset<T>{ filepath };

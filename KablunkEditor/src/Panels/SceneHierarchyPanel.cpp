@@ -271,6 +271,18 @@ namespace Kablunk
 			}
 		}
 
+		if (entity.HasComponent<IdComponent>())
+		{
+			auto& id = entity.GetComponent<IdComponent>().Id;
+
+			constexpr uint16_t k_buffer_size = 256;
+			char buffer[k_buffer_size];
+
+			memset(buffer, 0, k_buffer_size);
+			strcpy_s(buffer, k_buffer_size, uuid::to_string(id).c_str());
+			ImGui::TextColored({ 1.0f, 1.0f, 1.0f, 1.0f }, buffer);
+		}
+
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
 

@@ -45,9 +45,9 @@
 
 #define KABLUNK_BIND_EVENT_FN(x) [this](auto&&... args) -> decltype(auto) { return this->x(std::forward<decltype(args)>(args)...); }
 
-//#ifndef ENTT_ID_TYPE
-//#	define ENTT_ID_TYPE std::bitset<128>
-//#endif
+#ifndef ENTT_ID_TYPE
+#	define ENTT_ID_TYPE uint64_t
+#endif
 
 namespace Kablunk
 {

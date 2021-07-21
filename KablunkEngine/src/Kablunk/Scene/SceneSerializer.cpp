@@ -47,9 +47,7 @@ namespace Kablunk
 
 			auto& tag_component = entity.GetComponent<TagComponent>();
 			auto& tag = tag_component.Tag;
-			auto& id = tag_component.Id;
 			out << YAML::Key << "Tag" << YAML::Value << tag;
-			out << YAML::Key << "Id"  << YAML::Value << uuids::to_string(id);
 
 			out << YAML::EndMap;
 		}
@@ -105,7 +103,15 @@ namespace Kablunk
 			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap;
 
-			out << YAML::Key << "Texture"		<< YAML::Value << "AssetID HERE";
+			out << YAML::Key << "Texture" << YAML::Value;
+
+			out << YAML::BeginMap; // Texture Asset
+
+			out << YAML::Key << "m_uuid"		<< YAML::Value << "ASSET ID HERE";
+			out << YAML::Key << "m_filepath"	<< YAML::Value << "ASSET FILEPATH HERE";
+
+			out << YAML::EndMap;
+			
 			out << YAML::Key << "Color"			<< YAML::Value << comp.Color;
 			out << YAML::Key << "Tiling_factor" << YAML::Value << comp.Tiling_factor;
 
@@ -117,7 +123,7 @@ namespace Kablunk
 	{
 		out << YAML::BeginMap;
 		// #TODO add entity id instead of random number
-		out << YAML::Key << "Entity" << YAML::Value << static_cast<uint32_t>(entity.GetHandle());
+		out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(entity.GetHandle());
 
 		SerializeComponents(out, entity);
 
@@ -126,7 +132,7 @@ namespace Kablunk
 
 	void SceneSerializer::DeserializeEntity(YAML::detail::iterator_value& entity)
 	{
-		auto uuid = entity["Entity"].as<uint32_t>();
+		auto uuid = entity["Entity"].as<uuid::uuid64>();
 
 		std::string name;
 		auto tag_comp = entity["TagComponent"];

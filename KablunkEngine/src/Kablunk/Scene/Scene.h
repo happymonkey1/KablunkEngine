@@ -5,6 +5,7 @@
 
 
 #include "Kablunk/Core/Timestep.h"
+#include "Kablunk/Core/Uuid64.h"
 
 namespace Kablunk
 {
@@ -16,7 +17,7 @@ namespace Kablunk
 		Scene();
 		~Scene();
 
-		Entity CreateEntity(const std::string& name = std::string{});
+		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
 		void OnUpdate(Timestep ts);

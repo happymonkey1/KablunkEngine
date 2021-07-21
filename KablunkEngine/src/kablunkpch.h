@@ -20,9 +20,7 @@
 #include "Kablunk/Core/Log.h"
 #include "Kablunk/Debug/Instrumentor.h"
 #include "Kablunk/Utilities/StaticReflection.h"
-
-// #TODO Would prefer to include via <stduuid/uuid.h>
-#include <uuid.h>
+#include "Kablunk/Core/Uuid64.h"
 
 #ifdef KB_PLATFORM_WINDOWS
 	#include <Windows.h>
