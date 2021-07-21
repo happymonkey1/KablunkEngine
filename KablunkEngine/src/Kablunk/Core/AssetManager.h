@@ -29,7 +29,7 @@ namespace Kablunk
 		const std::string& GetFilepath() const { return m_filepath; }
 
 	protected:
-		UUID m_uuid{ };
+		UUID m_uuid{ uuid::nil_uuid };
 		std::string m_filepath{ "" };
 	};
 
@@ -44,15 +44,31 @@ namespace Kablunk
 	public:
 		Asset() = default;
 		Asset(const std::string& filepath)
-			: BaseAsset{ filepath } { }
+			: BaseAsset{ filepath } 
+		{ 
+#ifdef KB_DEBUG
+			KB_CORE_ASSERT("Asset template specialization not defined!");
+#else
+			KB_CORE_ERROR("Asset is not implemented, content must be set manually!");
+#endif
+		}
 		Asset(const std::string& filepath, const UUID& id)
-			: BaseAsset{ filepath, id } { };
+			: BaseAsset{ filepath, id } 
+		{ 
+#ifdef KB_DEBUG
+			KB_CORE_ASSERT("Asset template specialization not defined!");
+#else
+			KB_CORE_ERROR("Asset is not implemented, content must be set manually!");
+#endif
+		};
 		virtual ~Asset() override = default;
 
 		Ref<Content> Get() const { return m_asset; }
 		// Returns raw pointer to content
 		Content* Raw() { return m_asset.get(); }
 
+		operator Ref<Content>() { return m_asset; }
+		operator const Ref<Content>& () const { return m_asset; }
 		operator bool() const { return !uuid::is_nil(m_uuid) && m_asset.get() != nullptr; }
 		bool operator==(const Asset<Content>& rhs) const { return m_uuid != rhs.m_uuid; }
 		bool operator!=(const Asset<Content>& rhs) const { return !(*this == rhs); }
@@ -69,11 +85,11 @@ namespace Kablunk
 	
 	template<> 
 	Asset<Texture2D>::Asset(const std::string& filepath) 
-		: BaseAsset{ filepath }, m_asset{ Texture2D::Create(filepath) } { }
+		: BaseAsset{ filepath }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(1, 1) } { }
 
 	template<>
 	Asset<Texture2D>::Asset(const std::string& filepath, const UUID& id) 
-		: BaseAsset{ filepath, id }, m_asset{ Texture2D::Create(filepath) } { }
+		: BaseAsset{ filepath, id }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(1, 1) } { }
 
 	// =================
 	// | Asset manager |
@@ -99,6 +115,21 @@ namespace Kablunk
 	{
 	public:
 		template <typename T>
+		static Asset<T> Create()
+		{
+			KB_CORE_WARN("Creating asset without filepath");
+			return create_asset<T>();
+		}
+
+		template <typename T>
+		static Asset<T> Create(const UUID& id)
+		{
+			KB_CORE_WARN("Creating asset without filepath!");
+			return create_asset<T>("", id);
+		}
+
+
+		template <typename T>
 		static Asset<T> Create(const std::string& filepath)
 		{
 			return create_asset<T>(filepath);
@@ -113,14 +144,10 @@ namespace Kablunk
 				return create_asset<T>(filepath, uuid);
 			else
 			{
-				KB_CORE_ERROR("uuid: {0} already found in asset store!", uuid);
-
-#ifdef KB_DEBUG
-				throw DuplicateAssetException{ "Trying to create an asset that already exists!" };
-#else
+				KB_CORE_WARN("uuid: {0} already found in asset store!", uuid);
 				KB_CORE_WARN("Returning asset with uuid: {0} instead!", uuid);
-#endif
-				return Asset<T>{};
+
+				return it->second;
 			}
 			
 		}
@@ -152,8 +179,7 @@ namespace Kablunk
 			{
 				auto& asset = it->second;
 				if (asset && asset->GetFilepath() == filepath)
-					return get_asset<T>(it);
-				
+					return get_asset<T>(it);				
 			}
 
 			KB_CORE_ERROR("could not find file with path: '{0}' in asset store!", filepath);
@@ -167,13 +193,16 @@ namespace Kablunk
 
 	private:
 		template <typename T>
-		static Asset<T> create_asset(const std::string& filepath, const UUID& uuid = uuid::nil_uuid)
+		static Asset<T> create_asset(const std::string& filepath = std::string{}, const UUID& uuid = uuid::nil_uuid)
 		{
 			Asset<T> asset;
 			if (!uuid::is_nil(uuid)) 
 				asset = Asset<T>{ filepath, uuid };
 			else
 				asset = Asset<T>{ filepath };
+
+			if (!uuid::is_nil(uuid))
+				s_asset_store.emplace(uuid, &asset);
 
 			return asset;
 		}
@@ -202,7 +231,7 @@ namespace Kablunk
 
 
 	private:
-		static std::unordered_map<UUID, BaseAsset*> s_asset_store;
+		inline static std::unordered_map<UUID, BaseAsset*> s_asset_store;
 
 		template <typename T>
 		friend class Asset;

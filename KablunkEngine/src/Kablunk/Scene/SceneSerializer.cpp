@@ -107,8 +107,8 @@ namespace Kablunk
 
 			out << YAML::BeginMap; // Texture Asset
 
-			out << YAML::Key << "m_uuid"		<< YAML::Value << "ASSET ID HERE";
-			out << YAML::Key << "m_filepath"	<< YAML::Value << "ASSET FILEPATH HERE";
+			out << YAML::Key << "m_uuid"		<< YAML::Value << comp.Texture.GetUUID();
+			out << YAML::Key << "m_filepath"	<< YAML::Value << comp.Texture.GetFilepath();
 
 			out << YAML::EndMap;
 			
@@ -122,11 +122,23 @@ namespace Kablunk
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
 		out << YAML::BeginMap;
-		// #TODO add entity id instead of random number
-		out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(entity.GetHandle());
+		
+		auto& id_comp = entity.GetComponent<IdComponent>();
+		if (id_comp)
+		{
+			auto& uuid = id_comp.Id;
+			out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(uuid);
 
-		SerializeComponents(out, entity);
-
+			SerializeComponents(out, entity);
+		}
+		else
+		{
+#ifdef KB_DEBUG
+			KB_CORE_ASSERT(false, "Entity does not have an id component!");
+#else
+			KB_CORE_ERROR("Entity does not have an id component!");
+#endif
+		}
 		out << YAML::EndMap; 
 	}
 
@@ -139,9 +151,11 @@ namespace Kablunk
 		if (tag_comp)
 			name = tag_comp["Tag"].as<std::string>();
 
+#ifdef KB_DEBUG
 		KB_CORE_TRACE("Deserializing entity with ID: {0}, name: {1}", uuid, name);
-		KB_CORE_WARN("uuid not passed in when deserializing entity!");
-		Entity deserialized_entity = m_scene->CreateEntity(name);
+#endif
+
+		Entity deserialized_entity = m_scene->CreateEntity(name, uuid);
 
 		// Beyond this is pretty much garbage just to have a 'usable' deserialization feature
 
@@ -164,16 +178,16 @@ namespace Kablunk
 			{
 				auto scene_camera = SceneCamera{};
 				
-				auto perspective_fov	= scene_camera_data["m_perspective_fov"].as<float>();
-				auto perspective_near	= scene_camera_data["m_perspective_near"].as<float>();
-				auto perspective_far	= scene_camera_data["m_perspective_far"].as<float>();
+				auto perspective_fov		= scene_camera_data["m_perspective_fov"].as<float>();
+				auto perspective_near		= scene_camera_data["m_perspective_near"].as<float>();
+				auto perspective_far		= scene_camera_data["m_perspective_far"].as<float>();
 
-				auto orthographic_size	= scene_camera_data["m_orthographic_size"].as<float>();
-				auto orthographic_near	= scene_camera_data["m_orthographic_near"].as<float>();
-				auto orthographic_far	= scene_camera_data["m_orthographic_far"].as<float>();
+				auto orthographic_size		= scene_camera_data["m_orthographic_size"].as<float>();
+				auto orthographic_near		= scene_camera_data["m_orthographic_near"].as<float>();
+				auto orthographic_far		= scene_camera_data["m_orthographic_far"].as<float>();
 
-				auto aspect_ratio		= scene_camera_data["m_aspect_ratio"].as<float>();
-				auto projection_type	= scene_camera_data["m_projection_type"].as<int>();
+				auto aspect_ratio			= scene_camera_data["m_aspect_ratio"].as<float>();
+				auto projection_type		= scene_camera_data["m_projection_type"].as<int>();
 
 				scene_camera.SetOrthographic(orthographic_size, orthographic_near, orthographic_far);
 				scene_camera.SetPerspective(perspective_far, perspective_near, perspective_far);
@@ -192,10 +206,18 @@ namespace Kablunk
 		{
 			auto& sprite_renderer_comp = deserialized_entity.GetOrAddComponent<SpriteRendererComponent>();
 			
-			KB_CORE_ERROR("Entity with ID: {0}, SpriteRendererComponent Texture not set during deserialization!", uuid);
-			//sprite_renderer_comp.Texture = transform_data["Translation"].as<glm::vec3>();
+			auto texture_data = sprite_renderer_data["Texture"];
+			if (texture_data)
+			{
+				auto uuid				= texture_data["m_uuid"].as<uint64_t>();
+				auto filepath			= texture_data["m_filepath"].as<std::string>();
+
+				auto texture_asset = AssetManager::Create<Texture2D>(filepath, uuid);
+				sprite_renderer_comp.Texture = texture_asset;
+			}
+
 			sprite_renderer_comp.Color			= sprite_renderer_data["Color"].as<glm::vec4>();
-			sprite_renderer_comp.Tiling_factor = sprite_renderer_data["Tiling_factor"].as<float>();
+			sprite_renderer_comp.Tiling_factor	= sprite_renderer_data["Tiling_factor"].as<float>();
 		}
 	}
 

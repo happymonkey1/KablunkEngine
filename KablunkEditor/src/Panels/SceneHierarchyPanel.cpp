@@ -11,13 +11,14 @@ namespace Kablunk
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
-		m_selection_context = {};
-		KB_CORE_WARN("Selection context cleared!");
+		
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
 	{
 		m_context = context;
+		m_selection_context = {};
+		KB_CORE_WARN("Selection context cleared!");
 	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
@@ -271,18 +272,6 @@ namespace Kablunk
 			}
 		}
 
-		if (entity.HasComponent<IdComponent>())
-		{
-			auto& id = entity.GetComponent<IdComponent>().Id;
-
-			constexpr uint16_t k_buffer_size = 256;
-			char buffer[k_buffer_size];
-
-			memset(buffer, 0, k_buffer_size);
-			strcpy_s(buffer, k_buffer_size, uuid::to_string(id).c_str());
-			ImGui::TextColored({ 1.0f, 1.0f, 1.0f, 1.0f }, buffer);
-		}
-
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
 
@@ -307,6 +296,22 @@ namespace Kablunk
 		}
 
 		ImGui::PopItemWidth();
+
+		if (m_display_debug_properties)
+		{
+			if (entity.HasComponent<IdComponent>())
+			{
+				auto& id = entity.GetComponent<IdComponent>().Id;
+
+				// Way to big of a buffer
+				constexpr uint16_t k_buffer_size = 256;
+				char buffer[k_buffer_size];
+
+				memset(buffer, 0, k_buffer_size);
+				strcpy_s(buffer, k_buffer_size, uuid::to_string(id).c_str());
+				ImGui::TextColored({ 0.494f, 0.494f, 0.494f, 1.0f }, buffer);
+			}
+		}
 
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 			{
