@@ -147,7 +147,7 @@ namespace Kablunk
 				KB_CORE_WARN("uuid: {0} already found in asset store!", uuid);
 				KB_CORE_WARN("Returning asset with uuid: {0} instead!", uuid);
 
-				return it->second;
+				return *static_cast<Asset<T>*>(it->second);
 			}
 			
 		}
@@ -214,7 +214,7 @@ namespace Kablunk
 			auto& uuid = asset->GetUUID();
 			try
 			{
-				return dynamic_cast<T>(*asset);
+				return *static_cast<Asset<T>*>(it->second);
 			}
 			catch (...)
 			{

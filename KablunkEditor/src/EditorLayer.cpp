@@ -358,6 +358,8 @@ namespace Kablunk
 		default:
 			break;
 		}
+
+		return true;
 	}
 
 	void EditorLayer::NewScene()
