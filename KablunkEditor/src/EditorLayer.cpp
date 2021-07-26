@@ -72,11 +72,12 @@ namespace Kablunk
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		FrameBufferSpecification frame_buffer_specs;
+		FramebufferSpecification frame_buffer_spec;
 		auto window_dimensions = Application::Get().GetWindowDimensions();
-		frame_buffer_specs.width  = window_dimensions.x;
-		frame_buffer_specs.height = window_dimensions.y;
-		m_frame_buffer = Framebuffer::Create(frame_buffer_specs);
+		frame_buffer_spec.Width  = window_dimensions.x;
+		frame_buffer_spec.Height = window_dimensions.y;
+		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
 
 		m_hierarchy_panel.SetContext(m_active_scene);
 
@@ -116,7 +117,7 @@ namespace Kablunk
 
 		auto spec = m_frame_buffer->GetSpecification();
 		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
-			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
+			&& (spec.Width != m_viewport_size.x || spec.Height != m_viewport_size.y))
 		{
 			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 
@@ -364,7 +365,7 @@ namespace Kablunk
 			return false;
 
 		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) | Input::IsKeyPressed(Key::RightControl);
-		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift) | Input::IsKeyPressed(Key::RightShift);
+		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift)   | Input::IsKeyPressed(Key::RightShift);
 
 		switch (e.GetKeyCode())
 		{

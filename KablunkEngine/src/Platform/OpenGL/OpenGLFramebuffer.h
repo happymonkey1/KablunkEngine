@@ -10,7 +10,7 @@ namespace Kablunk
 	class OpenGLFramebuffer : public Framebuffer
 	{
 	public:
-		OpenGLFramebuffer(const FrameBufferSpecification& specs);
+		OpenGLFramebuffer(const FramebufferSpecification& specs);
 		virtual ~OpenGLFramebuffer();
 
 		void Invalidate();
@@ -20,17 +20,22 @@ namespace Kablunk
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual uint32_t GetColorAttachmentRendererID() const override { return m_color_attachment; }
+		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { KB_CORE_ASSERT(index < m_color_attachments.size(), "index out of bounds!"); return m_color_attachments[index]; }
 
-		virtual const FrameBufferSpecification& GetSpecification() const override { return m_specifications; }
+		virtual const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 	private:
 
 		void DeleteBuffer();
 
-
 		Renderer::RendererID m_renderer_id;
-		uint32_t m_color_attachment, m_depth_attachment;
-		FrameBufferSpecification m_specifications;
+		FramebufferSpecification m_specification;
+		
+		std::vector<FramebufferTextureSpecification> m_color_attachment_specs;
+		FramebufferTextureSpecification m_depth_attachment_spec = FramebufferTextureFormat::None;
+
+		// Renderer IDs
+		std::vector<Renderer::RendererID> m_color_attachments;
+		Renderer::RendererID m_depth_attachment;
 	};
 }
 

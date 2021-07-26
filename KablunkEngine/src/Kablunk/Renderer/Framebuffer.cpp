@@ -7,7 +7,7 @@
 
 namespace Kablunk
 {
-	Ref<Framebuffer> Framebuffer::Create(const FrameBufferSpecification& specs)
+	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
 	{
 		switch (Renderer::GetAPI())
 		{
