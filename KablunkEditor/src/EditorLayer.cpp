@@ -160,10 +160,10 @@ namespace Kablunk
 				if (pixel_data != -1 && pixel_data < m_active_scene->GetEntityCount())
 				{
 					EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
-					m_hierarchy_panel.SetSelectedEntity(handle);
+					m_hierarchy_panel.SetSelectionContext(handle);
 				}
-				else
-					m_hierarchy_panel.ClearSelectionContext();
+				//else
+				//	m_hierarchy_panel.ClearSelectionContext();
 			}
 		}
 		m_frame_buffer->Unbind();

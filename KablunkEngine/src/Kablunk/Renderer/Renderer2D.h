@@ -37,11 +37,6 @@ namespace Kablunk
 		* Since all drawing now uses transforms, there might not be a need to differentiate between DrawQuad and DrawRotatedQuad
 		* Somehow consolidate the functions 
 		*/
-		
-		// Color
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
 
 		// Entity
 		static void DrawQuad(Entity entity);

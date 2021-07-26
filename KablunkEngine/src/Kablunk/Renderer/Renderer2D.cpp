@@ -182,51 +182,6 @@ namespace Kablunk
 		RenderCommand::DrawIndexed(s_renderer_data.Quad_vertex_array, s_renderer_data.Quad_index_count);
 	}
 
-	// ========================
-	//   Draw Quad with Color
-	// ========================
-
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
-	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, color);
-	}
-
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		DrawQuad(transform, color);
-	}
-
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
-	{
-		if (s_renderer_data.Quad_count >= s_renderer_data.Max_quads)
-			EndBatch();
-
-		const float k_texture_index = 0.0f;
-		const float k_tiling_factor = 1.0f;
-
-		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		constexpr size_t quadVertexCount = 4;
-
-		for (uint32_t i = 0; i < quadVertexCount; ++i)
-		{
-			s_renderer_data.Quad_vertex_buffer_ptr->Position = transform * s_renderer_data.Quad_vertex_positions[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->Color = color;
-			s_renderer_data.Quad_vertex_buffer_ptr->TexCoord = textureCoords[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->TexIndex = k_texture_index;
-			s_renderer_data.Quad_vertex_buffer_ptr->TilingFactor = k_tiling_factor;
-			s_renderer_data.Quad_vertex_buffer_ptr->EntityID = -1;
-			s_renderer_data.Quad_vertex_buffer_ptr++;
-		}
-
-		s_renderer_data.Quad_index_count += 6;
-		s_renderer_data.Quad_count++;
-
-		s_renderer_data.Stats.Quad_count += 1;
-	}
-
 	// =========================
 	//   Draw Quad From Entity
 	// =========================
