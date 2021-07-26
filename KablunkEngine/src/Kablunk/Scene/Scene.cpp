@@ -125,6 +125,19 @@ namespace Kablunk
 		}
 	}
 
+	Entity Scene::GetPrimaryCameraEntity()
+	{
+		auto view = m_registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			const auto& camera = view.get<CameraComponent>(entity);
+			if (camera.Primary)
+				return { entity, this };
+		}
+
+		return {};
+	}
+
 	// #WARNING Templated code SHOULD be written in the header file, BUT since we are declaring specializations,
 	//			the compiler will not complain. However, this means that every new component added needs to have
 	//			the template specialization added. seems bad and a waste of time. 

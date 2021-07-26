@@ -16,43 +16,42 @@
 #	define KB_TRUE_UUID
 #endif
 
-namespace Kablunk
+namespace Kablunk::uuid
 {
-	namespace uuid
+	
+	using uuid64 = uint64_t;
+	static constexpr uuid64 nil_uuid = 0;
+
+	static std::random_device rd;
+	constexpr uint64_t uint64_t_max = std::numeric_limits<uint64_t>::max();
+
+	static std::string to_string(uuid64 id)
 	{
-		using uuid64 = uint64_t;
-		constexpr uuid64 nil_uuid = 0;
-
-		static std::random_device rd;
-		constexpr uint64_t uint64_t_max = std::numeric_limits<uint64_t>::max();
-
-		static std::string to_string(uuid64 id)
-		{
-			auto ss = std::stringstream{};
-			ss << std::hex << id;
-			return "0x" + ss.str();
-		}
-
-		// #TODO add more bits of entropy, currently only 16!
-		static uuid64 generate()
-		{
-			// Should probably make these static or find another way of doing this
-			// Creating a generator and distribution every time is probably not the most performant
-			auto twister = std::mt19937_64{ rd() };
-			auto dist = std::uniform_int_distribution<uint64_t>{ 1, uint64_t_max };
-
-			uuid64 id = dist(twister);
-			uint64_t mac_address = MacAddress::Get();
-#ifdef KB_TRUE_UUID
-			KB_CORE_WARN("uuid generator currently has 16 bits of entropy!");
-			uint64_t random_mask = 0xFFFF;
-			uint64_t random_bits = id & random_mask;
-#endif
-			return (mac_address << 16) ^ id;
-		}
-
-		static bool is_nil(uuid64 id) { return id == nil_uuid; }
+		auto ss = std::stringstream{};
+		ss << std::hex << id;
+		return "0x" + ss.str();
 	}
+
+	// #TODO add more bits of entropy, currently only 16!
+	static uuid64 generate()
+	{
+		// Should probably make these static or find another way of doing this
+		// Creating a generator and distribution every time is probably not the most performant
+		auto twister = std::mt19937_64{ rd() };
+		auto dist = std::uniform_int_distribution<uint64_t>{ 1, uint64_t_max };
+
+		uuid64 id = dist(twister);
+		uint64_t mac_address = MacAddress::Get();
+#ifdef KB_TRUE_UUID
+		KB_CORE_WARN("uuid generator currently has 16 bits of entropy!");
+		uint64_t random_mask = 0xFFFF;
+		uint64_t random_bits = id & random_mask;
+#endif
+		return (mac_address << 16) ^ id;
+	}
+
+	static bool is_nil(uuid64 id) { return id == nil_uuid; }
+	
 }
 
 #endif

@@ -3,10 +3,14 @@
 #include "Kablunk/Utilities/PlatformUtils.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 #include <Kablunk/Scene/SceneSerializer.h>
 
 #include "Kablunk/Core/Uuid64.h"
+
+#include "ImGuizmo.h"
+#include "Kablunk/Math/Math.h"
 
 namespace Kablunk
 {
@@ -121,6 +125,7 @@ namespace Kablunk
 		// ==========
 		//   Render
 		// ==========
+
 		Renderer2D::ResetStats();
 
 		m_frame_buffer->Bind();
@@ -292,7 +297,7 @@ namespace Kablunk
 		
 		m_viewport_focused = ImGui::IsWindowFocused();
 		m_viewport_hovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused && m_viewport_hovered);
+		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused || m_viewport_hovered);
 
 		auto panel_size = ImGui::GetContentRegionAvail();
 		auto width = panel_size.x, height = panel_size.y;
@@ -304,6 +309,60 @@ namespace Kablunk
 			{ m_viewport_size.x, m_viewport_size.y }, 
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 		);
+
+
+		// ImGuizmo
+
+		// #TODO refactor to use callbacks instead of querying current scene
+		auto selected_entity = m_hierarchy_panel.GetSelectedEntity();
+		if (selected_entity && m_gizmo_type != -1)
+		{
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+
+			float window_width = static_cast<float>(ImGui::GetWindowWidth()), window_height = static_cast<float>(ImGui::GetWindowHeight());
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
+
+			// Camera
+			auto camera_entity = m_active_scene->GetPrimaryCameraEntity();
+			const auto& camera = camera_entity.GetComponent<CameraComponent>().Camera;
+			const auto& camera_projection = camera.GetProjection();
+			auto camera_view = glm::inverse(camera_entity.GetComponent<TransformComponent>().GetTransform());
+
+			// Selected Entity Transform
+			auto& transform_component = selected_entity.GetComponent<TransformComponent>();
+			auto transform = transform_component.GetTransform();
+
+			// Snapping
+			bool snap = Input::IsKeyPressed(Key::LeftControl);
+			float snap_value = (m_gizmo_type == ImGuizmo::ROTATE) ? 45.0f : 0.5f;
+
+			float snap_values[3] = { snap_value, snap_value, snap_value };
+
+			ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(camera_projection), static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
+				ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snap_values : nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				auto original_rotation = transform_component.Rotation;
+				glm::vec3 translation, scale, rotation;
+				if (Math::decompose_transform(transform, translation, scale, rotation))
+				{
+					// Translation
+					transform_component.Translation = translation;
+
+					// Scale
+					transform_component.Scale = scale;
+
+					// Rotation
+					auto delta_rotation = rotation - transform_component.Rotation;
+					transform_component.Rotation += delta_rotation;
+				}
+
+				
+			}
+		}
+
 		
 		ImGui::PopStyleVar();
 		ImGui::End();
@@ -355,6 +414,30 @@ namespace Kablunk
 
 			break;
 		}
+
+		// Gizmos
+		case Key::Q:
+		{
+			m_gizmo_type = -1;
+			break;
+		}
+		case Key::W:
+		{
+			m_gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		}
+		case Key::E:
+		{
+			m_gizmo_type = ImGuizmo::OPERATION::ROTATE;
+			break;
+		}
+		case Key::R:
+		{
+			m_gizmo_type = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
+
+
 		default:
 			break;
 		}

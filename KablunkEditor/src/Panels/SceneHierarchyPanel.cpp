@@ -355,7 +355,7 @@ namespace Kablunk
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
 					float vertical_fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
-					if (ImGui::DragFloat("Size", &vertical_fov, 1.0f, 1.0f, 200.0f))
+					if (ImGui::DragFloat("FOV", &vertical_fov, 1.0f, 1.0f, 200.0f))
 						camera.SetPerspectiveVerticalFOV(glm::radians(vertical_fov));
 
 					float near_clip = camera.GetPerspectiveNearClip();

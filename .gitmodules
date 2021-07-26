@@ -19,3 +19,6 @@
 [submodule "KablunkEngine/vendor/stduuid"]
 	path = KablunkEngine/vendor/stduuid
 	url = https://github.com/happymonkey1/stduuid.git
+[submodule "KablunkEngine/vendor/ImGuizmo"]
+	path = KablunkEngine/vendor/ImGuizmo
+	url = https://github.com/thecherno/imguizmo

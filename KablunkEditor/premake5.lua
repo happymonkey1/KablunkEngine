@@ -24,7 +24,8 @@ project "KablunkEditor"
 		"%{IncludeDir.ImGui}",
         "%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
-        "%{IncludeDir.gsl}"
+        "%{IncludeDir.gsl}",
+		"%{IncludeDir.ImGuizmo}"
     }
 
     links

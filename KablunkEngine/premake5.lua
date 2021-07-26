@@ -18,7 +18,9 @@ project "KablunkEngine"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
-		"vendor/stduuid/include/uuid.h"
+		"vendor/stduuid/include/uuid.h",
+		"vendor/ImGuizmo/ImGuizmo.h",
+		"vendor/ImGuizmo/ImGuizmo.cpp"
 	}
 
 	defines
@@ -40,7 +42,8 @@ project "KablunkEngine"
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.stduuid}",
-		"%{IncludeDir.gsl}"
+		"%{IncludeDir.gsl}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 
 	links
@@ -52,6 +55,9 @@ project "KablunkEngine"
 		"spdlog",
 		"opengl32.lib"
 	}
+
+	filter "files:vendor/ImGuizmo/**.cpp"
+		flags { "NoPCH" }
 
 	filter "system:windows"
 		systemversion "latest"

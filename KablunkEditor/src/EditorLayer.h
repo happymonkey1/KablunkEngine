@@ -42,6 +42,9 @@ namespace Kablunk
 
 		Kablunk::Entity m_primary_camera_entity;
 		Kablunk::Entity m_secondary_camera_entity;
+
+		int m_gizmo_type = -1;
+
 		bool m_primary_camera_selected{ true };
 
 		bool m_application_paused{ true };

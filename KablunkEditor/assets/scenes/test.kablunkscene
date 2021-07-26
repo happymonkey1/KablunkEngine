@@ -1,16 +1,29 @@
 Scene: Untitled
 Entities:
+  - Entity: 222487504068932537
+    TagComponent:
+      Tag: Red Square
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0.663225114, -0.610865235, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Texture:
+        m_uuid: 1940518348739950787
+        m_filepath: ""
+      Color: [0.895752907, 0.114130706, 0.114130706, 1]
+      Tiling_factor: 1
   - Entity: 14732215051463990499
     TagComponent:
       Tag: Camera
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 0, 6]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
       Camera:
-        m_projection_type: 1
-        m_perspective_fov: 0.785398185
+        m_projection_type: 0
+        m_perspective_fov: 1.22173047
         m_perspective_near: 0.00999999978
         m_perspective_far: 1000
         m_orthographic_size: 10
@@ -19,16 +32,3 @@ Entities:
         m_aspect_ratio: 0.965753436
       Primary: true
       Fixed_aspect_ratio: false
-  - Entity: 222487504068932537
-    TagComponent:
-      Tag: Red Square
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Texture:
-        m_uuid: 1940518348739950787
-        m_filepath: ""
-      Color: [0.895752907, 0.114130706, 0.114130706, 1]
-      Tiling_factor: 1

@@ -22,6 +22,8 @@ namespace Kablunk
 
 		void OnUpdate(Timestep ts);
 		void OnViewportResize(uint32_t x, uint32_t y);
+
+		Entity GetPrimaryCameraEntity();
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);
