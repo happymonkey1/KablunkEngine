@@ -2,7 +2,10 @@
 #define EDITOR_EDITORLAYER_H
 
 #include <Kablunk.h>
+#include "Kablunk/Renderer/EditorCamera.h"
+
 #include "Panels/SceneHierarchyPanel.h"
+
 
 namespace Kablunk
 {
@@ -24,31 +27,16 @@ namespace Kablunk
 		void SaveSceneAs();
 		void OpenScene();
 	private:
-		glm::vec2 m_square_pos{ 0.5f, 0.5f };
-		glm::vec2 m_square_size{ 0.5f, 0.5f };
-		float m_square_rotation{ 0.0 };
-		glm::vec4 m_square_color{ 0.8f, 0.2f, 0.3f, 1.0f };
-
-		OrthographicCameraController m_camera_controller;
 
 		Ref<Framebuffer> m_frame_buffer;
-		Ref<Texture2D> m_missing_texture;
-		Asset<Texture2D> m_kablunk_logo;
-
-		Ref<Texture2D> m_icon_play;
-
 		Ref<Scene> m_active_scene;
-		Kablunk::Entity m_square_entity;
 
-		Kablunk::Entity m_primary_camera_entity;
-		Kablunk::Entity m_secondary_camera_entity;
+		EditorCamera m_editor_camera;
 
 		int m_gizmo_type = -1;
 
 		bool m_primary_camera_selected{ true };
-
 		bool m_application_paused{ true };
-
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };
 
 		glm::vec2 m_viewport_size{ 0.0f };

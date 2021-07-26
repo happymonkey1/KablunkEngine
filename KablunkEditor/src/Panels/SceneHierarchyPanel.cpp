@@ -42,6 +42,12 @@ namespace Kablunk
 			{
 				m_context->CreateEntity();
 			}
+			
+			if (ImGui::MenuItem("Create Sprite"))
+			{
+				auto entity = m_context->CreateEntity("Blank Sprite");
+				entity.AddComponent<SpriteRendererComponent>();
+			}
 
 			ImGui::EndPopup();
 		}

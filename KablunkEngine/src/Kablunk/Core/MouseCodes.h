@@ -9,19 +9,19 @@ namespace Kablunk
 		// FROM glfw3.h
 		enum : MouseCode
 		{
-			Button1		= 0,
-			Button2		= 1,
-			Button3		= 2,
-			Button4		= 3,
-			Button5		= 4,
-			Button6		= 5,
-			Button7		= 6,
-			Button8		= 7,
+			Button0		= 0,
+			Button1		= 1,
+			Button2		= 2,
+			Button3		= 3,
+			Button4		= 4,
+			Button5		= 5,
+			Button6		= 6,
+			Button7		= 7,
 
-			Left		= Button1,
-			Right		= Button2,
-			Middle		= Button3,
-			Last		= Button8
+			ButtonLeft		= Button0,
+			ButtonRight		= Button1,
+			ButtonMiddle	= Button2,
+			ButtonLast		= Button7
 		};
 	}
 }

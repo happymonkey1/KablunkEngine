@@ -128,6 +128,16 @@ namespace Kablunk
 		StartNewBatch();
 	}
 
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		glm::mat4 view_projection = camera.GetViewProjectionMatrix();
+
+		s_renderer_data.Texture_shader->Bind();
+		s_renderer_data.Texture_shader->SetMat4("u_ViewProjection", view_projection);
+
+		StartNewBatch();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		KB_PROFILE_FUNCTION();
@@ -137,6 +147,8 @@ namespace Kablunk
 
 		StartNewBatch();
 	}
+
+	
 
 	void Renderer2D::EndScene()
 	{

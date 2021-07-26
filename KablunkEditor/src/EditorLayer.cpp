@@ -18,7 +18,7 @@ namespace Kablunk
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_camera_controller{ 1.7778f, true }
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }
 	{
 		m_active_scene = CreateRef<Scene>();
 
@@ -68,9 +68,9 @@ namespace Kablunk
 
 	void EditorLayer::OnAttach()
 	{
-		m_missing_texture	= Texture2D::Create("assets/textures/missing_texture.png");
-		m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
-		m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
+		//m_missing_texture		= Texture2D::Create("assets/textures/missing_texture.png");
+		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
+		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
 		FrameBufferSpecification frame_buffer_specs;
 		auto window_dimensions = Application::Get().GetWindowDimensions();
@@ -100,7 +100,9 @@ namespace Kablunk
 		//   Update
 		// ==========
 		
-		if (m_viewport_focused) m_camera_controller.OnUpdate(ts);
+		//if (m_viewport_focused) m_editor_camera.OnUpdate(ts);
+
+		m_editor_camera.OnUpdate(ts);
 
 		if (m_imgui_profiler_stats.Counter >= m_imgui_profiler_stats.Counter_max)
 		{
@@ -117,8 +119,8 @@ namespace Kablunk
 			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
 		{
 			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-			m_camera_controller.OnResize(m_viewport_size.x, m_viewport_size.y);
 
+			m_editor_camera.OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 			m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		}
 		
@@ -133,7 +135,7 @@ namespace Kablunk
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-		m_active_scene->OnUpdate(ts);
+		m_active_scene->OnUpdateEditor(ts, m_editor_camera);
 
 		m_frame_buffer->Unbind();
 	}
@@ -213,21 +215,19 @@ namespace Kablunk
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("New", "Crtl+N"))
-				{
 					NewScene();
-				}
+				
 
 				if (ImGui::MenuItem("Open...", "Crtl+O"))
-				{
 					OpenScene();
-				}
+				
 
 				if (ImGui::MenuItem("Save As...", "Crtl+Shift+S"))
-				{
 					SaveSceneAs();
-				}
+				
 
-				if (ImGui::MenuItem("Exit")) Application::Get().Close();
+				if (ImGui::MenuItem("Exit")) 
+					Application::Get().Close();
 
 				ImGui::EndMenu();
 			}
@@ -243,40 +243,6 @@ namespace Kablunk
 
 		m_hierarchy_panel.OnImGuiRender();
 
-		/*
-		if (m_square_entity)
-		{
-			const std::string& tag = m_square_entity.GetComponent<TagComponent>();
-			ImGui::Begin(tag.c_str());
-
-			auto& square_color = m_square_entity.GetComponent<SpriteRendererComponent>().Color;
-			ImGui::ColorEdit4("Color", glm::value_ptr(square_color));
-			ImGui::DragFloat2("Position", glm::value_ptr(m_square_pos), 0.1f);
-
-			ImGui::DragFloat2("Size", glm::value_ptr(m_square_size), 0.1f);
-			ImGui::DragFloat("Rotation", &m_square_rotation, 0.1f);
-
-			ImGui::End();
-		}
-
-		if (m_primary_camera_entity)
-		{
-			const std::string& tag = m_primary_camera_entity.GetComponent<TagComponent>();
-			ImGui::Begin(tag.c_str());
-			
-			auto& primary_camera_component = m_primary_camera_entity.GetComponent<CameraComponent>();
-			
-			if (ImGui::Checkbox("Primary Camera", &m_primary_camera_selected))
-			{
-				primary_camera_component.Primary = m_primary_camera_selected;
-				m_secondary_camera_entity.GetComponent<CameraComponent>().Primary = !m_primary_camera_selected;
-			}
-			float ortho_size = primary_camera_component.Camera.GetOrthographicSize();
-			if (ImGui::DragFloat("Primary Camera Size", &ortho_size, 0.25f, 1.0f, 50.0f))
-				primary_camera_component.Camera.SetOrthographicSize(ortho_size);
-			ImGui::End();
-		}
-		*/
 
 		ImGui::Begin("Debug Information");
 		
@@ -324,10 +290,18 @@ namespace Kablunk
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
 
 			// Camera
+
+			// Runtime camera
+			/*
 			auto camera_entity = m_active_scene->GetPrimaryCameraEntity();
 			const auto& camera = camera_entity.GetComponent<CameraComponent>().Camera;
 			const auto& camera_projection = camera.GetProjection();
 			auto camera_view = glm::inverse(camera_entity.GetComponent<TransformComponent>().GetTransform());
+			*/
+
+			// Editor Camera
+			const auto& camera_projection	= m_editor_camera.GetProjection();
+			auto camera_view				= m_editor_camera.GetViewMatrix();
 
 			// Selected Entity Transform
 			auto& transform_component = selected_entity.GetComponent<TransformComponent>();
@@ -341,6 +315,7 @@ namespace Kablunk
 
 			ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(camera_projection), static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
 				ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snap_values : nullptr);
+
 
 			if (ImGuizmo::IsUsing())
 			{
@@ -373,7 +348,7 @@ namespace Kablunk
 
 	void EditorLayer::OnEvent(Event& e)
 	{
-		m_camera_controller.OnEvent(e);
+		m_editor_camera.OnEvent(e);
 
 		if (e.GetEventType() == EventType::WindowMinimized)
 			m_viewport_size = { 0.0f, 0.0f };

@@ -6,6 +6,7 @@
 
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Core/Uuid64.h"
+#include "Kablunk/Renderer/EditorCamera.h"
 
 namespace Kablunk
 {
@@ -20,7 +21,8 @@ namespace Kablunk
 		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
-		void OnUpdate(Timestep ts);
+		void OnUpdateRuntime(Timestep ts);
+		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
 		Entity GetPrimaryCameraEntity();
