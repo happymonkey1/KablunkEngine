@@ -1,6 +1,8 @@
 #include "EditorLayer.h"
 
 #include "Kablunk/Utilities/PlatformUtils.h"
+#include "Kablunk/Math/Math.h"
+#include "Kablunk/Core/MouseCodes.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -10,7 +12,7 @@
 #include "Kablunk/Core/Uuid64.h"
 
 #include "ImGuizmo.h"
-#include "Kablunk/Math/Math.h"
+
 
 namespace Kablunk
 {
@@ -76,7 +78,7 @@ namespace Kablunk
 		auto window_dimensions = Application::Get().GetWindowDimensions();
 		frame_buffer_spec.Width  = window_dimensions.x;
 		frame_buffer_spec.Height = window_dimensions.y;
-		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
 
 		m_hierarchy_panel.SetContext(m_active_scene);
@@ -138,6 +140,32 @@ namespace Kablunk
 
 		m_active_scene->OnUpdateEditor(ts, m_editor_camera);
 
+		bool mouse_click = Input::IsMouseButtonPressed(Mouse::ButtonLeft) | Input::IsMouseButtonPressed(Mouse::ButtonRight);
+
+		if (mouse_click)
+		{
+			auto [mx, my] = ImGui::GetMousePos();
+			mx -= m_viewport_bounds[0].x;
+			my -= m_viewport_bounds[0].y;
+
+			glm::vec2 viewport_size = m_viewport_bounds[1] - m_viewport_bounds[0];
+			my = m_viewport_size.y - my;
+
+			auto mouse_x = static_cast<int>(mx);
+			auto mouse_y = static_cast<int>(my);
+
+			if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < static_cast<int>(viewport_size.x) && mouse_y < static_cast<int>(viewport_size.y))
+			{
+				int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+				if (pixel_data != -1 && pixel_data < m_active_scene->GetEntityCount())
+				{
+					EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+					m_hierarchy_panel.SetSelectedEntity(handle);
+				}
+				else
+					m_hierarchy_panel.ClearSelectionContext();
+			}
+		}
 		m_frame_buffer->Unbind();
 	}
 
@@ -145,9 +173,9 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		static bool dockspace_open = true;
-		static bool opt_fullscreen = true;
-		static bool opt_padding = false;
+		static bool dockspace_open	= true;
+		static bool opt_fullscreen	= true;
+		static bool opt_padding		= false;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -261,6 +289,7 @@ namespace Kablunk
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
+		auto viewport_offset = ImGui::GetCursorPos(); // Includes whether the tab bar is drawn or not
 		
 		m_viewport_focused = ImGui::IsWindowFocused();
 		m_viewport_hovered = ImGui::IsWindowHovered();
@@ -277,6 +306,15 @@ namespace Kablunk
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 		);
 
+		auto window_size = ImGui::GetWindowSize();
+		auto min_bound = ImGui::GetWindowPos();
+		min_bound.x += viewport_offset.x;
+		min_bound.y += viewport_offset.y;
+
+		auto max_bound = ImVec2{ min_bound.x + window_size.x, min_bound.y + window_size.y };
+		m_viewport_bounds[0] = { min_bound.x, min_bound.y };
+		m_viewport_bounds[1] = { max_bound.x, max_bound.y };
+
 
 		// ImGuizmo
 
@@ -289,8 +327,6 @@ namespace Kablunk
 
 			float window_width = static_cast<float>(ImGui::GetWindowWidth()), window_height = static_cast<float>(ImGui::GetWindowHeight());
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
-
-			// Camera
 
 			// Runtime camera
 			/*

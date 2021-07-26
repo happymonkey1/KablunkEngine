@@ -25,16 +25,16 @@ namespace Kablunk
 			glBindTexture(TextureTarget(multisampled), id);
 		}
 
-		static void AttachColorTexture(Renderer::RendererID id, int samples, GLenum format, uint32_t width, uint32_t height, int index)
+		static void AttachColorTexture(Renderer::RendererID id, int samples, GLenum internal_format, GLenum access_format, uint32_t width, uint32_t height, int index)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
 			{
-				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internal_format, width, height, GL_FALSE);
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, access_format, GL_UNSIGNED_BYTE, nullptr);
 
 				// #TODO set based off framebuffer specification
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -130,7 +130,10 @@ namespace Kablunk
 				switch (m_color_attachment_specs[i].Texture_format)
 				{
 				case FramebufferTextureFormat::RGBA8:
-					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.Samples, GL_RGBA8, m_specification.Width, m_specification.Height, i);
+					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.Samples, GL_RGBA8, GL_RGBA, m_specification.Width, m_specification.Height, i);
+					break;
+				case FramebufferTextureFormat::RED_INTEGER:
+					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.Samples, GL_R32I, GL_RED_INTEGER, m_specification.Width, m_specification.Height, i);
 					break;
 				default:
 #if KB_DEBUG
@@ -204,6 +207,15 @@ namespace Kablunk
 		m_specification.Height = height;
 
 		Invalidate();
+	}
+
+	int OpenGLFramebuffer::ReadPixel(uint32_t attachment_index, int x, int y)
+	{
+		KB_CORE_ASSERT(attachment_index < m_color_attachments.size(), "index out of bounds error!");
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachment_index);
+		int pixel_data;
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
+		return pixel_data;
 	}
 
 	void OpenGLFramebuffer::DeleteBuffer()

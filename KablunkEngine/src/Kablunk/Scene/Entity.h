@@ -40,10 +40,10 @@ namespace Kablunk
 
 		bool Valid() const { return m_entity_handle != null_entity; }
 
-		std::string GetHandleAsString() const { return std::to_string(static_cast<uint32_t>(m_entity_handle)); }
+		std::string GetHandleAsString() const { return std::to_string(static_cast<uint64_t>(m_entity_handle)); }
 		const EntityHandle& GetHandle() const { return m_entity_handle; }
 
-		operator uint32_t() const { return static_cast<uint32_t>(m_entity_handle); }
+		operator uint64_t() const { return static_cast<uint64_t>(m_entity_handle); }
 		operator EntityHandle() const { return m_entity_handle; }
 
 		operator bool() const { return Valid(); }

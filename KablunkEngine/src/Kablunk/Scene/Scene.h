@@ -26,6 +26,8 @@ namespace Kablunk
 		void OnViewportResize(uint32_t x, uint32_t y);
 
 		Entity GetPrimaryCameraEntity();
+
+		size_t GetEntityCount() const { return m_registry.size(); }
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);

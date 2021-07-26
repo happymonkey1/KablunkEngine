@@ -80,7 +80,7 @@ namespace Kablunk
 		node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
 		// Pointer voodo magic
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, node_flags, tag.c_str());
+		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity, node_flags, tag.c_str());
 
 		if (ImGui::IsItemClicked())
 			m_selection_context = entity;

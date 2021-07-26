@@ -5,6 +5,8 @@
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 
+#include "Kablunk/Scene/Components.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Kablunk
@@ -16,7 +18,8 @@ namespace Kablunk
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
-		// TODO color, texid
+		// #TODO figure out how to pass 64 bit integers to OpenGL
+		int32_t EntityID{ -1 };
 	};
 
 
@@ -64,7 +67,8 @@ namespace Kablunk
 			{ ShaderDataType::Float4, "a_Color"},
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float, "a_TexIndex" },
-			{ ShaderDataType::Float, "a_TilingFactor" }
+			{ ShaderDataType::Float, "a_TilingFactor" },
+			{ ShaderDataType::Int, "a_EntityID" }
 		});
 		s_renderer_data.Quad_vertex_array->AddVertexBuffer(s_renderer_data.Quad_vertex_buffer);
 
@@ -108,6 +112,9 @@ namespace Kablunk
 		s_renderer_data.Quad_vertex_positions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+
+
+		KB_CORE_WARN("Drawing Quads with entities only supports 32 bit integers!");
 	}
 
 	void Renderer2D::Shutdown()
@@ -210,6 +217,7 @@ namespace Kablunk
 			s_renderer_data.Quad_vertex_buffer_ptr->TexCoord = textureCoords[i];
 			s_renderer_data.Quad_vertex_buffer_ptr->TexIndex = k_texture_index;
 			s_renderer_data.Quad_vertex_buffer_ptr->TilingFactor = k_tiling_factor;
+			s_renderer_data.Quad_vertex_buffer_ptr->EntityID = -1;
 			s_renderer_data.Quad_vertex_buffer_ptr++;
 		}
 
@@ -217,6 +225,23 @@ namespace Kablunk
 		s_renderer_data.Quad_count++;
 
 		s_renderer_data.Stats.Quad_count += 1;
+	}
+
+	// =========================
+	//   Draw Quad From Entity
+	// =========================
+
+	void Renderer2D::DrawQuad(Entity entity)
+	{
+		auto transform = entity.GetComponent<TransformComponent>().GetTransform();
+
+		auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
+		
+		const auto& texture = sprite_renderer_comp.Texture.Get();
+		auto tint_color = sprite_renderer_comp.Color;
+		auto tiling_factor = sprite_renderer_comp.Tiling_factor;
+
+		DrawQuad(transform, texture, tiling_factor, tint_color, static_cast<int32_t>(entity.GetHandle()));
 	}
 
 	// ==========================
@@ -236,7 +261,7 @@ namespace Kablunk
 		DrawQuad(transform, texture, tiling_factor, tint_color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id)
 	{
 		if (s_renderer_data.Quad_count + 1 > s_renderer_data.Max_quads)
 			EndBatch();
@@ -268,108 +293,9 @@ namespace Kablunk
 			s_renderer_data.Quad_vertex_buffer_ptr->TexCoord = texture_coords[i];
 			s_renderer_data.Quad_vertex_buffer_ptr->TexIndex = texture_index;
 			s_renderer_data.Quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
+			s_renderer_data.Quad_vertex_buffer_ptr->EntityID = entity_id;
 			s_renderer_data.Quad_vertex_buffer_ptr++;
 		}
-		s_renderer_data.Quad_index_count += 6;
-		s_renderer_data.Quad_count++;
-
-		s_renderer_data.Stats.Quad_count += 1;
-	}
-
-	// ================================
-	//   Draw Rotated Quad with Color
-	// ================================
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-	{
-		DrawRotatedQuad({ position.x, position.y, 1.0f }, size, rotation, color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		DrawRotatedQuad(transform, color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color)
-	{
-		if (s_renderer_data.Quad_count + 1 > s_renderer_data.Max_quads)
-			EndBatch();
-
-		constexpr float k_texture_index = 0.0f;
-		constexpr float k_tiling_factor = 1.0f;
-
-		constexpr glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		constexpr size_t quad_vertex_count = 4;
-
-		for (uint32_t i = 0; i < quad_vertex_count; ++i)
-		{
-			s_renderer_data.Quad_vertex_buffer_ptr->Position = transform * s_renderer_data.Quad_vertex_positions[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->Color = color;
-			s_renderer_data.Quad_vertex_buffer_ptr->TexCoord = texture_coords[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->TexIndex = k_texture_index;
-			s_renderer_data.Quad_vertex_buffer_ptr->TilingFactor = k_tiling_factor;
-			s_renderer_data.Quad_vertex_buffer_ptr++;
-
-		}
-
-		s_renderer_data.Quad_index_count += 6;
-		s_renderer_data.Quad_count++;
-
-		s_renderer_data.Stats.Quad_count += 1;
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
-	{
-		DrawRotatedQuad({ position.x, position.y, 1.0f }, size, rotation, texture, tiling_factor, tint_color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
-	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), {0.0f, 0.0f, 1.0f})
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		DrawRotatedQuad(transform, texture, tiling_factor, tint_color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
-	{
-		if (s_renderer_data.Quad_count + 1 > s_renderer_data.Max_quads)
-			EndBatch();
-
-		float texture_index = 0.0f;
-		for (uint32_t i = 1; i < s_renderer_data.Texture_slot_index; ++i)
-		{
-			// Dereference shared_ptrs and compare the textures
-			if (*s_renderer_data.Texture_slots[i].get() == *texture.get())
-			{
-				texture_index = (float)i;
-			}
-		}
-
-		if (texture_index == 0.0f)
-		{
-			texture_index = (float)s_renderer_data.Texture_slot_index;
-			s_renderer_data.Texture_slots[s_renderer_data.Texture_slot_index++] = texture;
-		}
-
-		constexpr glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		constexpr size_t quad_vertex_count = 4;
-		for (uint32_t i = 0; i < quad_vertex_count; ++i)
-		{
-			s_renderer_data.Quad_vertex_buffer_ptr->Position = transform * s_renderer_data.Quad_vertex_positions[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->Color = tint_color;
-			s_renderer_data.Quad_vertex_buffer_ptr->TexCoord = texture_coords[i];
-			s_renderer_data.Quad_vertex_buffer_ptr->TexIndex = texture_index;
-			s_renderer_data.Quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
-			s_renderer_data.Quad_vertex_buffer_ptr++;
-
-		}
-
 		s_renderer_data.Quad_index_count += 6;
 		s_renderer_data.Quad_count++;
 

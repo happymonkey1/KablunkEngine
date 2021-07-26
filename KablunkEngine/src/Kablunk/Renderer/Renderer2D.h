@@ -2,9 +2,10 @@
 #define KABLUNK_RENDERER_RENDERER2D
 
 #include "Kablunk/Renderer/Texture.h"
-#include "OrthographicCamera.h"
+#include "Kablunk/Renderer/OrthographicCamera.h"
 #include "Kablunk/Renderer/EditorCamera.h"
-#include "Camera.h"
+#include "Kablunk/Renderer/Camera.h"
+#include "Kablunk/Scene/Entity.h"
 
 namespace Kablunk
 {
@@ -42,20 +43,14 @@ namespace Kablunk
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
 
+		// Entity
+		static void DrawQuad(Entity entity);
+
 		// Texture
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
-		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
-
-		// Color + rotation
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color);
-
-		// Texture + rotation
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
-		static void DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
+		// #TODO figure out how to pass 64 bit integers to OpenGL so we can support int64_t instead of int32_t
+		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f }, int32_t entity_id = -1);
 	
 		static void ResetStats();
 		static Renderer2DStats GetStats();
