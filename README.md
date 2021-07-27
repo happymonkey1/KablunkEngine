@@ -67,8 +67,9 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [x] Scene Heirarchy
 - [x] Scene Loading and Unloading
 - [ ] Scene Play and Stop
-- [ ] UI Components Editing, Transform, Camera, SpriteRenderer, etc
-- [ ] Component Gismos
+- [x] UI Components Editing, Transform, Camera, SpriteRenderer, etc
+- [x] Component Gismos
+- [ ] Entity Selection Outline in Viewport
 - [ ] Content Manager
 - [ ] Asset Browser
 
