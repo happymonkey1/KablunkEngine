@@ -143,8 +143,7 @@ namespace Kablunk
 
 		m_active_scene->OnUpdateEditor(ts, m_editor_camera);
 
-		ViewportMouseClick();
-
+		ViewportClickSelectEntity();
 
 		m_frame_buffer->Unbind();
 	}
@@ -346,8 +345,6 @@ namespace Kablunk
 					auto delta_rotation = rotation - transform_component.Rotation;
 					transform_component.Rotation += delta_rotation;
 				}
-
-				
 			}
 		}
 
@@ -356,7 +353,6 @@ namespace Kablunk
 		ImGui::End();
 
 		ImGui::End();
-		
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -368,6 +364,7 @@ namespace Kablunk
 
 		EventDispatcher dispatcher{ e };
 		dispatcher.Dispatch<KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(KABLUNK_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -437,6 +434,14 @@ namespace Kablunk
 		return true;
 	}
 
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft)
+			m_hierarchy_panel.SetSelectionContext(m_selected_entity);
+
+		return true;
+	}
+
 	void EditorLayer::NewScene()
 	{
 		m_active_scene = CreateRef<Scene>();
@@ -468,12 +473,12 @@ namespace Kablunk
 
 	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
-	// #TODO Convert to event 
-	void EditorLayer::ViewportMouseClick()
+	void EditorLayer::ViewportClickSelectEntity()
 	{
-		bool mouse_click = Input::IsMouseButtonPressed(Mouse::ButtonLeft) || Input::IsMouseButtonPressed(Mouse::ButtonRight);
-		if (!mouse_click) return;
-		
+		// Don't check for viewport entity selection if we are not hovering
+		if (!m_viewport_hovered) return;
+		if (Input::IsKeyPressed(EditorCamera::Camera_control_key) || ImGuizmo::IsOver()) return;
+
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;
 		my -= m_viewport_bounds[0].y;
@@ -484,23 +489,20 @@ namespace Kablunk
 		auto mouse_x = static_cast<int>(mx);
 		auto mouse_y = static_cast<int>(my);
 
+		//KB_CORE_TRACE("Mouse: {0}, {1}", mouse_x, mouse_y);
+		int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+		
+		//KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
+		
 		if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < static_cast<int>(viewport_size.x) && mouse_y < static_cast<int>(viewport_size.y))
 		{
-			if (!Input::IsKeyPressed(EditorCamera::Camera_control_key) && !ImGuizmo::IsOver())
+			if (pixel_data != -1)
 			{
-				int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
-				KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
-				if (pixel_data != -1)
-				{
-					EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
-					m_hierarchy_panel.SetSelectionContext(handle);
-					
-				}
-				// Make sure we are not trying to use a gizmo and we are not using the editor camera
-				else
-					m_hierarchy_panel.ClearSelectionContext();
+				EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+				m_selected_entity = { handle, m_active_scene.get() };
 			}
+			else // Make sure we are not trying to use a gizmo and we are not using the editor camera
+				m_selected_entity = {};
 		}
-		
 	}
 }

@@ -22,12 +22,13 @@ namespace Kablunk
 		virtual void OnEvent(Event& e);
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
 
-		void ViewportMouseClick();
+		void ViewportClickSelectEntity();
 	private:
 
 		Ref<Framebuffer> m_frame_buffer;
@@ -43,6 +44,8 @@ namespace Kablunk
 
 		glm::vec2 m_viewport_size{ 0.0f };
 		glm::vec2 m_viewport_bounds[2];
+
+		Entity m_selected_entity;
 
 		SceneHierarchyPanel m_hierarchy_panel;
 

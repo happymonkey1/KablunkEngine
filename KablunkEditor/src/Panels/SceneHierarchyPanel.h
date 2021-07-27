@@ -19,7 +19,9 @@ namespace Kablunk
 		void OnImGuiRender();
 		
 		Entity GetSelectedEntity() const { return m_selection_context; }
+		
 		void SetSelectionContext(EntityHandle handle) { m_selection_context = Entity{ handle, m_context.get() }; }
+		void SetSelectionContext(Entity entity) { m_selection_context = entity; }
 
 		void ClearSelectionContext() { m_selection_context = {}; }
 	private:
