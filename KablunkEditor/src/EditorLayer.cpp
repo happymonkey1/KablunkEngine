@@ -76,18 +76,18 @@ namespace Kablunk
 
 		FramebufferSpecification frame_buffer_spec;
 		auto window_dimensions = Application::Get().GetWindowDimensions();
+		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		frame_buffer_spec.Width  = window_dimensions.x;
 		frame_buffer_spec.Height = window_dimensions.y;
-		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
 
 		m_hierarchy_panel.SetContext(m_active_scene);
 
-		for (int i = 0; i < 20; ++i)
+		/*for (int i = 0; i < 20; ++i)
 		{
 			auto test_uuid = uuid::generate();
 			KB_CORE_INFO("{0}", uuid::to_string(test_uuid));
-		}
+		}*/
 	}
 
 	void EditorLayer::OnDetach()
@@ -138,34 +138,14 @@ namespace Kablunk
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
+		// Clear our entity ID buffer to -1
+		m_frame_buffer->ClearAttachment(1, -1);
+
 		m_active_scene->OnUpdateEditor(ts, m_editor_camera);
 
-		bool mouse_click = Input::IsMouseButtonPressed(Mouse::ButtonLeft) | Input::IsMouseButtonPressed(Mouse::ButtonRight);
+		ViewportMouseClick();
 
-		if (mouse_click)
-		{
-			auto [mx, my] = ImGui::GetMousePos();
-			mx -= m_viewport_bounds[0].x;
-			my -= m_viewport_bounds[0].y;
 
-			glm::vec2 viewport_size = m_viewport_bounds[1] - m_viewport_bounds[0];
-			my = m_viewport_size.y - my;
-
-			auto mouse_x = static_cast<int>(mx);
-			auto mouse_y = static_cast<int>(my);
-
-			if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < static_cast<int>(viewport_size.x) && mouse_y < static_cast<int>(viewport_size.y))
-			{
-				int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
-				if (pixel_data != -1 && pixel_data < m_active_scene->GetEntityCount())
-				{
-					EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
-					m_hierarchy_panel.SetSelectionContext(handle);
-				}
-				//else
-				//	m_hierarchy_panel.ClearSelectionContext();
-			}
-		}
 		m_frame_buffer->Unbind();
 	}
 
@@ -484,5 +464,38 @@ namespace Kablunk
 			auto serializer = SceneSerializer{ m_active_scene };
 			serializer.Deserialize(filepath);
 		}
+	}
+
+	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
+	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
+	void EditorLayer::ViewportMouseClick()
+	{
+		bool mouse_click = Input::IsMouseButtonPressed(Mouse::ButtonLeft) || Input::IsMouseButtonPressed(Mouse::ButtonRight);
+		if (!mouse_click) return;
+		
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_viewport_bounds[0].x;
+		my -= m_viewport_bounds[0].y;
+
+		glm::vec2 viewport_size = m_viewport_bounds[1] - m_viewport_bounds[0];
+		my = m_viewport_size.y - my;
+
+		auto mouse_x = static_cast<int>(mx);
+		auto mouse_y = static_cast<int>(my);
+
+		if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < static_cast<int>(viewport_size.x) && mouse_y < static_cast<int>(viewport_size.y))
+		{
+			int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+			KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
+			if (pixel_data != -1)
+			{
+				EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+				m_hierarchy_panel.SetSelectionContext(handle);
+			}
+			// Make sure we are not trying to use a gizmo and we are not using the editor camera
+			else if (!Input::IsKeyPressed(EditorCamera::Camera_control_key) && !ImGuizmo::IsOver())
+				m_hierarchy_panel.ClearSelectionContext();
+		}
+		
 	}
 }

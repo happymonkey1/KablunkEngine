@@ -26,6 +26,8 @@ namespace Kablunk
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
+
+		void ViewportMouseClick();
 	private:
 
 		Ref<Framebuffer> m_frame_buffer;

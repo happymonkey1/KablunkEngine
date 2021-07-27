@@ -78,6 +78,18 @@ namespace Kablunk
 
 			return false;
 		}
+
+		static GLenum KablunkTextureFormatToGLenum(FramebufferTextureFormat format)
+		{
+			switch (format)
+			{
+				case FramebufferTextureFormat::RGBA8:		return GL_RGBA8;
+				case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+			}
+
+			KB_CORE_ASSERT(false, "Unknown format");
+			return 0;
+		}
 	}
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& specs)
@@ -189,6 +201,8 @@ namespace Kablunk
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_renderer_id);
 		glViewport(0, 0, m_specification.Width, m_specification.Height);
+
+		
 	}
 
 	void OpenGLFramebuffer::Unbind()
@@ -216,6 +230,16 @@ namespace Kablunk
 		int pixel_data;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
 		return pixel_data;
+	}
+
+	void OpenGLFramebuffer::ClearAttachment(uint32_t attachment_index, int value)
+	{
+		KB_CORE_ASSERT(attachment_index < m_color_attachments.size(), "index out of bounds!");
+
+		auto& spec = m_color_attachment_specs[attachment_index];
+
+		glClearTexImage(m_color_attachments[attachment_index], 0,
+			Utilities::KablunkTextureFormatToGLenum(spec.Texture_format), GL_INT, &value);
 	}
 
 	void OpenGLFramebuffer::DeleteBuffer()

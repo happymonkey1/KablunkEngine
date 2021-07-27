@@ -186,7 +186,7 @@ namespace Kablunk
 	//   Draw Quad From Entity
 	// =========================
 
-	void Renderer2D::DrawQuad(Entity entity)
+	void Renderer2D::DrawSprite(Entity entity)
 	{
 		auto transform = entity.GetComponent<TransformComponent>().GetTransform();
 

@@ -5,6 +5,7 @@
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Events/Event.h"
 #include "Kablunk/Events/MouseEvent.h"
+#include "Kablunk/Core/KeyCodes.h"
 
 #include <glm/glm.hpp>
 
@@ -40,6 +41,8 @@ namespace Kablunk
 
 		float GetPitch() const { return m_pitch; }
 		float GetYaw() const { return m_yaw; }
+
+		static constexpr int Camera_control_key = Key::LeftAlt;
 	private:
 		void UpdateProjection();
 		void UpdateView();

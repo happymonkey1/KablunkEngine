@@ -39,7 +39,7 @@ namespace Kablunk
 		*/
 
 		// Entity
-		static void DrawQuad(Entity entity);
+		static void DrawSprite(Entity entity);
 
 		// Texture
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });

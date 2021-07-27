@@ -100,7 +100,7 @@ namespace Kablunk
 			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
 			{
-				Renderer2D::DrawQuad({ entity, this });
+				Renderer2D::DrawSprite({ entity, this });
 			}
 
 			Renderer2D::EndScene();
@@ -114,7 +114,7 @@ namespace Kablunk
 		auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (auto entity : group)
 		{
-			Renderer2D::DrawQuad({ entity, this });
+			Renderer2D::DrawSprite({ entity, this });
 		}
 
 		Renderer2D::EndScene();

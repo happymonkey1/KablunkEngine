@@ -22,7 +22,7 @@ namespace Kablunk
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
+		if (Input::IsKeyPressed(Camera_control_key))
 		{
 			const auto& mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
 			auto delta = (mouse - m_initial_mouse_position) * 0.003f * ts.GetMiliseconds();
