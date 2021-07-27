@@ -269,7 +269,11 @@ namespace Kablunk
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
-		auto viewport_offset = ImGui::GetCursorPos(); // Includes whether the tab bar is drawn or not
+		auto viewport_min_region	= ImGui::GetWindowContentRegionMin();
+		auto viewport_max_region	= ImGui::GetWindowContentRegionMax();
+		auto viewport_offset		= ImGui::GetWindowPos();
+		m_viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+		m_viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
 		
 		m_viewport_focused = ImGui::IsWindowFocused();
 		m_viewport_hovered = ImGui::IsWindowHovered();
@@ -286,15 +290,6 @@ namespace Kablunk
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 		);
 
-		auto window_size = ImGui::GetWindowSize();
-		auto min_bound = ImGui::GetWindowPos();
-		min_bound.x += viewport_offset.x;
-		min_bound.y += viewport_offset.y;
-
-		auto max_bound = ImVec2{ min_bound.x + window_size.x, min_bound.y + window_size.y };
-		m_viewport_bounds[0] = { min_bound.x, min_bound.y };
-		m_viewport_bounds[1] = { max_bound.x, max_bound.y };
-
 
 		// ImGuizmo
 
@@ -305,8 +300,9 @@ namespace Kablunk
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 
-			float window_width = static_cast<float>(ImGui::GetWindowWidth()), window_height = static_cast<float>(ImGui::GetWindowHeight());
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
+			float window_width  = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
+			float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
+			ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
 
 			// Runtime camera
 			/*
@@ -410,22 +406,26 @@ namespace Kablunk
 		// Gizmos
 		case Key::Q:
 		{
-			m_gizmo_type = -1;
+			if (!ImGuizmo::IsUsing()) 
+				m_gizmo_type = -1;
 			break;
 		}
 		case Key::W:
 		{
-			m_gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
+			if (!ImGuizmo::IsUsing()) 
+				m_gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
 			break;
 		}
 		case Key::E:
 		{
-			m_gizmo_type = ImGuizmo::OPERATION::ROTATE;
+			if (!ImGuizmo::IsUsing()) 
+				m_gizmo_type = ImGuizmo::OPERATION::ROTATE;
 			break;
 		}
 		case Key::R:
 		{
-			m_gizmo_type = ImGuizmo::OPERATION::SCALE;
+			if (!ImGuizmo::IsUsing()) 
+				m_gizmo_type = ImGuizmo::OPERATION::SCALE;
 			break;
 		}
 
@@ -468,6 +468,7 @@ namespace Kablunk
 
 	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
+	// #TODO Convert to event 
 	void EditorLayer::ViewportMouseClick()
 	{
 		bool mouse_click = Input::IsMouseButtonPressed(Mouse::ButtonLeft) || Input::IsMouseButtonPressed(Mouse::ButtonRight);
@@ -485,16 +486,20 @@ namespace Kablunk
 
 		if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < static_cast<int>(viewport_size.x) && mouse_y < static_cast<int>(viewport_size.y))
 		{
-			int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
-			KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
-			if (pixel_data != -1)
+			if (!Input::IsKeyPressed(EditorCamera::Camera_control_key) && !ImGuizmo::IsOver())
 			{
-				EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
-				m_hierarchy_panel.SetSelectionContext(handle);
+				int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+				KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
+				if (pixel_data != -1)
+				{
+					EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+					m_hierarchy_panel.SetSelectionContext(handle);
+					
+				}
+				// Make sure we are not trying to use a gizmo and we are not using the editor camera
+				else
+					m_hierarchy_panel.ClearSelectionContext();
 			}
-			// Make sure we are not trying to use a gizmo and we are not using the editor camera
-			else if (!Input::IsKeyPressed(EditorCamera::Camera_control_key) && !ImGuizmo::IsOver())
-				m_hierarchy_panel.ClearSelectionContext();
 		}
 		
 	}
