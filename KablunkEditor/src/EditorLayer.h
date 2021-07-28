@@ -5,6 +5,7 @@
 #include "Kablunk/Renderer/EditorCamera.h"
 
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 
 namespace Kablunk
@@ -23,6 +24,8 @@ namespace Kablunk
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
+		bool CanPickFromViewport() const;
 
 		void NewScene();
 		void SaveSceneAs();
@@ -47,7 +50,8 @@ namespace Kablunk
 
 		Entity m_selected_entity;
 
-		SceneHierarchyPanel m_hierarchy_panel;
+		SceneHierarchyPanel m_scene_hierarchy_panel;
+		ContentBrowserPanel m_content_browser_panel;
 
 		struct ProfileResult
 		{

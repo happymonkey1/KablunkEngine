@@ -81,7 +81,7 @@ namespace Kablunk
 		frame_buffer_spec.Height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
 
-		m_hierarchy_panel.SetContext(m_active_scene);
+		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
 		/*for (int i = 0; i < 20; ++i)
 		{
@@ -249,7 +249,8 @@ namespace Kablunk
 
 		//ImGui::Dummy({ 0.0f, 200.0f });
 
-		m_hierarchy_panel.OnImGuiRender();
+		m_scene_hierarchy_panel.OnImGuiRender();
+		m_content_browser_panel.OnImGuiRender();
 
 
 		ImGui::Begin("Debug Information");
@@ -293,7 +294,7 @@ namespace Kablunk
 		// ImGuizmo
 
 		// #TODO refactor to use callbacks instead of querying current scene
-		auto selected_entity = m_hierarchy_panel.GetSelectedEntity();
+		auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
 		if (selected_entity && m_gizmo_type != -1)
 		{
 			ImGuizmo::SetOrthographic(false);
@@ -437,16 +438,17 @@ namespace Kablunk
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
-			m_hierarchy_panel.SetSelectionContext(m_selected_entity);
+			if (CanPickFromViewport())
+				m_scene_hierarchy_panel.SetSelectionContext(m_selected_entity);
 
-		return true;
+		return false;
 	}
 
 	void EditorLayer::NewScene()
 	{
 		m_active_scene = CreateRef<Scene>();
 		m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-		m_hierarchy_panel.SetContext(m_active_scene);
+		m_scene_hierarchy_panel.SetContext(m_active_scene);
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -471,14 +473,15 @@ namespace Kablunk
 		}
 	}
 
+	bool EditorLayer::CanPickFromViewport() const
+	{
+		return (m_viewport_focused || m_viewport_hovered) && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
+	}
+
 	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
 	void EditorLayer::ViewportClickSelectEntity()
 	{
-		// Don't check for viewport entity selection if we are not hovering
-		if (!m_viewport_hovered) return;
-		if (Input::IsKeyPressed(EditorCamera::Camera_control_key) || ImGuizmo::IsOver()) return;
-
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;
 		my -= m_viewport_bounds[0].y;

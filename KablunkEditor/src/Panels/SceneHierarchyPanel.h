@@ -8,6 +8,8 @@
 
 namespace Kablunk
 {
+	// #TODO think about moving into runtime (KablunkEngine) because scene hierarchy and entity browsing could be useful for debugging runtime 
+
 	class SceneHierarchyPanel
 	{
 	public:
