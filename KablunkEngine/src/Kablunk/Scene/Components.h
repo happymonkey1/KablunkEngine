@@ -7,12 +7,13 @@
 #define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
-
-#include "Kablunk/Scene/ScriptableEntity.h"
+#include "Kablunk/Scripts/NativeScriptModule.h"
+#include "Kablunk/Scripts/NativeScript.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Scene/SceneCamera.h"
 #include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Core/Uuid64.h"
+
 
 namespace Kablunk
 {
@@ -122,19 +123,30 @@ namespace Kablunk
 
 	struct NativeScriptComponent
 	{
-		ScriptableEntity* Instance{ nullptr };
+		Ref<NativeScript> Instance{ nullptr };
 
-		// Function pointers instead of std::function bc of potential memory allocations
-		ScriptableEntity* (*InstantiateScript)();
-		void (*DestroyScript)(NativeScriptComponent*);
+		// Function pointer instead of std::function bc of potential memory allocations
+		Scope<NativeScript> (*InstantiateScript)(Entity entity);
 
-		template <typename T>
-		void Bind()
+		template <typename T, typename... Args>
+		void Bind(Args... args)
 		{
-			InstantiateScript	= []() { return static_cast<ScriptableEntity*>(new T()); };
-			DestroyScript		= [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
+			InstantiateScript	= [args...](Entity entity) -> Scope<NativeScript> { return CreateScope<T>(entity, args...) };
 		}
-		
+
+		void LoadFromFile(const std::string& filepath, Entity entity)
+		{
+			if (filepath.empty())
+				return;
+
+			auto struct_names = Parser::CPP::FindStructNames(filepath, 1);
+			if (struct_names.empty()) KB_CORE_ASSERT(false, "Could not find struct in file {0}", filepath);
+			auto struct_name = struct_names[0];
+
+			Instance = Modules::s_native_script_module.GetScript(struct_name);
+			Instance->SetEntity(entity);
+		}
+
 		friend class Scene;
 	};
 }

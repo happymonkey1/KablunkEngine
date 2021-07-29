@@ -15,7 +15,8 @@ namespace Kablunk
 
 	Scene::~Scene()
 	{
-		m_registry.view<NativeScriptComponent>().each(
+		// NativeScript destructor handles cleanup
+		/*m_registry.view<NativeScriptComponent>().each(
 			[&](auto entity, auto native_script_component)
 			{
 				if (native_script_component.Instance)
@@ -24,7 +25,7 @@ namespace Kablunk
 					native_script_component.DestroyScript(&native_script_component);
 				}
 			}
-		);
+		);*/
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
@@ -64,9 +65,8 @@ namespace Kablunk
 				*/ 
 				if (!native_script_component.Instance)
 				{
-					native_script_component.Instance = native_script_component.InstantiateScript();
-					native_script_component.Instance->m_entity = Entity{ entity, this };
-					native_script_component.Instance->OnCreate();
+					native_script_component.InstantiateScript({ entity, this });
+					native_script_component.Instance->OnAwake();
 				}
 
 				native_script_component.Instance->OnUpdate(ts);

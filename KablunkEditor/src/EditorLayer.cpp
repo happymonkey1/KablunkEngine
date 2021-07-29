@@ -12,7 +12,7 @@
 #include "Kablunk/Core/Uuid64.h"
 
 #include "ImGuizmo.h"
-
+#include "Kablunk/Utilities/Parser.h"
 
 namespace Kablunk
 {
@@ -39,7 +39,7 @@ namespace Kablunk
 		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>();
 
 
-		class CameraControllerScript : public ScriptableEntity
+		class CameraControllerScript : public NativeScript
 		{
 		public:
 			virtual void OnCreate() override

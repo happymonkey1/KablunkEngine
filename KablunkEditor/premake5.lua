@@ -30,7 +30,8 @@ project "KablunkEditor"
 
     links
     {
-        "KablunkEngine"
+        "KablunkEngine",
+        "Sandbox"
     }
 
     filter "system:windows"

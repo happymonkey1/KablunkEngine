@@ -1,8 +1,8 @@
 project "Sandbox"
-	kind "ConsoleApp"
+	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
+	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -21,7 +21,10 @@ project "Sandbox"
 		"%{wks.location}/KablunkEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+        "%{IncludeDir.yaml_cpp}",
+        "%{IncludeDir.stduuid}",
+        "%{IncludeDir.gsl}"
 	}
 
 	links

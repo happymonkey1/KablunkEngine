@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Kablunk/Core/Core.h"
+#include "Kablunk/Core/Application.h"
+
 #ifdef KB_PLATFORM_WINDOWS
 
 

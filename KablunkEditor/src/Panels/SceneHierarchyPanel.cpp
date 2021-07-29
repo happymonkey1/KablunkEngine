@@ -298,6 +298,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<NativeScriptComponent>() && ImGui::MenuItem("Native Script"))
+			{
+				m_selection_context.AddComponent<NativeScriptComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -403,6 +409,25 @@ namespace Kablunk
 				float tiling_factor = component.Tiling_factor;
 				if (ImGui::DragFloat("Tiling Factor", &tiling_factor, 0.1f))
 					component.Tiling_factor = tiling_factor;
+			});
+
+		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
+			{
+				if (component.Instance)
+				{
+					ImGui::Text("Poop");
+				}
+				else
+				{
+					if (ImGui::Button("Add"))
+					{
+						auto filepath = FileDialog::OpenFile("Source File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
+						if (!filepath.empty())
+						{
+							component.LoadFromFile(filepath, entity);
+						}
+					}
+				}
 			});
 
 		// Debug Panels
