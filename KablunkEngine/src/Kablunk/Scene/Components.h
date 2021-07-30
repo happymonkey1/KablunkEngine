@@ -123,18 +123,19 @@ namespace Kablunk
 
 	struct NativeScriptComponent
 	{
-		Ref<NativeScript> Instance{ nullptr };
+		Scope<NativeScript> Instance{ nullptr };
 
 		// Function pointer instead of std::function bc of potential memory allocations
-		Scope<NativeScript> (*InstantiateScript)(Entity entity);
+		Scope<NativeScript> (*InstantiateScript)();
 
 		template <typename T, typename... Args>
 		void Bind(Args... args)
 		{
-			InstantiateScript	= [args...](Entity entity) -> Scope<NativeScript> { return CreateScope<T>(entity, args...) };
+			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
-		void LoadFromFile(const std::string& filepath, Entity entity)
+		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
+		void EditorLoadFromFile(const std::string& filepath, Entity entity)
 		{
 			if (filepath.empty())
 				return;
@@ -143,9 +144,15 @@ namespace Kablunk
 			if (struct_names.empty()) KB_CORE_ASSERT(false, "Could not find struct in file {0}", filepath);
 			auto struct_name = struct_names[0];
 
-			Instance = Modules::s_native_script_module.GetScript(struct_name);
-			Instance->SetEntity(entity);
+			Instance = Modules::NativeScriptModule::GetScript(struct_name);
+			KB_CORE_ASSERT(Instance, "Script could not be loaded from file {0}", filepath);
+			if (Instance)
+			{
+				Instance->SetEntity(entity);
+				Instance->OnAwake();
+			}
 		}
+
 
 		friend class Scene;
 	};

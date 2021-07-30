@@ -5,15 +5,28 @@
 
 namespace Kablunk::Modules
 {
-	void NativeScriptModule::RegisterScript(const std::string& script_name, NativeScript script)
+
+	bool NativeScriptModule::RegisterScript(const std::string& script_name, CreateMethod create_script)
 	{
-		m_native_scripts.insert({ script_name, CreateRef<NativeScript>(script) });
+		auto& native_scripts = GetScriptContainer();
+		auto it = native_scripts.find(script_name);
+		if (it == native_scripts.end())
+		{
+			native_scripts.emplace( script_name, create_script );
+			return true;
+		}
+		else
+		{
+			KB_CORE_ASSERT(false, "Script already registered!")
+			return false;
+		}
 	}
 
 	// #TODO currently searches for files during runtime, probably better to do at statically with reflection
-	Ref<NativeScript> NativeScriptModule::GetScript(const std::string& script_name)
+	Scope<NativeScript> NativeScriptModule::GetScript(const std::string& script_name)
 	{
-		auto it = m_native_scripts.find(script_name);
-		return it != m_native_scripts.end() ? it->second : Ref<NativeScript>{};
+		auto& native_scripts = GetScriptContainer();
+		auto it = native_scripts.find(script_name);
+		return it != native_scripts.end() ? Scope<NativeScript>(it->second()) : nullptr;
 	}
 }

@@ -9,11 +9,5 @@ namespace Kablunk
 	{
 
 	}
-
-	NativeScript::NativeScript(Entity entity)
-		: m_entity{ entity }
-	{
-	
-	}
 }
 

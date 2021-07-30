@@ -5,13 +5,12 @@
 
 struct TestScript : public Kablunk::NativeScript
 {
-
-	TestScript(Kablunk::Entity entity)
-		: Kablunk::NativeScript(entity)
+	TestScript()
 	{
 		
 	}
 
+	IMPLEMENT_NATIVE_SCRIPT(TestScript);
 
 	virtual void OnAwake() override
 	{
@@ -23,5 +22,6 @@ struct TestScript : public Kablunk::NativeScript
 		KB_CLIENT_TRACE("TestScript::OnUpdate()");
 	}
 };
+
 
 #endif

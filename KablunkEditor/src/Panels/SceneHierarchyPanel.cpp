@@ -424,7 +424,7 @@ namespace Kablunk
 						auto filepath = FileDialog::OpenFile("Source File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
 						if (!filepath.empty())
 						{
-							component.LoadFromFile(filepath, entity);
+							component.EditorLoadFromFile(filepath, entity);
 						}
 					}
 				}
