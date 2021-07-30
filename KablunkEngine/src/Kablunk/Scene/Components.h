@@ -134,7 +134,8 @@ namespace Kablunk
 			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
-		void LoadFromFile(const std::string& filepath, Entity entity)
+		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
+		void EditorLoadFromFile(const std::string& filepath, Entity entity)
 		{
 			if (filepath.empty())
 				return;
@@ -144,8 +145,12 @@ namespace Kablunk
 			auto struct_name = struct_names[0];
 
 			Instance = Modules::NativeScriptModule::GetScript(struct_name);
-			Instance->SetEntity(entity);
-			
+			KB_CORE_ASSERT(Instance, "Script could not be loaded from file {0}", filepath);
+			if (Instance)
+			{
+				Instance->SetEntity(entity);
+				Instance->OnAwake();
+			}
 		}
 
 

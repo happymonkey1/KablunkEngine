@@ -27,12 +27,15 @@ namespace Kablunk
 		}
 
 	protected:
+
+
 		virtual void OnAwake() { }
 		virtual void OnUpdate(Timestep ts)  { }
 	private:
 		Entity m_entity{ };
 
 		friend class Scene;
+		friend struct NativeScriptComponent;
 	};
 	
 }

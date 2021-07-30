@@ -23,6 +23,5 @@ struct TestScript : public Kablunk::NativeScript
 	}
 };
 
-REGISTER_NATIVE_SCRIPT(TestScript);
 
 #endif

@@ -4,4 +4,7 @@
 #include "Sandbox/TestScript.h"
 
 
+REGISTER_NATIVE_SCRIPT(TestScript);
+
+
 #endif

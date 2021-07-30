@@ -110,17 +110,17 @@ namespace Kablunk
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
-		//m_registry.view<NativeScriptComponent>().each(
-		//	[=](auto entity, auto& native_script_component)
-		//	{
-		//		/*	#TODO
-		//		*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
-		//		*	function if the instance has not been set
-		//		*/
-		//		if (native_script_component.Instance)
-		//			native_script_component.Instance->OnUpdate(ts);
-		//	}
-		//);
+		m_registry.view<NativeScriptComponent>().each(
+			[=](auto entity, auto& native_script_component)
+			{
+				/*	#TODO
+				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
+				*	function if the instance has not been set
+				*/
+				if (native_script_component.Instance)
+					native_script_component.Instance->OnUpdate(ts);
+			}
+		);
 
 
 		Renderer2D::BeginScene(camera);

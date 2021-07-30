@@ -11,7 +11,6 @@
 namespace Kablunk::Modules
 {
 	using CreateMethod = NativeScript* (*)();
-	
 
 	class NativeScriptModule
 	{
@@ -20,7 +19,13 @@ namespace Kablunk::Modules
 		static Scope<NativeScript> GetScript(const std::string& script_name);
 
 	private:
-		static std::unordered_map<std::string, CreateMethod> m_native_scripts;
+		using NativeScriptContainer = std::unordered_map<std::string, CreateMethod>;
+
+		static NativeScriptContainer& GetScriptContainer()
+		{
+			static NativeScriptContainer m_native_scripts;
+			return m_native_scripts;
+		}
 	};
 
 }
