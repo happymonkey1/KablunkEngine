@@ -12,7 +12,6 @@ namespace Kablunk
 	{
 	public:
 		NativeScript();
-		NativeScript(Entity entity);
 		virtual ~NativeScript() = default;
 		
 		template <typename T>
@@ -24,7 +23,6 @@ namespace Kablunk
 		// #TODO fix api and remove this
 		void SetEntity(Entity entity)
 		{
-			KB_CORE_WARN("NativeScript: FIX THE DAMN API!!!");
 			m_entity = entity;
 		}
 
@@ -32,7 +30,7 @@ namespace Kablunk
 		virtual void OnAwake() { }
 		virtual void OnUpdate(Timestep ts)  { }
 	private:
-		Entity m_entity;
+		Entity m_entity{ };
 
 		friend class Scene;
 	};

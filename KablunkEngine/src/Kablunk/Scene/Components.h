@@ -123,15 +123,15 @@ namespace Kablunk
 
 	struct NativeScriptComponent
 	{
-		Ref<NativeScript> Instance{ nullptr };
+		Scope<NativeScript> Instance{ nullptr };
 
 		// Function pointer instead of std::function bc of potential memory allocations
-		Scope<NativeScript> (*InstantiateScript)(Entity entity);
+		Scope<NativeScript> (*InstantiateScript)();
 
 		template <typename T, typename... Args>
 		void Bind(Args... args)
 		{
-			InstantiateScript	= [args...](Entity entity) -> Scope<NativeScript> { return CreateScope<T>(entity, args...) };
+			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
 		void LoadFromFile(const std::string& filepath, Entity entity)
@@ -143,9 +143,11 @@ namespace Kablunk
 			if (struct_names.empty()) KB_CORE_ASSERT(false, "Could not find struct in file {0}", filepath);
 			auto struct_name = struct_names[0];
 
-			Instance = Modules::s_native_script_module.GetScript(struct_name);
+			Instance = Modules::NativeScriptModule::GetScript(struct_name);
 			Instance->SetEntity(entity);
+			
 		}
+
 
 		friend class Scene;
 	};
