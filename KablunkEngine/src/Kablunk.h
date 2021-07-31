@@ -46,6 +46,10 @@
 #include "Kablunk/Scripts/NativeScriptModule.h"
 // ----------------------------------------------
 
+// ---Assets-------------------------------------
+#include "Kablunk/Core/AssetManager.h"
+// ----------------------------------------------
+
 
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"

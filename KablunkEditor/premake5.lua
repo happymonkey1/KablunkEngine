@@ -23,7 +23,7 @@ project "KablunkEditor"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
-        "%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
         "%{IncludeDir.gsl}",
 		"%{IncludeDir.ImGuizmo}"
@@ -46,7 +46,7 @@ project "KablunkEditor"
 	filter "configurations:Release"
 		defines "KB_RELEASE"
 		runtime "Release"
-		symbols "on"
+		optimize "on"
 	
 	filter "configurations:Distribution"
 		defines "KB_DISTRIBUTION"

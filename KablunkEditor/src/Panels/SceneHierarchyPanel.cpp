@@ -132,7 +132,7 @@ namespace Kablunk
 
 		ImGui::PushID(label.c_str());
 
-		ImGui::Columns(2);
+		ImGui::Columns(2, 0, false);
 
 		ImGui::SetColumnWidth(0, column_width);
 		ImGui::Text(label.c_str());

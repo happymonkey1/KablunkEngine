@@ -17,6 +17,9 @@ namespace Kablunk
 
 	private:
 		std::filesystem::path m_current_directory;
+
+		Asset<Texture2D> m_directory_icon;
+		Asset<Texture2D> m_file_icon;
 	};
 }
 
