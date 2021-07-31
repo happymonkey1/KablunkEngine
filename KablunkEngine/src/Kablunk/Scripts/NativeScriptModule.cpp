@@ -6,7 +6,7 @@
 namespace Kablunk::Modules
 {
 
-	bool NativeScriptModule::RegisterScript(const std::string& script_name, CreateMethod create_script)
+	bool NativeScriptModule::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
 	{
 		auto& native_scripts = GetScriptContainer();
 		auto it = native_scripts.find(script_name);

@@ -12,7 +12,10 @@ namespace Kablunk
 	{
 	public:
 		NativeScript();
-		virtual ~NativeScript() = default;
+		virtual ~NativeScript()
+		{
+			OnDestroy();
+		}
 		
 		template <typename T>
 		T& GetComponent()
@@ -27,10 +30,10 @@ namespace Kablunk
 		}
 
 	protected:
-
-
 		virtual void OnAwake() { }
 		virtual void OnUpdate(Timestep ts)  { }
+		// #TODO virtual function not working
+		virtual void OnDestroy() { }
 	private:
 		Entity m_entity{ };
 

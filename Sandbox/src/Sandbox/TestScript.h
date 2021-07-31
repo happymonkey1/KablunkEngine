@@ -9,6 +9,7 @@ struct TestScript : public Kablunk::NativeScript
 	{
 		
 	}
+	virtual ~TestScript() = default;
 
 	IMPLEMENT_NATIVE_SCRIPT(TestScript);
 
@@ -20,6 +21,11 @@ struct TestScript : public Kablunk::NativeScript
 	virtual void OnUpdate(Kablunk::Timestep ts) override
 	{
 		KB_CLIENT_TRACE("TestScript::OnUpdate()");
+	}
+
+	virtual void OnDestroy() override
+	{
+		KB_CLIENT_TRACE("TestScript::OnDestroy()");
 	}
 };
 

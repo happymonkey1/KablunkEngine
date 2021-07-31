@@ -121,12 +121,14 @@ namespace Kablunk
 		CameraComponent(const CameraComponent& projection) = default;
 	};
 
+	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
 		Scope<NativeScript> Instance{ nullptr };
 
+		using InstantiateScriptFunc = Scope<NativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
-		Scope<NativeScript> (*InstantiateScript)();
+		InstantiateScriptFunc InstantiateScript;
 
 		template <typename T, typename... Args>
 		void Bind(Args... args)

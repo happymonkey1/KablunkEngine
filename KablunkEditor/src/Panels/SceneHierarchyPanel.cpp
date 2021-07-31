@@ -415,7 +415,7 @@ namespace Kablunk
 			{
 				if (component.Instance)
 				{
-					ImGui::Text("Poop");
+					ImGui::Text("Script loaded");
 				}
 				else
 				{
