@@ -502,6 +502,8 @@ namespace Kablunk
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
 	void EditorLayer::ViewportClickSelectEntity()
 	{
+		// #TODO clicking outside viewport still tries to select entity, causing a deselection in most cases
+
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;
 		my -= m_viewport_bounds[0].y;
