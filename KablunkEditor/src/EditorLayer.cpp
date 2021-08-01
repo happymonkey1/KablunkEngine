@@ -19,8 +19,8 @@
 
 namespace Kablunk
 {
-	
-
+	// #TODO bad!
+	extern const std::filesystem::path g_asset_path;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }
@@ -86,11 +86,11 @@ namespace Kablunk
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
-		/*for (int i = 0; i < 20; ++i)
+		for (int i = 0; i < 3; ++i)
 		{
 			auto test_uuid = uuid::generate();
-			KB_CORE_INFO("{0}", uuid::to_string(test_uuid));
-		}*/
+			KB_CORE_INFO("{0}", test_uuid);
+		}
 	}
 
 	void EditorLayer::OnDetach()
@@ -272,6 +272,7 @@ namespace Kablunk
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
+		
 		auto viewport_min_region	= ImGui::GetWindowContentRegionMin();
 		auto viewport_max_region	= ImGui::GetWindowContentRegionMax();
 		auto viewport_offset		= ImGui::GetWindowPos();
@@ -293,6 +294,19 @@ namespace Kablunk
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 		);
 
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const auto path_wchar_str = (const wchar_t*)payload->Data;
+				auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
+				if (path.extension() == ".kablunkscene")
+					OpenScene(path);	
+				else
+					KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		// ImGuizmo
 
@@ -468,12 +482,15 @@ namespace Kablunk
 	{
 		auto filepath = FileDialog::OpenFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
 		if (!filepath.empty())
-		{
-			NewScene();
+			OpenScene(filepath);
+	}
 
-			auto serializer = SceneSerializer{ m_active_scene };
-			serializer.Deserialize(filepath);
-		}
+	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		NewScene();
+
+		auto serializer = SceneSerializer{ m_active_scene };
+		serializer.Deserialize(path.string());
 	}
 
 	bool EditorLayer::CanPickFromViewport() const

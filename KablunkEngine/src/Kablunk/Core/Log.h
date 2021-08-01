@@ -36,3 +36,13 @@ namespace Kablunk {
 #define KB_CLIENT_WARN(...)  ::Kablunk::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define KB_CLIENT_ERROR(...) ::Kablunk::Log::GetClientLogger()->error(__VA_ARGS__)
 #define KB_CLIENT_FATAL(...) ::Kablunk::Log::GetClientLogger()->critical(__VA_ARGS__)
+
+#ifdef KB_DEBUG
+#	define KB_TIME_FUNCTION_BEGIN()	float delta##__FUNCSIG__ = PlatformAPI::GetTime();
+#	define KB_TIME_FUNCTION_END(trace) \
+	auto trace_msg = std::string(trace) + std::string(": {0}"); \
+	KB_CORE_TRACE(trace_msg.c_str(), (PlatformAPI::GetTime() - delta##__FUNCSIG__) * 1000.0f);
+#else
+#	define KB_TIME_FUNCTION_BEGIN()
+#	define KB_TIME_FUNCTION_END(trace)
+#endif

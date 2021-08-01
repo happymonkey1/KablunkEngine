@@ -33,6 +33,7 @@
 #	define KB_PROFILE 0
 #endif
 
+
 #ifdef KB_ENABLE_ASSERTS
 #	define KB_ASSERT(x, ...)      { if(!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } }
 #	define KB_CORE_ASSERT(x, ...) { if(!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } } 

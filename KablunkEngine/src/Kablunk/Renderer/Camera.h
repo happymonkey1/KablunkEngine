@@ -16,7 +16,7 @@ namespace Kablunk
 		
 		glm::vec2 ScreenToWorldPosition2D(const glm::mat4& view, const glm::vec2& mouse_pos) const
 		{
-			auto inverse_mat = glm::inverse(m_projection * view);
+			auto inverse_mat = m_projection * glm::inverse(view);
 			auto scaled_mouse_position = glm::vec4{ mouse_pos.x, mouse_pos.y, 1.0f, 1.0f };
 			auto out_coords = scaled_mouse_position * inverse_mat;
 			out_coords.x /= out_coords.w;

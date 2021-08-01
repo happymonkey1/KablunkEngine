@@ -146,6 +146,8 @@ namespace Kablunk
 	{
 		auto uuid = entity["Entity"].as<uuid::uuid64>();
 
+
+
 		std::string name;
 		auto tag_comp = entity["TagComponent"];
 		if (tag_comp)
@@ -212,7 +214,7 @@ namespace Kablunk
 				auto uuid				= texture_data["m_uuid"].as<uint64_t>();
 				auto filepath			= texture_data["m_filepath"].as<std::string>();
 
-				auto texture_asset = AssetManager::Create<Texture2D>(filepath, uuid);
+				auto texture_asset = Asset<Texture2D>(filepath, uuid);
 				sprite_renderer_comp.Texture = texture_asset;
 			}
 

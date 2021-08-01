@@ -30,6 +30,7 @@ namespace Kablunk
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 
 		void ViewportClickSelectEntity();
 	private:

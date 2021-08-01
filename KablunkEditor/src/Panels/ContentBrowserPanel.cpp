@@ -9,10 +9,10 @@
 
 namespace Kablunk
 {
-	static const std::filesystem::path s_asset_path = "assets";
+	extern const std::filesystem::path g_asset_path = "assets";
 
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_current_directory{ s_asset_path }
+		: m_current_directory{ g_asset_path }
 	{
 		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
 		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
@@ -22,57 +22,133 @@ namespace Kablunk
 	{
 		ImGui::Begin("Content Browser");
 
-		if (m_current_directory != s_asset_path)
+		
+		auto panel_width = ImGui::GetContentRegionAvailWidth();
+		if (m_current_directory != g_asset_path)
 		{
 			if (ImGui::Button("<<<"))
 				m_current_directory = m_current_directory.parent_path();
-			
+
+			// #TODO currently hardcoded, should be calculated during runtime
+			ImGui::SameLine(panel_width / 2.0f + 10.0f);
 		}
+		else
+		{
+			// #TODO currently hardcoded, should be calculated during runtime
+			ImGui::SetCursorPosX(panel_width / 2.0f + 10.0f);
+		}
+		auto current_dir_string = m_current_directory.string();
+		ImGui::Text(current_dir_string.c_str());
+		
+		
+		ImGui::Separator();	
 
 		static float padding = 16.0f;
-		static float thumbnail_size = 128.0f;
+		static float thumbnail_size = 48.0f;
 		float cell_size = thumbnail_size + padding;
 
-		auto panel_width = ImGui::GetContentRegionAvailWidth();
-		auto column_count = static_cast<int>(panel_width / cell_size);
-		column_count = column_count < 1 ? 1 : column_count;
-
-		ImGui::Columns(column_count, 0, false);
-		
-		auto mouse_double_click = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 		// #TODO refactor so we don't iterate through the file system every frame
+		auto directory_entries = std::vector<std::filesystem::directory_entry>{};
 		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })
 		{
-			const auto& path = directory_entry.path();
-			auto relative_path = std::filesystem::relative(path, s_asset_path);
-			auto filename_string = relative_path.filename().string();
-			auto is_dir = directory_entry.is_directory();
-
-			// #TODO get more file icons and adjust icon texture accordingly
-			auto icon_renderer_id = is_dir ? m_directory_icon.Get()->GetRendererID() : m_file_icon.Get()->GetRendererID();
-			ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
-			ImGui::ImageButton((ImTextureID)icon_renderer_id, { thumbnail_size, thumbnail_size }, { 0, 1 }, { 1, 0 });
-			ImGui::PopStyleColor();
-
-			if (ImGui::BeginDragDropSource())
-			{
-				const auto item_path = relative_path.c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, wcslen(item_path))
-				ImGui::EndDragDropSource();
-			}
-
-			if (ImGui::IsItemHovered() && mouse_double_click)
-			{
-				if (directory_entry.is_directory())
-					m_current_directory /= path.filename();
-			}
-			ImGui::TextWrapped(filename_string.c_str());
-
-			ImGui::NextColumn();
+			directory_entries.push_back(directory_entry);
 		}
 
-		ImGui::Columns(1);
+		ImGuiTableFlags content_browser_panel_flags = ImGuiTableFlags_BordersInnerV;
+		if (ImGui::BeginTable("Directory Browser", 2, content_browser_panel_flags))
+		{
+			auto imgui_table = ImGui::GetCurrentTable();
+			//ImGui::TableSetupColumn("##Directories", ImGuiTableColumnFlags_WidthFixed, 75.0f);
+			//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
+			//ImGui::TableSetupColumn("##Directories", ImGuiTableColumnFlags_WidthStretch, 75.0f);
+			//ImGui::TableHeadersRow();
+			
+			// #TODO fix width of first column. Minimum width with stretching?
+			ImGui::TableNextColumn();
 
+			ImGui::TableSetColumnIndex(0);
+			ImGui::TableSetColumnWidthAutoAll(imgui_table);
+
+			auto working_dir = g_asset_path.string();
+			ImGui::Text(working_dir.c_str());
+
+			for (auto& directory_entry : directory_entries)
+			{
+				if (directory_entry.is_directory())
+				{
+					const auto& path			= directory_entry.path();
+					auto relative_path			= std::filesystem::relative(path, g_asset_path);
+					auto relative_path_string	= relative_path.string();
+
+					ImGuiTreeNodeFlags directory_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow;
+					// #TODO should only draw tree node if are files within directory
+					if (ImGui::TreeNodeEx(relative_path_string.c_str(), directory_tree_node_flags))
+					{
+						// #TODO recursively populate inner directories;
+						ImGui::Text("FIXME!");
+						ImGui::TreePop();
+					}
+				}
+			}
+
+
+			auto cell_rect = ImGui::TableGetCellBgRect(imgui_table, 0);
+			auto directory_panel_width = cell_rect.Max.x - cell_rect.Min.x;
+			//ImGui::PopStyleVar(); // Frame padding
+			ImGui::TableNextColumn();
+			
+			// Calculate how many columns we need to display files/folders
+			auto files_column_width = ImGui::GetContentRegionAvailWidth();
+			auto column_count = static_cast<int>(files_column_width / cell_size);
+			column_count = column_count < 1 ? 1 : column_count;
+
+			//ImGui::TableSetColumnIndex(1);
+			//ImGui::TableSetColumnWidth(1, panel_width - directory_panel_width);
+			int i = 0;
+			if (ImGui::BeginTable("Intra Directory Browser", column_count))
+			{
+				
+				auto mouse_double_click = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+				for (auto& directory_entry : directory_entries)
+				{
+					const auto& path = directory_entry.path();
+					auto relative_path = std::filesystem::relative(path, g_asset_path);
+					auto filename_string = relative_path.filename().string();
+					auto is_dir = directory_entry.is_directory();
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(i++);
+
+					// #TODO include more file icons and adjust icon texture accordingly
+					auto icon_renderer_id = is_dir ? m_directory_icon.Get()->GetRendererID() : m_file_icon.Get()->GetRendererID();
+					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+					ImGui::ImageButton((ImTextureID)icon_renderer_id, { thumbnail_size, thumbnail_size }, { 0, 1 }, { 1, 0 });
+					ImGui::PopStyleColor();
+
+					if (ImGui::BeginDragDropSource())
+					{
+						const auto item_path = relative_path.c_str();
+						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (wcslen(item_path) + 1) * sizeof(wchar_t), ImGuiCond_Once);
+						ImGui::EndDragDropSource();
+					}
+
+					if (ImGui::IsItemHovered() && mouse_double_click)
+					{
+						if (directory_entry.is_directory())
+							m_current_directory /= path.filename();
+					}
+					ImGui::TextWrapped(filename_string.c_str());
+
+
+					ImGui::PopID();
+				}
+
+				
+				ImGui::EndTable(); // File Browser
+			}
+
+			ImGui::EndTable(); // Directory Browser
+		}
 		ImGui::NewLine();
 
 		ImGui::SliderFloat("Thumbnail size", &thumbnail_size, 16, 512);

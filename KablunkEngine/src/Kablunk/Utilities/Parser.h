@@ -45,7 +45,6 @@ namespace Kablunk::Parser
 				while (ss)
 				{
 					ss >> word;
-					KB_CORE_TRACE("{0}", word);
 					if (word == "struct")
 					{
 						ss >> word;

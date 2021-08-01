@@ -5,8 +5,12 @@
 
 #include "imgui/imgui_internal.h"
 
+#include <filesystem>
+
 namespace Kablunk
 {
+	// #TODO bad!
+	extern const std::filesystem::path g_asset_path;
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
@@ -47,6 +51,14 @@ namespace Kablunk
 			{
 				auto entity = m_context->CreateEntity("Blank Sprite");
 				entity.AddComponent<SpriteRendererComponent>();
+			}
+
+			if (ImGui::MenuItem("Create Camera"))
+			{
+				auto entity = m_context->CreateEntity("Camera");
+				bool is_first_camera = m_context->GetPrimaryCameraEntity() == null_entity ? true : false;
+				auto& camera_comp = entity.AddComponent<CameraComponent>();
+				camera_comp.Primary = is_first_camera;
 			}
 
 			ImGui::EndPopup();
@@ -233,7 +245,7 @@ namespace Kablunk
 			ImGui::PopStyleVar();
 			ImGui::SameLine(content_region_available.x - line_height * 0.5f);
 			
-			const float button_padding_left = 50.0f;
+		//	const float button_padding_left = 50.0f;
 			if (ImGui::Button("...", { line_height, line_height }))	ImGui::OpenPopup("##ComponentSettings");
 
 			bool remove_component = false;
@@ -395,16 +407,46 @@ namespace Kablunk
 				}
 			});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
 			{
 				ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.Color));
 
-				Ref<Texture2D> sprite_texture = component.Texture;
-				auto sprite_texture_renderer_id = sprite_texture->GetRendererID();
+				auto& sprite_texture_asset = component.Texture;
+				auto sprite_texture_renderer_id = sprite_texture_asset.Get()->GetRendererID();
 				if (ImGui::ImageButton(reinterpret_cast<void*>(static_cast<uint64_t>(sprite_texture_renderer_id)), { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 				{
 					// #TODO change texture dynamically
 				}
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					{
+						const auto path_wchar_str = (const wchar_t*)payload->Data;
+						auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
+						auto path_str = path.string();
+						if (path.extension() == ".png")
+							sprite_texture_asset = Asset<Texture2D>(path_str);
+						else
+							KB_CORE_ERROR("Tried to load non kablunkscene file as scene, {0}", path_str);
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				if (m_display_debug_properties)
+				{
+					ImGui::SameLine();
+
+					// Way too big of a buffer
+					constexpr uint16_t k_buffer_size = 256;
+					char buffer[k_buffer_size];
+
+					memset(buffer, 0, k_buffer_size);
+					strcpy_s(buffer, k_buffer_size, uuid::to_string(sprite_texture_asset.GetUUID()).c_str());
+					ImGui::TextColored({ 0.494f, 0.494f, 0.494f, 1.0f }, buffer);
+				}
+
+				
 
 				float tiling_factor = component.Tiling_factor;
 				if (ImGui::DragFloat("Tiling Factor", &tiling_factor, 0.1f))

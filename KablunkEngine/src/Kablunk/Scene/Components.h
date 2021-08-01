@@ -99,7 +99,7 @@ namespace Kablunk
 
 	struct SpriteRendererComponent
 	{
-		Asset<Texture2D> Texture{ AssetManager::Create<Texture2D>() };
+		Asset<Texture2D> Texture{ Asset<Texture2D>("") };
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
 
