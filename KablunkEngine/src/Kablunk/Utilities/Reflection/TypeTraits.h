@@ -11,7 +11,8 @@ namespace Kablunk::Reflect
 		size_t Size;
 		
 		TypeTraits() = default;
-		TypeTraits(const char*, size_t) = default;
+		TypeTraits(const char* name , size_t size)
+			: Name{ name }, Size{ size } { }
 		virtual ~TypeTraits() = default;
 		
 		virtual std::string GetName() const { return Name; }

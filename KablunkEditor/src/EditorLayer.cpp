@@ -108,6 +108,8 @@ namespace Kablunk
 		
 		//if (m_viewport_focused) m_editor_camera.OnUpdate(ts);
 
+		m_content_browser_panel.OnUpdate(ts);
+
 		m_editor_camera.OnUpdate(ts);
 
 		if (m_imgui_profiler_stats.Counter >= m_imgui_profiler_stats.Counter_max)

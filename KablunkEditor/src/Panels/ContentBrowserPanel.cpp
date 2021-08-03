@@ -5,7 +5,7 @@
 
 #include "imgui/imgui_internal.h"
 
-#include <filesystem>
+#include <thread>
 
 namespace Kablunk
 {
@@ -47,12 +47,7 @@ namespace Kablunk
 		static float thumbnail_size = 48.0f;
 		float cell_size = thumbnail_size + padding;
 
-		// #TODO refactor so we don't iterate through the file system every frame
-		auto directory_entries = std::vector<std::filesystem::directory_entry>{};
-		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })
-		{
-			directory_entries.push_back(directory_entry);
-		}
+		//std::shared_lock lock{ m_mutex };
 
 		ImGuiTableFlags content_browser_panel_flags = ImGuiTableFlags_BordersInnerV;
 		if (ImGui::BeginTable("Directory Browser", 2, content_browser_panel_flags))
@@ -72,7 +67,7 @@ namespace Kablunk
 			auto working_dir = g_asset_path.string();
 			ImGui::Text(working_dir.c_str());
 
-			for (auto& directory_entry : directory_entries)
+			for (auto& directory_entry : m_directory_entries)
 			{
 				if (directory_entry.is_directory())
 				{
@@ -109,7 +104,7 @@ namespace Kablunk
 			{
 				
 				auto mouse_double_click = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-				for (auto& directory_entry : directory_entries)
+				for (auto& directory_entry : m_directory_entries)
 				{
 					const auto& path = directory_entry.path();
 					auto relative_path = std::filesystem::relative(path, g_asset_path);
@@ -151,9 +146,39 @@ namespace Kablunk
 		}
 		ImGui::NewLine();
 
-		ImGui::SliderFloat("Thumbnail size", &thumbnail_size, 16, 512);
-		ImGui::SliderFloat("Padding", &padding, 0, 32);
+		static bool debug_settings = false;
+		ImGui::Checkbox("Settings", &debug_settings);
+		if (debug_settings)
+		{
+			ImGui::SliderFloat("Thumbnail size", &thumbnail_size, 16, 512);
+			ImGui::SliderFloat("Padding", &padding, 0, 32);
+		}
 
 		ImGui::End();
 	}
+
+	void ContentBrowserPanel::OnUpdate(Timestep ts)
+	{
+		m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
+		if (m_update_directory_timer >= m_update_directory_timer_max)
+		{
+			//std::thread update_directory_task( &ContentBrowserPanel::UpdateDirectoryList, this );
+			//update_directory_task.join();
+			UpdateDirectoryList();
+
+
+			m_update_directory_timer -= m_update_directory_timer_max;
+		}
+	}
+
+	void ContentBrowserPanel::UpdateDirectoryList()
+	{
+		//std::unique_lock lock{ m_mutex };
+
+		// #TODO probably better to store as a hashmap instead of recreating vector 
+		m_directory_entries = {};
+		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })
+			m_directory_entries.push_back(directory_entry);
+	}
+
 }

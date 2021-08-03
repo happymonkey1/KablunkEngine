@@ -45,9 +45,10 @@ namespace Kablunk {
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
+
 		// #TODO build font library to load fonts instead of current way
-		io.Fonts->AddFontFromFileTTF("assets/fonts/poppins/Poppins-Bold.ttf", 18.0f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/poppins/Poppins-Medium.ttf", 18.0f);
+		io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 18.0f);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 18.0f);
 		//io.Fonts->Build();
 
 		//ImGui::StyleColorsDark();
