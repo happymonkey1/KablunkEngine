@@ -1,0 +1,6 @@
+#include "Sandbox/ReflectionTest.h"
+
+
+KB_REFLECT_STRUCT_BEGIN(TestStruct)
+KB_REFLECT_STRUCT_DEFINE_MEMBER(a)
+KB_REFLECT_STRUCT_END()

@@ -1,4 +1,4 @@
-#ifndef KABLUNK_UTILITIES_STATIC_REFLECTION_H
+#if 0
 #define KABLUNK_UTILITIES_STATIC_REFLECTION_H
 
 #include "Kablunk/Core/Core.h"
@@ -51,6 +51,7 @@ namespace Kablunk
 			ReflectionContainer(const char* name, size_t size, const std::initializer_list<Member>& members)
 				: TypeDescription{ nullptr, 0 }, Members{ members }
 			{
+
 			}
 		};
 
@@ -62,7 +63,7 @@ namespace Kablunk
 		class Resolver
 		{
 		public:
-			// Use SFINAE to determine if T::Relfection is a member
+			// Use SFINAE to determine if T::Reflection is a member
 			// https://en.cppreference.com/w/cpp/language/sfinae
 
 			using Defined = uint16_t;

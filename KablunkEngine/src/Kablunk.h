@@ -13,8 +13,6 @@
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/OrthographicCameraController.h"
-
-#include "Kablunk/Core/AssetManager.h"
 // ----------------------------------------------
 
 
@@ -50,7 +48,10 @@
 #include "Kablunk/Core/AssetManager.h"
 // ----------------------------------------------
 
-
+// ---Reflection---------------------------------
+#include "Kablunk/Utilities/Reflection/ReflectionCore.h"
+// ----------------------------------------------
+ 
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"
 #include "imgui.h"

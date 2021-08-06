@@ -130,6 +130,7 @@ namespace Kablunk
 		// Function pointer instead of std::function bc of potential memory allocations
 		InstantiateScriptFunc InstantiateScript;
 
+		// Runtime binding
 		template <typename T, typename... Args>
 		void Bind(Args... args)
 		{
