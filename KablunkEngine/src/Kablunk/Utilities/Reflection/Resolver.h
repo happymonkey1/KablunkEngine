@@ -4,8 +4,6 @@
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 #include "Kablunk/Utilities/Reflection/IntegralTypeTraits.h"
 
-#include <type_traits>
-
 namespace Kablunk::Reflect
 {
 	class BaseResolver
@@ -18,11 +16,11 @@ namespace Kablunk::Reflect
 		using NotDefined = uint8_t;
 
 		template <typename T>
-		static Defined f(decltype(&T::Reflection)) { return 0; }
+		static Defined f(decltype(&T::Reflection));
 
 		// fallback template 
 		template <typename T>
-		static NotDefined f(...) { return 0; }
+		static NotDefined f(...);
 
 		template <typename T>
 		struct IsReflectionDefined
@@ -35,14 +33,14 @@ namespace Kablunk::Reflect
 
 	public:
 
-		template <typename T, std::enable_if_t<IsReflectionDefined<T>::Value, bool> = true>
+		template <typename T, typename std::enable_if<IsReflectionDefined<T>::Value, int>::type = 0>
 		static TypeTraits* Get()
 		{
 			return &T::Reflection;
 		}
 
 		// SFINAE Backup for integral type
-		template <typename T, std::enable_if_t<IsReflectionDefined<T>::Value, bool> = false>
+		template <typename T, typename std::enable_if<!IsReflectionDefined<T>::Value, int>::type = 0>
 		static TypeTraits* Get()
 		{
 			return GetIntegralTypeTraits<T>();

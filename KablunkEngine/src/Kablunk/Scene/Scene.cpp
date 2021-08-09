@@ -176,22 +176,13 @@ namespace Kablunk
 	}
 
 	template <>
-	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<IdComponent>(Entity entity, IdComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<IdComponent>(Entity entity, IdComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component) { }
 	
 	template <>
 	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
@@ -202,27 +193,15 @@ namespace Kablunk
 	}
 
 	template <>
-	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
-	{
-		
-	}
+	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<ChildEntityComponent>(Entity entity, ChildEntityComponent& component)
-	{
-
-	}
+	void Scene::OnComponentAdded<ChildEntityComponent>(Entity entity, ChildEntityComponent& component) { }
 }
 

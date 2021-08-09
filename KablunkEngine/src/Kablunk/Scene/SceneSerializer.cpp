@@ -20,24 +20,6 @@ namespace Kablunk
 		
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
-	{
-		out << YAML::Flow << YAML::BeginSeq;
-		out << member.x << member.y << member.z;
-		out << YAML::EndSeq;
-
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& member)
-	{
-		out << YAML::Flow << YAML::BeginSeq;
-		out << member.x << member.y << member.z << member.w;
-		out << YAML::EndSeq;
-
-		return out;
-	}
-
 	static void SerializeComponents(YAML::Emitter& out, Entity entity)
 	{
 		if (entity.HasComponent<TagComponent>())
@@ -258,7 +240,17 @@ namespace Kablunk
 		std::stringstream sstream;
 		sstream << stream.rdbuf();
 
-		YAML::Node root = YAML::Load(sstream.str());
+		YAML::Node root;
+		try
+		{
+			YAML::Node root = YAML::Load(sstream.str());
+		}
+		catch (YAML::ParserException& e)
+		{
+			KB_CORE_ERROR("Failed to deserialize scene file '{0}'", filepath);
+			return false;
+		}
+
 		if (!root["Scene"])
 			return false;
 

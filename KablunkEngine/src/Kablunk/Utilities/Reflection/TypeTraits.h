@@ -2,6 +2,7 @@
 #define KABLUNK_UTILITIES_REFLECTION_TYPE_TRAITS_H
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Kablunk::Reflect
@@ -21,6 +22,7 @@ namespace Kablunk::Reflect
 		virtual ~TypeTraits() noexcept = default;
 		
 		virtual std::string GetName() const noexcept { return Name; }
+	
 	};
 
 	struct struct_TypeTraits : public TypeTraits
@@ -43,6 +45,15 @@ namespace Kablunk::Reflect
 		struct_TypeTraits(IntantiateReflectionFunc init);
 
 		struct_TypeTraits(const char* name, size_t size, const std::initializer_list<Member>& members);
+		
+		const Member* GetMember(std::string_view name)
+		{
+			for (const auto& member : Members)
+				if (name == member.Name)
+					return &member;
+
+			return nullptr;
+		}
 	};
 }
 
