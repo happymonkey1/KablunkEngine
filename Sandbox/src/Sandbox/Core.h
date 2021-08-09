@@ -3,9 +3,10 @@
 
 #include "Sandbox/TestScript.h"
 #include "Sandbox/CameraController.h"
+#include "Sandbox/ReflectionTest.h"
 
-REGISTER_NATIVE_SCRIPT(TestScript);
+
 REGISTER_NATIVE_SCRIPT(CameraController);
-
+REGISTER_NATIVE_SCRIPT(TestScript);
 
 #endif

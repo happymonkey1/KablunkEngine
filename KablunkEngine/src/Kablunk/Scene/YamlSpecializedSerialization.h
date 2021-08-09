@@ -4,6 +4,27 @@
 #include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
 
+namespace Kablunk
+{
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
+	{
+		out << YAML::Flow << YAML::BeginSeq;
+		out << member.x << member.y << member.z;
+		out << YAML::EndSeq;
+
+		return out;
+	}
+
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& member)
+	{
+		out << YAML::Flow << YAML::BeginSeq;
+		out << member.x << member.y << member.z << member.w;
+		out << YAML::EndSeq;
+
+		return out;
+	}
+}
+
 namespace YAML
 {
 	template <>
