@@ -39,7 +39,6 @@ namespace Kablunk
 	class Asset : public BaseAsset
 	{
 	public:
-		// Should probably determine null assets a different way since UUID could potentially generate as zero
 		template <class T>
 		static constexpr Asset<T> null_asset{};
 	public:
@@ -47,20 +46,12 @@ namespace Kablunk
 		Asset(const std::string& filepath)
 			: BaseAsset{ filepath } 
 		{ 
-#ifdef KB_DEBUG
 			KB_CORE_ASSERT("Asset template specialization not defined!");
-#else
-			KB_CORE_ERROR("Asset is not implemented, content must be set manually!");
-#endif
 		}
 		Asset(const std::string& filepath, const UUID& id)
 			: BaseAsset{ filepath, id } 
 		{ 
-#ifdef KB_DEBUG
 			KB_CORE_ASSERT("Asset template specialization not defined!");
-#else
-			KB_CORE_ERROR("Asset is not implemented, content must be set manually!");
-#endif
 		};
 		virtual ~Asset() override = default;
 
@@ -73,6 +64,9 @@ namespace Kablunk
 		operator bool() const { return !uuid::is_nil(m_uuid) && m_asset.get() != nullptr; }
 		bool operator==(const Asset<Content>& rhs) const { return m_uuid != rhs.m_uuid; }
 		bool operator!=(const Asset<Content>& rhs) const { return !(*this == rhs); }
+
+		Ref<Content> operator->() { return m_asset; }
+
 
 	private:
 		Ref<Content> m_asset{ nullptr };
@@ -94,7 +88,7 @@ namespace Kablunk
 
 
 	// =================
-	// | Asset manager |
+	//   Asset manager 
 	// =================
 
 	class BasicAssetException : public std::logic_error
@@ -162,7 +156,7 @@ namespace Kablunk
 			{
 				KB_CORE_ERROR("uuid: {0} not found in asset store!", uuid);
 #ifdef KB_DEBUG
-				throw BasicAssetException{ "Asset not found in asset store! " };
+				throw BasicAssetException{ "Asset not found in asset store!" };
 #else
 				KB_CORE_WARN("Returning null asset instead!");
 #endif

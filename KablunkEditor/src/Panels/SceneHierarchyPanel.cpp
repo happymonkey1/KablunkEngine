@@ -463,7 +463,7 @@ namespace Kablunk
 				{
 					if (ImGui::Button("Add"))
 					{
-						auto filepath = FileDialog::OpenFile("Source File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
+						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0");
 						if (!filepath.empty())
 						{
 							component.EditorLoadFromFile(filepath, entity);

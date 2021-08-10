@@ -159,16 +159,17 @@ namespace Kablunk
 
 	void ContentBrowserPanel::OnUpdate(Timestep ts)
 	{
-		m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
-		if (m_update_directory_timer >= m_update_directory_timer_max)
-		{
-			//std::thread update_directory_task( &ContentBrowserPanel::UpdateDirectoryList, this );
-			//update_directory_task.join();
-			UpdateDirectoryList();
+		UpdateDirectoryList();
+		//m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
+		//if (m_update_directory_timer >= m_update_directory_timer_max)
+		//{
+		//	//std::thread update_directory_task( &ContentBrowserPanel::UpdateDirectoryList, this );
+		//	//update_directory_task.join();
+		//	UpdateDirectoryList();
 
 
-			m_update_directory_timer -= m_update_directory_timer_max;
-		}
+		//	m_update_directory_timer -= m_update_directory_timer_max;
+		//}
 	}
 
 	void ContentBrowserPanel::UpdateDirectoryList()

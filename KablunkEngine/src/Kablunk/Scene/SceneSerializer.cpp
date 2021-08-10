@@ -243,7 +243,7 @@ namespace Kablunk
 		YAML::Node root;
 		try
 		{
-			YAML::Node root = YAML::Load(sstream.str());
+			root = YAML::Load(sstream.str());
 		}
 		catch (YAML::ParserException& e)
 		{
