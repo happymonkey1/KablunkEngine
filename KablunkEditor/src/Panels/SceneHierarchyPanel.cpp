@@ -466,7 +466,7 @@ namespace Kablunk
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0");
 						if (!filepath.empty())
 						{
-							component.EditorLoadFromFile(filepath, entity);
+							component.BindEditor(filepath, entity);
 						}
 					}
 				}

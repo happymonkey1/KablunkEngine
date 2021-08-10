@@ -99,6 +99,18 @@ namespace Kablunk
 
 			out << YAML::EndMap;
 		}
+
+		if (entity.HasComponent<NativeScriptComponent>())
+		{
+			auto& comp = entity.GetComponent<NativeScriptComponent>();
+
+			out << YAML::Key << "NativeScriptComponent";
+			out << YAML::BeginMap;
+
+			out << YAML::Key << "Filepath" << YAML::Value << comp.Filepath;
+
+			out << YAML::EndMap;
+		}
 	}
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
@@ -202,6 +214,17 @@ namespace Kablunk
 
 			sprite_renderer_comp.Color			= sprite_renderer_data["Color"].as<glm::vec4>();
 			sprite_renderer_comp.Tiling_factor	= sprite_renderer_data["Tiling_factor"].as<float>();
+		}
+
+		auto native_script_data = entity["NativeScriptComponent"];
+		if (native_script_data)
+		{
+			auto& nsc = deserialized_entity.GetOrAddComponent<NativeScriptComponent>();
+
+			auto filepath = native_script_data["Filepath"].as<std::string>();
+			nsc.BindEditor(filepath, deserialized_entity);
+			
+			KB_CORE_ASSERT(!nsc.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 		}
 	}
 

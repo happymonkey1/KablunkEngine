@@ -125,6 +125,7 @@ namespace Kablunk
 	struct NativeScriptComponent
 	{
 		Scope<NativeScript> Instance{ nullptr };
+		std::string Filepath{ "" };
 
 		using InstantiateScriptFunc = Scope<NativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
@@ -132,13 +133,13 @@ namespace Kablunk
 
 		// Runtime binding
 		template <typename T, typename... Args>
-		void Bind(Args... args)
+		void BindRuntime(Args... args)
 		{
 			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
 		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
-		void EditorLoadFromFile(const std::string& filepath, Entity entity)
+		void BindEditor(const std::string& filepath, Entity entity)
 		{
 			if (filepath.empty())
 				return;
@@ -149,10 +150,17 @@ namespace Kablunk
 
 			Instance = Modules::NativeScriptModule::GetScript(struct_name);
 			KB_CORE_ASSERT(Instance, "Script could not be loaded from file {0}", filepath);
+
+			// #TODO might not be necessary, i don't know if setting new ptr cleans up old reference
+			if (!Filepath.empty())
+				Instance.reset();
+
 			if (Instance)
 			{
 				Instance->SetEntity(entity);
 				Instance->OnAwake();
+
+				Filepath = filepath;
 			}
 		}
 
