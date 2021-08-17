@@ -14,11 +14,10 @@ namespace Kablunk
 			Mac = 3,
 			Android = 4,
 			iOS = 5
-			
 		};
 	public:
 		static float GetTime();
-		inline static PLATFORM GetPlatform() { return s_Platform; };
+		static PLATFORM GetPlatform() { return s_Platform; };
 	private:
 		static PLATFORM s_Platform;
 	};

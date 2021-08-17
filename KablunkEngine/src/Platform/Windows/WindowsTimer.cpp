@@ -1,6 +1,8 @@
 #include "kablunkpch.h"
 #include "WindowsTimer.h"
 
+#include "Kablunk/Core/Log.h"
+
 namespace Kablunk 
 {
 	

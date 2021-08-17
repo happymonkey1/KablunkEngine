@@ -5,9 +5,31 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <string_view>
 
 namespace Kablunk::Parser
 {
+	namespace String
+	{
+		// #FIXME very bad performance wise. Probably alot of unnecessary dynamic allocations through strings.
+		template <typename T>
+		static std::string DemangleTypeIDName()
+		{
+			std::string mangled_name = typeid(T).name();
+			std::string last_name = "";
+			
+			std::stringstream ss{ mangled_name };
+			while (ss)
+			{
+				ss >> last_name;
+			}
+
+			size_t substring_index = last_name.rfind(':');
+
+			return substring_index != std::string::npos ? last_name.substr(substring_index + 1) : last_name;
+		}
+	}
+
 	namespace CPP
 	{
 		struct FindIdentifier

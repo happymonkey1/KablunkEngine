@@ -145,11 +145,20 @@ namespace Kablunk
 				return;
 
 			auto struct_names = Parser::CPP::FindStructNames(filepath, 1);
-			if (struct_names.empty()) KB_CORE_ASSERT(false, "Could not find struct in file {0}", filepath);
-			auto struct_name = struct_names[0];
+			if (struct_names.empty())
+			{
+				KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);
+				return;
+			}
+				auto struct_name = struct_names[0];
 
 			Instance = Modules::NativeScriptModule::GetScript(struct_name);
-			KB_CORE_ASSERT(Instance, "Script could not be loaded from file {0}", filepath);
+
+			if (!Instance)
+			{
+				KB_CORE_ERROR("Script could not be loaded from file '{0}'", filepath);
+				return;
+			}
 
 			// #TODO might not be necessary, i don't know if setting new ptr cleans up old reference
 			if (!Filepath.empty())

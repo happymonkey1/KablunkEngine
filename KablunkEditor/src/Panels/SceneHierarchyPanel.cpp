@@ -458,6 +458,11 @@ namespace Kablunk
 				if (component.Instance)
 				{
 					ImGui::Text("Script loaded");
+					ImGui::Text("Filepath:");
+					
+					ImGui::PushStyleColor(ImGuiCol_Text, { 0.494f, 0.494f, 0.494f, 1.0f });
+					ImGui::TextWrapped(component.Filepath.c_str());
+					ImGui::PopStyleColor();
 				}
 				else
 				{

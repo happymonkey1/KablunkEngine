@@ -54,6 +54,13 @@ namespace Kablunk::Reflect
 
 			return nullptr;
 		}
+
+
+
+		std::vector<Member>::iterator		begin()			{ return Members.begin(); }
+		std::vector<Member>::iterator		end()			{ return Members.end(); }
+		std::vector<Member>::const_iterator begin() const	{ return Members.begin(); }
+		std::vector<Member>::const_iterator end()   const	{ return Members.end();	}
 	};
 }
 

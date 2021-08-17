@@ -7,12 +7,13 @@
 #include "Kablunk/Scene/Components.h"
 
 #include <fstream>
+#include <typeinfo>
 
 namespace Kablunk
 {
 
-	// #TODO almost all of the serialization code is garbage, just there for an MVP
-	// please refactor to use reflection.
+	// #FIXME almost all of the serialization code is garbage, just there for an MVP
+	// #TODO refactor to use reflection.
 
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
 		: m_scene{ scene }
@@ -20,8 +21,78 @@ namespace Kablunk
 		
 	}
 
+	template <typename ComponentT, typename WriteDataFunc>
+	static void WriteComponentData(YAML::Emitter& out, Entity entity, WriteDataFunc WriteMemberData)
+	{
+		if (entity.HasComponent<ComponentT>())
+		{
+			out << YAML::Key << Parser::String::DemangleTypeIDName<ComponentT>();
+			out << YAML::BeginMap;
+
+			auto& component = entity.GetComponent<ComponentT>();
+			WriteMemberData(out, component);
+
+			out << YAML::EndMap;
+		}
+	}
+
 	static void SerializeComponents(YAML::Emitter& out, Entity entity)
 	{
+
+		WriteComponentData<TagComponent>(out, entity, [](auto& out, auto& component)
+			{
+				auto& tag = component.Tag;
+				out << YAML::Key << "Tag" << YAML::Value << tag;
+			});
+
+		WriteComponentData<TransformComponent>(out, entity, [](auto& out, auto& component)
+			{
+				out << YAML::Key << "Translation"	<< YAML::Value << component.Translation;
+				out << YAML::Key << "Rotation"		<< YAML::Value << component.Rotation;
+				out << YAML::Key << "Scale"			<< YAML::Value << component.Scale;
+			});
+
+		WriteComponentData<CameraComponent>(out, entity, [](auto& out, auto& component)
+			{
+				const auto& camera = component.Camera;
+				out << YAML::Key << "m_projection_type" << YAML::Value << static_cast<uint32_t>(camera.GetProjectionType());
+
+				out << YAML::Key << "m_perspective_fov" << YAML::Value << camera.GetPerspectiveVerticalFOV();
+				out << YAML::Key << "m_perspective_near" << YAML::Value << camera.GetPerspectiveNearClip();
+				out << YAML::Key << "m_perspective_far" << YAML::Value << camera.GetPerspectiveFarClip();
+
+				out << YAML::Key << "m_orthographic_size" << YAML::Value << camera.GetOrthographicSize();
+				out << YAML::Key << "m_orthographic_near" << YAML::Value << camera.GetOrthographicNearClip();
+				out << YAML::Key << "m_orthographic_far" << YAML::Value << camera.GetOrthographicFarClip();
+
+				out << YAML::Key << "m_aspect_ratio" << YAML::Value << camera.GetAspectRatio();
+
+				out << YAML::EndMap;
+
+				out << YAML::Key << "Primary" << YAML::Value << component.Primary;
+				out << YAML::Key << "Fixed_aspect_ratio" << YAML::Value << component.Fixed_aspect_ratio;
+			});
+
+		WriteComponentData<SpriteRendererComponent>(out, entity, [](auto& out, auto& component)
+			{
+				out << YAML::Key << "Texture" << YAML::Value;
+
+				out << YAML::BeginMap; // Texture Asset
+
+				out << YAML::Key << "m_uuid"		<< YAML::Value << component.Texture.GetUUID();
+				out << YAML::Key << "m_filepath"	<< YAML::Value << component.Texture.GetFilepath();
+
+				out << YAML::EndMap;
+
+				out << YAML::Key << "Color"			<< YAML::Value << component.Color;
+				out << YAML::Key << "Tiling_factor" << YAML::Value << component.Tiling_factor;
+			});
+
+		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
+			{
+				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath;
+			});
+#if 0
 		if (entity.HasComponent<TagComponent>())
 		{
 			out << YAML::Key << "TagComponent";
@@ -111,6 +182,7 @@ namespace Kablunk
 
 			out << YAML::EndMap;
 		}
+#endif
 	}
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
@@ -136,14 +208,25 @@ namespace Kablunk
 		out << YAML::EndMap; 
 	}
 
-	void SceneSerializer::DeserializeEntity(YAML::detail::iterator_value& entity)
+	template <typename ComponentT, typename ReadDataFunc>
+	static void ReadComponentData(const YAML::detail::iterator_value& data, Entity entity, ReadDataFunc job_func)
 	{
-		auto uuid = entity["Entity"].as<uuid::uuid64>();
+		auto comp_data = data[Parser::String::DemangleTypeIDName<ComponentT>()];
+		if (comp_data)
+		{
+			auto& component = entity.GetOrAddComponent<ComponentT>();
+			job_func(component, comp_data);
+		}
+	}
+
+	void SceneSerializer::DeserializeEntity(YAML::detail::iterator_value& entity_data)
+	{
+		auto uuid = entity_data["Entity"].as<uuid::uuid64>();
 
 
 
 		std::string name;
-		auto tag_comp = entity["TagComponent"];
+		auto tag_comp = entity_data["TagComponent"];
 		if (tag_comp)
 			name = tag_comp["Tag"].as<std::string>();
 
@@ -151,23 +234,77 @@ namespace Kablunk
 		KB_CORE_TRACE("Deserializing entity with ID: {0}, name: {1}", uuid, name);
 #endif
 
-		Entity deserialized_entity = m_scene->CreateEntity(name, uuid);
+		Entity entity = m_scene->CreateEntity(name, uuid);
 
-		// Beyond this is pretty much garbage just to have a 'usable' deserialization feature
+		// #FIXME Beyond this is pretty much boilerplate garbage code just to have a 'usable' deserialization feature
 
-		auto transform_data = entity["TransformComponent"];
-		if (transform_data)
-		{
-			auto& transform = deserialized_entity.GetOrAddComponent<TransformComponent>();
-			transform.Translation	= transform_data["Translation"].as<glm::vec3>();
-			transform.Rotation		= transform_data["Rotation"].as<glm::vec3>();
-			transform.Scale			= transform_data["Scale"].as<glm::vec3>();
-		}
+		ReadComponentData<TransformComponent>(entity_data, entity, [this](auto& component, auto& data)
+			{
+				component.Translation	= data["Translation"].as<glm::vec3>();
+				component.Rotation		= data["Rotation"].as<glm::vec3>();
+				component.Scale			= data["Scale"].as<glm::vec3>();
+			});
 
-		auto camera_data = entity["CameraComponent"];
+		ReadComponentData<CameraComponent>(entity_data, entity, [this](auto& component, auto& data)
+			{
+				auto& scene_camera_data = data["Camera"];
+				if (scene_camera_data)
+				{
+					auto scene_camera = SceneCamera{};
+
+					auto perspective_fov = scene_camera_data["m_perspective_fov"].as<float>();
+					auto perspective_near = scene_camera_data["m_perspective_near"].as<float>();
+					auto perspective_far = scene_camera_data["m_perspective_far"].as<float>();
+
+					auto orthographic_size = scene_camera_data["m_orthographic_size"].as<float>();
+					auto orthographic_near = scene_camera_data["m_orthographic_near"].as<float>();
+					auto orthographic_far = scene_camera_data["m_orthographic_far"].as<float>();
+
+					auto aspect_ratio = scene_camera_data["m_aspect_ratio"].as<float>();
+					auto projection_type = scene_camera_data["m_projection_type"].as<int>();
+
+					scene_camera.SetOrthographic(orthographic_size, orthographic_near, orthographic_far);
+					scene_camera.SetPerspective(perspective_far, perspective_near, perspective_far);
+					scene_camera.SetProjectionType(static_cast<SceneCamera::ProjectionType>(projection_type));
+					scene_camera.SetAspectRatio(aspect_ratio);
+
+					component.Camera = scene_camera;
+				}
+
+				component.Primary = data["Primary"].as<bool>();
+				component.Fixed_aspect_ratio = data["Fixed_aspect_ratio"].as<bool>();
+			});
+
+		ReadComponentData<SpriteRendererComponent>(entity_data, entity, [this](auto& component, auto& data) {
+			
+			auto texture_data = data["Texture"];
+			if (texture_data)
+			{
+				auto uuid = texture_data["m_uuid"].as<uint64_t>();
+				auto filepath = texture_data["m_filepath"].as<std::string>();
+
+				auto texture_asset = Asset<Texture2D>(filepath, uuid);
+				component.Texture = texture_asset;
+			}
+
+			component.Color = data["Color"].as<glm::vec4>();
+			component.Tiling_factor = data["Tiling_factor"].as<float>();
+			
+			});
+
+		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
+			{
+				auto filepath = data["Filepath"].as<std::string>();
+				component.BindEditor(filepath, entity);
+
+				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
+			});
+
+#if 0
+		auto camera_data = entity_data["CameraComponent"];
 		if (camera_data)
 		{
-			auto& camera_comp = deserialized_entity.GetOrAddComponent<CameraComponent>();
+			auto& camera_comp = entity.GetOrAddComponent<CameraComponent>();
 			
 			auto& scene_camera_data = camera_data["Camera"];
 			if (scene_camera_data)
@@ -197,10 +334,10 @@ namespace Kablunk
 			camera_comp.Fixed_aspect_ratio	= camera_data["Fixed_aspect_ratio"].as<bool>();
 		}
 
-		auto sprite_renderer_data = entity["SpriteRendererComponent"];
+		auto sprite_renderer_data = entity_data["SpriteRendererComponent"];
 		if (sprite_renderer_data)
 		{
-			auto& sprite_renderer_comp = deserialized_entity.GetOrAddComponent<SpriteRendererComponent>();
+			auto& sprite_renderer_comp = entity.GetOrAddComponent<SpriteRendererComponent>();
 			
 			auto texture_data = sprite_renderer_data["Texture"];
 			if (texture_data)
@@ -216,16 +353,17 @@ namespace Kablunk
 			sprite_renderer_comp.Tiling_factor	= sprite_renderer_data["Tiling_factor"].as<float>();
 		}
 
-		auto native_script_data = entity["NativeScriptComponent"];
+		auto native_script_data = entity_data["NativeScriptComponent"];
 		if (native_script_data)
 		{
-			auto& nsc = deserialized_entity.GetOrAddComponent<NativeScriptComponent>();
+			auto& nsc = entity.GetOrAddComponent<NativeScriptComponent>();
 
 			auto filepath = native_script_data["Filepath"].as<std::string>();
-			nsc.BindEditor(filepath, deserialized_entity);
+			nsc.BindEditor(filepath, entity);
 			
 			KB_CORE_ASSERT(!nsc.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 		}
+#endif
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
