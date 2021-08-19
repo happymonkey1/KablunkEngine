@@ -26,6 +26,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 - [ ] Line Renderer
 - [ ] Scripting -  C#, python, lua, etc
+- [ ] Hot Reloading Scripts
 - [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
 - [ ] Task / Threading Abstraction
 - [ ] Multithreading Parts of Engine - Rendering and Physics
