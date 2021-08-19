@@ -6,6 +6,8 @@
 
 #include "Entity.h"
 
+#include <exception>
+
 namespace Kablunk
 {
 	Scene::Scene()
@@ -62,15 +64,62 @@ namespace Kablunk
 				/*	#TODO
 				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
 				*	function if the instance has not been set
-				*/ 
+				*/
 				if (!native_script_component.Instance)
 				{
 					native_script_component.InstantiateScript();
 					native_script_component.Instance->SetEntity({ entity, this });
-					native_script_component.Instance->OnAwake();
+
+					try
+					{
+						native_script_component.Instance->OnAwake();
+					}
+					catch (std::bad_alloc& e)
+					{
+						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
+						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (std::exception& e)
+					{
+						KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
+						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (...)
+					{
+						KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
+						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+
 				}
 
-				native_script_component.Instance->OnUpdate(ts);
+				if (native_script_component.Instance)
+				{
+					try
+					{
+						native_script_component.Instance->OnUpdate(ts);
+					}
+					catch (std::bad_alloc& e)
+					{
+						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (std::exception& e)
+					{
+						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (...)
+					{
+						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+				}
 			}
 		);
 		
@@ -118,7 +167,30 @@ namespace Kablunk
 				*	function if the instance has not been set
 				*/
 				if (native_script_component.Instance)
-					native_script_component.Instance->OnUpdate(ts);
+				{
+					try
+					{
+						native_script_component.Instance->OnUpdate(ts);
+					}
+					catch (std::bad_alloc& e)
+					{
+						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (std::exception& e)
+					{
+						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+					catch (...)
+					{
+						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						native_script_component.Instance.reset();
+					}
+				}
 			}
 		);
 

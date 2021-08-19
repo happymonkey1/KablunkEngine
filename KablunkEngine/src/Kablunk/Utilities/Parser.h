@@ -28,6 +28,35 @@ namespace Kablunk::Parser
 
 			return substring_index != std::string::npos ? last_name.substr(substring_index + 1) : last_name;
 		}
+
+		// #TODO review and implement instead of the above code
+		/*
+		namespace internal
+		{
+		  static const unsigned int FRONT_SIZE = sizeof("internal::GetTypeNameHelper<") - 1u;
+		  static const unsigned int BACK_SIZE = sizeof(">::GetTypeName") - 1u;
+
+		  template <typename T>
+		  struct GetTypeNameHelper
+		  {
+			static const char* GetTypeName(void)
+			{
+			  static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
+			  static char typeName[size] = {};
+			  memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
+
+			  return typeName;
+			}
+		  };
+		}
+
+
+		template <typename T>
+		const char* GetTypeName(void)
+		{
+		  return internal::GetTypeNameHelper<T>::GetTypeName();
+		}
+		*/
 	}
 
 	namespace CPP

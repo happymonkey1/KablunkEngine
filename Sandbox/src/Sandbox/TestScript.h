@@ -23,11 +23,14 @@ struct TestScript : public Kablunk::NativeScript
 		{
 			KB_CLIENT_TRACE("REFLECTION: '({0}) {1}'", member.GetTypeName(), member.GetName());
 		}
+
+		//throw std::exception{ "Test1" };
 	}
 
 	virtual void OnUpdate(Kablunk::Timestep ts) override
 	{
-		//KB_CLIENT_TRACE("TestScript::OnUpdate()");
+		KB_CLIENT_TRACE("TestScript::OnUpdate()");
+		throw std::exception{ "Test1" };
 	}
 
 	virtual void OnDestroy() override

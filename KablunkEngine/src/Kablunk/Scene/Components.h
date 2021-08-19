@@ -167,9 +167,30 @@ namespace Kablunk
 			if (Instance)
 			{
 				Instance->SetEntity(entity);
-				Instance->OnAwake();
-
 				Filepath = filepath;
+
+				try
+				{
+					Instance->OnAwake();
+				}
+				catch (std::bad_alloc& e)
+				{
+					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
+					Instance.reset();
+				}
+				catch (std::exception& e)
+				{
+					KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
+					Instance.reset();
+				}
+				catch (...)
+				{
+					KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
+					Instance.reset();
+				}
 			}
 		}
 
