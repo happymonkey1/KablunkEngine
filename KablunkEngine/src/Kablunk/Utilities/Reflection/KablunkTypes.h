@@ -13,7 +13,7 @@ namespace Kablunk::Reflect
 		TypeTraits* Type = nullptr;
 
 		TypeData() = default;
-		TypeData(void*, TypeTraits*) = default;
+		TypeData(void* data, TypeTraits* type) : Data{ data }, Type{ type } { }
 
 		template <typename T>
 		static TypeData Bind(T* other_ptr);

@@ -17,6 +17,7 @@ namespace Kablunk
 	
 
 	Application::Application() 
+		: m_thread_pool{ 7 }
 	{
 		KB_PROFILE_FUNCTION();
 
@@ -35,18 +36,21 @@ namespace Kablunk
 		Renderer::Init();
 	}
 
-	Application::~Application() {
-
+	Application::~Application() 
+	{
+		m_thread_pool.Shutdown();
 	}
 
-	void Application::PushLayer(Layer* layer) {
+	void Application::PushLayer(Layer* layer) 
+	{
 		KB_PROFILE_FUNCTION();
 
 		m_layer_stack.PushLayer(layer);
 		layer->OnAttach();
 	}
 
-	void Application::PushOverlay(Layer* overlay) {
+	void Application::PushOverlay(Layer* overlay) 
+	{
 		KB_PROFILE_FUNCTION();
 
 		m_layer_stack.PushOverlay(overlay);
@@ -58,7 +62,8 @@ namespace Kablunk
 		m_running = false;
 	}
 
-	void Application::OnEvent(Event& e) {
+	void Application::OnEvent(Event& e) 
+	{
 		KB_PROFILE_FUNCTION();
 
 		EventDispatcher dispatcher(e);
@@ -74,12 +79,14 @@ namespace Kablunk
 		}
 	}
 
-	bool Application::OnWindowClosed(WindowCloseEvent& e) {
+	bool Application::OnWindowClosed(WindowCloseEvent& e) 
+	{
 		m_running = false;
 		return true;
 	}
 
-	bool Application::OnWindowResize(WindowResizeEvent& e) {
+	bool Application::OnWindowResize(WindowResizeEvent& e) 
+	{
 		KB_PROFILE_FUNCTION();
 
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
@@ -95,7 +102,8 @@ namespace Kablunk
 	}
 	
 
-	void Application::Run() {
+	void Application::Run() 
+	{
 		KB_PROFILE_FUNCTION();
 
 		while (m_running) 

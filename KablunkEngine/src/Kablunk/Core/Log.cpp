@@ -15,7 +15,7 @@ namespace Kablunk {
 		logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Kablunk.log", true));
 
 		logSinks[0]->set_pattern("%^[%T] %n: %v%$");
-		logSinks[1]->set_pattern("[%T] [%l] %n: %v");
+		logSinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
 
 		s_CoreLogger = std::make_shared<spdlog::logger>("KABLUNK", begin(logSinks), end(logSinks));
 		spdlog::register_logger(s_CoreLogger);

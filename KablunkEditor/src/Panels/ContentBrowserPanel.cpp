@@ -160,22 +160,18 @@ namespace Kablunk
 	void ContentBrowserPanel::OnUpdate(Timestep ts)
 	{
 		UpdateDirectoryList();
-		//m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
-		//if (m_update_directory_timer >= m_update_directory_timer_max)
-		//{
-		//	//std::thread update_directory_task( &ContentBrowserPanel::UpdateDirectoryList, this );
-		//	//update_directory_task.join();
-		//	UpdateDirectoryList();
+		//Threading::JobSystem::AddJob(std::function<void()>([this]() { UpdateDirectoryList(); }));
+		/*m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
+		if (m_update_directory_timer >= m_update_directory_timer_max)
+		{
+			Threading::JobSystem::AddJob(std::function<void()>([this]() { UpdateDirectoryList(); }));
 
-
-		//	m_update_directory_timer -= m_update_directory_timer_max;
-		//}
+			m_update_directory_timer -= m_update_directory_timer_max;
+		}*/
 	}
 
 	void ContentBrowserPanel::UpdateDirectoryList()
 	{
-		//std::unique_lock lock{ m_mutex };
-
 		// #TODO probably better to store as a hashmap instead of recreating vector 
 		m_directory_entries = {};
 		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })

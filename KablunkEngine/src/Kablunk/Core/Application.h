@@ -7,6 +7,8 @@
 #include "Kablunk/Events/ApplicationEvent.h"
 
 #include "Kablunk/Imgui/ImGuiLayer.h"
+#include "Kablunk/Core/ThreadPool.h"
+
 
 int main(int argc, char** argv);
 
@@ -33,6 +35,10 @@ namespace Kablunk {
 
 		void SetWindowTitle(const std::string& title) { m_window->SetWindowTitle(title); }
 		glm::vec2 GetWindowDimensions() const { return m_window->GetDimensions(); }
+
+		// #TODO create better api so this is not exposed to client applications
+		Threading::ThreadPool& GetThreadPool() { return m_thread_pool; }
+		const Threading::ThreadPool& GetThreadPool() const { return m_thread_pool; }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -43,6 +49,8 @@ namespace Kablunk {
 		bool m_minimized = false;
 		LayerStack m_layer_stack;
 		
+		Threading::ThreadPool m_thread_pool;
+
 		float m_last_frame_time = 0.0f;
 		friend int ::main(int argc, char** argv);
 		

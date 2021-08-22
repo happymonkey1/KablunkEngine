@@ -9,13 +9,14 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace Kablunk
+namespace Kablunk::Threading
 {
+	
 
 	class ThreadPool
 	{
 	public:
-		using JobFunc = void(*)();
+		using JobFunc = std::function<void()>;
 	public:
 
 		ThreadPool() = delete;
@@ -23,11 +24,11 @@ namespace Kablunk
 		ThreadPool(uint8_t num_threads);
 		~ThreadPool();
 
-		void AddJob(JobFunc job);
+		void AddJob(JobFunc& job);
 		void Shutdown();
 	private:
 		bool m_terminate{ false }, m_has_stopped{ false };
-		uint8_t m_max_threads{ 7 };
+		uint8_t m_max_threads;
 		std::vector<std::thread> m_pool;
 
 		std::queue<JobFunc> m_job_queue;
@@ -36,6 +37,8 @@ namespace Kablunk
 
 		void ThreadLoop();
 	};
+
+	
 
 }
 
