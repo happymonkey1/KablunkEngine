@@ -8,6 +8,12 @@ Personal project to develop a basic 2D game engine.
 
 Run scripts/Windows-GenProjects.bat to generate project files
 
+## Issues
+
+- [ ] Premake binary not tracked. Should be at 'vendor/premake/bin/premake5.exe'
+- [ ] Instrumentor.h not tracked. Should be at 'KablunkEngine/src/Kablunk/Debug/Instrumentor.h'
+- [ ] Should switch submodules to all be forks to include premake files
+
 ## Engine
 
 ### Satisfactory Implemention
