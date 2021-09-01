@@ -73,7 +73,7 @@ namespace Kablunk {
         
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
-        SetVsync(true);
+        SetVsync(false);
 
         //GLFW Callbacks
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height){
@@ -162,6 +162,15 @@ namespace Kablunk {
             MouseMovedEvent event((float)xPos, (float)yPos);
             data.EventCallback(event);
         });
+
+		// Make sure window data about size is actual size
+		{
+			int width, height;
+			glfwGetWindowSize(m_Window, &width, &height);
+			m_Data.Width = width;
+			m_Data.Height = height;
+		}
+
     }
     void WindowsWindow::Shutdown()
     {
@@ -174,11 +183,15 @@ namespace Kablunk {
 			glfwTerminate();
     }
 
+	void WindowsWindow::PollEvents()
+	{
+		glfwPollEvents();
+	}
+
     void WindowsWindow::OnUpdate()
     {
         KB_PROFILE_FUNCTION();
 
-        glfwPollEvents();
         m_Context->SwapBuffers();
     }
 

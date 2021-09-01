@@ -9,11 +9,12 @@ namespace Kablunk {
 
 	struct WindowProps {
 		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
+		uint32_t Width;
+		uint32_t Height;
 
-		WindowProps(const std::string& title = "Kablunk Engine", unsigned int width = 1600, unsigned int height = 900)
+		WindowProps(const std::string& title = "Kablunk Engine", uint32_t width = 1600, uint32_t height = 900)
 			: Title(title), Width(width), Height(height) { }
+		
 	};
 
 	class Window
@@ -23,6 +24,7 @@ namespace Kablunk {
 
 		virtual ~Window() {}
 
+		virtual void PollEvents() = 0;
 		virtual void OnUpdate() = 0;
 
 		virtual unsigned int GetWidth() const = 0;

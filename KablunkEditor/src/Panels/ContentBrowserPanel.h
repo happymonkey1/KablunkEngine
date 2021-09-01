@@ -8,6 +8,8 @@
 
 namespace Kablunk
 {
+	constexpr const int MAX_SEARCH_BUFFER_LENGTH = 128;
+
 	class ContentBrowserPanel 
 	{
 	public:
@@ -19,13 +21,21 @@ namespace Kablunk
 
 
 	private:
-		void UpdateDirectoryList();
+		
+
+		void RenderTopBar();
+		void Refresh();
 		std::filesystem::path m_current_directory;
 		std::vector<std::filesystem::directory_entry> m_directory_entries{};
 		mutable std::shared_mutex m_mutex;
 
 		Asset<Texture2D> m_directory_icon;
 		Asset<Texture2D> m_file_icon;
+		Asset<Texture2D> m_back_button;
+		Asset<Texture2D> m_forward_button;
+		Asset<Texture2D> m_refresh_button;
+
+		char m_search_buffer[MAX_SEARCH_BUFFER_LENGTH];
 
 		float m_update_directory_timer_max{ 1.0f };
 		float m_update_directory_timer{ m_update_directory_timer_max };

@@ -16,32 +16,19 @@ namespace Kablunk
 	{
 		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
 		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
+		m_back_button = Asset<Texture2D>("resources/content_browser/icons/back_button.png");
+		m_forward_button = Asset<Texture2D>("resources/content_browser/icons/forward_button.png");
+		m_refresh_button = Asset<Texture2D>("resources/content_browser/icons/refresh_button.png");
+
+		memset(m_search_buffer, 0, sizeof(char) * MAX_SEARCH_BUFFER_LENGTH);
+		Refresh();
 	}
 
 	void ContentBrowserPanel::OnImGuiRender()
 	{
-		ImGui::Begin("Content Browser");
+		ImGui::Begin("Content Browser", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 
-		
-		auto panel_width = ImGui::GetContentRegionAvailWidth();
-		if (m_current_directory != g_asset_path)
-		{
-			if (ImGui::Button("<<<"))
-				m_current_directory = m_current_directory.parent_path();
-
-			// #TODO currently hardcoded, should be calculated during runtime
-			ImGui::SameLine(panel_width / 2.0f + 10.0f);
-		}
-		else
-		{
-			// #TODO currently hardcoded, should be calculated during runtime
-			ImGui::SetCursorPosX(panel_width / 2.0f + 10.0f);
-		}
-		auto current_dir_string = m_current_directory.string();
-		ImGui::Text(current_dir_string.c_str());
-		
-		
-		ImGui::Separator();	
+		RenderTopBar();
 
 		static float padding = 16.0f;
 		static float thumbnail_size = 48.0f;
@@ -130,7 +117,10 @@ namespace Kablunk
 					if (ImGui::IsItemHovered() && mouse_double_click)
 					{
 						if (directory_entry.is_directory())
+						{
 							m_current_directory /= path.filename();
+							Refresh();
+						}
 					}
 					ImGui::TextWrapped(filename_string.c_str());
 
@@ -159,7 +149,6 @@ namespace Kablunk
 
 	void ContentBrowserPanel::OnUpdate(Timestep ts)
 	{
-		UpdateDirectoryList();
 		//Threading::JobSystem::AddJob(std::function<void()>([this]() { UpdateDirectoryList(); }));
 		/*m_update_directory_timer += ts.GetMiliseconds() / 1000.0f;
 		if (m_update_directory_timer >= m_update_directory_timer_max)
@@ -170,7 +159,68 @@ namespace Kablunk
 		}*/
 	}
 
-	void ContentBrowserPanel::UpdateDirectoryList()
+	void ContentBrowserPanel::RenderTopBar()
+	{
+		ImGui::BeginChild("##top_bar", { 0, 30 });
+		
+
+		if (ImGui::ImageButton((ImTextureID)m_back_button->GetRendererID(), { 22, 22 }) && m_current_directory != g_asset_path)
+		{
+			m_current_directory = m_current_directory.parent_path();
+			Refresh();
+		}
+		
+		ImGui::SameLine();
+
+		if (ImGui::ImageButton((ImTextureID)m_forward_button->GetRendererID(), { 22, 22 }))
+		{
+			// #TODO go to next directory
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::ImageButton((ImTextureID)m_refresh_button->GetRendererID(), { 22, 22 }))
+		{
+			Refresh();
+		}
+
+		ImGui::SameLine();
+		
+		ImGui::PushItemWidth(200);
+		if (ImGui::InputTextWithHint("", "Search...", m_search_buffer, MAX_SEARCH_BUFFER_LENGTH))
+		{
+			if (strlen(m_search_buffer) == 0)
+			{
+				// #TODO reset search to current directory
+			}
+			else
+			{
+				// #TODO add item searching
+			}
+
+			ImGui::PopItemWidth();
+		}
+		
+		ImGui::SameLine();
+
+
+
+		// #TODO update to use project's asset directory when projects are implemented
+		const std::string& asset_dir_name = g_asset_path.string();
+		auto text_size = ImGui::CalcTextSize(asset_dir_name.c_str());
+		if (ImGui::Selectable(asset_dir_name.c_str(), false, 0, { text_size.x, 22 }))
+		{
+			m_current_directory = g_asset_path;
+		}
+
+		// #TODO add other directories in current path
+
+
+
+		ImGui::EndChild();
+	}
+
+	void ContentBrowserPanel::Refresh()
 	{
 		// #TODO probably better to store as a hashmap instead of recreating vector 
 		m_directory_entries = {};

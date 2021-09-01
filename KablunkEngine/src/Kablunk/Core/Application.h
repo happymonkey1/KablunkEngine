@@ -14,14 +14,28 @@ int main(int argc, char** argv);
 
 namespace Kablunk {
 
+	struct ApplicationSpecification
+	{
+		std::string Name = "KablunkEngine";
+		uint32_t Width = 1600, height = 900;
+		bool Fullscreen = false;
+		bool Vsync = false;
+		// #NOTE use when projects are implemented
+		std::string Working_directory = "";
+		bool Resizable = true;
+		bool Enable_imgui = true;
+	};
+
 	class Application
 	{
 	public:
-		Application();
+		Application(const ApplicationSpecification& specification);
 		virtual ~Application();
 
 		void Run();
 		void OnEvent(Event& e);
+		void OnStartup();
+		void OnShutdown();
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
@@ -43,6 +57,7 @@ namespace Kablunk {
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
+		ApplicationSpecification m_specification;
 		Scope<Window> m_window;
 		ImGuiLayer* m_imgui_layer;
 		bool m_running = true;
@@ -51,7 +66,9 @@ namespace Kablunk {
 		
 		Threading::ThreadPool m_thread_pool;
 
+		Timestep m_timestep;
 		float m_last_frame_time = 0.0f;
+		
 		friend int ::main(int argc, char** argv);
 		
 	private:

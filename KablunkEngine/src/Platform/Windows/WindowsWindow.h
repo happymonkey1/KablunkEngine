@@ -15,7 +15,8 @@ namespace Kablunk {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		void OnUpdate() override;
+		virtual void PollEvents() override;
+		virtual void OnUpdate() override;
 
 		virtual unsigned int GetWidth() const override { return m_Data.Width; }
 

@@ -8,9 +8,9 @@ namespace Kablunk
 	class KablunkEditor : public Application
 	{
 	public:
-		KablunkEditor()
+		KablunkEditor(const ApplicationSpecification& specification)
+			: Application{ specification }
 		{
-			Application::Get().SetWindowTitle("Kablunk Editor");
 			PushLayer(new EditorLayer());
 		}
 
@@ -21,6 +21,16 @@ namespace Kablunk
 
 	Kablunk::Application* Kablunk::CreateApplication()
 	{
-		return new KablunkEditor();
+		ApplicationSpecification specification = {
+			"Kablunk Editor",
+			1600,
+			900,
+			false,
+			false,
+			"",
+			true,
+			true
+		};
+		return new KablunkEditor(specification);
 	}
 }

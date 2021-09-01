@@ -43,7 +43,7 @@
 
 // ---Scripts------------------------------------
 #include "Kablunk/Scripts/NativeScript.h"
-#include "Kablunk/Scripts/NativeScriptModule.h"
+#include "Kablunk/Scripts/NativeScriptEngine.h"
 // ----------------------------------------------
 
 // ---Assets-------------------------------------

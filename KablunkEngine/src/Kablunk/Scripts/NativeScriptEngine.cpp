@@ -1,12 +1,12 @@
 #include "kablunkpch.h"
-#include "Kablunk/Scripts/NativeScriptModule.h"
+#include "Kablunk/Scripts/NativeScriptEngine.h"
 
 #include "Kablunk/Utilities/Parser.h"
 
-namespace Kablunk::Modules
+namespace Kablunk
 {
 
-	bool NativeScriptModule::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
+	bool NativeScriptEngine::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
 	{
 		auto& native_scripts = GetScriptContainer();
 		auto it = native_scripts.find(script_name);
@@ -23,7 +23,7 @@ namespace Kablunk::Modules
 	}
 
 	// #TODO currently searches for files during runtime, probably better to do at statically with reflection
-	Scope<NativeScript> NativeScriptModule::GetScript(const std::string& script_name)
+	Scope<NativeScript> NativeScriptEngine::GetScript(const std::string& script_name)
 	{
 		auto& native_scripts = GetScriptContainer();
 		auto it = native_scripts.find(script_name);

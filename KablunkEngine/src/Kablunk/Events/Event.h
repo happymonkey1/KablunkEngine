@@ -22,8 +22,8 @@ namespace Kablunk {
 		EventCategoryMouseButton	= BIT(4),
 	};
 
-#define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; }\
-								virtual EventType GetEventType() const override { return GetStaticType(); }\
+#define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; } \
+								virtual EventType GetEventType() const override { return GetStaticType(); } \
 								virtual const char* GetName() const override { return #type; }
 
 
@@ -41,29 +41,37 @@ namespace Kablunk {
 		virtual int GetCategoryFlags() const = 0;
 		virtual std::string ToString() const { return GetName(); }
 
-		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
-		inline bool GetStatus() const { return m_Handled; }
-		inline void SetStatus(bool handled) { m_Handled = handled; }
+		bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
+		bool GetStatus() const { return m_Handled; }
+		void SetStatus(bool handled) { m_Handled = handled; }
 	protected:
 		bool m_Handled = false;
 	};
 
-	class EventDispatcher {
+	class EventDispatcher 
+	{
 	public:
-		EventDispatcher(Event& event) : m_Event(event) {
+		template<typename T>
+		using EventFunc = std::function<bool(T&)>;
+	public:
+		EventDispatcher(Event& event) 
+			: m_event{ event } 
+		{
 
 		}
 
-		template<typename T, typename F>
-		bool Dispatch(const F& func) {
-			if (m_Event.GetEventType() == T::GetStaticType()) {
-				m_Event.m_Handled = func(static_cast<T&>(m_Event));
+		template <typename T>
+		bool Dispatch(EventFunc<T> func) 
+		{
+			if (m_event.GetEventType() == T::GetStaticType()) 
+			{
+				m_event.m_Handled = func(*(T*)&m_event);
 				return true;
 			}
 			return false;
 		}
 	private:
-		Event& m_Event;
+		Event& m_event;
 	};
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e) {

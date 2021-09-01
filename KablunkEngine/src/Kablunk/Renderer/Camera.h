@@ -1,6 +1,7 @@
 #ifndef KABLUNK_RENDERER_CAMERA_H
 #define KABLUNK_RENDERER_CAMERA_H
 
+#include "Kablunk/Core/Input.h"
 #include <glm/glm.hpp>
 
 namespace Kablunk
@@ -15,12 +16,15 @@ namespace Kablunk
 		const glm::mat4& GetProjection() const { return m_projection; }
 		
 		// #TODO cleanup function for appropriate API
-		glm::vec2 ScreenToWorldPosition2D(const glm::mat4& view, const glm::vec2& mouse_pos) const
+		glm::vec2 ScreenToWorldPosition2D(const glm::mat4& view) const
 		{
 			float viewport_width = 1.0f, viewport_height = 1.0f;
 			float depth_value = 1.0f;
 			auto inverse_mat = m_projection * glm::inverse(view);
 			
+			auto [x, y] = Input::GetMousePosition();
+			glm::vec2 mouse_pos = { x, y };
+
 			auto scaled_mouse = glm::vec4{
 				mouse_pos.x / viewport_width,
 				mouse_pos.y / viewport_height,

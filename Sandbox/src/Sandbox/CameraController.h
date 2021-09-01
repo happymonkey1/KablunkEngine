@@ -19,9 +19,7 @@ struct CameraController : public Kablunk::NativeScript
 			auto& camera = camera_comp.Camera;
 
 			auto& transform = GetComponent<Kablunk::TransformComponent>().GetTransform();
-			auto [mx, my] = Kablunk::Input::GetMousePosition();
-			auto mouse_pos = glm::vec2{ mx, my };
-			auto screen_pos = camera.ScreenToWorldPosition2D(transform, mouse_pos);
+			auto screen_pos = camera.ScreenToWorldPosition2D(transform);
 			KB_CLIENT_TRACE("Mouse pos ({0}, {1})", screen_pos.x, screen_pos.y);
 		}
 	}

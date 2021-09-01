@@ -7,7 +7,7 @@
 #define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
-#include "Kablunk/Scripts/NativeScriptModule.h"
+#include "Kablunk/Scripts/NativeScriptEngine.h"
 #include "Kablunk/Scripts/NativeScript.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Scene/SceneCamera.h"
@@ -152,7 +152,7 @@ namespace Kablunk
 			}
 				auto struct_name = struct_names[0];
 
-			Instance = Modules::NativeScriptModule::GetScript(struct_name);
+			Instance = NativeScriptEngine::GetScript(struct_name);
 
 			if (!Instance)
 			{

@@ -7,13 +7,12 @@
 #include <string>
 #include <unordered_map>
 
-// #TODO generalize module system
-namespace Kablunk::Modules
+namespace Kablunk
 {
 
 	/*	Native scripts store a create method function pointer inside a map, 
 		which can be accessed to instantiate a Scoped script during runtime */
-	class NativeScriptModule
+	class NativeScriptEngine
 	{
 	public:
 		using CreateMethodFunc = NativeScript * (*)();
@@ -46,7 +45,7 @@ namespace Kablunk::Modules
 
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 #	define REGISTER_NATIVE_SCRIPT(T) bool T::s_registered = \
-		Kablunk::Modules::NativeScriptModule::RegisterScript(#T, T::Create);
+		Kablunk::NativeScriptEngine::RegisterScript(#T, T::Create);
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT
 #	define REGISTER_NATIVE_SCRIPT

@@ -9,39 +9,41 @@
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
-namespace Kablunk 
+namespace Kablunk
 {
 
 	Application* Application::s_Instance = nullptr;
 
-	
 
-	Application::Application() 
-		: m_thread_pool{ 7 }
+
+	Application::Application(const ApplicationSpecification& specification)
+		: m_specification{ specification }, m_thread_pool{ 7 }
 	{
 		KB_PROFILE_FUNCTION();
 
 		KB_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		{
-			m_window = Window::Create();
-			m_window->SetEventCallback(KABLUNK_BIND_EVENT_FN(Application::OnEvent));
-			m_window->SetVsync(false);
+			m_window = Window::Create({ specification.Name, specification.Width, specification.height });
+			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
+			m_window->SetVsync(specification.Vsync);
 		}
-		
-
-		m_imgui_layer = new ImGuiLayer();
-		PushOverlay(m_imgui_layer);
 
 		Renderer::Init();
+
+		if (specification.Enable_imgui)
+		{
+			m_imgui_layer = new ImGuiLayer();
+			PushOverlay(m_imgui_layer);
+		}
 	}
 
-	Application::~Application() 
+	Application::~Application()
 	{
 		m_thread_pool.Shutdown();
 	}
 
-	void Application::PushLayer(Layer* layer) 
+	void Application::PushLayer(Layer* layer)
 	{
 		KB_PROFILE_FUNCTION();
 
@@ -49,7 +51,7 @@ namespace Kablunk
 		layer->OnAttach();
 	}
 
-	void Application::PushOverlay(Layer* overlay) 
+	void Application::PushOverlay(Layer* overlay)
 	{
 		KB_PROFILE_FUNCTION();
 
@@ -62,13 +64,13 @@ namespace Kablunk
 		m_running = false;
 	}
 
-	void Application::OnEvent(Event& e) 
+	void Application::OnEvent(Event& e)
 	{
 		KB_PROFILE_FUNCTION();
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(KABLUNK_BIND_EVENT_FN(Application::OnWindowClosed));
-		dispatcher.Dispatch<WindowResizeEvent>(KABLUNK_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClosed(e); });
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 
 
 		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) {
@@ -79,60 +81,82 @@ namespace Kablunk
 		}
 	}
 
-	bool Application::OnWindowClosed(WindowCloseEvent& e) 
+	bool Application::OnWindowClosed(WindowCloseEvent& e)
 	{
 		m_running = false;
 		return true;
 	}
 
-	bool Application::OnWindowResize(WindowResizeEvent& e) 
+	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
 		KB_PROFILE_FUNCTION();
 
-		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		const uint32_t width = e.GetWidth(), height = e.GetHeight();
+		if (width == 0 || height == 0)
 		{
 			m_minimized = true;
 			return false;
 		}
 
 		m_minimized = false;
-		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		Renderer::OnWindowResize(width, height);
 
 		return false;
 	}
-	
 
-	void Application::Run() 
+	void Application::Run()
 	{
 		KB_PROFILE_FUNCTION();
 
-		while (m_running) 
-		{
-			KB_PROFILE_SCOPE("RunLoop - Application::Run")
+		OnStartup();
 
-			float time = PlatformAPI::GetTime(); // Platform::GetTime
-			Timestep timestep = time - m_last_frame_time;
-			m_last_frame_time = time;
+		while (m_running)
+		{
+			KB_PROFILE_SCOPE("RunLoop - Application::Run");
+
+			//KB_CORE_TRACE("Vsync: {0}", GetWindow().IsVsync());
+
+			m_window->PollEvents();
 
 			if (!m_minimized)
 			{
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
-					for (Layer* layer : m_layer_stack)
-						layer->OnUpdate(timestep);
-				}
-			
-
-				m_imgui_layer->Begin();
-				{
-					KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
 						for (Layer* layer : m_layer_stack)
-							layer->OnImGuiRender(timestep);
+							layer->OnUpdate(m_timestep);
 				}
-				m_imgui_layer->End();
+
+				if (m_specification.Enable_imgui)
+				{
+					//KB_TIME_FUNCTION_BEGIN()
+					m_imgui_layer->Begin();
+					{
+						KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
+							for (Layer* layer : m_layer_stack)
+								layer->OnImGuiRender(m_timestep);
+					}
+					m_imgui_layer->End();
+					//KB_TIME_FUNCTION_END("imgui layer time")
+				}
 			}
 
 			m_window->OnUpdate();
+
+			float time = PlatformAPI::GetTime(); // Platform::GetTime
+			m_timestep = time - m_last_frame_time;
+			m_last_frame_time = time;
 		}
+
+		OnShutdown();
+	}
+
+	void Application::OnStartup()
+	{
+
+	}
+
+	void Application::OnShutdown()
+	{
+
 	}
 }
