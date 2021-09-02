@@ -30,15 +30,15 @@ namespace Kablunk
 
 		void DeleteBuffer();
 
-		Renderer::RendererID m_renderer_id;
+		RendererID m_renderer_id;
 		FramebufferSpecification m_specification;
 		
 		std::vector<FramebufferTextureSpecification> m_color_attachment_specs;
 		FramebufferTextureSpecification m_depth_attachment_spec = FramebufferTextureFormat::None;
 
 		// Renderer IDs
-		std::vector<Renderer::RendererID> m_color_attachments;
-		Renderer::RendererID m_depth_attachment;
+		std::vector<RendererID> m_color_attachments;
+		RendererID m_depth_attachment;
 	};
 }
 

@@ -18,6 +18,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Log.h"
+#include "Kablunk/Events/Event.h"
 #include "Kablunk/Debug/Instrumentor.h"
 #include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 #include "Kablunk/Core/Uuid64.h"

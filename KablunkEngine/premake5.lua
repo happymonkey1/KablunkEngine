@@ -43,7 +43,8 @@ project "KablunkEngine"
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.stduuid}",
 		"%{IncludeDir.gsl}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.assimp}"
 	}
 
 	links
@@ -55,6 +56,7 @@ project "KablunkEngine"
 		"spdlog",
 		"opengl32.lib"
 	}
+	
 
 	filter "files:vendor/ImGuizmo/**.cpp"
 		flags { "NoPCH" }
@@ -66,13 +68,29 @@ project "KablunkEngine"
 		defines "KB_DEBUG"
 		runtime "Debug"
 		symbols "on"
+
+		links
+        {
+            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+        }
 	
 	filter "configurations:Release"
 		defines "KB_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+		links
+        {
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+        }
+        
 	
 	filter "configurations:Distribution"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
+
+		links
+        {
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+        }

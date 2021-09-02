@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
-#include "Texture.h"
+#include "Kablunk/Renderer/Texture.h"
 
-#include "Renderer.h"
+#include "Kablunk/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 
 namespace Kablunk
@@ -11,8 +11,8 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::API::None:      KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:    return CreateRef<OpenGLTexture2D>(width, height);
+		case RendererAPI::RenderAPI_t::None:      KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:    return CreateRef<OpenGLTexture2D>(width, height);
 		default:						  KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
 		}
 	}
@@ -22,8 +22,8 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::API::None:      KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:    return CreateRef<OpenGLTexture2D>(path);
+		case RendererAPI::RenderAPI_t::None:      KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:    return CreateRef<OpenGLTexture2D>(path);
 		default:						  KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
 		}
 	}

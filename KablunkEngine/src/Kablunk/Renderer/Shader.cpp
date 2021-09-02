@@ -10,8 +10,8 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:      KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
-		case RendererAPI::API::OpenGL:    return std::make_shared<OpenGLShader>(filePath);
+		case RendererAPI::RenderAPI_t::None:      KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:    return std::make_shared<OpenGLShader>(filePath);
 		default:						  KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
@@ -21,8 +21,8 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:      KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
-		case RendererAPI::API::OpenGL:    return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
+		case RendererAPI::RenderAPI_t::None:      KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:    return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		default:						  KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 	}

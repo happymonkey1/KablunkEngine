@@ -1,5 +1,7 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef KABLUNK_RENDERER_BUFFER_H
+#define KABLUNK_RENDERER_BUFFER_H
+
+#include "Kablunk/Renderer/RendererTypes.h"
 
 namespace Kablunk 
 {
@@ -116,7 +118,9 @@ namespace Kablunk
 
 
 		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(const void* data, uint32_t size);
+
+		virtual RendererID GetRendererID() const = 0;
 	};
 
 	class IndexBuffer
@@ -127,9 +131,12 @@ namespace Kablunk
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(uint32_t count);
+		static Ref<IndexBuffer> Create(const void* data, uint32_t count);
 
 		virtual const uint32_t GetCount() const = 0;
+
+		virtual RendererID GetRendererID() const = 0;
 	};
 }
 

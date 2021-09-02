@@ -247,10 +247,26 @@ namespace Kablunk
 		UploadUniformIntArray(name, values, count);
 	}
 
+	void OpenGLShader::SetUniformBuffer(const ShaderUniformBuffer& buffer, const void* data, uint32_t size, uint32_t offset)
+	{
+		glNamedBufferSubData(buffer.RendererID, offset, size, data);
+	}
+
+	void OpenGLShader::SetUniformBuffer(const std::string& name, const void* data, uint32_t size)
+	{
+		KB_CORE_ASSERT(false, "Not implemented! :)");
+	}
+
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform1i(location, value);
+	}
+
+	void OpenGLShader::UploadUniformUInt(const std::string& name, uint32_t value)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)

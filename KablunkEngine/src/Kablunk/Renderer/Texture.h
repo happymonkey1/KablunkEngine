@@ -2,7 +2,7 @@
 #define KABLUNK_RENDERER_TEXTURE_H
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RendererTypes.h"
 #include <string>
 
 namespace Kablunk 
@@ -13,7 +13,7 @@ namespace Kablunk
 		virtual ~Texture() = default;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
-		virtual Renderer::RendererID GetRendererID() const = 0;
+		virtual RendererID GetRendererID() const = 0;
 		virtual void SetData(void* data, uint32_t size) = 0;
 
 		virtual void Bind(uint32_t slot = 0) const = 0;

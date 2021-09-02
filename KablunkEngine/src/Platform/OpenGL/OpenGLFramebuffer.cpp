@@ -20,12 +20,12 @@ namespace Kablunk
 			glCreateTextures(TextureTarget(multisampled), count, out_id);
 		}
 
-		static void BindTexture(bool multisampled, Renderer::RendererID id)
+		static void BindTexture(bool multisampled, RendererID id)
 		{
 			glBindTexture(TextureTarget(multisampled), id);
 		}
 
-		static void AttachColorTexture(Renderer::RendererID id, int samples, GLenum internal_format, GLenum access_format, uint32_t width, uint32_t height, int index)
+		static void AttachColorTexture(RendererID id, int samples, GLenum internal_format, GLenum access_format, uint32_t width, uint32_t height, int index)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
@@ -47,7 +47,7 @@ namespace Kablunk
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
 		}
 
-		static void AttachDepthTexture(Renderer::RendererID id, int samples, GLenum format, GLenum attachment_type, uint32_t width, uint32_t height)
+		static void AttachDepthTexture(RendererID id, int samples, GLenum format, GLenum attachment_type, uint32_t width, uint32_t height)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
@@ -115,6 +115,7 @@ namespace Kablunk
 	{
 		DeleteBuffer();
 	}
+
 	void OpenGLFramebuffer::Invalidate()
 	{
 		if (m_renderer_id)

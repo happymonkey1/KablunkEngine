@@ -22,3 +22,6 @@
 [submodule "KablunkEngine/vendor/ImGuizmo"]
 	path = KablunkEngine/vendor/ImGuizmo
 	url = https://github.com/thecherno/imguizmo
+[submodule "KablunkEngine/vendor/assimp"]
+	path = KablunkEngine/vendor/assimp
+	url = https://github.com/happymonkey1/assimp.git

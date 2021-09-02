@@ -7,6 +7,9 @@
 
 #include <thread>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+
 namespace Kablunk
 {
 	extern const std::filesystem::path g_asset_path = "assets";
@@ -121,6 +124,13 @@ namespace Kablunk
 							m_current_directory /= path.filename();
 							Refresh();
 						}
+						else if (directory_entry.path().extension() == FILE_EXTENSIONS::FBX)
+						{
+						
+							auto mesh_data = CreateRef<Kablunk::MeshData>( directory_entry.path().string() );
+							auto mesh = Kablunk::Mesh{ mesh_data };
+						
+						}
 					}
 					ImGui::TextWrapped(filename_string.c_str());
 
@@ -175,6 +185,7 @@ namespace Kablunk
 		if (ImGui::ImageButton((ImTextureID)m_forward_button->GetRendererID(), { 22, 22 }))
 		{
 			// #TODO go to next directory
+			KB_CORE_WARN("Forward directory not implemented!");
 		}
 
 		ImGui::SameLine();
@@ -196,13 +207,13 @@ namespace Kablunk
 			else
 			{
 				// #TODO add item searching
+				KB_CORE_WARN("searching for items not implemented!");
 			}
 
 			ImGui::PopItemWidth();
 		}
 		
 		ImGui::SameLine();
-
 
 
 		// #TODO update to use project's asset directory when projects are implemented

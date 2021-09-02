@@ -10,3 +10,4 @@ IncludeDir["spdlog"] = "%{wks.location}/KablunkEngine/vendor/spdlog/include/spdl
 IncludeDir["stduuid"] = "%{wks.location}/KablunkEngine/vendor/stduuid/include"
 IncludeDir["gsl"] = "%{wks.location}/KablunkEngine/vendor/stduuid/gsl"
 IncludeDir["ImGuizmo"] = "%{wks.location}/KablunkEngine/vendor/ImGuizmo"
+IncludeDir["assimp"] = "%{wks.location}/KablunkEngine/vendor/assimp/include"

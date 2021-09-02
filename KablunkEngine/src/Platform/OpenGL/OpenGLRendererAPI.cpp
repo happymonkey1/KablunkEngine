@@ -1,7 +1,6 @@
 #include "kablunkpch.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 
-
 #include "glad/glad.h"
 
 namespace Kablunk
@@ -12,6 +11,9 @@ namespace Kablunk
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Interpolative blending
 		//glBlendFunc(GL_ONE, GL_ONE); //Additive blending
 		//glBlendFunc(GL_DST_COLOR, GL_ZERO); // Multiplicative blending
+
+		glEnable(GL_MULTISAMPLE);
+		glEnable(GL_STENCIL_TEST);
 
 		glEnable(GL_DEPTH_TEST);
 	}
@@ -35,7 +37,7 @@ namespace Kablunk
 	{
 		uint32_t count = (indexCount) ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 }

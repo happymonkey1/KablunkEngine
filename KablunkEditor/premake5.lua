@@ -26,13 +26,14 @@ project "KablunkEditor"
 		"%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
         "%{IncludeDir.gsl}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.assimp}"
     }
 
     links
     {
         "KablunkEngine",
-        "Sandbox"
+        "Sandbox",
     }
 
     filter "system:windows"
@@ -42,13 +43,42 @@ project "KablunkEditor"
 		defines "KB_DEBUG"
 		runtime "Debug"
 		symbols "on"
+        links
+        {
+            "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+        }
+
+        postbuildcommands
+        {
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"'
+        }
 	
 	filter "configurations:Release"
 		defines "KB_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+        links
+        {
+            "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+        }
+        
+        postbuildcommands
+        {
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"'
+        }
 	
 	filter "configurations:Distribution"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
+
+        links
+        {
+            "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+        }
+        
+        postbuildcommands
+        {
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"'
+        }

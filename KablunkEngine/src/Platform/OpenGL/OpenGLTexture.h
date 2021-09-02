@@ -18,7 +18,7 @@ namespace Kablunk
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
-		virtual Renderer::RendererID GetRendererID() const override { return m_RendererID; }
+		virtual RendererID GetRendererID() const override { return m_RendererID; }
 
 		virtual void SetData(void* data, uint32_t size) override;
 
@@ -32,7 +32,7 @@ namespace Kablunk
 		std::string m_Path;
 		uint32_t m_Width;
 		uint32_t m_Height;
-		Renderer::RendererID m_RendererID;
+		RendererID m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 		
 	};

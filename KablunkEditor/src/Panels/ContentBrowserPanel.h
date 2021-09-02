@@ -10,6 +10,16 @@ namespace Kablunk
 {
 	constexpr const int MAX_SEARCH_BUFFER_LENGTH = 128;
 
+	// #TODO move elsewhere
+	struct FILE_EXTENSIONS
+	{
+		static constexpr const char* FBX	= ".fbx";
+		static constexpr const char* OBJ	= ".obj";
+		static constexpr const char* PNG	= ".png";
+		static constexpr const char* JPEG	= ".jpeg";
+		static constexpr const char* JPG	= ".jpg";
+	};
+
 	class ContentBrowserPanel 
 	{
 	public:

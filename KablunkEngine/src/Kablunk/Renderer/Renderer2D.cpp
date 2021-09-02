@@ -112,9 +112,6 @@ namespace Kablunk
 		s_renderer_data.Quad_vertex_positions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
-
-
-		KB_CORE_WARN("Drawing Quads with entities only supports 32 bit integers!");
 	}
 
 	void Renderer2D::Shutdown()
@@ -123,6 +120,11 @@ namespace Kablunk
 
 		// Cleanup memory
 		delete[] s_renderer_data.Quad_vertex_buffer_base_ptr;
+	}
+
+	Ref<Texture2D> Renderer2D::GetWhiteTexture()
+	{
+		return s_renderer_data.White_texture;
 	}
 
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)

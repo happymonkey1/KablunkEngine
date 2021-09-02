@@ -26,17 +26,13 @@ namespace Kablunk
 		static void Init();
 		static void Shutdown();
 
+		static Ref<Texture2D> GetWhiteTexture();
+
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 		static void Flush();
-
-		/* 
-		* #TODO Cleanup DrawQuad 'situation' 
-		* Since all drawing now uses transforms, there might not be a need to differentiate between DrawQuad and DrawRotatedQuad
-		* Somehow consolidate the functions 
-		*/
 
 		// Entity
 		static void DrawSprite(Entity entity);

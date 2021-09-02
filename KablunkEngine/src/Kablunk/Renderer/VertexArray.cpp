@@ -11,10 +11,10 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::API::None:
+		case RendererAPI::RenderAPI_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::None is not supported!");
 			return nullptr;
-		case RendererAPI::API::OpenGL:
+		case RendererAPI::RenderAPI_t::OpenGL:
 			return CreateRef<OpenGLVertexArray>();
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");

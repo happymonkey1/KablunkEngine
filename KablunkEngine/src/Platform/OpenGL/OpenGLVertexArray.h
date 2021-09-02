@@ -3,6 +3,7 @@
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Renderer.h"
 
+
 namespace Kablunk
 {
 	class OpenGLVertexArray : public VertexArray
@@ -23,7 +24,7 @@ namespace Kablunk
 	private:
 		std::vector<Ref<VertexBuffer>> m_VertexBuffers;
 		Ref<IndexBuffer> m_IndexBuffer;
-		Renderer::RendererID m_RendererID;
+		RendererID m_RendererID;
 		uint32_t m_VertexBufferIndex = 0;
 	};
 }

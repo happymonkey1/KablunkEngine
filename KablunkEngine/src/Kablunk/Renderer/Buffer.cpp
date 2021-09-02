@@ -10,10 +10,10 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
+		case RendererAPI::RenderAPI_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
-		case RendererAPI::API::OpenGL:
+		case RendererAPI::RenderAPI_t::OpenGL:
 			return CreateRef<OpenGLVertexBuffer>(size);
 		default:
 			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
@@ -21,34 +21,51 @@ namespace Kablunk
 		}
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+	Kablunk::Ref<Kablunk::VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
+		case RendererAPI::RenderAPI_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(vertices, size);
+		case RendererAPI::RenderAPI_t::OpenGL:
+			return CreateRef<OpenGLVertexBuffer>(data, size);
 		default:
 			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
 			return nullptr;
 		}
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
+	Ref<IndexBuffer> IndexBuffer::Create(uint32_t count)
 	{
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::API::None:
+		case RendererAPI::RenderAPI_t::None:
 			KB_CORE_FATAL("RendererAPI::None is not supported!");
 			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(indices, count);
+		case RendererAPI::RenderAPI_t::OpenGL:
+			return CreateRef<OpenGLIndexBuffer>(count);
 		default:
 			KB_CORE_FATAL("Unkown RenderAPI!");
 			return nullptr;
 		}
 	}
+
+	Kablunk::Ref<Kablunk::IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
+	{
+		switch (Renderer::GetAPI())
+		{
+
+		case RendererAPI::RenderAPI_t::None:
+			KB_CORE_FATAL("RendererAPI::None is not supported!");
+			return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:
+			return CreateRef<OpenGLIndexBuffer>(data, count);
+		default:
+			KB_CORE_FATAL("Unkown RenderAPI!");
+			return nullptr;
+		}
+	}
+
 }

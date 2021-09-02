@@ -8,7 +8,7 @@ namespace Kablunk
 	class RendererAPI
 	{
 	public:
-		enum class API
+		enum class RenderAPI_t
 		{
 			None = 0, OpenGL = 1
 		};
@@ -24,11 +24,9 @@ namespace Kablunk
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
 
-		static inline API GetAPI() { return s_API; };
-		static inline bool GetVsync() { return s_VSYNC; };
+		static inline RenderAPI_t GetAPI() { return s_API; };
 	private:
-		static API s_API;
-		static bool s_VSYNC;
+		inline static RenderAPI_t s_API = RenderAPI_t::OpenGL;
 	};
 
 }
