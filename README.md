@@ -10,7 +10,6 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 ## Issues
 
-- [ ] Instrumentor.h not tracked. Should be at 'KablunkEngine/src/Kablunk/Debug/Instrumentor.h'
 - [ ] Should switch submodules to all be forks to include premake files
 
 ## Engine
@@ -33,7 +32,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Scripting -  C#, python, lua, etc
 - [ ] Hot Reloading Scripts
 - [ ] More Rendering APIs - Vulkan, DirectX, Metal (LOL)
-- [ ] Task / Threading Abstraction
+- [x] Task / Threading Abstraction
 - [ ] Multithreading Parts of Engine - Rendering and Physics
 - [ ] Particle System
 - [ ] Better Debuging - Memory, CPU usage, etc
@@ -41,23 +40,27 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [ ] Runtime Builds
 - [ ] Multiplatform support - Development and Packaging
 - [ ] Audio Support - OpenAL
+- [ ] Mesh Rendering
+- [ ] 3D Animations
 - [ ] 2D / 3D? Lighting
 - [ ] 2D Physics - Box2D
 - [ ] 3D Physics - PhysX, Bullet
 - [ ] Better Shader System - SPIR-V
 - [ ] Networking - LOL
 - [ ] Material System
+- [ ] Physically Based Renderer
 - [ ] 3D Model to 2D Texture System (what is this called?)
 - [ ] UI system (Either abstracting over ImGui or inhouse)
 - [ ] Asset Manager
-- [ ] UUIDs
+- [x] UUIDs
 - [ ] Binary Serialization - Cereal
+- [ ] Editor Projects
 
 ### Cleanup
 
 - [x] Refactor Input Code Situation
 - [ ] Code Review - Member variable renaming, etc
-- [ ] Improve Camera System
+- [x] Improve Camera System
 
 ## Editor
 
@@ -76,7 +79,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [x] UI Components Editing, Transform, Camera, SpriteRenderer, etc
 - [x] Component Gismos
 - [ ] Entity Selection Outline in Viewport
-- [ ] Content Manager
+- [x] Content Manager
 - [ ] Asset Browser
 
 ## Other
