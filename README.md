@@ -10,7 +10,6 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 ## Issues
 
-- [ ] Instrumentor.h not tracked. Should be at 'KablunkEngine/src/Kablunk/Debug/Instrumentor.h'
 - [ ] Should switch submodules to all be forks to include premake files
 
 ## Engine
