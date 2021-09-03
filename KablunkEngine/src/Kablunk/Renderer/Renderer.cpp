@@ -56,6 +56,7 @@ namespace Kablunk
 
 	void Renderer::SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform)
 	{
+		// #FIXME bad
 		auto mesh_shader = std::dynamic_pointer_cast<OpenGLShader>(mesh->GetMeshData()->GetShader());
 	
 		mesh->GetVertexArray()->Bind();
