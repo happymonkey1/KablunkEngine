@@ -181,6 +181,7 @@ namespace Kablunk
 			s_renderer_data.Texture_slots[i]->Bind(i);
 		}
 
+		s_renderer_data.Quad_vertex_array->Bind();
 		RenderCommand::DrawIndexed(s_renderer_data.Quad_vertex_array, s_renderer_data.Quad_index_count);
 	}
 

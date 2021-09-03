@@ -117,6 +117,7 @@ namespace Kablunk
 	// #TODO move elsewhere
 	class MeshFactory
 	{
+	public:
 		static Ref<Mesh> CreateCube(float side_length);
 	};
 }

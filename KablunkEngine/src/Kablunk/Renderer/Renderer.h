@@ -9,17 +9,30 @@
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/Mesh.h"
+#include "Kablunk/Renderer/EditorCamera.h"
 
 namespace Kablunk
 {
+	struct SceneData
+	{
+		glm::mat4 ViewProjectionMatrix;
+		glm::mat4 InverseViewProjectionMatrix;
+		glm::mat4 ProjectionMatrix;
+		glm::mat4 ViewMatrix;
+	};
+
 	class Renderer
 	{
 	public:
 		static void Init();
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
+		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const EditorCamera& camera);
+		// #TODO remove
 		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
+
 
 		static void Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform);
@@ -30,11 +43,6 @@ namespace Kablunk
 
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:
-		struct SceneData
-		{
-			glm::mat4 ViewProjectionMatrix;
-		};
-
 		static Scope<SceneData> m_SceneData;
 		
 		static Ref<ShaderLibrary> s_shader_library;

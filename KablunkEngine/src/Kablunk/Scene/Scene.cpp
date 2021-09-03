@@ -3,6 +3,7 @@
 
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/Renderer.h"
 
 #include "Entity.h"
 
@@ -194,16 +195,34 @@ namespace Kablunk
 			}
 		);
 
-
-		Renderer2D::BeginScene(camera);
-
-		auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (auto entity : group)
 		{
-			Renderer2D::DrawSprite({ entity, this });
+			Renderer2D::BeginScene(camera);
+
+			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				Renderer2D::DrawSprite({ entity, this });
+			}
+
+			Renderer2D::EndScene();
 		}
 
-		Renderer2D::EndScene();
+		{
+			Renderer::BeginScene(camera);
+
+			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
+			for (auto entity_id : mesh_group)
+			{
+				auto entity = Entity{ entity_id, this };
+				auto& mesh_comp = entity.GetComponent<MeshComponent>();
+				auto& transform = entity.GetComponent<TransformComponent>();
+				Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+			}
+
+			Renderer::EndScene();
+		}
+		
+		
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -269,6 +288,9 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component) { }
 
 	template <>
 	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component) { }

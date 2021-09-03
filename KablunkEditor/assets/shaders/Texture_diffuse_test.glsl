@@ -42,6 +42,12 @@ uniform sampler2D u_Textures[32];
 
 void main()
 {
-	o_Color  = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+    // Ambient Lighting
+    float ambientStrength = 0.3;
+	vec3 lightColor = vec3(1.0, 1.0, 1.0);
+    vec4 ambient = vec4(ambientStrength * lightColor, 1.0);
+
+	vec4 tintedTexture = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+	o_Color = ambient * tintedTexture;
 	o_EntityID = v_EntityID;
 }

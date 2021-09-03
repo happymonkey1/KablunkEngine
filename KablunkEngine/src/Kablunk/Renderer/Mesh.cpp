@@ -12,8 +12,9 @@
 namespace Kablunk
 {
 	static constexpr const uint32_t s_mesh_import_flags =
-		aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
+		aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 	
+
 	MeshData::MeshData(const std::string& filepath)
 		: m_filepath{ filepath }
 	{
@@ -85,6 +86,7 @@ namespace Kablunk
 				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
+			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
 		}
 
 		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
@@ -93,6 +95,8 @@ namespace Kablunk
 	MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
 		: m_vertices{ verticies }, m_indices{ indices }
 	{
+		m_mesh_shader = Renderer::GetShaderLibrary()->Get("KablunkPBR_static");
+
 		m_vertex_buffer = VertexBuffer::Create((uint32_t)m_vertices.size());
 		m_vertex_buffer->SetData(m_vertices.data(), (uint32_t)m_vertices.size());
 		m_vertex_buffer_layout = {
@@ -102,6 +106,7 @@ namespace Kablunk
 			{ ShaderDataType::Float3, "a_Binormal" },
 			{ ShaderDataType::Float2, "a_TexCoord" }
 		};
+		m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
 
 		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 	}

@@ -61,6 +61,13 @@ namespace Kablunk
 				camera_comp.Primary = is_first_camera;
 			}
 
+			if (ImGui::MenuItem("Create Cube"))
+			{
+				auto entity = m_context->CreateEntity("Cube");
+				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f));
+
+			}
+
 			ImGui::EndPopup();
 		}
 

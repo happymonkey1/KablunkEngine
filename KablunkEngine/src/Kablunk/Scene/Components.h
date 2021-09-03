@@ -13,6 +13,7 @@
 #include "Kablunk/Scene/SceneCamera.h"
 #include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Core/Uuid64.h"
+#include "Kablunk/Renderer/Mesh.h"
 
 
 namespace Kablunk
@@ -196,6 +197,15 @@ namespace Kablunk
 
 
 		friend class Scene;
+	};
+
+	struct MeshComponent
+	{
+		Ref<Kablunk::Mesh> Mesh;
+
+		MeshComponent(const Ref<Kablunk::Mesh>& mesh)
+			: Mesh{ mesh } { }
+		MeshComponent(const MeshComponent&) = default;
 	};
 }
 
