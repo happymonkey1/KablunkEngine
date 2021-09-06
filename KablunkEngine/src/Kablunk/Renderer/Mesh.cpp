@@ -31,7 +31,7 @@ namespace Kablunk
 
 		m_scene = scene;
 
-		m_mesh_shader = Renderer::GetShaderLibrary()->Get("KablunkPBR_static");
+		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
 
 		// #TODO submeshes
 		aiMesh* mesh = scene->mMeshes[0];
@@ -95,10 +95,10 @@ namespace Kablunk
 	MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
 		: m_vertices{ verticies }, m_indices{ indices }
 	{
-		m_mesh_shader = Renderer::GetShaderLibrary()->Get("KablunkPBR_static");
+		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
 
 		m_vertex_buffer = VertexBuffer::Create((uint32_t)m_vertices.size());
-		m_vertex_buffer->SetData(m_vertices.data(), (uint32_t)m_vertices.size());
+
 		m_vertex_buffer_layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
@@ -107,6 +107,7 @@ namespace Kablunk
 			{ ShaderDataType::Float2, "a_TexCoord" }
 		};
 		m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
+		m_vertex_buffer->SetData(m_vertices.data(), (uint32_t)m_vertices.size());
 
 		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 	}
@@ -146,23 +147,54 @@ namespace Kablunk
 	{
 		std::vector<Vertex> verts;
 		verts.resize(8);
-		verts[0].Position = { -side_length / 2.0f, -side_length / 2.0f, side_length / 2.0f };
-		verts[1].Position = { side_length / 2.0f, -side_length / 2.0f, side_length / 2.0f };
-		verts[2].Position = { side_length / 2.0f, side_length / 2.0f, side_length / 2.0f };
-		verts[3].Position = { -side_length / 2.0f, side_length / 2.0f, side_length / 2.0f };
+		verts[0].Position = { -side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
+		verts[1].Position = { side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
+		verts[2].Position = { side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
+		verts[3].Position = { -side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
 		verts[4].Position = { -side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
 		verts[5].Position = { side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
-		verts[6].Position = { side_length / 2.0f, side_length / 2.0f, -side_length / 2.0f };
-		verts[7].Position = { -side_length / 2.0f, side_length / 2.0f, -side_length / 2.0f };
-
+		verts[6].Position = { side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
+		verts[7].Position = { -side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
+		
 		verts[0].Normal = { -1.0f, -1.0f,  1.0f };
-		verts[1].Normal = {  1.0f, -1.0f,  1.0f };
-		verts[2].Normal = {  1.0f,  1.0f,  1.0f };
+		verts[1].Normal = { 1.0f, -1.0f,  1.0f };
+		verts[2].Normal = { 1.0f,  1.0f,  1.0f };
 		verts[3].Normal = { -1.0f,  1.0f,  1.0f };
 		verts[4].Normal = { -1.0f, -1.0f, -1.0f };
-		verts[5].Normal = {  1.0f, -1.0f, -1.0f };
-		verts[6].Normal = {  1.0f,  1.0f, -1.0f };
+		verts[5].Normal = { 1.0f, -1.0f, -1.0f };
+		verts[6].Normal = { 1.0f,  1.0f, -1.0f };
 		verts[7].Normal = { -1.0f,  1.0f, -1.0f };
+
+
+		// #FIXME this is garbage data
+		verts[0].Binormal = { -1.0f, -1.0f,  1.0f };
+		verts[1].Binormal = { 1.0f, -1.0f,  1.0f };
+		verts[2].Binormal = { 1.0f,  1.0f,  1.0f };
+		verts[3].Binormal = { -1.0f,  1.0f,  1.0f };
+		verts[4].Binormal = { -1.0f, -1.0f, -1.0f };
+		verts[5].Binormal = { 1.0f, -1.0f, -1.0f };
+		verts[6].Binormal = { 1.0f,  1.0f, -1.0f };
+		verts[7].Binormal = { -1.0f,  1.0f, -1.0f };
+
+		// #FIXME this is garbage data
+		verts[0].Tangent = { -1.0f, -1.0f,  1.0f };
+		verts[1].Tangent = { 1.0f, -1.0f,  1.0f };
+		verts[2].Tangent = { 1.0f,  1.0f,  1.0f };
+		verts[3].Tangent = { -1.0f,  1.0f,  1.0f };
+		verts[4].Tangent = { -1.0f, -1.0f, -1.0f };
+		verts[5].Tangent = { 1.0f, -1.0f, -1.0f };
+		verts[6].Tangent = { 1.0f,  1.0f, -1.0f };
+		verts[7].Tangent = { -1.0f,  1.0f, -1.0f };
+
+		// #FIXME this is garbage data
+		verts[0].TexCoord = { 1.0f, 1.0f, };
+		verts[1].TexCoord = { 1.0f, 1.0f, };
+		verts[2].TexCoord = { 1.0f, 1.0f, };
+		verts[3].TexCoord = { 1.0f, 1.0f, };
+		verts[4].TexCoord = { 1.0f, 1.0f, };
+		verts[5].TexCoord = { 1.0f, 1.0f, };
+		verts[6].TexCoord = { 1.0f, 1.0f, };
+		verts[7].TexCoord = { 1.0f, 1.0f, };
 
 		std::vector<Index> indices;
 		indices.resize(12);

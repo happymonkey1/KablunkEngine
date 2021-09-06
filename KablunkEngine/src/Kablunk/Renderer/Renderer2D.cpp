@@ -4,6 +4,7 @@
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Renderer/UniformBuffer.h"
 
 #include "Kablunk/Scene/Components.h"
 
@@ -50,6 +51,14 @@ namespace Kablunk
 		std::array<Ref<Texture2D>, Max_texture_slots> Texture_slots;
 
 		Renderer2D::Renderer2DStats Stats;
+
+		struct CameraData
+		{
+			glm::mat4 ViewProjection;
+		};
+
+		CameraData camera_buffer;
+		Ref<UniformBuffer> camera_uniform_buffer;
 	};
 
 	static Renderer2DData s_renderer_data;
@@ -112,6 +121,8 @@ namespace Kablunk
 		s_renderer_data.Quad_vertex_positions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 		s_renderer_data.Quad_vertex_positions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+
+		s_renderer_data.camera_uniform_buffer = UniformBuffer::Create(sizeof(Renderer2DData), 0);
 	}
 
 	void Renderer2D::Shutdown()
@@ -132,7 +143,8 @@ namespace Kablunk
 		glm::mat4 view_projection = camera.GetProjection() * glm::inverse(transform);
 
 		s_renderer_data.Texture_shader->Bind();
-		s_renderer_data.Texture_shader->SetMat4("u_ViewProjection", view_projection);
+		s_renderer_data.camera_buffer.ViewProjection = view_projection;
+		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
 		StartNewBatch();
 	}
@@ -142,7 +154,8 @@ namespace Kablunk
 		glm::mat4 view_projection = camera.GetViewProjectionMatrix();
 
 		s_renderer_data.Texture_shader->Bind();
-		s_renderer_data.Texture_shader->SetMat4("u_ViewProjection", view_projection);
+		s_renderer_data.camera_buffer.ViewProjection = view_projection;
+		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
 		StartNewBatch();
 	}
@@ -152,7 +165,8 @@ namespace Kablunk
 		KB_PROFILE_FUNCTION();
 
 		s_renderer_data.Texture_shader->Bind();
-		s_renderer_data.Texture_shader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_renderer_data.camera_buffer.ViewProjection = camera.GetViewProjectionMatrix();
+		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
 		StartNewBatch();
 	}

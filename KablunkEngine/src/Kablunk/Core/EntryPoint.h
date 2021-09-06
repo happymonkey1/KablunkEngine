@@ -8,6 +8,16 @@
 
 extern Kablunk::Application* Kablunk::CreateApplication();
 
+#ifdef KB_PLATFORM_WINDOWS
+#	ifndef PREFER_HIGH_PERFORMANCE_GPU
+#	define PREFER_HIGH_PERFORMANCE_GPU
+// Auto select high performance gpu
+extern "C" {
+	_declspec(dllexport) DWORD NvOptimusEnablement = 1;
+	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#	endif
+#endif
 
 int main(int argc, char** argv) 
 {

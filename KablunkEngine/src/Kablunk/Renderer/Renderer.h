@@ -10,15 +10,30 @@
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/EditorCamera.h"
+#include "Kablunk/Renderer/UniformBuffer.h"
+
 
 namespace Kablunk
 {
 	struct SceneData
 	{
-		glm::mat4 ViewProjectionMatrix;
-		glm::mat4 InverseViewProjectionMatrix;
-		glm::mat4 ProjectionMatrix;
-		glm::mat4 ViewMatrix;
+		struct CameraData
+		{
+			glm::mat4 ViewProjectionMatrix;
+			glm::mat4 InverseViewProjectionMatrix;
+			glm::mat4 ProjectionMatrix;
+			glm::mat4 ViewMatrix;
+		};
+		
+		struct RendererData
+		{
+			glm::mat4 Transform;
+		};
+
+		CameraData camera_buffer;
+		RendererData renderer_buffer;
+		Ref<UniformBuffer> camera_uniform_buffer;
+		Ref<UniformBuffer> renderer_uniform_buffer;
 	};
 
 	class Renderer

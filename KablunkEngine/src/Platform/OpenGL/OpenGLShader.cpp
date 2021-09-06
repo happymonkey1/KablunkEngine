@@ -254,60 +254,111 @@ namespace Kablunk
 
 	void OpenGLShader::SetUniformBuffer(const std::string& name, const void* data, uint32_t size)
 	{
-		KB_CORE_ASSERT(false, "Not implemented! :)");
+		GLint loc = glGetUniformLocation(m_RendererID, name.c_str());
+		if (loc == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
+		glNamedBufferSubData(loc, 0, size, data);
 	}
 
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::UploadUniformUInt(const std::string& name, uint32_t value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform1iv(location, count, values);
 	}
 
 	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform1f(location, value);
 	}
 
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform2f(location, values.x, values.y);
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform3f(location, values.x, values.y, values.z);
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniform4f(location, values.x, values.y, values.z, values.w);
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location == -1)
+		{
+			KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+			return;
+		}
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 

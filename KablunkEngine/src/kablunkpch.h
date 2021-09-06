@@ -24,7 +24,7 @@
 #include "Kablunk/Core/Uuid64.h"
 
 #ifdef KB_PLATFORM_WINDOWS
-	#include <Windows.h>
+#	include <Windows.h>
 #endif
 
 #endif
