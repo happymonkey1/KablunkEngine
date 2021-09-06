@@ -16,6 +16,8 @@ namespace Kablunk
 		glEnable(GL_STENCIL_TEST);
 
 		glEnable(GL_DEPTH_TEST);
+
+
 	}
 
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -35,9 +37,17 @@ namespace Kablunk
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
+		// turn wireframe on
+		if (m_draw_wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		uint32_t count = (indexCount) ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 		//glBindTexture(GL_TEXTURE_2D, 0);
+
+		// normal rendering
+		if (m_draw_wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 }

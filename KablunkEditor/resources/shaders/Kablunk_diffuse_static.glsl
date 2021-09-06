@@ -13,6 +13,7 @@ layout(std140, binding = 0) uniform Camera
     mat4 u_InverseViewProjectionMatrix;
     mat4 u_ProjectionMatrix;
     mat4 u_ViewMatrix;
+    vec3 u_CameraPosition;
 };
 
 // This is prob really bad performance wise
@@ -31,6 +32,7 @@ struct VertexOutput
     vec3 Binormal;
 
     mat3 CameraView;
+    vec3 CameraPosition;
 
     vec3 ViewPosition;
 };
@@ -48,11 +50,12 @@ void main()
     v_Input.Binormal = a_Binormal;
 
     v_Input.CameraView = mat3(u_ViewMatrix);
+    v_Input.CameraPosition = u_CameraPosition;
     v_Input.ViewPosition = vec3(u_ViewMatrix * vec4(v_Input.WorldPosition, 1.0));
 
-    v_Color = vec3(1.0, 1.0, 1.0);
+    v_Color = vec3(1.0, 0.5, 0.31);
 
-    gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);
+    gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
@@ -70,6 +73,7 @@ struct VertexOutput
     vec3 Binormal;
 
     mat3 CameraView;
+    vec3 CameraPosition;
 
     vec3 ViewPosition;
 };
@@ -79,9 +83,28 @@ in vec3 v_Color;
 
 void main()
 {
+    // Ambient
     float ambientStrength = 0.3;
 	vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    vec4 ambient = vec4(ambientStrength * lightColor, 1.0);
+    vec3 ambient = ambientStrength * lightColor;
 
-    o_Color = vec4(v_Color, 1.0) * ambient;
+    // Diffuse
+    float diffuseStrength = 1.0;
+    vec3 lightPos = vec3(1.2, 1.0, 2.0);
+    //vec3 lightPos = vec3(0.0, 1.0, 0.0);
+    vec3 normal = normalize(v_Input.Normal);
+    vec3 lightDir = normalize(lightPos - v_Input.WorldPosition);
+    float diffuseImpact = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diffuseImpact * lightColor * diffuseStrength;
+
+
+    // Specular
+    float shininess = 32;
+    float specularStrength = 0.5;
+    vec3 reflectDir = reflect(-lightDir, normal);
+    vec3 viewDir = normalize(v_Input.WorldPosition - v_Input.CameraPosition);
+    float specularImpact = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    vec3 specular = specularStrength * specularImpact * lightColor;
+
+    o_Color = vec4(v_Color, 1.0) * vec4(ambient + diffuse + specular, 1.0);
 }

@@ -23,6 +23,7 @@ namespace Kablunk
 			glm::mat4 InverseViewProjectionMatrix;
 			glm::mat4 ProjectionMatrix;
 			glm::mat4 ViewMatrix;
+			glm::vec3 CameraPosition;
 		};
 		
 		struct RendererData

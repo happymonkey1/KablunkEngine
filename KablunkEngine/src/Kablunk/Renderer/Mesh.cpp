@@ -77,8 +77,7 @@ namespace Kablunk
 
 		// #TODO 3d animations
 		{
-			m_vertex_buffer = VertexBuffer::Create((uint32_t)m_vertices.size());
-			m_vertex_buffer->SetData(m_vertices.data(), (uint32_t)m_vertices.size());
+			m_vertex_buffer = VertexBuffer::Create(m_vertices.data(), (uint32_t)m_vertices.size() * sizeof(Vertex));
 			m_vertex_buffer_layout = {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
@@ -89,7 +88,7 @@ namespace Kablunk
 			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
 		}
 
-		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index) / sizeof(uint32_t)));
 	}
 
 	MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
@@ -97,7 +96,7 @@ namespace Kablunk
 	{
 		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
 
-		m_vertex_buffer = VertexBuffer::Create((uint32_t)m_vertices.size());
+		m_vertex_buffer = VertexBuffer::Create(m_vertices.data(), (uint32_t)(m_vertices.size() * sizeof(Vertex)));
 
 		m_vertex_buffer_layout = {
 			{ ShaderDataType::Float3, "a_Position" },
@@ -107,9 +106,9 @@ namespace Kablunk
 			{ ShaderDataType::Float2, "a_TexCoord" }
 		};
 		m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
-		m_vertex_buffer->SetData(m_vertices.data(), (uint32_t)m_vertices.size());
 
-		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+		KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
+		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index) / sizeof(uint32_t)));
 	}
 
 	MeshData::~MeshData()
@@ -198,16 +197,27 @@ namespace Kablunk
 
 		std::vector<Index> indices;
 		indices.resize(12);
+		//Front
 		indices[0]  = { 0, 1, 2 };
 		indices[1]  = { 2, 3, 0 };
-		indices[2]  = { 1, 5, 6 };
-		indices[3]  = { 6, 2, 1 };
-		indices[4]  = { 7, 6, 5 };
-		indices[5]  = { 5, 4, 7 };
-		indices[6]  = { 4, 0, 3 };
-		indices[7]  = { 3, 7, 4 };
-		indices[8]  = { 4, 5, 1 };
-		indices[9]  = { 1, 0, 4 };
+		
+		//Right
+		indices[2] = { 1, 5, 6 };
+		indices[3] = { 6, 2, 1 };
+		
+		//Back
+		indices[4] = { 7, 6, 5 };
+		indices[5] = { 5, 4, 7 };
+
+		// Left
+		indices[6] = { 4, 0, 3 };
+		indices[7] = { 3, 7, 4 };
+		
+		//Bottom
+		indices[8] = { 4, 5, 1 };
+		indices[9] = { 1, 0, 4 };
+		
+		//Top
 		indices[10] = { 3, 2, 6 };
 		indices[11] = { 6, 7, 3 };
 

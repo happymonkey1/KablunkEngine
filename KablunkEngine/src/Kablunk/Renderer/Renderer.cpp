@@ -45,6 +45,7 @@ namespace Kablunk
 		m_SceneData->camera_buffer.InverseViewProjectionMatrix = glm::inverse(view_projection_mat);
 		m_SceneData->camera_buffer.ProjectionMatrix = camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = view_mat;
+		m_SceneData->camera_buffer.CameraPosition = transform[3];
 		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
@@ -54,6 +55,7 @@ namespace Kablunk
 		m_SceneData->camera_buffer.InverseViewProjectionMatrix = glm::inverse(editor_camera.GetViewProjectionMatrix());
 		m_SceneData->camera_buffer.ProjectionMatrix = editor_camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = editor_camera.GetViewMatrix();
+		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetTranslation();
 		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
@@ -89,6 +91,8 @@ namespace Kablunk
 		//mesh_shader->SetMat4("u_Transform", transform);
 
 		mesh->GetVertexArray()->Bind();
+		//RenderCommand::SetWireframeMode(true);
 		RenderCommand::DrawIndexed(mesh->GetVertexArray());
+		//RenderCommand::SetWireframeMode(false);
 	}
 }
