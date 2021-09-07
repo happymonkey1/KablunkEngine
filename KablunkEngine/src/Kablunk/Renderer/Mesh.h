@@ -99,7 +99,7 @@ namespace Kablunk
 	class Mesh
 	{
 	public:
-		explicit Mesh(Ref<MeshData> mesh_data);
+		Mesh(Ref<MeshData> mesh_data);
 		Mesh(const Ref<Mesh>& other);
 		virtual ~Mesh();
 

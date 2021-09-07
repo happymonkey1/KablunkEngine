@@ -203,9 +203,24 @@ namespace Kablunk
 	{
 		Ref<Kablunk::Mesh> Mesh;
 
+		MeshComponent() = default;
 		MeshComponent(const Ref<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
 		MeshComponent(const MeshComponent&) = default;
+	};
+
+	struct PointLightComponent
+	{
+		float Multiplier;
+		glm::vec3 Radiance;
+		float Radius;
+		float Min_radius;
+		float Falloff;
+
+		PointLightComponent() = default;
+		PointLightComponent(float multiplier, const glm::vec3& radiance, float radius, float min_radius, float falloff)
+			: Multiplier{ multiplier }, Radiance{ radiance }, Radius{ radius }, Min_radius{ min_radius }, Falloff{ falloff } {}
+		PointLightComponent(const PointLightComponent&) = default;
 	};
 }
 

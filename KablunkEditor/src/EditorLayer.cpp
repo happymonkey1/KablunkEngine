@@ -367,6 +367,13 @@ namespace Kablunk
 				}
 			}
 		}
+		else if (selected_entity && m_gizmo_type == -1)
+		{
+			if (selected_entity.HasComponent<PointLightComponent>())
+			{
+				// #TODO add guizmo for point light
+			}
+		}
 
 		
 		ImGui::PopStyleVar();

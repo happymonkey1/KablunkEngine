@@ -12,6 +12,8 @@ namespace Kablunk
 {
 	class Entity;
 
+	
+
 	class Scene
 	{
 	public:

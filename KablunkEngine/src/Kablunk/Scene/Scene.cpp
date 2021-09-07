@@ -210,6 +210,30 @@ namespace Kablunk
 		{
 			Renderer::BeginScene(camera);
 
+			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
+			std::vector<PointLightData> point_lights_data = {};
+			uint32_t point_light_count = 0;
+			for (auto id : point_lights)
+			{
+				auto entity = Entity{ id, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+				PointLightData plight_data = {
+					transform.Translation,
+					plight_comp.Multiplier,
+					plight_comp.Radiance,
+					plight_comp.Radius,
+					plight_comp.Min_radius,
+					plight_comp.Falloff
+				};
+
+				point_lights_data.push_back(plight_data);
+				point_light_count++;
+			}
+			
+			Renderer::SubmitPointLights(point_lights_data, point_light_count);
+
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
 			for (auto entity_id : mesh_group)
 			{
@@ -291,6 +315,9 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component) { }
 
 	template <>
 	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component) { }

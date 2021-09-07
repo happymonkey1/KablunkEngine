@@ -15,8 +15,13 @@ namespace Kablunk
 
 		// #TODO move elsewhere when refactoring renderer
 		s_shader_library->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+
+		// Setting up data
+
+		// Uniform buffers
 		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
 		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
+		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(uint32_t) + sizeof(PointLightData) * MAX_POINT_LIGHTS, 2);
 
 		RenderCommand::Init();
 		Renderer2D::Init();
@@ -94,5 +99,13 @@ namespace Kablunk
 		//RenderCommand::SetWireframeMode(true);
 		RenderCommand::DrawIndexed(mesh->GetVertexArray());
 		//RenderCommand::SetWireframeMode(false);
+	}
+
+	void Renderer::SubmitPointLights(std::vector<PointLightData>& lights, uint32_t count)
+	{
+		KB_CORE_ASSERT(lights.size() < MAX_POINT_LIGHTS, "only {0} concurrent point lights are supported!", MAX_POINT_LIGHTS);
+		m_SceneData->plights_buffer = { count, lights.data() };
+		
+		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLightData) * count);
 	}
 }

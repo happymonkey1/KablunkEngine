@@ -63,6 +63,22 @@ void main()
 
 layout(location = 0) out vec4 o_Color;
 
+struct PointLight
+{
+    vec3 Position;
+    float Multiplier;
+    vec3 Radiance;
+    float Radius;
+    float MinRadius;
+    float Falloff;
+};
+
+layout(std140, binding = 2) uniform PointLightsData
+{
+    uint u_PointLightsCount;
+    PointLight u_PointLights[16];
+};
+
 struct VertexOutput
 {
     vec3 WorldPosition;
@@ -78,33 +94,114 @@ struct VertexOutput
     vec3 ViewPosition;
 };
 
+
+
 in VertexOutput v_Input;
 in vec3 v_Color;
+in PointLight light;
+
+vec3 GetPointLightAttenuationValues(in float distance)
+{
+    // Values courtesy of Orge3D's wiki: https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
+    if (distance <= 7)
+    {
+        return vec3(1.0, 0.7, 1.8);
+    }
+    else if (distance <= 13)
+    {
+        return vec3(1.0, 0.35, 0.44);
+    }
+    else if (distance <= 20)
+    {
+        return vec3(1.0, 0.22, 0.2);
+    }
+    else if (distance <= 32)
+    {
+        return vec3(1.0, 0.14, 0.07);
+    }
+    else if (distance <= 50)
+    {
+        return vec3(1.0, 0.09, 0.032);
+    }
+    else if (distance <= 65)
+    {
+        return vec3(1.0, 0.07, 0.017);
+    }
+    else if (distance <= 100)
+    {
+        return vec3(1.0, 0.045, 0.0075);
+    }
+    else if (distance <= 160)
+    {
+        return vec3(1.0, 0.027, 0.0028);
+    }
+    else if (distance <= 200)
+    {
+        return vec3(1.0, 0.022, 0.0019);
+    }
+    else if (distance <= 325)
+    {
+        return vec3(1.0, 0.014, 0.0007);
+    }
+    else if (distance <= 600)
+    {
+        return vec3(1.0, 0.007, 0.0002);
+    }
+    else 
+    {
+        return vec3(1.0, 0.0014, 0.000007);
+    }
+}
+
+// TODO prob bad to pass VertexOutput into func, assuming it copies data
+vec3 CalculatePointLights()
+{
+    float diffuseStrength = 1.0;
+    float specularStrength = 0.5;
+    
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < u_PointLightsCount; i++)
+    {
+        PointLight light = u_PointLights[i];
+        float distance = length(light.Position - v_Input.WorldPosition);
+        vec3 attenuationValues = GetPointLightAttenuationValues(distance);
+        float constant = attenuationValues.x;
+        float linear = attenuationValues.y;
+        float quadratic = attenuationValues.z;
+
+        float attenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
+    
+        vec3 radiance = light.Radiance * light.Multiplier * attenuation;
+
+        // Diffuse
+        vec3 normal = normalize(v_Input.Normal);
+        vec3 lightDir = normalize(light.Position - v_Input.WorldPosition);
+        float diffuseImpact = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = diffuseImpact * radiance * diffuseStrength;
+
+        // Specular
+        float shininess = 32;
+        vec3 reflectDir = reflect(-lightDir, normal);
+        vec3 viewDir = normalize(v_Input.WorldPosition - v_Input.CameraPosition);
+        float specularImpact = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+        vec3 specular = specularStrength * specularImpact * radiance;
+
+        result += diffuse + specular;
+        //result += vec3(1.0);
+    }
+
+    return result;
+}
 
 void main()
 {
+
     // Ambient
     float ambientStrength = 0.3;
-	vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    vec3 ambient = ambientStrength * lightColor;
+    vec3 ambientColor = vec3(1.0);
+    vec4 ambient = vec4(ambientStrength * ambientColor, 1.0);
 
-    // Diffuse
-    float diffuseStrength = 1.0;
-    vec3 lightPos = vec3(1.2, 1.0, 2.0);
-    //vec3 lightPos = vec3(0.0, 1.0, 0.0);
-    vec3 normal = normalize(v_Input.Normal);
-    vec3 lightDir = normalize(lightPos - v_Input.WorldPosition);
-    float diffuseImpact = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diffuseImpact * lightColor * diffuseStrength;
+    vec4 pLightsColor = vec4(CalculatePointLights(), 1.0);
 
-
-    // Specular
-    float shininess = 32;
-    float specularStrength = 0.5;
-    vec3 reflectDir = reflect(-lightDir, normal);
-    vec3 viewDir = normalize(v_Input.WorldPosition - v_Input.CameraPosition);
-    float specularImpact = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    vec3 specular = specularStrength * specularImpact * lightColor;
-
-    o_Color = vec4(v_Color, 1.0) * vec4(ambient + diffuse + specular, 1.0);
+    o_Color = vec4(v_Color, 1.0) * (ambient + pLightsColor);
 }

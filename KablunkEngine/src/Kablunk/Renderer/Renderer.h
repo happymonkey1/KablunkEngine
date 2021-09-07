@@ -15,6 +15,25 @@
 
 namespace Kablunk
 {
+	constexpr uint32_t MAX_POINT_LIGHTS = 16;
+
+	struct PointLightData
+	{
+		glm::vec3 Position;
+		float Multiplier;
+		glm::vec3 Radiance;
+		float Radius;
+		float Min_radius;
+		float Falloff;
+	};
+
+	// #TODO rename to avoid confusion
+	struct PointLightsData
+	{
+		uint32_t count;
+		PointLightData* lights[MAX_POINT_LIGHTS];
+	};
+
 	struct SceneData
 	{
 		struct CameraData
@@ -33,9 +52,13 @@ namespace Kablunk
 
 		CameraData camera_buffer;
 		RendererData renderer_buffer;
+		PointLightsData plights_buffer;
 		Ref<UniformBuffer> camera_uniform_buffer;
 		Ref<UniformBuffer> renderer_uniform_buffer;
+		Ref<UniformBuffer> point_lights_uniform_buffer;
 	};
+
+	
 
 	class Renderer
 	{
@@ -49,9 +72,9 @@ namespace Kablunk
 		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
 
-
 		static void Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform);
+		static void SubmitPointLights(std::vector<PointLightData>& data, uint32_t count);
 
 		static Ref<Texture2D> GetWhiteTexture();
 

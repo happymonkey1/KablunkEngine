@@ -65,7 +65,12 @@ namespace Kablunk
 			{
 				auto entity = m_context->CreateEntity("Cube");
 				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f));
+			}
 
+			if (ImGui::MenuItem("Create Point Light"))
+			{
+				auto entity = m_context->CreateEntity("Point Light");
+				auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
 			}
 
 			ImGui::EndPopup();
@@ -323,6 +328,18 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<MeshComponent>() && ImGui::MenuItem("Mesh"))
+			{
+				m_selection_context.AddComponent<MeshComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (!m_selection_context.HasComponent<PointLightComponent>() && ImGui::MenuItem("Point Light"))
+			{
+				m_selection_context.AddComponent<PointLightComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -482,6 +499,34 @@ namespace Kablunk
 						}
 					}
 				}
+			});
+
+		DrawComponent<MeshComponent>("Mesh", entity, [&](auto& component)
+			{
+				ImGui::Text("FIXME");
+			});
+
+		DrawComponent<PointLightComponent>("Point Light", entity, [&](auto& component)
+			{
+				float multiplier = component.Multiplier;
+				if (ImGui::DragFloat("Multiplier", &multiplier, 0.1f))
+					component.Multiplier = multiplier;
+
+				glm::vec3 radiance = glm::vec3{ 1.0f };
+				if (ImGui::ColorEdit3("Radiance", glm::value_ptr(radiance)))
+					component.Radiance = radiance;
+
+				float r = component.Radius;
+				if (ImGui::DragFloat("Radius", &r, 0.1f))
+					component.Radius = r;
+
+				float min_r = component.Min_radius;
+				if (ImGui::DragFloat("Minimum Radius", &min_r, 0.1f))
+					component.Radius = min_r;
+
+				float falloff = component.Falloff;
+				if (ImGui::DragFloat("Falloff Distance", &falloff, 0.1f))
+					component.Falloff = falloff;
 			});
 
 		// Debug Panels
