@@ -21,7 +21,7 @@ namespace Kablunk
 		// Uniform buffers
 		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
 		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
-		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(uint32_t) + sizeof(PointLightData) * MAX_POINT_LIGHTS, 2);
+		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 2);
 
 		RenderCommand::Init();
 		Renderer2D::Init();
@@ -47,7 +47,6 @@ namespace Kablunk
 		auto view_mat = glm::inverse(transform);
 		auto view_projection_mat = camera.GetProjection() * glm::inverse(transform);
 		m_SceneData->camera_buffer.ViewProjectionMatrix = view_projection_mat;
-		m_SceneData->camera_buffer.InverseViewProjectionMatrix = glm::inverse(view_projection_mat);
 		m_SceneData->camera_buffer.ProjectionMatrix = camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = view_mat;
 		m_SceneData->camera_buffer.CameraPosition = transform[3];
@@ -57,7 +56,6 @@ namespace Kablunk
 	void Renderer::BeginScene(const EditorCamera& editor_camera)
 	{
 		m_SceneData->camera_buffer.ViewProjectionMatrix = editor_camera.GetViewProjectionMatrix();
-		m_SceneData->camera_buffer.InverseViewProjectionMatrix = glm::inverse(editor_camera.GetViewProjectionMatrix());
 		m_SceneData->camera_buffer.ProjectionMatrix = editor_camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = editor_camera.GetViewMatrix();
 		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetTranslation();
@@ -101,11 +99,13 @@ namespace Kablunk
 		//RenderCommand::SetWireframeMode(false);
 	}
 
-	void Renderer::SubmitPointLights(std::vector<PointLightData>& lights, uint32_t count)
+	void Renderer::SubmitPointLights(std::vector<PointLight>& lights, uint32_t count)
 	{
+		KB_CORE_ASSERT(lights.size() == count, "count and light vector sizes are different!");
 		KB_CORE_ASSERT(lights.size() < MAX_POINT_LIGHTS, "only {0} concurrent point lights are supported!", MAX_POINT_LIGHTS);
-		m_SceneData->plights_buffer = { count, lights.data() };
-		
-		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLightData) * count);
+		m_SceneData->plights_buffer.count = count;
+		memcpy(m_SceneData->plights_buffer.lights, lights.data(), sizeof(PointLight) * count);
+
+		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
 	}
 }

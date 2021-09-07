@@ -2,6 +2,7 @@
 #define KABLUNK_RENDERER_RENDERER_H
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Kablunk/Renderer/RendererTypes.h"
 #include "Kablunk/Renderer/RenderCommand.h"
@@ -17,21 +18,25 @@ namespace Kablunk
 {
 	constexpr uint32_t MAX_POINT_LIGHTS = 16;
 
-	struct PointLightData
+	// #TODO move to scene
+	struct PointLight
 	{
-		glm::vec3 Position;
-		float Multiplier;
-		glm::vec3 Radiance;
-		float Radius;
-		float Min_radius;
-		float Falloff;
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		float Multiplier = { 1.0f };
+		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+		float Radius = { 10.0f };
+		float Min_radius = { 1.0f };
+		float Falloff = { 1.0f };
+
+		char Padding[8]{}; // Don't know why this is needed, but sizeof PointLight = 48 bytes makes it work???
 	};
 
 	// #TODO rename to avoid confusion
 	struct PointLightsData
 	{
 		uint32_t count;
-		PointLightData* lights[MAX_POINT_LIGHTS];
+		glm::vec3 Padding{}; // I have no idea why this is needed but it is
+		PointLight lights[MAX_POINT_LIGHTS]{};
 	};
 
 	struct SceneData
@@ -39,7 +44,6 @@ namespace Kablunk
 		struct CameraData
 		{
 			glm::mat4 ViewProjectionMatrix;
-			glm::mat4 InverseViewProjectionMatrix;
 			glm::mat4 ProjectionMatrix;
 			glm::mat4 ViewMatrix;
 			glm::vec3 CameraPosition;
@@ -74,7 +78,7 @@ namespace Kablunk
 
 		static void Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform);
-		static void SubmitPointLights(std::vector<PointLightData>& data, uint32_t count);
+		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
 		static Ref<Texture2D> GetWhiteTexture();
 

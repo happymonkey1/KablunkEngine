@@ -211,7 +211,7 @@ namespace Kablunk
 			Renderer::BeginScene(camera);
 
 			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-			std::vector<PointLightData> point_lights_data = {};
+			std::vector<PointLight> point_lights_data = {};
 			uint32_t point_light_count = 0;
 			for (auto id : point_lights)
 			{
@@ -219,10 +219,10 @@ namespace Kablunk
 				auto& transform = entity.GetComponent<TransformComponent>();
 				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				PointLightData plight_data = {
-					transform.Translation,
+				PointLight plight_data = {
+					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
 					plight_comp.Multiplier,
-					plight_comp.Radiance,
+					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
 					plight_comp.Radius,
 					plight_comp.Min_radius,
 					plight_comp.Falloff

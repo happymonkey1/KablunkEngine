@@ -512,7 +512,7 @@ namespace Kablunk
 				if (ImGui::DragFloat("Multiplier", &multiplier, 0.1f))
 					component.Multiplier = multiplier;
 
-				glm::vec3 radiance = glm::vec3{ 1.0f };
+				glm::vec3 radiance = component.Radiance;
 				if (ImGui::ColorEdit3("Radiance", glm::value_ptr(radiance)))
 					component.Radiance = radiance;
 
@@ -522,7 +522,7 @@ namespace Kablunk
 
 				float min_r = component.Min_radius;
 				if (ImGui::DragFloat("Minimum Radius", &min_r, 0.1f))
-					component.Radius = min_r;
+					component.Min_radius = min_r;
 
 				float falloff = component.Falloff;
 				if (ImGui::DragFloat("Falloff Distance", &falloff, 0.1f))

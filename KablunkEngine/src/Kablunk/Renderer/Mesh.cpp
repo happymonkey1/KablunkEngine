@@ -166,24 +166,24 @@ namespace Kablunk
 
 
 		// #FIXME this is garbage data
-		verts[0].Binormal = { -1.0f, -1.0f,  1.0f };
-		verts[1].Binormal = { 1.0f, -1.0f,  1.0f };
-		verts[2].Binormal = { 1.0f,  1.0f,  1.0f };
-		verts[3].Binormal = { -1.0f,  1.0f,  1.0f };
-		verts[4].Binormal = { -1.0f, -1.0f, -1.0f };
-		verts[5].Binormal = { 1.0f, -1.0f, -1.0f };
-		verts[6].Binormal = { 1.0f,  1.0f, -1.0f };
-		verts[7].Binormal = { -1.0f,  1.0f, -1.0f };
+		verts[0].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[1].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[2].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[3].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[4].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[5].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[6].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[7].Binormal = { 1.0f, 1.0f, 1.0f };
 
 		// #FIXME this is garbage data
-		verts[0].Tangent = { -1.0f, -1.0f,  1.0f };
-		verts[1].Tangent = { 1.0f, -1.0f,  1.0f };
-		verts[2].Tangent = { 1.0f,  1.0f,  1.0f };
-		verts[3].Tangent = { -1.0f,  1.0f,  1.0f };
-		verts[4].Tangent = { -1.0f, -1.0f, -1.0f };
-		verts[5].Tangent = { 1.0f, -1.0f, -1.0f };
-		verts[6].Tangent = { 1.0f,  1.0f, -1.0f };
-		verts[7].Tangent = { -1.0f,  1.0f, -1.0f };
+		verts[0].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[1].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[2].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[3].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[4].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[5].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[6].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[7].Tangent = { 1.0f, 1.0f, 1.0f };
 
 		// #FIXME this is garbage data
 		verts[0].TexCoord = { 1.0f, 1.0f, };
