@@ -6,6 +6,7 @@ layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec3 a_Tangent;
 layout(location = 3) in vec3 a_Binormal;
 layout(location = 4) in vec2 a_TexCoord;
+layout(location = 5) in int a_EntityID;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -20,6 +21,12 @@ layout(std140, binding = 1) uniform Renderer
 {
     uniform mat4 u_Transform;
 };
+
+
+// Material
+uniform sampler2D DiffuseMap;
+uniform sampler2D SpecularMap;
+uniform float Shininess;
 
 struct VertexOutput
 {
@@ -38,6 +45,7 @@ struct VertexOutput
 
 out VertexOutput v_Input;
 out vec3 v_Color;
+flat out int v_EntityID;
 
 void main()
 {
@@ -52,7 +60,8 @@ void main()
     v_Input.CameraPosition = u_CameraPosition;
     v_Input.ViewPosition = vec3(u_ViewMatrix * vec4(v_Input.WorldPosition, 1.0));
 
-    v_Color = vec3(1.0, 0.5, 0.31);
+    v_Color = vec3(1.0, 1.0, 1.0);
+    v_EntityID = a_EntityID;
 
     gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 }
@@ -61,6 +70,7 @@ void main()
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityID;
 
 struct PointLight
 {
@@ -72,7 +82,7 @@ struct PointLight
     float Falloff;
 };
 
-layout(std140, binding = 2) uniform PointLightsData
+layout(std140, binding = 3) uniform PointLightsData
 {
     uint u_PointLightsCount;
     PointLight u_PointLights[16];
@@ -98,6 +108,7 @@ struct VertexOutput
 in VertexOutput v_Input;
 in vec3 v_Color;
 in PointLight light;
+flat in int v_EntityID;
 
 vec3 GetPointLightAttenuationValues(in float distance)
 {
@@ -159,7 +170,7 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
     float diffuseStrength = 1.0;
     float specularStrength = 0.5;
     
-    vec3 result = vec3(0.0);
+    vec3 result = vec3(0.33);
     for (int i = 0; i < u_PointLightsCount; i++)
     {
         PointLight light = u_PointLights[i];
@@ -196,12 +207,10 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 
 void main()
 {
-
-    
-
     vec3 normal = normalize(v_Input.Normal);
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
     vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
     o_Color = vec4(v_Color, 1.0) * (pLightsColor);
+    o_EntityID = v_EntityID;
 }

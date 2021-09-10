@@ -24,6 +24,11 @@ namespace Assimp
 
 namespace Kablunk
 {
+	class Entity;
+}
+
+namespace Kablunk
+{
 	struct Vertex
 	{
 		glm::vec3 Position;
@@ -31,6 +36,7 @@ namespace Kablunk
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 TexCoord;
+		int32_t EntityID;
 	};
 
 	struct Index
@@ -54,7 +60,7 @@ namespace Kablunk
 	class MeshData
 	{
 	public:
-		MeshData(const std::string& filename);
+		MeshData(const std::string& filename, Kablunk::Entity entity);
 		MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform);
 		virtual ~MeshData();
 
@@ -118,7 +124,7 @@ namespace Kablunk
 	class MeshFactory
 	{
 	public:
-		static Ref<Mesh> CreateCube(float side_length);
+		static Ref<Mesh> CreateCube(float side_length, Entity entity);
 	};
 }
 

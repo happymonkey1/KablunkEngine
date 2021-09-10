@@ -33,6 +33,11 @@ namespace Kablunk
 		void OpenScene(const std::filesystem::path& path);
 
 		void ViewportClickSelectEntity();
+
+		void UI_Toolbar();
+
+		void OnScenePlay();
+		void OnSceneStop();
 	private:
 
 		Ref<Framebuffer> m_frame_buffer;
@@ -51,8 +56,18 @@ namespace Kablunk
 
 		Entity m_selected_entity;
 
+		// Panels
 		SceneHierarchyPanel m_scene_hierarchy_panel;
 		ContentBrowserPanel m_content_browser_panel;
+
+		// Resources
+		Ref<Texture2D> m_icon_play, m_icon_stop;
+
+		enum class SceneState
+		{
+			Edit = 0, Play = 1
+		};
+		SceneState m_scene_state{ SceneState::Edit };
 
 		struct ProfileResult
 		{
@@ -69,6 +84,8 @@ namespace Kablunk
 			float Fps{ 10.0f };
 		};
 		ImGuiProfilerStats m_imgui_profiler_stats;
+
+		
 	};
 }
 #endif

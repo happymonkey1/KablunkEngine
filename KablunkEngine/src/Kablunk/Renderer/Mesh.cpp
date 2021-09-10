@@ -4,6 +4,7 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Scene/Entity.h"
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -15,7 +16,7 @@ namespace Kablunk
 		aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 	
 
-	MeshData::MeshData(const std::string& filepath)
+	MeshData::MeshData(const std::string& filepath, Entity entity)
 		: m_filepath{ filepath }
 	{
 		KB_CORE_TRACE("Loading mesh: '{0}'", filepath.c_str());
@@ -45,7 +46,8 @@ namespace Kablunk
 				Vertex v;
 				v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 				v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-				
+				v.EntityID = static_cast<int32_t>(entity);
+
 				if (mesh->HasTangentsAndBitangents())
 				{
 					v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
@@ -57,6 +59,8 @@ namespace Kablunk
 					// #FIXME figure out how to deal with multiple textures
 					v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
 				}
+
+
 
 				m_vertices.push_back(v);
 			}
@@ -83,7 +87,8 @@ namespace Kablunk
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
 				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" }
+				{ ShaderDataType::Float2, "a_TexCoord" },
+				{ ShaderDataType::Int, "a_EntityID" }
 			};
 			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
 		}
@@ -103,7 +108,8 @@ namespace Kablunk
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
 			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_TexCoord" }
+			{ ShaderDataType::Float2, "a_TexCoord" },
+			{ ShaderDataType::Int, "a_EntityID" }
 		};
 		m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
 
@@ -142,7 +148,7 @@ namespace Kablunk
 		KB_CORE_WARN("Mesh OnUpdate() not implemented!");
 	}
 
-	Ref<Mesh> MeshFactory::CreateCube(float side_length)
+	Ref<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	{
 		std::vector<Vertex> verts;
 		verts.resize(8);
@@ -194,6 +200,16 @@ namespace Kablunk
 		verts[5].TexCoord = { 1.0f, 1.0f, };
 		verts[6].TexCoord = { 1.0f, 1.0f, };
 		verts[7].TexCoord = { 1.0f, 1.0f, };
+
+
+		verts[0].EntityID = static_cast<int32_t>(entity);
+		verts[1].EntityID = static_cast<int32_t>(entity);
+		verts[2].EntityID = static_cast<int32_t>(entity);
+		verts[3].EntityID = static_cast<int32_t>(entity);
+		verts[4].EntityID = static_cast<int32_t>(entity);
+		verts[5].EntityID = static_cast<int32_t>(entity);
+		verts[6].EntityID = static_cast<int32_t>(entity);
+		verts[7].EntityID = static_cast<int32_t>(entity);
 
 		std::vector<Index> indices;
 		indices.resize(12);

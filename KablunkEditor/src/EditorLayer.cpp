@@ -27,6 +27,9 @@ namespace Kablunk
 	{
 		m_active_scene = CreateRef<Scene>();
 
+		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
+		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
+
 #if 0
 		auto square = m_active_scene->CreateEntity("Square Entity");
 		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
@@ -108,9 +111,7 @@ namespace Kablunk
 		
 		//if (m_viewport_focused) m_editor_camera.OnUpdate(ts);
 
-		m_content_browser_panel.OnUpdate(ts);
-
-		m_editor_camera.OnUpdate(ts);
+		//m_content_browser_panel.OnUpdate(ts);
 
 		if (m_imgui_profiler_stats.Counter >= m_imgui_profiler_stats.Counter_max)
 		{
@@ -122,6 +123,7 @@ namespace Kablunk
 		else
 			m_imgui_profiler_stats.Counter += ts.GetMiliseconds() / 1000.0f;
 
+		// #TODO move to a scene renderer
 		auto spec = m_frame_buffer->GetSpecification();
 		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
 			&& (spec.Width != m_viewport_size.x || spec.Height != m_viewport_size.y))
@@ -136,8 +138,12 @@ namespace Kablunk
 		//   Render
 		// ==========
 
+
+		
+
 		Renderer2D::ResetStats();
 
+		// #TODO move to a scene renderer
 		m_frame_buffer->Bind();
 
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
@@ -146,9 +152,22 @@ namespace Kablunk
 		// Clear our entity ID buffer to -1
 		m_frame_buffer->ClearAttachment(1, -1);
 
-		m_active_scene->OnUpdateEditor(ts, m_editor_camera);
+		switch (m_scene_state)
+		{
+		case SceneState::Edit:
 
-		ViewportClickSelectEntity();
+			m_editor_camera.OnUpdate(ts);
+
+			m_active_scene->OnUpdateEditor(ts, m_editor_camera);
+
+			ViewportClickSelectEntity();
+			break;
+		case SceneState::Play:
+
+			m_active_scene->OnUpdateRuntime(ts);
+
+			break;
+		}
 
 		m_frame_buffer->Unbind();
 	}
@@ -230,15 +249,12 @@ namespace Kablunk
 				if (ImGui::MenuItem("New", "Crtl+N"))
 					NewScene();
 				
-
 				if (ImGui::MenuItem("Open...", "Crtl+O"))
 					OpenScene();
 				
-
 				if (ImGui::MenuItem("Save As...", "Crtl+Shift+S"))
 					SaveSceneAs();
 				
-
 				if (ImGui::MenuItem("Exit")) 
 					Application::Get().Close();
 
@@ -302,8 +318,14 @@ namespace Kablunk
 			{
 				const auto path_wchar_str = (const wchar_t*)payload->Data;
 				auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
-				if (path.extension() == ".kablunkscene")
+				if (path.extension() == FILE_EXTENSIONS::KABLUNK_SCENE)
 					OpenScene(path);	
+				else if (path.extension() == FILE_EXTENSIONS::FBX)
+				{
+					auto entity = m_active_scene->CreateEntity("Untitled Model");
+					auto& mesh_comp = entity.AddComponent<MeshComponent>();
+					mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+				}
 				else
 					KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
 			}
@@ -312,6 +334,11 @@ namespace Kablunk
 
 		// ImGuizmo
 
+		
+
+
+		
+
 		// #TODO refactor to use callbacks instead of querying current scene
 		auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
 		if (selected_entity && m_gizmo_type != -1)
@@ -319,7 +346,7 @@ namespace Kablunk
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 
-			float window_width  = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
+			float window_width = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
 			float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
 			ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
 
@@ -379,7 +406,48 @@ namespace Kablunk
 		ImGui::PopStyleVar();
 		ImGui::End();
 
+		UI_Toolbar();
+
 		ImGui::End();
+	}
+
+	void EditorLayer::UI_Toolbar()
+	{
+		auto flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 1 });
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, { 0, 0 });
+		ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.3f, 0.305f, 0.31f, 0.5f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.15f, 0.1505f, 0.151f, 0.5f });
+		ImGui::Begin("##toolbar", nullptr, flags);
+
+		auto icon = m_scene_state == SceneState::Edit ? m_icon_play : m_icon_stop;
+		float size = ImGui::GetWindowHeight() - 4.0f;
+
+		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
+		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { size, size }, { 0, 0 }, { 1, 1 }, 0))
+		{
+			if (m_scene_state == SceneState::Edit)
+				OnScenePlay();
+			else if (m_scene_state == SceneState::Play)
+				OnSceneStop();
+		}
+
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(3);
+
+		ImGui::End();
+	}
+
+	void EditorLayer::OnScenePlay()
+	{
+		m_scene_state = SceneState::Play;
+	}
+
+	void EditorLayer::OnSceneStop()
+	{
+		m_scene_state = SceneState::Edit;
 	}
 
 	void EditorLayer::OnEvent(Event& e)

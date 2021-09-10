@@ -202,11 +202,23 @@ namespace Kablunk
 	struct MeshComponent
 	{
 		Ref<Kablunk::Mesh> Mesh;
+		std::string Filepath = "";
 
 		MeshComponent() = default;
 		MeshComponent(const Ref<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
 		MeshComponent(const MeshComponent&) = default;
+
+		void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
+		{
+			if (!Filepath.empty())
+				Mesh.reset();
+
+			auto mesh_data = CreateRef<MeshData>(filepath, entity);
+			Mesh = CreateRef<Kablunk::Mesh>(mesh_data);
+
+			Filepath = filepath;
+		}
 	};
 
 	struct PointLightComponent

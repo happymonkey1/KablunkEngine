@@ -21,7 +21,7 @@ namespace Kablunk
 		// Uniform buffers
 		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
 		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
-		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 2);
+		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
 
 		RenderCommand::Init();
 		Renderer2D::Init();
@@ -46,6 +46,7 @@ namespace Kablunk
 	{
 		auto view_mat = glm::inverse(transform);
 		auto view_projection_mat = camera.GetProjection() * glm::inverse(transform);
+
 		m_SceneData->camera_buffer.ViewProjectionMatrix = view_projection_mat;
 		m_SceneData->camera_buffer.ProjectionMatrix = camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = view_mat;
@@ -101,7 +102,7 @@ namespace Kablunk
 
 	void Renderer::SubmitPointLights(std::vector<PointLight>& lights, uint32_t count)
 	{
-		KB_CORE_ASSERT(lights.size() == count, "count and light vector sizes are different!");
+		KB_CORE_ASSERT(lights.size() <= count, "count and light vector sizes are different!");
 		KB_CORE_ASSERT(lights.size() < MAX_POINT_LIGHTS, "only {0} concurrent point lights are supported!", MAX_POINT_LIGHTS);
 		m_SceneData->plights_buffer.count = count;
 		memcpy(m_SceneData->plights_buffer.lights, lights.data(), sizeof(PointLight) * count);

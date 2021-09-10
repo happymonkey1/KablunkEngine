@@ -64,7 +64,7 @@ namespace Kablunk
 			if (ImGui::MenuItem("Create Cube"))
 			{
 				auto entity = m_context->CreateEntity("Cube");
-				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f));
+				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f, entity));
 			}
 
 			if (ImGui::MenuItem("Create Point Light"))
@@ -503,7 +503,23 @@ namespace Kablunk
 
 		DrawComponent<MeshComponent>("Mesh", entity, [&](auto& component)
 			{
-				ImGui::Text("FIXME");
+				const char* add_or_change_button_text;
+				if (!component.Mesh)
+					add_or_change_button_text = "Add";
+				else
+					add_or_change_button_text = "Replace";
+
+				if (ImGui::Button(add_or_change_button_text))
+				{
+					auto filepath = FileDialog::OpenFile("Mesh (*.fbx)\0*.fbx\0");
+					if (!filepath.empty())
+						component.LoadMeshFromFileEditor(filepath, entity);
+				}
+
+				ImGui::Text("File:");
+				ImGui::PushStyleColor(ImGuiCol_Text, { 0.494f, 0.494f, 0.494f, 1.0f });
+				ImGui::TextWrapped(component.Filepath.c_str());
+				ImGui::PopStyleColor();
 			});
 
 		DrawComponent<PointLightComponent>("Point Light", entity, [&](auto& component)

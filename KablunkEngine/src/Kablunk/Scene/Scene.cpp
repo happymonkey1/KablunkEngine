@@ -144,17 +144,62 @@ namespace Kablunk
 			}
 		}
 
-		if (main_camera)
 		{
-			Renderer2D::BeginScene(*main_camera, main_camera_transform);
-
-			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto entity : group)
+			if (main_camera)
 			{
-				Renderer2D::DrawSprite({ entity, this });
-			}
+				Renderer::BeginScene(*main_camera, main_camera_transform);
 
-			Renderer2D::EndScene();
+				auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
+				std::vector<PointLight> point_lights_data = {};
+				uint32_t point_light_count = 0;
+				for (auto id : point_lights)
+				{
+					auto entity = Entity{ id, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+					PointLight plight_data = {
+						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+						plight_comp.Multiplier,
+						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+						plight_comp.Radius,
+						plight_comp.Min_radius,
+						plight_comp.Falloff
+					};
+
+					point_lights_data.push_back(plight_data);
+					point_light_count++;
+				}
+
+				Renderer::SubmitPointLights(point_lights_data, point_light_count);
+
+				auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
+				for (auto entity_id : mesh_group)
+				{
+					auto entity = Entity{ entity_id, this };
+					auto& mesh_comp = entity.GetComponent<MeshComponent>();
+					auto& transform = entity.GetComponent<TransformComponent>();
+					if (mesh_comp.Mesh)
+						Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+				}
+
+				Renderer::EndScene();
+			}
+		}
+
+		{
+			if (main_camera)
+			{
+				Renderer2D::BeginScene(*main_camera, main_camera_transform);
+
+				auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (auto entity : group)
+				{
+					Renderer2D::DrawSprite({ entity, this });
+				}
+
+				Renderer2D::EndScene();
+			}
 		}
 	}
 
@@ -240,7 +285,8 @@ namespace Kablunk
 				auto entity = Entity{ entity_id, this };
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
-				Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+				if (mesh_comp.Mesh)
+					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
 			}
 
 			Renderer::EndScene();

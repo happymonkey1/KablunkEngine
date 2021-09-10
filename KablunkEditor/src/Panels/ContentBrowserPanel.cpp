@@ -127,8 +127,7 @@ namespace Kablunk
 						else if (directory_entry.path().extension() == FILE_EXTENSIONS::FBX)
 						{
 						
-							auto mesh_data = CreateRef<Kablunk::MeshData>( directory_entry.path().string() );
-							auto mesh = Kablunk::Mesh{ mesh_data };
+							// #TODO open model in asset viewer
 						
 						}
 					}
