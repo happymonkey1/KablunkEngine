@@ -37,13 +37,21 @@ namespace Kablunk
 		entity.AddComponent<TransformComponent>();
 		
 		// Check if we should use uuid passed into when creating the id component
+		uuid::uuid64 entity_uuid;
 		if (uuid::is_nil(id))
-			entity.AddComponent<IdComponent>();
+			entity_uuid = entity.AddComponent<IdComponent>().Id;
 		else
+		{
+			entity_uuid = id;
 			entity.AddComponent<IdComponent>(id);
+		}
 
 		auto& tag = entity.AddComponent<TagComponent>(name);
 		tag = name.empty() ? "Blank Entity" : name;
+
+		entity.AddComponent<ParentingComponent>();
+
+		m_entity_map.insert({ entity_uuid, entity });
 
 		return entity;
 	}
@@ -324,6 +332,38 @@ namespace Kablunk
 		return {};
 	}
 
+	Entity Scene::GetEntityFromUUID(uuid::uuid64 id) const
+	{
+
+		auto it = m_entity_map.find(id);
+		return it != m_entity_map.end() ? it->second : Entity{};
+	}
+
+	void Scene::ParentEntity(Entity child, Entity parent)
+	{
+		if (child.GetParentUUID() != uuid::nil_uuid)
+		{
+			auto old_parent = GetEntityFromUUID(child.GetParentUUID());
+			if (old_parent)
+				UnparentEntity(child);
+		}
+
+		parent.GetChildren().push_back(child.GetUUID());
+		child.SetParentUUID(parent.GetUUID());
+	}
+
+	void Scene::UnparentEntity(Entity child)
+	{
+		Entity parent = GetEntityFromUUID(child.GetParentUUID());
+		if (!parent)
+			return;
+
+		auto& children = parent.GetChildren();
+		children.erase(std::find(children.begin(), children.end(), child.GetUUID()));
+
+		child.SetParentUUID(uuid::nil_uuid);
+	}
+
 	// #WARNING Templated code SHOULD be written in the header file, BUT since we are declaring specializations,
 	//			the compiler will not complain. However, this means that every new component added needs to have
 	//			the template specialization added. seems bad and a waste of time. 
@@ -366,9 +406,6 @@ namespace Kablunk
 	void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<ParentEntityComponent>(Entity entity, ParentEntityComponent& component) { }
-
-	template <>
-	void Scene::OnComponentAdded<ChildEntityComponent>(Entity entity, ChildEntityComponent& component) { }
+	void Scene::OnComponentAdded<ParentingComponent>(Entity entity, ParentingComponent& component) { }
 }
 

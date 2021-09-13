@@ -372,8 +372,14 @@ namespace Kablunk
 
 			float snap_values[3] = { snap_value, snap_value, snap_value };
 
-			ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(camera_projection), static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
-				ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap ? snap_values : nullptr);
+			ImGuizmo::Manipulate(glm::value_ptr(camera_view), 
+				glm::value_ptr(camera_projection), 
+				static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
+				ImGuizmo::LOCAL, 
+				glm::value_ptr(transform), 
+				nullptr, 
+				snap ? snap_values : nullptr
+			);
 
 
 			if (ImGuizmo::IsUsing())
@@ -443,6 +449,8 @@ namespace Kablunk
 	void EditorLayer::OnScenePlay()
 	{
 		m_scene_state = SceneState::Play;
+
+		m_selected_entity = {};
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -532,8 +540,13 @@ namespace Kablunk
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
-			if (CanPickFromViewport())
+			if (CanPickFromViewport() && m_scene_state != SceneState::Play)
+			{
 				m_scene_hierarchy_panel.SetSelectionContext(m_selected_entity);
+
+				// #TODO ray cast mouse picking
+
+			}
 
 		return false;
 	}
@@ -606,5 +619,18 @@ namespace Kablunk
 			else // Make sure we are not trying to use a gizmo and we are not using the editor camera
 				m_selected_entity = {};
 		}
+	}
+
+	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)
+	{
+		glm::vec4 mouse_clip_position = { mx, my, -1.0f, 1.0f };
+
+		auto inverse_projection = glm::inverse(camera.GetProjection());
+		auto inverse_view		= glm::inverse(glm::mat3{ camera.GetViewMatrix() });
+		glm::vec4 ray			= inverse_projection * mouse_clip_position;
+		glm::vec3 ray_pos		= camera.GetTranslation();
+		glm::vec3 ray_dir		= inverse_view * glm::vec3{ ray };
+
+		return { ray_pos, ray_dir };
 	}
 }

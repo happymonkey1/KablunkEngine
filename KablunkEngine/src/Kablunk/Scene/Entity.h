@@ -30,6 +30,9 @@ namespace Kablunk
 		T& GetComponent();
 
 		template <typename T>
+		T& GetComponent() const;
+
+		template <typename T>
 		T& GetOrAddComponent();
 
 		template <typename T, typename... Args>
@@ -42,6 +45,13 @@ namespace Kablunk
 
 		std::string GetHandleAsString() const { return std::to_string(static_cast<uint64_t>(m_entity_handle)); }
 		const EntityHandle& GetHandle() const { return m_entity_handle; }
+
+		const uuid::uuid64& GetUUID() const;
+		const uuid::uuid64& GetParentUUID() const;
+		std::vector<uuid::uuid64>& GetChildren();
+		const std::vector<uuid::uuid64>& GetChildren() const;
+
+		void SetParentUUID(const uuid::uuid64& uuid);
 
 		operator uint64_t() const { return static_cast<uint64_t>(m_entity_handle); }
 		operator EntityHandle() const { return m_entity_handle; }
@@ -75,6 +85,13 @@ namespace Kablunk
 
 	template <typename T>
 	T& Entity::GetComponent()
+	{
+		KB_CORE_ASSERT(HasComponent<T>(), "Component does not exist on entity!");
+		return m_scene->m_registry.get<T>(m_entity_handle);
+	}
+
+	template <typename T>
+	T& Entity::GetComponent() const
 	{
 		KB_CORE_ASSERT(HasComponent<T>(), "Component does not exist on entity!");
 		return m_scene->m_registry.get<T>(m_entity_handle);

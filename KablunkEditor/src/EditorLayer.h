@@ -38,6 +38,8 @@ namespace Kablunk
 
 		void OnScenePlay();
 		void OnSceneStop();
+
+		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
 		Ref<Framebuffer> m_frame_buffer;

@@ -13,7 +13,7 @@ namespace Kablunk
 
 		virtual ~Material() = default;
 
-		virtual void Invalidate() = 0;
+		virtual void Bind() = 0;
 
 		virtual void Set(const std::string& name, float value) = 0;
 		virtual void Set(const std::string& name, int value) = 0;

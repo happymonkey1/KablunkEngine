@@ -13,7 +13,7 @@ namespace Kablunk
 		OpenGLMaterial(const Ref<Shader>& shader, const std::string& name = "");
 		virtual ~OpenGLMaterial() = default;
 
-		virtual void Invalidate() override;
+		virtual void Bind() override;
 
 		virtual void Set(const std::string& name, float value) override;
 		virtual void Set(const std::string& name, int value) override;
@@ -39,13 +39,29 @@ namespace Kablunk
 		virtual glm::mat4& GetMat4(const std::string& name) override;
 		virtual Ref<Texture2D> GetTexture2D(const std::string& name) override;
 
-		virtual Ref<Shader> GetShader() override;
-		virtual const std::string& GetName() const override;
+		virtual Ref<Shader> GetShader() override { return m_shader; };
+		virtual const std::string& GetName() const override { return m_name; };
+	private:
+
+		int32_t GetGLLocation(const std::string& name);
+
+		template <typename FuncT>
+		void Set(const std::string& name, FuncT set_func)
+		{
+			auto location = GetGLLocation(name);
+			if (location == -1)
+			{
+				KB_CORE_ERROR("Could not find uniform '{0}'!", name);
+				return;
+			}
+			set_func(location);
+		}
+
 	private:
 		Ref<Shader> m_shader;
 		std::string m_name;
 
-		std::vector<Ref<Texture2D>> m_texture;
+		std::vector<Ref<Texture2D>> m_textures;
 	};
 }
 

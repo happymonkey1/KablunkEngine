@@ -102,6 +102,7 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
+		glBindSampler(slot, m_RendererID);
 		glBindTextureUnit(slot, m_RendererID);
 	}
 

@@ -11,8 +11,39 @@ namespace Kablunk
 
 	}
 
+	const uuid::uuid64& Entity::GetUUID() const
+	{
+		if (HasComponent<IdComponent>())
+			return GetComponent<IdComponent>().Id;
+		else
+			return uuid::nil_uuid;
+	}
+
+	const uuid::uuid64& Entity::GetParentUUID() const
+	{
+		return GetComponent<ParentingComponent>().Parent;
+	}
+
+	std::vector<uuid::uuid64>& Entity::GetChildren()
+	{
+		return GetComponent<ParentingComponent>().Children;
+	}
+
+	const std::vector<uuid::uuid64>& Entity::GetChildren() const
+	{
+		return GetComponent<ParentingComponent>().Children;
+	}
+
+	void Entity::SetParentUUID(const uuid::uuid64& uuid)
+	{
+		auto& parent_comp = GetOrAddComponent<ParentingComponent>();
+		parent_comp.Parent = uuid;
+	}
+
+
 	void Entity::AddChild(EntityHandle child_handle)
 	{
+#if 0
 		if (!HasComponent<ParentEntityComponent>()) AddComponent<ParentEntityComponent>();
 		auto& parent_comp = GetComponent<ParentEntityComponent>();
 		KB_CORE_ASSERT(!parent_comp.ContainsHandle(child_handle), "Trying to add child that already exists!");
@@ -30,10 +61,12 @@ namespace Kablunk
 			child.AddComponent<ChildEntityComponent>();
 
 		child.GetComponent<ChildEntityComponent>().SetParent(m_entity_handle);
+#endif
 	}
 
 	void Entity::RemoveChild(EntityHandle child_handle)
 	{
+#if 0
 		KB_CORE_ASSERT(!HasComponent<ParentEntityComponent>(), "Trying to remove child from an entity that doesn't have parent component!");
 		auto parent_entity_comp = GetComponent<ParentEntityComponent>();
 		KB_CORE_ASSERT(parent_entity_comp.ContainsHandle(child_handle), "Trying to remove child that doesn't exist!");
@@ -42,5 +75,6 @@ namespace Kablunk
 		auto child = Entity{ child_handle, m_scene };
 		KB_CORE_ASSERT(!HasComponent<ChildEntityComponent>(), "Trying to remove parent reference from child that does not have a child component!");
 		child.GetComponent<ChildEntityComponent>().SetParent(null_entity);
+#endif
 	}
 }

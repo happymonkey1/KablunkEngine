@@ -29,13 +29,28 @@ namespace Kablunk
 	{
 		ImGui::Begin("Scene Hierarchy");
 
-		m_context->m_registry.each(
-			[&](auto entity_id)
-			{
-				Entity entity{ entity_id, m_context.get() };
+		auto window_rect = ImRect{ ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax() };
+		
+
+		auto group = m_context->m_registry.view<IdComponent, ParentingComponent>();
+		for (auto id : group)
+		{
+			Entity entity{ id, m_context.get() };
+			if (entity.GetParentUUID() == uuid::nil_uuid)
 				DrawEntityNode(entity);
+		}
+
+		if (ImGui::BeginDragDropTargetCustom(window_rect, ImGui::GetCurrentWindow()->ID))
+		{
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("scene_entity_hierarchy");
+			if (payload)
+			{
+				Entity& dropped_entity = *(Entity*)payload->Data;
+				m_context->UnparentEntity(dropped_entity);
 			}
-		);
+
+			ImGui::EndDragDropTarget();
+		}
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) m_selection_context = {};
 
@@ -44,13 +59,15 @@ namespace Kablunk
 		{
 			if (ImGui::MenuItem("Create Blank Entity"))
 			{
-				m_context->CreateEntity();
+				auto entity = m_context->CreateEntity();
+				m_selection_context = entity;
 			}
 			
 			if (ImGui::MenuItem("Create Sprite"))
 			{
 				auto entity = m_context->CreateEntity("Blank Sprite");
 				entity.AddComponent<SpriteRendererComponent>();
+				m_selection_context = entity;
 			}
 
 			if (ImGui::MenuItem("Create Camera"))
@@ -59,49 +76,46 @@ namespace Kablunk
 				bool is_first_camera = m_context->GetPrimaryCameraEntity() == null_entity ? true : false;
 				auto& camera_comp = entity.AddComponent<CameraComponent>();
 				camera_comp.Primary = is_first_camera;
+				m_selection_context = entity;
 			}
 
 			if (ImGui::MenuItem("Create Cube"))
 			{
 				auto entity = m_context->CreateEntity("Cube");
 				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f, entity));
+				m_selection_context = entity;
 			}
 
 			if (ImGui::MenuItem("Create Point Light"))
 			{
 				auto entity = m_context->CreateEntity("Point Light");
 				auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
+				m_selection_context = entity;
 			}
 
 			ImGui::EndPopup();
 		}
+
+		
 
 		ImGui::End();
 
 		ImGui::Begin("Properties");
 
 		if (m_selection_context)
-		{
 			DrawComponents(m_selection_context);
-		}
 
 		ImGui::End();
 	}
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity, bool draw_child_node)
 	{
-		
-
-		// Should probably refactor code so un-parented entities do not have a ChildEntityComponent attached
-		// Look at entt docs for performance issues
-		// Also currently cannot have a child of a child
-		if (entity.HasComponent<ChildEntityComponent>() && entity.GetComponent<ChildEntityComponent>().Parent_entity_handle != null_entity) 
-			if (!draw_child_node)
-				return;
-
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
 		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		if (entity.GetChildren().empty())
+			node_flags |= ImGuiTreeNodeFlags_Leaf;
 
 		// Pointer voodo magic
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity, node_flags, tag.c_str());
@@ -122,17 +136,34 @@ namespace Kablunk
 		}
 
 
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+		{
+			ImGui::Text(entity.GetComponent<TagComponent>().Tag.c_str());
+			ImGui::SetDragDropPayload("scene_entity_hierarchy", &entity, sizeof(entity));
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("scene_entity_hierarchy");
+			if (payload)
+			{
+				Entity& dropped_entity = *(Entity*)payload->Data;
+				m_context->ParentEntity(dropped_entity, entity);
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
 		if (opened)
 		{
-			// Parenting placeholder code
-			if (entity.HasComponent<ParentEntityComponent>())
+			for (const auto& child_id : entity.GetChildren())
 			{
-				auto& parent_entity_comp = entity.GetComponent<ParentEntityComponent>();
-				for (auto child_handle : parent_entity_comp)
-				{
-					DrawEntityNode({ child_handle, m_context.get() }, true);
-				}
+				Entity child_entity = m_context->GetEntityFromUUID(child_id);
+				if (child_entity)
+					DrawEntityNode(child_entity);
 			}
+
 			ImGui::TreePop();
 		}
 
@@ -548,6 +579,7 @@ namespace Kablunk
 		// Debug Panels
 		if (m_display_debug_properties)
 		{
+#if 0
 			DrawComponent<ParentEntityComponent>("Children", entity, [&](auto& component)
 				{
 					for (auto child_handle : component)
@@ -566,6 +598,7 @@ namespace Kablunk
 					auto parent_tag = parent_entity.GetComponent<TagComponent>().Tag;
 					ImGui::Text("%s (%s)", parent_tag.c_str(), parent_handle_str.c_str());
 				});
+#endif
 		}
 
 	}

@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 
+#include "Kablunk/Renderer/RendererTypes.h"
+
 namespace Kablunk {
 
 	enum class ShaderUniformType
@@ -66,6 +68,7 @@ namespace Kablunk {
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
 
 		virtual const std::string& GetName() const = 0;
+		virtual RendererID GetRendererID() const = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
 		// #REMOVE deprecated

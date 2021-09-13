@@ -31,6 +31,7 @@ namespace Kablunk
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 
 		virtual const std::string& GetName() const override { return m_Name; }
+		virtual RendererID GetRendererID() const override { return m_RendererID; }
 
 		void SetUniformBuffer(const ShaderUniformBuffer& buffer, const void* data, uint32_t size, uint32_t offset);
 		void SetUniformBuffer(const std::string& name, const void* data, uint32_t size);

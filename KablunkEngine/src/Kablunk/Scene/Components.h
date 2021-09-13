@@ -43,6 +43,17 @@ namespace Kablunk
 		operator const std::string&() const	{ return Tag; }
 	};
 
+	struct ParentingComponent
+	{
+		uuid::uuid64 Parent;
+		std::vector<uuid::uuid64> Children;
+
+		ParentingComponent() = default;
+		ParentingComponent(const ParentingComponent&) = default;
+		ParentingComponent(uuid::uuid64 parent) : Parent{ parent } {}
+	};
+
+#if 0
 	// #TODO make children transforms relative to parents
 	struct ParentEntityComponent
 	{
@@ -75,6 +86,7 @@ namespace Kablunk
 		void SetParent(EntityHandle parent_handle) { Parent_entity_handle = parent_handle; }
 		EntityHandle GetParent() const { return Parent_entity_handle; }
 	};
+#endif
 
 	struct TransformComponent
 	{
