@@ -1,5 +1,6 @@
 #include "Panels/SceneHierarchyPanel.h"
 
+#include <Kablunk/Imgui/ImGuiWrappers.h>
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -79,18 +80,22 @@ namespace Kablunk
 				m_selection_context = entity;
 			}
 
-			if (ImGui::MenuItem("Create Cube"))
+			if (ImGui::BeginMenu("3D"))
 			{
-				auto entity = m_context->CreateEntity("Cube");
-				auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f, entity));
-				m_selection_context = entity;
-			}
+				if (ImGui::MenuItem("Create Cube"))
+				{
+					auto entity = m_context->CreateEntity("Cube");
+					auto& mesh_comp = entity.AddComponent<MeshComponent>(MeshFactory::CreateCube(1.0f, entity));
+					m_selection_context = entity;
+				}
 
-			if (ImGui::MenuItem("Create Point Light"))
-			{
-				auto entity = m_context->CreateEntity("Point Light");
-				auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
-				m_selection_context = entity;
+				if (ImGui::MenuItem("Create Point Light"))
+				{
+					auto entity = m_context->CreateEntity("Point Light");
+					auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
+					m_selection_context = entity;
+				}
+				ImGui::EndMenu();
 			}
 
 			ImGui::EndPopup();
@@ -431,46 +436,41 @@ namespace Kablunk
 					ImGui::EndCombo();
 				}
 
+				UI::BeginProperties();
+
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
-					float vertical_fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
-					if (ImGui::DragFloat("FOV", &vertical_fov, 1.0f, 1.0f, 200.0f))
-						camera.SetPerspectiveVerticalFOV(glm::radians(vertical_fov));
-
-					float near_clip = camera.GetPerspectiveNearClip();
-					if (ImGui::DragFloat("Near Clip", &near_clip, 0.1f, 0.001f, 10000.0f))
-						camera.SetPerspectiveNearClip(near_clip);
-
-					float far_clip = camera.GetPerspectiveFarClip();
-					if (ImGui::DragFloat("Far Clip", &far_clip, 0.1f, 0.001f, 10000.0f))
-						camera.SetPerspectiveFarClip(far_clip);
+					float fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
+					if (UI::Property("FOV", fov, 1.0f, 1.0f, 200.0f))
+						camera.SetPerspectiveVerticalFOV(glm::radians(fov));
+					UI::Property("Near Clip", camera.GetPerspectiveNearClip(), 0.1f, 0.001f, 10000.0f);
+					UI::Property("Far Clip", camera.GetPerspectiveFarClip(), 0.1f, 0.001f, 10000.0f);
 				}
 
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 				{
-					float ortho_size = camera.GetOrthographicSize();
-					if (ImGui::DragFloat("Size", &ortho_size, 0.25f, 0.1f, 0.0f))
-						camera.SetOrthographicSize(ortho_size);
-
-					float near_clip = camera.GetOrthographicNearClip();
-					if (ImGui::DragFloat("Near Clip", &near_clip, 0.1f))
-						camera.SetOrthographicNearClip(near_clip);
-
-					float far_clip = camera.GetOrthographicFarClip();
-					if (ImGui::DragFloat("Far Clip", &far_clip, 0.1f))
-						camera.SetOrthographicFarClip(far_clip);
+					UI::Property("Size", camera.GetOrthographicSize(), 1.0f, 1.0f, 200.0f);
+					UI::Property("Near Clip", camera.GetOrthographicNearClip(), 0.1f, 0.001f, 10000.0f);
+					UI::Property("Far Clip", camera.GetOrthographicFarClip(), 0.1f, 0.001f, 10000.0f);
 				}
+
+				UI::EndProperties();
 			});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
 			{
-				ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.Color));
 
-				auto& sprite_texture_asset = component.Texture;
-				auto sprite_texture_renderer_id = sprite_texture_asset.Get()->GetRendererID();
-				if (ImGui::ImageButton(reinterpret_cast<void*>(static_cast<uint64_t>(sprite_texture_renderer_id)), { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+				UI::BeginProperties();
+
+				UI::PropertyColorEdit4("Tint Color", component.Color);
+
+				if (UI::ImageButton(component.Texture, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 				{
-					// #TODO change texture dynamically
+					auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
+					if (!filepath.empty())
+					{
+						component.Texture = Asset<Texture2D>(filepath);
+					}
 				}
 
 				if (ImGui::BeginDragDropTarget())
@@ -481,31 +481,26 @@ namespace Kablunk
 						auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
-							sprite_texture_asset = Asset<Texture2D>(path_str);
+							component.Texture = Asset<Texture2D>(path_str);
 						else
-							KB_CORE_ERROR("Tried to load non kablunkscene file as scene, {0}", path_str);
+							KB_CORE_ERROR("Tried to load non image file as a texture, {0}", path_str);
 					}
 					ImGui::EndDragDropTarget();
 				}
 
+#if 0
 				if (m_display_debug_properties)
 				{
-					ImGui::SameLine();
 
-					// Way too big of a buffer
-					constexpr uint16_t k_buffer_size = 256;
-					char buffer[k_buffer_size];
-
-					memset(buffer, 0, k_buffer_size);
-					strcpy_s(buffer, k_buffer_size, uuid::to_string(sprite_texture_asset.GetUUID()).c_str());
-					ImGui::TextColored({ 0.494f, 0.494f, 0.494f, 1.0f }, buffer);
+					UI::PushItemDisabled();
+					UI::Property("", uuid::to_string(sprite_texture_asset.GetUUID()));
+					UI::PopItemDisabled();
 				}
+#endif
 
-				
+				UI::Property("Tiling Factor", component.Tiling_factor);
 
-				float tiling_factor = component.Tiling_factor;
-				if (ImGui::DragFloat("Tiling Factor", &tiling_factor, 0.1f))
-					component.Tiling_factor = tiling_factor;
+				UI::EndProperties();
 			});
 
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
@@ -555,25 +550,15 @@ namespace Kablunk
 
 		DrawComponent<PointLightComponent>("Point Light", entity, [&](auto& component)
 			{
-				float multiplier = component.Multiplier;
-				if (ImGui::DragFloat("Multiplier", &multiplier, 0.1f))
-					component.Multiplier = multiplier;
+				UI::BeginProperties();
 
-				glm::vec3 radiance = component.Radiance;
-				if (ImGui::ColorEdit3("Radiance", glm::value_ptr(radiance)))
-					component.Radiance = radiance;
+				UI::Property("Multiplier", component.Multiplier);
+				UI::PropertyColorEdit3("Radiance", component.Radiance);
+				UI::Property("Radius", component.Radius);
+				UI::Property("Minimum Radius", component.Min_radius);
+				UI::Property("Falloff Distance", component.Falloff);
 
-				float r = component.Radius;
-				if (ImGui::DragFloat("Radius", &r, 0.1f))
-					component.Radius = r;
-
-				float min_r = component.Min_radius;
-				if (ImGui::DragFloat("Minimum Radius", &min_r, 0.1f))
-					component.Min_radius = min_r;
-
-				float falloff = component.Falloff;
-				if (ImGui::DragFloat("Falloff Distance", &falloff, 0.1f))
-					component.Falloff = falloff;
+				UI::EndProperties();
 			});
 
 		// Debug Panels

@@ -30,23 +30,29 @@ namespace Kablunk
 		// Perspective
 
 		float GetPerspectiveVerticalFOV() const { return m_perspective_fov; }
+		float& GetPerspectiveVerticalFOV() { return m_perspective_fov; }
 		void SetPerspectiveVerticalFOV(float vertical_fov) { m_perspective_fov = vertical_fov; RecalculateProjection(); }
 		
 		float GetPerspectiveNearClip() const  { return m_perspective_near; }
+		float& GetPerspectiveNearClip() { return m_perspective_near; }
 		void SetPerspectiveNearClip(float near_clip) { m_perspective_near = near_clip; RecalculateProjection(); }
 
 		float GetPerspectiveFarClip() const { return m_perspective_far; }
+		float& GetPerspectiveFarClip() { return m_perspective_far; }
 		void SetPerspectiveFarClip(float far_clip) { m_perspective_far = far_clip; RecalculateProjection(); }
 
 		// Orthographic
 
 		float GetOrthographicSize() const { return m_orthographic_size; }
+		float& GetOrthographicSize() { return m_orthographic_size; }
 		void SetOrthographicSize(float size) { m_orthographic_size = size; RecalculateProjection(); }
 
 		float GetOrthographicNearClip() const { return m_orthographic_near; }
+		float& GetOrthographicNearClip() { return m_orthographic_near; }
 		void SetOrthographicNearClip(float near_clip) { m_orthographic_near = near_clip; RecalculateProjection(); }
 
 		float GetOrthographicFarClip() const { return m_orthographic_far; }
+		float& GetOrthographicFarClip() { return m_orthographic_far; }
 		void SetOrthographicFarClip(float far_clip) { m_orthographic_far = far_clip; RecalculateProjection(); }
 
 

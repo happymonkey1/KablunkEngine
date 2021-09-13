@@ -1,36 +1,5 @@
 Scene: Untitled
 Entities:
-  - Entity: 17074028417211321348
-    TagComponent:
-      Tag: Point Light
-    TransformComponent:
-      Translation: [-0.624633253, 1.10742879, -0.128958464]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    PointLightComponent:
-      Multiplier: 1
-      Radiance: [1, 1, 1]
-      Radius: 10
-      Min_radius: 1
-      Falloff: 1
-  - Entity: 17777381773982453137
-    TagComponent:
-      Tag: Blank Entity
-    TransformComponent:
-      Translation: [0.972704709, 0, -3.47924876]
-      Rotation: [0, -0.527442098, 0]
-      Scale: [1, 1, 1]
-    MeshComponent:
-      Filepath: C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEditor\assets\models\basic\cube_1m.fbx
-  - Entity: 8658218152859526103
-    TagComponent:
-      Tag: Blank Entity
-    TransformComponent:
-      Translation: [-0.336660981, -4.76837158e-07, 2.59432411]
-      Rotation: [0.485474139, 0.727977514, 1.10984457]
-      Scale: [0.999999881, 0.999999881, 0.99999994]
-    MeshComponent:
-      Filepath: C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEditor\assets\models\basic\cube_1m.fbx
   - Entity: 3738428799421004821
     TagComponent:
       Tag: Blank Entity
@@ -40,3 +9,34 @@ Entities:
       Scale: [1, 1, 1]
     MeshComponent:
       Filepath: C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEditor\assets\models\basic\sphere_1m.fbx
+  - Entity: 8658218152859526103
+    TagComponent:
+      Tag: Blank Entity
+    TransformComponent:
+      Translation: [-0.336660981, -4.76837158e-07, 2.59432411]
+      Rotation: [0.485474139, 0.727977514, 1.10984457]
+      Scale: [0.999999881, 0.999999881, 0.99999994]
+    MeshComponent:
+      Filepath: C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEditor\assets\models\basic\cube_1m.fbx
+  - Entity: 17777381773982453137
+    TagComponent:
+      Tag: Blank Entity
+    TransformComponent:
+      Translation: [0.972704709, 0, -3.47924876]
+      Rotation: [0, -0.527442098, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      Filepath: C:\Users\Gaming Account\Source\Repos\KablunkEngine2020\KablunkEditor\assets\models\basic\cube_1m.fbx
+  - Entity: 17074028417211321348
+    TagComponent:
+      Tag: Point Light
+    TransformComponent:
+      Translation: [-0.785329521, 11.6499996, -0.128958464]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Multiplier: 1.20000005
+      Radiance: [0.65882355, 0.745098054, 1]
+      Radius: 26.7999992
+      Min_radius: 1
+      Falloff: 1
