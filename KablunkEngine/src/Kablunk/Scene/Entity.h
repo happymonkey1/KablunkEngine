@@ -51,6 +51,8 @@ namespace Kablunk
 		std::vector<uuid::uuid64>& GetChildren();
 		const std::vector<uuid::uuid64>& GetChildren() const;
 
+		bool IsAncestorOf(Entity parent) const;
+
 		void SetParentUUID(const uuid::uuid64& uuid);
 
 		operator uint64_t() const { return static_cast<uint64_t>(m_entity_handle); }

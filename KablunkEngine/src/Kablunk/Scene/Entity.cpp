@@ -34,6 +34,18 @@ namespace Kablunk
 		return GetComponent<ParentingComponent>().Children;
 	}
 
+	bool Entity::IsAncestorOf(Entity parent) const
+	{
+		// DFS
+		bool is_ancestor = false;
+		if (parent.GetUUID() == GetParentUUID()) 
+			return true;
+
+		is_ancestor = IsAncestorOf(m_scene->GetEntityFromUUID(parent.GetParentUUID()));
+
+		return is_ancestor;
+	}
+
 	void Entity::SetParentUUID(const uuid::uuid64& uuid)
 	{
 		auto& parent_comp = GetOrAddComponent<ParentingComponent>();

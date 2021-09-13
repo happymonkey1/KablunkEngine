@@ -30,7 +30,6 @@ struct TestScript : public Kablunk::NativeScript
 	virtual void OnUpdate(Kablunk::Timestep ts) override
 	{
 		KB_CLIENT_TRACE("TestScript::OnUpdate()");
-		throw std::exception{ "Test1" };
 	}
 
 	virtual void OnDestroy() override

@@ -505,18 +505,26 @@ namespace Kablunk
 
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
 			{
+				UI::BeginProperties();
 				if (component.Instance)
 				{
-					ImGui::Text("Script loaded");
-					ImGui::Text("Filepath:");
-					
-					ImGui::PushStyleColor(ImGuiCol_Text, { 0.494f, 0.494f, 0.494f, 1.0f });
-					ImGui::TextWrapped(component.Filepath.c_str());
-					ImGui::PopStyleColor();
+
+					UI::PushItemDisabled();
+
+					std::vector<std::string> name_vec = Parser::CPP::FindStructNames(component.Filepath);
+					if (name_vec.empty())
+						KB_CORE_ASSERT(false, "Script loaded somehow but could not find name for component!");
+
+					UI::Property("Script Name", name_vec[0]);
+
+					// #TODO relative path based on project
+					UI::Property("Filepath", component.Filepath);
+					UI::PopItemDisabled();
+
 				}
 				else
 				{
-					if (ImGui::Button("Add"))
+					if (UI::Button("Add"))
 					{
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0");
 						if (!filepath.empty())
@@ -525,6 +533,7 @@ namespace Kablunk
 						}
 					}
 				}
+				UI::EndProperties();
 			});
 
 		DrawComponent<MeshComponent>("Mesh", entity, [&](auto& component)
