@@ -341,10 +341,21 @@ namespace Kablunk
 
 	void Scene::ParentEntity(Entity child, Entity parent)
 	{
-		if (child.GetParentUUID() != uuid::nil_uuid)
+		if (parent.IsDescendentOf(child))
 		{
-			auto old_parent = GetEntityFromUUID(child.GetParentUUID());
-			if (old_parent)
+			UnparentEntity(parent);
+
+			Entity new_parent = child.GetParent();
+			if (new_parent)
+			{
+				UnparentEntity(child);
+				ParentEntity(parent, new_parent);
+			}
+		}
+		else
+		{
+			Entity other_parent = child.GetParent();
+			if (other_parent)
 				UnparentEntity(child);
 		}
 

@@ -24,6 +24,19 @@ namespace Kablunk
 		return GetComponent<ParentingComponent>().Parent;
 	}
 
+	bool Entity::HasParent() const
+	{
+		return GetParentUUID() != uuid::nil_uuid;
+	}
+
+	Entity Entity::GetParent()
+	{
+		if (!HasParent())
+			return {};
+
+		return m_scene->GetEntityFromUUID(GetParentUUID());
+	}
+
 	std::vector<uuid::uuid64>& Entity::GetChildren()
 	{
 		return GetComponent<ParentingComponent>().Children;
@@ -36,57 +49,28 @@ namespace Kablunk
 
 	bool Entity::IsAncestorOf(Entity parent) const
 	{
-		// DFS
-		bool is_ancestor = false;
-		if (parent.GetUUID() == GetParentUUID()) 
-			return true;
+		const auto& children = GetChildren();
+		if (children.size() == 0)
+			return false;
 
-		is_ancestor = IsAncestorOf(m_scene->GetEntityFromUUID(parent.GetParentUUID()));
+		for (const auto& child : children)
+		{
+			if (child == parent.GetUUID())
+				return true;
+		}
 
-		return is_ancestor;
+		for (const auto& child : children)
+		{
+			if (m_scene->GetEntityFromUUID(child).IsAncestorOf(parent))
+				return true;
+		}
+
+		return false;
 	}
 
 	void Entity::SetParentUUID(const uuid::uuid64& uuid)
 	{
 		auto& parent_comp = GetOrAddComponent<ParentingComponent>();
 		parent_comp.Parent = uuid;
-	}
-
-
-	void Entity::AddChild(EntityHandle child_handle)
-	{
-#if 0
-		if (!HasComponent<ParentEntityComponent>()) AddComponent<ParentEntityComponent>();
-		auto& parent_comp = GetComponent<ParentEntityComponent>();
-		KB_CORE_ASSERT(!parent_comp.ContainsHandle(child_handle), "Trying to add child that already exists!");
-		parent_comp.AddChildHandle(child_handle);
-
-		auto child = Entity{ child_handle, m_scene };
-		if (child.HasComponent<ChildEntityComponent>())
-		{
-			// We can use this scene because parented entities MUST be in the same scene
-			auto& child_component = child.GetComponent<ChildEntityComponent>();
-			auto other_parent = Entity{ child_component.GetParent(), m_scene };
-			other_parent.RemoveChild(m_entity_handle);
-		}
-		else
-			child.AddComponent<ChildEntityComponent>();
-
-		child.GetComponent<ChildEntityComponent>().SetParent(m_entity_handle);
-#endif
-	}
-
-	void Entity::RemoveChild(EntityHandle child_handle)
-	{
-#if 0
-		KB_CORE_ASSERT(!HasComponent<ParentEntityComponent>(), "Trying to remove child from an entity that doesn't have parent component!");
-		auto parent_entity_comp = GetComponent<ParentEntityComponent>();
-		KB_CORE_ASSERT(parent_entity_comp.ContainsHandle(child_handle), "Trying to remove child that doesn't exist!");
-		parent_entity_comp.RemoveChildHandle(child_handle);
-
-		auto child = Entity{ child_handle, m_scene };
-		KB_CORE_ASSERT(!HasComponent<ChildEntityComponent>(), "Trying to remove parent reference from child that does not have a child component!");
-		child.GetComponent<ChildEntityComponent>().SetParent(null_entity);
-#endif
 	}
 }

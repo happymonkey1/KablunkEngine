@@ -17,12 +17,6 @@ namespace Kablunk
 
 		Entity(const Entity&) = default;
 
-		void AddChild(EntityHandle child);
-		void RemoveChild(EntityHandle child);
-
-		// #TODO add something to remove parent ref from ChildCompent is destroyed
-		//		 either destroy child entity or unparent.
-
 		template <typename T>
 		bool HasComponent() const;
 
@@ -48,10 +42,16 @@ namespace Kablunk
 
 		const uuid::uuid64& GetUUID() const;
 		const uuid::uuid64& GetParentUUID() const;
+		bool HasParent() const;
+		Entity GetParent();
 		std::vector<uuid::uuid64>& GetChildren();
 		const std::vector<uuid::uuid64>& GetChildren() const;
 
 		bool IsAncestorOf(Entity parent) const;
+		bool IsDescendentOf(Entity child) const
+		{
+			return child.IsAncestorOf(*this);
+		}
 
 		void SetParentUUID(const uuid::uuid64& uuid);
 
