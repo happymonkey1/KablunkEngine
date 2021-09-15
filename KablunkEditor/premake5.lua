@@ -27,13 +27,15 @@ project "KablunkEditor"
         "%{IncludeDir.stduuid}",
         "%{IncludeDir.gsl}",
 		"%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.assimp}"
+        "%{IncludeDir.assimp}",
+        "%{IncludeDir.FreeType}"
     }
 
     links
     {
         "KablunkEngine",
         "Sandbox",
+        "FreeType"
     }
 
     filter "system:windows"

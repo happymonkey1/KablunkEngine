@@ -9,6 +9,8 @@
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
+
+
 namespace Kablunk
 {
 
@@ -28,6 +30,7 @@ namespace Kablunk
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
 			m_window->SetVsync(specification.Vsync);
 		}
+
 
 		Renderer::Init();
 

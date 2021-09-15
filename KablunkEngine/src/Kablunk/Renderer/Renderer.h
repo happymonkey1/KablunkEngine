@@ -13,6 +13,9 @@
 #include "Kablunk/Renderer/EditorCamera.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 
 namespace Kablunk
 {
@@ -89,6 +92,8 @@ namespace Kablunk
 		static Scope<SceneData> m_SceneData;
 		
 		static Ref<ShaderLibrary> s_shader_library;
+
+		static Ref<FT_Library> s_freetype_lib;
 	};
 
 	

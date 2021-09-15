@@ -24,7 +24,8 @@ project "Sandbox"
 		"%{IncludeDir.ImGui}",
         "%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
-        "%{IncludeDir.gsl}"
+        "%{IncludeDir.gsl}",
+		"%{IncludeDir.FreeType}"
 	}
 
 	links

@@ -18,7 +18,7 @@ namespace Kablunk
 	class Scene
 	{
 	public:
-		Scene();
+		Scene(const std::string& name = "Empty");
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
@@ -41,6 +41,7 @@ namespace Kablunk
 		void OnComponentAdded(Entity entity, T& component);
 	
 	private:
+		std::string m_name{ "Empty" };
 		entt::registry m_registry;
 		EntityMap m_entity_map{};
 

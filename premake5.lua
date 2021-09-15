@@ -33,6 +33,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/imgui"
     include "KablunkEngine/vendor/yaml-cpp"
     include "KablunkEngine/vendor/spdlog"
+    include "KablunkEngine/vendor/FreeType"
 group ""
 
 include "KablunkEngine"

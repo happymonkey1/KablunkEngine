@@ -11,7 +11,8 @@
 
 namespace Kablunk
 {
-	Scene::Scene()
+	Scene::Scene(const std::string& name)
+		: m_name{ name }
 	{
 		// m_registry.on_construct<CameraComponent>().connect<>();
 	}
@@ -299,8 +300,6 @@ namespace Kablunk
 
 			Renderer::EndScene();
 		}
-		
-		
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

@@ -8,6 +8,7 @@ namespace Kablunk
 {
 	Scope<SceneData> Renderer::m_SceneData = CreateScope<SceneData>();
 	Ref<ShaderLibrary> Renderer::s_shader_library = CreateRef<ShaderLibrary>();
+	Ref<FT_Library> Renderer::s_freetype_lib = CreateRef<FT_Library>();
 
 	void Renderer::Init()
 	{
@@ -22,6 +23,12 @@ namespace Kablunk
 		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
 		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
 		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
+
+		// Initialize freetype
+		if (FT_Init_FreeType(s_freetype_lib.get()))
+			KB_CORE_ASSERT(false, "Could not initialize FreeType");
+		
+
 
 		RenderCommand::Init();
 		Renderer2D::Init();

@@ -44,7 +44,8 @@ project "KablunkEngine"
 		"%{IncludeDir.stduuid}",
 		"%{IncludeDir.gsl}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.assimp}"
+		"%{IncludeDir.assimp}",
+		"%{IncludeDir.FreeType}"
 	}
 
 	links
@@ -54,6 +55,7 @@ project "KablunkEngine"
 		"ImGui",
 		"yaml-cpp",
 		"spdlog",
+		"FreeType",
 		"opengl32.lib"
 	}
 	
