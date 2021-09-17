@@ -25,8 +25,8 @@ namespace Kablunk
 		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
 
 		// Initialize freetype
-		if (FT_Init_FreeType(s_freetype_lib.get()))
-			KB_CORE_ASSERT(false, "Could not initialize FreeType");
+		//if (FT_Init_FreeType(s_freetype_lib.get()))
+		//	KB_CORE_ASSERT(false, "Could not initialize FreeType");
 		
 
 
