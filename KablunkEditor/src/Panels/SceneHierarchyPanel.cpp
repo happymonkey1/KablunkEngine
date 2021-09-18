@@ -32,12 +32,21 @@ namespace Kablunk
 
 		auto window_rect = ImGui::GetWindowDockNode()->Rect();
 
-		auto group = m_context->m_registry.view<IdComponent, ParentingComponent>();
-		for (auto id : group)
+		// Scene tree node
+		auto scene_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
+		if (m_context->GetEntityCount() == 0)
+			scene_tree_node_flags |= ImGuiTreeNodeFlags_Leaf;
+		if (ImGui::TreeNodeEx(m_context->m_name.c_str(), scene_tree_node_flags))
 		{
-			Entity entity{ id, m_context.get() };
-			if (entity.GetParentUUID() == uuid::nil_uuid)
-				DrawEntityNode(entity);
+			auto group = m_context->m_registry.view<IdComponent, ParentingComponent>();
+			for (auto id : group)
+			{
+				Entity entity{ id, m_context.get() };
+				if (entity.GetParentUUID() == uuid::nil_uuid)
+					DrawEntityNode(entity);
+			}
+
+			ImGui::TreePop();
 		}
 
 		if (ImGui::BeginDragDropTargetCustom(window_rect, ImGui::GetCurrentWindow()->ID))
@@ -53,7 +62,7 @@ namespace Kablunk
 		}
 		
 
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) m_selection_context = {};
+		if (UI::IsMouseDownOnDockedWindow()) m_selection_context = {};
 
 		// Context menu for right-clicking blank space
 		if (ImGui::BeginPopupContextWindow(0, 1, false))

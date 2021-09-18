@@ -241,7 +241,7 @@ namespace Kablunk
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene"		<< YAML::Value << "Untitled";
+		out << YAML::Key << "Scene"		<< YAML::Value << m_scene->m_name;
 		out << YAML::Key << "Entities"	<< YAML::Value << YAML::BeginSeq;
 
 		m_scene->m_registry.each([&](auto entity_handle) 

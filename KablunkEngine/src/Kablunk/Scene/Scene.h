@@ -14,11 +14,12 @@ namespace Kablunk
 
 	
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
+	constexpr const char* default_scene_name = "Untitled Scene";
 
 	class Scene
 	{
 	public:
-		Scene(const std::string& name = "Empty");
+		Scene(const std::string& name = default_scene_name);
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
@@ -41,7 +42,7 @@ namespace Kablunk
 		void OnComponentAdded(Entity entity, T& component);
 	
 	private:
-		std::string m_name{ "Empty" };
+		std::string m_name{ default_scene_name };
 		entt::registry m_registry;
 		EntityMap m_entity_map{};
 

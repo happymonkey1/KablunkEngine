@@ -105,6 +105,11 @@ namespace Kablunk::UI
 		ImGui::PopItemFlag();
 	}
 
+	static bool IsMouseDownOnDockedWindow(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags hovered_flags = 0)
+	{
+		return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
+	}
+
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
 	{
