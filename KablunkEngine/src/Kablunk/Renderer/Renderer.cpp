@@ -29,7 +29,7 @@ namespace Kablunk
 		//	KB_CORE_ASSERT(false, "Could not initialize FreeType");
 		
 
-
+		// OpenGL initialization
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

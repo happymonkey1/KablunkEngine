@@ -118,6 +118,7 @@ namespace Kablunk
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
 		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+		
 
 		if (entity.GetChildren().empty())
 			node_flags |= ImGuiTreeNodeFlags_Leaf;
@@ -128,8 +129,8 @@ namespace Kablunk
 		if (ImGui::IsItemClicked())
 			m_selection_context = entity;
 
-
 		bool entity_deleted = false;
+
 		// Context menu for right-clicking entity in hierarchy
 		if (ImGui::BeginPopupContextItem(0, 1))
 		{
