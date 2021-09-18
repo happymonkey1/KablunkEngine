@@ -4,9 +4,6 @@
 [submodule "spdlog1"]
 	path = spdlog1
 	url = https://github.com/gabime/spdlog
-[submodule "KablunkEngine/vendor/imgui"]
-	path = KablunkEngine/vendor/imgui
-	url = https://github.com/ocornut/imgui
 [submodule "KablunkEngine/vendor/glm"]
 	path = KablunkEngine/vendor/glm
 	url = https://github.com/g-truc/glm
