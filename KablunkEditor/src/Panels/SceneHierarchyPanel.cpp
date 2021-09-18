@@ -30,8 +30,7 @@ namespace Kablunk
 	{
 		ImGui::Begin("Scene Hierarchy");
 
-		auto window_rect = ImRect{ ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax() };
-		
+		auto window_rect = ImGui::GetWindowDockNode()->Rect();
 
 		auto group = m_context->m_registry.view<IdComponent, ParentingComponent>();
 		for (auto id : group)
@@ -52,6 +51,7 @@ namespace Kablunk
 
 			ImGui::EndDragDropTarget();
 		}
+		
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) m_selection_context = {};
 
