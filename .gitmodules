@@ -22,3 +22,7 @@
 [submodule "KablunkEngine/vendor/assimp"]
 	path = KablunkEngine/vendor/assimp
 	url = https://github.com/happymonkey1/assimp.git
+[submodule "KablunkEngine/vendor/imgui"]
+	path = KablunkEngine/vendor/imgui
+	url = https://github.com/happymonkey1/imgui.git
+	branch = docking
