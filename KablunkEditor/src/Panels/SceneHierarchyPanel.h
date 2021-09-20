@@ -29,12 +29,15 @@ namespace Kablunk
 	private:
 		void DrawEntityNode(Entity entity, bool draw_child_node = false);
 		void DrawComponents(Entity entity);
+		void UI_RenameScenePopup();
 	private:
 		Ref<Scene> m_context;
 		Entity m_selection_context;
 
 		// #TODO move to properties panel class
 		bool m_display_debug_properties{ true };
+
+		bool m_rename_scene_popup_open{ false };
 	};
 }
 

@@ -1,9 +1,10 @@
 #ifndef KABLUNK_IMGUI_IMGUI_WRAPPERS_H
 #define KABLUNK_IMGUI_IMGUI_WRAPPERS_H
 
-#include "imgui.h"
+#include "Kablunk/Core/Log.h"
 #include "Kablunk/Renderer/Texture.h"
 
+#include "imgui.h"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #	define IMGUI_DEFINE_MATH_OPERATORS
 #endif
@@ -25,12 +26,17 @@ namespace Kablunk::UI
 		template <typename FuncT>
 		static void CreateStaticProperty(const char* label, FuncT DrawUI)
 		{
+			ShiftCursorY(3.0f);
+
 			ImGui::Text(label);
+
+			ShiftCursorY(-3.0f);
 			ImGui::NextColumn();
 			ImGui::PushItemWidth(-1);
 
 			// Account for null terminator
 			size_t label_size = std::strlen(label) + 1;
+			KB_CORE_ASSERT(label_size <= MAX_CHARS, "label too long!");
 			char* id_buffer = new char[label_size + 2];
 			id_buffer[0] = '#';
 			id_buffer[1] = '#';
@@ -47,11 +53,16 @@ namespace Kablunk::UI
 		template <typename FuncT>
 		static bool CreateProperty(const char* label, FuncT DrawUI)
 		{
+			ShiftCursorY(3.0f);
+
 			ImGui::Text(label);
+
+			ShiftCursorY(-3.0f);
 			ImGui::NextColumn();
 			ImGui::PushItemWidth(-1);
 
 			size_t label_size = std::strlen(label) + 1;
+			KB_CORE_ASSERT(label_size <= MAX_CHARS, "label too long!");
 			char* id_buffer = new char[label_size + 2];
 			id_buffer[0] = '#';
 			id_buffer[1] = '#';
@@ -110,9 +121,33 @@ namespace Kablunk::UI
 		return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
 	}
 
+	static bool IsMouseDownOnItem(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags flags = 0)
+	{
+		return ImGui::IsMouseDown(mouse) && ImGui::IsItemHovered(flags);
+	}
+
+	static void ShiftCursor(ImVec2 distance)
+	{
+		ImGui::SetCursorPos(ImGui::GetCursorPos() + distance);
+	}
+
+	static void ShiftCursorX(float distance)
+	{
+		ImGui::SetCursorPosY(ImGui::GetCursorPosX() + distance);
+	}
+
+	static void ShiftCursorY(float distance)
+	{
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
+	}
+
+	void Image(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	bool ImageButton(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
 	{
+		KB_CORE_ASSERT(strlen(label) + 1 < MAX_CHARS, "string is too long!");
 		return Internal::CreateProperty(label, [&value](char* id_buffer) -> bool
 			{
 				char buffer[MAX_CHARS];
@@ -188,6 +223,14 @@ namespace Kablunk::UI
 			});
 	}
 
+	static bool Property(const char* label, bool* value)
+	{
+		return Internal::CreateProperty(label, [&](char* id_buffer)
+			{
+				return ImGui::Checkbox(id_buffer, value);
+			});
+	}
+
 	static bool Property(const char* label, glm::vec4& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
@@ -209,6 +252,78 @@ namespace Kablunk::UI
 		return Internal::CreateProperty(label, [&](char* id_buffer)
 			{
 				return ImGui::ColorEdit4(id_buffer, glm::value_ptr(value));
+			});
+	}
+
+	template <typename EnumT, typename UnderlyingT = int32_t>
+	static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT selected)
+	{
+		return Internal::CreateProperty(label, [&](char* id_buffer)
+			{
+				UnderlyingT selected_index = (UnderlyingT)selected;
+				const char* current = options[selected_index];
+				bool updated = false;
+
+				if (ImGui::BeginCombo(label, current))
+				{
+					for (size_t i = 0; i < option_count; ++i)
+					{
+						const bool selected = current == options[i];
+						if (ImGui::Selectable(options[i], selected))
+						{
+							current = options[i];
+							selected = (EnumT)i;
+							updated = true;
+						}
+
+						if (selected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndCombo();
+				}
+
+				return updated;
+			});
+	}
+
+	static bool PropertyDropdown(const char* label, const std::vector<std::string>& options, int32_t option_count, int32_t* selected_index)
+	{
+		return Internal::CreateProperty(label, [&](char* id_buffer)
+			{
+				const char* current = options[*selected_index].c_str();
+				bool updated = false;
+
+				if (ImGui::BeginCombo(label, current))
+				{
+					for (size_t i = 0; i < option_count; ++i)
+					{
+						const bool selected = current == options[i];
+						if (ImGui::Selectable(options[i].c_str(), selected))
+						{
+							current = options[i].c_str();
+							*selected_index = i;
+							updated = true;
+						}
+
+						if (selected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndCombo();
+				}
+
+				return updated;
+			});
+	}
+
+	static bool PropertyImageButton(const char* label, Ref<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
+	{
+		ShiftCursorY(size.y / 4.0f);
+		return Internal::CreateProperty(label, [&](char* id_buffer)
+			{
+				//ShiftCursorY(-5.0f);
+				return ImageButton(image, size, uv0, uv1, frame_padding, bg_col, tint_col);
 			});
 	}
 
@@ -238,10 +353,6 @@ namespace Kablunk::UI
 	{
 		ImGui::TreePop();
 	}
-
-	void Image(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
-	
 }
 
 #endif

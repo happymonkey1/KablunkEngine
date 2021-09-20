@@ -246,6 +246,53 @@ namespace Kablunk
 			: Multiplier{ multiplier }, Radiance{ radiance }, Radius{ radius }, Min_radius{ min_radius }, Falloff{ falloff } {}
 		PointLightComponent(const PointLightComponent&) = default;
 	};
+
+	struct RigidBody2DComponent
+	{
+		enum class RigidBodyType { Static = 0, Dynamic, Kinematic };
+
+		RigidBodyType Type = RigidBodyType::Static;
+		bool Fixed_rotation = false;
+
+		void* Runtime_body = nullptr;
+
+		RigidBody2DComponent() = default;
+		RigidBody2DComponent(const RigidBody2DComponent&) = default;
+	};
+
+	struct BoxCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		glm::vec2 Size = { 0.5f, 0.5f };
+
+		// #TODO move to physics material
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float Restitution_threshold = 0.5f;
+
+		void* Runtime_ficture = nullptr;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	struct CircleCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		float Radius = 0.5f;
+
+		// #TODO move to physics material
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float Restitution_threshold = 0.5f;
+
+		void* Runtime_ficture = nullptr;
+
+		CircleCollider2DComponent() = default;
+		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
+	};
 }
 
 #endif

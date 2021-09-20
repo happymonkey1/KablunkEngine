@@ -11,6 +11,11 @@ namespace Kablunk
 
 	}
 
+	TransformComponent& Entity::GetTransform()
+	{
+		return GetComponent<TransformComponent>();
+	}
+
 	const uuid::uuid64& Entity::GetUUID() const
 	{
 		if (HasComponent<IdComponent>())

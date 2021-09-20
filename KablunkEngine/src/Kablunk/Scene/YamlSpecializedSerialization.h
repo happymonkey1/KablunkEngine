@@ -6,6 +6,15 @@
 
 namespace Kablunk
 {
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& member)
+	{
+		out << YAML::Flow << YAML::BeginSeq;
+		out << member.x << member.y;
+		out << YAML::EndSeq;
+
+		return out;
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
@@ -27,6 +36,27 @@ namespace Kablunk
 
 namespace YAML
 {
+	template <>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2 rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
 	template <>
 	struct convert<glm::vec3>
 	{

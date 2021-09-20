@@ -6,6 +6,9 @@
 
 namespace Kablunk
 {
+	// Forward dec
+	struct TransformComponent;
+
 	using EntityHandle = entt::entity;
 	constexpr EntityHandle null_entity = entt::null;
 
@@ -34,6 +37,8 @@ namespace Kablunk
 
 		template <typename T>
 		void RemoveComponent();
+
+		TransformComponent& GetTransform();
 
 		bool Valid() const { return m_entity_handle != null_entity; }
 

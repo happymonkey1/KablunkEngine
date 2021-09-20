@@ -55,6 +55,10 @@ namespace Kablunk
 		WriteComponentData<CameraComponent>(out, entity, [](auto& out, auto& component)
 			{
 				const auto& camera = component.Camera;
+
+				out << YAML::Key << "Camera" << YAML::Value;
+				out << YAML::BeginMap; // Camera
+
 				out << YAML::Key << "m_projection_type" << YAML::Value << static_cast<uint32_t>(camera.GetProjectionType());
 
 				out << YAML::Key << "m_perspective_fov" << YAML::Value << camera.GetPerspectiveVerticalFOV();
@@ -105,6 +109,32 @@ namespace Kablunk
 				out << YAML::Key << "Radius" << YAML::Value << component.Radius;
 				out << YAML::Key << "Min_radius" << YAML::Value << component.Min_radius;
 				out << YAML::Key << "Falloff" << YAML::Value << component.Falloff;
+			});
+
+		WriteComponentData<RigidBody2DComponent>(out, entity, [](auto& out, RigidBody2DComponent& component)
+			{
+				out << YAML::Key << "Type" << YAML::Value << static_cast<int32_t>(component.Type);
+				out << YAML::Key << "Fixed_rotation" << YAML::Value << component.Fixed_rotation;
+			});
+
+		WriteComponentData<BoxCollider2DComponent>(out, entity, [](auto& out, BoxCollider2DComponent& component)
+			{
+				out << YAML::Key << "Offset" << YAML::Value << component.Offset;
+				out << YAML::Key << "Size" << YAML::Value << component.Size;
+				out << YAML::Key << "Density" << YAML::Value << component.Density;
+				out << YAML::Key << "Friction" << YAML::Value << component.Friction;
+				out << YAML::Key << "Restitution" << YAML::Value << component.Restitution;
+				out << YAML::Key << "Restitution_threshold" << YAML::Value << component.Restitution_threshold;
+			});
+
+		WriteComponentData<CircleCollider2DComponent>(out, entity, [](auto& out, CircleCollider2DComponent& component)
+			{
+				out << YAML::Key << "Offset" << YAML::Value << component.Offset;
+				out << YAML::Key << "Radius" << YAML::Value << component.Radius;
+				out << YAML::Key << "Density" << YAML::Value << component.Density;
+				out << YAML::Key << "Friction" << YAML::Value << component.Friction;
+				out << YAML::Key << "Restitution" << YAML::Value << component.Restitution;
+				out << YAML::Key << "Restitution_threshold" << YAML::Value << component.Restitution_threshold;
 			});
 	}
 
@@ -235,6 +265,32 @@ namespace Kablunk
 				component.Min_radius	= data["Min_radius"].as<float>();
 				component.Falloff		= data["Falloff"].as<float>();
 			});
+
+		ReadComponentData<RigidBody2DComponent>(entity_data, entity, [&](RigidBody2DComponent& component, auto& data)
+			{
+				component.Type = static_cast<RigidBody2DComponent::RigidBodyType>(data["Type"].as<int32_t>());
+				component.Fixed_rotation = data["Fixed_rotation"].as<bool>();
+			});
+
+		ReadComponentData<BoxCollider2DComponent>(entity_data, entity, [&](BoxCollider2DComponent& component, auto& data)
+			{
+				component.Offset = data["Offset"].as<glm::vec2>();
+				component.Size = data["Size"].as<glm::vec2>();
+				component.Density = data["Density"].as<float>();
+				component.Friction = data["Friction"].as<float>();
+				component.Restitution = data["Restitution"].as<float>();
+				component.Restitution_threshold = data["Restitution_threshold"].as<float>();
+			});
+
+		ReadComponentData<CircleCollider2DComponent>(entity_data, entity, [&](CircleCollider2DComponent& component, auto& data)
+			{
+				component.Offset = data["Offset"].as<glm::vec2>();
+				component.Radius = data["Radius"].as<float>();
+				component.Density = data["Density"].as<float>();
+				component.Friction = data["Friction"].as<float>();
+				component.Restitution = data["Restitution"].as<float>();
+				component.Restitution_threshold = data["Restitution_threshold"].as<float>();
+			});
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
@@ -288,6 +344,8 @@ namespace Kablunk
 
 		std::string scene_name = root["Scene"].as<std::string>();
 		KB_CORE_TRACE("Deserializing scene '{0}'", scene_name);
+		m_scene->m_name = scene_name;
+
 
 		auto entities = root["Entities"];
 		if (entities)
