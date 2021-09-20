@@ -449,6 +449,7 @@ namespace Kablunk
 	void EditorLayer::OnScenePlay()
 	{
 		m_scene_state = SceneState::Play;
+		m_active_scene->OnStartRuntime();
 
 		m_selected_entity = {};
 	}
@@ -456,6 +457,7 @@ namespace Kablunk
 	void EditorLayer::OnSceneStop()
 	{
 		m_scene_state = SceneState::Edit;
+		m_active_scene->OnStopRuntime();
 	}
 
 	void EditorLayer::OnEvent(Event& e)

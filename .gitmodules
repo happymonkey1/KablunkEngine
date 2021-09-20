@@ -26,3 +26,6 @@
 	path = KablunkEngine/vendor/imgui
 	url = https://github.com/happymonkey1/imgui.git
 	branch = docking
+[submodule "KablunkEngine/vendor/box2d"]
+	path = KablunkEngine/vendor/box2d
+	url = https://github.com/happymonkey1/box2d.git

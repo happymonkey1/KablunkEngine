@@ -45,7 +45,8 @@ project "KablunkEngine"
 		"%{IncludeDir.gsl}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.assimp}",
-		"%{IncludeDir.FreeType}"
+		"%{IncludeDir.FreeType}",
+		"%{IncludeDir.Box2d}"
 	}
 
 	links
@@ -56,6 +57,7 @@ project "KablunkEngine"
 		"yaml-cpp",
 		"spdlog",
 		"FreeType",
+		"Box2d",
 		"opengl32.lib"
 	}
 	

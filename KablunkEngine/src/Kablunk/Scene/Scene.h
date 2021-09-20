@@ -8,6 +8,8 @@
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/EditorCamera.h"
 
+class b2World;
+
 namespace Kablunk
 {
 	class Entity;
@@ -24,6 +26,9 @@ namespace Kablunk
 
 		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
+
+		void OnStartRuntime();
+		void OnStopRuntime();
 
 		void OnUpdateRuntime(Timestep ts);
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
@@ -47,6 +52,8 @@ namespace Kablunk
 		EntityMap m_entity_map{};
 
 		uint32_t m_viewport_width = 0, m_viewport_height = 0;
+
+		b2World* m_box2D_world = nullptr;
 
 		friend class Entity;
 		friend class SceneSerializer;

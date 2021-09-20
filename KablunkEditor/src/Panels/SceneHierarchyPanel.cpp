@@ -13,10 +13,38 @@ namespace Kablunk
 	// #TODO bad!
 	extern const std::filesystem::path g_asset_path;
 
+	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)
+	{
+		switch (type)
+		{
+		case RigidBody2DComponent::RigidBodyType::Static:		return std::string{ "Static" };
+		case RigidBody2DComponent::RigidBodyType::Dynamic:		return std::string{ "Dynamic" };
+		case RigidBody2DComponent::RigidBodyType::Kinematic:	return std::string{ "Kinematic" };
+		
+		}
+		KB_CORE_ASSERT(false, "unknown body type"); 
+		return std::string{ "Static" };
+	}
+
+	RigidBody2DComponent::RigidBodyType StringToKablunkRigidBodyType(const std::string& type)
+	{
+		if (type == "Static")
+			return RigidBody2DComponent::RigidBodyType::Static;
+		else if (type == "Dynamic")
+			return RigidBody2DComponent::RigidBodyType::Dynamic;
+		else if (type == "Kinematic")			
+			return RigidBody2DComponent::RigidBodyType::Kinematic;
+		else
+		{
+			KB_CORE_ASSERT(false, "unknown body type");
+			return RigidBody2DComponent::RigidBodyType::Static;
+		}
+	}
+
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
-		
+
 	}
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
@@ -24,6 +52,57 @@ namespace Kablunk
 		m_context = context;
 		m_selection_context = {};
 		KB_CORE_WARN("Selection context cleared!");
+	}
+
+	void SceneHierarchyPanel::UI_RenameScenePopup()
+	{
+		if (m_rename_scene_popup_open)
+			ImGui::OpenPopup("Rename Scene");
+
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+		if (ImGui::BeginPopupModal("Rename Scene", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar))
+		{
+			const float button_size = 24.0f;
+			//const float button_pos_x = ImGui::GetWindowWidth() - button_size - ImGui::GetCurrentWindow()->WindowPadding.x / 2.0f;
+			// #TODO button on right side
+			if (ImGui::Button("X", { button_size, button_size }))
+				m_rename_scene_popup_open = false;
+
+			char buffer[256];
+			strcpy_s<256>(buffer, m_context->m_name.c_str());
+
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.0f);
+			ImGui::Text("New name");
+
+			ImGui::SameLine();
+			//ImGui::PushItemWidth(-1);
+
+			// #FIXME window flashing when typing
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3.0f);
+			if (ImGui::InputText("##rename", buffer, 256))
+			{
+				m_context->m_name = buffer;
+			}
+
+			if (!m_rename_scene_popup_open)
+				ImGui::CloseCurrentPopup();
+
+			//ImGui::PopItemWidth();
+
+			// For some reason the imgui wrappers aren't resizing the window correctly
+#if 0
+			UI::BeginProperties();
+
+			auto scene_name = m_context->m_name;
+			UI::Property("Name", scene_name);
+
+			UI::EndProperties();
+#endif
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
@@ -36,8 +115,14 @@ namespace Kablunk
 		auto scene_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 		if (m_context->GetEntityCount() == 0)
 			scene_tree_node_flags |= ImGuiTreeNodeFlags_Leaf;
+
+		UI_RenameScenePopup();
+
 		if (ImGui::TreeNodeEx(m_context->m_name.c_str(), scene_tree_node_flags))
 		{
+			if (UI::IsMouseDownOnItem(1))
+				m_rename_scene_popup_open = true;
+
 			auto group = m_context->m_registry.view<IdComponent, ParentingComponent>();
 			for (auto id : group)
 			{
@@ -205,7 +290,9 @@ namespace Kablunk
 		ImGui::Columns(2, 0, false);
 
 		ImGui::SetColumnWidth(0, column_width);
+		UI::ShiftCursorY(3.0f);
 		ImGui::Text(label.c_str());
+		UI::ShiftCursorY(-3.0f);
 		ImGui::NextColumn();
 
 		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
@@ -386,6 +473,32 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<RigidBody2DComponent>() && ImGui::MenuItem("RigidBody 2D"))
+			{
+				m_selection_context.AddComponent<RigidBody2DComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (!m_selection_context.HasComponent<BoxCollider2DComponent>() && ImGui::MenuItem("Box Collider 2D"))
+			{
+				// Box collider needs rigidbody
+				if (!m_selection_context.HasComponent<RigidBody2DComponent>())
+					m_selection_context.AddComponent<RigidBody2DComponent>();
+
+				m_selection_context.AddComponent<BoxCollider2DComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (!m_selection_context.HasComponent<CircleCollider2DComponent>() && ImGui::MenuItem("Circle Collider 2D"))
+			{
+				// Box collider needs rigidbody
+				if (!m_selection_context.HasComponent<RigidBody2DComponent>())
+					m_selection_context.AddComponent<RigidBody2DComponent>();
+
+				m_selection_context.AddComponent<CircleCollider2DComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -474,7 +587,7 @@ namespace Kablunk
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-				if (UI::ImageButton(component.Texture, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+				if (UI::PropertyImageButton("Texture", component.Texture, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
 				{
 					auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
 					if (!filepath.empty())
@@ -576,6 +689,49 @@ namespace Kablunk
 				UI::Property("Radius", component.Radius);
 				UI::Property("Minimum Radius", component.Min_radius);
 				UI::Property("Falloff Distance", component.Falloff);
+
+				UI::EndProperties();
+			});
+
+		DrawComponent<RigidBody2DComponent>("RigidBody 2D", entity, [&](RigidBody2DComponent& component)
+			{
+				UI::BeginProperties();
+
+
+				std::vector<std::string> options = { "Static", "Dynamic", "Kinematic" };
+				int32_t index = std::find(options.begin(), options.end(), KablunkRigidBodyTypeToString(component.Type)) - options.begin();
+				if (UI::PropertyDropdown("Type", options, options.size(), &index))
+					component.Type = StringToKablunkRigidBodyType(options[index]);
+				
+				UI::Property("Fixed Rotation", &component.Fixed_rotation);
+
+				UI::EndProperties();
+			});
+
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [&](BoxCollider2DComponent& component)
+			{
+				UI::BeginProperties();
+
+				UI::Property("Offset", component.Offset);
+
+				UI::Property("Density", component.Density);
+				UI::Property("Friction", component.Friction, 0.01f, 0.0f, 1.0f);
+				UI::Property("Restitution", component.Restitution, 0.01f, 0.0f, 1.0f);
+				UI::Property("Restitution Threshold", component.Restitution_threshold);
+
+				UI::EndProperties();
+			});
+
+		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [&](CircleCollider2DComponent& component)
+			{
+				UI::BeginProperties();
+
+				UI::Property("Offset", component.Offset);
+
+				UI::Property("Density", component.Density);
+				UI::Property("Friction", component.Friction, 0.01f, 0.0f, 1.0f);
+				UI::Property("Restitution", component.Restitution, 0.01f, 0.0f, 1.0f);
+				UI::Property("Restitution Threshold", component.Restitution_threshold);
 
 				UI::EndProperties();
 			});

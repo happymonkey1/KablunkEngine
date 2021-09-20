@@ -34,6 +34,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/yaml-cpp"
     include "KablunkEngine/vendor/spdlog"
     include "KablunkEngine/vendor/FreeType"
+    include "KablunkEngine/vendor/box2d"
 group ""
 
 include "KablunkEngine"

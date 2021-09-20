@@ -4,8 +4,13 @@
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Scene/Entity.h"
 
-#include "Entity.h"
+#include <box2d/b2_world.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_circle_shape.h>
+#include <box2d/b2_fixture.h>
 
 #include <exception>
 
@@ -14,22 +19,23 @@ namespace Kablunk
 	Scene::Scene(const std::string& name)
 		: m_name{ name }
 	{
-		// m_registry.on_construct<CameraComponent>().connect<>();
+		
 	}
 
 	Scene::~Scene()
 	{
-		// NativeScript destructor handles cleanup
-		/*m_registry.view<NativeScriptComponent>().each(
-			[&](auto entity, auto native_script_component)
-			{
-				if (native_script_component.Instance)
-				{
-					native_script_component.Instance->OnDestroy();
-					native_script_component.DestroyScript(&native_script_component);
-				}
-			}
-		);*/
+		
+	}
+
+	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
+	{
+		switch (type)
+		{
+		case RigidBody2DComponent::RigidBodyType::Static:		return b2BodyType::b2_staticBody;
+		case RigidBody2DComponent::RigidBodyType::Dynamic:		return b2BodyType::b2_dynamicBody;
+		case RigidBody2DComponent::RigidBodyType::Kinematic:	return b2BodyType::b2_kinematicBody;
+		default:												KB_CORE_ASSERT(false, "unknown body type"); return b2_staticBody;
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
@@ -60,6 +66,71 @@ namespace Kablunk
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_registry.destroy(entity);
+	}
+
+	void Scene::OnStartRuntime()
+	{
+		// #TODO expose gravity in editor panel
+		m_box2D_world = new b2World{ { 0.0f, -9.8f } };
+
+		auto view = m_registry.view<RigidBody2DComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto& transform = entity.GetTransform();
+			auto& rb2d_comp = entity.GetComponent<RigidBody2DComponent>();
+
+			b2BodyDef body_def;
+			body_def.type = KablunkRigidBody2DToBox2DType(rb2d_comp.Type);
+			body_def.position.Set(transform.Translation.x, transform.Translation.y);
+			body_def.angle = transform.Rotation.z;
+
+			b2Body* body = m_box2D_world->CreateBody(&body_def);
+			body->SetFixedRotation(rb2d_comp.Fixed_rotation);
+			rb2d_comp.Runtime_body = body;
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
+			{
+				auto& bc2d_comp = entity.GetComponent<BoxCollider2DComponent>();
+				// #FIXME offset isn't working
+				body_def.position += b2Vec2{ bc2d_comp.Offset.x, bc2d_comp.Offset.y };
+
+				b2PolygonShape polygon_shape;
+				polygon_shape.SetAsBox(bc2d_comp.Size.x * transform.Scale.x, bc2d_comp.Size.y * transform.Scale.y);
+
+				b2FixtureDef fixture_def;
+				fixture_def.shape = &polygon_shape;
+				fixture_def.density = bc2d_comp.Density;
+				fixture_def.friction = bc2d_comp.Friction;
+				fixture_def.restitution = bc2d_comp.Restitution;
+				fixture_def.restitutionThreshold = bc2d_comp.Restitution_threshold;
+				body->CreateFixture(&fixture_def);
+			}
+
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& cc2d_comp = entity.GetComponent<CircleCollider2DComponent>();
+				// #FIXME offset isn't working
+				body_def.position += b2Vec2{ cc2d_comp.Offset.x, cc2d_comp.Offset.y };
+
+				b2CircleShape circle;
+				circle.m_radius = cc2d_comp.Radius * transform.Scale.x;
+
+				b2FixtureDef fixture_def;
+				fixture_def.shape = &circle;
+				fixture_def.density = cc2d_comp.Density;
+				fixture_def.friction = cc2d_comp.Friction;
+				fixture_def.restitution = cc2d_comp.Restitution;
+				fixture_def.restitutionThreshold = cc2d_comp.Restitution_threshold;
+				body->CreateFixture(&fixture_def);
+			}
+		}
+	}
+
+	void Scene::OnStopRuntime()
+	{
+		delete m_box2D_world;
+		m_box2D_world = nullptr;
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -133,6 +204,33 @@ namespace Kablunk
 			}
 		);
 		
+		// ===========	
+		//	 Physics
+		// ===========
+
+		{
+			// #TODO expose to editor
+			const uint32_t velocityIterations = 6;
+			const uint32_t positionIterations = 2;
+
+			m_box2D_world->Step(ts, velocityIterations, positionIterations);
+
+			// update transforms from box2D data
+			auto view = m_registry.view<RigidBody2DComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				auto& transform = entity.GetTransform();
+				auto& rb2d_comp = entity.GetComponent<RigidBody2DComponent>();
+
+				b2Body* body = static_cast<b2Body*>(rb2d_comp.Runtime_body);
+				const auto& pos = body->GetPosition();
+				transform.Translation.x = pos.x;
+				transform.Translation.y = pos.y;
+				transform.Rotation.z = body->GetAngle();
+			}
+		}
+
 		// ==========	
 		//	 Render
 		// ==========
@@ -417,5 +515,14 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<ParentingComponent>(Entity entity, ParentingComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<RigidBody2DComponent>(Entity entity, RigidBody2DComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component) { }
 }
 
