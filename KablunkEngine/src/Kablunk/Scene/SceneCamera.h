@@ -61,7 +61,7 @@ namespace Kablunk
 	private:
 		ProjectionType m_projection_type{ ProjectionType::Orthographic };
 		
-		float m_perspective_fov{ glm::radians(45.0f) };
+		float m_perspective_fov{ glm::radians(60.0f) };
 		float m_perspective_near = 0.01f, m_perspective_far = 1000.0f;
 		
 		float m_orthographic_size { 10.0f };

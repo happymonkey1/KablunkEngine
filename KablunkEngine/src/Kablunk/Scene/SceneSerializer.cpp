@@ -212,10 +212,12 @@ namespace Kablunk
 					auto aspect_ratio = scene_camera_data["m_aspect_ratio"].as<float>();
 					auto projection_type = scene_camera_data["m_projection_type"].as<int>();
 
+					scene_camera.SetPerspectiveVerticalFOV(perspective_fov);
 					scene_camera.SetOrthographic(orthographic_size, orthographic_near, orthographic_far);
 					scene_camera.SetPerspective(perspective_far, perspective_near, perspective_far);
 					scene_camera.SetProjectionType(static_cast<SceneCamera::ProjectionType>(projection_type));
 					scene_camera.SetAspectRatio(aspect_ratio);
+
 
 					component.Camera = scene_camera;
 				}

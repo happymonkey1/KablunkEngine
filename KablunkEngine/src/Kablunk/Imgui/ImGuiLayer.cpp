@@ -111,7 +111,8 @@ namespace Kablunk {
 
 	void ImGuiLayer::OnEvent(Event& e)
 	{
-		if (!m_allow_event_passing)
+		// #FIXME event passing
+		/*if (!m_allow_event_passing)
 		{
 			ImGuiIO& io = ImGui::GetIO();
 
@@ -120,7 +121,7 @@ namespace Kablunk {
 			handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
 
 			e.SetStatus(handled);
-		}
+		}*/
 	}
 
 	void ImGuiLayer::OnImGuiRender(Timestep ts)

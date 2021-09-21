@@ -27,9 +27,9 @@ Entities:
     TagComponent:
       Tag: box
     TransformComponent:
-      Translation: [-2.25451159, 3.15472364, 0]
-      Rotation: [0, 0, -0.000290689582]
-      Scale: [0.409999967, 0.409999967, 0.410000026]
+      Translation: [-5.82356501, -2.42345047, 0]
+      Rotation: [0, 0, -0.00485005835]
+      Scale: [0.409999669, 0.409999669, 0.410000026]
     SpriteRendererComponent:
       Texture:
         m_uuid: 4212238907262798272
@@ -56,7 +56,7 @@ Entities:
     CameraComponent:
       Camera:
         m_projection_type: 0
-        m_perspective_fov: 1.04719758
+        m_perspective_fov: 1.39626336
         m_perspective_near: 0.00999999978
         m_perspective_far: 1000
         m_orthographic_size: 10
@@ -92,8 +92,8 @@ Entities:
     TagComponent:
       Tag: circle
     TransformComponent:
-      Translation: [5.88036013, 4.29987717, 0]
-      Rotation: [0, 0, 0]
+      Translation: [-5.11349773, -2.13644958, 0]
+      Rotation: [0, 0, 24.6619549]
       Scale: [0.999994397, 0.999994397, 1]
     SpriteRendererComponent:
       Texture:

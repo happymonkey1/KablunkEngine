@@ -128,7 +128,7 @@ namespace Kablunk
 			{
 				Entity entity{ id, m_context.get() };
 				if (entity.GetParentUUID() == uuid::nil_uuid)
-					DrawEntityNode(entity);
+					UI_DrawEntityNode(entity);
 			}
 
 			ImGui::TreePop();
@@ -202,12 +202,12 @@ namespace Kablunk
 		ImGui::Begin("Properties");
 
 		if (m_selection_context)
-			DrawComponents(m_selection_context);
+			UI_DrawComponents(m_selection_context);
 
 		ImGui::End();
 	}
 
-	void SceneHierarchyPanel::DrawEntityNode(Entity entity, bool draw_child_node)
+	void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
 		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -228,6 +228,9 @@ namespace Kablunk
 		// Context menu for right-clicking entity in hierarchy
 		if (ImGui::BeginPopupContextItem(0, 1))
 		{
+			if (ImGui::MenuItem("Duplicate"))
+				m_context->DuplicateEntity(entity);
+
 			if (ImGui::MenuItem("Delete Entity"))
 				entity_deleted = true;
 			
@@ -261,7 +264,7 @@ namespace Kablunk
 			{
 				Entity child_entity = m_context->GetEntityFromUUID(child_id);
 				if (child_entity)
-					DrawEntityNode(child_entity);
+					UI_DrawEntityNode(child_entity);
 			}
 
 			ImGui::TreePop();
@@ -419,7 +422,7 @@ namespace Kablunk
 		#TODO 
 		Move to separate file and class
 	*/
-	void SceneHierarchyPanel::DrawComponents(Entity entity)
+	void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 	{
 		if (entity.HasComponent<TagComponent>())
 		{

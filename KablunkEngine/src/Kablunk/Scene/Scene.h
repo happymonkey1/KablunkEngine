@@ -24,7 +24,7 @@ namespace Kablunk
 		Scene(const std::string& name = default_scene_name);
 		~Scene();
 
-		Entity CreateEntity(const std::string& name = std::string{}, uuid::uuid64 id = uuid::nil_uuid);
+		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
 		void OnStartRuntime();
@@ -39,6 +39,8 @@ namespace Kablunk
 		size_t GetEntityCount() const { return m_registry.size(); }
 		Entity GetEntityFromUUID(uuid::uuid64 id) const;
 		const EntityMap& GetEntityMap() const { return m_entity_map; }
+
+		Entity DuplicateEntity(Entity entity);
 
 		void ParentEntity(Entity child, Entity parent);
 		void UnparentEntity(Entity child);

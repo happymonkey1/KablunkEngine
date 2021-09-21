@@ -77,10 +77,10 @@ namespace Kablunk
 
 
 		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) {
-			if (e.GetStatus())
-				break;
 
 			(*it)->OnEvent(e);
+			if (e.GetStatus())
+				break;
 		}
 	}
 

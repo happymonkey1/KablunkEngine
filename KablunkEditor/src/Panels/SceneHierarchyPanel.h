@@ -27,8 +27,8 @@ namespace Kablunk
 
 		void ClearSelectionContext() { m_selection_context = {}; }
 	private:
-		void DrawEntityNode(Entity entity, bool draw_child_node = false);
-		void DrawComponents(Entity entity);
+		void UI_DrawEntityNode(Entity entity, bool draw_child_node = false);
+		void UI_DrawComponents(Entity entity);
 		void UI_RenameScenePopup();
 	private:
 		Ref<Scene> m_context;

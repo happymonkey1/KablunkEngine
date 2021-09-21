@@ -504,6 +504,14 @@ namespace Kablunk
 
 			break;
 		}
+		case Key::D:
+		{
+			if (ctrl_pressed)
+				if (m_selected_entity != null_entity)
+					m_active_scene->DuplicateEntity(m_selected_entity);
+
+			break;
+		}
 
 		// Gizmos
 		case Key::Q:
@@ -595,6 +603,8 @@ namespace Kablunk
 	void EditorLayer::ViewportClickSelectEntity()
 	{
 		// #TODO clicking outside viewport still tries to select entity, causing a deselection in most cases
+		if (!Input::IsMouseButtonPressed(Mouse::Button0))
+			return;
 
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;

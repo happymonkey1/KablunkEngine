@@ -32,9 +32,8 @@ namespace Kablunk
 
 	struct TagComponent
 	{
-		std::string Tag;
+		std::string Tag = "";
 		
-
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
 		TagComponent(const std::string& tag) : Tag{ tag } { }
@@ -45,8 +44,8 @@ namespace Kablunk
 
 	struct ParentingComponent
 	{
-		uuid::uuid64 Parent;
-		std::vector<uuid::uuid64> Children;
+		uuid::uuid64 Parent = uuid::nil_uuid;
+		std::vector<uuid::uuid64> Children = std::vector<uuid::uuid64>{};
 
 		ParentingComponent() = default;
 		ParentingComponent(const ParentingComponent&) = default;
@@ -137,18 +136,39 @@ namespace Kablunk
 	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
-		Scope<NativeScript> Instance{ nullptr };
-		std::string Filepath{ "" };
+		Scope<NativeScript> Instance = nullptr;
+		std::string Filepath = "";
 
 		using InstantiateScriptFunc = Scope<NativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
-		InstantiateScriptFunc InstantiateScript;
+		InstantiateScriptFunc InstantiateScript = nullptr;
+
+		NativeScriptComponent() = default;
+		NativeScriptComponent(const NativeScriptComponent& other) 
+			: Instance{ nullptr }, Filepath{ other.Filepath }
+		{
+			KB_CORE_WARN("Copied native script! BindEditor needs to be called seperately!");
+		}
+		
+		NativeScriptComponent& operator=(const NativeScriptComponent& other)
+		{
+			Instance = nullptr;
+			Filepath = other.Filepath;
+			KB_CORE_WARN("Copied native script! BindEditor needs to be called seperately!");
+			return *this;
+		}
 
 		// Runtime binding
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
 		{
 			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
+		}
+
+		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
+		void BindEditor(Entity entity)
+		{
+			BindEditor(Filepath, entity);
 		}
 
 		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor

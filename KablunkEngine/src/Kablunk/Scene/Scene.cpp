@@ -53,8 +53,8 @@ namespace Kablunk
 			entity.AddComponent<IdComponent>(id);
 		}
 
-		auto& tag = entity.AddComponent<TagComponent>(name);
-		tag = name.empty() ? "Blank Entity" : name;
+		TagComponent& tag_comp = entity.AddComponent<TagComponent>();
+		tag_comp.Tag = name.empty() ? "Blank Entity" : name;
 
 		entity.AddComponent<ParentingComponent>();
 
@@ -434,6 +434,73 @@ namespace Kablunk
 
 		auto it = m_entity_map.find(id);
 		return it != m_entity_map.end() ? it->second : Entity{};
+	}
+
+	template <typename ComponentT>
+	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& reg)
+	{
+		if (reg.any_of<ComponentT>(src))
+		{
+			auto& src_comp = reg.get<ComponentT>(src);
+			reg.emplace_or_replace<ComponentT>(dst, src_comp);
+			return true;
+		}
+		else
+			return false;
+	}
+
+
+	Entity Scene::DuplicateEntity(Entity entity)
+	{
+		Entity new_entity;
+		if (entity.HasComponent<TagComponent>())
+		{
+			std::string tag = entity.GetComponent<TagComponent>().Tag;
+			new_entity = CreateEntity(tag);
+		}
+		else
+		{
+			KB_CORE_ERROR("Duplicating entity which doesn't have a tag component!");
+			new_entity = CreateEntity();
+		}
+		
+		CopyComponentIfItExists<TransformComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<SpriteRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
+			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
+		CopyComponentIfItExists<MeshComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<PointLightComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<RigidBody2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<BoxCollider2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<CircleCollider2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+
+		// Need to copy ParentingComponent manually 
+		auto children = entity.GetChildrenCopy();
+		for (auto child_id : children)
+		{
+			Entity child = GetEntityFromUUID(child_id);
+			KB_CORE_ASSERT(child, "Child entity is null. Scene probably corrupted!");
+			if (child)
+			{
+				Entity new_child = DuplicateEntity(child);
+
+				UnparentEntity(new_child);
+
+				new_child.SetParentUUID(new_entity.GetUUID());
+				new_entity.GetChildren().push_back(new_child.GetUUID());
+			}
+		}
+
+		if (entity.HasParent())
+		{
+			Entity parent = GetEntityFromUUID(entity.GetParentUUID());
+			KB_CORE_ASSERT(parent, "Failed to find parent entity. Scene probably corrup!");
+			new_entity.SetParentUUID(entity.GetParentUUID());
+			parent.GetChildren().push_back(new_entity.GetUUID());
+		}
+
+		return new_entity;
 	}
 
 	void Scene::ParentEntity(Entity child, Entity parent)

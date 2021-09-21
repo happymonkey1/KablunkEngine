@@ -49,6 +49,7 @@ namespace Kablunk
 		const uuid::uuid64& GetParentUUID() const;
 		bool HasParent() const;
 		Entity GetParent();
+		std::vector<uuid::uuid64> GetChildrenCopy() const;
 		std::vector<uuid::uuid64>& GetChildren();
 		const std::vector<uuid::uuid64>& GetChildren() const;
 

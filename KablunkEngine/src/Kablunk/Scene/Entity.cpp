@@ -42,6 +42,11 @@ namespace Kablunk
 		return m_scene->GetEntityFromUUID(GetParentUUID());
 	}
 
+	std::vector<uuid::uuid64> Entity::GetChildrenCopy() const
+	{
+		return GetComponent<ParentingComponent>().Children;
+	}
+
 	std::vector<uuid::uuid64>& Entity::GetChildren()
 	{
 		return GetComponent<ParentingComponent>().Children;
