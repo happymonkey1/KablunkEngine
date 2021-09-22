@@ -13,6 +13,7 @@
 namespace Kablunk
 {
 	extern const std::filesystem::path g_asset_path = "assets";
+	extern const std::filesystem::path g_resources_path = "resources";
 
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_current_directory{ g_asset_path }

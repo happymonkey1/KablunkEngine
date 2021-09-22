@@ -15,6 +15,8 @@
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Mesh.h"
 
+#include <filesystem>
+
 
 namespace Kablunk
 {
@@ -137,7 +139,7 @@ namespace Kablunk
 	struct NativeScriptComponent
 	{
 		Scope<NativeScript> Instance = nullptr;
-		std::string Filepath = "";
+		std::filesystem::path Filepath = "";
 
 		using InstantiateScriptFunc = Scope<NativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
@@ -158,6 +160,8 @@ namespace Kablunk
 			return *this;
 		}
 
+		std::string GetFilepath() const { return Filepath.string(); }
+
 		// Runtime binding
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
@@ -172,12 +176,12 @@ namespace Kablunk
 		}
 
 		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
-		void BindEditor(const std::string& filepath, Entity entity)
+		void BindEditor(const std::filesystem::path& filepath, Entity entity)
 		{
 			if (filepath.empty())
 				return;
 
-			auto struct_names = Parser::CPP::FindStructNames(filepath, 1);
+			auto struct_names = Parser::CPP::FindStructNames(filepath.string(), 1);
 			if (struct_names.empty())
 			{
 				KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);

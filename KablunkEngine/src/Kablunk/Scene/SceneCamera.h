@@ -18,6 +18,7 @@ namespace Kablunk
 		virtual ~SceneCamera() = default;
 
 		ProjectionType GetProjectionType() const { return m_projection_type; }
+		ProjectionType& GetProjectionType() { return m_projection_type; }
 		void SetProjectionType(ProjectionType new_projection_type);
 
 		void SetAspectRatio(float aspect_ratio) { m_aspect_ratio = aspect_ratio; }

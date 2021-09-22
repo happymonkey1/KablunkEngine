@@ -12,6 +12,7 @@ namespace Kablunk
 {
 	// #TODO bad!
 	extern const std::filesystem::path g_asset_path;
+	extern const std::filesystem::path g_resources_path;
 
 	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)
 	{
@@ -210,7 +211,7 @@ namespace Kablunk
 	void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
-		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen;
 		node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		
 
@@ -537,33 +538,14 @@ namespace Kablunk
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
 				auto& camera = component.Camera;
-
-				ImGui::Checkbox("Primary", &component.Primary);
-
-				const char* projection_type_strings[] = { "Perspective", "Orthographic" };
-				const char* current_projection_type_str = projection_type_strings[static_cast<int>(camera.GetProjectionType())];
-
-				if (ImGui::BeginCombo("Projection", current_projection_type_str))
-				{
-
-					for (int i = 0; i < 2; ++i)
-					{
-						bool is_selected = current_projection_type_str == projection_type_strings[i];
-						if (ImGui::Selectable(projection_type_strings[i], is_selected))
-						{
-							current_projection_type_str = projection_type_strings[i];
-							camera.SetProjectionType(static_cast<SceneCamera::ProjectionType>(i));
-						}
-
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-
-					ImGui::EndCombo();
-				}
-
 				UI::BeginProperties();
 
+				UI::Property("Primary", &component.Primary);
+
+				const char* projection_type_strings[] = { "Perspective", "Orthographic" };
+
+				UI::PropertyDropdown("Projection Type", projection_type_strings, 2, camera.GetProjectionType());
+				
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
 					float fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
@@ -634,19 +616,14 @@ namespace Kablunk
 				UI::BeginProperties();
 				if (component.Instance)
 				{
-
-					UI::PushItemDisabled();
-
-					std::vector<std::string> name_vec = Parser::CPP::FindStructNames(component.Filepath);
+					std::vector<std::string> name_vec = Parser::CPP::FindStructNames(component.GetFilepath());
 					if (name_vec.empty())
 						KB_CORE_ASSERT(false, "Script loaded somehow but could not find name for component!");
 
-					UI::Property("Script Name", name_vec[0]);
+					UI::PropertyReadOnlyString("Script Name", name_vec[0]);
 
 					// #TODO relative path based on project
-					UI::Property("Filepath", component.Filepath);
-					UI::PopItemDisabled();
-
+					UI::PropertyReadOnlyString("Filepath", component.GetFilepath());
 				}
 				else
 				{
@@ -655,6 +632,8 @@ namespace Kablunk
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0");
 						if (!filepath.empty())
 						{
+							// #FIXME relative path when projects are implemented
+							//std::filesystem::path relative_path = std::filesystem::relative(filepath, g_asset_path);
 							component.BindEditor(filepath, entity);
 						}
 					}

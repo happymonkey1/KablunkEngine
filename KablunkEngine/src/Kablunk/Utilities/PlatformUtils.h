@@ -9,6 +9,7 @@ namespace Kablunk
 	{
 	public:
 		static std::string OpenFile(const char* filter);
+		static std::string OpenFolder(const char* starting_folder = "");
 		static std::string SaveFile(const char* filter);
 	};
 

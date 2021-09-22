@@ -44,6 +44,13 @@ namespace Kablunk
 
 		void ParentEntity(Entity child, Entity parent);
 		void UnparentEntity(Entity child);
+
+		template <typename T, typename... Args>
+		auto GetAllEntitiesWith()
+		{
+			return m_registry->view<T, Args...>();
+		}
+
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);

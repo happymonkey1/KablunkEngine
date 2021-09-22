@@ -3,6 +3,7 @@
 #include "Kablunk/Utilities/PlatformUtils.h"
 #include "Kablunk/Math/Math.h"
 #include "Kablunk/Core/MouseCodes.h"
+#include "Kablunk/Imgui/ImGuiWrappers.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -14,6 +15,9 @@
 #include "ImGuizmo.h"
 #include "Kablunk/Utilities/Parser.h"
 
+#include "Kablunk/Project/Project.h"
+#include "Kablunk/Project/ProjectSerializer.h"
+
 // #TODO replace when runtime is figured out
 #include "Sandbox/Core.h"
 
@@ -21,57 +25,25 @@ namespace Kablunk
 {
 	// #TODO bad!
 	extern const std::filesystem::path g_asset_path;
+	extern const std::filesystem::path g_resources_path;
+
+	constexpr uint32_t MAX_PROJECT_NAME_LENGTH = 255;
+	constexpr uint32_t MAX_PROJECT_FILEPATH_LENGTH = 512;
+
+	static char* s_project_name_buffer = new char[MAX_PROJECT_NAME_LENGTH];
+	static char* s_project_filepath_buffer = new char[MAX_PROJECT_FILEPATH_LENGTH];
+
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }
 	{
 		m_active_scene = CreateRef<Scene>();
 
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
 
-#if 0
-		auto square = m_active_scene->CreateEntity("Square Entity");
-		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
-
-		auto red_square = m_active_scene->CreateEntity("Square Entity");
-		red_square.AddComponent<SpriteRendererComponent>(glm::vec4{ 8.0f, 0.2f, 0.3f, 1.0f });
-	
-		m_square_entity = square;
-
-		m_primary_camera_entity = m_active_scene->CreateEntity("Primary Camera");
-		m_primary_camera_entity.AddComponent<CameraComponent>();
-		m_secondary_camera_entity = m_active_scene->CreateEntity("Secondary Camera");
-		auto& camera_comp = m_secondary_camera_entity.AddComponent<CameraComponent>();
-
-
-		class CameraControllerScript : public NativeScript
-		{
-		public:
-			virtual void OnCreate() override
-			{
-
-			}
-			
-			virtual void OnUpdate(Timestep ts) override
-			{
-				auto& transform = GetComponent<TransformComponent>();
-				static float speed = 10.0f;
-
-				if (Input::IsKeyPressed(Key::W))			transform.Translation.y += speed * ts;
-				else if (Input::IsKeyPressed(Key::S))		transform.Translation.y -= speed * ts;
-				if (Input::IsKeyPressed(Key::A))			transform.Translation.x -= speed * ts;
-				else if (Input::IsKeyPressed(Key::D))		transform.Translation.x += speed * ts;
-			}
-		};
-
-		m_primary_camera_entity.AddComponent<NativeScriptComponent>().Bind<CameraControllerScript>();
-
-		camera_comp.Primary = false;
-
-		auto dummy_child_test_ent = m_active_scene->CreateEntity("Dummy Child");
-		m_primary_camera_entity.AddChild(dummy_child_test_ent);
-#endif
+		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
+		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
 	}
 
 	void EditorLayer::OnAttach()
@@ -246,18 +218,34 @@ namespace Kablunk
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New", "Crtl+N"))
+
+				if (ImGui::MenuItem("Create Project..."))
+					m_show_create_new_project_popup = true;
+				if (ImGui::MenuItem("Save Project"))
+					SaveProject();
+				if (ImGui::MenuItem("Open Project...", "Crtl+O"))
+					OpenProject();
+
+				ImGui::Separator();
+				if (ImGui::MenuItem("New Scene", "Crtl+N"))
 					NewScene();
 				
-				if (ImGui::MenuItem("Open...", "Crtl+O"))
+				if (ImGui::MenuItem("Open Scene..."))
 					OpenScene();
 				
-				if (ImGui::MenuItem("Save As...", "Crtl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene As...", "Crtl+Shift+S"))
 					SaveSceneAs();
 				
 				if (ImGui::MenuItem("Exit")) 
 					Application::Get().Close();
 
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Edit"))
+			{
+				if (ImGui::MenuItem("Project Settings"))
+					m_show_project_properties_panel = true;
 				ImGui::EndMenu();
 			}
 
@@ -273,20 +261,35 @@ namespace Kablunk
 		m_scene_hierarchy_panel.OnImGuiRender();
 		m_content_browser_panel.OnImGuiRender();
 
+		if (Project::GetActive().get() != nullptr)
+			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
+		else
+			m_show_project_properties_panel = false;
 
-		ImGui::Begin("Debug Information");
+		if (m_show_debug_panel)
+		{
+			ImGui::Begin("Debug Panel");
+
+			UI::BeginProperties();
+
+			UI::PropertyReadOnlyFloat("Frame time", m_imgui_profiler_stats.Delta_time);
+			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
+
+			Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+
+			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
+			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
+			UI::PropertyReadOnlyUint32("Indices", stats.GetTotalIndexCount());
+			UI::PropertyReadOnlyUint32("Quad Count", stats.Quad_count);
+
+			UI::Property("Editor Selected Entity", m_selected_entity.GetHandleAsString());
+			UI::Property("Hierarchy Panel Selected Entity", m_scene_hierarchy_panel.GetSelectedEntity().GetHandleAsString());
+
+			UI::EndProperties();
+
+			ImGui::End();
+		}
 		
-		ImGui::Text("Frame time: %.*f", 4, m_imgui_profiler_stats.Delta_time);
-		ImGui::Text("FPS: %.*f", 4, m_imgui_profiler_stats.Fps);
-
-		Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
-
-		ImGui::Text("Draw Calls: %d", stats.Draw_calls);
-		ImGui::Text("Verts: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-		ImGui::Text("Quad Count: %d", stats.Quad_count);
-		
-		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::Begin("Viewport");
@@ -415,6 +418,97 @@ namespace Kablunk
 		UI_Toolbar();
 
 		ImGui::End();
+
+		if (m_show_create_new_project_popup)
+		{
+			ImGui::OpenPopup("New Project");
+			memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
+			memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
+			m_show_create_new_project_popup = false;
+		}
+
+		auto bold_font = io.Fonts->Fonts[0];
+		auto center = ImGui::GetMainViewport()->GetCenter();
+
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, { 0.5f, 0.5f });
+		ImGui::SetNextWindowSize({ 700, 350 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 20, 20 });
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 4, 10 });
+		if (ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+		{
+			UI::ShiftCursorY(350.0f / 8.0f);
+			UI::BeginProperties();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 10, 7 });
+			ImGui::PushFont(bold_font);
+			std::string full_project_path = strlen(s_project_filepath_buffer) > 0
+				? std::string(s_project_filepath_buffer) + "/" + std::string(s_project_name_buffer) : "";
+			UI::PropertyReadOnlyString("Full Project Path", full_project_path);
+			ImGui::PopFont();
+
+			UI::Property("Project Name", s_project_name_buffer, MAX_PROJECT_NAME_LENGTH);
+			
+			auto label_size = ImGui::CalcTextSize("...", NULL, true);
+			auto& style = ImGui::GetStyle();
+			auto button_size = ImGui::CalcItemSize(
+				{ 0, 0 }, label_size.x + style.FramePadding.x * 2.0f, 
+				label_size.y + style.FramePadding.y * 2.0f
+			);
+			
+			UI::PropertyReadOnlyChars("Project Location", s_project_filepath_buffer);
+		
+			auto px = ImGui::GetColumnWidth() - button_size.x / 2.0f - style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1;
+			ImGui::NextColumn();
+			UI::ShiftCursorX(px);
+			if (ImGui::Button("..."))
+			{
+				std::string path = FileDialog::OpenFolder();
+				std::replace(path.begin(), path.end(), '\\', '/');
+				memcpy(s_project_filepath_buffer, path.data(), path.length());
+			}
+
+			ImGui::Separator();
+			UI::EndProperties();
+
+			auto create_text_size = ImGui::CalcTextSize("Create", NULL, true);
+			auto create_button_size = ImGui::CalcItemSize(
+				{ 0, 0 }, create_text_size.x + style.FramePadding.x * 2.0f,
+				label_size.y + style.FramePadding.y * 2.0f
+			);
+
+			auto cancel_text_size = ImGui::CalcTextSize("Cancel", NULL, true);
+			auto cancel_button_size = ImGui::CalcItemSize(
+				{ 0, 0 }, cancel_text_size.x + style.FramePadding.x * 2.0f,
+				label_size.y + style.FramePadding.y * 2.0f
+			);
+
+			auto button_widths = create_button_size.x / 2.0f + (style.ItemSpacing.x - 1) + cancel_button_size.x / 2.0f;
+			UI::ShiftCursorX((600.0f / 2.0f) - button_widths / 2.0f - style.FramePadding.x);
+			ImGui::PushFont(bold_font);
+			if (ImGui::Button("Create"))
+			{
+				CreateProject(full_project_path);
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Cancel"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::PopFont();
+			ImGui::PopStyleVar();
+
+
+			ImGui::EndPopup();
+		}
+		else
+		{
+			if (strlen(s_project_filepath_buffer) > 0)
+				OpenProject(s_project_filepath_buffer);
+		}
+
+		ImGui::PopStyleVar(2);
 	}
 
 	void EditorLayer::UI_Toolbar()
@@ -493,7 +587,7 @@ namespace Kablunk
 		case Key::O:
 		{
 			if (ctrl_pressed)
-				OpenScene();
+				OpenProject();
 
 			break;
 		}
@@ -507,8 +601,8 @@ namespace Kablunk
 		case Key::D:
 		{
 			if (ctrl_pressed)
-				if (m_selected_entity != null_entity)
-					m_active_scene->DuplicateEntity(m_selected_entity);
+				if (Entity selection = m_scene_hierarchy_panel.GetSelectedEntity(); selection)
+					m_active_scene->DuplicateEntity(selection);
 
 			break;
 		}
@@ -598,13 +692,112 @@ namespace Kablunk
 		return (m_viewport_focused || m_viewport_hovered) && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
 	}
 
+	void EditorLayer::CreateProject(std::filesystem::path project_path)
+	{
+		if (project_path.empty())
+		{
+			KB_CORE_ERROR("Tried creating project with empty path!");
+			return;
+		}
+		if (!std::filesystem::exists(project_path))
+			std::filesystem::create_directories(project_path);
+
+		std::filesystem::copy(g_resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
+
+		{
+			std::ifstream stream{ project_path / "Project.kablunkproj" };
+			std::stringstream ss;
+			ss << stream.rdbuf();
+
+			stream.close();
+
+			std::string data = ss.str();
+			ReplaceProjectName(data, s_project_name_buffer);
+
+			std::ofstream ostream{ project_path / "Project.kablunkproj" };
+			ostream << data;
+			ostream.close();
+
+			std::string new_project_filename = std::string{ s_project_name_buffer } + ".kablunkproj";
+			std::filesystem::rename(project_path / "Project.kablunkproj", project_path / new_project_filename);
+
+			std::filesystem::create_directories(project_path / "assets" / "scenes");
+			std::filesystem::create_directories(project_path / "assets" / "scripts");
+
+			
+
+			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");
+		}
+	}
+
+	void EditorLayer::OpenProject(const std::string& filepath)
+	{
+		if (Project::GetActive())
+			CloseProject();
+
+		Ref<Project> project = CreateRef<Project>();
+		ProjectSerializer serializer{ project };
+
+		serializer.Deserialize(filepath);
+		Project::SetActive(project);
+
+		m_project_properties_panel = ProjectPropertiesPanel{ project };
+
+		if (const std::string& scene_name = project->GetStartSceneName(); !scene_name.empty())
+			OpenScene(Project::GetAssetDirectory() / scene_name);
+		else
+			NewScene();
+
+		m_scene_hierarchy_panel.ClearSelectionContext();
+
+		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
+		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
+	}
+
+	void EditorLayer::OpenProject()
+	{
+		auto filepath = FileDialog::OpenFile("Kablunk Project (*.kablunkproj)\0*.kablunkproj\0");
+		
+		if (filepath.empty())
+			return;
+
+		strcpy_s(s_project_filepath_buffer, MAX_PROJECT_FILEPATH_LENGTH, filepath.data());
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		auto& project = Project::GetActive();
+		ProjectSerializer serializer{ project };
+		serializer.Serialize(project->GetConfig().Project_directory + "/" + project->GetConfig().Project_filename);
+	}
+
+	void EditorLayer::CloseProject(bool unload /*= true*/)
+	{
+		SaveProject();
+
+		m_scene_hierarchy_panel.SetContext(nullptr);
+		m_active_scene = nullptr;
+
+		if (unload)
+			Project::SetActive(nullptr);
+	}
+
+	void EditorLayer::ReplaceProjectName(std::string& data, const std::string& project_name)
+	{
+		static const char* s_project_name_token = "$PROJECT_NAME$";
+		size_t p = 0;
+		while ((p = data.find(s_project_name_token, p)) != std::string::npos)
+		{
+			data.replace(p, strlen(s_project_name_token), project_name);
+			p += strlen(s_project_name_token);
+		}
+	}
+
 	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
 	void EditorLayer::ViewportClickSelectEntity()
 	{
 		// #TODO clicking outside viewport still tries to select entity, causing a deselection in most cases
-		if (!Input::IsMouseButtonPressed(Mouse::Button0))
-			return;
 
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;

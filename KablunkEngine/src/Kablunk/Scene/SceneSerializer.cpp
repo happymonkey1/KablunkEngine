@@ -94,7 +94,7 @@ namespace Kablunk
 
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
-				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath;
+				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
 
 		WriteComponentData<MeshComponent>(out, entity, [](auto& out, auto& component)

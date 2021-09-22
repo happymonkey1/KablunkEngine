@@ -6,6 +6,7 @@
 
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
+#include "Panels/ProjectPropertiesPanel.h"
 
 
 namespace Kablunk
@@ -26,6 +27,13 @@ namespace Kablunk
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		bool CanPickFromViewport() const;
+
+		void CreateProject(std::filesystem::path project_path);
+		void OpenProject();
+		void OpenProject(const std::string& filepath);
+		void SaveProject();
+		void CloseProject(bool unload = true);
+		void ReplaceProjectName(std::string& data, const std::string& project_name);
 
 		void NewScene();
 		void SaveSceneAs();
@@ -52,6 +60,10 @@ namespace Kablunk
 		bool m_primary_camera_selected{ true };
 		bool m_application_paused{ true };
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };
+		bool m_show_debug_panel{ true };
+
+		bool m_show_create_new_project_popup{ false };
+		bool m_show_project_properties_panel{ false };
 
 		glm::vec2 m_viewport_size{ 0.0f };
 		glm::vec2 m_viewport_bounds[2];
@@ -61,6 +73,8 @@ namespace Kablunk
 		// Panels
 		SceneHierarchyPanel m_scene_hierarchy_panel;
 		ContentBrowserPanel m_content_browser_panel;
+		ProjectPropertiesPanel m_project_properties_panel;
+
 
 		// Resources
 		Ref<Texture2D> m_icon_play, m_icon_stop;

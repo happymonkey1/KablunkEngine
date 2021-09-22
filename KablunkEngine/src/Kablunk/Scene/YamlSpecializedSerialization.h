@@ -6,7 +6,7 @@
 
 namespace Kablunk
 {
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& member)
+	inline YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
 		out << member.x << member.y;
@@ -15,7 +15,7 @@ namespace Kablunk
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
+	inline YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
 		out << member.x << member.y << member.z;
@@ -24,7 +24,7 @@ namespace Kablunk
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& member)
+	inline YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& member)
 	{
 		out << YAML::Flow << YAML::BeginSeq;
 		out << member.x << member.y << member.z << member.w;

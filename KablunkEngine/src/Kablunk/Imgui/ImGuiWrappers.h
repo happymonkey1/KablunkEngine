@@ -23,6 +23,8 @@ namespace Kablunk::UI
 
 	namespace Internal
 	{
+		static char s_id_buffer[MAX_CHARS];
+
 		template <typename FuncT>
 		static void CreateStaticProperty(const char* label, FuncT DrawUI)
 		{
@@ -36,14 +38,15 @@ namespace Kablunk::UI
 
 			// Account for null terminator
 			size_t label_size = std::strlen(label) + 1;
-			KB_CORE_ASSERT(label_size <= MAX_CHARS, "label too long!");
-			char* id_buffer = new char[label_size + 2];
-			id_buffer[0] = '#';
-			id_buffer[1] = '#';
-			strcpy_s(&id_buffer[3], label_size, label);
-
+			size_t buffer_size = label_size + 2;
+			KB_CORE_ASSERT(buffer_size <= MAX_CHARS, "label too long!");
+			memset(s_id_buffer, 0, MAX_CHARS);
+			s_id_buffer[0] = '#';
+			s_id_buffer[1] = '#';
+			strcpy_s(s_id_buffer + 2, MAX_CHARS, label);
+			
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-			DrawUI(id_buffer);
+			DrawUI(s_id_buffer);
 			ImGui::PopStyleVar();
 
 			ImGui::PopItemWidth();
@@ -62,16 +65,17 @@ namespace Kablunk::UI
 			ImGui::PushItemWidth(-1);
 
 			size_t label_size = std::strlen(label) + 1;
-			KB_CORE_ASSERT(label_size <= MAX_CHARS, "label too long!");
-			char* id_buffer = new char[label_size + 2];
-			id_buffer[0] = '#';
-			id_buffer[1] = '#';
-			strcpy_s(&id_buffer[2], label_size, label);
+			size_t buffer_size = label_size + 2;
+			KB_CORE_ASSERT(buffer_size <= MAX_CHARS, "label too long!");
+			memset(s_id_buffer, 0, MAX_CHARS);
+			s_id_buffer[0] = '#';
+			s_id_buffer[1] = '#';
+			strcpy_s(s_id_buffer + 2, MAX_CHARS, label);
 
 			if (IsItemDisabled())
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
-			bool modified = DrawUI(id_buffer);
+			bool modified = DrawUI(s_id_buffer);
 
 			if (IsItemDisabled())
 				ImGui::PopStyleVar();
@@ -133,7 +137,7 @@ namespace Kablunk::UI
 
 	static void ShiftCursorX(float distance)
 	{
-		ImGui::SetCursorPosY(ImGui::GetCursorPosX() + distance);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + distance);
 	}
 
 	static void ShiftCursorY(float distance)
@@ -173,12 +177,38 @@ namespace Kablunk::UI
 			});
 	}
 
+	static void PropertyWithHint(const char* label, const std::string& hint, std::string& value)
+	{
+		Internal::CreateStaticProperty(label, [&](char* id_buffer)
+			{
+				ImGui::InputTextWithHint(id_buffer, hint.c_str(), (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
+			});
+	}
+
+	static void PropertyReadOnlyString(const char* label, const std::string& value)
+	{
+		Property(label, value);
+	}
+
+	static void PropertyReadOnlyStringWithHint(const char* label, const std::string& hint, std::string& value)
+	{
+		PropertyWithHint(label, hint, value);
+	}
+
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, char* value, size_t length)
 	{
 		return Internal::CreateProperty(label, [&value, &length](char* id_buffer) -> bool
 			{
 				return ImGui::InputText(id_buffer, (char*)value, length);
+			});
+	}
+
+	static bool PropertyWithHint(const char* label, const char* hint, char* value, size_t length)
+	{
+		return Internal::CreateProperty(label, [&](char* id_buffer) -> bool
+			{
+				return ImGui::InputTextWithHint(id_buffer, hint, (char*)value, length);
 			});
 	}
 
@@ -191,6 +221,24 @@ namespace Kablunk::UI
 			});
 	}
 
+	static void PropertyWithHint(const char* label, const char* hint, const char* value)
+	{
+		Internal::CreateStaticProperty(label, [&](char* id_buffer)
+			{
+				ImGui::InputTextWithHint(id_buffer, hint, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
+			});
+	}
+
+	static void PropertyReadOnlyChars(const char* label, const char* value)
+	{
+		Property(label, value);
+	}
+
+	static void PropertyReadOnlyCharsWithHint(const char* label, const char* hint, const char* value)
+	{
+		PropertyWithHint(label, hint, value);
+	}
+
 	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
@@ -199,12 +247,31 @@ namespace Kablunk::UI
 			});
 	}
 
+	static void PropertyReadOnlyFloat(const char* label, const float& value)
+	{
+		Property(label, std::to_string(value));
+	}
+
 	static bool Property(const char* label, int& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
 			{
 				return ImGui::DragInt(id_buffer, &value, delta, min, max);
 			});
+	}
+
+	static bool Property(const char* label, uint32_t& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+	{
+		return Internal::CreateProperty(label, [&](char* id_buffer)
+			{
+				int casted_int = static_cast<int>(value);
+				return ImGui::DragInt(id_buffer, &casted_int, delta, min, max);
+			});
+	}
+
+	static void PropertyReadOnlyUint32(const char* label, const uint32_t& value)
+	{
+		Property(label, std::to_string(value));
 	}
 
 	static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
@@ -256,7 +323,7 @@ namespace Kablunk::UI
 	}
 
 	template <typename EnumT, typename UnderlyingT = int32_t>
-	static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT selected)
+	static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT& selected)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
 			{
@@ -268,15 +335,15 @@ namespace Kablunk::UI
 				{
 					for (size_t i = 0; i < option_count; ++i)
 					{
-						const bool selected = current == options[i];
-						if (ImGui::Selectable(options[i], selected))
+						const bool is_selected = current == options[i];
+						if (ImGui::Selectable(options[i], is_selected))
 						{
 							current = options[i];
 							selected = (EnumT)i;
 							updated = true;
 						}
 
-						if (selected)
+						if (is_selected)
 							ImGui::SetItemDefaultFocus();
 					}
 
@@ -327,10 +394,54 @@ namespace Kablunk::UI
 			});
 	}
 
-	static bool Button(const char* label, const ImVec2& size = { 0, 0 })
+	static bool Button(const char* label, const ImVec2& size = { 0, 0 }, bool next_column = true)
 	{
 		bool pressed = ImGui::Button(label, size);
-		ImGui::NextColumn();
+		if (next_column)
+			ImGui::NextColumn();
+		return pressed;
+	}
+
+	static bool PropertyFolderPathWithButton(const char* label, char* path_buffer, size_t buffer_size)
+	{
+		bool pressed = false;
+
+		ImGui::EndColumns();
+		if (ImGui::BeginTable("##folder_path_with_button", 3))
+		{
+			const auto& style = ImGui::GetStyle();
+			auto button_size = ImGui::CalcTextSize("...");
+			auto label_width = ImGui::GetWindowContentRegionWidth() / 2.0f - style.ColumnsMinSpacing - 1;
+			ImGui::TableSetupColumn("##label", ImGuiTableColumnFlags_NoHeaderLabel);
+			ImGui::TableSetupColumn("##path_preview", ImGuiTableColumnFlags_NoHeaderLabel);
+			ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_NoHeaderLabel);
+			ImGui::TableHeadersRow();
+			ImGui::TableNextColumn();
+
+			ShiftCursorY(3.0f);
+			ImGui::Text(label);
+			ShiftCursorY(-3.0f);
+
+			ImGui::TableNextColumn();
+
+			ImGui::PushItemWidth(-1);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
+			ImGui::InputText("##path_preview", path_buffer, buffer_size, ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::PopStyleVar();
+			ImGui::PopItemWidth();
+
+			ImGui::TableNextColumn();
+
+			pressed = Button("...", button_size, false);
+
+			ImGui::EndTable();
+		}
+
+		// #TODO remove when switching main properties layout to tables API
+		ImGui::BeginColumns("##properties", 2, ImGuiOldColumnFlags_NoResize | ImGuiOldColumnFlags_NoBorder);
+
 		return pressed;
 	}
 
