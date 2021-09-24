@@ -17,7 +17,7 @@ project "KablunkEditor"
     {
         "src",
         "%{wks.location}/KablunkEngine/vendor/spdlog/include",
-		"%{wks.location}/KablunkEngine/src",
+		"%{wks.location}/KablunkEngine/include",
 		"%{wks.location}/KablunkEngine/vendor",
 		"%{wks.location}/Sandbox/src",
 		"%{IncludeDir.glm}",

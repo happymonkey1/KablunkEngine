@@ -17,7 +17,7 @@ project "Sandbox"
 	{
 		"src",
 		"%{wks.location}/KablunkEngine/vendor/spdlog/include",
-		"%{wks.location}/KablunkEngine/src",
+		"%{wks.location}/KablunkEngine/include",
 		"%{wks.location}/KablunkEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",

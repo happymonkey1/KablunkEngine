@@ -1,5 +1,5 @@
 #include "kablunkpch.h"
-#include "Scene.h"
+#include "Kablunk/Scene/Scene.h"
 
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Renderer/Renderer2D.h"

@@ -12,7 +12,7 @@ project "KablunkEngine"
 
 	files
 	{
-		"src/**.h",
+		"include/**.h",
 		"src/**.cpp",
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
@@ -31,6 +31,7 @@ project "KablunkEngine"
 
 	includedirs
 	{
+		"include",
 		"src",
 		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",

@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include "Kablunk/Core/Application.h"
+
 #include "Kablunk/Utilities/PlatformUtils.h"
 #include "Kablunk/Math/Math.h"
 #include "Kablunk/Core/MouseCodes.h"

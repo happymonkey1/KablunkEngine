@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
-#include "Entity.h"
+#include "Kablunk/Scene/Entity.h"
 
-#include "Components.h"
+#include "Kablunk/Scene/Components.h"
 
 namespace Kablunk
 {

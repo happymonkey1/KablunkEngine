@@ -1,5 +1,5 @@
 #include "kablunkpch.h"
-#include "AssetManager.h"
+#include "Kablunk/Core/AssetManager.h"
 
 namespace Kablunk
 {

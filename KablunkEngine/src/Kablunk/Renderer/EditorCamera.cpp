@@ -1,5 +1,5 @@
 #include "kablunkpch.h"
-#include "EditorCamera.h"
+#include "Kablunk/Renderer/EditorCamera.h"
 
 #include "Kablunk/Core/Input.h"
 #include "Kablunk/Core/KeyCodes.h"
