@@ -66,6 +66,7 @@ namespace Kablunk
 
 		bool m_show_create_new_project_popup{ false };
 		bool m_show_project_properties_panel{ false };
+		bool m_show_replace_kablunk_install_popup{ false };
 
 		glm::vec2 m_viewport_size{ 0.0f };
 		glm::vec2 m_viewport_bounds[2];

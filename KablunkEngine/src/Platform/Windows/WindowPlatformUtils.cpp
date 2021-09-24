@@ -151,7 +151,23 @@ namespace Kablunk
 		return mac_address;
 	}
 
-	std::string FileSystem::GetEnviornmentVar(const std::string& key)
+	bool FileSystem::HasEnvironmentVariable(const std::string& key)
+	{
+		HKEY hKey;
+		LPCSTR keyPath = "Environment";
+		LSTATUS lOpenStatus = RegOpenKeyExA(HKEY_CURRENT_USER, keyPath, 0, KEY_ALL_ACCESS, &hKey);
+
+		if (lOpenStatus == ERROR_SUCCESS)
+		{
+			lOpenStatus = RegQueryValueExA(hKey, key.c_str(), 0, NULL, NULL, NULL);
+			RegCloseKey(hKey);
+		}
+
+		return lOpenStatus == ERROR_SUCCESS;
+	}
+
+
+	std::string FileSystem::GetEnvironmentVar(const std::string& key)
 	{
 		HKEY hKey;
 		LPCSTR keyPath = "Environment";

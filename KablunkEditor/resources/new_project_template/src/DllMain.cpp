@@ -7,7 +7,6 @@ KB_API BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lp
 	case DLL_PROCESS_ATTACH:
 		// Initialize once for each new process.
 		// Return FALSE to fail DLL load.
-		DebugPrint();
 		break;
 
 	case DLL_THREAD_ATTACH:

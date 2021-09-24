@@ -65,7 +65,8 @@ namespace Kablunk
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
 
-		s_kablunk_install_path = FileSystem::GetEnviornmentVar("KABLUNK_DIR");
+		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
+		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
 	}
 
 	void EditorLayer::OnDetach()
@@ -481,11 +482,29 @@ namespace Kablunk
 
 			if (ImGui::BeginMenu("Edit"))
 			{
+
+				if (!Project::GetActive())
+				{
+					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+					ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+				}
+
 				if (ImGui::MenuItem("Project Settings"))
 					m_show_project_properties_panel = true;
 
+
 				if (ImGui::MenuItem("Reload NativeScript DLLs"))
 					NativeScriptEngine::LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
+				
+				if (!Project::GetActive())
+				{
+					ImGui::PopStyleVar();
+					ImGui::PopItemFlag();
+				}
+
+
+				if (ImGui::MenuItem("Select KablunkEngine Install"))
+					m_show_replace_kablunk_install_popup = true;
 
 				ImGui::EndMenu();
 			}
@@ -526,7 +545,8 @@ namespace Kablunk
 
 	void EditorLayer::UI_KablunkInstallPopup()
 	{
-		if (s_kablunk_install_path.empty() && !ImGui::IsPopupOpen("Select KablunkEngine Install"))
+		if ((m_show_replace_kablunk_install_popup || s_kablunk_install_path.empty()) 
+			&& !ImGui::IsPopupOpen("Select KablunkEngine Install"))
 		{
 			ImGui::OpenPopup("Select KablunkEngine Install");
 			s_kablunk_install_path.reserve(MAX_PROJECT_FILEPATH_LENGTH);
@@ -538,11 +558,14 @@ namespace Kablunk
 		ImGui::SetNextWindowSize({ 700, 350 });
 		if (ImGui::BeginPopupModal("Select KablunkEngine Install", 0, ImGuiWindowFlags_NoMove | ImGuiTableColumnFlags_NoResize))
 		{
-			const auto& io = ImGui::GetIO();
-			auto bold_font = io.Fonts->Fonts[0];
-			ImGui::PushFont(bold_font);
-			ImGui::TextUnformatted("Could not find KablunkEngine Install");
-			ImGui::PopFont();
+			if (s_kablunk_install_path.empty())
+			{
+				const auto& io = ImGui::GetIO();
+				auto bold_font = io.Fonts->Fonts[0];
+				ImGui::PushFont(bold_font);
+				ImGui::TextUnformatted("Could not find KablunkEngine Install");
+				ImGui::PopFont();
+			}
 
 			ImGui::TextWrapped("Please select the root folder for the KablunkEngine install you want to use");
 
@@ -570,6 +593,14 @@ namespace Kablunk
 			{
 				bool success = FileSystem::SetEnvironmentVar("KABLUNK_DIR", s_kablunk_install_path.c_str());
 				KB_CORE_ASSERT(success, "Failed to set environment variable!");
+				m_show_replace_kablunk_install_popup = false;
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel"))
+			{
+				m_show_replace_kablunk_install_popup = false;
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -733,11 +764,18 @@ namespace Kablunk
 
 	void EditorLayer::CreateProject(std::filesystem::path project_path)
 	{
+		if (!FileSystem::HasEnvironmentVariable("KABLUNK_DIR"))
+		{
+			KB_CORE_ERROR("KablunkEngine install location not set!");
+			return;
+		}
+
 		if (project_path.empty())
 		{
 			KB_CORE_ERROR("Tried creating project with empty path!");
 			return;
 		}
+
 		if (!std::filesystem::exists(project_path))
 			std::filesystem::create_directories(project_path);
 
@@ -769,6 +807,8 @@ namespace Kablunk
 
 				std::string data = ss.str(); 
 				ReplaceToken("$PROJECT_NAME$", data, s_project_name_buffer);
+				ReplaceToken("$KABLUNK_DIR$", data, s_kablunk_install_path);
+				std::replace(data.begin(), data.end(), '\\', '/');
 
 				std::ofstream ostream{ project_path / "premake5.lua" };
 				ostream << data;
@@ -806,9 +846,13 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "include");
 			std::filesystem::create_directories(project_path / "src");
 
-			std::string gen_proj_batch = "\'" + project_path.string();
+			std::string gen_proj_batch = "\"" + project_path.string();
 			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
-			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\'";
+			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
+			
+			KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
+
+			// #TODO enivornment variable is not working when called from c++ script
 			system(gen_proj_batch.c_str());
 
 			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");

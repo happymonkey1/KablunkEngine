@@ -22,7 +22,8 @@ namespace Kablunk
 	class FileSystem
 	{
 	public:
-		static std::string GetEnviornmentVar(const std::string& key);
+		static bool HasEnvironmentVariable(const std::string& key);
+		static std::string GetEnvironmentVar(const std::string& key);
 		static bool SetEnvironmentVar(const std::string& key, const std::string& value);
 	};
 }

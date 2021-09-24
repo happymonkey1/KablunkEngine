@@ -4,18 +4,10 @@
 #include "Kablunk/Utilities/Parser.h"
 #include "Kablunk/Utilities/Utilities.h"
 
-#ifdef KB_PLATFORM_WINDOWS
-#	include <windows.h>
-#	include <stdio.h>
-#else
-#	error "Native scripting is only supported on windows!"
-#endif
+#include "Kablunk/Scripts/NativeScriptModule.h"
 
 namespace Kablunk
 {
-
-	//typedef int(__cdecl* PROCADDR)(LPWSTR);
-	using FuncPointer = int(WINAPI*)();
 
 	bool NativeScriptEngine::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
 	{
@@ -43,6 +35,7 @@ namespace Kablunk
 
 	bool NativeScriptEngine::LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir)
 	{
+#if 0
 		if (!m_dll_directory_set && false)
 		{
 			// #TODO move elsewhere
@@ -60,24 +53,23 @@ namespace Kablunk
 
 			m_dll_directory_set = true;
 		}
+#endif
 
-		std::string full_dll_path = dll_dir  + dll_name;
-		HINSTANCE handle = LoadLibraryA(full_dll_path.c_str());
+		NativeScriptModule nsc_module = NativeScriptModule{ dll_name, dll_dir };
 
 		bool successful_link = false;
 		bool dll_freed = false;
-		if (handle != NULL)
+		if (nsc_module)
 		{
-			KB_CORE_ASSERT(false, "WOO!");
-			FuncPointer dll_func = (FuncPointer)GetProcAddress(handle, "DebugPrint");
+			auto dll_func = NULL;//nsc_module["DebugPrint"];
 
 			if (dll_func != NULL)
 			{
 				successful_link = true;
-				dll_func();
+				//dll_func();
 			}
 
-			dll_freed = FreeLibrary(handle);
+			dll_freed = FreeLibrary(nsc_module.GetHandle());
 		}
 
 		if (!successful_link)
