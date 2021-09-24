@@ -110,7 +110,7 @@ namespace Kablunk
 	{
 		ImGui::Begin("Scene Hierarchy");
 
-		auto window_rect = ImGui::GetWindowDockNode()->Rect();
+		auto window_rect = ImRect{ ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax() };
 
 		// Scene tree node
 		auto scene_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;

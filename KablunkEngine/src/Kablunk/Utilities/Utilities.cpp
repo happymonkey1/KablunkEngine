@@ -7,5 +7,8 @@ namespace Kablunk::Utils
 	void WaitForSecondsCallback(float delay, T callback)
 	{
 		// Add job with callback
+		KB_CORE_ASSERT(false, "Not implemented!");
 	}
+
+	
 }

@@ -12,6 +12,8 @@
 
 #include "Kablunk/Core/Uuid64.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
 #include "ImGuizmo.h"
 #include "Kablunk/Utilities/Parser.h"
 
@@ -32,6 +34,7 @@ namespace Kablunk
 
 	static char* s_project_name_buffer = new char[MAX_PROJECT_NAME_LENGTH];
 	static char* s_project_filepath_buffer = new char[MAX_PROJECT_FILEPATH_LENGTH];
+	static std::string s_kablunk_install_path = "";
 
 
 	EditorLayer::EditorLayer()
@@ -61,11 +64,8 @@ namespace Kablunk
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
-		for (int i = 0; i < 3; ++i)
-		{
-			auto test_uuid = uuid::generate();
-			KB_CORE_INFO("{0}", test_uuid);
-		}
+
+		s_kablunk_install_path = FileSystem::GetEnviornmentVar("KABLUNK_DIR");
 	}
 
 	void EditorLayer::OnDetach()
@@ -148,9 +148,7 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		static bool dockspace_open	= true;
 		static bool opt_fullscreen	= true;
-		static bool opt_padding		= false;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -165,38 +163,22 @@ namespace Kablunk
 			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		}
-		else
-		{
-			dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-		}
 
 
 		if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
 			window_flags |= ImGuiWindowFlags_NoBackground;
 
-		if (!opt_padding)
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 1.0f, 1.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, { 0.0f, 0.0f, 0.0f, 0.0f });
 		ImGui::Begin("##kablunk_editor_dockspace", NULL, window_flags);
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar(2);
 
-		if (!opt_padding)
-			ImGui::PopStyleVar();
 
 		if (opt_fullscreen)
 			ImGui::PopStyleVar(2);
-
-		
-
-		/*auto secondary_toolbar_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
-		static float padding = 10.0f;
-		if (ImGui::Begin("##secondary_toolbar", NULL, secondary_toolbar_flags))
-		{
-			auto play_button_icon_id = m_icon_play->GetRendererID();
-			ImGui::ImageButton((void*)play_button_icon_id, { 30.0f, 30.0f });
-
-
-			ImGui::End();
-		}*/
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
@@ -205,54 +187,13 @@ namespace Kablunk
 		style.WindowMinSize.x = 375.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
-			ImGuiID dockspace_id = ImGui::GetID("##kablunk_editor_dockspace");
+			ImGuiID dockspace_id = ImGui::GetID("kablunk_editor_dockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
 		style.WindowMinSize.x = min_window_size;
 
-
-
-		float main_menu_window_height{ -1.0f };
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-
-				if (ImGui::MenuItem("Create Project..."))
-					m_show_create_new_project_popup = true;
-				if (ImGui::MenuItem("Save Project"))
-					SaveProject();
-				if (ImGui::MenuItem("Open Project...", "Crtl+O"))
-					OpenProject();
-
-				ImGui::Separator();
-				if (ImGui::MenuItem("New Scene", "Crtl+N"))
-					NewScene();
-				
-				if (ImGui::MenuItem("Open Scene..."))
-					OpenScene();
-				
-				if (ImGui::MenuItem("Save Scene As...", "Crtl+Shift+S"))
-					SaveSceneAs();
-				
-				if (ImGui::MenuItem("Exit")) 
-					Application::Get().Close();
-
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Edit"))
-			{
-				if (ImGui::MenuItem("Project Settings"))
-					m_show_project_properties_panel = true;
-				ImGui::EndMenu();
-			}
-
-			main_menu_window_height = ImGui::GetFrameHeight();
-			ImGui::EndMenuBar();
-		}
-		
+		UI_DrawMenuBar();
 		
 		//ImGui::PopStyleVar();
 
@@ -292,132 +233,127 @@ namespace Kablunk
 		
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-		ImGui::Begin("Viewport");
-		
-		auto viewport_min_region	= ImGui::GetWindowContentRegionMin();
-		auto viewport_max_region	= ImGui::GetWindowContentRegionMax();
-		auto viewport_offset		= ImGui::GetWindowPos();
-		m_viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
-		m_viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
-		
-		m_viewport_focused = ImGui::IsWindowFocused();
-		m_viewport_hovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused || m_viewport_hovered);
-
-		auto panel_size = ImGui::GetContentRegionAvail();
-		auto width = panel_size.x, height = panel_size.y;
-		m_viewport_size = { width, height };
-
-		auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
-		ImGui::Image(
-			reinterpret_cast<void*>(static_cast<uint64_t>(frame_buffer_id)), 
-			{ m_viewport_size.x, m_viewport_size.y }, 
-			{ 0.0f, 1.0f }, { 1.0f, 0.0f }
-		);
-
-		if (ImGui::BeginDragDropTarget())
+		if (ImGui::Begin("Viewport"))
 		{
-			if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-			{
-				const auto path_wchar_str = (const wchar_t*)payload->Data;
-				auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
-				if (path.extension() == FILE_EXTENSIONS::KABLUNK_SCENE)
-					OpenScene(path);	
-				else if (path.extension() == FILE_EXTENSIONS::FBX)
-				{
-					auto entity = m_active_scene->CreateEntity("Untitled Model");
-					auto& mesh_comp = entity.AddComponent<MeshComponent>();
-					mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
-				}
-				else
-					KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
-			}
-			ImGui::EndDragDropTarget();
-		}
+			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
+			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+			auto viewport_offset = ImGui::GetWindowPos();
+			m_viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+			m_viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
 
-		// ImGuizmo
+			m_viewport_focused = ImGui::IsWindowFocused();
+			m_viewport_hovered = ImGui::IsWindowHovered();
+			Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused || m_viewport_hovered);
 
-		
+			auto panel_size = ImGui::GetContentRegionAvail();
+			auto width = panel_size.x, height = panel_size.y;
+			m_viewport_size = { width, height };
 
-
-		
-
-		// #TODO refactor to use callbacks instead of querying current scene
-		auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
-		if (selected_entity && m_gizmo_type != -1)
-		{
-			ImGuizmo::SetOrthographic(false);
-			ImGuizmo::SetDrawlist();
-
-			float window_width = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
-			float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
-			ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
-
-			// Runtime camera
-			/*
-			auto camera_entity = m_active_scene->GetPrimaryCameraEntity();
-			const auto& camera = camera_entity.GetComponent<CameraComponent>().Camera;
-			const auto& camera_projection = camera.GetProjection();
-			auto camera_view = glm::inverse(camera_entity.GetComponent<TransformComponent>().GetTransform());
-			*/
-
-			// Editor Camera
-			const auto& camera_projection	= m_editor_camera.GetProjection();
-			auto camera_view				= m_editor_camera.GetViewMatrix();
-
-			// Selected Entity Transform
-			auto& transform_component = selected_entity.GetComponent<TransformComponent>();
-			auto transform = transform_component.GetTransform();
-
-			// Snapping
-			bool snap = Input::IsKeyPressed(Key::LeftControl);
-			float snap_value = (m_gizmo_type == ImGuizmo::ROTATE) ? 45.0f : 0.5f;
-
-			float snap_values[3] = { snap_value, snap_value, snap_value };
-
-			ImGuizmo::Manipulate(glm::value_ptr(camera_view), 
-				glm::value_ptr(camera_projection), 
-				static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
-				ImGuizmo::LOCAL, 
-				glm::value_ptr(transform), 
-				nullptr, 
-				snap ? snap_values : nullptr
+			auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
+			ImGui::Image(
+				reinterpret_cast<void*>(static_cast<uint64_t>(frame_buffer_id)),
+				{ m_viewport_size.x, m_viewport_size.y },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 			);
 
-
-			if (ImGuizmo::IsUsing())
+			if (ImGui::BeginDragDropTarget())
 			{
-				auto original_rotation = transform_component.Rotation;
-				glm::vec3 translation, scale, rotation;
-				if (Math::decompose_transform(transform, translation, scale, rotation))
+				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
-					// Translation
-					transform_component.Translation = translation;
+					const auto path_wchar_str = (const wchar_t*)payload->Data;
+					auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
+					if (path.extension() == FILE_EXTENSIONS::KABLUNK_SCENE)
+						OpenScene(path);
+					else if (path.extension() == FILE_EXTENSIONS::FBX)
+					{
+						auto entity = m_active_scene->CreateEntity("Untitled Model");
+						auto& mesh_comp = entity.AddComponent<MeshComponent>();
+						mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+					}
+					else
+						KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
+				}
+				ImGui::EndDragDropTarget();
+			}
 
-					// Scale
-					transform_component.Scale = scale;
+			// ImGuizmo
 
-					// Rotation
-					auto delta_rotation = rotation - transform_component.Rotation;
-					transform_component.Rotation += delta_rotation;
+			// #TODO refactor to use callbacks instead of querying current scene
+			auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
+			if (selected_entity && m_gizmo_type != -1)
+			{
+				ImGuizmo::SetOrthographic(false);
+				ImGuizmo::SetDrawlist();
+
+				float window_width = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
+				float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
+				ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
+
+				// Runtime camera
+				/*
+				auto camera_entity = m_active_scene->GetPrimaryCameraEntity();
+				const auto& camera = camera_entity.GetComponent<CameraComponent>().Camera;
+				const auto& camera_projection = camera.GetProjection();
+				auto camera_view = glm::inverse(camera_entity.GetComponent<TransformComponent>().GetTransform());
+				*/
+
+				// Editor Camera
+				const auto& camera_projection = m_editor_camera.GetProjection();
+				auto camera_view = m_editor_camera.GetViewMatrix();
+
+				// Selected Entity Transform
+				auto& transform_component = selected_entity.GetComponent<TransformComponent>();
+				auto transform = transform_component.GetTransform();
+
+				// Snapping
+				bool snap = Input::IsKeyPressed(Key::LeftControl);
+				float snap_value = (m_gizmo_type == ImGuizmo::ROTATE) ? 45.0f : 0.5f;
+
+				float snap_values[3] = { snap_value, snap_value, snap_value };
+
+				ImGuizmo::Manipulate(glm::value_ptr(camera_view),
+					glm::value_ptr(camera_projection),
+					static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
+					ImGuizmo::LOCAL,
+					glm::value_ptr(transform),
+					nullptr,
+					snap ? snap_values : nullptr
+				);
+
+
+				if (ImGuizmo::IsUsing())
+				{
+					auto original_rotation = transform_component.Rotation;
+					glm::vec3 translation, scale, rotation;
+					if (Math::decompose_transform(transform, translation, scale, rotation))
+					{
+						// Translation
+						transform_component.Translation = translation;
+
+						// Scale
+						transform_component.Scale = scale;
+
+						// Rotation
+						auto delta_rotation = rotation - transform_component.Rotation;
+						transform_component.Rotation += delta_rotation;
+					}
 				}
 			}
-		}
-		else if (selected_entity && m_gizmo_type == -1)
-		{
-			if (selected_entity.HasComponent<PointLightComponent>())
+			else if (selected_entity && m_gizmo_type == -1)
 			{
-				// #TODO add guizmo for point light
+				if (selected_entity.HasComponent<PointLightComponent>())
+				{
+					// #TODO add guizmo for point light
+				}
 			}
-		}
 
-		
-		ImGui::PopStyleVar();
-		ImGui::End();
+
+			ImGui::PopStyleVar();
+			ImGui::End();
+		}
 
 		UI_Toolbar();
-
-		ImGui::End();
+		UI_KablunkInstallPopup();
 
 		if (m_show_create_new_project_popup)
 		{
@@ -509,6 +445,54 @@ namespace Kablunk
 		}
 
 		ImGui::PopStyleVar(2);
+
+		ImGui::End();
+	}
+
+	void EditorLayer::UI_DrawMenuBar()
+	{
+		float main_menu_window_height{ -1.0f };
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Create Project..."))
+					m_show_create_new_project_popup = true;
+				if (ImGui::MenuItem("Save Project"))
+					SaveProject();
+				if (ImGui::MenuItem("Open Project...", "Crtl+O"))
+					OpenProject();
+
+				ImGui::Separator();
+				if (ImGui::MenuItem("New Scene", "Crtl+N"))
+					NewScene();
+
+				if (ImGui::MenuItem("Open Scene..."))
+					OpenScene();
+
+				if (ImGui::MenuItem("Save Scene As...", "Crtl+Shift+S"))
+					SaveSceneAs();
+
+				if (ImGui::MenuItem("Exit"))
+					Application::Get().Close();
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Edit"))
+			{
+				if (ImGui::MenuItem("Project Settings"))
+					m_show_project_properties_panel = true;
+
+				if (ImGui::MenuItem("Reload NativeScript DLLs"))
+					NativeScriptEngine::LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
+
+				ImGui::EndMenu();
+			}
+
+			main_menu_window_height = ImGui::GetFrameHeight();
+			ImGui::EndMenuBar();
+		}
 	}
 
 	void EditorLayer::UI_Toolbar()
@@ -538,6 +522,61 @@ namespace Kablunk
 		ImGui::PopStyleColor(3);
 
 		ImGui::End();
+	}
+
+	void EditorLayer::UI_KablunkInstallPopup()
+	{
+		if (s_kablunk_install_path.empty() && !ImGui::IsPopupOpen("Select KablunkEngine Install"))
+		{
+			ImGui::OpenPopup("Select KablunkEngine Install");
+			s_kablunk_install_path.reserve(MAX_PROJECT_FILEPATH_LENGTH);
+		}
+
+		auto center = ImGui::GetMainViewport()->GetCenter();
+
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, { 0.5f, 0.5f });
+		ImGui::SetNextWindowSize({ 700, 350 });
+		if (ImGui::BeginPopupModal("Select KablunkEngine Install", 0, ImGuiWindowFlags_NoMove | ImGuiTableColumnFlags_NoResize))
+		{
+			const auto& io = ImGui::GetIO();
+			auto bold_font = io.Fonts->Fonts[0];
+			ImGui::PushFont(bold_font);
+			ImGui::TextUnformatted("Could not find KablunkEngine Install");
+			ImGui::PopFont();
+
+			ImGui::TextWrapped("Please select the root folder for the KablunkEngine install you want to use");
+
+			ImGui::Dummy({ 0, 8 });
+
+			auto label_size = ImGui::CalcTextSize("...", NULL, true);
+			auto& style = ImGui::GetStyle();
+			auto button_size = ImGui::CalcItemSize({ 0, 0 }, label_size.x + style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1, label_size.y + style.FramePadding.y * 2.0f);
+
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 10 });
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4, 6 });
+			ImGui::SetNextItemWidth(700 - button_size.x - style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1);
+			
+			ImGui::InputTextWithHint("##kablunk_install_location_text", 
+				"Select Install", s_kablunk_install_path.data(), MAX_PROJECT_FILEPATH_LENGTH, ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::SameLine();
+			if (ImGui::Button("..."))
+			{
+				std::string path = FileDialog::OpenFolder();
+				s_kablunk_install_path.assign(path);
+			}
+
+			if (ImGui::Button("Confirm"))
+			{
+				bool success = FileSystem::SetEnvironmentVar("KABLUNK_DIR", s_kablunk_install_path.c_str());
+				KB_CORE_ASSERT(success, "Failed to set environment variable!");
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::PopStyleVar(2);
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void EditorLayer::OnScenePlay()
@@ -705,18 +744,56 @@ namespace Kablunk
 		std::filesystem::copy(g_resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
 
 		{
-			std::ifstream stream{ project_path / "Project.kablunkproj" };
-			std::stringstream ss;
-			ss << stream.rdbuf();
 
-			stream.close();
+			// Kablunk Project
+			{
+				std::ifstream stream{ project_path / "Project.kablunkproj" };
+				std::stringstream ss;
+				ss << stream.rdbuf();
 
-			std::string data = ss.str();
-			ReplaceProjectName(data, s_project_name_buffer);
+				stream.close();
+			
+				std::string data = ss.str();
+				ReplaceToken("$PROJECT_NAME$", data, s_project_name_buffer);
 
-			std::ofstream ostream{ project_path / "Project.kablunkproj" };
-			ostream << data;
-			ostream.close();
+				std::ofstream ostream{ project_path / "Project.kablunkproj" };
+				ostream << data;
+				ostream.close();
+			}
+
+			// Premake
+			{
+				std::ifstream stream{ project_path / "premake5.lua" };
+				std::stringstream ss;
+				ss << stream.rdbuf();
+
+				std::string data = ss.str(); 
+				ReplaceToken("$PROJECT_NAME$", data, s_project_name_buffer);
+
+				std::ofstream ostream{ project_path / "premake5.lua" };
+				ostream << data;
+				ostream.close();
+			}
+
+#if 0
+			// Generate NativeScript batch
+			 {
+				std::ifstream stream{ project_path / "Windows-CreateNativeScriptProject.bat" };
+				std::stringstream ss;
+				ss << stream.rdbuf();
+
+				std::string data = ss.str();
+				std::string project_path_windows = "\'" + project_path.string();
+				std::replace(project_path_windows.begin(), project_path_windows.end(), '/', '\\');
+				project_path_windows += "\'";
+				ReplaceToken("$PROJECT_DIR$", data, project_path_windows);
+
+				std::ofstream ostream{ project_path / "Windows-CreateNativeScriptProject.bat" };
+				ostream << data;
+				ostream.close();
+			}
+#endif
+
 
 			std::string new_project_filename = std::string{ s_project_name_buffer } + ".kablunkproj";
 			std::filesystem::rename(project_path / "Project.kablunkproj", project_path / new_project_filename);
@@ -724,7 +801,15 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "scenes");
 			std::filesystem::create_directories(project_path / "assets" / "scripts");
 
-			
+			// Native scripts
+			std::filesystem::create_directories(project_path / "assets" / "bin");
+			std::filesystem::create_directories(project_path / "include");
+			std::filesystem::create_directories(project_path / "src");
+
+			std::string gen_proj_batch = "\'" + project_path.string();
+			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
+			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\'";
+			system(gen_proj_batch.c_str());
 
 			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");
 		}
@@ -782,14 +867,13 @@ namespace Kablunk
 			Project::SetActive(nullptr);
 	}
 
-	void EditorLayer::ReplaceProjectName(std::string& data, const std::string& project_name)
+	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& project_name)
 	{
-		static const char* s_project_name_token = "$PROJECT_NAME$";
 		size_t p = 0;
-		while ((p = data.find(s_project_name_token, p)) != std::string::npos)
+		while ((p = data.find(token, p)) != std::string::npos)
 		{
-			data.replace(p, strlen(s_project_name_token), project_name);
-			p += strlen(s_project_name_token);
+			data.replace(p, strlen(token), project_name);
+			p += strlen(token);
 		}
 	}
 

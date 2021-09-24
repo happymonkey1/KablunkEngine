@@ -33,7 +33,7 @@ namespace Kablunk
 		void OpenProject(const std::string& filepath);
 		void SaveProject();
 		void CloseProject(bool unload = true);
-		void ReplaceProjectName(std::string& data, const std::string& project_name);
+		void ReplaceToken(const char* token, std::string& data, const std::string& project_name);
 
 		void NewScene();
 		void SaveSceneAs();
@@ -42,7 +42,9 @@ namespace Kablunk
 
 		void ViewportClickSelectEntity();
 
+		void UI_DrawMenuBar();
 		void UI_Toolbar();
+		void UI_KablunkInstallPopup();
 
 		void OnScenePlay();
 		void OnSceneStop();

@@ -3,6 +3,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include <Kablunk/Scripts/NativeScript.h>
+#include "Kablunk/Utilities/PlatformUtils.h"
 
 #include <string>
 #include <unordered_map>
@@ -20,6 +21,8 @@ namespace Kablunk
 		static bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		static Scope<NativeScript> GetScript(const std::string& script_name);
 
+		static bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
+
 	private:
 		using NativeScriptContainer = std::unordered_map<std::string, CreateMethodFunc>;
 
@@ -28,6 +31,8 @@ namespace Kablunk
 			static NativeScriptContainer m_native_scripts;
 			return m_native_scripts;
 		}
+
+		inline static bool m_dll_directory_set = false;
 	};
 
 }

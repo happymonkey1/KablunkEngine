@@ -18,6 +18,18 @@ namespace Kablunk
 	public:
 		static uint64_t Get();
 	};
+
+	class FileSystem
+	{
+	public:
+		static std::string GetEnviornmentVar(const std::string& key);
+		static bool SetEnvironmentVar(const std::string& key, const std::string& value);
+	};
+}
+
+namespace Kablunk::Utils
+{
+	std::wstring StringToWideString(const std::string& str);
 }
 
 #endif

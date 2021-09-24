@@ -150,4 +150,61 @@ namespace Kablunk
 
 		return mac_address;
 	}
+
+	std::string FileSystem::GetEnviornmentVar(const std::string& key)
+	{
+		HKEY hKey;
+		LPCSTR keyPath = "Environment";
+		DWORD createdNewKey;
+		LSTATUS lOpenStatus = RegCreateKeyExA(HKEY_CURRENT_USER, keyPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &createdNewKey);
+		if (lOpenStatus == ERROR_SUCCESS)
+		{
+			DWORD valueType;
+			char* data = new char[512];
+			DWORD dataSize = 512;
+			LSTATUS status = RegGetValueA(hKey, NULL, key.c_str(), RRF_RT_ANY, &valueType, (PVOID)data, &dataSize);
+
+			RegCloseKey(hKey);
+
+			if (status == ERROR_SUCCESS)
+			{
+				std::string result(data);
+				delete[] data;
+				return result;
+			}
+		}
+
+		return std::string{};
+	}
+
+	bool FileSystem::SetEnvironmentVar(const std::string& key, const std::string& value)
+	{
+		HKEY hKey;
+		LPCSTR keyPath = "Environment";
+		DWORD createdNewKey;
+		LSTATUS lOpenStatus = RegCreateKeyExA(HKEY_CURRENT_USER, keyPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &createdNewKey);
+		if (lOpenStatus == ERROR_SUCCESS)
+		{
+			LSTATUS lSetStatus = RegSetValueExA(hKey, key.c_str(), 0, REG_SZ, (LPBYTE)value.c_str(), value.length() + 1);
+			RegCloseKey(hKey);
+
+			if (lSetStatus == ERROR_SUCCESS)
+			{
+				SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Environment", SMTO_BLOCK, 100, NULL);
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+}
+
+namespace Kablunk::Utils
+{
+	std::wstring StringToWideString(const std::string& str)
+	{
+		std::wstring str_as_wstr = std::wstring{ str.begin(), str.end() };
+		return str_as_wstr;
+	}
 }

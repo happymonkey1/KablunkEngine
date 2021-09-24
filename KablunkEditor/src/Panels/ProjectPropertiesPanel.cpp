@@ -47,7 +47,7 @@ namespace Kablunk
 		
 		UI::Property("Name", m_project->m_config.Name);
 		UI::Property("Asset Directory", m_project->GetAssetDirectory().string());
-		UI::Property("Native Script Modules Path", m_project->GetNativeScriptModulesPath().string());
+		UI::Property("Native Script Modules Path", m_project->GetNativeScriptModulePath().string());
 		UI::Property("Project Directory", m_project->GetProjectDirectory().string());
 
 		UI::PopItemDisabled();
