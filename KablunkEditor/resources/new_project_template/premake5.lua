@@ -1,7 +1,8 @@
 project_name = "$PROJECT_NAME$"
 kablunk_root_dir = os.getenv("KABLUNK_DIR")
 kablunk_root_dir = kablunk_root_dir:gsub("\\", "/")
-dependencies_path = kablunk_root_dir .. "/dependencies.lua"
+dependencies_path = kablunk_root_dir .. "\\dependencies.lua"
+dependencies_path = dependencies_path:gsub("\\", "/")
 
 include(dependencies_path)
 
@@ -27,7 +28,7 @@ project "$PROJECT_NAME$"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "off"
+	staticruntime "on"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -36,29 +37,33 @@ project "$PROJECT_NAME$"
 	{
 		"src/**.cpp",
 		"include/**.h"
-		
 	}
 
 	defines
 	{
-		"_CRT_SECURE_NO_WARNINGS"
+		"_CRT_SECURE_NO_WARNINGS",
+		"NOMINMAX"
 	}
 
 	includedirs
 	{
+		"src",
 		"include",
-		"$KABLUNK_DIR$/KablunkEngine/src",
-		"$KABLUNK_DIR$/%{IncludeDir.glm}",
-		"$KABLUNK_DIR$/%{IncludeDir.stb_image}",
-		"$KABLUNK_DIR$/%{IncludeDir.entt}",
-		"$KABLUNK_DIR$/%{IncludeDir.yaml_cpp}",
-		"$KABLUNK_DIR$/%{IncludeDir.spdlog}",
-		"$KABLUNK_DIR$/%{IncludeDir.stduuid}",
-		"$KABLUNK_DIR$/%{IncludeDir.gsl}",
-		"$KABLUNK_DIR$/%{IncludeDir.ImGuizmo}",
-		"$KABLUNK_DIR$/%{IncludeDir.assimp}",
-		"$KABLUNK_DIR$/%{IncludeDir.FreeType}",
-		"$KABLUNK_DIR$/%{IncludeDir.Box2d}"
+		"KablunkEngine/engine",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stduuid}",
+		"%{IncludeDir.gsl}",
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.assimp}",
+		"%{IncludeDir.FreeType}",
+		"%{IncludeDir.Box2d}"
 	}
 
 	links
@@ -68,7 +73,7 @@ project "$PROJECT_NAME$"
 
 	filter "system:windows"
 		systemversion "latest"
-		linkoptions { "/FORCE:UNRESOLVED" }
+		--linkoptions { "/FORCE:UNRESOLVED" }
 
 	filter "configurations:Debug"
 		defines "KB_DEBUG"

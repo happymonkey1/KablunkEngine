@@ -41,10 +41,37 @@ namespace Kablunk
 
 		HMODULE GetHandle() const { return m_dll_handle; }
 
+
 		operator bool() const { return m_dll_handle != NULL; }
 
 	private:
+		std::string m_dll_name;
 		HMODULE m_dll_handle;
+	};
+
+	class SharedMemoryModule
+	{
+	public:
+		explicit SharedMemoryModule(const std::string& name, size_t size);
+		~SharedMemoryModule();
+
+		template <typename T>
+		T* GetFromMemory()
+		{
+			return (T*)m_buffer;
+		}
+
+		template <typename T>
+		void SetMemory(T* data, size_t size)
+		{
+			T* data_in_buffer = (T*)m_buffer;
+			data_in_buffer = (T*)data;
+		}
+	private:
+		std::string m_name = "";
+		void* m_handle = nullptr;
+		void* m_buffer = nullptr;
+		size_t m_buffer_size = 0;
 	};
 }
 

@@ -33,7 +33,8 @@ namespace Kablunk
 		void OpenProject(const std::string& filepath);
 		void SaveProject();
 		void CloseProject(bool unload = true);
-		void ReplaceToken(const char* token, std::string& data, const std::string& project_name);
+		void ReplaceToken(const char* token, std::string& data, const std::string& new_token);
+		void UpdateProjectEngineFiles();
 
 		void NewScene();
 		void SaveSceneAs();

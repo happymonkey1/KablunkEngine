@@ -22,6 +22,8 @@
 #include "Kablunk/Project/Project.h"
 #include "Kablunk/Project/ProjectSerializer.h"
 
+#include "Kablunk/Core/JobSystem.h"
+
 // #TODO replace when runtime is figured out
 #include "Sandbox/Core.h"
 
@@ -494,6 +496,8 @@ namespace Kablunk
 				if (ImGui::MenuItem("Project Settings"))
 					m_show_project_properties_panel = true;
 
+				if (ImGui::MenuItem("Update Project Engine Files"))
+					UpdateProjectEngineFiles();
 
 				if (ImGui::MenuItem("Reload NativeScript DLLs"))
 					NativeScriptEngine::LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
@@ -503,7 +507,6 @@ namespace Kablunk
 					ImGui::PopStyleVar();
 					ImGui::PopItemFlag();
 				}
-
 
 				if (ImGui::MenuItem("Select KablunkEngine Install"))
 					m_show_replace_kablunk_install_popup = true;
@@ -792,7 +795,7 @@ namespace Kablunk
 				ss << stream.rdbuf();
 
 				stream.close();
-			
+
 				std::string data = ss.str();
 				ReplaceToken("$PROJECT_NAME$", data, s_project_name_buffer);
 
@@ -807,7 +810,7 @@ namespace Kablunk
 				std::stringstream ss;
 				ss << stream.rdbuf();
 
-				std::string data = ss.str(); 
+				std::string data = ss.str();
 				ReplaceToken("$PROJECT_NAME$", data, s_project_name_buffer);
 				ReplaceToken("$KABLUNK_DIR$", data, s_kablunk_install_path);
 				std::replace(data.begin(), data.end(), '\\', '/');
@@ -819,7 +822,7 @@ namespace Kablunk
 
 #if 0
 			// Generate NativeScript batch
-			 {
+			{
 				std::ifstream stream{ project_path / "Windows-CreateNativeScriptProject.bat" };
 				std::stringstream ss;
 				ss << stream.rdbuf();
@@ -847,18 +850,53 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "bin");
 			std::filesystem::create_directories(project_path / "include");
 			std::filesystem::create_directories(project_path / "src");
+			std::filesystem::create_directories(project_path / "KablunkEngine" / "engine");
+			std::filesystem::create_directories(project_path / "KablunkEngine" / "vendor");
+			std::filesystem::create_directories(project_path / "KablunkEngine" / "bin");
+
+			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", project_path / "KablunkEngine" / "bin", std::filesystem::copy_options::recursive);
+			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", project_path / "KablunkEngine" / "engine", std::filesystem::copy_options::recursive);
+
+			// #TODO replace with better code
+			std::string get_vendor_includes_path = "\"" + s_kablunk_install_path;
+			std::replace(get_vendor_includes_path.begin(), get_vendor_includes_path.end(), '/', '\\');
+			get_vendor_includes_path += "\\scripts\\CopyVendorIncludes.py\"";
+			std::string run_python_cmd = "python " + get_vendor_includes_path + " "
+				+ "\"" + std::filesystem::path{project_path / "KablunkEngine" / "vendor"}.string() + "\"";
+
+			Threading::JobSystem::AddJob([&run_python_cmd]()
+				{
+					system(run_python_cmd.c_str());
+				});
+			
 
 			std::string gen_proj_batch = "\"" + project_path.string();
 			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
 			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
 			
-			KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
+			//KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
+			Threading::JobSystem::AddJob([&gen_proj_batch]()
+				{
+					system(gen_proj_batch.c_str());
+				});
 
 			// #TODO enivornment variable is not working when called from c++ script
-			system(gen_proj_batch.c_str());
+			
 
 			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");
 		}
+	}
+
+	void EditorLayer::UpdateProjectEngineFiles()
+	{
+		auto project = Project::GetActive();
+		if (!project)
+			return;
+		
+		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", 
+			project->GetProjectDirectory() / "KablunkEngine" / "bin", std::filesystem::copy_options::recursive);
+		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", 
+			project->GetProjectDirectory() / "KablunkEngine" / "engine", std::filesystem::copy_options::recursive);
 	}
 
 	void EditorLayer::OpenProject(const std::string& filepath)
@@ -913,12 +951,12 @@ namespace Kablunk
 			Project::SetActive(nullptr);
 	}
 
-	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& project_name)
+	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token)
 	{
 		size_t p = 0;
 		while ((p = data.find(token, p)) != std::string::npos)
 		{
-			data.replace(p, strlen(token), project_name);
+			data.replace(p, strlen(token), new_token);
 			p += strlen(token);
 		}
 	}

@@ -8,7 +8,7 @@ namespace Kablunk::Threading
 	class JobSystem
 	{
 	public:
-		static void AddJob(ThreadPool::JobFunc& job);
+		static void AddJob(ThreadPool::JobFunc job);
 	};
 }
 

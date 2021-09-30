@@ -24,6 +24,8 @@ namespace Kablunk
 		Scene(const std::string& name = default_scene_name);
 		~Scene();
 
+		static Ref<Scene> CopyTo(Ref<Scene> src_scene, Ref<Scene> dest_scene = CreateRef<Scene>());
+
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
@@ -33,6 +35,7 @@ namespace Kablunk
 		void OnUpdateRuntime(Timestep ts);
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t x, uint32_t y);
+
 
 		Entity GetPrimaryCameraEntity();
 

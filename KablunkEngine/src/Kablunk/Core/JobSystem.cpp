@@ -5,7 +5,7 @@
 
 namespace Kablunk::Threading
 {
-	void JobSystem::AddJob(ThreadPool::JobFunc& job)
+	void JobSystem::AddJob(ThreadPool::JobFunc job)
 	{
 		Application::Get().GetThreadPool().AddJob(job);
 	}

@@ -38,6 +38,30 @@ namespace Kablunk
 		}
 	}
 
+	Ref<Scene> Scene::CopyTo(Ref<Scene> src_scene, Ref<Scene> dest_scene)
+	{
+		dest_scene->m_name = src_scene->m_name;
+
+		dest_scene->m_entity_map = src_scene->m_entity_map;
+
+		dest_scene->m_viewport_width = src_scene->m_viewport_width;
+		dest_scene->m_viewport_height = src_scene->m_viewport_height;
+
+		auto& src_scene_reg = src_scene->m_registry;
+		auto& dest_scene_reg = dest_scene->m_registry;
+		auto id_view = src_scene_reg.view<IdComponent>();
+		for (auto id : id_view)
+		{
+			uuid::uuid64 uuid = src_scene_reg.get<IdComponent>(id).Id;
+			const auto& tag = src_scene_reg.get<TagComponent>(id).Tag;
+
+			dest_scene->CreateEntity(tag, uuid);
+
+		}
+
+		return dest_scene;
+	}
+
 	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
 	{
 		Entity entity = { m_registry.create(), this };
@@ -449,6 +473,18 @@ namespace Kablunk
 			return false;
 	}
 
+	template <typename ComponentT>
+	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& src_reg, entt::registry& dest_reg)
+	{
+		if (src_reg.any_of<ComponentT>(src))
+		{
+			auto& src_comp = src_reg.get<ComponentT>(src);
+			dest_reg.emplace_or_replace<ComponentT>(dst, src_comp);
+			return true;
+		}
+		else
+			return false;
+	}
 
 	Entity Scene::DuplicateEntity(Entity entity)
 	{

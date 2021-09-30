@@ -3,6 +3,11 @@
 
 #include <memory>
 
+#ifdef KB_BUILD_DLL
+#	define KB_API __declspec(dllexport)
+#else
+#	define KB_API __declspec(dllimport)
+#endif
 
 // Platform detection
 #ifdef _WIN32

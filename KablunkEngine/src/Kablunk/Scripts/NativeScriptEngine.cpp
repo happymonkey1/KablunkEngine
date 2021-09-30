@@ -55,31 +55,24 @@ namespace Kablunk
 		}
 #endif
 
+		if (!m_shared_mem_setup)
+			m_shared_mem_setup = SetupSharedLibrary();
+
 		NativeScriptModule nsc_module = NativeScriptModule{ dll_name, dll_dir };
 
-		bool successful_link = false;
-		bool dll_freed = false;
 		if (nsc_module)
 		{
-			auto dll_func = NULL;//nsc_module["DebugPrint"];
+			//auto dll_func = nsc_module["DebugPrint"];
 
-			if (dll_func != NULL)
+			/*if (dll_func != NULL)
 			{
 				successful_link = true;
-				//dll_func();
-			}
-
-			dll_freed = FreeLibrary(nsc_module.GetHandle());
+				dll_func();
+			}*/
 		}
-
-		if (!successful_link)
+		else
 		{
 			KB_CORE_ERROR("Failed to load dll '{0}'", dll_name);
-			return false;
-		}
-		if (successful_link && !dll_freed)
-		{
-			KB_CORE_ERROR("Failed to free dll '{0}'", dll_name);
 			return false;
 		}
 

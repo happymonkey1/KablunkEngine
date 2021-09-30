@@ -9,6 +9,8 @@
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
+#include "Kablunk/Scripts/NativeScriptEngine.h"
+
 
 
 namespace Kablunk
@@ -160,6 +162,6 @@ namespace Kablunk
 
 	void Application::OnShutdown()
 	{
-
+		NativeScriptEngine::Shutdown();
 	}
 }

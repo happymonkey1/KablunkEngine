@@ -4,6 +4,7 @@
 #include "Kablunk/Core/Core.h"
 #include <Kablunk/Scripts/NativeScript.h>
 #include "Kablunk/Utilities/PlatformUtils.h"
+#include "Kablunk/Scripts/NativeScriptModule.h"
 
 #include <string>
 #include <unordered_map>
@@ -17,11 +18,25 @@ namespace Kablunk
 	{
 	public:
 		using CreateMethodFunc = NativeScript * (*)();
+		
 
 		static bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		static Scope<NativeScript> GetScript(const std::string& script_name);
 
 		static bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
+
+		static bool SetupSharedLibrary()
+		{
+			s_shared_logger_mem = CreateRef<SharedMemoryModule>("TEST", sizeof(spdlog::logger));
+			s_shared_logger_mem->SetMemory(Log::GetClientLogger().get(), sizeof(spdlog::logger));
+
+			return true;
+		}
+
+		static void Shutdown()
+		{
+			s_shared_logger_mem.reset();
+		}
 
 	private:
 		using NativeScriptContainer = std::unordered_map<std::string, CreateMethodFunc>;
@@ -33,6 +48,9 @@ namespace Kablunk
 		}
 
 		inline static bool m_dll_directory_set = false;
+		inline static bool m_shared_mem_setup = false;
+		inline static Ref<SharedMemoryModule> s_shared_logger_mem;
+
 	};
 
 }
