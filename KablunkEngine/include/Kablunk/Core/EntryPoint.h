@@ -21,7 +21,7 @@ extern "C" {
 
 int main(int argc, char** argv) 
 {
-	Kablunk::Log::Init();
+	Kablunk::InitCore();
 
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");
 	Kablunk::Application* app = Kablunk::CreateApplication();
@@ -34,6 +34,8 @@ int main(int argc, char** argv)
 	KB_BEGIN_SESSION("Shutdown", "KablunkProfile-Shutdown.json");
 	delete app;
 	KB_END_SESSION();
+
+	Kablunk::ShutdownCore();
 }
 
 #endif

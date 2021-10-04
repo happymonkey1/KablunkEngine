@@ -18,12 +18,13 @@ namespace Kablunk {
 		static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_client_logger; }
 
 		// #TODO DANGEROUS API
-		static void __cdecl DLLSetCoreLogger(spdlog::logger * logger) { s_core_logger.reset(logger); }
+		static spdlog::logger* DLLGetCoreLoggerPtr() { return s_core_logger.get(); }
 		// #TODO DANGEROUS API
-		static void __cdecl DLLSetClientLogger(spdlog::logger* logger) { s_client_logger.reset(logger); }
+		static spdlog::logger* DLLGetClientLoggerPtr() { return s_client_logger.get(); }
+
 	private:
-		inline static std::shared_ptr<spdlog::logger> s_core_logger;
-		inline static std::shared_ptr<spdlog::logger> s_client_logger;
+		inline static std::shared_ptr<spdlog::logger> s_core_logger = nullptr;
+		inline static std::shared_ptr<spdlog::logger> s_client_logger = nullptr;
 	};
 
 	

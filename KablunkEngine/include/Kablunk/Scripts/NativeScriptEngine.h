@@ -5,6 +5,7 @@
 #include <Kablunk/Scripts/NativeScript.h>
 #include "Kablunk/Utilities/PlatformUtils.h"
 #include "Kablunk/Scripts/NativeScriptModule.h"
+#include "Kablunk/Core/SharedMemoryBuffer.h"
 
 #include <string>
 #include <unordered_map>
@@ -27,10 +28,25 @@ namespace Kablunk
 
 		static bool SetupSharedLibrary()
 		{
-			s_shared_logger_mem = CreateRef<SharedMemoryModule>("TEST", sizeof(spdlog::logger));
-			s_shared_logger_mem->SetMemory(Log::GetClientLogger().get(), sizeof(spdlog::logger));
+			s_shared_logger_mem = CreateRef<SharedMemoryBuffer>("CLIENT_LOGGER", sizeof(spdlog::logger), true);
 
 			return true;
+		}
+
+		static void Init()
+		{
+			SetupSharedLibrary();
+
+			s_initialized = true;
+		}
+
+		static Ref<SharedMemoryBuffer> GetSharedMemoryModule() 
+		{ 
+			// Can't log because this is initialized before loggers!
+			if (!s_initialized)
+				__debugbreak();
+
+			return s_shared_logger_mem; 
 		}
 
 		static void Shutdown()
@@ -47,9 +63,10 @@ namespace Kablunk
 			return m_native_scripts;
 		}
 
+		inline static bool s_initialized = false;
 		inline static bool m_dll_directory_set = false;
 		inline static bool m_shared_mem_setup = false;
-		inline static Ref<SharedMemoryModule> s_shared_logger_mem;
+		inline static Ref<SharedMemoryBuffer> s_shared_logger_mem;
 
 	};
 

@@ -893,10 +893,11 @@ namespace Kablunk
 		if (!project)
 			return;
 		
+		auto copy_option_flags = std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", 
-			project->GetProjectDirectory() / "KablunkEngine" / "bin", std::filesystem::copy_options::recursive);
+			project->GetProjectDirectory() / "KablunkEngine" / "bin", copy_option_flags);
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", 
-			project->GetProjectDirectory() / "KablunkEngine" / "engine", std::filesystem::copy_options::recursive);
+			project->GetProjectDirectory() / "KablunkEngine" / "engine", copy_option_flags);
 	}
 
 	void EditorLayer::OpenProject(const std::string& filepath)

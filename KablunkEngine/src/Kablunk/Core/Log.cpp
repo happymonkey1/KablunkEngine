@@ -1,6 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Core/Log.h"
 
+#include "Kablunk/Scripts/NativeScriptEngine.h"
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -15,12 +16,22 @@ namespace Kablunk {
 		logSinks[0]->set_pattern("%^[%T] %n: %v%$");
 		logSinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
 
+#ifdef KB_NATIVE_SCRIPTING
 		s_core_logger = std::make_shared<spdlog::logger>("KABLUNK", begin(logSinks), end(logSinks));
+
+		auto shared_mem = NativeScriptEngine::GetSharedMemoryModule();
+		spdlog::logger* client_ptr = shared_mem->Create<spdlog::logger>( "APP", begin(logSinks), end(logSinks) );
+		s_client_logger = Ref<spdlog::logger>(client_ptr);
+#else
+		s_core_logger = std::make_shared<spdlog::logger>("KABLUNK", begin(logSinks), end(logSinks));
+		s_client_logger = std::make_shared<spdlog::logger>("APP", begin(logSinks), end(logSinks));
+#endif
+		
 		spdlog::register_logger(s_core_logger);
 		s_core_logger->set_level(spdlog::level::trace);
 		s_core_logger->flush_on(spdlog::level::trace);
 
-		s_client_logger = std::make_shared<spdlog::logger>("APP", begin(logSinks), end(logSinks));
+		
 		spdlog::register_logger(s_client_logger);
 		s_client_logger->set_level(spdlog::level::trace);
 		s_client_logger->flush_on(spdlog::level::trace);

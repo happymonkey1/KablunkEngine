@@ -55,9 +55,6 @@ namespace Kablunk
 		}
 #endif
 
-		if (!m_shared_mem_setup)
-			m_shared_mem_setup = SetupSharedLibrary();
-
 		NativeScriptModule nsc_module = NativeScriptModule{ dll_name, dll_dir };
 
 		if (nsc_module)

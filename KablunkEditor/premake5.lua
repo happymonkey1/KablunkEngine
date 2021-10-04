@@ -38,6 +38,11 @@ project "KablunkEditor"
         "FreeType"
     }
 
+    defines
+    {
+        "KB_NATIVE_SCRIPTING"
+    }
+
     filter "system:windows"
 		systemversion "latest"
 

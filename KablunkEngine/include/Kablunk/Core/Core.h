@@ -1,7 +1,14 @@
 #ifndef KABLUNK_CORE_CORE_H
 #define KABLUNK_CORE_CORE_H
 
+#include "Kablunk/Core/RefCounting.h"
 #include <memory>
+
+namespace Kablunk
+{
+	void InitCore();
+	void ShutdownCore();
+}
 
 #ifdef KB_BUILD_DLL
 #	define KB_API __declspec(dllexport)
@@ -57,6 +64,7 @@
 
 namespace Kablunk
 {
+
 	template <typename T>
 	using Scope = std::unique_ptr<T>;
 
@@ -66,14 +74,6 @@ namespace Kablunk
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 
-	template <typename T>
-	using Ref = std::shared_ptr<T>;
-
-	template <typename T, typename ... Args>
-	constexpr Ref<T> CreateRef(Args&& ... args)
-	{
-		return std::make_shared<T>(std::forward<Args>(args)...);
-	}
 }
 
 #endif
