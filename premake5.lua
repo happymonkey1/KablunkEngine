@@ -35,6 +35,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/spdlog"
     include "KablunkEngine/vendor/FreeType"
     include "KablunkEngine/vendor/box2d"
+    include "KablunkEngine/vendor/RuntimeCompiledCPlusPlus"
 group ""
 
 include "KablunkEngine"

@@ -19,7 +19,7 @@ namespace Kablunk
 
 	const SharedMemoryBufferLayoutElement& SharedMemoryBufferLayout::Find(const std::string& name) const
 	{
-		auto it = std::find_if(m_elements.begin(), m_elements.end(), [&name](const auto& el) { return el.Name == name });
+		auto it = std::find_if(m_elements.begin(), m_elements.end(), [&name](const auto& el) { return el.Name == name; });
 		if (it == m_elements.end())
 		{
 			assert(false);

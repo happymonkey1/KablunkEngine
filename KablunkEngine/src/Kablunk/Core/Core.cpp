@@ -9,17 +9,19 @@ namespace Kablunk
 
 	void InitCore()
 	{
-		NativeScriptEngine::Init();
-
 		Log::Init();
+		NativeScriptEngine::Init();
 
 		KB_CORE_INFO("Core initilized");
 	}
 
 	void ShutdownCore()
 	{
-
-
 		KB_CORE_INFO("Core shutting down!");
+
+		NativeScriptEngine::Shutdown();
+		Log::Shutdown();
+
+
 	}
 }

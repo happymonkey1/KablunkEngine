@@ -50,7 +50,8 @@ project "KablunkEngine"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.FreeType}",
-		"%{IncludeDir.Box2d}"
+		"%{IncludeDir.Box2d}",
+		"%{IncludeDir.RCCPP}"
 	}
 
 	links
@@ -62,6 +63,7 @@ project "KablunkEngine"
 		"spdlog",
 		"FreeType",
 		"Box2d",
+		"RCCPP",
 		"opengl32.lib"
 	}
 	

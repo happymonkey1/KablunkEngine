@@ -6,8 +6,38 @@
 
 #include "Kablunk/Scripts/NativeScriptModule.h"
 
+#include "RCCPP/RuntimeObjectSystem/IObject.h"
+#include "RCCPP/RuntimeCompiler/BuildTool.h"
+#include "RCCPP/RuntimeCompiler/ICompilerLogger.h"
+#include "RCCPP/RuntimeCompiler/FileChangeNotifier.h"
+#include "RCCPP/RuntimeObjectSystem/ObjectFactorySystem/ObjectFactorySystem.h"
+#include "RCCPP/RuntimeObjectSystem/RuntimeObjectSystem.h"
+
 namespace Kablunk
 {
+
+	NativeScriptEngine::NativeScriptEngine()
+		: m_compiler_logger{ nullptr }, m_runtime_object_system{ new RuntimeObjectSystem }
+	{
+		if (m_runtime_object_system->Initialise(m_compiler_logger, nullptr))
+		{
+			std::cout << "something failed with runtime compiled c plus plus" << std::endl;
+			exit(1);
+		}
+
+		m_runtime_object_system->GetObjectFactorySystem()->AddListener(this);
+	}
+
+	NativeScriptEngine::~NativeScriptEngine()
+	{
+		if (m_runtime_object_system)
+			m_runtime_object_system->CleanObjectFiles();
+
+		if (m_runtime_object_system && m_runtime_object_system->GetObjectFactorySystem())
+		{
+			m_runtime_object_system->GetObjectFactorySystem()->RemoveListener(this);
+		}
+	}
 
 	bool NativeScriptEngine::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
 	{
@@ -74,6 +104,38 @@ namespace Kablunk
 		}
 
 		return true;
+	}
+
+	void NativeScriptEngine::OnConstructorsAdded()
+	{
+
+	}
+
+	void NativeScriptEngine::OnUpdate(Timestep ts)
+	{
+		if (m_runtime_object_system->GetIsCompiledComplete())
+		{
+			KB_CORE_INFO("loading compiled module");
+			m_runtime_object_system->LoadCompiledModule();
+		}
+
+		if (!m_runtime_object_system->GetIsCompiling())
+		{
+
+			m_runtime_object_system->GetFileChangeNotifier()->Update(ts);
+
+		}
+	}
+
+	void NativeScriptEngine::Init()
+	{
+		if (!s_native_script_engine)
+			s_native_script_engine = new NativeScriptEngine{};
+	}
+
+	void NativeScriptEngine::Shutdown()
+	{
+		delete s_native_script_engine;
 	}
 
 }

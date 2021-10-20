@@ -29,3 +29,6 @@
 [submodule "KablunkEngine/vendor/box2d"]
 	path = KablunkEngine/vendor/box2d
 	url = https://github.com/happymonkey1/box2d.git
+[submodule "KablunkEngine/vendor/RuntimeCompiledCPlusPlus"]
+	path = KablunkEngine/vendor/RuntimeCompiledCPlusPlus
+	url = https://github.com/happymonkey1/RuntimeCompiledCPlusPlus.git

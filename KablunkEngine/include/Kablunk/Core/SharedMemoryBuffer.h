@@ -47,7 +47,7 @@ namespace Kablunk
 		T* Get(const std::string& name)
 		{
 			size_t offset = m_buffer_layout.Find(name).Offset;
-			void* cur = static_cast<uint8_t>(m_buffer) + offset;
+			void* cur = static_cast<uint8_t*>(m_buffer) + offset;
 
 			return (T*)cur;
 		}
@@ -68,10 +68,11 @@ namespace Kablunk
 		{
 			auto layout_element = m_buffer_layout.Find(name);
 			void* cur = static_cast<uint8_t*>(m_buffer) + layout_element.Offset;
+			T* casted_cur = (T*)cur;
 
-			T* data = new (cur) T{ std::forward<Args>(args)... };
+			T* data = new (casted_cur) T{ std::forward<Args>(args)... };
 
-			return (T*)cur;
+			return data;
 		}
 
 	private:

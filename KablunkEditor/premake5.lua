@@ -28,7 +28,8 @@ project "KablunkEditor"
         "%{IncludeDir.gsl}",
 		"%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.assimp}",
-        "%{IncludeDir.FreeType}"
+        "%{IncludeDir.FreeType}",
+        "%{IncludeDir.RCCPP}"
     }
 
     links

@@ -500,7 +500,7 @@ namespace Kablunk
 					UpdateProjectEngineFiles();
 
 				if (ImGui::MenuItem("Reload NativeScript DLLs"))
-					NativeScriptEngine::LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
+					NativeScriptEngine::Get()->LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
 				
 				if (!Project::GetActive())
 				{

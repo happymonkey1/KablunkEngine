@@ -7,53 +7,49 @@
 #include "Kablunk/Scripts/NativeScriptModule.h"
 #include "Kablunk/Core/SharedMemoryBuffer.h"
 
+#include "RCCPP/RuntimeObjectSystem/IObjectFactorySystem.h"
+#include "RCCPP/RuntimeObjectSystem/ObjectInterface.h"
+#include "RCCPP/RuntimeCompiler/AUArray.h"
+
+
 #include <string>
 #include <unordered_map>
+
+struct IRuntimeObjectSystem;
 
 namespace Kablunk
 {
 
 	/*	Native scripts store a create method function pointer inside a map, 
 		which can be accessed to instantiate a Scoped script during runtime */
-	class NativeScriptEngine
+	class NativeScriptEngine : public IObjectFactoryListener
 	{
 	public:
 		using CreateMethodFunc = NativeScript * (*)();
+
+		static NativeScriptEngine* Get()
+		{
+			if (!s_native_script_engine)
+				Init();
+			return s_native_script_engine;
+		}
+
+		static void Init();
+		static void Shutdown();
+	public:
+		NativeScriptEngine();
+		~NativeScriptEngine();
+
+		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
+		Scope<NativeScript> GetScript(const std::string& script_name);
+
+		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
 		
+		void OnConstructorsAdded();
+		void OnUpdate(Timestep ts);
 
-		static bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
-		static Scope<NativeScript> GetScript(const std::string& script_name);
-
-		static bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
-
-		static bool SetupSharedLibrary()
-		{
-			s_shared_logger_mem = CreateRef<SharedMemoryBuffer>("CLIENT_LOGGER", sizeof(spdlog::logger), true);
-
-			return true;
-		}
-
-		static void Init()
-		{
-			SetupSharedLibrary();
-
-			s_initialized = true;
-		}
-
-		static Ref<SharedMemoryBuffer> GetSharedMemoryModule() 
-		{ 
-			// Can't log because this is initialized before loggers!
-			if (!s_initialized)
-				__debugbreak();
-
-			return s_shared_logger_mem; 
-		}
-
-		static void Shutdown()
-		{
-			s_shared_logger_mem.reset();
-		}
-
+	private:
+		inline static NativeScriptEngine* s_native_script_engine;
 	private:
 		using NativeScriptContainer = std::unordered_map<std::string, CreateMethodFunc>;
 
@@ -62,11 +58,12 @@ namespace Kablunk
 			static NativeScriptContainer m_native_scripts;
 			return m_native_scripts;
 		}
+		
+		bool m_dll_directory_set = false;
 
-		inline static bool s_initialized = false;
-		inline static bool m_dll_directory_set = false;
-		inline static bool m_shared_mem_setup = false;
-		inline static Ref<SharedMemoryBuffer> s_shared_logger_mem;
+		// RCCPP
+		ICompilerLogger* m_compiler_logger;
+		IRuntimeObjectSystem* m_runtime_object_system;
 
 	};
 
@@ -85,7 +82,7 @@ namespace Kablunk
 
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 #	define REGISTER_NATIVE_SCRIPT(T) bool T::s_registered = \
-		Kablunk::NativeScriptEngine::RegisterScript(#T, T::Create);
+		Kablunk::NativeScriptEngine::Get()->RegisterScript(#T, T::Create);
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT
 #	define REGISTER_NATIVE_SCRIPT

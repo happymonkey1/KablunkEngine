@@ -13,8 +13,8 @@
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/JobSystem.h"
-// #TODO remove
-#include "Kablunk/Core/OrthographicCameraController.h"
+#include "Kablunk/Core/UUID64.h"
+#include "Kablunk/Core/RefCounting.h"
 // ----------------------------------------------
 
 
@@ -30,7 +30,6 @@
 #include "Kablunk/Renderer/Texture.h"
 
 #include "Kablunk/Renderer/Camera.h"
-#include "Kablunk/Renderer/OrthographicCamera.h"
 // ----------------------------------------------
 
 

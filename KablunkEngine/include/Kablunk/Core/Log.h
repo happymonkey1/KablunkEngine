@@ -14,22 +14,22 @@ namespace Kablunk {
 	public:
 		static void Init();
 
-		static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_core_logger; }
-		static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_client_logger; }
+		static spdlog::logger* GetCoreLogger() { return s_core_logger; }
+		static spdlog::logger* GetClientLogger() { return s_client_logger; }
 
 		// #TODO DANGEROUS API
-		static spdlog::logger* DLLGetCoreLoggerPtr() { return s_core_logger.get(); }
+		static spdlog::logger* DLLGetCoreLoggerPtr() { return s_core_logger; }
 		// #TODO DANGEROUS API
-		static spdlog::logger* DLLGetClientLoggerPtr() { return s_client_logger.get(); }
+		static spdlog::logger* DLLGetClientLoggerPtr() { return s_client_logger; }
 
+		static void Shutdown();
 	private:
-		inline static std::shared_ptr<spdlog::logger> s_core_logger = nullptr;
-		inline static std::shared_ptr<spdlog::logger> s_client_logger = nullptr;
+		inline static spdlog::logger* s_core_logger = nullptr;
+		inline static spdlog::logger* s_client_logger = nullptr;
 	};
 
 	
 }
-
 
 #define KB_CORE_TRACE(...)   ::Kablunk::Log::GetCoreLogger()->trace(__VA_ARGS__)
 #define KB_CORE_INFO(...)    ::Kablunk::Log::GetCoreLogger()->info(__VA_ARGS__)
