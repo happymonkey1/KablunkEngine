@@ -101,6 +101,7 @@ namespace Kablunk
 
 		CopyComponent<TransformComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<SpriteRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CircleRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<NativeScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<MeshComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
@@ -379,19 +380,26 @@ namespace Kablunk
 			}
 		}
 
+		if (main_camera)
 		{
-			if (main_camera)
+			Renderer2D::BeginScene(*main_camera, main_camera_transform);
+			
 			{
-				Renderer2D::BeginScene(*main_camera, main_camera_transform);
-
-				auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-				for (auto entity : group)
-				{
+				auto view = m_registry.view<TransformComponent, SpriteRendererComponent>();
+				for (auto entity : view)
 					Renderer2D::DrawSprite({ entity, this });
-				}
-
-				Renderer2D::EndScene();
 			}
+			
+			{
+				auto view = m_registry.view<TransformComponent, CircleRendererComponent>();
+				for (auto entity : view)
+				{
+					auto& [transform, circle_component] = view.get<TransformComponent, CircleRendererComponent>(entity);
+					Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+				}
+			}
+
+			Renderer2D::EndScene();
 		}
 	}
 
@@ -433,17 +441,22 @@ namespace Kablunk
 			}
 		);
 
+		Renderer2D::BeginScene(camera);
 		{
-			Renderer2D::BeginScene(camera);
-
-			auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto entity : group)
-			{
+			auto view = m_registry.view<TransformComponent, SpriteRendererComponent>();
+			for (auto entity : view)
 				Renderer2D::DrawSprite({ entity, this });
-			}
-
-			Renderer2D::EndScene();
 		}
+
+		{
+			auto view = m_registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto entity : view)
+			{
+				auto& [transform, circle_component] = view.get<TransformComponent, CircleRendererComponent>(entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+			}
+		}
+		Renderer2D::EndScene();
 
 		{
 			Renderer::BeginScene(camera);
@@ -538,6 +551,7 @@ namespace Kablunk
 		
 		CopyComponentIfItExists<TransformComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<SpriteRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<CircleRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
 			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
@@ -644,6 +658,9 @@ namespace Kablunk
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component) { }
 
 	template <>
+	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component) { }
+
+	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
 
 	template <>
@@ -663,5 +680,6 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component) { }
+
 }
 

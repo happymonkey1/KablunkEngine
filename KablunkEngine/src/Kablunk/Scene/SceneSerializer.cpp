@@ -92,6 +92,14 @@ namespace Kablunk
 				out << YAML::Key << "Tiling_factor" << YAML::Value << component.Tiling_factor;
 			});
 
+		WriteComponentData<CircleRendererComponent>(out, entity, [](auto& out, CircleRendererComponent& component)
+			{
+				out << YAML::Key << "Color" << YAML::Value << component.Color;
+				out << YAML::Key << "Radius" << YAML::Value << component.Radius;
+				out << YAML::Key << "Thickness" << YAML::Value << component.Thickness;
+				out << YAML::Key << "Fade" << YAML::Value << component.Fade;
+			});
+
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
@@ -241,6 +249,15 @@ namespace Kablunk
 			component.Color = data["Color"].as<glm::vec4>();
 			component.Tiling_factor = data["Tiling_factor"].as<float>();
 			
+			});
+
+		ReadComponentData<CircleRendererComponent>(entity_data, entity, [this](CircleRendererComponent& component, auto& data) 
+			{
+				component.Color = data["Color"].as<glm::vec4>();
+				component.Radius = data["Radius"].as<float>();
+				component.Thickness = data["Thickness"].as<float>();
+				component.Fade = data["Fade"].as<float>();
+
 			});
 
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)

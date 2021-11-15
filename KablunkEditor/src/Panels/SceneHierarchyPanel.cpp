@@ -459,6 +459,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<CircleRendererComponent>() && ImGui::MenuItem("Circle Renderer"))
+			{
+				m_selection_context.AddComponent<CircleRendererComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			if (!m_selection_context.HasComponent<NativeScriptComponent>() && ImGui::MenuItem("Native Script"))
 			{
 				m_selection_context.AddComponent<NativeScriptComponent>();
@@ -607,6 +613,19 @@ namespace Kablunk
 #endif
 
 				UI::Property("Tiling Factor", component.Tiling_factor);
+
+				UI::EndProperties();
+			});
+
+		DrawComponent<CircleRendererComponent>("Sprite Renderer", entity, [this](CircleRendererComponent& component)
+			{
+
+				UI::BeginProperties();
+
+				UI::PropertyColorEdit4("Tint Color", component.Color);
+				UI::Property("Radius", component.Radius, 0.1f, 0.0f, 10.0f);
+				UI::Property("Thickness", component.Thickness, 0.0025f, 0.0f, 1.0f);
+				UI::Property("Fade", component.Fade, 0.00025f, 0.0f, 1.0f);
 
 				UI::EndProperties();
 			});

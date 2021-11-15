@@ -42,6 +42,7 @@ namespace Kablunk
 		if (m_draw_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+		vertexArray->Bind();
 		uint32_t count = (indexCount) ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 		//glBindTexture(GL_TEXTURE_2D, 0);

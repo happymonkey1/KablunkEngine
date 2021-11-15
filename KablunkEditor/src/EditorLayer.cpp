@@ -44,7 +44,7 @@ namespace Kablunk
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }
 	{
-		m_active_scene = CreateRef<Scene>();
+		
 
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
@@ -65,6 +65,10 @@ namespace Kablunk
 		frame_buffer_spec.Width  = window_dimensions.x;
 		frame_buffer_spec.Height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
+
+
+		m_editor_scene = CreateRef<Scene>();
+		m_active_scene = m_editor_scene;
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
@@ -626,7 +630,7 @@ namespace Kablunk
 		m_scene_state = SceneState::Play;
 		//m_active_scene->OnStartRuntime();
 		
-		m_runtime_scene = Scene::Copy(m_editor_scene);
+		m_runtime_scene = Scene::Copy(m_active_scene);
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
@@ -741,8 +745,7 @@ namespace Kablunk
 			if (CanPickFromViewport() && m_scene_state != SceneState::Play)
 			{
 				m_scene_hierarchy_panel.SetSelectionContext(m_selected_entity);
-
-				// #TODO ray cast mouse picking
+				// #TODO ray cast mouse picking?
 
 			}
 
@@ -811,7 +814,7 @@ namespace Kablunk
 
 	bool EditorLayer::CanPickFromViewport() const
 	{
-		return (m_viewport_focused || m_viewport_hovered) && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
+		return m_viewport_hovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
 	}
 
 	void EditorLayer::CreateProject(std::filesystem::path project_path)

@@ -125,6 +125,19 @@ namespace Kablunk
 			: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
 	};
 
+	struct CircleRendererComponent
+	{
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float Radius{ 0.5f };
+		float Thickness = 1.0f;
+		float Fade = 0.005f;
+
+		CircleRendererComponent() = default;
+		CircleRendererComponent(const CircleRendererComponent&) = default;
+		CircleRendererComponent(const glm::vec4& color, float radius, float thickness, float fade)
+			: Color{ color }, Radius{ radius }, Thickness{ thickness }, Fade{ fade } {}
+	};
+
 	struct CameraComponent
 	{
 		SceneCamera Camera;

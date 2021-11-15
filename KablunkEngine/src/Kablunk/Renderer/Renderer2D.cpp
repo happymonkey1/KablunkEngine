@@ -23,10 +23,23 @@ namespace Kablunk
 		int32_t EntityID{ -1 };
 	};
 
+	struct CircleVertex
+	{
+		glm::vec3 WorldPosition;
+		glm::vec3 LocalPosition;
+		glm::vec4 Color;
+		float Radius;
+		float Thickness;
+		float Fade;
+
+		// #TODO figure out how to pass 64 bit integers to OpenGL
+		int32_t EntityID{ -1 };
+	};
+
 
 	struct Renderer2DData
 	{
-		static const uint32_t Max_quads			= 40'000;
+		static const uint32_t Max_quads			= 20'000;
 		static const uint32_t Max_vertices		= Max_quads * 4;
 		static const uint32_t Max_indices		= Max_quads * 6;
 		static const uint32_t Max_texture_slots	= 32;
@@ -34,16 +47,24 @@ namespace Kablunk
 
 		Ref <VertexArray> Quad_vertex_array;
 		Ref <VertexBuffer> Quad_vertex_buffer;
-		Ref <Shader> Texture_shader;
+
+		Ref <VertexArray> Circle_vertex_array;
+		Ref <VertexBuffer> Circle_vertex_buffer;
+
+		Ref <Shader> Quad_shader;
+		Ref <Shader> Circle_shader;
+
 		Ref <Texture2D> White_texture;
 		
 		QuadVertex* Quad_vertex_buffer_base_ptr	= nullptr;
 		QuadVertex* Quad_vertex_buffer_ptr		= nullptr;
-
 		uint32_t Quad_count						= 0;
 		uint32_t Quad_index_count				= 0;
-		
 
+		CircleVertex* Circle_vertex_buffer_base_ptr = nullptr;
+		CircleVertex* Circle_vertex_buffer_ptr = nullptr;
+		uint32_t Circle_count = 0;
+		uint32_t Circle_index_count = 0;
 		
 		uint32_t Texture_slot_index				= 1; //0 = white texture
 		
@@ -70,7 +91,6 @@ namespace Kablunk
 		s_renderer_data.Quad_vertex_array = VertexArray::Create();
 
 		s_renderer_data.Quad_vertex_buffer = VertexBuffer::Create(s_renderer_data.Max_vertices * sizeof(QuadVertex));
-
 		s_renderer_data.Quad_vertex_buffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color"},
@@ -103,15 +123,37 @@ namespace Kablunk
 		s_renderer_data.Quad_vertex_array->SetIndexBuffer(quad_index_buffer);
 		delete[] quad_indices;
 
+		// Circles
+		s_renderer_data.Circle_vertex_array = VertexArray::Create();
+
+		s_renderer_data.Circle_vertex_buffer = VertexBuffer::Create(s_renderer_data.Max_vertices * sizeof(CircleVertex));
+		
+		s_renderer_data.Circle_vertex_buffer->SetLayout({
+			{ ShaderDataType::Float3, "a_WorldPosition" },
+			{ ShaderDataType::Float3, "a_LocalPosition" },
+			{ ShaderDataType::Float4, "a_Color"},
+			{ ShaderDataType::Float, "a_Radius" },
+			{ ShaderDataType::Float, "a_Thickness" },
+			{ ShaderDataType::Float, "a_Fade" },
+			{ ShaderDataType::Int, "a_EntityID" }
+		});
+
+		s_renderer_data.Circle_vertex_array->AddVertexBuffer(s_renderer_data.Circle_vertex_buffer);
+		s_renderer_data.Circle_vertex_array->SetIndexBuffer(quad_index_buffer);
+		s_renderer_data.Circle_vertex_buffer_base_ptr = new CircleVertex[s_renderer_data.Max_vertices];
+
+
 		s_renderer_data.White_texture = Texture2D::Create(1, 1);
 
 		int32_t samplers[s_renderer_data.Max_texture_slots];
 		for (int32_t i = 0; i < s_renderer_data.Max_texture_slots; ++i)
 			samplers[i] = i;
 
-		s_renderer_data.Texture_shader = Shader::Create("assets/shaders/Texture.glsl");
-		s_renderer_data.Texture_shader->Bind();
-		s_renderer_data.Texture_shader->SetIntArray("u_Textures", samplers, s_renderer_data.Max_texture_slots);
+		s_renderer_data.Quad_shader = Shader::Create("resources/shaders/Renderer2D_Quad.glsl");
+		s_renderer_data.Quad_shader->Bind();
+		s_renderer_data.Quad_shader->SetIntArray("u_Textures", samplers, s_renderer_data.Max_texture_slots);
+
+		s_renderer_data.Circle_shader = Shader::Create("resources/shaders/Renderer2D_Circle.glsl");
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
@@ -142,7 +184,6 @@ namespace Kablunk
 	{
 		glm::mat4 view_projection = camera.GetProjection() * glm::inverse(transform);
 
-		s_renderer_data.Texture_shader->Bind();
 		s_renderer_data.camera_buffer.ViewProjection = view_projection;
 		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
@@ -153,7 +194,6 @@ namespace Kablunk
 	{
 		glm::mat4 view_projection = camera.GetViewProjectionMatrix();
 
-		s_renderer_data.Texture_shader->Bind();
 		s_renderer_data.camera_buffer.ViewProjection = view_projection;
 		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
@@ -164,7 +204,6 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		s_renderer_data.Texture_shader->Bind();
 		s_renderer_data.camera_buffer.ViewProjection = camera.GetViewProjectionMatrix();
 		s_renderer_data.camera_uniform_buffer->SetData(&s_renderer_data.camera_buffer, sizeof(Renderer2DData));
 
@@ -182,21 +221,31 @@ namespace Kablunk
 
 	void Renderer2D::Flush()
 	{
-		if (s_renderer_data.Quad_index_count == 0)
-			return;
-
 		KB_PROFILE_FUNCTION();
-
-		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.Quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.Quad_vertex_buffer_base_ptr);
-		s_renderer_data.Quad_vertex_buffer->SetData(s_renderer_data.Quad_vertex_buffer_base_ptr, data_size);
-		
-		for (uint32_t i = 0; i < s_renderer_data.Texture_slot_index; ++i)
+		if (s_renderer_data.Quad_index_count != 0)
 		{
-			s_renderer_data.Texture_slots[i]->Bind(i);
+			uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.Quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.Quad_vertex_buffer_base_ptr);
+			s_renderer_data.Quad_vertex_buffer->SetData(s_renderer_data.Quad_vertex_buffer_base_ptr, data_size);
+
+			s_renderer_data.Quad_shader->Bind();
+			for (uint32_t i = 0; i < s_renderer_data.Texture_slot_index; ++i)
+			{
+				s_renderer_data.Texture_slots[i]->Bind(i);
+			}
+
+			RenderCommand::DrawIndexed(s_renderer_data.Quad_vertex_array, s_renderer_data.Quad_index_count);
+			s_renderer_data.Stats.Draw_calls++;
 		}
 
-		s_renderer_data.Quad_vertex_array->Bind();
-		RenderCommand::DrawIndexed(s_renderer_data.Quad_vertex_array, s_renderer_data.Quad_index_count);
+		if (s_renderer_data.Circle_index_count != 0)
+		{
+			uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.Circle_vertex_buffer_ptr - (uint8_t*)s_renderer_data.Circle_vertex_buffer_base_ptr);
+			s_renderer_data.Circle_vertex_buffer->SetData(s_renderer_data.Circle_vertex_buffer_base_ptr, data_size);
+
+			s_renderer_data.Circle_shader->Bind();
+			RenderCommand::DrawIndexed(s_renderer_data.Circle_vertex_array, s_renderer_data.Circle_index_count);
+			s_renderer_data.Stats.Draw_calls++;
+		}
 	}
 
 	// =========================
@@ -238,7 +287,6 @@ namespace Kablunk
 		if (s_renderer_data.Quad_count + 1 > s_renderer_data.Max_quads)
 			EndBatch();
 
-
 		//constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		float texture_index = 0.0f;
 		for (uint32_t i = 1; i < s_renderer_data.Texture_slot_index; ++i)
@@ -274,10 +322,36 @@ namespace Kablunk
 		s_renderer_data.Stats.Quad_count += 1;
 	}
 
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float radius /*= 0.5f*/, float thickness /*= 1.0f*/, float fade /*= 0.005f*/, int32_t entity_id /*= -1*/)
+	{
+		// #TODO implement for circles
+		// if (s_renderer_data.Quad_count + 1 > s_renderer_data.Max_quads)
+		// 	EndBatch();
+
+		constexpr size_t circle_vertex_count = 4;
+
+		for (uint32_t i = 0; i < circle_vertex_count; ++i)
+		{
+			s_renderer_data.Circle_vertex_buffer_ptr->WorldPosition = transform * s_renderer_data.Quad_vertex_positions[i];
+			s_renderer_data.Circle_vertex_buffer_ptr->LocalPosition = s_renderer_data.Quad_vertex_positions[i] * 2.0f;
+			s_renderer_data.Circle_vertex_buffer_ptr->Color = color;
+			s_renderer_data.Circle_vertex_buffer_ptr->Radius = radius;
+			s_renderer_data.Circle_vertex_buffer_ptr->Thickness = thickness;
+			s_renderer_data.Circle_vertex_buffer_ptr->Fade = fade;
+			s_renderer_data.Circle_vertex_buffer_ptr->EntityID = entity_id;
+			s_renderer_data.Circle_vertex_buffer_ptr++;
+		}
+		s_renderer_data.Circle_index_count += 6;
+		s_renderer_data.Circle_count++;
+
+		s_renderer_data.Stats.Circle_count += 1;
+	}
+
 	void Renderer2D::ResetStats()
 	{
 		s_renderer_data.Stats.Draw_calls = 0;
 		s_renderer_data.Stats.Quad_count = 0;
+		s_renderer_data.Stats.Circle_count = 0;
 	}
 
 	Renderer2D::Renderer2DStats Renderer2D::GetStats() { return s_renderer_data.Stats; }
@@ -288,9 +362,11 @@ namespace Kablunk
 		s_renderer_data.Quad_index_count = 0;
 		s_renderer_data.Quad_vertex_buffer_ptr = s_renderer_data.Quad_vertex_buffer_base_ptr;
 
-		s_renderer_data.Texture_slot_index = 1;
+		s_renderer_data.Circle_count = 0;
+		s_renderer_data.Circle_index_count = 0;
+		s_renderer_data.Circle_vertex_buffer_ptr = s_renderer_data.Circle_vertex_buffer_base_ptr;
 
-		s_renderer_data.Stats.Draw_calls++;
+		s_renderer_data.Texture_slot_index = 1;
 	}
 
 	void Renderer2D::EndBatch()
