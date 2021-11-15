@@ -147,6 +147,8 @@ namespace Kablunk
 		}
 
 		m_frame_buffer->Unbind();
+
+		NativeScriptEngine::Get()->OnUpdate(ts);
 	}
 
 	void EditorLayer::OnImGuiRender(Timestep ts)
@@ -177,7 +179,7 @@ namespace Kablunk
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 1.0f, 1.0f });
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-		ImGui::Begin("##kablunk_editor_dockspace", NULL, window_flags);
+		ImGui::Begin("##kablunk_editor_dockspace", nullptr, window_flags);
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(2);
 
@@ -389,7 +391,7 @@ namespace Kablunk
 
 			UI::Property("Project Name", s_project_name_buffer, MAX_PROJECT_NAME_LENGTH);
 			
-			auto label_size = ImGui::CalcTextSize("...", NULL, true);
+			auto label_size = ImGui::CalcTextSize("...", nullptr, true);
 			auto& style = ImGui::GetStyle();
 			auto button_size = ImGui::CalcItemSize(
 				{ 0, 0 }, label_size.x + style.FramePadding.x * 2.0f, 
@@ -411,13 +413,13 @@ namespace Kablunk
 			ImGui::Separator();
 			UI::EndProperties();
 
-			auto create_text_size = ImGui::CalcTextSize("Create", NULL, true);
+			auto create_text_size = ImGui::CalcTextSize("Create", nullptr, true);
 			auto create_button_size = ImGui::CalcItemSize(
 				{ 0, 0 }, create_text_size.x + style.FramePadding.x * 2.0f,
 				label_size.y + style.FramePadding.y * 2.0f
 			);
 
-			auto cancel_text_size = ImGui::CalcTextSize("Cancel", NULL, true);
+			auto cancel_text_size = ImGui::CalcTextSize("Cancel", nullptr, true);
 			auto cancel_button_size = ImGui::CalcItemSize(
 				{ 0, 0 }, cancel_text_size.x + style.FramePadding.x * 2.0f,
 				label_size.y + style.FramePadding.y * 2.0f
@@ -474,6 +476,10 @@ namespace Kablunk
 
 				if (ImGui::MenuItem("Open Scene..."))
 					OpenScene();
+
+				if (ImGui::MenuItem("Save Scene", "Crtl+S"))
+					SaveScene();
+			
 
 				if (ImGui::MenuItem("Save Scene As...", "Crtl+Shift+S"))
 					SaveSceneAs();
@@ -561,7 +567,7 @@ namespace Kablunk
 
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, { 0.5f, 0.5f });
 		ImGui::SetNextWindowSize({ 700, 350 });
-		if (ImGui::BeginPopupModal("Select KablunkEngine Install", 0, ImGuiWindowFlags_NoMove | ImGuiTableColumnFlags_NoResize))
+		if (ImGui::BeginPopupModal("Select KablunkEngine Install", nullptr, ImGuiWindowFlags_NoMove | ImGuiTableColumnFlags_NoResize))
 		{
 			if (s_kablunk_install_path.empty())
 			{
@@ -576,7 +582,7 @@ namespace Kablunk
 
 			ImGui::Dummy({ 0, 8 });
 
-			auto label_size = ImGui::CalcTextSize("...", NULL, true);
+			auto label_size = ImGui::CalcTextSize("...", nullptr, true);
 			auto& style = ImGui::GetStyle();
 			auto button_size = ImGui::CalcItemSize({ 0, 0 }, label_size.x + style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1, label_size.y + style.FramePadding.y * 2.0f);
 
@@ -618,15 +624,23 @@ namespace Kablunk
 	void EditorLayer::OnScenePlay()
 	{
 		m_scene_state = SceneState::Play;
-		m_active_scene->OnStartRuntime();
+		//m_active_scene->OnStartRuntime();
+		
+		m_runtime_scene = Scene::Copy(m_editor_scene);
+		m_runtime_scene->OnStartRuntime();
 
+		m_active_scene = m_runtime_scene;
 		m_selected_entity = {};
 	}
 
 	void EditorLayer::OnSceneStop()
 	{
 		m_scene_state = SceneState::Edit;
-		m_active_scene->OnStopRuntime();
+
+		m_runtime_scene->OnStopRuntime();
+		m_runtime_scene.reset();
+
+		m_active_scene = m_editor_scene;
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -668,8 +682,13 @@ namespace Kablunk
 		}
 		case Key::S:
 		{
-			if (ctrl_pressed && shift_pressed)
-				SaveSceneAs();
+			if (ctrl_pressed)
+			{
+				if (shift_pressed)
+					SaveSceneAs();
+				else
+					SaveScene();
+			}
 
 			break;
 		}
@@ -735,6 +754,15 @@ namespace Kablunk
 		m_active_scene = CreateRef<Scene>();
 		m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
+		m_editor_scene_path = std::filesystem::path{};
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (!m_editor_scene_path.empty())
+			SerializeScene(m_editor_scene, m_editor_scene_path);
+		else
+			SaveSceneAs();
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -742,13 +770,22 @@ namespace Kablunk
 		auto filepath = FileDialog::SaveFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
 		if (!filepath.empty())
 		{
-			auto serializer = SceneSerializer{ m_active_scene };
-			serializer.Serialize(filepath);
+			SerializeScene(m_editor_scene, filepath);
+			m_editor_scene_path = filepath;
 		}
+	}
+
+	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	{
+		SceneSerializer serializer{ scene };
+		serializer.Serialize(path.string());
 	}
 
 	void EditorLayer::OpenScene()
 	{
+		if (m_scene_state != SceneState::Edit)
+			OnSceneStop();
+
 		auto filepath = FileDialog::OpenFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
 		if (!filepath.empty())
 			OpenScene(filepath);
@@ -758,8 +795,18 @@ namespace Kablunk
 	{
 		NewScene();
 
-		auto serializer = SceneSerializer{ m_active_scene };
-		serializer.Deserialize(path.string());
+		Ref<Scene> new_scene = CreateRef<Scene>();
+		auto serializer = SceneSerializer{ new_scene };
+		if (serializer.Deserialize(path.string()))
+		{
+			m_editor_scene = new_scene;
+			m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
+			m_scene_hierarchy_panel.SetContext(m_editor_scene);
+
+			m_active_scene = m_editor_scene;
+
+			m_editor_scene_path = path;
+		}
 	}
 
 	bool EditorLayer::CanPickFromViewport() const
@@ -787,7 +834,6 @@ namespace Kablunk
 		std::filesystem::copy(g_resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
 
 		{
-
 			// Kablunk Project
 			{
 				std::ifstream stream{ project_path / "Project.kablunkproj" };

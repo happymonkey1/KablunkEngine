@@ -24,7 +24,7 @@ namespace Kablunk
 		Scene(const std::string& name = default_scene_name);
 		~Scene();
 
-		static Ref<Scene> CopyTo(Ref<Scene> src_scene, Ref<Scene> dest_scene = CreateRef<Scene>());
+		static Ref<Scene> Copy(Ref<Scene> src_scene);
 
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);

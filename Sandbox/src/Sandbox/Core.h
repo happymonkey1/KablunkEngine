@@ -7,8 +7,7 @@
 // #TODO Remove
 
 
-REGISTER_NATIVE_SCRIPT(CameraController);
-REGISTER_NATIVE_SCRIPT(TestScript);
+//REGISTER_NATIVE_SCRIPT(CameraController);
 
 // #TODO Remove
 #ifdef ECLIPSE

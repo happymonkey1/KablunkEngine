@@ -9,7 +9,7 @@ struct CameraController : public Kablunk::NativeScript
 
 	}
 
-	IMPLEMENT_NATIVE_SCRIPT(CameraController);
+	//IMPLEMENT_NATIVE_SCRIPT(CameraController);
 
 	void CameraController::OnUpdate(Kablunk::Timestep ts) override
 	{

@@ -96,7 +96,7 @@ namespace Kablunk::Parser
 				while (ss)
 				{
 					ss >> word;
-					if (word == "struct")
+					if (word == identifier)
 					{
 						ss >> word;
 						struct_names.emplace_back(word);
@@ -126,6 +126,14 @@ namespace Kablunk::Parser
 		static std::vector<std::string> FindClassNames(const std::string& filepath, uint32_t num_structs_to_find = 0)
 		{
 			return find_all_of(FindIdentifier::CLASS, filepath, num_structs_to_find);
+		}
+
+		static std::vector<std::string> FindClassAndStructNames(const std::string& filepath, uint32_t num_to_find = 0)
+		{
+			auto structs = find_all_of(FindIdentifier::STRUCT, filepath, num_to_find);
+			auto cclass = find_all_of(FindIdentifier::CLASS, filepath, num_to_find);
+			structs.insert(structs.end(), cclass.begin(), cclass.end());
+			return structs;
 		}
 	}
 

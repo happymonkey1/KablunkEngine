@@ -4,6 +4,7 @@
 #include "Kablunk/Utilities/Parser.h"
 #include "Kablunk/Utilities/Utilities.h"
 
+#include "Kablunk/Scripts/NativeScriptCompilerLogger.h"
 #include "Kablunk/Scripts/NativeScriptModule.h"
 
 #include "RCCPP/RuntimeObjectSystem/IObject.h"
@@ -13,19 +14,47 @@
 #include "RCCPP/RuntimeObjectSystem/ObjectFactorySystem/ObjectFactorySystem.h"
 #include "RCCPP/RuntimeObjectSystem/RuntimeObjectSystem.h"
 
+
 namespace Kablunk
 {
+	// Static functions
+	void NativeScriptEngine::Init()
+	{
+		if (!s_native_script_engine)
+			s_native_script_engine = new NativeScriptEngine{};
+	}
+
+	void NativeScriptEngine::Shutdown()
+	{
+		//delete s_native_script_engine;
+	}
+
+	bool NativeScriptEngine::AreScriptsCompiling()
+	{
+		{
+			if (s_native_script_engine)
+				return Get()->m_runtime_object_system->GetIsCompiling();
+			else
+				return false;
+		}
+	}
 
 	NativeScriptEngine::NativeScriptEngine()
-		: m_compiler_logger{ nullptr }, m_runtime_object_system{ new RuntimeObjectSystem }
+		: m_compiler_logger{ new NativeScriptCompilerLogger{} }, m_runtime_object_system{ new RuntimeObjectSystem{} }
 	{
-		if (m_runtime_object_system->Initialise(m_compiler_logger, nullptr))
+		if (!m_runtime_object_system->Initialise(m_compiler_logger, nullptr))
 		{
 			std::cout << "something failed with runtime compiled c plus plus" << std::endl;
 			exit(1);
 		}
 
 		m_runtime_object_system->GetObjectFactorySystem()->AddListener(this);
+		m_runtime_object_system->AddIncludeDir("C:\\Users\\Gaming Account\\Source\\Repos\\KablunkEngine2020\\Sandbox\\src\\Sandbox");
+		m_runtime_object_system->AddIncludeDir("C:\\Users\\Gaming Account\\Source\\Repos\\KablunkEngine2020\\KablunkEngine\\include");
+		m_runtime_object_system->AddIncludeDir("C:\\Users\\Gaming Account\\Source\\Repos\\KablunkEngine2020\\KablunkEngine\\vendor");
+
+		m_runtime_object_system->SetAdditionalLinkOptions("/LIBPATH:C:\\Users\\Gaming Account\\Source\\Repos\\KablunkEngine2020\\bin\\ KablunkEngine.lib");
+		
 	}
 
 	NativeScriptEngine::~NativeScriptEngine()
@@ -36,11 +65,25 @@ namespace Kablunk
 		if (m_runtime_object_system && m_runtime_object_system->GetObjectFactorySystem())
 		{
 			m_runtime_object_system->GetObjectFactorySystem()->RemoveListener(this);
+
+			for (auto& [script_name, nsc_runtime] : m_native_scripts)
+			{
+				if (nsc_runtime.ptr)
+				{
+					IObject* obj_ptr = m_runtime_object_system->GetObjectFactorySystem()->GetObjectW(nsc_runtime.id);
+					delete obj_ptr;
+				}
+			}
 		}
+
+		delete m_runtime_object_system;
+		delete m_compiler_logger;
 	}
 
 	bool NativeScriptEngine::RegisterScript(const std::string& script_name, CreateMethodFunc create_script)
 	{
+		KB_CORE_ASSERT(false, "deprecated");
+		/*
 		auto& native_scripts = GetScriptContainer();
 		auto it = native_scripts.find(script_name);
 		if (it == native_scripts.end())
@@ -52,39 +95,21 @@ namespace Kablunk
 		{
 			KB_CORE_ASSERT(false, "Script already registered!")
 			return false;
-		}
+		}*/
+		return false;
 	}
 
 	// #TODO currently searches for files during runtime, probably better to do at statically with reflection
 	Scope<NativeScript> NativeScriptEngine::GetScript(const std::string& script_name)
 	{
-		auto& native_scripts = GetScriptContainer();
-		auto it = native_scripts.find(script_name);
-		return it != native_scripts.end() ? Scope<NativeScript>(it->second()) : nullptr;
+		KB_CORE_ASSERT(false, "deprecated");
+		//auto it = m_native_scripts.find(script_name);
+		//return it != m_native_scripts.end() ? Scope<NativeScript>(it->second()) : nullptr;
+		return nullptr;
 	}
 
 	bool NativeScriptEngine::LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir)
 	{
-#if 0
-		if (!m_dll_directory_set && false)
-		{
-			// #TODO move elsewhere
-			//std::string dll_directory = "assets/native_scripts";
-			//std::wstring dll_directory_wstr = std::wstring{ dll_directory.begin(), dll_directory.end() };
-
-			std::string dll_directory = "C:\\Users\\Gaming Account\\Source\\Repos\\KablunkEngine2020\\KablunkEditor\\assets\\native_scripts\\";
-			SetDllDirectoryA(dll_directory.c_str());
-
-			constexpr size_t BUFFER_LEN = 256;
-			char dll_dir_buffer[BUFFER_LEN];
-			uint32_t get_dll_dir_success = GetDllDirectoryA(BUFFER_LEN, dll_dir_buffer);
-			KB_CORE_ASSERT(get_dll_dir_success, "Failed to find dll directory");
-			KB_CORE_TRACE("dll directory '{0}'", dll_dir_buffer);
-
-			m_dll_directory_set = true;
-		}
-#endif
-
 		NativeScriptModule nsc_module = NativeScriptModule{ dll_name, dll_dir };
 
 		if (nsc_module)
@@ -106,13 +131,60 @@ namespace Kablunk
 		return true;
 	}
 
+	NativeScript** NativeScriptEngine::AddScript(const std::string& name, const std::filesystem::path& filepath)
+	{
+		auto filename = filepath.filename();
+		m_runtime_object_system->AddToRuntimeFileList(filename.string().c_str());
+		
+		// #TODO support multiple native scripts 
+		auto it = m_native_scripts.find(name);
+		if (it == m_native_scripts.end())
+		{
+			IObjectConstructor* ctr_ptr = m_runtime_object_system->GetObjectFactorySystem()->GetConstructor(name.c_str());
+			
+			if (ctr_ptr)
+			{
+				IObject* obj_ptr = ctr_ptr->Construct();
+				NativeScript* nsc_ptr = nullptr;
+				obj_ptr->GetInterface(&nsc_ptr);
+				if (!nsc_ptr)
+				{
+					delete obj_ptr;
+					KB_CORE_ERROR("could not find native script interface");
+					return nullptr;
+				}
+
+				Internal::NativeScriptRuntimeObject nsc_runtime = { nsc_ptr, obj_ptr->GetObjectId() };
+				m_native_scripts[name] = nsc_runtime;
+				return &(m_native_scripts[name].ptr);
+			}
+		}
+
+		return nullptr;
+	}
+
 	void NativeScriptEngine::OnConstructorsAdded()
 	{
-
+		for (auto& [script_name, nsc_runtime] : m_native_scripts)
+		{
+			if (nsc_runtime.ptr)
+			{
+				IObject* obj_ptr = m_runtime_object_system->GetObjectFactorySystem()->GetObjectW(nsc_runtime.id);
+				obj_ptr->GetInterface(&nsc_runtime.ptr);
+				if (!obj_ptr)
+				{
+					delete obj_ptr;
+					nsc_runtime.ptr = nullptr;
+					KB_CORE_ERROR("could not find native script interface");
+					break;
+				}
+			}
+		}
 	}
 
 	void NativeScriptEngine::OnUpdate(Timestep ts)
 	{
+		// #TODO add to job
 		if (m_runtime_object_system->GetIsCompiledComplete())
 		{
 			KB_CORE_INFO("loading compiled module");
@@ -121,21 +193,7 @@ namespace Kablunk
 
 		if (!m_runtime_object_system->GetIsCompiling())
 		{
-
 			m_runtime_object_system->GetFileChangeNotifier()->Update(ts);
-
 		}
 	}
-
-	void NativeScriptEngine::Init()
-	{
-		if (!s_native_script_engine)
-			s_native_script_engine = new NativeScriptEngine{};
-	}
-
-	void NativeScriptEngine::Shutdown()
-	{
-		delete s_native_script_engine;
-	}
-
 }

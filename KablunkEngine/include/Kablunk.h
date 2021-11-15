@@ -45,6 +45,11 @@
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 // ----------------------------------------------
 
+// ---RCCPP--------------------------------------
+#include "RCCPP/RuntimeObjectSystem/IObject.h"
+#include "RCCPP/RuntimeObjectSystem/ObjectInterfacePerModule.h"
+// ----------------------------------------------
+
 // ---Assets-------------------------------------
 #include "Kablunk/Core/AssetManager.h"
 // ----------------------------------------------

@@ -37,7 +37,9 @@ namespace Kablunk
 		void UpdateProjectEngineFiles();
 
 		void NewScene();
+		void SaveScene();
 		void SaveSceneAs();
+		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 
@@ -54,7 +56,11 @@ namespace Kablunk
 	private:
 
 		Ref<Framebuffer> m_frame_buffer;
+
 		Ref<Scene> m_active_scene;
+		Ref<Scene> m_editor_scene;
+		Ref<Scene> m_runtime_scene;
+		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;
 

@@ -14,11 +14,21 @@
 
 #include <string>
 #include <unordered_map>
+#include <filesystem>
 
 struct IRuntimeObjectSystem;
 
 namespace Kablunk
 {
+	namespace Internal
+	{
+		struct NativeScriptRuntimeObject
+		{
+			NativeScript* ptr;
+			ObjectId id;
+		};
+	}
+	
 
 	/*	Native scripts store a create method function pointer inside a map, 
 		which can be accessed to instantiate a Scoped script during runtime */
@@ -36,37 +46,38 @@ namespace Kablunk
 
 		static void Init();
 		static void Shutdown();
+		static bool AreScriptsCompiling();
+		
 	public:
 		NativeScriptEngine();
 		~NativeScriptEngine();
-
+		
+		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
+		[[deprecated("Replaced by rccpp")]]
 		Scope<NativeScript> GetScript(const std::string& script_name);
 
+		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
-		
-		void OnConstructorsAdded();
+
+		NativeScript** AddScript(const std::string& name, const std::filesystem::path& filepath);
+		virtual void OnConstructorsAdded() override;
 		void OnUpdate(Timestep ts);
 
 	private:
 		inline static NativeScriptEngine* s_native_script_engine;
 	private:
-		using NativeScriptContainer = std::unordered_map<std::string, CreateMethodFunc>;
-
-		static NativeScriptContainer& GetScriptContainer()
-		{
-			static NativeScriptContainer m_native_scripts;
-			return m_native_scripts;
-		}
+		using NativeScriptContainer = std::unordered_map<std::string, Internal::NativeScriptRuntimeObject>;
 		
 		bool m_dll_directory_set = false;
 
 		// RCCPP
 		ICompilerLogger* m_compiler_logger;
 		IRuntimeObjectSystem* m_runtime_object_system;
-
+		NativeScriptContainer m_native_scripts;
 	};
 
+	
 }
 
 

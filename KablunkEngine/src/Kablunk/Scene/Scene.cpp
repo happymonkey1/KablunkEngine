@@ -38,8 +38,49 @@ namespace Kablunk
 		}
 	}
 
-	Ref<Scene> Scene::CopyTo(Ref<Scene> src_scene, Ref<Scene> dest_scene)
+	template <typename ComponentT>
+	static void CopyComponent(entt::registry& dst, entt::registry& src, const EntityMap& entity_map)
 	{
+		auto view = src.view<ComponentT>();
+		for (auto e : view)
+		{
+			uuid::uuid64 UUID = src.get<IdComponent>(e).Id;
+			entt::entity dst_entt_id = entity_map.at(UUID);
+
+			auto& component = src.get<ComponentT>(e);
+			dst.emplace_or_replace<ComponentT>(dst_entt_id, component);
+		}
+	}
+
+	template <typename ComponentT>
+	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& reg)
+	{
+		if (reg.any_of<ComponentT>(src))
+		{
+			auto& src_comp = reg.get<ComponentT>(src);
+			reg.emplace_or_replace<ComponentT>(dst, src_comp);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template <typename ComponentT>
+	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& src_reg, entt::registry& dest_reg)
+	{
+		if (src_reg.any_of<ComponentT>(src))
+		{
+			auto& src_comp = src_reg.get<ComponentT>(src);
+			dest_reg.emplace_or_replace<ComponentT>(dst, src_comp);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	Ref<Scene> Scene::Copy(Ref<Scene> src_scene)
+	{
+		Ref<Scene> dest_scene = CreateRef<Scene>();
 		dest_scene->m_name = src_scene->m_name;
 
 		dest_scene->m_entity_map = src_scene->m_entity_map;
@@ -56,8 +97,28 @@ namespace Kablunk
 			const auto& tag = src_scene_reg.get<TagComponent>(id).Tag;
 
 			dest_scene->CreateEntity(tag, uuid);
-
 		}
+
+		CopyComponent<TransformComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<SpriteRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<NativeScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<MeshComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<PointLightComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<RigidBody2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+
+		// Bind all native script components
+		auto view = dest_scene_reg.view<NativeScriptComponent>();
+		for (auto e : view)
+		{
+			Entity entity{ e, dest_scene.get() };
+			auto& nsc = entity.GetComponent<NativeScriptComponent>();
+			nsc.BindEditor(entity);
+		}
+
+		// #TODO copy parenting components
 
 		return dest_scene;
 	}
@@ -173,29 +234,29 @@ namespace Kablunk
 				if (!native_script_component.Instance)
 				{
 					native_script_component.InstantiateScript();
-					native_script_component.Instance->SetEntity({ entity, this });
+					(*native_script_component.Instance)->SetEntity({ entity, this });
 
 					try
 					{
-						native_script_component.Instance->OnAwake();
+						(*native_script_component.Instance)->OnAwake();
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 
 				}
@@ -204,25 +265,25 @@ namespace Kablunk
 				{
 					try
 					{
-						native_script_component.Instance->OnUpdate(ts);
+						(*native_script_component.Instance)->OnUpdate(ts);
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 				}
 			}
@@ -347,25 +408,26 @@ namespace Kablunk
 				{
 					try
 					{
-						native_script_component.Instance->OnUpdate(ts);
+						if (!NativeScriptEngine::AreScriptsCompiling())
+							(*native_script_component.Instance)->OnUpdate(ts);
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.Instance = nullptr;
 					}
 				}
 			}
@@ -458,32 +520,6 @@ namespace Kablunk
 
 		auto it = m_entity_map.find(id);
 		return it != m_entity_map.end() ? it->second : Entity{};
-	}
-
-	template <typename ComponentT>
-	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& reg)
-	{
-		if (reg.any_of<ComponentT>(src))
-		{
-			auto& src_comp = reg.get<ComponentT>(src);
-			reg.emplace_or_replace<ComponentT>(dst, src_comp);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	template <typename ComponentT>
-	static bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& src_reg, entt::registry& dest_reg)
-	{
-		if (src_reg.any_of<ComponentT>(src))
-		{
-			auto& src_comp = src_reg.get<ComponentT>(src);
-			dest_reg.emplace_or_replace<ComponentT>(dst, src_comp);
-			return true;
-		}
-		else
-			return false;
 	}
 
 	Entity Scene::DuplicateEntity(Entity entity)

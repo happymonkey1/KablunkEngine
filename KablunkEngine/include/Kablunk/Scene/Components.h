@@ -138,7 +138,7 @@ namespace Kablunk
 	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
-		Scope<NativeScript> Instance = nullptr;
+		NativeScript** Instance = nullptr;
 		std::filesystem::path Filepath = "";
 
 		using InstantiateScriptFunc = Scope<NativeScript>(*)();
@@ -181,15 +181,15 @@ namespace Kablunk
 			if (filepath.empty())
 				return;
 
-			auto struct_names = Parser::CPP::FindStructNames(filepath.string(), 1);
+			auto struct_names = Parser::CPP::FindClassAndStructNames(filepath.string(), 1);
 			if (struct_names.empty())
 			{
 				KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);
 				return;
 			}
-				auto struct_name = struct_names[0];
+			auto struct_name = struct_names[0];
 
-			Instance = NativeScriptEngine::Get()->GetScript(struct_name);
+			Instance = NativeScriptEngine::Get()->AddScript(struct_name, filepath.string());
 
 			if (!Instance)
 			{
@@ -197,36 +197,32 @@ namespace Kablunk
 				return;
 			}
 
-			// #TODO might not be necessary, i don't know if setting new ptr cleans up old reference
-			if (!Filepath.empty())
-				Instance.reset();
-
 			if (Instance)
 			{
-				Instance->SetEntity(entity);
+				(*Instance)->SetEntity(entity);
 				Filepath = filepath;
 
 				try
 				{
-					Instance->OnAwake();
+					(*Instance)->OnAwake();
 				}
 				catch (std::bad_alloc& e)
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
+					delete Instance;
 				}
 				catch (std::exception& e)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
+					delete Instance;
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
+					delete Instance;
 				}
 			}
 		}

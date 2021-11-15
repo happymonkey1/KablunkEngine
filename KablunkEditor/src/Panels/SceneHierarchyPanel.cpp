@@ -616,11 +616,12 @@ namespace Kablunk
 				UI::BeginProperties();
 				if (component.Instance)
 				{
+					std::string name = "placeholder";
 					std::vector<std::string> name_vec = Parser::CPP::FindStructNames(component.GetFilepath());
-					if (name_vec.empty())
-						KB_CORE_ASSERT(false, "Script loaded somehow but could not find name for component!");
+					if (!name_vec.empty())
+						name = name_vec[0];
 
-					UI::PropertyReadOnlyString("Script Name", name_vec[0]);
+					UI::PropertyReadOnlyString("Script Name", name);
 
 					// #TODO relative path based on project
 					UI::PropertyReadOnlyString("Filepath", component.GetFilepath());
@@ -629,7 +630,7 @@ namespace Kablunk
 				{
 					if (UI::Button("Add"))
 					{
-						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0");
+						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
 						if (!filepath.empty())
 						{
 							// #FIXME relative path when projects are implemented
