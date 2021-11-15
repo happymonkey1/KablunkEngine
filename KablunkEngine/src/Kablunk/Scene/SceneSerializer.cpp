@@ -253,11 +253,10 @@ namespace Kablunk
 
 		ReadComponentData<CircleRendererComponent>(entity_data, entity, [this](CircleRendererComponent& component, auto& data) 
 			{
-				component.Color = data["Color"].as<glm::vec4>();
-				component.Radius = data["Radius"].as<float>();
+				component.Color		= data["Color"].as<glm::vec4>();
+				component.Radius	= data["Radius"].as<float>();
 				component.Thickness = data["Thickness"].as<float>();
-				component.Fade = data["Fade"].as<float>();
-
+				component.Fade		= data["Fade"].as<float>();
 			});
 
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
