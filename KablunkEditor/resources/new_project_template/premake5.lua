@@ -1,13 +1,12 @@
 project_name = "$PROJECT_NAME$"
 kablunk_root_dir = os.getenv("KABLUNK_DIR")
 kablunk_root_dir = kablunk_root_dir:gsub("\\", "/")
-dependencies_path = kablunk_root_dir .. "\\dependencies.lua"
-dependencies_path = dependencies_path:gsub("\\", "/")
 
 include(dependencies_path)
 
 workspace "%{project_name}"
-    architecture "x86_64"
+    architecture "x64"
+	targetdir "build"
     startproject "%{project_name}"
 
     configurations
@@ -22,101 +21,37 @@ workspace "%{project_name}"
         "MultiProcessorCompile"
     }
 
-	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-
-project "$PROJECT_NAME$"
+group "Kablunk"
+project "Kablunk-ScriptCore"
+	location "%{kablunk_root_dir}/Kablunk-ScriptCore"
 	kind "SharedLib"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "on"
+	language "C#"
 
-	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts")
+	objdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts/intermediates")
 
 	files
 	{
-		"src/**.cpp",
-		"include/**.h"
+		"%{kablunk_root_dir}/Kablunk-ScriptCore/Source/**.cs"
 	}
+group ""
 
-	defines
-	{
-		"_CRT_SECURE_NO_WARNINGS",
-		"NOMINMAX"
-	}
 
-	includedirs
+project "$PROJECT_NAME$"
+	location "Assets/Scripts"
+	kind "SharedLib"
+	language "C#"
+
+	targetname "%{project_name}"
+	targetdir ("%{prj.location}/binaries")
+	objdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts/intermediates")
+
+	files
 	{
-		"src",
-		"include",
-		"KablunkEngine/engine",
-		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.spdlog}",
-		"%{IncludeDir.stduuid}",
-		"%{IncludeDir.gsl}",
-		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.assimp}",
-		"%{IncludeDir.FreeType}",
-		"%{IncludeDir.Box2d}"
+		"assets/scripts/source/**.cs"
 	}
 
 	links
 	{
-		"%{kablunk_root_dir}/bin/" .. outputdir .. "/KablunkEngine/KablunkEngine.lib"
+		"Kablunk-ScriptCore"
 	}
-
-	filter "system:windows"
-		systemversion "latest"
-		--linkoptions { "/FORCE:UNRESOLVED" }
-
-	filter "configurations:Debug"
-		defines "KB_DEBUG"
-		runtime "Debug"
-		symbols "on"
-
-		links
-        {
-            
-        }
-
-		postbuildcommands
-        {
-            '{COPY} "%{cfg.targetdir}/%{file.basename}.dll" "assets/bin"'
-        }
-	
-	filter "configurations:Release"
-		defines "KB_RELEASE"
-		runtime "Release"
-		optimize "on"
-
-		links
-        {
-            
-        }
-
-		postbuildcommands
-        {
-            '{COPY} "%{cfg.targetdir}/%{file.basename}.dll" "assets/bin"'
-        }
-        
-	
-	filter "configurations:Distribution"
-		defines "KB_DISTRIBUTION"
-		runtime "Release"
-		optimize "on"
-
-		links
-        {
-            
-        }
-
-		postbuildcommands
-        {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"'
-        }

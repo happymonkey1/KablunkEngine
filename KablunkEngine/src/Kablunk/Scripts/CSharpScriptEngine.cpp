@@ -1,5 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
+#include "Kablunk/Scripts/CSharpInternalCallRegistry.h"
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
@@ -23,6 +24,8 @@ namespace Kablunk
 	static std::string s_core_assembly_path;
 	static Ref<Scene> s_scene_context;
 
+	static EntityInstanceMap s_entity_instance_map;
+
 	static MonoMethod* GetMethod(MonoImage* image, const std::string& method_description);
 
 	MonoImage* s_app_assembly_image = nullptr;
@@ -32,7 +35,8 @@ namespace Kablunk
 	static MonoClass* s_entity_class = nullptr;
 
 	static std::unordered_map<std::string, MonoClass*> s_classes;
-
+	static std::unordered_map<std::string, EntityScriptClass> s_entity_class_map;
+	
 	struct EntityScriptClass
 	{
 		std::string Full_name;
@@ -54,6 +58,17 @@ namespace Kablunk
 		}
 	};
 
+	MonoObject* EntityInstance::GetInstance()
+	{
+		KB_CORE_ASSERT(Handle, "Entity has not been instantiated!");
+		return mono_gchandle_get_target(Handle);
+	}
+
+	bool EntityInstance::IsRuntimeAvailable() const
+	{
+		return Handle != 0;
+	}
+
 	MonoAssembly* LoadAssemblyFromFile(const char* filepath)
 	{
 		if (filepath == nullptr)
@@ -71,7 +86,7 @@ namespace Kablunk
 		}
 
 		void* file_data = malloc(file_size);
-		if (file_data == NULL)
+		if (file_data == nullptr)
 		{
 			CloseHandle(handle);
 			return nullptr;
@@ -104,6 +119,7 @@ namespace Kablunk
 	
 	static void InitMono()
 	{
+		KB_CORE_TRACE("initializing mono!");
 		KB_CORE_ASSERT(!s_current_mono_domain, "[C#-ScriptEngine] Mono has already been initialized!");
 		mono_set_assemblies_path("mono/lib");
 		s_current_mono_domain = mono_jit_init("Kablunk");
@@ -246,7 +262,11 @@ namespace Kablunk
 
 	void CSharpScriptEngine::OnSceneDestroy(uuid::uuid64 scene_id)
 	{
-		KB_CORE_WARN("CSharpScriptEngine::OnSceneDestroy() not implemented!");
+		if (s_entity_instance_map.find(scene_id) != s_entity_instance_map.end())
+		{
+			s_entity_instance_map.at(scene_id).clear();
+			s_entity_instance_map.erase(scene_id);
+		}
 	}
 
 	bool CSharpScriptEngine::LoadKablunkRuntimeAssembly(const std::filesystem::path& path)
@@ -291,6 +311,7 @@ namespace Kablunk
 			return false;
 
 		auto app_assembly_image = GetAssemblyImage(app_assembly);
+		CSharpInternalCallRegistry::RegisterAll();
 		
 		if (s_post_load_cleanup)
 		{
@@ -312,7 +333,20 @@ namespace Kablunk
 		if (!LoadAppAssembly(path))
 			return false;
 
-		// #TODO loop through entities and reload scripts
+		if (!s_entity_instance_map.empty())
+		{
+			Ref<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
+			KB_CORE_ASSERT(scene, "[C#-ScriptEngine] No active scene");
+			if (auto& entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
+			{
+				const auto& entity_map = scene->GetEntityMap();
+				for (auto& [entity_id, entity_instance_data] : entity_instance_map->second)
+				{
+					KB_CORE_ASSERT(entity_map.find(entity_id) != entity_map.end(), "Invalid entity id '{0}'", entity_id);
+					InitScriptEntity(entity_map.at(entity_id));
+				}
+			}
+		}
 	}
 
 	void CSharpScriptEngine::SetSceneContext(const Ref<Scene>& scene)
@@ -326,48 +360,199 @@ namespace Kablunk
 		return s_scene_context;
 	}
 
+	void CSharpScriptEngine::CopyEntityScriptData(uuid::uuid64 dst, uuid::uuid64 src)
+	{
+		KB_CORE_ASSERT(s_entity_instance_map.find(src) != s_entity_instance_map.end(), "src entity not found in map!");
+		KB_CORE_ASSERT(s_entity_instance_map.find(dst) != s_entity_instance_map.end(), "src entity not found in map!");
+
+		auto dst_entity_map = s_entity_instance_map.at(dst);
+		auto src_entity_map = s_entity_instance_map.at(src);
+
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
 	void CSharpScriptEngine::OnCreateEntity(Entity entity)
 	{
-
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnCreateMethod)
+			CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnCreateMethod);
 	}
 
 	void CSharpScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
 	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnUpdateMethod)
+		{
+			void* args[] = { &ts };
+			CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnUpdateMethod, args);
+		}
+	}
 
+	void CSharpScriptEngine::OnScriptComponentDestroyed(uuid::uuid64 scene_id, uuid::uuid64 entity_id)
+	{
+		if (s_entity_instance_map.find(scene_id) != s_entity_instance_map.end())
+		{
+			auto& entity_map = s_entity_instance_map.at(scene_id);
+			if (entity_map.find(entity_id) != entity_map.end())
+				entity_map.erase(entity_id);
+		}
 	}
 
 	MonoObject* CSharpScriptEngine::Construct(const std::string& full_name, bool call_constructor /*= true*/, void** parameters /*= nullptr*/)
 	{
+		std::string namespace_name;
+		std::string class_name;
+		std::string parameter_list;
 
+		if (full_name.find('.') != std::string::npos)
+		{
+			namespace_name = full_name.substr(0, full_name.find_first_of('.'));
+			class_name = full_name.substr(full_name.find_first_of('.') + 1, (full_name.find_first_of(':') - full_name.find_first_of('.') - 1));
+		}
+
+		if (full_name.find(':') != std::string::npos)
+		{
+			parameter_list = full_name.substr(full_name.find_first_of(':'));
+		}
+
+		MonoClass* klass = mono_class_from_name(s_core_assembly_image, namespace_name.c_str(), class_name.c_str());
+		KB_CORE_ASSERT(klass, "[C#-ScriptCore] could not find class '{0}:{1}'", namespace_name, class_name);
+		MonoObject* obj = mono_object_new(mono_domain_get(), klass);
+
+		if (call_constructor)
+		{
+			MonoMethodDesc* description = mono_method_desc_new(parameter_list.c_str(), false);
+			MonoMethod* ctor = mono_method_desc_search_in_class(description, klass);
+			MonoObject* except = nullptr;
+			mono_runtime_invoke(ctor, obj, parameters, &except);
+		}
+
+		return obj;
 	}
 
 	MonoClass* CSharpScriptEngine::GetCoreClass(const std::string& full_name)
 	{
-
+		KB_CORE_ASSERT(false, "not implemented!");
+		return nullptr;
 	}
 
 	bool CSharpScriptEngine::ModuleExists(const std::string& module_name)
 	{
+		// no assembly loaded
+		if (!s_app_assembly_image)
+			return false;
 
+		std::string namespace_name, class_name;
+		if (module_name.find('.') != std::string::npos)
+		{
+			size_t p = module_name.find_last_of('.');
+			namespace_name = module_name.substr(0, p);
+			class_name = module_name.substr(p + 1);
+		}
+		else
+			class_name = module_name;
+
+		MonoClass* mono_class = mono_class_from_name(s_app_assembly_image, namespace_name.c_str(), class_name.c_str());
+		if (!mono_class)
+			return false;
+
+		auto is_entity_sub_class = mono_class_is_subclass_of(mono_class, s_entity_class, false);
+		return is_entity_sub_class;
 	}
 
 	std::string CSharpScriptEngine::StripNamespace(const std::string& name_space, const std::string& module_name)
 	{
+		if (module_name.empty())
+		{
+			KB_CORE_ERROR("module name empty");
+			return std::string{ "" };
+		}
 
+		std::string name = module_name;
+		size_t p = name.find(name_space + ".");
+		if (p == 0)
+			name.erase(p, name_space.size() + 1);
+
+		return name;
 	}
 
 	void CSharpScriptEngine::InitScriptEntity(Entity entity)
 	{
+		Scene* context = entity.m_scene;
+		uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
+		auto& module_name = entity.GetComponent<CSharpScriptComponent>().Module_name;
+		if (module_name.empty())
+			return;
 
+		if (!ModuleExists(module_name))
+		{
+			KB_CORE_ERROR("Entity references non-existant script module '{0}'", module_name);
+			return;
+		}
+
+		EntityScriptClass& script_class = s_entity_class_map[module_name];
+		script_class.Full_name = module_name;
+		if (module_name.find('.') != std::string::npos)
+		{
+			size_t p = module_name.find_last_of('.');
+			script_class.Namespace_name = module_name.substr(0, p);
+			script_class.Class_name = module_name.substr(p + 1);
+		}
+		else
+			script_class.Class_name = module_name;
+
+		script_class.Class = GetClass(s_app_assembly_image, script_class);
+		script_class.InitClassMethods(s_app_assembly_image);
+
+		EntityInstanceData& entity_instance_data = s_entity_instance_map[context->GetUUID()][id];
+		EntityInstance& entity_instance = entity_instance_data.Instance;
+		entity_instance.Script_class = &script_class;
+
+		CSharpScriptComponent& script_comp = entity.GetComponent<CSharpScriptComponent>();
+		// #TODO save old fields so reloading scripts maintains values
+
+		// #TODO retrieve public fields to display in gui
+
+		Destroy(entity_instance.Handle);
 	}
 
 	void CSharpScriptEngine::ShutdownScriptEntity(Entity entity, const std::string& module_name)
 	{
-
+		KB_CORE_ERROR("ShutdownScriptEntity not implemented!");
 	}
 
 	void CSharpScriptEngine::InstantiateEntityClass(Entity entity)
 	{
+		Scene* context = entity.m_scene;
+		UUID id = entity.GetComponent<IdComponent>().Id;
+		auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
+		auto& module_name = script_comp.Module_name;
 
+		EntityInstanceData& entity_instance_data = GetEntityInstanceData(context->GetUUID(), id);
+		EntityInstance& entity_instance = entity_instance_data.Instance;
+		KB_CORE_ASSERT(entity_instance.Script_class, "Script class not set for instance!");
+		entity_instance.Handle = Instantiate(*entity_instance.Script_class);
+
+		void* args[] = { &id };
+		CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->Constructor, args);
+
+		// #TODO set public field values
 	}
+
+	EntityInstanceMap& CSharpScriptEngine::GetEntityInstanceMap()
+	{
+		return s_entity_instance_map;
+	}
+
+	EntityInstanceData& CSharpScriptEngine::GetEntityInstanceData(uuid::uuid64 scene_id, uuid::uuid64 entity_id)
+	{
+		KB_CORE_ASSERT(s_entity_instance_map.find(scene_id) != s_entity_instance_map.end(), "invalid scene id");
+		auto& entity_id_map = s_entity_instance_map.at(scene_id);
+
+		if (entity_id_map.find(entity_id) != entity_id_map.end())
+			CSharpScriptEngine::InitScriptEntity(s_scene_context->GetEntityMap().at(entity_id));
+
+		return entity_id_map.at(entity_id);
+	}
+
 }

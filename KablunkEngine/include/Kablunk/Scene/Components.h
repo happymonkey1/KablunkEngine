@@ -326,6 +326,20 @@ namespace Kablunk
 		CircleCollider2DComponent() = default;
 		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
+
+	struct CSharpScriptComponent
+	{
+		std::string Module_name;
+
+		CSharpScriptComponent() = default;
+		CSharpScriptComponent(const CSharpScriptComponent&) = default;
+		CSharpScriptComponent(const std::string& name) : Module_name{ name } {}
+	};
+
+	struct SceneComponent
+	{
+		uuid::uuid64 Scene_id;
+	};
 }
 
 #endif

@@ -4,4 +4,6 @@ Project:
   Native_script_modules_path: assets/bin
   Native_script_default_namespace: $DEFAULT_NAMESPACE$
   Reload_native_script_assemblies_on_play: False
+  CSharp_script_modules_path: assets/scripts/binaries
+  CSharp_script_default_namespace: $DEFAULT_NAMESPACE$
   Start_scene: $SCENE_NAME$

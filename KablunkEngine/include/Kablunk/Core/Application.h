@@ -42,6 +42,7 @@ namespace Kablunk {
 
 		static Application& Get() { return *s_Instance; }
 		Window& GetWindow() { return *m_window; }
+		const ApplicationSpecification& GetSpecification() const { return m_specification; }
 
 		void Close();
 

@@ -36,12 +36,13 @@ namespace Kablunk
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
-
 		Entity GetPrimaryCameraEntity();
 
 		size_t GetEntityCount() const { return m_registry.size(); }
 		Entity GetEntityFromUUID(uuid::uuid64 id) const;
 		const EntityMap& GetEntityMap() const { return m_entity_map; }
+
+		uuid::uuid64 GetUUID() const { return m_scene_id; }
 
 		Entity DuplicateEntity(Entity entity);
 
@@ -53,13 +54,15 @@ namespace Kablunk
 		{
 			return m_registry->view<T, Args...>();
 		}
-
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);
 	
+		void OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity);
+		void OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity);
 	private:
 		std::string m_name{ default_scene_name };
+		uuid::uuid64 m_scene_id;
 		entt::registry m_registry;
 		EntityMap m_entity_map{};
 

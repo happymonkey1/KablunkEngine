@@ -29,14 +29,16 @@ project "KablunkEditor"
 		"%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.FreeType}",
-        "%{IncludeDir.RCCPP}"
+        "%{IncludeDir.RCCPP}",
+        "%{IncludeDir.mono}"
     }
 
     links
     {
         "KablunkEngine",
         "Sandbox",
-        "FreeType"
+        "FreeType",
+        "%{Library.mono}"
     }
 
     defines
@@ -58,7 +60,8 @@ project "KablunkEditor"
 
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"'
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
         }
 	
 	filter "configurations:Release"
@@ -73,7 +76,8 @@ project "KablunkEditor"
         
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"'
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
         }
 	
 	filter "configurations:Distribution"

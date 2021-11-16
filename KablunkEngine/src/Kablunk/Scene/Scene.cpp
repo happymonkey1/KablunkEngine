@@ -6,6 +6,8 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Scene/Entity.h"
 
+#include "Kablunk/Scripts/CSharpScriptEngine.h"
+
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
 #include <box2d/b2_polygon_shape.h>
@@ -16,15 +18,22 @@
 
 namespace Kablunk
 {
+	
+	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
+
 	Scene::Scene(const std::string& name)
 		: m_name{ name }
 	{
-		
+		m_registry.on_construct<CSharpScriptComponent>().connect<&Scene::OnCSharpScriptComponentConstruct>(this);
+		m_registry.on_destroy<CSharpScriptComponent>().connect<&Scene::OnCSharpScriptComponentDestroy>(this);
+
+		auto m_scene_entity = m_registry.create();
+		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
 	}
 
 	Scene::~Scene()
 	{
-		
+		CSharpScriptEngine::OnSceneDestroy(m_scene_id);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -151,6 +160,9 @@ namespace Kablunk
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		if (entity.HasComponent<CSharpScriptComponent>())
+			CSharpScriptEngine::OnScriptComponentDestroyed(m_scene_id, entity.GetUUID());
+
 		m_registry.destroy(entity);
 	}
 
@@ -637,6 +649,22 @@ namespace Kablunk
 		KB_CORE_ASSERT(false, "No default OnComponentAdded!");
 	}
 
+	void Scene::OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity)
+	{
+		auto entity_id = registry.get<IdComponent>(entity).Id;
+		KB_CORE_ASSERT(m_entity_map.find(entity_id) != m_entity_map.end(), "Entity not in entity map");
+		CSharpScriptEngine::InitScriptEntity(m_entity_map.at(entity_id));
+	}
+
+	void Scene::OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity)
+	{
+		if (registry.any_of<IdComponent>(entity))
+		{
+			auto entity_id = registry.get<IdComponent>(entity).Id;
+			CSharpScriptEngine::OnScriptComponentDestroyed(GetUUID(), entity_id);
+		}
+	}
+
 	template <>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component) { }
 
@@ -662,6 +690,9 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<CSharpScriptComponent>(Entity entity, CSharpScriptComponent& component) { }
 
 	template <>
 	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component) { }
