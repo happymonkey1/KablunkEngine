@@ -1,4 +1,5 @@
 #include "Panels/ContentBrowserPanel.h"
+#include "Kablunk/Project/Project.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -12,11 +13,11 @@
 
 namespace Kablunk
 {
-	extern const std::filesystem::path g_asset_path = "assets";
-	extern const std::filesystem::path g_resources_path = "resources";
+	//extern const std::filesystem::path g_asset_path = "assets";
+	//extern const std::filesystem::path g_resources_path = "resources";
 
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_current_directory{ g_asset_path }
+		: m_current_directory{ Project::GetActive() ? Project::GetAssetDirectoryPath() : "" }
 	{
 		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
 		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
@@ -30,7 +31,15 @@ namespace Kablunk
 
 	void ContentBrowserPanel::OnImGuiRender()
 	{
+		
+
 		ImGui::Begin("Content Browser", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+
+		if (!Project::GetActive())
+		{
+			ImGui::End();
+			return;
+		}
 
 		RenderTopBar();
 
@@ -55,15 +64,15 @@ namespace Kablunk
 			ImGui::TableSetColumnIndex(0);
 			ImGui::TableSetColumnWidthAutoAll(imgui_table);
 
-			auto working_dir = g_asset_path.string();
-			ImGui::Text(working_dir.c_str());
+			auto working_dir = Project::GetAssetDirectory();
+			ImGui::Text(working_dir.string().c_str());
 
 			for (auto& directory_entry : m_directory_entries)
 			{
 				if (directory_entry.is_directory())
 				{
 					const auto& path			= directory_entry.path();
-					auto relative_path			= std::filesystem::relative(path, g_asset_path);
+					auto relative_path			= std::filesystem::relative(path, Project::GetAssetDirectoryPath());
 					auto relative_path_string	= relative_path.string();
 
 					ImGuiTreeNodeFlags directory_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow;
@@ -98,7 +107,7 @@ namespace Kablunk
 				for (auto& directory_entry : m_directory_entries)
 				{
 					const auto& path = directory_entry.path();
-					auto relative_path = std::filesystem::relative(path, g_asset_path);
+					auto relative_path = std::filesystem::relative(path, Project::GetAssetDirectory());
 					auto filename_string = relative_path.filename().string();
 					auto is_dir = directory_entry.is_directory();
 
@@ -174,7 +183,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (ImGui::ImageButton((ImTextureID)m_back_button->GetRendererID(), { 22, 22 }) && m_current_directory != g_asset_path)
+		if (ImGui::ImageButton((ImTextureID)m_back_button->GetRendererID(), { 22, 22 }) && m_current_directory != Project::GetAssetDirectory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			Refresh();
@@ -217,11 +226,12 @@ namespace Kablunk
 
 
 		// #TODO update to use project's asset directory when projects are implemented
-		const std::string& asset_dir_name = g_asset_path.string();
-		auto text_size = ImGui::CalcTextSize(asset_dir_name.c_str());
-		if (ImGui::Selectable(asset_dir_name.c_str(), false, 0, { text_size.x, 22 }))
+		auto project_asset_dir = Project::GetProjectDirectory();
+		auto asset_dir_name = std::filesystem::relative(m_current_directory, project_asset_dir);
+		auto text_size = ImGui::CalcTextSize(asset_dir_name.string().c_str());
+		if (ImGui::Selectable(asset_dir_name.string().c_str(), false, 0, { text_size.x, 22 }))
 		{
-			m_current_directory = g_asset_path;
+			m_current_directory = Project::GetAssetDirectoryPath();
 		}
 
 		// #TODO add other directories in current path
@@ -233,6 +243,9 @@ namespace Kablunk
 
 	void ContentBrowserPanel::Refresh()
 	{
+		if (m_current_directory.empty())
+			return;
+
 		// #TODO probably better to store as a hashmap instead of recreating vector 
 		m_directory_entries = {};
 		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })

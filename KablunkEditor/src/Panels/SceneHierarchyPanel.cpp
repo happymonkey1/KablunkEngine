@@ -14,9 +14,6 @@
 
 namespace Kablunk
 {
-	// #TODO bad!
-	extern const std::filesystem::path g_asset_path;
-	extern const std::filesystem::path g_resources_path;
 
 	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)
 	{
@@ -603,7 +600,7 @@ namespace Kablunk
 					if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const auto path_wchar_str = (const wchar_t*)payload->Data;
-						auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
+						auto path = std::filesystem::path{ Project::GetAssetDirectoryPath() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
 							component.Texture = Asset<Texture2D>(path_str);

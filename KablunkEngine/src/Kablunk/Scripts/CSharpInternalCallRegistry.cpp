@@ -12,9 +12,41 @@
 
 namespace Kablunk
 {
+	std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
+	std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
+
+	extern MonoImage* s_core_assembly_image;
+	#define Component_RegisterType(Type) \
+		{\
+			MonoType* type = mono_reflection_type_from_name("Kablunk." #Type, s_core_assembly_image);\
+			if (type) {\
+				uint32_t id = mono_type_get_type(type);\
+				s_has_component_funcs[type] = [](Entity& entity) { return entity.HasComponent<Type>(); };\
+				s_create_component_funcs[type] = [](Entity& entity) { entity.AddComponent<Type>(); };\
+			} else {\
+				KB_CORE_ERROR("No C# component class found for " #Type "!");\
+			}\
+		}
+
+	static void InitComponentTypes()
+	{
+		Component_RegisterType(TagComponent);
+		Component_RegisterType(TransformComponent);
+		Component_RegisterType(MeshComponent);
+		Component_RegisterType(CSharpScriptComponent);
+		Component_RegisterType(CameraComponent);
+		Component_RegisterType(SpriteRendererComponent);
+		Component_RegisterType(RigidBody2DComponent);
+		Component_RegisterType(BoxCollider2DComponent);
+		Component_RegisterType(SpriteRendererComponent);
+	}
+
+
 
 	void CSharpInternalCallRegistry::RegisterAll()
 	{
+		InitComponentTypes();
+
 		// input
 		mono_add_internal_call("Kablunk.Input::IsKeyPressed_Native", Scripts::Kablunk_Input_IsKeyPressed);
 		mono_add_internal_call("Kablunk.Input::IsMouseButtonPressed_Native", Scripts::Kablunk_Input_IsMouseButtonPressed);
@@ -50,5 +82,7 @@ namespace Kablunk
 		mono_add_internal_call("Kablunk.Texture2D::Construct_Native", Scripts::Kablunk_Texture2D_Constructor);
 		mono_add_internal_call("Kablunk.Texture2D::Destructor_Native", Scripts::Kablunk_Texture2D_Destructor);
 		mono_add_internal_call("Kablunk.Texture2D::SetData_Native", Scripts::Kablunk_Texture2D_SetData);
+
+		mono_add_internal_call("Kablunk.Log::LogMessage_Native", Scripts::Kablunk_Log_LogMessage);
 	}
 }

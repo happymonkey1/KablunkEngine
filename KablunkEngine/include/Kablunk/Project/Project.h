@@ -44,6 +44,7 @@ namespace Kablunk
 		static const std::string& GetProjectName() { return s_active_project->GetConfig().Name; }
 		static std::filesystem::path GetProjectDirectory() { return s_active_project->GetConfig().Project_directory; }
 		static std::filesystem::path GetAssetDirectory() { return s_active_project->GetConfig().Asset_directory; }
+		static std::filesystem::path GetAssetDirectoryPath() { return GetProjectDirectory() / GetAssetDirectory(); }
 
 		static std::filesystem::path GetNativeScriptModulePath() 
 		{ 

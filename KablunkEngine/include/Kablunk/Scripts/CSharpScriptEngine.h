@@ -49,8 +49,8 @@ namespace Kablunk
 		static bool LoadAppAssembly(const std::filesystem::path& path);
 		static bool ReloadAssembly(const std::filesystem::path& path);
 
-		static void SetSceneContext(const Ref<Scene>& scene);
-		static const Ref<Scene>& GetCurrentSceneContext();
+		static void SetSceneContext(Scene* scene);
+		static const WeakRef<Scene>& GetCurrentSceneContext();
 
 		static void CopyEntityScriptData(uuid::uuid64 dst, uuid::uuid64 src);
 
@@ -70,6 +70,8 @@ namespace Kablunk
 
 		static EntityInstanceMap& GetEntityInstanceMap();
 		static EntityInstanceData& GetEntityInstanceData(uuid::uuid64 scene_id, uuid::uuid64 entity_id);
+
+		static void OnImGuiRender();
 	};
 }
 

@@ -1,13 +1,10 @@
-project_name = "$PROJECT_NAME$"
-kablunk_root_dir = os.getenv("KABLUNK_DIR")
-kablunk_root_dir = kablunk_root_dir:gsub("\\", "/")
+ProjectName = "$PROJECT_NAME$"
+KablunkRootDirectory = os.getenv("KABLUNK_DIR")
 
-include(dependencies_path)
-
-workspace "%{project_name}"
+workspace "%{ProjectName}"
     architecture "x64"
 	targetdir "build"
-    startproject "%{project_name}"
+    startproject "%{ProjectName}"
 
     configurations
     {
@@ -23,16 +20,16 @@ workspace "%{project_name}"
 
 group "Kablunk"
 project "Kablunk-ScriptCore"
-	location "%{kablunk_root_dir}/Kablunk-ScriptCore"
+	location "%{KablunkRootDirectory}/Kablunk-ScriptCore"
 	kind "SharedLib"
 	language "C#"
 
-	targetdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts")
-	objdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts/intermediates")
+	targetdir ("%{KablunkRootDirectory}/KablunkEditor/resources/scripts")
+	objdir ("%{KablunkRootDirectory}/KablunkEditor/resources/scripts/intermediates")
 
 	files
 	{
-		"%{kablunk_root_dir}/Kablunk-ScriptCore/Source/**.cs"
+		"%{KablunkRootDirectory}/Kablunk-ScriptCore/Source/**.cs"
 	}
 group ""
 
@@ -42,9 +39,9 @@ project "$PROJECT_NAME$"
 	kind "SharedLib"
 	language "C#"
 
-	targetname "%{project_name}"
+	targetname "%{ProjectName}"
 	targetdir ("%{prj.location}/binaries")
-	objdir ("%{kablunk_root_dir}/KablunkEditor/resources/scripts/intermediates")
+	objdir ("%{KablunkRootDirectory}/KablunkEditor/resources/scripts/intermediates")
 
 	files
 	{

@@ -3,7 +3,7 @@
 
 #include "entt.hpp"
 
-
+#include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/EditorCamera.h"
@@ -25,6 +25,7 @@ namespace Kablunk
 		~Scene();
 
 		static Ref<Scene> Copy(Ref<Scene> src_scene);
+		static WeakRef<Scene> GetScene(uuid::uuid64 scene_id);
 
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
@@ -62,7 +63,7 @@ namespace Kablunk
 		void OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity);
 	private:
 		std::string m_name{ default_scene_name };
-		uuid::uuid64 m_scene_id;
+		uuid::uuid64 m_scene_id = uuid::generate();
 		entt::registry m_registry;
 		EntityMap m_entity_map{};
 

@@ -8,6 +8,8 @@
 #include <mono/metadata/attrdefs.h>
 #include <mono/metadata/mono-gc.h>
 
+#include <imgui.h>
+
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -22,7 +24,7 @@ namespace Kablunk
 	static MonoDomain* s_current_mono_domain = nullptr;
 	static MonoDomain* s_new_mono_domain = nullptr;
 	static std::string s_core_assembly_path;
-	static Ref<Scene> s_scene_context;
+	static WeakRef<Scene> s_scene_context = nullptr;
 
 	static EntityInstanceMap s_entity_instance_map;
 
@@ -122,12 +124,12 @@ namespace Kablunk
 		KB_CORE_TRACE("initializing mono!");
 		KB_CORE_ASSERT(!s_current_mono_domain, "[C#-ScriptEngine] Mono has already been initialized!");
 		mono_set_assemblies_path("mono/lib");
-		s_current_mono_domain = mono_jit_init("Kablunk");
+		auto domain = mono_jit_init("Kablunk");
 	}
 
 	static void ShutdownMono()
 	{
-		mono_jit_cleanup(s_current_mono_domain);
+		//mono_jit_cleanup(s_current_mono_domain);
 	}
 
 	static MonoAssembly* LoadAssembly(const std::filesystem::path& path)
@@ -181,6 +183,8 @@ namespace Kablunk
 
 		mono_runtime_object_init(instance);
 		uint32_t handle = mono_gchandle_new(instance, false);
+		KB_CORE_TRACE("[C#-ScriptEngine] instantiated script '{0}'", script_class.Full_name);
+
 		return handle;
 	}
 
@@ -195,11 +199,17 @@ namespace Kablunk
 
 		MonoMethodDesc* description = mono_method_desc_new(method_description.c_str(), false);
 		if (!description)
+		{
 			KB_CORE_ERROR("[C#-ScriptEngine] mono_method_desc_new failed ({0})", method_description);
+			return nullptr;
+		}
 
 		MonoMethod* method = mono_method_desc_search_in_image(description, image);
 		if (!method)
+		{
 			KB_CORE_WARN("[C#-ScriptEngine] mono_method_desc_search_in_image failed ({0})", method_description);
+			return nullptr;
+		}
 
 		return method;
 	}
@@ -335,7 +345,7 @@ namespace Kablunk
 
 		if (!s_entity_instance_map.empty())
 		{
-			Ref<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
+			WeakRef<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
 			KB_CORE_ASSERT(scene, "[C#-ScriptEngine] No active scene");
 			if (auto& entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
 			{
@@ -349,13 +359,15 @@ namespace Kablunk
 		}
 	}
 
-	void CSharpScriptEngine::SetSceneContext(const Ref<Scene>& scene)
+	void CSharpScriptEngine::SetSceneContext(Scene* scene)
 	{
 		s_classes.clear();
+		if (!scene)
+			s_entity_instance_map.clear();
 		s_scene_context = scene;
 	}
 
-	const Kablunk::Ref<Kablunk::Scene>& CSharpScriptEngine::GetCurrentSceneContext()
+	const WeakRef<Scene>& CSharpScriptEngine::GetCurrentSceneContext()
 	{
 		return s_scene_context;
 	}
@@ -480,7 +492,8 @@ namespace Kablunk
 	{
 		Scene* context = entity.m_scene;
 		uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
-		auto& module_name = entity.GetComponent<CSharpScriptComponent>().Module_name;
+		auto& comp = entity.GetComponent<CSharpScriptComponent>();
+		auto& module_name = comp.Module_name;
 		if (module_name.empty())
 			return;
 
@@ -525,6 +538,7 @@ namespace Kablunk
 	{
 		Scene* context = entity.m_scene;
 		UUID id = entity.GetComponent<IdComponent>().Id;
+		KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, entity.m_entity_handle);
 		auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
 		auto& module_name = script_comp.Module_name;
 
@@ -555,4 +569,37 @@ namespace Kablunk
 		return entity_id_map.at(entity_id);
 	}
 
+	void CSharpScriptEngine::OnImGuiRender()
+	{
+		ImGui::Begin("C# Script Engine Debug");
+
+		float gc_heap_size = (float)mono_gc_get_heap_size();
+		float gc_usage_size = (float)mono_gc_get_used_size();
+		ImGui::Text("GC Heap Info(Used/Available): %.2fKB/%.2fKB", gc_usage_size / 1024.0f, gc_heap_size / 1024.0f);
+
+		for (auto& [sceneID, entityMap] : s_entity_instance_map)
+		{
+			bool opened = ImGui::TreeNode((void*)(uint64_t)sceneID, "Scene (%llx)", sceneID);
+			if (opened)
+			{
+				WeakRef<Scene> scene = Scene::GetScene(sceneID);
+				for (auto& [entityID, entityInstanceData] : entityMap)
+				{
+					Entity entity = scene->GetEntityMap().at(entityID);
+					std::string entityName = "Unnamed Entity";
+					if (entity.HasComponent<TagComponent>())
+						entityName = entity.GetComponent<TagComponent>().Tag;
+					opened = ImGui::TreeNode((void*)(uint64_t)entityID, "%s (%llx)", entityName.c_str(), entityID);
+					if (opened)
+					{
+						// #TODO public c# script fields
+						ImGui::TreePop();
+					}
+				}
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
+	}
 }

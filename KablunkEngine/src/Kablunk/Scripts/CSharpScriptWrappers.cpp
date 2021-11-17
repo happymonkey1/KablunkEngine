@@ -41,7 +41,7 @@ namespace Kablunk::Scripts
 
 	MonoArray* Kablunk_Scene_GetEntities()
 	{
-		Ref<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		auto context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "no scene set!");
 		const auto& entity_map = context->GetEntityMap();
 

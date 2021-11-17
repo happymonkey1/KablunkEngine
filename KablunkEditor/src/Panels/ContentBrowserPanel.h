@@ -30,6 +30,8 @@ namespace Kablunk
 		void OnImGuiRender();
 		void OnUpdate(Timestep ts);
 
+		// #TODO should probably replace this, but currently exposes working directory so opening projects can set the working dir
+		void SetCurrentDirectory(const std::filesystem::path& path) { m_current_directory = path; Refresh(); }
 
 	private:
 		

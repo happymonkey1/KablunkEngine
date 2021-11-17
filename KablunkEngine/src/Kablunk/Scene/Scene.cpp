@@ -16,6 +16,8 @@
 
 #include <exception>
 
+#define DISABLE_NATIVE_SCRIPT 0
+
 namespace Kablunk
 {
 	
@@ -29,11 +31,14 @@ namespace Kablunk
 
 		auto m_scene_entity = m_registry.create();
 		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
+		
+		s_active_scenes.insert({ m_scene_id, this });
 	}
 
 	Scene::~Scene()
 	{
 		CSharpScriptEngine::OnSceneDestroy(m_scene_id);
+		s_active_scenes.erase(m_scene_id);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -113,11 +118,16 @@ namespace Kablunk
 		CopyComponent<CircleRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<NativeScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CSharpScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<MeshComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<PointLightComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<RigidBody2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+
+		const auto& entity_instance_map = CSharpScriptEngine::GetEntityInstanceMap();
+		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
+			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
 		// Bind all native script components
 		auto view = dest_scene_reg.view<NativeScriptComponent>();
@@ -131,6 +141,17 @@ namespace Kablunk
 		// #TODO copy parenting components
 
 		return dest_scene;
+	}
+
+	WeakRef<Scene> Scene::GetScene(uuid::uuid64 scene_id)
+	{
+		if (s_active_scenes.find(scene_id) != s_active_scenes.end())
+			return WeakRef<Scene>(s_active_scenes.at(scene_id));
+		else
+		{
+			KB_CORE_ERROR("Could not find scene '{0}' in active scenes!", scene_id);
+			return nullptr;
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
@@ -169,6 +190,8 @@ namespace Kablunk
 	void Scene::OnStartRuntime()
 	{
 		// #TODO expose gravity in editor panel
+		CSharpScriptEngine::SetSceneContext(this);
+
 		m_box2D_world = new b2World{ { 0.0f, -9.8f } };
 
 		auto view = m_registry.view<RigidBody2DComponent>();
@@ -223,6 +246,23 @@ namespace Kablunk
 				body->CreateFixture(&fixture_def);
 			}
 		}
+
+		{
+			auto view = m_registry.view<CSharpScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::InstantiateEntityClass(entity);
+			}
+
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::OnCreateEntity(entity);
+			}
+		}
 	}
 
 	void Scene::OnStopRuntime()
@@ -237,6 +277,7 @@ namespace Kablunk
 		//	 Update
 		// ==========
 
+#if DISABLE_NATIVE_SCRIPT
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
@@ -301,6 +342,17 @@ namespace Kablunk
 				}
 			}
 		);
+#endif
+
+		{
+			auto view = m_registry.view<CSharpScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::OnUpdateEntity(entity, ts);
+			}
+		}
 		
 		// ===========	
 		//	 Physics
@@ -567,6 +619,7 @@ namespace Kablunk
 		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
 			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
+		CopyComponentIfItExists<CSharpScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<MeshComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<PointLightComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<RigidBody2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
