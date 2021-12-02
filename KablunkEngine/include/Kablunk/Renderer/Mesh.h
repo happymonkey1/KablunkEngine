@@ -16,6 +16,9 @@
 
 // Forward decs
 struct aiScene;
+struct aiNode;
+struct aiNodeAnim;
+struct aiAnimation;
 
 namespace Assimp
 {
@@ -39,6 +42,64 @@ namespace Kablunk
 		int32_t EntityID;
 	};
 
+	struct AnimatedVertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Normal;
+		glm::vec3 Tangent;
+		glm::vec3 Binormal;
+		glm::vec2 TexCoord;
+
+		uint32_t Ids[4] = { 0, 0, 0, 0 };
+		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+		void AddBoneData(uint32_t bone_id, float weight)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				if (Weights[i] == 0.0)
+				{
+					Ids[i] = bone_id;
+					Weights[i] = weight;
+					return;
+				}
+			}
+
+			KB_CORE_WARN("Vertex has more than four bones or weights affecting it, extra data is discarded!");
+		}
+
+		int32_t EntityID;
+	};
+
+	struct BoneInfo
+	{
+		glm::mat4 Bone_offset;
+		glm::mat4 Final_transformation;
+	};
+
+	struct VertexBoneData
+	{
+		uint32_t Ids[4];
+		float Weights[4];
+
+		VertexBoneData() : Ids{ 0 }, Weights{ 0.0f } {}
+
+		void AddBoneData(uint32_t bone_id, float weight)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				if (Weights[i] == 0.0)
+				{
+					Ids[i] = bone_id;
+					Weights[i] = weight;
+					return;
+				}
+			}
+
+			KB_CORE_WARN("Vertex has more than four bones or weights affecting it, extra data is discarded!");
+		}
+	};
+
 	struct Index
 	{
 		uint32_t V1;
@@ -57,6 +118,21 @@ namespace Kablunk
 		{ }
 	};
 
+	class Submesh
+	{
+	public:
+		uint32_t BaseVertex;
+		uint32_t BaseIndex;
+		uint32_t MaterialIndex;
+		uint32_t IndexCount;
+		uint32_t VertexCount;
+
+		glm::mat4 Transform{ 1.0f };
+		glm::mat4 Local_transform{ 1.0f };
+
+		std::string node_name, mesh_name;
+	};
+
 	class MeshData
 	{
 	public:
@@ -64,7 +140,7 @@ namespace Kablunk
 		MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform);
 		virtual ~MeshData();
 
-		const std::vector<Vertex>& GetVertices() const { return m_vertices; }
+		const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 		const std::vector<Index>& GetIndicies() const { return m_indices; }
 		Ref<Shader> GetShader() { return m_mesh_shader; }
 		Ref<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
@@ -75,9 +151,25 @@ namespace Kablunk
 		const std::vector<Ref<Texture2D>> GetNormalMap() const { return m_normal_map; }
 		const std::string& GetFilepath() const { return m_filepath; }
 
+		void SetSubmeshes(const std::vector<Submesh>& submeshes);
+		std::vector<Submesh>& GetSubmeshes() { return m_sub_meshes; }
+		const std::vector<Submesh>& GetSubmeshes() const { return m_sub_meshes; }
+
 		const std::vector<Triangle>& GetTriangleCache(uint32_t index) const { return m_triangle_cache.at(index); }
 
-		void BindVertexBuffer() { KB_CORE_ERROR("MeshData BindVertexBuffer() not implemented!"); };
+		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& node_name);
+		uint32_t FindPosition(float animation_time, const aiNodeAnim* root_node_anim);
+		uint32_t FindRotation(float animation_time, const aiNodeAnim* root_node_anim);
+		uint32_t FindScaling(float animation_time, const aiNodeAnim* root_node_anim);
+		glm::vec3 InterpolateTranslation(float animation_time, const aiNodeAnim* node_anim);
+		glm::quat InterpolateRotation(float animation_time, const aiNodeAnim* node_anim);
+		glm::vec3 InterpolateScale(float animation_time, const aiNodeAnim* node_anim);
+
+		void ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform);
+
+		void BindVertexBuffer() { KB_CORE_ASSERT(false, "MeshData BindVertexBuffer() not implemented!"); };
+	private:
+		void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, uint32_t level = 0);
 	private:
 		Scope<Assimp::Importer> m_importer;
 
@@ -85,10 +177,19 @@ namespace Kablunk
 		Ref<IndexBuffer> m_index_buffer;
 		BufferLayout m_vertex_buffer_layout;
 
-		std::vector<Vertex> m_vertices;
+		std::vector<Vertex> m_static_vertices;
+		std::vector<AnimatedVertex> m_animated_vertices;
 		std::vector<Index> m_indices;
+		std::unordered_map<std::string, uint32_t> m_bone_mapping;
+		std::unordered_map<aiNode*, std::vector<uint32_t>> m_node_map;
+
+		uint32_t m_bone_count = 0;
+		std::vector<BoneInfo> m_bone_info;
+		std::vector<Submesh> m_sub_meshes;
 	
 		const aiScene* m_scene;
+
+		glm::mat4 m_inverse_transform{ 1.0f };
 
 		Ref<Shader> m_mesh_shader;
 		std::vector<Ref<Texture2D>> m_textures;
@@ -97,6 +198,13 @@ namespace Kablunk
 		std::unordered_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
 
 		std::string m_filepath;
+
+		// Animation
+		bool m_is_animated = false;
+		float m_animation_time = 0.0f;
+		float m_world_time = 0.0f;
+		float m_time_multiplier = 1.0f;
+		float m_animation_playing = true;
 
 		friend class Renderer;
 	};

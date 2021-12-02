@@ -150,6 +150,8 @@ namespace Kablunk
 			break;
 		}
 
+		OnOverlayRender();
+
 		m_frame_buffer->Unbind();
 
 #if DISABLE_NATIVE_SCRIPTING
@@ -239,6 +241,7 @@ namespace Kablunk
 
 			UI::Property("Editor Selected Entity", m_selected_entity.GetHandleAsString());
 			UI::Property("Hierarchy Panel Selected Entity", m_scene_hierarchy_panel.GetSelectedEntity().GetHandleAsString());
+			UI::Property("Show Physics Colliders", &m_show_physics_colliders);
 
 			UI::EndProperties();
 
@@ -1088,6 +1091,42 @@ namespace Kablunk
 			else // Make sure we are not trying to use a gizmo and we are not using the editor camera
 				m_selected_entity = {};
 		}
+	}
+
+	void EditorLayer::OnOverlayRender()
+	{
+		if (m_scene_state == SceneState::Play)
+		{
+			auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+			if (cam_entity.Valid())
+				Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
+			else
+			{
+				KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+				return;
+			}
+		}
+		else
+		{
+			Renderer2D::BeginScene(m_editor_camera);
+		}
+
+		if (m_show_physics_colliders)
+		{
+			auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, CircleCollider2DComponent>();
+			for (auto e : view)
+			{
+				auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);
+				auto translate = transform_comp.Translation + glm::vec3{ cc2D_comp.Offset, 0.001f };
+				auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
+
+				auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
+				Renderer2D::DrawCircle(transform, glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f }, cc2D_comp.Radius, 0.025f);
+			}
+		}
+
+
+		Renderer2D::EndScene();
 	}
 
 	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)

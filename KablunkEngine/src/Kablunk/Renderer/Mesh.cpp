@@ -10,11 +10,33 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+
+
 namespace Kablunk
 {
 	static constexpr const uint32_t s_mesh_import_flags =
 		aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 	
+	namespace Utils {
+
+		glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix)
+		{
+			glm::mat4 result;
+			//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+			result[0][0] = matrix.a1; result[1][0] = matrix.a2; result[2][0] = matrix.a3; result[3][0] = matrix.a4;
+			result[0][1] = matrix.b1; result[1][1] = matrix.b2; result[2][1] = matrix.b3; result[3][1] = matrix.b4;
+			result[0][2] = matrix.c1; result[1][2] = matrix.c2; result[2][2] = matrix.c3; result[3][2] = matrix.c4;
+			result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
+			return result;
+		}
+
+	}
 
 	MeshData::MeshData(const std::string& filepath, Entity entity)
 		: m_filepath{ filepath }
@@ -32,56 +54,153 @@ namespace Kablunk
 
 		m_scene = scene;
 
-		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+		m_is_animated = m_scene->mAnimations != nullptr;
+		if (m_is_animated)
+			KB_CORE_INFO("ANIMATED MESH!");
+		m_mesh_shader = m_is_animated ? Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_anim")  : Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
-		// #TODO submeshes
-		aiMesh* mesh = scene->mMeshes[0];
-		size_t vertex_count = mesh->mNumVertices;
+		size_t vertex_count = 0;
+		size_t index_count = 0;
 
-		// ---Vertices---
-		// #TODO 3d animations
+		m_sub_meshes.reserve(scene->mNumMeshes);
+		for (size_t m = 0; m < scene->mNumMeshes; ++m)
 		{
-			for (size_t i = 0; i < vertex_count; ++i)
+			aiMesh* mesh = scene->mMeshes[m];
+
+			Submesh& submesh = m_sub_meshes.emplace_back();
+			submesh.BaseVertex = vertex_count;
+			submesh.BaseIndex = index_count;
+			submesh.MaterialIndex = mesh->mMaterialIndex;
+			submesh.VertexCount = mesh->mNumVertices;
+			submesh.IndexCount = mesh->mNumFaces * 3;
+			submesh.mesh_name = mesh->mName.C_Str();
+
+			vertex_count += mesh->mNumVertices;
+			index_count += submesh.IndexCount;
+
+			if (m_is_animated)
 			{
-				Vertex v;
-				v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-				v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-				v.EntityID = static_cast<int32_t>(entity);
-
-				if (mesh->HasTangentsAndBitangents())
+				for (size_t i = 0; i < mesh->mNumVertices; ++i)
 				{
-					v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-					v.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+					AnimatedVertex v;
+					v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+					v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+					v.EntityID = static_cast<int32_t>(entity);
+
+					if (mesh->HasTangentsAndBitangents())
+					{
+						v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+						v.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+					}
+
+					if (mesh->HasTextureCoords(0))
+					{
+						// #FIXME figure out how to deal with multiple textures
+						v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
+					}
+
+					m_animated_vertices.push_back(v);
 				}
-
-				if (mesh->HasTextureCoords(0))
-				{
-					// #FIXME figure out how to deal with multiple textures
-					v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
-				}
-
-
-
-				m_vertices.push_back(v);
 			}
-		}
+			else
+			{
+				for (size_t i = 0; i < mesh->mNumVertices; ++i)
+				{
+					Vertex v;
+					v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+					v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+					v.EntityID = static_cast<int32_t>(entity);
 
-		// ---Indices---
-		// #TODO 3d animations
-		{
+					if (mesh->HasTangentsAndBitangents())
+					{
+						v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+						v.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+					}
+
+					if (mesh->HasTextureCoords(0))
+					{
+						// #FIXME figure out how to deal with multiple textures
+						v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
+					}
+
+					m_static_vertices.push_back(v);
+				}
+			}
+
+			
 			for (size_t i = 0; i < mesh->mNumFaces; ++i)
 			{
 				KB_CORE_ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices");
 				Index index = { mesh->mFaces[i].mIndices[0], mesh->mFaces[i].mIndices[1], mesh->mFaces[i].mIndices[2] };
 				m_indices.push_back(index);
 
-				m_triangle_cache[i].emplace_back(m_vertices[index.V1], m_vertices[index.V2], m_vertices[index.V3]);
+				if (!m_is_animated)
+					m_triangle_cache[i].emplace_back(m_static_vertices[index.V1], m_static_vertices[index.V2], m_static_vertices[index.V3]);
 			}
 		}
 
-		// #TODO 3d animations
+		TraverseNodes(scene->mRootNode);
+
+		// Bones
+		if (m_is_animated)
 		{
-			m_vertex_buffer = VertexBuffer::Create(m_vertices.data(), (uint32_t)m_vertices.size() * sizeof(Vertex));
+			for (size_t i = 0; i < scene->mNumMeshes; ++i)
+			{
+				aiMesh* mesh = scene->mMeshes[i];
+				Submesh& submesh = m_sub_meshes[i];
+
+				for (size_t b = 0; b < mesh->mNumBones; ++b)
+				{
+					aiBone* bone = mesh->mBones[b];
+					std::string bone_name = bone->mName.data;
+					uint32_t bone_index = 0;
+
+					if (m_bone_mapping.find(bone_name) == m_bone_mapping.end())
+					{
+						bone_index = m_bone_count++;
+						BoneInfo& bone_info = m_bone_info.emplace_back();
+						bone_info.Bone_offset = Utils::Mat4FromAssimpMat4(bone->mOffsetMatrix);
+						m_bone_mapping[bone_name] = bone_index;
+					}
+					else
+					{
+						KB_CORE_WARN("Found existing bone in map");
+						bone_index = m_bone_mapping[bone_name];
+					}
+
+					for (size_t j = 0; j < bone->mNumWeights; ++j)
+					{
+						uint32_t vertex_id = submesh.BaseVertex + bone->mWeights[j].mVertexId;
+						float weight = bone->mWeights[j].mWeight;
+						m_animated_vertices[vertex_id].AddBoneData(bone_index, weight);
+					}
+				}
+			}
+			
+		}
+
+		// #TODO materials
+
+
+		if (m_is_animated)
+		{
+			m_vertex_buffer = VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
+			m_vertex_buffer_layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float3, "a_Normal" },
+				{ ShaderDataType::Float3, "a_Tangent" },
+				{ ShaderDataType::Float3, "a_Binormal" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
+				{ ShaderDataType::Int4, "a_BoneIDs" },
+				{ ShaderDataType::Float4, "a_Weights" },
+				{ ShaderDataType::Int, "a_EntityID" }
+			};
+			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
+		}
+		else
+		{
+			m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
 			m_vertex_buffer_layout = {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
@@ -97,11 +216,19 @@ namespace Kablunk
 	}
 
 	MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
-		: m_vertices{ verticies }, m_indices{ indices }
+		: m_static_vertices{ verticies }, m_indices{ indices }
 	{
+		Submesh submesh;
+		submesh.BaseVertex = 0;
+		submesh.BaseIndex = 0;
+		submesh.IndexCount = (uint32_t)indices.size() * 3u;
+		submesh.Transform = transform;
+		m_sub_meshes.push_back(submesh);
+
+		
 		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
 
-		m_vertex_buffer = VertexBuffer::Create(m_vertices.data(), (uint32_t)(m_vertices.size() * sizeof(Vertex)));
+		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 		m_vertex_buffer_layout = {
 			{ ShaderDataType::Float3, "a_Position" },
@@ -120,6 +247,129 @@ namespace Kablunk
 	MeshData::~MeshData()
 	{
 
+	}
+
+	void MeshData::SetSubmeshes(const std::vector<Submesh>& submeshes)
+	{
+		if (!submeshes.empty())
+			m_sub_meshes = submeshes;
+		else
+			KB_CORE_ERROR("Trying to set empty submesh array!");
+	}
+
+	const aiNodeAnim* MeshData::FindNodeAnim(const aiAnimation* animation, const std::string& node_name)
+	{
+		for (uint32_t i = 0; i < animation->mNumChannels; ++i)
+		{
+			const aiNodeAnim* node_anim = animation->mChannels[i];
+			if (std::string{ node_anim->mNodeName.data } == node_name)
+				return node_anim;
+		}
+
+		return nullptr;
+	}
+
+	uint32_t MeshData::FindPosition(float animation_time, const aiNodeAnim* root_node_anim)
+	{
+		for (uint32_t i = 0; i < root_node_anim->mNumPositionKeys - 1; ++i)
+		{
+			if (animation_time < static_cast<float>(root_node_anim->mPositionKeys[i + 1].mTime))
+				return i;
+		}
+
+		return 0;
+	}
+
+	uint32_t MeshData::FindRotation(float animation_time, const aiNodeAnim* root_node_anim)
+	{
+		for (uint32_t i = 0; i < root_node_anim->mNumRotationKeys - 1; ++i)
+		{
+			if (animation_time < static_cast<float>(root_node_anim->mRotationKeys[i + 1].mTime))
+				return i;
+		}
+
+		return 0;
+	}
+
+	uint32_t MeshData::FindScaling(float animation_time, const aiNodeAnim* root_node_anim)
+	{
+		for (uint32_t i = 0; i < root_node_anim->mNumScalingKeys - 1; ++i)
+		{
+			if (animation_time < static_cast<float>(root_node_anim->mScalingKeys[i + 1].mTime))
+				return i;
+		}
+
+		return 0;
+	}
+
+	glm::vec3 MeshData::InterpolateTranslation(float animation_time, const aiNodeAnim* node_anim)
+	{
+		KB_CORE_ASSERT(false, "not implemented");
+		return glm::vec3{ 1.0f };
+	}
+
+	glm::quat MeshData::InterpolateRotation(float animation_time, const aiNodeAnim* node_anim)
+	{
+		KB_CORE_ASSERT(false, "not implemented");
+		return {};
+	}
+
+	glm::vec3 MeshData::InterpolateScale(float animation_time, const aiNodeAnim* node_anim)
+	{
+		KB_CORE_ASSERT(false, "not implemented");
+		return glm::vec3{ 1.0f };
+	}
+
+	void MeshData::ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform)
+	{
+		std::string name = root->mName.data;
+		const aiAnimation* animation = m_scene->mAnimations[0];
+		auto node_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
+		const aiNodeAnim* node_anim = FindNodeAnim(animation, name);
+
+		if (node_anim)
+		{
+			glm::vec3 translation = InterpolateTranslation(animation_time, node_anim);
+			glm::mat4 translation_mat = glm::translate(glm::mat4{ 1.0f }, translation);
+
+			glm::quat rot = InterpolateRotation(animation_time, node_anim);
+			glm::mat4 rot_mat = glm::toMat4(rot);
+
+			glm::vec3 scale = InterpolateScale(animation_time, node_anim);
+			glm::mat4 scale_mat = glm::scale(glm::mat4{ 1.0f }, scale);
+
+			node_transform = translation_mat * rot_mat * scale_mat;
+		}
+
+		glm::mat4 transform = parent_transform * node_transform;
+
+		if (m_bone_mapping.find(name) != m_bone_mapping.end())
+		{
+			uint32_t bone_index = m_bone_mapping[name];
+			m_bone_info[bone_index].Final_transformation = m_inverse_transform * transform * m_bone_info[bone_index].Bone_offset;
+		}
+
+		for (uint32_t i = 0; i < root->mNumChildren; ++i)
+			ReadNodeHierarchy(animation_time, root->mChildren[i], transform);
+	}
+
+	void MeshData::TraverseNodes(aiNode* root, const glm::mat4& parent_transform, uint32_t level)
+	{
+		auto local_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
+		auto transform = parent_transform * local_transform;
+		m_node_map[root].resize(root->mNumMeshes);
+		for (uint32_t i = 0; i < root->mNumMeshes; ++i)
+		{
+			uint32_t mesh_index = root->mMeshes[i];
+			auto& submesh = m_sub_meshes[mesh_index];
+			submesh.node_name = root->mName.C_Str();
+			submesh.Transform = transform;
+			submesh.Local_transform = local_transform;
+			m_node_map[root][i] = mesh_index;
+		}
+
+		for (uint32_t i = 0; i < root->mNumChildren; ++i)
+			TraverseNodes(root->mChildren[i], transform, level + 1);
 	}
 
 	Mesh::Mesh(Ref<MeshData> mesh_data)

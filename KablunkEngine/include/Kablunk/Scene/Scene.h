@@ -50,10 +50,10 @@ namespace Kablunk
 		void ParentEntity(Entity child, Entity parent);
 		void UnparentEntity(Entity child);
 
-		template <typename T, typename... Args>
+		template <typename... Components>
 		auto GetAllEntitiesWith()
 		{
-			return m_registry->view<T, Args...>();
+			return m_registry.view<Components...>();
 		}
 	private:
 		template <typename T>

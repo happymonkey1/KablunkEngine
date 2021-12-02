@@ -45,6 +45,8 @@ namespace Kablunk
 
 		void ViewportClickSelectEntity();
 
+		void OnOverlayRender();
+
 		void UI_DrawMenuBar();
 		void UI_Toolbar();
 		void UI_KablunkInstallPopup();
@@ -70,6 +72,7 @@ namespace Kablunk
 		bool m_application_paused{ true };
 		bool m_viewport_focused{ false }, m_viewport_hovered{ false };
 		bool m_show_debug_panel{ true };
+		bool m_show_physics_colliders{ false };
 
 		bool m_show_create_new_project_popup{ false };
 		bool m_show_project_properties_panel{ false };
