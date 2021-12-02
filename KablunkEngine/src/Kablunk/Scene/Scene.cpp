@@ -61,7 +61,6 @@ namespace Kablunk
 			uuid::uuid64 UUID = src.get<IdComponent>(e).Id;
 			entt::entity dst_entt_id = entity_map.at(UUID);
 
-			KB_CORE_INFO("copying component into scene id '{0}'", entity_map.at(UUID).GetSceneUUID());
 
 			auto& component = src.get<ComponentT>(e);
 			dst.emplace_or_replace<ComponentT>(dst_entt_id, component);
@@ -114,7 +113,6 @@ namespace Kablunk
 			const auto& tag = src_scene_reg.get<TagComponent>(id).Tag;
 
 			Entity new_entity = dest_scene->CreateEntity(tag, uuid);
-			KB_CORE_INFO("this should be same id as above '{0}'", new_entity.GetSceneUUID());
 		}
 
 		CopyComponent<TransformComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
@@ -182,7 +180,6 @@ namespace Kablunk
 		KB_CORE_ASSERT(entity.GetSceneUUID() == m_scene_id, "scene ids do not match");
 		KB_CORE_ASSERT(entity.GetSceneUUID() == m_entity_map.at(entity_uuid).GetSceneUUID(), "scene ids do not match");
 		KB_CORE_ASSERT(m_entity_map.at(entity_uuid).GetSceneUUID() == m_scene_id, "scene ids do not match");
-		KB_CORE_INFO("creating entity in scene '{0}'", m_scene_id);
 
 		return entity;
 	}
@@ -715,10 +712,8 @@ namespace Kablunk
 
 	void Scene::OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity)
 	{
-		KB_CORE_INFO("OnCSharpScriptComponentConstruct(): CSharp script creation for scene '{0}'", m_scene_id);
 		auto entity_id = registry.get<IdComponent>(entity).Id;
 		KB_CORE_ASSERT(m_entity_map.find(entity_id) != m_entity_map.end(), "Entity not in entity map");
-		KB_CORE_INFO("OnCSharpScriptComponentConstruct(): entity scene id '{0}'", m_entity_map.at(entity_id).GetSceneUUID());
 		CSharpScriptEngine::InitScriptEntity(m_entity_map.at(entity_id));
 	}
 
