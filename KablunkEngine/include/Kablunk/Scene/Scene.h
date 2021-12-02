@@ -16,12 +16,12 @@ namespace Kablunk
 
 	
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
-	constexpr const char* default_scene_name = "Untitled Scene";
+	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
 
 	class Scene
 	{
 	public:
-		Scene(const std::string& name = default_scene_name);
+		Scene(const std::string& name = DEFAULT_SCENE_NAME);
 		~Scene();
 
 		static Ref<Scene> Copy(Ref<Scene> src_scene);
@@ -62,7 +62,7 @@ namespace Kablunk
 		void OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity);
 		void OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity);
 	private:
-		std::string m_name{ default_scene_name };
+		std::string m_name{ DEFAULT_SCENE_NAME };
 		uuid::uuid64 m_scene_id = uuid::generate();
 		entt::registry m_registry;
 		EntityMap m_entity_map{};

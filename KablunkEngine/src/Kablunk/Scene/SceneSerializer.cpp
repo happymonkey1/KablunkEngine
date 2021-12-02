@@ -331,7 +331,18 @@ namespace Kablunk
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene"		<< YAML::Value << m_scene->m_name;
+		
+		std::string scene_name;
+		if (m_scene->m_name != DEFAULT_SCENE_NAME)
+			scene_name = m_scene->m_name;
+		else
+		{
+			std::filesystem::path filepath_as_path{ filepath };
+			scene_name = filepath_as_path.stem().string();
+			m_scene->m_name = scene_name;
+		}
+		
+		out << YAML::Key << "Scene"		<< YAML::Value << scene_name;
 		out << YAML::Key << "Entities"	<< YAML::Value << YAML::BeginSeq;
 
 		/*m_scene->m_registry.each([&](auto entity_handle)

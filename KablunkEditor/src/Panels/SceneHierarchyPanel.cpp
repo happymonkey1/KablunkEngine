@@ -671,6 +671,15 @@ namespace Kablunk
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{
+				if (!Project::GetActive())
+				{
+					UI::BeginProperties();
+					bool active = false;
+					UI::PropertyReadOnlyString("No active project :(", "");
+					UI::EndProperties();
+					return;
+				}
+
 				UI::BeginProperties();
 				
 				bool is_error = !CSharpScriptEngine::ModuleExists(component.Module_name);

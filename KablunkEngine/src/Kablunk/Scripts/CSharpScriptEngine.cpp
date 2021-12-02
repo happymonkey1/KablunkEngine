@@ -56,7 +56,7 @@ namespace Kablunk
 			Constructor = GetMethod(s_core_assembly_image, "Kablunk.Entity:.ctor(ulong)");
 			OnCreateMethod = GetMethod(image, Full_name + ":OnCreate()");
 			OnUpdateMethod = GetMethod(image, Full_name + ":OnUpdate(single)");
-			OnDestroyMethod = GetMethod(image, Full_name + "OnDestroy()");
+			OnDestroyMethod = GetMethod(image, Full_name + ":OnDestroy()");
 		}
 	};
 
@@ -337,6 +337,7 @@ namespace Kablunk
 
 	bool CSharpScriptEngine::ReloadAssembly(const std::filesystem::path& path)
 	{
+		KB_CORE_INFO("Reloading C# assemblies");
 		if (!LoadKablunkRuntimeAssembly(s_core_assembly_path))
 			return false;
 
@@ -380,7 +381,8 @@ namespace Kablunk
 		auto dst_entity_map = s_entity_instance_map.at(dst);
 		auto src_entity_map = s_entity_instance_map.at(src);
 
-		KB_CORE_ASSERT(false, "not implemented!");
+		//KB_CORE_ASSERT(false, "not implemented!");
+		// #TODO implement copy of public fields
 	}
 
 	void CSharpScriptEngine::OnCreateEntity(Entity entity)
@@ -517,6 +519,8 @@ namespace Kablunk
 		script_class.Class = GetClass(s_app_assembly_image, script_class);
 		script_class.InitClassMethods(s_app_assembly_image);
 
+		KB_CORE_INFO("InitScriptEntity called for scene '{0}'", context->GetUUID());
+		
 		EntityInstanceData& entity_instance_data = s_entity_instance_map[context->GetUUID()][id];
 		EntityInstance& entity_instance = entity_instance_data.Instance;
 		entity_instance.Script_class = &script_class;
@@ -563,7 +567,7 @@ namespace Kablunk
 		KB_CORE_ASSERT(s_entity_instance_map.find(scene_id) != s_entity_instance_map.end(), "invalid scene id");
 		auto& entity_id_map = s_entity_instance_map.at(scene_id);
 
-		if (entity_id_map.find(entity_id) != entity_id_map.end())
+		if (entity_id_map.find(entity_id) == entity_id_map.end())
 			CSharpScriptEngine::InitScriptEntity(s_scene_context->GetEntityMap().at(entity_id));
 
 		return entity_id_map.at(entity_id);

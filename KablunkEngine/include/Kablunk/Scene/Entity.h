@@ -47,7 +47,7 @@ namespace Kablunk
 
 		const uuid::uuid64& GetUUID() const;
 		const uuid::uuid64& GetParentUUID() const;
-		const uuid::uuid64& GetSceneUUID() const { return m_scene->GetUUID(); }
+		uuid::uuid64 GetSceneUUID() const { return m_scene->GetUUID(); }
 		bool HasParent() const;
 		Entity GetParent();
 		std::vector<uuid::uuid64> GetChildrenCopy() const;
