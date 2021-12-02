@@ -8,6 +8,14 @@ Personal project to develop a basic 2D game engine. Currently still in developme
 
 Run scripts/Windows-GenProjects.bat to generate project files
 
+## Features
+
+- [x] 2D Batch Renderer
+- [x] C# Scripting
+- [x] Editor
+- [x] Basic 3D Renderer
+- [x] Entity Component System   
+
 ## Roadmap
 
 https://trello.com/b/cYhcr9CG/kablunkengine
