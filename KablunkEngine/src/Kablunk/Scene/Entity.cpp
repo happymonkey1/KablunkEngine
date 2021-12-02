@@ -28,6 +28,7 @@ namespace Kablunk
 	{
 		return GetComponent<ParentingComponent>().Parent;
 	}
+	
 
 	bool Entity::HasParent() const
 	{

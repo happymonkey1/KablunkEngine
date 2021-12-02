@@ -9,7 +9,8 @@
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
-#include "Kablunk/Scripts/NativeScriptEngine.h"
+//#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Scripts/CSharpScriptEngine.h"
 
 
 
@@ -41,11 +42,14 @@ namespace Kablunk
 			m_imgui_layer = new ImGuiLayer();
 			PushOverlay(m_imgui_layer);
 		}
+
+		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
 	}
 
 	Application::~Application()
 	{
 		m_thread_pool.Shutdown();
+		CSharpScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -162,6 +166,6 @@ namespace Kablunk
 
 	void Application::OnShutdown()
 	{
-		NativeScriptEngine::Shutdown();
+		//NativeScriptEngine::Shutdown();
 	}
 }

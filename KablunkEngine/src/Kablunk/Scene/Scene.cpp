@@ -6,6 +6,8 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Scene/Entity.h"
 
+#include "Kablunk/Scripts/CSharpScriptEngine.h"
+
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
 #include <box2d/b2_polygon_shape.h>
@@ -14,17 +16,29 @@
 
 #include <exception>
 
+#define DISABLE_NATIVE_SCRIPT 0
+
 namespace Kablunk
 {
+
+	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
+
 	Scene::Scene(const std::string& name)
 		: m_name{ name }
 	{
+		m_registry.on_construct<CSharpScriptComponent>().connect<&Scene::OnCSharpScriptComponentConstruct>(this);
+		m_registry.on_destroy<CSharpScriptComponent>().connect<&Scene::OnCSharpScriptComponentDestroy>(this);
+
+		auto m_scene_entity = m_registry.create();
+		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
 		
+		s_active_scenes.insert({ m_scene_id, this });
 	}
 
 	Scene::~Scene()
 	{
-		
+		CSharpScriptEngine::OnSceneDestroy(m_scene_id);
+		s_active_scenes.erase(m_scene_id);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -46,6 +60,8 @@ namespace Kablunk
 		{
 			uuid::uuid64 UUID = src.get<IdComponent>(e).Id;
 			entt::entity dst_entt_id = entity_map.at(UUID);
+
+			KB_CORE_INFO("copying component into scene id '{0}'", entity_map.at(UUID).GetSceneUUID());
 
 			auto& component = src.get<ComponentT>(e);
 			dst.emplace_or_replace<ComponentT>(dst_entt_id, component);
@@ -81,9 +97,10 @@ namespace Kablunk
 	Ref<Scene> Scene::Copy(Ref<Scene> src_scene)
 	{
 		Ref<Scene> dest_scene = CreateRef<Scene>();
+		KB_CORE_INFO("copying source scene '{0}' into '{1}'", src_scene->m_scene_id, dest_scene->m_scene_id);
 		dest_scene->m_name = src_scene->m_name;
 
-		dest_scene->m_entity_map = src_scene->m_entity_map;
+		//dest_scene->m_entity_map = src_scene->m_entity_map;
 
 		dest_scene->m_viewport_width = src_scene->m_viewport_width;
 		dest_scene->m_viewport_height = src_scene->m_viewport_height;
@@ -96,19 +113,25 @@ namespace Kablunk
 			uuid::uuid64 uuid = src_scene_reg.get<IdComponent>(id).Id;
 			const auto& tag = src_scene_reg.get<TagComponent>(id).Tag;
 
-			dest_scene->CreateEntity(tag, uuid);
+			Entity new_entity = dest_scene->CreateEntity(tag, uuid);
+			KB_CORE_INFO("this should be same id as above '{0}'", new_entity.GetSceneUUID());
 		}
 
-		CopyComponent<TransformComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<SpriteRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<CircleRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<NativeScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<MeshComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<PointLightComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<RigidBody2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<TransformComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<SpriteRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CircleRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CameraComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<NativeScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CSharpScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<MeshComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<PointLightComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<RigidBody2DComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<BoxCollider2DComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+
+		const auto& entity_instance_map = CSharpScriptEngine::GetEntityInstanceMap();
+		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
+			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
 		// Bind all native script components
 		auto view = dest_scene_reg.view<NativeScriptComponent>();
@@ -122,6 +145,17 @@ namespace Kablunk
 		// #TODO copy parenting components
 
 		return dest_scene;
+	}
+
+	WeakRef<Scene> Scene::GetScene(uuid::uuid64 scene_id)
+	{
+		if (s_active_scenes.find(scene_id) != s_active_scenes.end())
+			return WeakRef<Scene>(s_active_scenes.at(scene_id));
+		else
+		{
+			KB_CORE_ERROR("Could not find scene '{0}' in active scenes!", scene_id);
+			return nullptr;
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, uuid::uuid64 id)
@@ -143,20 +177,29 @@ namespace Kablunk
 		tag_comp.Tag = name.empty() ? "Blank Entity" : name;
 
 		entity.AddComponent<ParentingComponent>();
-
+		
 		m_entity_map.insert({ entity_uuid, entity });
+		KB_CORE_ASSERT(entity.GetSceneUUID() == m_scene_id, "scene ids do not match");
+		KB_CORE_ASSERT(entity.GetSceneUUID() == m_entity_map.at(entity_uuid).GetSceneUUID(), "scene ids do not match");
+		KB_CORE_ASSERT(m_entity_map.at(entity_uuid).GetSceneUUID() == m_scene_id, "scene ids do not match");
+		KB_CORE_INFO("creating entity in scene '{0}'", m_scene_id);
 
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		if (entity.HasComponent<CSharpScriptComponent>())
+			CSharpScriptEngine::OnScriptComponentDestroyed(m_scene_id, entity.GetUUID());
+
 		m_registry.destroy(entity);
 	}
 
 	void Scene::OnStartRuntime()
 	{
 		// #TODO expose gravity in editor panel
+		CSharpScriptEngine::SetSceneContext(this);
+
 		m_box2D_world = new b2World{ { 0.0f, -9.8f } };
 
 		auto view = m_registry.view<RigidBody2DComponent>();
@@ -211,6 +254,23 @@ namespace Kablunk
 				body->CreateFixture(&fixture_def);
 			}
 		}
+
+		{
+			auto view = m_registry.view<CSharpScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::InstantiateEntityClass(entity);
+			}
+
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::OnCreateEntity(entity);
+			}
+		}
 	}
 
 	void Scene::OnStopRuntime()
@@ -225,6 +285,7 @@ namespace Kablunk
 		//	 Update
 		// ==========
 
+#if DISABLE_NATIVE_SCRIPT
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
@@ -289,6 +350,17 @@ namespace Kablunk
 				}
 			}
 		);
+#endif
+
+		{
+			auto view = m_registry.view<CSharpScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+					CSharpScriptEngine::OnUpdateEntity(entity, ts);
+			}
+		}
 		
 		// ===========	
 		//	 Physics
@@ -405,6 +477,8 @@ namespace Kablunk
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
+
+#if DISABLE_NATIVE_SCRIPT
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
@@ -440,6 +514,7 @@ namespace Kablunk
 				}
 			}
 		);
+#endif
 
 		Renderer2D::BeginScene(camera);
 		{
@@ -555,6 +630,7 @@ namespace Kablunk
 		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
 			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
+		CopyComponentIfItExists<CSharpScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<MeshComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<PointLightComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<RigidBody2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
@@ -637,6 +713,24 @@ namespace Kablunk
 		KB_CORE_ASSERT(false, "No default OnComponentAdded!");
 	}
 
+	void Scene::OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity)
+	{
+		KB_CORE_INFO("OnCSharpScriptComponentConstruct(): CSharp script creation for scene '{0}'", m_scene_id);
+		auto entity_id = registry.get<IdComponent>(entity).Id;
+		KB_CORE_ASSERT(m_entity_map.find(entity_id) != m_entity_map.end(), "Entity not in entity map");
+		KB_CORE_INFO("OnCSharpScriptComponentConstruct(): entity scene id '{0}'", m_entity_map.at(entity_id).GetSceneUUID());
+		CSharpScriptEngine::InitScriptEntity(m_entity_map.at(entity_id));
+	}
+
+	void Scene::OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity)
+	{
+		if (registry.any_of<IdComponent>(entity))
+		{
+			auto entity_id = registry.get<IdComponent>(entity).Id;
+			CSharpScriptEngine::OnScriptComponentDestroyed(GetUUID(), entity_id);
+		}
+	}
+
 	template <>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component) { }
 
@@ -662,6 +756,9 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
+
+	template <>
+	void Scene::OnComponentAdded<CSharpScriptComponent>(Entity entity, CSharpScriptComponent& component) { }
 
 	template <>
 	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component) { }

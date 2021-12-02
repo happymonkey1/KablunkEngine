@@ -47,6 +47,7 @@ namespace Kablunk
 
 		const uuid::uuid64& GetUUID() const;
 		const uuid::uuid64& GetParentUUID() const;
+		uuid::uuid64 GetSceneUUID() const { return m_scene->GetUUID(); }
 		bool HasParent() const;
 		Entity GetParent();
 		std::vector<uuid::uuid64> GetChildrenCopy() const;
@@ -73,6 +74,8 @@ namespace Kablunk
 		
 		// TODO: replace with weak ref in the future
 		Scene* m_scene{ nullptr };
+
+		friend class CSharpScriptEngine;
 	};
 
 	template <typename T>

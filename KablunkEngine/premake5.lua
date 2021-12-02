@@ -51,7 +51,8 @@ project "KablunkEngine"
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.FreeType}",
 		"%{IncludeDir.Box2d}",
-		"%{IncludeDir.RCCPP}"
+		"%{IncludeDir.RCCPP}",
+		"%{IncludeDir.mono}"
 	}
 
 	links
@@ -64,7 +65,10 @@ project "KablunkEngine"
 		"FreeType",
 		"Box2d",
 		"RCCPP",
-		"opengl32.lib"
+		"opengl32.lib",
+		
+
+		"%{Library.mono}"
 	}
 	
 

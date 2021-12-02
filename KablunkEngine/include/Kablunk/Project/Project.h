@@ -16,9 +16,12 @@ namespace Kablunk
 		std::string Asset_directory;
 		std::string Native_script_modules_path;
 		std::string Native_script_default_namespace;
+		std::string CSharp_script_modules_path;
+		std::string CSharp_script_default_namespace;
 
 		// #TODO actually implement this
 		bool Reload_native_script_assemblies_on_play;
+		bool Reload_csharp_script_assemblies_on_play;
 
 		std::string Start_scene;
 
@@ -41,17 +44,32 @@ namespace Kablunk
 		static const std::string& GetProjectName() { return s_active_project->GetConfig().Name; }
 		static std::filesystem::path GetProjectDirectory() { return s_active_project->GetConfig().Project_directory; }
 		static std::filesystem::path GetAssetDirectory() { return s_active_project->GetConfig().Asset_directory; }
+		static std::filesystem::path GetAssetDirectoryPath() { return GetProjectDirectory() / GetAssetDirectory(); }
 
 		static std::filesystem::path GetNativeScriptModulePath() 
 		{ 
 			return std::filesystem::path{ s_active_project->GetConfig().Project_directory } 
 			/ std::filesystem::path{ s_active_project->GetConfig().Native_script_modules_path };
 		}
+
 		static std::string GetNativeScriptModuleFileName() { return s_active_project->GetProjectName() + ".dll"; }
 		static std::filesystem::path GetNativeScriptModuleFilePath()
 		{ 
 			return GetNativeScriptModulePath() / GetNativeScriptModuleFileName();
 		}
+
+		static std::filesystem::path GetCSharpScriptModulePath()
+		{
+			return std::filesystem::path{ s_active_project->GetConfig().Project_directory }
+			/ std::filesystem::path{ s_active_project->GetConfig().CSharp_script_modules_path };
+		}
+
+		static std::string GetCSharpScriptModuleFileName() { return s_active_project->GetProjectName() + ".dll"; }
+		static std::filesystem::path GetCSharpScriptModuleFilePath()
+		{
+			return GetCSharpScriptModulePath() / GetCSharpScriptModuleFileName();
+		}
+
 
 		static const std::string& GetStartSceneName() { return s_active_project->GetConfig().Start_scene; }
 

@@ -31,6 +31,9 @@ namespace Kablunk
 		out << YAML::Key << "Native_script_modules_path" << YAML::Value << config.Native_script_modules_path;
 		out << YAML::Key << "Native_script_default_namespace" << YAML::Value << config.Native_script_default_namespace;
 		out << YAML::Key << "Reload_native_script_assemblies_on_play" << YAML::Value << config.Reload_native_script_assemblies_on_play;
+		out << YAML::Key << "CSharp_script_modules_path" << YAML::Value << config.CSharp_script_modules_path;
+		out << YAML::Key << "CSharp_script_default_namespace" << YAML::Value << config.CSharp_script_default_namespace;
+		out << YAML::Key << "Reload_csharp_script_assemblies_on_play" << YAML::Value << config.Reload_csharp_script_assemblies_on_play;
 		out << YAML::Key << "Start_scene" << YAML::Value << config.Start_scene;
 		out << YAML::EndMap;
 
@@ -71,6 +74,9 @@ namespace Kablunk
 		config.Native_script_modules_path = root["Native_script_modules_path"].as <std::string>();
 		config.Native_script_default_namespace = root["Native_script_default_namespace"].as<std::string>();
 		config.Reload_native_script_assemblies_on_play = root["Reload_native_script_assemblies_on_play"].as<bool>();
+		config.CSharp_script_modules_path = root["CSharp_script_modules_path"].as<std::string>();
+		config.CSharp_script_default_namespace = root["CSharp_script_default_namespace"].as<std::string>();
+		config.Reload_csharp_script_assemblies_on_play = root["Reload_csharp_script_assemblies_on_play"].as<bool>();
 		config.Start_scene = root["Start_scene"].as<std::string>();
 
 		std::filesystem::path project_path = filepath;

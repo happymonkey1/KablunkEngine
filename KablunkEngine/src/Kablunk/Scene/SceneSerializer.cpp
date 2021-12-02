@@ -105,6 +105,11 @@ namespace Kablunk
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
 
+		WriteComponentData<CSharpScriptComponent>(out, entity, [](auto& out, CSharpScriptComponent& component)
+			{
+				out << YAML::Key << "Module_name" << YAML::Value << component.Module_name;
+			});
+
 		WriteComponentData<MeshComponent>(out, entity, [](auto& out, auto& component)
 			{
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath;
@@ -150,18 +155,18 @@ namespace Kablunk
 	{
 		out << YAML::BeginMap;
 		
-		auto& id_comp = entity.GetComponent<IdComponent>();
-		if (id_comp)
+		if (entity.HasComponent<IdComponent>())
 		{
-			auto& uuid = id_comp.Id;
-			out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(uuid);
+			auto& id_comp = entity.GetComponent<IdComponent>();
+			if (id_comp)
+			{
+				auto& uuid = id_comp.Id;
+				out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(uuid);
 
-			SerializeComponents(out, entity);
+				SerializeComponents(out, entity);
+			}
 		}
-		else
-		{
-			KB_CORE_ASSERT(false, "Entity does not have an id component!");
-		}
+
 		out << YAML::EndMap; 
 	}
 
@@ -253,11 +258,10 @@ namespace Kablunk
 
 		ReadComponentData<CircleRendererComponent>(entity_data, entity, [this](CircleRendererComponent& component, auto& data) 
 			{
-				component.Color = data["Color"].as<glm::vec4>();
-				component.Radius = data["Radius"].as<float>();
+				component.Color		= data["Color"].as<glm::vec4>();
+				component.Radius	= data["Radius"].as<float>();
 				component.Thickness = data["Thickness"].as<float>();
-				component.Fade = data["Fade"].as<float>();
-
+				component.Fade		= data["Fade"].as<float>();
 			});
 
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
@@ -267,6 +271,17 @@ namespace Kablunk
 
 				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 			});
+
+		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
+			{
+				component.Module_name = data["Module_name"].as<std::string>();
+			});*/
+		auto script_comp = entity_data["CSharpScriptComponent"];
+		if (script_comp)
+		{
+			auto module_name = script_comp["Module_name"].as<std::string>();
+			CSharpScriptComponent& csharp_script_comp = entity.AddComponent<CSharpScriptComponent>(module_name);
+		}
 
 		ReadComponentData<MeshComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{
@@ -316,17 +331,31 @@ namespace Kablunk
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene"		<< YAML::Value << m_scene->m_name;
+		
+		std::string scene_name;
+		if (m_scene->m_name != DEFAULT_SCENE_NAME)
+			scene_name = m_scene->m_name;
+		else
+		{
+			std::filesystem::path filepath_as_path{ filepath };
+			scene_name = filepath_as_path.stem().string();
+			m_scene->m_name = scene_name;
+		}
+		
+		out << YAML::Key << "Scene"		<< YAML::Value << scene_name;
 		out << YAML::Key << "Entities"	<< YAML::Value << YAML::BeginSeq;
 
-		m_scene->m_registry.each([&](auto entity_handle) 
+		/*m_scene->m_registry.each([&](auto entity_handle)
 			{
 				auto entity = Entity{ entity_handle, m_scene.get() };
 				if (!entity)
 					return;
 
 				SerializeEntity(out, entity);
-			});
+			});*/
+		auto view = m_scene->m_registry.view<IdComponent>();
+		for (auto e : view)
+			SerializeEntity(out, { e, m_scene.get() });
 
 		out << YAML::EndSeq;
 		out << YAML::EndMap;

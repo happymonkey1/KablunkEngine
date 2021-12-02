@@ -14,3 +14,7 @@ IncludeDir["assimp"] = "%{wks.location}/KablunkEngine/vendor/assimp/include"
 IncludeDir["FreeType"] = "%{wks.location}/KablunkEngine/vendor/FreeType/include"
 IncludeDir["Box2d"] = "%{wks.location}/KablunkEngine/vendor/box2d/include"
 IncludeDir["RCCPP"] = "%{wks.location}/KablunkEngine/vendor/RuntimeCompiledCPlusPlus"
+IncludeDir["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/include"
+
+Library = {}
+Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/Debug/mono-2.0-sgen.lib"

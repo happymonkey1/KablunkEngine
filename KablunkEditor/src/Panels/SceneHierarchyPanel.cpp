@@ -1,5 +1,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 
+#include <Kablunk/Project/Project.h>
+#include <Kablunk/Scripts/CSharpScriptEngine.h>
 #include <Kablunk/Imgui/ImGuiWrappers.h>
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,11 +10,10 @@
 
 #include <filesystem>
 
+#define DISABLE_NATIVE_SCRIPT 0
+
 namespace Kablunk
 {
-	// #TODO bad!
-	extern const std::filesystem::path g_asset_path;
-	extern const std::filesystem::path g_resources_path;
 
 	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)
 	{
@@ -465,9 +466,16 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+#if DISABLE_NATIVE_SCRIPT
 			if (!m_selection_context.HasComponent<NativeScriptComponent>() && ImGui::MenuItem("Native Script"))
 			{
 				m_selection_context.AddComponent<NativeScriptComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+#endif
+			if (!m_selection_context.HasComponent<CSharpScriptComponent>() && ImGui::MenuItem("C# Script"))
+			{
+				m_selection_context.AddComponent<CSharpScriptComponent>();
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -592,7 +600,7 @@ namespace Kablunk
 					if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const auto path_wchar_str = (const wchar_t*)payload->Data;
-						auto path = std::filesystem::path{ g_asset_path / path_wchar_str };
+						auto path = std::filesystem::path{ Project::GetAssetDirectoryPath() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
 							component.Texture = Asset<Texture2D>(path_str);
@@ -658,6 +666,62 @@ namespace Kablunk
 						}
 					}
 				}
+				UI::EndProperties();
+			});
+
+		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
+			{
+				if (!Project::GetActive())
+				{
+					UI::BeginProperties();
+					bool active = false;
+					UI::PropertyReadOnlyString("No active project :(", "");
+					UI::EndProperties();
+					return;
+				}
+
+				UI::BeginProperties();
+				
+				bool is_error = !CSharpScriptEngine::ModuleExists(component.Module_name);
+				std::string name = CSharpScriptEngine::StripNamespace(Project::GetActive()->GetConfig().CSharp_script_default_namespace, component.Module_name);
+
+				bool was_error = is_error;
+				if (was_error)
+					ImGui::PushStyleColor(ImGuiCol_Text, { 0.9f, 0.2f, 0.2f, 1.0f });
+
+				if (UI::Property("Module Name", name))
+				{
+					if (is_error)
+						CSharpScriptEngine::ShutdownScriptEntity(entity, component.Module_name);
+
+					if (CSharpScriptEngine::ModuleExists(name))
+					{
+						component.Module_name = name;
+						is_error = false;
+					}
+					else if (CSharpScriptEngine::ModuleExists(Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name))
+					{
+						component.Module_name = Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name;
+						is_error = false;
+					}
+					else
+					{
+						component.Module_name = name;
+						is_error = true;
+					}
+
+					if (!is_error)
+						CSharpScriptEngine::InitScriptEntity(entity);
+				}
+
+				if (was_error)
+					ImGui::PopStyleColor();
+
+				// #TODO public field view
+
+				if (UI::Button("Run Script"))
+					CSharpScriptEngine::OnCreateEntity(entity);
+
 				UI::EndProperties();
 			});
 
