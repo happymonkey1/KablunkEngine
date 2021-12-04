@@ -99,11 +99,12 @@ namespace Kablunk
 				out << YAML::Key << "Thickness" << YAML::Value << component.Thickness;
 				out << YAML::Key << "Fade" << YAML::Value << component.Fade;
 			});
-
+#if KB_NATIVE_SCRIPTING
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
+#endif
 
 		WriteComponentData<CSharpScriptComponent>(out, entity, [](auto& out, CSharpScriptComponent& component)
 			{
@@ -263,7 +264,7 @@ namespace Kablunk
 				component.Thickness = data["Thickness"].as<float>();
 				component.Fade		= data["Fade"].as<float>();
 			});
-
+#if KB_NATIVE_SCRIPTING
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{
 				auto filepath = data["Filepath"].as<std::string>();
@@ -271,6 +272,7 @@ namespace Kablunk
 
 				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 			});
+#endif
 
 		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
 			{
@@ -384,6 +386,7 @@ namespace Kablunk
 		catch (YAML::ParserException& e)
 		{
 			KB_CORE_ERROR("Failed to deserialize scene file '{0}'", filepath);
+			KB_CORE_ERROR("    {0}", e.msg);
 			return false;
 		}
 

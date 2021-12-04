@@ -1,6 +1,8 @@
 #ifndef KABLUNK_SCRIPTS_NATIVE_SCRIPT_COMPILER_LOGGER_H
 #define KABLUNK_SCRIPTS_NATIVE_SCRIPT_COMPILER_LOGGER_H
 
+#if KB_NATIVE_SCRIPTING
+
 #include "RCCPP/RuntimeCompiler/ICompilerLogger.h"
 
 namespace Kablunk
@@ -37,5 +39,7 @@ namespace Kablunk
 	};
 
 }
+
+#endif
 
 #endif

@@ -76,6 +76,7 @@ namespace Kablunk {
 		static Application* s_Instance;
 	};
 
-	Application* CreateApplication();
+	// function defined as extern in entrypoint.h, client needs to implement
+	Application* CreateApplication(int argc, char** argv);
 }
 

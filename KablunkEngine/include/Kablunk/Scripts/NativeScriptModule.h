@@ -1,6 +1,8 @@
 #ifndef KABLUNK_SCRIPTS_NATIVE_SCRIPT_MODULE_H
 #define KABLUNK_SCRIPTS_NATIVE_SCRIPT_MODULE_H
 
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Core/Core.h"
 #include <string>
 
@@ -49,5 +51,7 @@ namespace Kablunk
 		HMODULE m_dll_handle;
 	};
 }
+
+#endif
 
 #endif

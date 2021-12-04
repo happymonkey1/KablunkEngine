@@ -129,7 +129,7 @@ namespace Kablunk
 			}
 
 			
-			for (size_t i = 0; i < mesh->mNumFaces; ++i)
+			for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
 			{
 				KB_CORE_ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices");
 				Index index = { mesh->mFaces[i].mIndices[0], mesh->mFaces[i].mIndices[1], mesh->mFaces[i].mIndices[2] };

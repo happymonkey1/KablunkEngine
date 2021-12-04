@@ -28,8 +28,7 @@ project "KablunkEngine"
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE",
 		"NOMINMAX",
-		"KB_BUILD_DLL",
-		"KB_NATIVE_SCRIPTING"
+		"KB_BUILD_DLL"
 	}
 
 	includedirs

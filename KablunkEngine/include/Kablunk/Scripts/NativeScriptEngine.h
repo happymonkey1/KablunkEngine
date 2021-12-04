@@ -1,6 +1,8 @@
 #ifndef KABLUNK_MODULES_MODULE_H
 #define KABLUNK_MODULES_MODULE_H
 
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Core/Core.h"
 #include <Kablunk/Scripts/NativeScript.h>
 #include "Kablunk/Utilities/PlatformUtils.h"
@@ -97,6 +99,8 @@ namespace Kablunk
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT
 #	define REGISTER_NATIVE_SCRIPT
+#endif
+
 #endif
 
 #endif

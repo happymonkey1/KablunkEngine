@@ -43,7 +43,7 @@ project "KablunkEditor"
 
     defines
     {
-        "KB_NATIVE_SCRIPTING"
+        
     }
 
     filter "system:windows"

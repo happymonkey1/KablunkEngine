@@ -3,6 +3,7 @@
 //#include <kablunk.h>
 #include "TestScript.h"
 
+#if KB_NATIVE_SCRIPTING
 #include "Sandbox/ReflectionTest.h"
 #include <kablunk.h>
 
@@ -47,3 +48,5 @@ public:
 };
 
 REGISTERCLASS(TestScript);
+
+#endif

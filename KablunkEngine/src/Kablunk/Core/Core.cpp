@@ -10,7 +10,10 @@ namespace Kablunk
 	void InitCore()
 	{
 		Log::Init();
-		//NativeScriptEngine::Init();
+
+#if KB_NATIVE_SCRIPTING
+		NativeScriptEngine::Init();
+#endif
 
 		KB_CORE_INFO("Core initilized");
 	}
@@ -19,7 +22,10 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Core shutting down!");
 
-		//NativeScriptEngine::Shutdown();
+#if KB_NATIVE_SCRIPTING
+		NativeScriptEngine::Shutdown();
+#endif
+
 		Log::Shutdown();
 
 

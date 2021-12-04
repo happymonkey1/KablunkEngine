@@ -1,5 +1,7 @@
 #include "kablunkpch.h"
 
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Scripts/NativeScript.h"
 
 namespace Kablunk
@@ -10,4 +12,6 @@ namespace Kablunk
 
 	}
 }
+
+#endif
 

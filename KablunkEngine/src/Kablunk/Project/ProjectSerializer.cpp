@@ -60,6 +60,7 @@ namespace Kablunk
 		catch (YAML::ParserException& e)
 		{
 			KB_CORE_ERROR("Failed to deserialize project file '{0}'", filepath);
+			KB_CORE_ERROR("    {0}", e.msg);
 			return false;
 		}
 

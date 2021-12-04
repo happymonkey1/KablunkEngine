@@ -154,7 +154,7 @@ namespace Kablunk
 
 		m_frame_buffer->Unbind();
 
-#if DISABLE_NATIVE_SCRIPTING
+#if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
 #endif
 		
@@ -514,7 +514,7 @@ namespace Kablunk
 				if (ImGui::MenuItem("Project Settings"))
 					m_show_project_properties_panel = true;
 
-#if DISABLE_NATIVE_SCRIPTING
+#if KB_NATIVE_SCRIPTING
 				if (ImGui::MenuItem("Update Project Engine Files"))
 					UpdateProjectEngineFiles();
 
@@ -897,7 +897,7 @@ namespace Kablunk
 				ostream.close();
 			}
 
-#if DISABLE_NATIVE_SCRIPTING
+#if KB_NATIVE_SCRIPTING
 			// Generate NativeScript batch
 			{
 				std::ifstream stream{ project_path / "Windows-CreateNativeScriptProject.bat" };

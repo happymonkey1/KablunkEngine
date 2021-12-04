@@ -6,7 +6,7 @@
 #ifdef KB_PLATFORM_WINDOWS
 
 
-extern Kablunk::Application* Kablunk::CreateApplication();
+extern Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv);
 
 #ifdef KB_PLATFORM_WINDOWS
 #	ifndef PREFER_HIGH_PERFORMANCE_GPU
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 	Kablunk::InitCore();
 
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");
-	Kablunk::Application* app = Kablunk::CreateApplication();
+	Kablunk::Application* app = Kablunk::CreateApplication(argc, argv);
 	KB_END_SESSION();
 
 	KB_BEGIN_SESSION("Runtime", "KablunkProfile-Runtime.json");

@@ -1,4 +1,7 @@
 #include "kablunkpch.h"
+
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
 #include "Kablunk/Utilities/Parser.h"
@@ -197,3 +200,5 @@ namespace Kablunk
 		}
 	}
 }
+
+#endif

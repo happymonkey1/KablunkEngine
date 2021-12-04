@@ -1,4 +1,7 @@
 #include "kablunkpch.h"
+
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Scripts/NativeScriptCompilerLogger.h"
 
 #include <stdarg.h>
@@ -19,7 +22,7 @@ namespace Kablunk
 			begin = pos + 2;
 
 			return_format += '{';
-			return_format += '0' + count++;
+			return_format += static_cast<char>('0' + count++);
 			return_format += "}";
 
 			pos = data.find("%", begin);
@@ -57,5 +60,6 @@ namespace Kablunk
 		kbLog(LogLevel::INFO,format, args);
 		va_end(args);
 	}
-
 }
+
+#endif

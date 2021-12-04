@@ -638,6 +638,7 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
+#if KB_NATIVE_SCRIPTING
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
 			{
 				UI::BeginProperties();
@@ -668,6 +669,7 @@ namespace Kablunk
 				}
 				UI::EndProperties();
 			});
+#endif 
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{

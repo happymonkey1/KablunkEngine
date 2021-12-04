@@ -119,7 +119,9 @@ namespace Kablunk
 		CopyComponent<SpriteRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CameraComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+#if KB_NATIVE_SCRIPTING
 		CopyComponent<NativeScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+#endif
 		CopyComponent<CSharpScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<MeshComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<PointLightComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
@@ -131,6 +133,7 @@ namespace Kablunk
 		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
 			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
+#if KB_NATIVE_SCRIPTING
 		// Bind all native script components
 		auto view = dest_scene_reg.view<NativeScriptComponent>();
 		for (auto e : view)
@@ -139,6 +142,7 @@ namespace Kablunk
 			auto& nsc = entity.GetComponent<NativeScriptComponent>();
 			nsc.BindEditor(entity);
 		}
+#endif
 
 		// #TODO copy parenting components
 
@@ -625,8 +629,10 @@ namespace Kablunk
 		CopyComponentIfItExists<SpriteRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CircleRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+#if KB_NATIVE_SCRIPTING
 		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
 			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
+#endif
 		CopyComponentIfItExists<CSharpScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<MeshComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<PointLightComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
@@ -749,8 +755,10 @@ namespace Kablunk
 	template <>
 	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component) { }
 
+#if KB_NATIVE_SCRIPTING
 	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
+#endif
 
 	template <>
 	void Scene::OnComponentAdded<CSharpScriptComponent>(Entity entity, CSharpScriptComponent& component) { }

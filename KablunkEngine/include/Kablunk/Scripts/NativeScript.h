@@ -1,6 +1,8 @@
 #ifndef KABLUNK_SCENE_SCRIPTABLE_ENTITY_H
 #define KABLUNK_SCENE_SCRIPTABLE_ENTITY_H
 
+#if KB_NATIVE_SCRIPTING
+
 #include "Kablunk/Scripts/InterfaceIDs.h"
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Core/Timestep.h"
@@ -44,5 +46,7 @@ namespace Kablunk
 	};
 	
 }
+
+#endif
 
 #endif

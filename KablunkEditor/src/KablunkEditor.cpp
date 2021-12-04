@@ -19,7 +19,7 @@ namespace Kablunk
 		}
 	};
 
-	Kablunk::Application* Kablunk::CreateApplication()
+	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification specification = {
 			"Kablunk Editor",

@@ -7,8 +7,12 @@
 #define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
-#include "Kablunk/Scripts/NativeScriptEngine.h"
-#include "Kablunk/Scripts/NativeScript.h"
+#if KB_NATIVE_SCRIPTING
+#	include "Kablunk/Scripts/NativeScriptEngine.h"
+#	include "Kablunk/Scripts/NativeScript.h"
+#endif
+
+#include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Scene/SceneCamera.h"
 #include "Kablunk/Core/AssetManager.h"
@@ -149,6 +153,7 @@ namespace Kablunk
 	};
 
 	// #TODO allow for multiple scripts to be attached to the same entity
+#if KB_NATIVE_SCRIPTING
 	struct NativeScriptComponent
 	{
 		NativeScript** Instance = nullptr;
@@ -243,6 +248,7 @@ namespace Kablunk
 
 		friend class Scene;
 	};
+#endif
 
 	struct MeshComponent
 	{

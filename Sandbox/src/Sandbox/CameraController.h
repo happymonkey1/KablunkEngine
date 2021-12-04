@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kablunk.h>
-
+#if KB_NATIVE_SCRIPTING
 struct CameraController : public Kablunk::NativeScript
 {
 	CameraController()
@@ -24,3 +24,4 @@ struct CameraController : public Kablunk::NativeScript
 		}
 	}
 };
+#endif
