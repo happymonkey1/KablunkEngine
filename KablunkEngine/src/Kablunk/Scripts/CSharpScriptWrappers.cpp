@@ -9,8 +9,25 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+namespace Kablunk {
+	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
+	extern std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
+}
+
+
 namespace Kablunk::Scripts
 {
+
+	static inline auto GetEntity(uint64_t entity_id)
+	{
+		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		KB_CORE_ASSERT(context, "No active scene!");
+
+		const auto& entity_map = context->GetEntityMap();
+		KB_CORE_ASSERT(entity_map.find(entity_id) != entity_map.end(), "Entity does not exist in current context!");
+
+		return entity_map.at(entity_id);
+	}
 
 	bool Kablunk_Input_IsKeyPressed(KeyCode key)
 	{
@@ -59,95 +76,154 @@ namespace Kablunk::Scripts
 		return result;
 	}
 
-	EntityHandle Kablunk_Entity_GetParent(EntityHandle entity_id)
+	uint64_t Kablunk_Entity_GetParent(uint64_t entity_id)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return (EntityHandle)0;
+		return 0;
 	}
 
-	void Kablunk_Entity_SetParent(EntityHandle entity_id, EntityHandle parent_id)
+	void Kablunk_Entity_SetParent(uint64_t entity_id, uint64_t parent_id)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
 
-	MonoArray* Kablunk_Entity_GetChildren(EntityHandle entity_id)
+	MonoArray* Kablunk_Entity_GetChildren(uint64_t entity_id)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;
 	}
 
-	EntityHandle Kablunk_Entity_CreateEntity()
+	uint64_t Kablunk_Entity_CreateEntity()
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
-		return (EntityHandle)0;
+		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		return context->CreateEntity("New C# Entity").GetUUID();
 	}
 
-	EntityHandle Kablunk_Entity_DestroyEntity(EntityHandle entity_id)
+	uint64_t Kablunk_Entity_DestroyEntity(uint64_t entity_id)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return (EntityHandle)0;
+		return 0;
 	}
 
-	void Kablunk_Entity_CreateComponent(EntityHandle entity_id, void* type)
+	void Kablunk_Entity_CreateComponent(uint64_t entity_id, void* type)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		MonoType* monoType = mono_reflection_type_get_type((MonoReflectionType*)type);
+		s_create_component_funcs[monoType](entity);
 	}
 
-	bool Kablunk_Entity_HasComponent(EntityHandle entity_id, void* type)
+	bool Kablunk_Entity_HasComponent(uint64_t entity_id, void* type)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
-		return false;
+		auto entity = GetEntity(static_cast<uint64_t>(entity_id));
+		MonoType* mono_type = mono_reflection_type_get_type((MonoReflectionType*)type);
+		bool res = s_has_component_funcs[mono_type](entity);
+		return res;
 	}
 
-	MonoString* Kablunk_TagComponent_GetTag(EntityHandle entity_id)
+	MonoString* Kablunk_TagComponent_GetTag(uint64_t entity_id)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
-		return nullptr;
+		auto entity = GetEntity(entity_id);
+		return mono_string_new(mono_domain_get(), entity.GetComponent<TagComponent>().Tag.c_str());
 	}
 
-	void Kablunk_TagComponent_SetTag(EntityHandle entity_id, MonoString* new_tag)
+	void Kablunk_TagComponent_SetTag(uint64_t entity_id, MonoString* new_tag)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		entity.GetComponent<TagComponent>().Tag = mono_string_to_utf8(new_tag);
 	}
 
-	void Kablunk_TransformComponent_GetTransform(EntityHandle entity_id, TransformComponent* out_transform)
+	void Kablunk_TransformComponent_GetTransform(uint64_t entity_id, TransformComponent* out_transform)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		*out_transform = entity.GetComponent<TransformComponent>();
 	}
 
-	void Kablunk_TransformComponent_SetTransform(EntityHandle entity_id, TransformComponent* in_transform)
+	void Kablunk_TransformComponent_SetTransform(uint64_t entity_id, TransformComponent* in_transform)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		entity.GetComponent<TransformComponent>() = *in_transform;
 	}
 
-	void Kablunk_TransformComponent_GetTranslation(EntityHandle entity_id, glm::vec3* out_translation)
+	void Kablunk_TransformComponent_GetTranslation(uint64_t entity_id, glm::vec3* out_translation)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		*out_translation = entity.GetComponent<TransformComponent>().Translation;
 	}
 
-	void Kablunk_TransformComponent_SetTranslation(EntityHandle entity_id, glm::vec3* in_translation)
+	void Kablunk_TransformComponent_SetTranslation(uint64_t entity_id, glm::vec3* in_translation)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		entity.GetComponent<TransformComponent>().Translation = *in_translation;
 	}
 
-	void Kablunk_TransformComponent_GetRotation(EntityHandle entity_id, glm::vec3* out_rotation)
+	void Kablunk_TransformComponent_GetRotation(uint64_t entity_id, glm::vec3* out_rotation)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		*out_rotation = entity.GetComponent<TransformComponent>().Rotation;
 	}
 
-	void Kablunk_TransformComponent_SetRotation(EntityHandle entity_id, glm::vec3* in_rotation)
+	void Kablunk_TransformComponent_SetRotation(uint64_t entity_id, glm::vec3* in_rotation)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		entity.GetComponent<TransformComponent>().Rotation = *in_rotation;
 	}
 
-	void Kablunk_TransformComponent_GetScale(EntityHandle entity_id, glm::vec3* out_scale)
+	void Kablunk_TransformComponent_GetScale(uint64_t entity_id, glm::vec3* out_scale)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		*out_scale = entity.GetComponent<TransformComponent>().Scale;
 	}
 
-	void Kablunk_TransformComponent_SetScale(EntityHandle entity_id, glm::vec3* in_scale)
+	void Kablunk_TransformComponent_SetScale(uint64_t entity_id, glm::vec3* in_scale)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		auto entity = GetEntity(entity_id);
+		entity.GetComponent<TransformComponent>().Scale = *in_scale;
+	}
+
+	void Kablunk_CameraComponent_ScreenToWorldPosition(glm::vec2* screen_pos, glm::vec3* out_position)
+	{
+		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		KB_CORE_ASSERT(context, "no context set!");
+
+		auto entity = context->GetPrimaryCameraEntity();
+		if (!entity.Valid())
+		{
+			KB_CORE_ERROR("no valid primary camera entity!");
+			return;
+		}
+
+		auto& camera = entity.GetComponent<CameraComponent>().Camera;
+		auto transform = entity.GetComponent<TransformComponent>().GetTransform();
+		glm::mat4 mat_projection = glm::inverse(transform) * camera.GetProjection();
+		glm::mat4 inverse = glm::inverse(mat_projection);
+
+
+
+		
+		glm::vec2 window_size;
+		
+		if (Application::Get().GetSpecification().Enable_imgui)
+		{
+			ImGuiContext* imgui_context = ImGui::GetCurrentContext();
+			ImGuiWindow* imgui_window = imgui_context->HoveredWindow;
+			window_size = glm::vec2{ imgui_window->Size.x, imgui_window->Size.y };
+		}
+		else
+			window_size = Application::Get().GetWindowDimensions();
+		
+		glm::vec2 transformed_pos = {
+			(2.0f * (screen_pos->x / window_size.x)) - 1.0f,
+			1.0f - (2.0f * (screen_pos->y / window_size.y))
+		};
+		glm::vec4 in = { transformed_pos.x, transformed_pos.y, 0.0f, 1.0f };
+
+		glm::vec4 res_out = in * inverse;
+
+		out_position->x = res_out.x;
+		out_position->y = res_out.y;
+		out_position->z = res_out.z;
+
+		*out_position /= res_out.w;
 	}
 
 	void* Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height)
@@ -180,5 +256,4 @@ namespace Kablunk::Scripts
 			case LogLevel::Critcal:	KB_CORE_FATAL(msg_cstr); break;
 		}
 	}
-
 }

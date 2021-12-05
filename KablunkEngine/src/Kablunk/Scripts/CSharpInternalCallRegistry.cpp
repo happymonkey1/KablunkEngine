@@ -50,7 +50,7 @@ namespace Kablunk
 		// input
 		mono_add_internal_call("Kablunk.Input::IsKeyPressed_Native", Scripts::Kablunk_Input_IsKeyPressed);
 		mono_add_internal_call("Kablunk.Input::IsMouseButtonPressed_Native", Scripts::Kablunk_Input_IsMouseButtonPressed);
-		mono_add_internal_call("Kablunk.Input::IsKeyPressed_Native", Scripts::Kablunk_Input_GetMousePosition);
+		mono_add_internal_call("Kablunk.Input::GetMousePosition_Native", Scripts::Kablunk_Input_GetMousePosition);
 
 		// Scene
 		mono_add_internal_call("Kablunk.Scene::GetEntities_Native", Scripts::Kablunk_Scene_GetEntities);
@@ -69,14 +69,17 @@ namespace Kablunk
 		mono_add_internal_call("Kablunk.TagComponent::SetTag_Native", Scripts::Kablunk_TagComponent_SetTag);
 
 		// Transform Component
-		mono_add_internal_call("Kablunk.Transform::GetTransform_Native", Scripts::Kablunk_TransformComponent_GetTransform);
-		mono_add_internal_call("Kablunk.Transform::SetTransform_Native", Scripts::Kablunk_TransformComponent_SetTransform);
-		mono_add_internal_call("Kablunk.Transform::GetTranslation_Native", Scripts::Kablunk_TransformComponent_GetTranslation);
-		mono_add_internal_call("Kablunk.Transform::SetTranslation_Native", Scripts::Kablunk_TransformComponent_SetTranslation);
-		mono_add_internal_call("Kablunk.Transform::GetRotation_Native", Scripts::Kablunk_TransformComponent_GetRotation);
-		mono_add_internal_call("Kablunk.Transform::SetRotation_Native", Scripts::Kablunk_TransformComponent_SetRotation);
-		mono_add_internal_call("Kablunk.Transform::GetScale_Native", Scripts::Kablunk_TransformComponent_GetScale);
-		mono_add_internal_call("Kablunk.Transform::SetScale_Native", Scripts::Kablunk_TransformComponent_SetScale);
+		mono_add_internal_call("Kablunk.TransformComponent::GetTransform_Native", Scripts::Kablunk_TransformComponent_GetTransform);
+		mono_add_internal_call("Kablunk.TransformComponent::SetTransform_Native", Scripts::Kablunk_TransformComponent_SetTransform);
+		mono_add_internal_call("Kablunk.TransformComponent::GetTranslation_Native", Scripts::Kablunk_TransformComponent_GetTranslation);
+		mono_add_internal_call("Kablunk.TransformComponent::SetTranslation_Native", Scripts::Kablunk_TransformComponent_SetTranslation);
+		mono_add_internal_call("Kablunk.TransformComponent::GetRotation_Native", Scripts::Kablunk_TransformComponent_GetRotation);
+		mono_add_internal_call("Kablunk.TransformComponent::SetRotation_Native", Scripts::Kablunk_TransformComponent_SetRotation);
+		mono_add_internal_call("Kablunk.TransformComponent::GetScale_Native", Scripts::Kablunk_TransformComponent_GetScale);
+		mono_add_internal_call("Kablunk.TransformComponent::SetScale_Native", Scripts::Kablunk_TransformComponent_SetScale);
+
+		// Camera Component
+		mono_add_internal_call("Kablunk.Camera::ScreenToWorldPosition_Native", Scripts::Kablunk_CameraComponent_ScreenToWorldPosition);
 
 		// Texture2D
 		mono_add_internal_call("Kablunk.Texture2D::Construct_Native", Scripts::Kablunk_Texture2D_Constructor);

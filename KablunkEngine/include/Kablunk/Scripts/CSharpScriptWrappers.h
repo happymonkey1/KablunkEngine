@@ -29,27 +29,30 @@ namespace Kablunk::Scripts
 	MonoArray*		Kablunk_Scene_GetEntities();
 
 	// Entity
-	EntityHandle	Kablunk_Entity_GetParent(EntityHandle entity_id);
-	void			Kablunk_Entity_SetParent(EntityHandle entity_id, EntityHandle parent_id);
-	MonoArray*		Kablunk_Entity_GetChildren(EntityHandle entity_id);
-	EntityHandle	Kablunk_Entity_CreateEntity();
-	EntityHandle	Kablunk_Entity_DestroyEntity(EntityHandle entity_id);
-	void			Kablunk_Entity_CreateComponent(EntityHandle entity_id, void* type);
-	bool			Kablunk_Entity_HasComponent(EntityHandle entity_id, void* type);
+	uint64_t	Kablunk_Entity_GetParent(uint64_t entity_id);
+	void			Kablunk_Entity_SetParent(uint64_t entity_id, uint64_t parent_id);
+	MonoArray*		Kablunk_Entity_GetChildren(uint64_t entity_id);
+	uint64_t	Kablunk_Entity_CreateEntity();
+	uint64_t	Kablunk_Entity_DestroyEntity(uint64_t entity_id);
+	void			Kablunk_Entity_CreateComponent(uint64_t entity_id, void* type);
+	bool			Kablunk_Entity_HasComponent(uint64_t entity_id, void* type);
 
 	// Tag Component
-	MonoString*		Kablunk_TagComponent_GetTag(EntityHandle entity_id);
-	void			Kablunk_TagComponent_SetTag(EntityHandle entity_id, MonoString* new_tag);
+	MonoString*		Kablunk_TagComponent_GetTag(uint64_t entity_id);
+	void			Kablunk_TagComponent_SetTag(uint64_t entity_id, MonoString* new_tag);
 
 	// Transform Component
-	void			Kablunk_TransformComponent_GetTransform(EntityHandle entity_id, TransformComponent* out_transform);
-	void			Kablunk_TransformComponent_SetTransform(EntityHandle entity_id, TransformComponent* in_transform);
-	void			Kablunk_TransformComponent_GetTranslation(EntityHandle entity_id, glm::vec3* out_translation);
-	void			Kablunk_TransformComponent_SetTranslation(EntityHandle entity_id, glm::vec3* in_translation);
-	void			Kablunk_TransformComponent_GetRotation(EntityHandle entity_id, glm::vec3* out_rotation);
-	void			Kablunk_TransformComponent_SetRotation(EntityHandle entity_id, glm::vec3* in_rotation);
-	void			Kablunk_TransformComponent_GetScale(EntityHandle entity_id, glm::vec3* out_scale);
-	void			Kablunk_TransformComponent_SetScale(EntityHandle entity_id, glm::vec3* in_scale);
+	void			Kablunk_TransformComponent_GetTransform(uint64_t entity_id, TransformComponent* out_transform);
+	void			Kablunk_TransformComponent_SetTransform(uint64_t entity_id, TransformComponent* in_transform);
+	void			Kablunk_TransformComponent_GetTranslation(uint64_t entity_id, glm::vec3* out_translation);
+	void			Kablunk_TransformComponent_SetTranslation(uint64_t entity_id, glm::vec3* in_translation);
+	void			Kablunk_TransformComponent_GetRotation(uint64_t entity_id, glm::vec3* out_rotation);
+	void			Kablunk_TransformComponent_SetRotation(uint64_t entity_id, glm::vec3* in_rotation);
+	void			Kablunk_TransformComponent_GetScale(uint64_t entity_id, glm::vec3* out_scale);
+	void			Kablunk_TransformComponent_SetScale(uint64_t entity_id, glm::vec3* in_scale);
+
+	// Camera Component
+	void			Kablunk_CameraComponent_ScreenToWorldPosition(glm::vec2* screen_pos, glm::vec3* out_position);
 
 	// Texture2D
 	void*			Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height);

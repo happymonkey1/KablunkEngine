@@ -55,8 +55,6 @@ namespace Kablunk
 		float GetOrthographicFarClip() const { return m_orthographic_far; }
 		float& GetOrthographicFarClip() { return m_orthographic_far; }
 		void SetOrthographicFarClip(float far_clip) { m_orthographic_far = far_clip; RecalculateProjection(); }
-
-
 	private:
 		void RecalculateProjection();
 	private:

@@ -46,7 +46,6 @@ namespace Kablunk
 		RecalculateProjection();
 	}
 
-
 	void SceneCamera::RecalculateProjection()
 	{
 		switch (m_projection_type)

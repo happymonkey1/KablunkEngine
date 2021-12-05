@@ -719,7 +719,12 @@ namespace Kablunk
 				if (was_error)
 					ImGui::PopStyleColor();
 
-				// #TODO public field view
+				// Exposing public fields
+				if (!is_error)
+				{
+					EntityInstanceData& entity_instance_data = CSharpScriptEngine::GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID());
+					
+				}
 
 				if (UI::Button("Run Script"))
 					CSharpScriptEngine::OnCreateEntity(entity);

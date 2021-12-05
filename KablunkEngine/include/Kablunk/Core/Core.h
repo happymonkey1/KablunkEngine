@@ -2,6 +2,7 @@
 #define KABLUNK_CORE_CORE_H
 
 #include "Kablunk/Core/RefCounting.h"
+#include "Kablunk/Core/Log.h"
 #include <memory>
 
 namespace Kablunk
