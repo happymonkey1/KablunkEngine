@@ -800,6 +800,17 @@ namespace Kablunk
 		{
 			SerializeScene(m_editor_scene, filepath);
 			m_editor_scene_path = filepath;
+
+			// update default scene for project
+			if (Project::GetActive())
+			{
+				if (Project::GetStartSceneName() == "$SCENE_NAME$")
+				{
+					Project::SetStartSceneName(m_editor_scene_path.filename().stem().string());
+					ProjectSerializer project_serializer{ Project::GetActive() };
+					project_serializer.Serialize(Project::GetActive()->GetConfig().Project_directory + "/" + Project::GetActive()->GetConfig().Project_filename);
+				}
+			}
 		}
 	}
 
@@ -1004,7 +1015,7 @@ namespace Kablunk
 		m_project_properties_panel = ProjectPropertiesPanel{ project };
 
 		if (const std::string& scene_name = project->GetStartSceneName(); !scene_name.empty())
-			OpenScene(Project::GetAssetDirectoryPath() / scene_name);
+			OpenScene(Project::GetAssetDirectoryPath() / "scenes" / scene_name);
 		else
 			NewScene();
 

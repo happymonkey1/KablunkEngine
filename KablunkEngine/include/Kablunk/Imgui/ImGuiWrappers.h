@@ -402,7 +402,7 @@ namespace Kablunk::UI
 		return pressed;
 	}
 
-	static bool PropertyFolderPathWithButton(const char* label, char* path_buffer, size_t buffer_size)
+	static bool PropertyFolderPathWithButton(const char* label, const char* path_buffer, size_t buffer_size)
 	{
 		bool pressed = false;
 
@@ -427,7 +427,7 @@ namespace Kablunk::UI
 			ImGui::PushItemWidth(-1);
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
-			ImGui::InputText("##path_preview", path_buffer, buffer_size, ImGuiInputTextFlags_ReadOnly);
+			ImGui::InputText("##path_preview", (char*)path_buffer, buffer_size, ImGuiInputTextFlags_ReadOnly);
 
 			ImGui::PopStyleVar();
 			ImGui::PopItemWidth();

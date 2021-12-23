@@ -54,7 +54,17 @@ namespace Kablunk
 
 		// #TODO startup scene selection;
 		//UI::Property("Startup Scene", m_project->GetStartSceneName());
-		UI::PropertyFolderPathWithButton("Startup Scene", s_scene_path_buffer, MAX_PATH_BUFFER_SIZE);
+		std::string default_scene_path;
+		if (m_project->GetStartSceneName() != "$SCENE_NAME$")
+			default_scene_path = m_project->GetAssetDirectory().string() + "/scenes/" + m_project->GetStartSceneName();
+		else
+			default_scene_path = "no default scene set!";
+
+		if (UI::PropertyFolderPathWithButton("Startup Scene", default_scene_path.c_str(), MAX_PATH_BUFFER_SIZE))
+		{
+			std::filesystem::path new_start_scene = FileDialog::OpenFile("Kablunk Scene (*.kablunkscene)\0*.kablunkscene\0");
+			m_project->SetStartSceneName(new_start_scene.filename().string());
+		}
 
 		UI::EndProperties();
 

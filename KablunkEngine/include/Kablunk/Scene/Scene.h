@@ -55,6 +55,8 @@ namespace Kablunk
 		{
 			return m_registry.view<Components...>();
 		}
+
+		const std::string& GetSceneName() const { return m_name; }
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);

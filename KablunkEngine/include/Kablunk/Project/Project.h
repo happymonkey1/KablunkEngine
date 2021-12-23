@@ -72,6 +72,7 @@ namespace Kablunk
 
 
 		static const std::string& GetStartSceneName() { return s_active_project->GetConfig().Start_scene; }
+		static const void SetStartSceneName(const std::string& new_name) { s_active_project->m_config.Start_scene = new_name; }
 
 	private:
 		ProjectConfig m_config;
