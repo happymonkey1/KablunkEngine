@@ -38,6 +38,8 @@ namespace Kablunk {
 		ImGuiContext* context = ImGui::GetCurrentContext();
 		double xpos = -1, ypos = -1;
 		ImGuiWindow* imgui_window = context->HoveredWindow;
+		if (!imgui_window)
+			return std::make_pair(0.0f, 0.0f);
 		ImGuiViewport* viewport = imgui_window->Viewport;
 
 		GLFWwindow* window = static_cast<GLFWwindow*>(viewport->PlatformHandle);

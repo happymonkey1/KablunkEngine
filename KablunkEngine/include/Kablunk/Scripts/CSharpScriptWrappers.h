@@ -29,11 +29,11 @@ namespace Kablunk::Scripts
 	MonoArray*		Kablunk_Scene_GetEntities();
 
 	// Entity
-	uint64_t	Kablunk_Entity_GetParent(uint64_t entity_id);
+	uint64_t		Kablunk_Entity_GetParent(uint64_t entity_id);
 	void			Kablunk_Entity_SetParent(uint64_t entity_id, uint64_t parent_id);
 	MonoArray*		Kablunk_Entity_GetChildren(uint64_t entity_id);
-	uint64_t	Kablunk_Entity_CreateEntity();
-	uint64_t	Kablunk_Entity_DestroyEntity(uint64_t entity_id);
+	uint64_t		Kablunk_Entity_CreateEntity();
+	uint64_t		Kablunk_Entity_DestroyEntity(uint64_t entity_id);
 	void			Kablunk_Entity_CreateComponent(uint64_t entity_id, void* type);
 	bool			Kablunk_Entity_HasComponent(uint64_t entity_id, void* type);
 

@@ -1,6 +1,7 @@
 .vs/
 bin/
 bin-int/
+KablunkEditor/resources/scripts/*.dll
 **.sln
 **.vcxproj
 **.vcxproj.filters
@@ -386,3 +387,5 @@ KablunkEngine2020/vendor/imgui
 
 Sandbox/src/Eclipse
 Sandbox/assets/Eclipse
+KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll
+KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll

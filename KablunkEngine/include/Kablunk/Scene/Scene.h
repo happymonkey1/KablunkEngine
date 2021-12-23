@@ -74,6 +74,10 @@ namespace Kablunk
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
+
+		// fixed update
+		float last_time = 0.0f;
+		const float FIXED_TIMESTEP = 0.5f; // #TODO expose to project settings
 	};
 }
 

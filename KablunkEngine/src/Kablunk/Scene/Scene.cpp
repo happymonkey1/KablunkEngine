@@ -353,6 +353,18 @@ namespace Kablunk
 		);
 #endif
 
+		// update fixed timestep
+		auto current_time = last_time + ts;
+		bool do_fixed_update = false;
+		float fixed_ts = 0.0f;
+		if (current_time >= FIXED_TIMESTEP)
+		{
+			do_fixed_update = true;
+			last_time -= FIXED_TIMESTEP;
+			fixed_ts = FIXED_TIMESTEP + last_time;
+		}
+		
+		last_time += ts;
 		{
 			auto view = m_registry.view<CSharpScriptComponent>();
 			for (auto e : view)
@@ -360,6 +372,10 @@ namespace Kablunk
 				Entity entity = { e, this };
 				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
 					CSharpScriptEngine::OnUpdateEntity(entity, ts);
+
+				if (do_fixed_update)
+					if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+						CSharpScriptEngine::OnFixedUpdateEntity(entity, Timestep{ fixed_ts });
 			}
 		}
 		

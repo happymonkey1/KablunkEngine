@@ -45,17 +45,19 @@ namespace Kablunk
 		std::string Class_name;
 		std::string Namespace_name;
 
-		MonoClass* Class = nullptr;
-		MonoMethod* Constructor = nullptr;
-		MonoMethod* OnCreateMethod = nullptr;
-		MonoMethod* OnDestroyMethod = nullptr;
-		MonoMethod* OnUpdateMethod = nullptr;
+		MonoClass* Class				= nullptr;
+		MonoMethod* Constructor			= nullptr;
+		MonoMethod* OnCreateMethod		= nullptr;
+		MonoMethod* OnDestroyMethod		= nullptr;
+		MonoMethod* OnUpdateMethod		= nullptr;
+		MonoMethod* OnFixedUpdateMethod = nullptr;
 		
 		void InitClassMethods(MonoImage* image)
 		{
 			Constructor = GetMethod(s_core_assembly_image, "Kablunk.Entity:.ctor(ulong)");
 			OnCreateMethod = GetMethod(image, Full_name + ":OnCreate()");
 			OnUpdateMethod = GetMethod(image, Full_name + ":OnUpdate(single)");
+			OnFixedUpdateMethod = GetMethod(image, Full_name + ":OnFixedUpdate(single)");
 			OnDestroyMethod = GetMethod(image, Full_name + ":OnDestroy()");
 		}
 	};
@@ -399,6 +401,16 @@ namespace Kablunk
 		{
 			void* args[] = { &ts };
 			CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnUpdateMethod, args);
+		}
+	}
+
+	void CSharpScriptEngine::OnFixedUpdateEntity(Entity entity, Timestep fixed_ts)
+	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnFixedUpdateMethod)
+		{
+			void* args[] = { &fixed_ts };
+			CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnFixedUpdateMethod, args);
 		}
 	}
 
