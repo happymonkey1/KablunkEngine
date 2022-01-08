@@ -113,7 +113,7 @@ namespace Kablunk
 		std::string Class_name;
 		std::string Namespace_name;
 
-		MonoClass* Class				= nullptr;
+		MonoClass*  Class				= nullptr;
 		MonoMethod* Constructor			= nullptr;
 		MonoMethod* OnCreateMethod		= nullptr;
 		MonoMethod* OnDestroyMethod		= nullptr;
@@ -219,7 +219,7 @@ namespace Kablunk
 	{
 		std::string path_as_str = path.string();
 		MonoAssembly* assembly = LoadAssemblyFromFile(path_as_str.c_str());
-		// can't use loggers here because this will happen before they get initialized
+		// can't use loggers here because this happens before they get initialized
 		if (!assembly)
 		{
 			std::cout << "[C#-ScriptEngine] Could not load assembly: " << path_as_str << std::endl;
