@@ -777,6 +777,7 @@ namespace Kablunk
 					component.Type = StringToKablunkRigidBodyType(options[index]);
 				
 				UI::Property("Fixed Rotation", &component.Fixed_rotation);
+				UI::Property("Affected by Gravity", &component.Does_gravity_affect);
 
 				UI::EndProperties();
 			});

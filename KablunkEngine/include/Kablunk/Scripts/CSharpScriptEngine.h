@@ -59,6 +59,11 @@ namespace Kablunk
 		static void OnFixedUpdateEntity(Entity entity, Timestep fixed_ts);
 		static void OnScriptComponentDestroyed(uuid::uuid64 scene_id, uuid::uuid64 entity_id);
 
+		static void OnMouseDownEntity(Entity entity);
+		static void OnMouseOverEntity(Entity entity);
+		static void OnMouseMoveEntity(Entity entity);
+		static void OnMouseUpEntity(Entity entity);
+
 		static MonoObject* Construct(const std::string& full_name, bool call_constructor = true, void** parameters = nullptr);
 		static MonoClass* GetCoreClass(const std::string& full_name);
 

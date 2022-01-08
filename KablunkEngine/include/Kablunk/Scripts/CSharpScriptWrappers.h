@@ -54,6 +54,9 @@ namespace Kablunk::Scripts
 	// Camera Component
 	void			Kablunk_CameraComponent_ScreenToWorldPosition(glm::vec2* screen_pos, glm::vec3* out_position);
 
+	// Physics 2D
+	
+
 	// Texture2D
 	void*			Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height);
 	void			Kablunk_Texture2D_Destructor(Ref<Texture2D>* _this);

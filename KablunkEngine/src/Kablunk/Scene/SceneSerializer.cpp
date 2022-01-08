@@ -129,6 +129,7 @@ namespace Kablunk
 			{
 				out << YAML::Key << "Type" << YAML::Value << static_cast<int32_t>(component.Type);
 				out << YAML::Key << "Fixed_rotation" << YAML::Value << component.Fixed_rotation;
+				out << YAML::Key << "Does_gravity_affect" << YAML::Value << component.Does_gravity_affect;
 			});
 
 		WriteComponentData<BoxCollider2DComponent>(out, entity, [](auto& out, BoxCollider2DComponent& component)
@@ -306,6 +307,7 @@ namespace Kablunk
 			{
 				component.Type = static_cast<RigidBody2DComponent::RigidBodyType>(data["Type"].as<int32_t>());
 				component.Fixed_rotation = data["Fixed_rotation"].as<bool>();
+				component.Does_gravity_affect = data["Does_gravity_affect"].as<bool>();
 			});
 
 		ReadComponentData<BoxCollider2DComponent>(entity_data, entity, [&](BoxCollider2DComponent& component, auto& data)

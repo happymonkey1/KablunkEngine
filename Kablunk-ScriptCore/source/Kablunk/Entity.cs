@@ -4,7 +4,12 @@ using System.Runtime.CompilerServices;
 namespace Kablunk
 {
 	public class Entity
-    {
+	{
+		private Action m_OnMouseDownCallbacks;
+		private Action m_OnMouseMoveCallbacks;
+		private Action m_OnMouseOverCallbacks;
+		private Action m_OnMouseUpCallbacks;
+
 		protected Entity() { ID = 0; }
 
 		internal Entity(ulong id)
@@ -106,6 +111,50 @@ namespace Kablunk
         {
 			DestroyEntity_Native(entity.ID);
         }
+
+		/// <summary>
+		/// Add a callback for a mouse down event over the entity
+		/// </summary>
+		/// <param name="mouse_down_callback"></param>
+		public void AddMouseDownCallback(Action mouse_down_callback)
+		{
+			m_OnMouseDownCallbacks += mouse_down_callback;
+		}
+
+		public void AddMouseOverCallback(Action mouse_over_callback)
+		{
+			m_OnMouseOverCallbacks += mouse_over_callback;
+		}
+
+		public void AddMouseMoveCallback(Action mouse_move_callback)
+		{
+			m_OnMouseMoveCallbacks += mouse_move_callback;
+		}
+
+		public void AddMouseUpCallback(Action mouse_up_callback)
+		{
+			m_OnMouseUpCallbacks += mouse_up_callback;
+		}
+
+		internal void OnMouseDown()
+		{
+			m_OnMouseDownCallbacks?.Invoke();
+		}
+
+		internal void OnMouseOver()
+		{
+			m_OnMouseOverCallbacks?.Invoke();
+		}
+
+		internal void OnMouseMove()
+		{
+			m_OnMouseMoveCallbacks?.Invoke();
+		}
+
+		internal void OnMouseUp()
+		{
+			m_OnMouseUpCallbacks?.Invoke();
+		}
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CreateComponent_Native(ulong entity_id, Type type);

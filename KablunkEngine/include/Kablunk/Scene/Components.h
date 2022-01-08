@@ -292,6 +292,7 @@ namespace Kablunk
 
 		RigidBodyType Type = RigidBodyType::Static;
 		bool Fixed_rotation = false;
+		bool Does_gravity_affect = true;
 
 		void* Runtime_body = nullptr;
 

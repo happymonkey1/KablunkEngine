@@ -4,10 +4,18 @@
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 #include "Kablunk/Core/Application.h"
 
+#include "Kablunk/Core/MouseCodes.h"
+
 #include <mono/jit/jit.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include <box2d/b2_shape.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_circle_shape.h>
+#include <box2d/b2_fixture.h>
 
 namespace Kablunk {
 	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
@@ -58,7 +66,7 @@ namespace Kablunk::Scripts
 
 	MonoArray* Kablunk_Scene_GetEntities()
 	{
-		auto context = CSharpScriptEngine::GetCurrentSceneContext();
+		Kablunk::WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "no scene set!");
 		const auto& entity_map = context->GetEntityMap();
 
@@ -142,6 +150,13 @@ namespace Kablunk::Scripts
 	{
 		auto entity = GetEntity(entity_id);
 		entity.GetComponent<TransformComponent>() = *in_transform;
+
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			auto& rb2d_comp = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)rb2d_comp.Runtime_body;
+			body->SetTransform(b2Vec2{ in_transform->Translation.x, in_transform->Translation.y }, in_transform->Rotation.z);
+		}
 	}
 
 	void Kablunk_TransformComponent_GetTranslation(uint64_t entity_id, glm::vec3* out_translation)
@@ -154,6 +169,13 @@ namespace Kablunk::Scripts
 	{
 		auto entity = GetEntity(entity_id);
 		entity.GetComponent<TransformComponent>().Translation = *in_translation;
+
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			auto& rb2d_comp = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)rb2d_comp.Runtime_body;
+			body->SetTransform(b2Vec2{ in_translation->x, in_translation->y }, body->GetAngle());
+		}
 	}
 
 	void Kablunk_TransformComponent_GetRotation(uint64_t entity_id, glm::vec3* out_rotation)
@@ -166,6 +188,14 @@ namespace Kablunk::Scripts
 	{
 		auto entity = GetEntity(entity_id);
 		entity.GetComponent<TransformComponent>().Rotation = *in_rotation;
+
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			auto& rb2d_comp = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)rb2d_comp.Runtime_body;
+			const b2Transform& transform = body->GetTransform();
+			body->SetTransform(body->GetPosition(), in_rotation->z);
+		}
 	}
 
 	void Kablunk_TransformComponent_GetScale(uint64_t entity_id, glm::vec3* out_scale)
@@ -196,9 +226,6 @@ namespace Kablunk::Scripts
 		auto transform = entity.GetComponent<TransformComponent>().GetTransform();
 		glm::mat4 mat_projection = glm::inverse(transform) * camera.GetProjection();
 		glm::mat4 inverse = glm::inverse(mat_projection);
-
-
-
 		
 		glm::vec2 window_size;
 		
@@ -206,7 +233,10 @@ namespace Kablunk::Scripts
 		{
 			ImGuiContext* imgui_context = ImGui::GetCurrentContext();
 			ImGuiWindow* imgui_window = imgui_context->HoveredWindow;
-			window_size = glm::vec2{ imgui_window->Size.x, imgui_window->Size.y };
+			if (imgui_window)
+				window_size = glm::vec2{ imgui_window->Size.x, imgui_window->Size.y };
+			else
+				return;
 		}
 		else
 			window_size = Application::Get().GetWindowDimensions();
@@ -225,6 +255,7 @@ namespace Kablunk::Scripts
 
 		*out_position /= res_out.w;
 	}
+	
 
 	void* Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height)
 	{

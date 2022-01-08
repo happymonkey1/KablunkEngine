@@ -216,6 +216,8 @@ namespace Kablunk
 			body_def.angle = transform.Rotation.z;
 
 			b2Body* body = m_box2D_world->CreateBody(&body_def);
+			
+			body->SetGravityScale(rb2d_comp.Does_gravity_affect ? 1.0f : 0.0f);
 			body->SetFixedRotation(rb2d_comp.Fixed_rotation);
 			rb2d_comp.Runtime_body = body;
 
@@ -234,7 +236,9 @@ namespace Kablunk
 				fixture_def.friction = bc2d_comp.Friction;
 				fixture_def.restitution = bc2d_comp.Restitution;
 				fixture_def.restitutionThreshold = bc2d_comp.Restitution_threshold;
-				body->CreateFixture(&fixture_def);
+				b2Fixture* fixture = body->CreateFixture(&fixture_def);
+
+				bc2d_comp.Runtime_ficture = fixture;
 			}
 
 			if (entity.HasComponent<CircleCollider2DComponent>())
@@ -252,7 +256,9 @@ namespace Kablunk
 				fixture_def.friction = cc2d_comp.Friction;
 				fixture_def.restitution = cc2d_comp.Restitution;
 				fixture_def.restitutionThreshold = cc2d_comp.Restitution_threshold;
-				body->CreateFixture(&fixture_def);
+				b2Fixture* fixture = body->CreateFixture(&fixture_def);
+
+				cc2d_comp.Runtime_ficture = fixture;
 			}
 		}
 
@@ -371,7 +377,14 @@ namespace Kablunk
 			{
 				Entity entity = { e, this };
 				if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))
+				{
+					CSharpScriptEngine::OnMouseDownEntity(entity);
+					CSharpScriptEngine::OnMouseOverEntity(entity);
+					CSharpScriptEngine::OnMouseMoveEntity(entity);
+					CSharpScriptEngine::OnMouseUpEntity(entity);
+
 					CSharpScriptEngine::OnUpdateEntity(entity, ts);
+				}
 
 				if (do_fixed_update)
 					if (CSharpScriptEngine::ModuleExists(entity.GetComponent<CSharpScriptComponent>().Module_name))

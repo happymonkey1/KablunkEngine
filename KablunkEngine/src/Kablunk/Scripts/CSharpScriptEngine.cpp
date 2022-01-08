@@ -1,6 +1,8 @@
 #include "kablunkpch.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 #include "Kablunk/Scripts/CSharpInternalCallRegistry.h"
+#include "Kablunk/Scene/Components.h"
+#include "Kablunk/Scripts/CSharpScriptWrappers.h"
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
@@ -17,10 +19,76 @@
 #include <windows.h>
 #include <fileapi.h>
 
+#include <box2d/b2_shape.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_circle_shape.h>
+#include <box2d/b2_fixture.h>
+
 // https://www.mono-project.com/docs/advanced/embedding/
 
 namespace Kablunk
 {
+	namespace Internal
+	{
+		// #TODO think about moving elsewhere
+		bool CheckOnMouseDown(Entity entity, std::pair<float, float> point)
+		{
+			bool res = false;
+			
+			//#TODO figure out better way than using the exposed c# api
+			glm::vec3 screen_pos{ 0.0f };
+			Kablunk::Scripts::Kablunk_CameraComponent_ScreenToWorldPosition(&glm::vec2{ point.first, point.second }, &screen_pos);
+
+			b2Vec2 point_b2D{ screen_pos.x, screen_pos.y };
+			
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
+			{
+				auto& box_collider_comp = entity.GetComponent<BoxCollider2DComponent>();
+				b2Fixture* fixture = (b2Fixture*)(box_collider_comp.Runtime_ficture);
+
+				b2Body* body = (b2Body*)(fixture->GetBody());
+				const b2Transform& transform = body->GetTransform();
+
+				res = fixture->GetShape()->TestPoint(transform, point_b2D);
+				if (res)
+					return true;
+			}
+
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& sphere_collider_comp = entity.GetComponent<CircleCollider2DComponent>();
+				b2Fixture* fixture = (b2Fixture*)(sphere_collider_comp.Runtime_ficture);
+
+				b2Body* body = (b2Body*)(fixture->GetBody());
+				const b2Transform& transform = body->GetTransform();
+
+				res = fixture->GetShape()->TestPoint(transform, point_b2D) ? true : res;
+			}
+
+			return res;
+		}
+
+		bool CheckOnMouseOver(Entity entity, std::pair<float, float> point)
+		{
+#pragma message("CheckOnMouseOver not implemented!")
+			return false;
+		}
+
+		bool CheckOnMouseMove(Entity entity, std::pair<float, float> point)
+		{
+#pragma warning("CheckOnMouseMove not implemented!")
+			return false;
+		}
+
+		bool CheckOnMouseUp(Entity entity, std::pair<float, float> point)
+		{
+#pragma warning("CheckOnMouseUp not implemented!")
+			return false;
+		}
+	}
+
 	static MonoDomain* s_current_mono_domain = nullptr;
 	static MonoDomain* s_new_mono_domain = nullptr;
 	static std::string s_core_assembly_path;
@@ -51,14 +119,27 @@ namespace Kablunk
 		MonoMethod* OnDestroyMethod		= nullptr;
 		MonoMethod* OnUpdateMethod		= nullptr;
 		MonoMethod* OnFixedUpdateMethod = nullptr;
+
+		// Physics 2D
+		MonoMethod* OnMouseDownMethod	= nullptr;
+		MonoMethod* OnMouseOverMethod	= nullptr;
+		MonoMethod* OnMouseMoveMethod	= nullptr;
+		MonoMethod* OnMouseUpMethod		= nullptr;
+
 		
 		void InitClassMethods(MonoImage* image)
 		{
-			Constructor = GetMethod(s_core_assembly_image, "Kablunk.Entity:.ctor(ulong)");
-			OnCreateMethod = GetMethod(image, Full_name + ":OnCreate()");
-			OnUpdateMethod = GetMethod(image, Full_name + ":OnUpdate(single)");
+			Constructor			= GetMethod(s_core_assembly_image, "Kablunk.Entity:.ctor(ulong)");
+			OnCreateMethod		= GetMethod(image, Full_name + ":OnCreate()");
+			OnUpdateMethod		= GetMethod(image, Full_name + ":OnUpdate(single)");
 			OnFixedUpdateMethod = GetMethod(image, Full_name + ":OnFixedUpdate(single)");
-			OnDestroyMethod = GetMethod(image, Full_name + ":OnDestroy()");
+			OnDestroyMethod		= GetMethod(image, Full_name + ":OnDestroy()");
+
+			// Physics 2D
+			OnMouseDownMethod	= GetMethod(s_core_assembly_image, "Kablunk.Entity:OnMouseDown()");
+			OnMouseOverMethod	= GetMethod(s_core_assembly_image, "Kablunk.Entity:OnMouseOver()");
+			OnMouseMoveMethod	= GetMethod(s_core_assembly_image, "Kablunk.Entity:OnMouseMove()");
+			OnMouseUpMethod		= GetMethod(s_core_assembly_image, "Kablunk.Entity:OnMouseUp()");
 		}
 	};
 
@@ -412,6 +493,38 @@ namespace Kablunk
 			void* args[] = { &fixed_ts };
 			CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnFixedUpdateMethod, args);
 		}
+	}
+
+	void CSharpScriptEngine::OnMouseDownEntity(Entity entity)
+	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnMouseDownMethod)
+			if (Internal::CheckOnMouseDown(entity, Input::GetMousePosition()))
+				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseDownMethod, nullptr);
+	}
+
+	void CSharpScriptEngine::OnMouseOverEntity(Entity entity)
+	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnMouseDownMethod)
+			if (Internal::CheckOnMouseOver(entity, Input::GetMousePosition()))
+				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseOverMethod, nullptr);
+	}
+
+	void CSharpScriptEngine::OnMouseMoveEntity(Entity entity)
+	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnMouseDownMethod)
+			if (Internal::CheckOnMouseMove(entity, Input::GetMousePosition()))
+				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseMoveMethod, nullptr);
+	}
+
+	void CSharpScriptEngine::OnMouseUpEntity(Entity entity)
+	{
+		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
+		if (entity_instance.Script_class->OnMouseDownMethod)
+			if (Internal::CheckOnMouseUp(entity, Input::GetMousePosition()))
+				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseUpMethod, nullptr);
 	}
 
 	void CSharpScriptEngine::OnScriptComponentDestroyed(uuid::uuid64 scene_id, uuid::uuid64 entity_id)

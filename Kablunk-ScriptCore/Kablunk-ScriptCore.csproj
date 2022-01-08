@@ -20,7 +20,8 @@
     <OutputPath>..\KablunkEditor\resources\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\KablunkEditor\resources\scripts\intermediates\Debug\Kablunk-ScriptCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -31,7 +32,8 @@
     <OutputPath>..\KablunkEditor\resources\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\KablunkEditor\resources\scripts\intermediates\Release\Kablunk-ScriptCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -42,7 +44,8 @@
     <OutputPath>..\KablunkEditor\resources\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\KablunkEditor\resources\scripts\intermediates\Distribution\Kablunk-ScriptCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -61,6 +64,7 @@
     <Compile Include="Source\Kablunk\Math\Vector2.cs" />
     <Compile Include="Source\Kablunk\Math\Vector3.cs" />
     <Compile Include="Source\Kablunk\Math\Vector4.cs" />
+    <Compile Include="Source\Kablunk\Physics2D.cs" />
     <Compile Include="Source\Kablunk\Renderer\Color.cs" />
     <Compile Include="Source\Kablunk\RuntimeException.cs" />
     <Compile Include="Source\Kablunk\Scene\Components.cs" />

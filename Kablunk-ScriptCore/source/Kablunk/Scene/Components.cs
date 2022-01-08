@@ -149,4 +149,9 @@ namespace Kablunk
 	{
 		// #TODO implement
 	}
+
+	public class SphereCollider2DComponent : Component
+	{
+		// #TODO implement
+	}
 }
