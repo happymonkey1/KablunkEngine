@@ -1,32 +1,36 @@
 #include "EditorLayer.h"
 
 #include "Kablunk/Core/Application.h"
+#include "Kablunk/Core/MouseCodes.h"
+#include "Kablunk/Core/Uuid64.h"
+#include "Kablunk/Core/JobSystem.h"
 
 #include "Kablunk/Utilities/PlatformUtils.h"
-#include "Kablunk/Math/Math.h"
-#include "Kablunk/Core/MouseCodes.h"
-#include "Kablunk/Imgui/ImGuiWrappers.h"
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
+#include "Kablunk/Math/Math.h"
+
+#include "Kablunk/Imgui/ImGuiWrappers.h"
 
 #include <Kablunk/Scene/SceneSerializer.h>
 
-#include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_internal.h"
-#include "ImGuizmo.h"
 #include "Kablunk/Utilities/Parser.h"
 
 #include "Kablunk/Project/Project.h"
 #include "Kablunk/Project/ProjectSerializer.h"
 
-#include "Kablunk/Core/JobSystem.h"
-
 // #TODO replace when runtime is figured out
 #include "Sandbox/Core.h"
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+#include <ImGuizmo.h>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+
+
 
 #define DISABLE_NATIVE_SCRIPTING 0
 
@@ -463,6 +467,7 @@ namespace Kablunk
 				OpenProject(s_project_filepath_buffer);
 		}
 
+
 		ImGui::PopStyleVar(2);
 
 		ImGui::End();
@@ -685,8 +690,8 @@ namespace Kablunk
 		if (e.GetRepeatCount() > 0)
 			return false;
 
-		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) | Input::IsKeyPressed(Key::RightControl);
-		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift)   | Input::IsKeyPressed(Key::RightShift);
+		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift)   || Input::IsKeyPressed(Key::RightShift);
 
 		switch (e.GetKeyCode())
 		{

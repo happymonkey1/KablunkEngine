@@ -30,7 +30,8 @@ project "KablunkEditor"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.FreeType}",
         "%{IncludeDir.RCCPP}",
-        "%{IncludeDir.mono}"
+        "%{IncludeDir.mono}",
+        "%{IncludeDir.Vulkan}",
     }
 
     links

@@ -51,7 +51,9 @@ project "KablunkEngine"
 		"%{IncludeDir.FreeType}",
 		"%{IncludeDir.Box2d}",
 		"%{IncludeDir.RCCPP}",
-		"%{IncludeDir.mono}"
+		"%{IncludeDir.mono}",
+		"%{IncludeDir.VulkanSDK}",
+		"%{IncludeDir.VulkanSDK_LocalInclude}"
 	}
 
 	links
@@ -65,7 +67,9 @@ project "KablunkEngine"
 		"Box2d",
 		"RCCPP",
 		"opengl32.lib",
-		
+
+		"%{Library.Vulkan}",
+		"%{Library.VulkanUtils}",
 
 		"%{Library.mono}"
 	}

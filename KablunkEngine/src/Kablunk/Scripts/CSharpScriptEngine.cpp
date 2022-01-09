@@ -186,7 +186,7 @@ namespace Kablunk
 			return nullptr;
 		}
 
-		MonoImageOpenStatus status;
+		MonoImageOpenStatus status = MonoImageOpenStatus::MONO_IMAGE_IMAGE_INVALID;
 		MonoImage* image = mono_image_open_from_data_full(reinterpret_cast<char*>(file_data), file_size, 1, &status, 0);
 		if (status != MONO_IMAGE_OK)
 		{

@@ -252,7 +252,12 @@ namespace Kablunk::UI
 		Property(label, std::to_string(value));
 	}
 
-	static bool Property(const char* label, int& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+	static void PropertyReadOnlyDouble(const char* label, const double& value)
+	{
+		Property(label, std::to_string(value));
+	}
+
+	static bool Property(const char* label, int& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
 			{
@@ -260,7 +265,7 @@ namespace Kablunk::UI
 			});
 	}
 
-	static bool Property(const char* label, uint32_t& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+	static bool Property(const char* label, uint32_t& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](char* id_buffer)
 			{

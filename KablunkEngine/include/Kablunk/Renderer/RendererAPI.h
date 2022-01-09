@@ -10,7 +10,7 @@ namespace Kablunk
 	public:
 		enum class RenderAPI_t
 		{
-			None = 0, OpenGL = 1
+			None = 0, OpenGL = 1, Vulkan = 2
 		};
 
 	public:

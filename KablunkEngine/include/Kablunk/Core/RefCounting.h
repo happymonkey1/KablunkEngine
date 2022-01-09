@@ -1,6 +1,7 @@
 #ifndef KABLUNK_CORE_REF_COUNTING_H
 #define KABLUNK_CORE_REF_COUNTING_H
 
+#include <atomic>
 #include <memory>
 
 namespace Kablunk
@@ -29,7 +30,7 @@ namespace Kablunk
 	{
 	public:
 		IntrusiveRef() : m_ptr{ nullptr } {}
-		IntrusiveRef(std::nullptr_t n) m_ptr { nullptr } {}
+		IntrusiveRef(std::nullptr_t n) : m_ptr { nullptr } {}
 		IntrusiveRef(T* ptr) : m_ptr{ ptr }
 		{
 			static_assert(std::is_base_of<RefCounted, T>::value, "Class is not RefCounted!");
@@ -110,13 +111,13 @@ namespace Kablunk
 		operator bool() const { return m_ptr != nullptr; }
 
 		T* operator->() { return m_ptr; }
-		const T* operator->() { return m_ptr; }
+		const T* operator->() const { return m_ptr; }
 
 		T& operator*() { return *m_ptr; }
-		const T& operator*() { return *m_ptr; }
+		const T& operator*() const { return *m_ptr; }
 
 		T* get() { return m_ptr; }
-		const T* get() { return m_ptr; }
+		const T* get() const { return m_ptr; }
 
 		void reset(T* ptr = nullptr)
 		{
