@@ -10,6 +10,7 @@ namespace Kablunk {
 
 		void Init() override;
 		void SwapBuffers() override;
+		void Shutdown() override;
 	private:
 		GLFWwindow* m_WindowHandle;
 	};

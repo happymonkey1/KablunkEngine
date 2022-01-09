@@ -27,7 +27,7 @@ namespace Kablunk
 
 		static inline RenderAPI_t GetAPI() { return s_API; };
 	private:
-		inline static RenderAPI_t s_API = RenderAPI_t::OpenGL;
+		inline static RenderAPI_t s_API = RenderAPI_t::Vulkan;
 	};
 
 }

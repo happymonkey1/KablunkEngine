@@ -9,9 +9,9 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
-#include "GLFW/glfw3.h"
 
-
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 namespace Kablunk {
 
@@ -57,6 +57,14 @@ namespace Kablunk {
 
 			int success = glfwInit();
             KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
+
+			// Hint to glfw that this will be rendered with Vulkan
+			if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+			{
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+			}
+			
 
             glfwSetErrorCallback(GLFWErrorCallback);
         }
@@ -175,6 +183,8 @@ namespace Kablunk {
     void WindowsWindow::Shutdown()
     {
         KB_PROFILE_FUNCTION();
+
+		m_Context->Shutdown();
 
         glfwDestroyWindow(m_Window);
 		--s_glfw_window_count;

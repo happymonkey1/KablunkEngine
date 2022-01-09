@@ -3,6 +3,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Vulkan/VulkanContext.h"
 
 namespace Kablunk
 {
@@ -15,6 +16,8 @@ namespace Kablunk
 			return nullptr;
 		case RendererAPI::RenderAPI_t::OpenGL:
 			return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
+		case RendererAPI::RenderAPI_t::Vulkan:
+			return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
 			return nullptr;
