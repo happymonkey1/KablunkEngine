@@ -4,7 +4,7 @@
 
 namespace Kablunk 
 {
-	class GraphicsContext 
+	class GraphicsContext : public RefCounted
 	{
 	public:
 		virtual ~GraphicsContext() = default;

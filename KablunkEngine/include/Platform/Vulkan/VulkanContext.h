@@ -3,6 +3,8 @@
 #define KABLUNK_PLATFORM_VULKAN_CONTEXT_H
 
 #include "Kablunk/Renderer/GraphicsContext.h"
+#include "Platform/Vulkan/VulkanDevice.h"
+#include "Platform/Vulkan/VulkanSwapChain.h"
 
 #include <vulkan/vulkan.h>
 
@@ -13,15 +15,6 @@ struct GLFWwindow;
 
 namespace Kablunk
 {
-	struct QueueFamilyIndices
-	{
-		std::optional<uint32_t> Graphics_family;
-
-		bool IsComplete() {
-			return Graphics_family.has_value();
-		}
-	};
-
 	class VulkanContext : public GraphicsContext {
 	public:
 		VulkanContext(GLFWwindow* window_handle);
@@ -29,6 +22,12 @@ namespace Kablunk
 		void Init() override;
 		void SwapBuffers() override;
 		void Shutdown() override;
+
+		IntrusiveRef<VulkanDevice> GetDevice() { return m_device; }
+
+		static IntrusiveRef<VulkanContext> Get() { return s_context; }
+
+		static VkInstance GetInstance() { return s_instance; }
 	private:
 		void CreateInstance();
 		bool CheckValidationLayerSupport();
@@ -77,27 +76,28 @@ namespace Kablunk
 		}
 
 		void SetupDebugMessageCallback();
-
-		// Physical Devices
-		void PickPhysicalDevice();
-		bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
-
-		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-
-		// Logical Device
-		void CreateLogicalDevice();
 	private:
+		// #TODO move
+		inline static IntrusiveRef<VulkanContext> s_context;
+		inline static VkInstance s_instance;
+
 		GLFWwindow* m_window_handle;
-		VkInstance m_instance;
+
+		IntrusiveRef<VulkanPhysicalDevice> m_physical_device = nullptr;
+		IntrusiveRef<VulkanDevice> m_device = nullptr;
+
+		VulkanSwapChain m_swap_chain;
 
 		// Validation layers
 		const std::vector<const char*> m_validation_layers;
-		VkDebugUtilsMessengerEXT m_debug_messenger;
+		VkDebugUtilsMessengerEXT m_debug_messenger = nullptr;
 #ifdef KB_DEBUG
 		const bool m_enable_validation_layers = true;
 #else
 		const bool m_enable_validation_layers = false;
 #endif
+
+		friend class VulkanDevice;
 	};
 }
 

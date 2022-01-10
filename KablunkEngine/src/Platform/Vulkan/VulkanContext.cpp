@@ -9,15 +9,26 @@
 namespace Kablunk
 {
 	VulkanContext::VulkanContext(GLFWwindow* window_handle)
-		: m_window_handle{ window_handle }, m_instance{}, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }
+		: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }
 	{
-		
+		s_context = IntrusiveRef<VulkanContext>(this);
 	}
 
 	void VulkanContext::Init()
 	{
 		CreateInstance();
 		SetupDebugMessageCallback();
+		
+		
+		m_physical_device = IntrusiveRef<VulkanPhysicalDevice>::Create();
+
+		VkPhysicalDeviceFeatures enabled_features{};
+		enabled_features.samplerAnisotropy = true;
+		enabled_features.wideLines = true;
+		enabled_features.fillModeNonSolid = true;
+		enabled_features.pipelineStatisticsQuery = true;
+
+		m_device = IntrusiveRef<VulkanDevice>::Create(m_physical_device, enabled_features);
 	}
 
 	void VulkanContext::SwapBuffers()
@@ -53,7 +64,7 @@ namespace Kablunk
 		else
 			create_info.enabledLayerCount = 0;
 		
-		if (vkCreateInstance(&create_info, nullptr, &m_instance) != VK_SUCCESS)
+		if (vkCreateInstance(&create_info, nullptr, &s_instance) != VK_SUCCESS)
 		{
 			KB_CORE_ERROR("failed to create Vulkan instance!");
 			return;
@@ -132,98 +143,23 @@ namespace Kablunk
 		create_info.pfnUserCallback = DebugCallback;
 		create_info.pUserData = nullptr;
 
-		if (CreateDebugUtilsMessengerExtension(m_instance, &create_info, nullptr, &m_debug_messenger) != VK_SUCCESS)
+		if (CreateDebugUtilsMessengerExtension(s_instance, &create_info, nullptr, &m_debug_messenger) != VK_SUCCESS)
 		{
 			KB_CORE_ERROR("Failed to create Debug Messenger!");
 			return;
 		}
 	}
 
-	void VulkanContext::PickPhysicalDevice()
-	{
-		VkPhysicalDevice physical_device = VK_NULL_HANDLE;
-
-		uint32_t device_count = 0;
-		vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
-
-		if (device_count == 0)
-		{
-			KB_CORE_ERROR("Vulkan found no physical devices!");
-			return;
-		}
-
-		std::vector<VkPhysicalDevice> devices(device_count);
-		vkEnumeratePhysicalDevices(m_instance, &device_count, devices.data());
-
-		for (const auto& device : devices)
-		{
-			if (IsPhysicalDeviceSuitable(device))
-			{
-				// #TODO select best device
-				physical_device = device;
-				break;
-			}
-		}
-
-		if (physical_device == VK_NULL_HANDLE)
-		{
-			KB_CORE_ERROR("Vulkan found no suitable physical device!");
-			return;
-		}
-	}
-
-	bool VulkanContext::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
-	{
-		VkPhysicalDeviceProperties device_properties{};
-		VkPhysicalDeviceFeatures device_features{};
-		
-		vkGetPhysicalDeviceProperties(device, &device_properties);
-		vkGetPhysicalDeviceFeatures(device, &device_features);
-
-		// #TODO score each device and pick best
-
-		auto indices = FindQueueFamilies(device);
-
-		bool suitable = device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader && indices.IsComplete();
-
-		return suitable;
-	}
-
-	QueueFamilyIndices VulkanContext::FindQueueFamilies(VkPhysicalDevice device)
-	{
-		QueueFamilyIndices indices;
-
-		uint32_t queue_family_count = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-
-		std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-		int i = 0;
-		for (const auto& queue_family : queue_families)
-		{
-			if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-				indices.Graphics_family = i;
-
-			i++;
-		}
-
-		return indices;
-	}
-
-	void VulkanContext::CreateLogicalDevice()
-	{
-		auto indices = FindQueueFamilies()
-	}
-
 	void VulkanContext::Shutdown()
 	{
 		KB_CORE_INFO("Shutting down Vulkan instance");
 
-		if (m_enable_validation_layers)
-			DestroyDebugUtilsMessengerEXT(m_instance, m_debug_messenger, nullptr);
+		m_device->Destroy();
 
-		vkDestroyInstance(m_instance, nullptr);
+		if (m_enable_validation_layers)
+			DestroyDebugUtilsMessengerEXT(s_instance, m_debug_messenger, nullptr);
+
+		vkDestroyInstance(s_instance, nullptr);
 	}
 
 }
