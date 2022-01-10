@@ -52,6 +52,7 @@ project "KablunkEngine"
 		"%{IncludeDir.Box2d}",
 		"%{IncludeDir.RCCPP}",
 		"%{IncludeDir.mono}",
+		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}"
 	}
@@ -88,7 +89,12 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib",
+			"%{Library.ShaderC_Debug}",
+			"%{Library.ShaderC_Utils_Debug}",
+			"%{Library.SPIRV_Cross_Debug}",
+			"%{Library.SPIRV_Cross_GLSL_Debug}",
+			"%{Library.SPIRV_Tools_Debug}"
         }
 	
 	filter "configurations:Release"
@@ -98,7 +104,11 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+			"%{Library.ShaderC_Release}",
+			"%{Library.ShaderC_Utils_Release}",
+			"%{Library.SPIRV_Cross_Release}",
+			"%{Library.SPIRV_Cross_GLSL_Release}"
         }
         
 	
@@ -109,5 +119,9 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+			"%{Library.ShaderC_Release}",
+			"%{Library.ShaderC_Utils_Release}",
+			"%{Library.SPIRV_Cross_Release}",
+			"%{Library.SPIRV_Cross_GLSL_Release}",
         }

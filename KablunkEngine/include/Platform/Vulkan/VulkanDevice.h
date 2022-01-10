@@ -31,20 +31,28 @@ namespace Kablunk
 
 		const VkPhysicalDeviceProperties& GetProperties() const { return m_properties; }
 		const VkPhysicalDeviceFeatures& GetFeatures() const { return m_features; }
+		const std::vector<const char*>& GetRequiredExtensions() const { return m_required_extensions; }
+		VkFormat GetDepthFormat() const { return m_depth_format; }
 	private:
 		void FindPresentingIndices(VkSurfaceKHR surface);
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
+		bool CheckDeviseExtensionSupport(VkPhysicalDevice device);
+		std::vector<VkExtensionProperties> FindSupportedExtensions(VkPhysicalDevice device);
+		VkFormat FindDepthFormat();
 	private:
 		VkPhysicalDevice m_device = nullptr;
 
 		VkPhysicalDeviceProperties m_properties;
 		VkPhysicalDeviceFeatures m_features;
 
+		VkFormat m_depth_format = VK_FORMAT_UNDEFINED;
+
 		std::vector<VkQueueFamilyProperties> m_queue_family_properties;
 		std::vector<VkDeviceQueueCreateInfo> m_queue_create_infos;
 
 		std::vector<const char*> m_supported_extensions;
+		std::vector<const char*> m_required_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 		QueueFamilyIndices m_queue_family_indices;
 
@@ -70,7 +78,7 @@ namespace Kablunk
 
 		IntrusiveRef<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 		VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
-		VkDevice GetLogicalDevice() { return m_device; }
+		VkDevice GetVkDevice() { return m_device; }
 	private:
 		VkDevice m_device;
 		IntrusiveRef<VulkanPhysicalDevice> m_physical_device;

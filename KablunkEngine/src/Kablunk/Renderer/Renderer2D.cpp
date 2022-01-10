@@ -51,8 +51,8 @@ namespace Kablunk
 		Ref <VertexArray> Circle_vertex_array;
 		Ref <VertexBuffer> Circle_vertex_buffer;
 
-		Ref <Shader> Quad_shader;
-		Ref <Shader> Circle_shader;
+		IntrusiveRef<Shader> Quad_shader;
+		IntrusiveRef<Shader> Circle_shader;
 
 		Ref <Texture2D> White_texture;
 		
@@ -79,7 +79,7 @@ namespace Kablunk
 		};
 
 		CameraData camera_buffer;
-		Ref<UniformBuffer> camera_uniform_buffer;
+		IntrusiveRef<UniformBuffer> camera_uniform_buffer;
 	};
 
 	static Renderer2DData s_renderer_data;

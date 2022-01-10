@@ -9,6 +9,7 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Vulkan/VulkanContext.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -77,6 +78,17 @@ namespace Kablunk {
         }
 		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
+
+		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+		{
+			// #TODO bad!
+			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_Context.get());
+			vk_context->GetSwapchain().InitSurface(m_Window);
+
+			uint32_t width = m_Data.Width, height = m_Data.Height;
+			vk_context->GetSwapchain().Create(&width, &height, m_Data.VSync);
+		}
+
 		KB_CORE_INFO("Context created!");
         
         

@@ -142,7 +142,7 @@ namespace Kablunk
 
 		const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 		const std::vector<Index>& GetIndicies() const { return m_indices; }
-		Ref<Shader> GetShader() { return m_mesh_shader; }
+		IntrusiveRef<Shader> GetShader() { return m_mesh_shader; }
 		Ref<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
 		Ref<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
 		const BufferLayout& GetBufferLayout() const { return m_vertex_buffer_layout; }
@@ -191,7 +191,7 @@ namespace Kablunk
 
 		glm::mat4 m_inverse_transform{ 1.0f };
 
-		Ref<Shader> m_mesh_shader;
+		IntrusiveRef<Shader> m_mesh_shader;
 		std::vector<Ref<Texture2D>> m_textures;
 		std::vector<Ref<Texture2D>> m_normal_map;
 		

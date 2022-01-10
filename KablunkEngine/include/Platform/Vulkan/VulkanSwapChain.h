@@ -43,12 +43,17 @@ namespace Kablunk
 			return m_command_buffers[index];
 		}
 
-		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.RenderComplete; }
+		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.render_complete; }
 
 		void Cleanup();
+
+		// #TODO move elsewhere
+		static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 	private:
 		VkResult AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index);
 		VkResult QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE);
+
+		void FindImageFormatAndColorSpace();
 
 		void CreateFramebuffer();
 		void CreateDepthStencil();
@@ -57,7 +62,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanDevice> m_device;
 		bool m_vsync = false;
 
-		VkSwapchainKHR m_swaphchain = nullptr;
+		VkSwapchainKHR m_swapchain = nullptr;
 		uint32_t m_image_count = 0;
 		std::vector<VkImage> m_images;
 
@@ -68,22 +73,24 @@ namespace Kablunk
 		};
 		std::vector<SwapChainBufferData> m_buffers;
 
+		VkFormat m_color_format;
+		VkColorSpaceKHR m_color_space;
+		
 		struct DepthStencilData
 		{
 			VkImage image;
-			// #TODO custom allocator
-			VkImageView view;
+			VkImageView image_view;
 		};
 		DepthStencilData m_depth_stencil;
-		
+
 		std::vector<VkFramebuffer> m_framebuffers;
 		VkCommandPool m_command_pool = nullptr;
 		std::vector<VkCommandBuffer> m_command_buffers;
 
 		struct Semaphores
 		{
-			VkSemaphore PresentComplete;
-			VkSemaphore RenderComplete;
+			VkSemaphore present_complete;
+			VkSemaphore render_complete;
 		};
 		Semaphores m_semaphores;
 

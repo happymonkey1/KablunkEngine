@@ -24,9 +24,12 @@ layout(std140, binding = 1) uniform Renderer
 
 
 // Material
-uniform sampler2D DiffuseMap;
-uniform sampler2D SpecularMap;
-uniform float Shininess;
+//layout(set = 0, binding = 2) uniform sampler2D DiffuseMap;
+//layout(set = 0, binding = 3) uniform sampler2D SpecularMap;
+//layout(std140, binding = 4) uniform MaterialShininess
+//{
+//    float Shininess;
+//};
 
 struct VertexOutput
 {
@@ -43,9 +46,9 @@ struct VertexOutput
     vec3 ViewPosition;
 };
 
-out VertexOutput v_Input;
-out vec3 v_Color;
-flat out int v_EntityID;
+layout(location = 0) out VertexOutput v_Input;
+layout(location = 15) out vec3 v_Color;
+layout(location = 16) flat out int v_EntityID;
 
 void main()
 {
@@ -69,9 +72,6 @@ void main()
 #type fragment
 #version 450 core
 
-layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID;
-
 struct PointLight
 {
     vec3 Position;
@@ -82,7 +82,7 @@ struct PointLight
     float Falloff;
 };
 
-layout(std140, binding = 3) uniform PointLightsData
+layout(std140, binding = 5) uniform PointLightsData
 {
     uint u_PointLightsCount;
     PointLight u_PointLights[16];
@@ -103,12 +103,12 @@ struct VertexOutput
     vec3 ViewPosition;
 };
 
+layout(location = 0) in VertexOutput v_Input;
+layout(location = 15) in vec3 v_Color;
+layout(location = 16) flat in int v_EntityID;
 
-
-in VertexOutput v_Input;
-in vec3 v_Color;
-in PointLight light;
-flat in int v_EntityID;
+layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityID;
 
 vec3 GetPointLightAttenuationValues(in float distance)
 {

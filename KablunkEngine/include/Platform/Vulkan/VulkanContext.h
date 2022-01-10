@@ -6,6 +6,8 @@
 #include "Platform/Vulkan/VulkanDevice.h"
 #include "Platform/Vulkan/VulkanSwapChain.h"
 
+#include "Kablunk/Renderer/RenderCommand.h"
+
 #include <vulkan/vulkan.h>
 
 #include <optional>
@@ -28,6 +30,8 @@ namespace Kablunk
 		static IntrusiveRef<VulkanContext> Get() { return s_context; }
 
 		static VkInstance GetInstance() { return s_instance; }
+
+		VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
 	private:
 		void CreateInstance();
 		bool CheckValidationLayerSupport();
@@ -41,17 +45,17 @@ namespace Kablunk
 		{
 			
 			if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-				KB_CORE_TRACE("[Vulkan Validation Layer]: {0}", pCallbackData->pMessage);
+				KB_CORE_TRACE("[Vk Trace]: {0}", pCallbackData->pMessage);
 			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-				KB_CORE_INFO("[Vulkan Validation Layer]: {0}", pCallbackData->pMessage);
+				KB_CORE_INFO("[Vk Info]: {0}", pCallbackData->pMessage);
 			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-				KB_CORE_WARN("[Vulkan Validation Layer]: {0}", pCallbackData->pMessage);
+				KB_CORE_WARN("[Vk Warn]: {0}", pCallbackData->pMessage);
 			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-				KB_CORE_ERROR("[Vulkan Validation Layer]: {0}", pCallbackData->pMessage);
+				KB_CORE_ERROR("[Vk Error]: {0}", pCallbackData->pMessage);
 			else
 			{
 				KB_CORE_WARN("Unknown VkMessageType!");
-				KB_CORE_INFO("[Vulkan Validation Layer]: {0}", pCallbackData->pMessage);
+				KB_CORE_INFO("[Vk Unknown]: {0}", pCallbackData->pMessage);
 			}
 
 			return VK_FALSE;

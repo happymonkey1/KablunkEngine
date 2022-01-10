@@ -7,15 +7,15 @@
 namespace Kablunk
 {
 	Scope<SceneData> Renderer::m_SceneData = CreateScope<SceneData>();
-	Ref<ShaderLibrary> Renderer::s_shader_library = CreateRef<ShaderLibrary>();
+	IntrusiveRef<ShaderLibrary> Renderer::s_shader_library = IntrusiveRef<ShaderLibrary>::Create();
 	Ref<FT_Library> Renderer::s_freetype_lib = CreateRef<FT_Library>();
 
 	void Renderer::Init()
 	{
 		KB_PROFILE_FUNCTION();
 
-		// #TODO move elsewhere when refactoring renderer
-		s_shader_library->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+		// Renderer initialization
+		RenderCommand::Init();
 
 		// Setting up data
 
@@ -28,9 +28,6 @@ namespace Kablunk
 		//if (FT_Init_FreeType(s_freetype_lib.get()))
 		//	KB_CORE_ASSERT(false, "Could not initialize FreeType");
 		
-
-		// OpenGL initialization
-		RenderCommand::Init();
 		Renderer2D::Init();
 	}
 
@@ -39,7 +36,7 @@ namespace Kablunk
 		return Renderer2D::GetWhiteTexture();
 	}
 
-	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
+	IntrusiveRef<ShaderLibrary> Renderer::GetShaderLibrary()
 	{
 		return s_shader_library;
 	}
@@ -80,7 +77,7 @@ namespace Kablunk
 
 	}
 
-	void Renderer::Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	void Renderer::SubmitData(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
 		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
@@ -93,8 +90,8 @@ namespace Kablunk
 	void Renderer::SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform)
 	{
 		// #FIXME bad
-		auto mesh_shader = std::dynamic_pointer_cast<OpenGLShader>(mesh->GetMeshData()->GetShader());
-		mesh_shader->Bind();
+		//auto mesh_shader = mesh->GetMeshData()->GetShader().As<OpenGLShader>();
+		mesh->GetMeshData()->GetShader()->Bind();
 
 		m_SceneData->renderer_buffer.Transform = transform;
 		m_SceneData->renderer_uniform_buffer->SetData(&m_SceneData->renderer_buffer, sizeof(SceneData::RendererData));

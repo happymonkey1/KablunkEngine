@@ -21,6 +21,8 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
 		
 		m_device->GetPhysicalDevice()->FindPresentingIndices(m_surface);
+
+		FindImageFormatAndColorSpace();
 	}
 
 	void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
@@ -106,6 +108,7 @@ namespace Kablunk
 			}
 		}
 
+		// Create swapchain
 		VkSwapchainCreateInfoKHR swapchain_create_info{};
 		swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchain_create_info.pNext = nullptr;
@@ -176,7 +179,7 @@ namespace Kablunk
 			color_attachment_view_create_info.image = m_buffers[i].image;
 
 			if (vkCreateImageView(device, &color_attachment_view_create_info, nullptr, &m_buffers[i].view) != VK_SUCCESS)
-				KB_CORE_ERROR(false, "Vulkan failed to create image view!");
+				KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 		}
 
 		// create command buffers
@@ -197,47 +200,244 @@ namespace Kablunk
 		
 		if (vkAllocateCommandBuffers(device, &cmd_buf_allocate_info, m_command_buffers.data()) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffers");
+
+		// Create semaphores
+		VkSemaphoreCreateInfo semaphore_create_info{};
+		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		
+		if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &m_semaphores.present_complete) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create presenting semaphore!");
+
+		if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &m_semaphores.render_complete) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create rendering semaphore!");
+
+		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// setup submit info struct
+		m_submit_info = {};
+		m_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		m_submit_info.pWaitDstStageMask = &pipeline_stage_flags;
+		m_submit_info.waitSemaphoreCount = 1;
+		m_submit_info.pWaitSemaphores = &m_semaphores.present_complete;
+		m_submit_info.signalSemaphoreCount = 1;
+		m_submit_info.pSignalSemaphores = &m_semaphores.render_complete;
+
+		// Wait for fences to sync command buffer access
+		VkFenceCreateInfo fence_create_info{};
+		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		
+		m_wait_fences.resize(MAX_FRAMES_IN_FLIGHT);
+		for (auto& fence : m_wait_fences)
+			if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
+				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
+
+		// #TODO render pass
 	}
 
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
-		KB_CORE_ASSERT(false, "not implemented");
+		auto device = m_device->GetVkDevice();
+
+		// wait to synchronize
+		vkDeviceWaitIdle(device);
+
+		Create(&width, &height, m_vsync);
+
+		for (auto& framebuffer : m_framebuffers)
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+		CreateFramebuffer();
+
+		vkDeviceWaitIdle(device);
 	}
 
 	void VulkanSwapChain::BeginFrame()
 	{
-		KB_CORE_ASSERT(false, "not implemented");
+		if (AcquireNextImage(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
+			KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
 	}
 
 	void VulkanSwapChain::Present()
 	{
-		KB_CORE_ASSERT(false, "not implemented");
+		constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
+
+		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		VkSubmitInfo submit_info{};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.pWaitDstStageMask = &wait_stage_mask;
+		submit_info.waitSemaphoreCount = 1;
+		submit_info.pWaitSemaphores = &m_semaphores.present_complete;
+		submit_info.signalSemaphoreCount = 1;
+		submit_info.pSignalSemaphores = &m_semaphores.render_complete;
+		submit_info.pCommandBuffers = &m_command_buffers[m_current_buffer_index];
+		submit_info.commandBufferCount = 1;
+
+		if (vkResetFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to reset fence!");
+
+		if (vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submit_info, m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to submit!");
+
+		// present buffer to the swap chain
+		VkResult result = QueuePresent(m_device->GetGraphicsQueue(), m_current_image_index, m_semaphores.render_complete);
+
+		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
+		{
+			if (result == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				OnResize(m_width, m_height);
+				return;
+			}
+		}
+
+		m_current_buffer_index = (m_current_image_index + 1) % MAX_FRAMES_IN_FLIGHT;
+		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
 	}
 
 	void VulkanSwapChain::Cleanup()
 	{
-		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+		VkDevice device = m_device->GetVkDevice();
+
+		if (m_swapchain)
+		{
+			for (uint32_t i = 0; i < m_image_count; ++i)
+				vkDestroyImageView(device, m_buffers[i].view, nullptr);
+		}
+
+		if (m_surface)
+		{
+			vkDestroySwapchainKHR(device, m_swapchain, nullptr);
+			vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+		}
+
+		m_swapchain = nullptr;
+		m_surface = nullptr;
 	}
 
 	VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index)
 	{
-		KB_CORE_ASSERT(false, "not implemented");
-		return VK_SUCCESS;
+		return vkAcquireNextImageKHR(m_device->GetVkDevice(), m_swapchain, UINT64_MAX, present_complete_sem, (VkFence)nullptr, image_index);
 	}
 
 	VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem /*= VK_NULL_HANDLE*/)
 	{
-		KB_CORE_ASSERT(false, "not implemented");
-		return VK_SUCCESS;
+		VkPresentInfoKHR present_info{};
+		present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		present_info.pNext = nullptr;
+		present_info.swapchainCount = 1;
+		present_info.pSwapchains = &m_swapchain;
+		present_info.pImageIndices = &image_index;
+
+		if (wait_sem != VK_NULL_HANDLE)
+		{
+			present_info.pWaitSemaphores = &wait_sem;
+			present_info.waitSemaphoreCount = 1;
+		}
+
+		return vkQueuePresentKHR(queue, &present_info);
+	}
+
+	void VulkanSwapChain::FindImageFormatAndColorSpace()
+	{
+		VkPhysicalDevice physical_device = m_device->GetVkPhysicalDevice();
+
+		uint32_t format_count = 0;
+		if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, nullptr) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan could not find image format count!");
+
+		std::vector<VkSurfaceFormatKHR> formats(format_count);
+		if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, formats.data()) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan could not find image formats!");
+
+		if ((format_count == 1) && (formats[0].format == VK_FORMAT_UNDEFINED))
+		{
+			m_color_format = VK_FORMAT_B8G8R8_UNORM;
+			m_color_space = formats[0].colorSpace;
+		}
+		else
+		{
+			bool found = false;
+			for (auto&& format : formats)
+			{
+				if (format.format == VK_FORMAT_B8G8R8_UNORM)
+				{
+					m_color_format = VK_FORMAT_B8G8R8_UNORM;
+					m_color_space = format.colorSpace;
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+			{
+				m_color_format = formats[0].format;
+				m_color_space = formats[0].colorSpace;
+			}
+		}
 	}
 
 	void VulkanSwapChain::CreateFramebuffer()
 	{
-		KB_CORE_ASSERT(false, "not implemented");
+		VkImageView image_view_attachments[2];
+
+		image_view_attachments[1] = m_depth_stencil.image_view;
+
+		VkFramebufferCreateInfo frame_buffer_create_info{};
+		frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frame_buffer_create_info.pNext = nullptr;
+		frame_buffer_create_info.renderPass = m_render_pass;
+		frame_buffer_create_info.attachmentCount = 1;
+		frame_buffer_create_info.pAttachments = image_view_attachments;
+		frame_buffer_create_info.width = m_width;
+		frame_buffer_create_info.height = m_height;
+		frame_buffer_create_info.layers = 1;
+
+		m_framebuffers.resize(m_image_count);
+		for (uint32_t i = 0; i < m_image_count; ++i)
+		{
+			image_view_attachments[0] = m_buffers[i].view;
+			if (vkCreateFramebuffer(m_device->GetVkDevice(), &frame_buffer_create_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
+				KB_CORE_ASSERT(false, "Vulkan failed to create framebuffer!");
+		}
 	}
 
 	void VulkanSwapChain::CreateDepthStencil()
 	{
-		KB_CORE_ASSERT(false, "not implemented");
+		VkDevice device = m_device->GetVkDevice();
+		VkFormat depth_format = m_device->GetPhysicalDevice()->GetDepthFormat();
+
+		VkImageCreateInfo image_create_info{};
+		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_create_info.imageType = VK_IMAGE_TYPE_2D;
+		image_create_info.format = depth_format;
+		image_create_info.extent = { m_width, m_height + 1 };
+		image_create_info.mipLevels = 1;
+		image_create_info.arrayLayers = 1;
+		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+		image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+		// #TODO allocator for depth stencil
+
+		VkImageViewCreateInfo image_view_create_info;
+		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		image_view_create_info.image = m_depth_stencil.image;
+		image_view_create_info.format = depth_format;
+		image_view_create_info.subresourceRange.baseMipLevel = 0;
+		image_view_create_info.subresourceRange.levelCount = 1;
+		image_view_create_info.subresourceRange.baseArrayLayer = 0;
+		image_view_create_info.subresourceRange.layerCount = 1;
+		image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+		if (depth_format >= VK_FORMAT_D16_UNORM_S8_UINT)
+			image_view_create_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+		if (vkCreateImageView(device, &image_view_create_info, nullptr, &m_depth_stencil.image_view) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create depth stencil image view!");
 	}
 }

@@ -32,22 +32,25 @@ namespace Kablunk
 		}
 
 		if (m_device == VK_NULL_HANDLE)
+		{
 			KB_CORE_ASSERT(false, "Vulkan found no suitable physical device!");
+		}
+		else
+		{
+			KB_CORE_INFO("Vulkan selected device {0}", (const char*)m_properties.deviceName);
+		}
+		
 
 		m_queue_family_indices = FindQueueFamilies(m_device);
 
-		uint32_t extension_count = 0;
-		vkEnumerateDeviceExtensionProperties(m_device, nullptr, &extension_count, nullptr);
-		if (extension_count > 0)
-		{
-			std::vector<VkExtensionProperties> extensions(extension_count);
-			if (vkEnumerateDeviceExtensionProperties(m_device, nullptr, &extension_count, extensions.data()) != VK_SUCCESS)
-				KB_CORE_ASSERT(false, "Vulkan unable to find extensions!");
+		auto supported_extensions = FindSupportedExtensions(m_device);
+		std::vector<const char*> supported_extensions_named;
+		supported_extensions_named.reserve(supported_extensions.size());
+		for (const auto& extension : supported_extensions)
+			supported_extensions_named.emplace_back(extension.extensionName);
+		m_supported_extensions = supported_extensions_named;
 
-			KB_CORE_TRACE("Selected physical device has {0} extensions!", extension_count);
-			for (const auto& extension : extensions)
-				m_supported_extensions.push_back(extension.extensionName);
-		}
+		m_depth_format = FindDepthFormat();
 	}
 
 	void VulkanPhysicalDevice::FindPresentingIndices(VkSurfaceKHR surface)
@@ -104,9 +107,82 @@ namespace Kablunk
 
 		// #TODO score each device and pick best
 
-		bool suitable = device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader && indices.HasGraphics();
+		bool suitable = device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader 
+			&& indices.HasGraphics() && CheckDeviseExtensionSupport(device);
+
+		if (suitable)
+			m_properties = device_properties;
 
 		return suitable;
+	}
+	
+	std::vector<VkExtensionProperties> VulkanPhysicalDevice::FindSupportedExtensions(VkPhysicalDevice device)
+	{
+		uint32_t extension_count = 0;
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+		if (extension_count > 0)
+		{
+			std::vector<VkExtensionProperties> extensions(extension_count);
+			if (vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data()) != VK_SUCCESS)
+				KB_CORE_ASSERT(false, "Vulkan unable to find extensions!");
+
+			KB_CORE_TRACE("Physical device has {0} extensions!", extension_count);
+
+			return extensions;
+		}
+
+		KB_CORE_WARN("Physical device has 0 extensions!");
+		return {};
+	}
+
+	VkFormat VulkanPhysicalDevice::FindDepthFormat()
+	{
+		std::vector<VkFormat> depth_formats = {
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
+			VK_FORMAT_D32_SFLOAT,
+			VK_FORMAT_D24_UNORM_S8_UINT,
+			VK_FORMAT_D16_UNORM_S8_UINT,
+			VK_FORMAT_D16_UNORM
+		};
+
+		for (auto& format : depth_formats)
+		{
+			VkFormatProperties format_props;
+			vkGetPhysicalDeviceFormatProperties(m_device, format, &format_props);
+			// Format must support depth stencil attachment for optimal tiling
+			if (format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+				return format;
+		}
+
+		return VK_FORMAT_UNDEFINED;
+	}
+
+	bool VulkanPhysicalDevice::CheckDeviseExtensionSupport(VkPhysicalDevice device)
+	{
+		auto supported_extensions = FindSupportedExtensions(device);
+		std::vector<const char*> supported_extensions_named;
+		supported_extensions_named.reserve(supported_extensions.size());
+		for (const auto& extension : supported_extensions)
+			supported_extensions_named.emplace_back(extension.extensionName);
+		
+		for (const auto& extension : m_required_extensions)
+		{
+			bool found = false;
+			for (const auto& supported : supported_extensions_named)
+			{
+				if (strcmp(supported, extension) == 0)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				return false;
+		}
+
+
+		return true;
 	}
 
 	VulkanPhysicalDevice::~VulkanPhysicalDevice()
@@ -119,7 +195,7 @@ namespace Kablunk
 	{
 		auto context = VulkanContext::Get();
 		float queue_priority = 1.0f;
-		std::vector<const char*> device_extensions;
+		const auto& device_extensions = m_physical_device->GetRequiredExtensions();
 
 		// #TODO move to VulkanPhysicalDevice
 		VkDeviceQueueCreateInfo queue_create_info{};

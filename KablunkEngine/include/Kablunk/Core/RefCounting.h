@@ -3,6 +3,8 @@
 
 #include <atomic>
 #include <memory>
+#include <cassert>
+#include <iostream>
 
 namespace Kablunk
 {
@@ -20,10 +22,17 @@ namespace Kablunk
 	public:
 		void IncRefCount() const { m_ref_count++; }
 		void DecRefCount() const { m_ref_count--; }
-		uint32_t GetRefCount() const { return m_ref_count; }
+		uint32_t GetRefCount() const { return m_ref_count.load(); }
 	private:
 		mutable std::atomic<uint32_t> m_ref_count = 0;
 	};
+
+	namespace Internal
+	{
+		void AddToLiveReferences(void* instance);
+		void RemoveFromLiveReferences(void* instance);
+		bool IsLive(void* instance);
+	}
 
 	template <typename T>
 	class IntrusiveRef
@@ -162,7 +171,7 @@ namespace Kablunk
 			if (m_ptr)
 			{
 				m_ptr->IncRefCount();
-				// #TODO add to live reference map
+				Internal::AddToLiveReferences((void*)m_ptr);
 			}
 		}
 
@@ -170,15 +179,26 @@ namespace Kablunk
 		{
 			if (m_ptr)
 			{
+				if (m_ptr->GetRefCount() == 0)
+				{
+					std::cout << "uh oh!" << std::endl;
+					delete m_ptr;
+					Internal::RemoveFromLiveReferences((void*)m_ptr);
+					m_ptr = nullptr;
+				}
+
 				m_ptr->DecRefCount();
 				if (m_ptr->GetRefCount() == 0)
 				{
 					delete m_ptr;
-					// #TODO remove from live reference map
+					Internal::RemoveFromLiveReferences((void*)m_ptr);
 					m_ptr = nullptr;
 				}
 			}
 		}
+
+		template <class T2>
+		friend class IntrusiveRef;
 
 		mutable T* m_ptr;
 	};
@@ -193,7 +213,7 @@ namespace Kablunk
 		WeakRef(T* ptr) : m_ptr{ ptr } { }
 
 		// #TODO make sure pointer is valid in the live reference map
-		bool Valid() const { return m_ptr ? true : false; }
+		bool Valid() const { return m_ptr ? Internal::IsLive(m_ptr) : false; }
 
 		T* operator->() { return m_ptr; }
 		T& operator*() { return *m_ptr; }

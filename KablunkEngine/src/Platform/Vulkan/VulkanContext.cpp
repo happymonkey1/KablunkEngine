@@ -29,11 +29,14 @@ namespace Kablunk
 		enabled_features.pipelineStatisticsQuery = true;
 
 		m_device = IntrusiveRef<VulkanDevice>::Create(m_physical_device, enabled_features);
+
+		m_swap_chain = VulkanSwapChain{};
+		m_swap_chain.Init(s_instance, m_device);
 	}
 
 	void VulkanContext::SwapBuffers()
 	{
-
+		m_swap_chain.Present();
 	}
 
 	void VulkanContext::CreateInstance()
@@ -42,7 +45,7 @@ namespace Kablunk
 
 		VkApplicationInfo app_info{};
 		app_info.sType				= VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		app_info.pApplicationName	= "FIXME";
+		app_info.pApplicationName	= "KablunkEngine";
 		app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		app_info.pEngineName		= "KablunkEngine";
 		app_info.engineVersion		= VK_MAKE_VERSION(1, 0, 0);
@@ -138,8 +141,8 @@ namespace Kablunk
 
 		VkDebugUtilsMessengerCreateInfoEXT create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-		create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		create_info.pfnUserCallback = DebugCallback;
 		create_info.pUserData = nullptr;
 
