@@ -252,11 +252,11 @@ namespace Kablunk
 
 	struct MeshComponent
 	{
-		Ref<Kablunk::Mesh> Mesh;
+		IntrusiveRef<Kablunk::Mesh> Mesh;
 		std::string Filepath = "";
 
 		MeshComponent() = default;
-		MeshComponent(const Ref<Kablunk::Mesh>& mesh)
+		MeshComponent(const IntrusiveRef<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
 		MeshComponent(const MeshComponent&) = default;
 
@@ -265,8 +265,8 @@ namespace Kablunk
 			if (!Filepath.empty())
 				Mesh.reset();
 
-			auto mesh_data = CreateRef<MeshData>(filepath, entity);
-			Mesh = CreateRef<Kablunk::Mesh>(mesh_data);
+			auto mesh_data = IntrusiveRef<MeshData>::Create(filepath, entity);
+			Mesh = IntrusiveRef<Kablunk::Mesh>::Create(mesh_data);
 
 			Filepath = filepath;
 		}

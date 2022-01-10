@@ -45,11 +45,11 @@ namespace Kablunk
 		static const uint32_t Max_texture_slots	= 32;
 		glm::vec4 Quad_vertex_positions[4]		= {};
 
-		Ref <VertexArray> Quad_vertex_array;
-		Ref <VertexBuffer> Quad_vertex_buffer;
+		IntrusiveRef <VertexArray> Quad_vertex_array;
+		IntrusiveRef <VertexBuffer> Quad_vertex_buffer;
 
-		Ref <VertexArray> Circle_vertex_array;
-		Ref <VertexBuffer> Circle_vertex_buffer;
+		IntrusiveRef <VertexArray> Circle_vertex_array;
+		IntrusiveRef <VertexBuffer> Circle_vertex_buffer;
 
 		IntrusiveRef<Shader> Quad_shader;
 		IntrusiveRef<Shader> Circle_shader;
@@ -119,7 +119,7 @@ namespace Kablunk
 			offset += uint32_t{ 4 };
 		}
 
-		Ref<IndexBuffer> quad_index_buffer = IndexBuffer::Create(quad_indices, s_renderer_data.Max_indices);
+		IntrusiveRef<IndexBuffer> quad_index_buffer = IndexBuffer::Create(quad_indices, s_renderer_data.Max_indices);
 		s_renderer_data.Quad_vertex_array->SetIndexBuffer(quad_index_buffer);
 		delete[] quad_indices;
 

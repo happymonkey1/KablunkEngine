@@ -45,13 +45,18 @@ namespace Kablunk
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
+	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
 #if 0
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 #endif
 		glNamedBufferSubData(m_RendererID, 0, size, data);
+	}
+
+	void OpenGLVertexBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset)
+	{
+		KB_CORE_WARN("OpenGLVertexBuffer RT_SetData not implemented!");
 	}
 
 	void OpenGLVertexBuffer::Bind() const
@@ -117,5 +122,9 @@ namespace Kablunk
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
+	void OpenGLIndexBuffer::SetData(const void* buffer, uint32_t size, uint32_t offset /* = 0 */)
+	{
+		KB_CORE_WARN("OpenGlIndexBuffer SetData not implemented!");
+	}
 }
 

@@ -27,11 +27,8 @@ namespace Kablunk
 
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offest /*= 0*/)
 	{
-		memcpy(m_local_storage, data, size);
-		void* local_storage_as_void = m_local_storage;
 		IntrusiveRef<VulkanUniformBuffer> instance = this;
-
-		RenderCommand::Submit([instance, local_storage_as_void, size, offest]() mutable
+		RenderCommand::Submit([instance, data, size, offest]() mutable
 			{
 				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
@@ -50,17 +47,19 @@ namespace Kablunk
 				alloc_info.allocationSize = instance->m_size;
 				alloc_info.memoryTypeIndex = 0;
 
+				// #TODO replace with VulkanAllocator
 				if (vkAllocateMemory(device, &alloc_info, nullptr, &instance->m_vk_memory) != VK_SUCCESS)
 					KB_CORE_ERROR("Vulkan uniform buffer failed to allocate memory!");
 				
 				vkBindBufferMemory(device, instance->m_buffer, instance->m_vk_memory, offest);
 
-				vkMapMemory(device, instance->m_vk_memory, offest, size, 0, &local_storage_as_void);
+				vkMapMemory(device, instance->m_vk_memory, offest, size, 0, (void**)&instance->m_local_storage);
 
-				// copy memory here then flush?
+				memcpy(instance->m_local_storage, data, instance->m_size);
 
-				// is this needed?
 				vkUnmapMemory(device, instance->m_vk_memory);
+
+				// flush mapped memory?
 			});
 	}
 

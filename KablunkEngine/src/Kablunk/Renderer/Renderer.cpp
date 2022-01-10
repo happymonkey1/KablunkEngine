@@ -3,6 +3,9 @@
 #include "Kablunk/Renderer/Renderer2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/Vulkan/VulkanShader.h"
+
+#include "Kablunk/Renderer/RendererAPI.h"
 
 namespace Kablunk
 {
@@ -77,17 +80,25 @@ namespace Kablunk
 
 	}
 
-	void Renderer::SubmitData(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	void Renderer::SubmitData(const IntrusiveRef<Shader> shader, const IntrusiveRef<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
-		shader->Bind();
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_Transform", transform);
+		if (Renderer::GetAPI() == RendererAPI::RenderAPI_t::OpenGL)
+		{
+			shader->Bind();
+			shader.As<OpenGLShader>()->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
+			shader.As<OpenGLShader>()->UploadUniformMat4("u_Transform", transform);
+		}
+		else
+		{
+			//shader.As<VulkanShader>()->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
+			//shader.As<VulkanShader>()->UploadUniformMat4("u_Transform", transform);
+		}
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}
 
-	void Renderer::SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform)
+	void Renderer::SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform)
 	{
 		// #FIXME bad
 		//auto mesh_shader = mesh->GetMeshData()->GetShader().As<OpenGLShader>();

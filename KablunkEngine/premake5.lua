@@ -20,7 +20,11 @@ project "KablunkEngine"
 		"vendor/glm/glm/**.inl",
 		"vendor/stduuid/include/uuid.h",
 		"vendor/ImGuizmo/ImGuizmo.h",
-		"vendor/ImGuizmo/ImGuizmo.cpp"
+		"vendor/ImGuizmo/ImGuizmo.cpp",
+
+		"vendor/VulkanMemoryAllocator/vk_mem_alloc.h",
+		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp"
+
 	}
 
 	defines

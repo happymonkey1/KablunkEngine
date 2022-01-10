@@ -31,7 +31,7 @@ namespace Kablunk
 			s_RendererAPI->Clear();
 		};
 
-		static void DrawIndexed(const Ref<VertexArray> vertexArray, uint32_t indexCount = 0)
+		static void DrawIndexed(const IntrusiveRef<VertexArray> vertexArray, uint32_t indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
 		};

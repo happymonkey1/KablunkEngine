@@ -18,7 +18,8 @@ namespace Kablunk
 		OpenGLVertexBuffer(const void* data, uint32_t size);
 		virtual ~OpenGLVertexBuffer();
 
-		virtual void SetData(const void* data, uint32_t size) override;
+		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
@@ -46,6 +47,8 @@ namespace Kablunk
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
+
+		virtual void SetData(const void* buffer, uint32_t size, uint32_t offset /* = 0 */) override;
 
 		virtual const uint32_t GetCount() const override { return m_Count; }
 		virtual RendererID GetRendererID() const override { return m_RendererID; }
