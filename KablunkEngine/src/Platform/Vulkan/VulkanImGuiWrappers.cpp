@@ -25,7 +25,7 @@ namespace Kablunk::UI
 		IntrusiveRef<VulkanTexture2D> vulkanTexture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& imageInfo = vulkanTexture->GetVulkanDescriptorInfo();
 		if (!imageInfo.imageView)
-			return;
+			return false;
 		const auto texture_id = 0;// ImGui_ImplVulkan_AddTexture(imageInfo.sampler, imageInfo.imageView, imageInfo.imageLayout);
 		bool pressed = ImGui::ImageButton(texture_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
 		ImGui::NextColumn();
