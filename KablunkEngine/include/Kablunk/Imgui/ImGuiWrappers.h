@@ -145,8 +145,8 @@ namespace Kablunk::UI
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
 	}
 
-	void Image(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const Ref<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+	void Image(const IntrusiveRef<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	bool ImageButton(const IntrusiveRef<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
@@ -389,7 +389,7 @@ namespace Kablunk::UI
 			});
 	}
 
-	static bool PropertyImageButton(const char* label, Ref<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
+	static bool PropertyImageButton(const char* label, IntrusiveRef<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
 	{
 		ShiftCursorY(size.y / 4.0f);
 		return Internal::CreateProperty(label, [&](char* id_buffer)

@@ -12,15 +12,21 @@ namespace Kablunk
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(uint32_t width, uint32_t height);
+		OpenGLTexture2D(ImageFormat format, uint32_t width, uint32_t height);
 		OpenGLTexture2D(const std::string& path);
 		~OpenGLTexture2D();
 
+		virtual void Resize(uint32_t width, uint32_t height) override { KB_CORE_ASSERT(false, "not implemented!"); };
+
+		virtual IntrusiveRef<Image2D> GetImage() const override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
+		virtual ImageFormat GetFormat() const override { return m_format; }
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual RendererID GetRendererID() const override { return m_RendererID; }
 
 		virtual void SetData(void* data, uint32_t size) override;
+
+		virtual Buffer GetWriteableBuffer() override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
 
 		virtual void Bind(uint32_t slot) const override;
 
@@ -34,6 +40,8 @@ namespace Kablunk
 		uint32_t m_Height;
 		RendererID m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
+		
+		ImageFormat m_format;
 		
 	};
 }

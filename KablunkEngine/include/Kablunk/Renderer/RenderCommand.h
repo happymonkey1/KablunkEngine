@@ -1,6 +1,7 @@
 #pragma once
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Renderer/RenderCommandQueue.h"
+#include "Kablunk/Renderer/Renderer.h"
 
 namespace Kablunk 
 {
@@ -63,6 +64,27 @@ namespace Kablunk
 			auto storage_buffer = GetRenderCommandQueue().Allocate(render_cmd, sizeof(func));
 			new (storage_buffer) FuncT(std::forward<FuncT>(func));
 		}
+
+		template <typename FuncT>
+		static void SubmitResourceFree(FuncT&& func)
+		{
+			auto render_cmd = [](void* ptr)
+			{
+				auto p_func = (FuncT*)ptr;
+				(*p_func)();
+
+				p_func->~FuncT();
+			};
+
+			Submit([render_cmd, func]()
+				{
+					const uint32_t index = Renderer::GetCurrentFrameIndex();
+					auto storage_buffer = GetRenderResourceReleaseQueue(index).Allocate(render_cmd, sizeof(func));
+					new (storage_buffer) FuncT(std::forward<FuncT>((FuncT&&)func));
+				});
+		}
+
+		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
 	private:
 		// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
 		static RenderCommandQueue& GetRenderCommandQueue();

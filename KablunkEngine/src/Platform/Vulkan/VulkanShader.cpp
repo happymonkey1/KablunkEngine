@@ -219,7 +219,7 @@ namespace Kablunk
 
 	void VulkanShader::SetIntArray(const std::string& name, int* values, uint32_t count)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		KB_CORE_ERROR("VulkanShader SetIntArray() not implemented!");
 	}
 
 	std::vector<VkDescriptorSetLayout> VulkanShader::GetAllDescriptorSetLayouts()

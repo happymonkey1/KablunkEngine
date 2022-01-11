@@ -79,12 +79,12 @@ namespace Kablunk
 			return false;
 		}
 
-		static GLenum KablunkTextureFormatToGLenum(FramebufferTextureFormat format)
+		static GLenum KablunkTextureFormatToGLenum(ImageFormat format)
 		{
 			switch (format)
 			{
-				case FramebufferTextureFormat::RGBA8:		return GL_RGBA8;
-				case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+				case ImageFormat::RGBA:		return GL_RGBA;
+				case ImageFormat::RED32F: return GL_RED_INTEGER;
 			}
 
 			KB_CORE_ASSERT(false, "Unknown format");
@@ -97,11 +97,11 @@ namespace Kablunk
 	{
 		for (auto spec : m_specification.Attachments.Attachments)
 		{
-			if (!Utilities::IsDepthFormat(spec.Texture_format))
+			if (!Utils::IsDepthFormat(spec.format))
 				m_color_attachment_specs.emplace_back(spec);
 			else
 			{
-				if (m_depth_attachment_spec.Texture_format != FramebufferTextureFormat::None)
+				if (m_depth_attachment_spec.format != ImageFormat::None)
 					KB_CORE_ASSERT(false, "Only one depth buffer attachment is currently supported!");
 
 				m_depth_attachment_spec = spec;
@@ -116,6 +116,11 @@ namespace Kablunk
 		DeleteBuffer();
 	}
 
+	void OpenGLFramebuffer::AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
 	void OpenGLFramebuffer::Invalidate()
 	{
 		if (m_renderer_id)
@@ -128,7 +133,7 @@ namespace Kablunk
 		glCreateFramebuffers(1, &m_renderer_id);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_renderer_id);
 
-		bool multisample = m_specification.Samples > 1;
+		bool multisample = m_specification.samples > 1;
 
 		if (m_color_attachment_specs.size())
 		{
@@ -140,17 +145,17 @@ namespace Kablunk
 			for (size_t i = 0; i < m_color_attachments.size(); ++i)
 			{
 				Utilities::BindTexture(multisample, m_color_attachments[i]);
-				switch (m_color_attachment_specs[i].Texture_format)
+				switch (m_color_attachment_specs[i].format)
 				{
-				case FramebufferTextureFormat::RGBA8:
-					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.Samples, GL_RGBA8, GL_RGBA, m_specification.Width, m_specification.Height, i);
+				case ImageFormat::RGBA:
+					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.samples, GL_RGBA8, GL_RGBA, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RED_INTEGER:
-					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.Samples, GL_R32I, GL_RED_INTEGER, m_specification.Width, m_specification.Height, i);
+				case ImageFormat::RED32F:
+					Utilities::AttachColorTexture(m_color_attachments[i], m_specification.samples, GL_R32F, GL_RED_INTEGER, m_specification.width, m_specification.height, i);
 					break;
 				default:
 #if KB_DEBUG
-					KB_CORE_ASSERT(false, "Unsupported color texture format passed to frame buffer specification!");
+					KB_CORE_ASSERT(false, "Unsupported color texture format passed to framebuffer specification!");
 #else
 					KB_CORE_ERROR("Unsupported color texture format passed to frame buffer specification!");
 #endif
@@ -161,15 +166,15 @@ namespace Kablunk
 		}
 
 		// Depth Attachment
-		if (m_depth_attachment_spec.Texture_format != FramebufferTextureFormat::None)
+		if (m_depth_attachment_spec.format != ImageFormat::None)
 		{
 			Utilities::CreateTextures(multisample, &m_depth_attachment, 1);
 			Utilities::BindTexture(multisample, m_depth_attachment);
-			switch (m_depth_attachment_spec.Texture_format)
+			switch (m_depth_attachment_spec.format)
 			{
-			case FramebufferTextureFormat::DEPTH24STENCIL8:
-				Utilities::AttachDepthTexture(m_depth_attachment, m_specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, 
-					m_specification.Width, m_specification.Height);
+			case ImageFormat::DEPTH24STENCIL8:
+				Utilities::AttachDepthTexture(m_depth_attachment, m_specification.samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, 
+					m_specification.width, m_specification.height);
 				break;
 			default:
 #if KB_DEBUG
@@ -198,28 +203,33 @@ namespace Kablunk
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFramebuffer::Bind()
+	void OpenGLFramebuffer::Bind() const
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_renderer_id);
-		glViewport(0, 0, m_specification.Width, m_specification.Height);
+		glViewport(0, 0, m_specification.width, m_specification.height);
 
 		
 	}
 
-	void OpenGLFramebuffer::Unbind()
+	void OpenGLFramebuffer::Unbind() const
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
+	void OpenGLFramebuffer::BindTexture(uint32_t attachment_index /*= 0*/, uint32_t slot /*= 0*/) const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height, bool force_recreate)
 	{
 		if (width == 0 || height == 0 || width > s_max_frame_buffer_size || height > s_max_frame_buffer_size)
 		{
 			KB_CORE_WARN("Attempt to resize framebuffer to invalid size, ({0}, {1})", width, height);
 			return;
 		}
-		m_specification.Width = width;
-		m_specification.Height = height;
+		m_specification.width = width;
+		m_specification.height = height;
 
 		Invalidate();
 	}
@@ -240,7 +250,19 @@ namespace Kablunk
 		auto& spec = m_color_attachment_specs[attachment_index];
 
 		glClearTexImage(m_color_attachments[attachment_index], 0,
-			Utilities::KablunkTextureFormatToGLenum(spec.Texture_format), GL_INT, &value);
+			Utilities::KablunkTextureFormatToGLenum(spec.format), GL_INT, &value);
+	}
+
+	Kablunk::IntrusiveRef<Kablunk::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+		return nullptr;
+	}
+
+	Kablunk::IntrusiveRef<Kablunk::Image2D> OpenGLFramebuffer::GetDepthImage() const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+		return nullptr;
 	}
 
 	void OpenGLFramebuffer::DeleteBuffer()

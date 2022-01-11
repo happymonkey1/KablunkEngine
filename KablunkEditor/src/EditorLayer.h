@@ -57,7 +57,7 @@ namespace Kablunk
 		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
-		Ref<Framebuffer> m_frame_buffer;
+		IntrusiveRef<Framebuffer> m_frame_buffer;
 
 		Ref<Scene> m_active_scene;
 		Ref<Scene> m_editor_scene;
@@ -90,7 +90,7 @@ namespace Kablunk
 
 
 		// Resources
-		Ref<Texture2D> m_icon_play, m_icon_stop;
+		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop;
 
 		enum class SceneState
 		{

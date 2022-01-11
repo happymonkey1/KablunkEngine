@@ -30,6 +30,7 @@ namespace Kablunk
 		const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_queue_family_indices; }
 
 		const VkPhysicalDeviceProperties& GetProperties() const { return m_properties; }
+		const VkPhysicalDeviceLimits& GetLimits() const { return m_properties.limits; }
 		const VkPhysicalDeviceFeatures& GetFeatures() const { return m_features; }
 		const std::vector<const char*>& GetRequiredExtensions() const { return m_required_extensions; }
 		VkFormat GetDepthFormat() const { return m_depth_format; }

@@ -85,7 +85,9 @@ namespace Kablunk
 		static void SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform);
 		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
-		static Ref<Texture2D> GetWhiteTexture();
+		static uint32_t GetCurrentFrameIndex();
+
+		static IntrusiveRef<Texture2D> GetWhiteTexture();
 
 		static IntrusiveRef<ShaderLibrary> GetShaderLibrary();
 

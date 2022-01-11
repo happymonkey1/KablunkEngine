@@ -39,7 +39,7 @@ namespace Kablunk
 
 		if (specification.Enable_imgui)
 		{
-			m_imgui_layer = new ImGuiLayer();
+			m_imgui_layer = ImGuiLayer::Create();
 			PushOverlay(m_imgui_layer);
 		}
 

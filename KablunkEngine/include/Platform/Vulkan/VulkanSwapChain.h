@@ -27,8 +27,12 @@ namespace Kablunk
 
 		uint32_t GetImageCount() const { return m_image_count; }
 
-		VkFramebuffer GetCurrentFrameBuffer() { return GetFramebuffer(m_current_image_index); }
+		VkRenderPass GetRenderPass() { return m_render_pass; }
+
+		VkFramebuffer GetCurrentFramebuffer() { return GetFramebuffer(m_current_image_index); }
 		VkCommandBuffer GetCurrentDrawCommandBuffer() { return GetDrawCommandBuffer(m_current_buffer_index); }
+
+		VkFormat GetColorFormat() { return m_color_format; }
 
 		uint32_t GetCurrentBufferIndex() const { return m_current_buffer_index; }
 		VkFramebuffer GetFramebuffer(uint32_t index)
@@ -46,6 +50,9 @@ namespace Kablunk
 		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.render_complete; }
 
 		void Cleanup();
+
+		uint32_t GetWidth() const { return m_width; }
+		uint32_t GetHeight() const { return m_height; }
 
 		// #TODO move elsewhere
 		static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;

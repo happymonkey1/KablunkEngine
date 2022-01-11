@@ -65,9 +65,9 @@ namespace Kablunk
 
 		FramebufferSpecification frame_buffer_spec;
 		auto window_dimensions = Application::Get().GetWindowDimensions();
-		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
-		frame_buffer_spec.Width  = window_dimensions.x;
-		frame_buffer_spec.Height = window_dimensions.y;
+		frame_buffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::RED32F, ImageFormat::Depth };
+		frame_buffer_spec.width  = window_dimensions.x;
+		frame_buffer_spec.height = window_dimensions.y;
 		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
 
 
@@ -111,7 +111,7 @@ namespace Kablunk
 		// #TODO move to a scene renderer
 		auto spec = m_frame_buffer->GetSpecification();
 		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
-			&& (spec.Width != m_viewport_size.x || spec.Height != m_viewport_size.y))
+			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
 		{
 			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 
@@ -270,9 +270,9 @@ namespace Kablunk
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
 
-			auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
+			IntrusiveRef<Image2D> frame_buffer_image = m_frame_buffer->GetImage();
 			ImGui::Image(
-				reinterpret_cast<void*>(static_cast<uint64_t>(frame_buffer_id)),
+				reinterpret_cast<void*>(frame_buffer_image.get()),
 				{ m_viewport_size.x, m_viewport_size.y },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f }
 			);

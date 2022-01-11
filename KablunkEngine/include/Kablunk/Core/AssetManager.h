@@ -1,6 +1,7 @@
 #ifndef KABLUNK_CORE_ASSET_MANAGER_H
 #define KABLUNK_CORE_ASSET_MANAGER_H
 
+
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Utilities/Parser.h"
@@ -10,7 +11,6 @@
 namespace Kablunk
 {
 	using UUID = uuid::uuid64;
-
 
 	class BaseAsset
 	{
@@ -55,21 +55,21 @@ namespace Kablunk
 		};
 		virtual ~Asset() override = default;
 
-		Ref<Content> Get() const { return m_asset; }
+		IntrusiveRef<Content> Get() const { return m_asset; }
 		// Returns raw pointer to content
 		Content* Raw() { return m_asset.get(); }
 
-		operator Ref<Content>() { return m_asset; }
-		operator const Ref<Content>& () const { return m_asset; }
+		operator IntrusiveRef<Content>() { return m_asset; }
+		operator const IntrusiveRef<Content>& () const { return m_asset; }
 		operator bool() const { return !uuid::is_nil(m_uuid) && m_asset.get() != nullptr; }
 		bool operator==(const Asset<Content>& rhs) const { return m_uuid != rhs.m_uuid; }
 		bool operator!=(const Asset<Content>& rhs) const { return !(*this == rhs); }
 
-		Ref<Content> operator->() { return m_asset; }
+		IntrusiveRef<Content> operator->() { return m_asset; }
 
 
 	private:
-		Ref<Content> m_asset{ nullptr };
+		IntrusiveRef<Content> m_asset{ nullptr };
 
 		friend class AssetManager;
 	};
@@ -80,11 +80,11 @@ namespace Kablunk
 	
 	template<> 
 	Asset<Texture2D>::Asset(const std::string& filepath)
-		: BaseAsset{ filepath }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(1, 1) } { }
+		: BaseAsset{ filepath }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(ImageFormat::RGBA, 1, 1) } { }
 
 	template<>
 	Asset<Texture2D>::Asset(const std::string& filepath, const UUID& id)
-		: BaseAsset{ filepath, id }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(1, 1) } { }
+		: BaseAsset{ filepath, id }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Texture2D::Create(ImageFormat::RGBA, 1, 1) } { }
 
 
 	// =================

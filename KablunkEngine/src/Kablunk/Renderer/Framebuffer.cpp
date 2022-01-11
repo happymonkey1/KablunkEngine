@@ -4,10 +4,11 @@
 #include "Kablunk/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
+#include "Platform/Vulkan/VulkanFramebuffer.h"
 
 namespace Kablunk
 {
-	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
+	IntrusiveRef<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,7 +16,9 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
 		case RendererAPI::RenderAPI_t::OpenGL:
-			return CreateRef<OpenGLFramebuffer>(specs);
+			return IntrusiveRef<OpenGLFramebuffer>::Create(specs);
+		case RendererAPI::RenderAPI_t::Vulkan:
+			return IntrusiveRef<VulkanFramebuffer>::Create(specs);
 		default:
 			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
 			return nullptr;

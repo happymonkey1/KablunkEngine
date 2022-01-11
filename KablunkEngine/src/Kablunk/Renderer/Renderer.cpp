@@ -5,6 +5,8 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
 
+#include "Platform/Vulkan/VulkanContext.h"
+
 #include "Kablunk/Renderer/RendererAPI.h"
 
 namespace Kablunk
@@ -34,7 +36,7 @@ namespace Kablunk
 		Renderer2D::Init();
 	}
 
-	Ref<Texture2D> Renderer::GetWhiteTexture()
+	IntrusiveRef<Texture2D> Renderer::GetWhiteTexture()
 	{
 		return Renderer2D::GetWhiteTexture();
 	}
@@ -124,4 +126,15 @@ namespace Kablunk
 
 		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
 	}
+
+	uint32_t Renderer::GetCurrentFrameIndex()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::RenderAPI_t::Vulkan:	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
+		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return 0;
+		}
+
+	}
+
 }

@@ -11,23 +11,17 @@ namespace Kablunk {
 	class ImGuiLayer : public Layer
 	{
 	public:
-		ImGuiLayer();
-		~ImGuiLayer();
-
-		virtual void OnDetach() override;
-		virtual void OnAttach() override;
-		virtual void OnEvent(Event& e) override;
-		virtual void OnImGuiRender(Timestep ts) override;
-
-		void Begin();
-		void End();
+		ImGuiLayer() : Layer{ "ImguiLayer" } {}
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 
 		void SetDarkTheme();
 
-		void SetAllowEventPassing(bool allow) { m_allow_event_passing = allow; }
+		void SetAllowEventPassing(bool allow) { m_allow_event_passing = allow;  };
+
+		static ImGuiLayer* Create();
 	private:
-		bool m_allow_event_passing{ true };
-		float m_time;
+		bool m_allow_event_passing{ false };
 	};
 }
 

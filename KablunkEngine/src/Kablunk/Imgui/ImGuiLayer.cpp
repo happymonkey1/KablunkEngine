@@ -3,134 +3,15 @@
 
 #include "imgui.h"
 
-#include "Kablunk/Core/Application.h"
-#include "Kablunk/Events/KeyEvent.h"
-#include "Kablunk/Events/MouseEvent.h"
+#include "Platform/OpenGL/OpenGLImguiLayer.h"
+#include "Platform/Vulkan/VulkanImGuiLayer.h"
 
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_glfw.h"
-
-//TEMPORARY
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-#include "ImGuizmo.h"
-
-namespace Kablunk {
-	ImGuiLayer::ImGuiLayer() 
-		: Layer{ "ImGuiLayer" }, m_time{ 0.0f } 
-	{
-
-	}
-
-	ImGuiLayer::~ImGuiLayer()
-	{
-
-	}
-
-	void ImGuiLayer::OnAttach()
-	{
-		KB_PROFILE_FUNCTION();
-
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+#include "Kablunk/Renderer/RendererAPI.h"
 
 
-		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
-
-		// #TODO build font library to load fonts instead of current way
-		io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 18.0f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 18.0f);
-		//io.Fonts->Build();
-
-		//ImGui::StyleColorsDark();
-		SetDarkTheme();
-
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-			//style.Colors[ImGuiCol_Button] = { 0.381f, 0.381f, 0.381f, 1.0f };
-		}
-
-		Application& app = Application::Get();
-		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
-
-		
-		ImGui_ImplOpenGL3_Init("#version 450");
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-	}
-
-	void ImGuiLayer::OnDetach()
-	{
-		KB_PROFILE_FUNCTION();
-
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
-	}
-
-	void ImGuiLayer::Begin()
-	{
-		KB_PROFILE_FUNCTION();
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
-	}
-
-	void ImGuiLayer::End()
-	{
-		KB_PROFILE_FUNCTION();
-
-		ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
-		io.DisplaySize = ImVec2(static_cast<float>(app.GetWindow().GetWidth()), static_cast<float>(app.GetWindow().GetHeight()));
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
-			
-			// WINDOWS SPECIFIC CODE
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backup_current_context);
-		}
-	}
-
-	void ImGuiLayer::OnEvent(Event& e)
-	{
-		// #FIXME event passing
-		/*if (!m_allow_event_passing)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-
-			auto handled = e.GetStatus();
-			handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-			handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
-
-			e.SetStatus(handled);
-		}*/
-	}
-
-	void ImGuiLayer::OnImGuiRender(Timestep ts)
-	{
-		/*static bool show = false;
-		ImGui::ShowDemoWindow(&show);*/
-		//ImGui::ShowStyleEditor();
-	}
-
+namespace Kablunk 
+{
 	void ImGuiLayer::SetDarkTheme()
 	{
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -159,5 +40,16 @@ namespace Kablunk {
 		style.Colors[ImGuiCol_TabUnfocusedActive]	= { 0.200f, 0.205f, 0.210f, 1.0f };
 	}
 	
+
+	ImGuiLayer* ImGuiLayer::Create()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::RenderAPI_t::OpenGL:	return new OpenGLImguiLayer{};
+		case RendererAPI::RenderAPI_t::Vulkan:	return new VulkanImGuiLayer{};
+		default:								KB_CORE_ASSERT(false, "unknown renderAPI!");
+
+		}
+	}
 
 }
