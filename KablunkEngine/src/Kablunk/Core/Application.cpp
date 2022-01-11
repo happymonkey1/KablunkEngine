@@ -9,6 +9,8 @@
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
 
+#include "Platform/Vulkan/VulkanContext.h"
+
 //#include "Kablunk/Scripts/NativeScriptEngine.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -36,6 +38,7 @@ namespace Kablunk
 
 
 		Renderer::Init();
+		RenderCommand::WaitAndRender();
 
 		if (specification.Enable_imgui)
 		{
@@ -50,6 +53,8 @@ namespace Kablunk
 	{
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
+
+		RenderCommand::WaitAndRender();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -129,6 +134,7 @@ namespace Kablunk
 
 			if (!m_minimized)
 			{
+				RenderCommand::BeginFrame();
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
 						for (Layer* layer : m_layer_stack)
@@ -138,18 +144,25 @@ namespace Kablunk
 				if (m_specification.Enable_imgui)
 				{
 					//KB_TIME_FUNCTION_BEGIN()
-					m_imgui_layer->Begin();
-					{
-						KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run")
-							for (Layer* layer : m_layer_stack)
-								layer->OnImGuiRender(m_timestep);
-					}
-					m_imgui_layer->End();
+					Application* app = this;
+					RenderCommand::Submit([app]() { app->RenderImGui(); });
+					RenderCommand::Submit([=]() { m_imgui_layer->End(); });
+					
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
-			}
 
-			m_window->OnUpdate();
+				RenderCommand::EndFrame();
+
+				// #TODO fix this so API agnostic
+				if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+				{
+					VulkanContext::Get()->GetSwapchain().BeginFrame();
+					RenderCommand::WaitAndRender();
+				}
+
+				m_window->OnUpdate();
+
+			}
 
 			float time = PlatformAPI::GetTime(); // Platform::GetTime
 			m_timestep = time - m_last_frame_time;
@@ -157,6 +170,17 @@ namespace Kablunk
 		}
 
 		OnShutdown();
+	}
+
+	void Application::RenderImGui()
+	{
+		m_imgui_layer->Begin();
+		{
+			KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run");
+			for (Layer* layer : m_layer_stack)
+				layer->OnImGuiRender(m_timestep);
+		}
+		
 	}
 
 	void Application::OnStartup()

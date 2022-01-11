@@ -7,6 +7,7 @@
 #include "Kablunk/Renderer/Texture.h"
 #include "Platform/Vulkan/VulkanContext.h"
 
+#include "Platform/Vulkan/VulkanImage.h"
 
 #include <vulkan/vulkan.h>
 
@@ -28,6 +29,7 @@ namespace Kablunk
 		virtual uint32_t GetHeight() const override { return m_height; }
 		virtual RendererID GetRendererID() const override { return 0; }
 
+		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
 		virtual Buffer GetWriteableBuffer() override;
 

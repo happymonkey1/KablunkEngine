@@ -16,6 +16,7 @@ namespace Kablunk
 
 	void VulkanContext::Init()
 	{
+		KB_CORE_INFO("Initializing Vulkan Context!");
 		CreateInstance();
 		SetupDebugMessageCallback();
 		

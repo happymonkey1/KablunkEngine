@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Kablunk/Core/Core.h"
+#include "Kablunk/Renderer/Image.h"
+#include "Kablunk/Renderer/RenderCommandBuffer.h"
 #include "Kablunk/Renderer/VertexArray.h"
 #include <glm/glm.hpp>
 
@@ -18,11 +21,15 @@ namespace Kablunk
 		
 		virtual void Init() = 0;
 
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
+
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 		virtual void Clear() = 0;
 
 		virtual void DrawIndexed(const IntrusiveRef<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+		virtual void ClearImage(IntrusiveRef<RenderCommandBuffer> commandBuffer, IntrusiveRef<Image2D> image) = 0;
 		virtual void SetWireframeMode(bool draw_wireframe) = 0;
 
 		static inline RenderAPI_t GetAPI() { return s_API; };

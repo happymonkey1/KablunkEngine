@@ -37,6 +37,8 @@ namespace Kablunk
 
 	void VulkanImGuiLayer::OnAttach()
 	{
+		KB_CORE_INFO("VulkanImGuiLayer OnAttach called!");
+
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 

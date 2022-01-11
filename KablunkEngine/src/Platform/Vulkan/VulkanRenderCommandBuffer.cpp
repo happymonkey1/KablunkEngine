@@ -157,7 +157,7 @@ namespace Kablunk
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 1);
 
 				if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan failed to end command buffer")
+					KB_CORE_ASSERT(false, "Vulkan failed to end command buffer");
 			});
 
 	}

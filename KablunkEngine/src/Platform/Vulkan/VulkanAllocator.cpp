@@ -29,10 +29,17 @@ namespace Kablunk
 	{
 		VmaAllocationCreateInfo alloc_create_info{};
 		alloc_create_info.usage = usage;
+		alloc_create_info.pool = nullptr;
+		alloc_create_info.memoryTypeBits = 0;
+		
 
 		VmaAllocation allocation;
-		if (vmaCreateBuffer(s_data->allocator, &buffer_create_info, &alloc_create_info, &out_buffer, &allocation, nullptr) != VK_SUCCESS)
+		VkResult res = vmaCreateBuffer(s_data->allocator, &buffer_create_info, &alloc_create_info, &out_buffer, &allocation, nullptr);
+		if (res != VK_SUCCESS)
+		{
 			KB_CORE_ERROR("VulkanAllocator failed to create buffer!");
+			KB_CORE_ERROR("  {0}", res);
+		}
 
 		VmaAllocationInfo alloc_info{};
 		vmaGetAllocationInfo(s_data->allocator, allocation, &alloc_info);
@@ -96,6 +103,7 @@ namespace Kablunk
 
 	void VulkanAllocator::Init(IntrusiveRef<VulkanDevice> device)
 	{
+		KB_CORE_INFO("Initializing VulkanAllocator!");
 		s_data = new VulkanAllocatorData{};
 
 		VmaAllocatorCreateInfo alloc_info{};

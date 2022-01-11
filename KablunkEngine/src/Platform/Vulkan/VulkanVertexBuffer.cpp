@@ -9,6 +9,7 @@ namespace Kablunk
 {
 
 	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage /*= VertexBufferUsage::Static*/)
+		: m_size{ size }
 	{
 		m_local_data = Buffer::Copy(data, size);
 
@@ -47,8 +48,10 @@ namespace Kablunk
 				copy_region.size = instance->m_local_data.size();
 				vkCmdCopyBuffer(copy_cmd, staging_buffer, instance->m_vk_buffer, 1, &copy_region);
 
+				KB_CORE_INFO("VertexBuffer about to flush command queue!");
 				device->FlushCommandBuffer(copy_cmd);
 
+				KB_CORE_INFO("VertexBuffer destroying staging buffer!");
 				allocator.DestroyBuffer(staging_buffer, staging_buffer_allocation);
 			});
 	}

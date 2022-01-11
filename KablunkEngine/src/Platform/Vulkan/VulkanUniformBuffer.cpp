@@ -16,7 +16,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanUniformBuffer> instance = this;
 		RenderCommand::Submit([instance]() mutable
 			{
-				instance->Invalidate();
+				instance->RT_Invalidate();
 			});
 	}
 
@@ -25,66 +25,36 @@ namespace Kablunk
 		Release();
 	}
 
-	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offest /*= 0*/)
+	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
 	{
+		memcpy(m_local_storage, data, size);
+
 		IntrusiveRef<VulkanUniformBuffer> instance = this;
-		RenderCommand::Submit([instance, data, size, offest]() mutable
+		RenderCommand::Submit([instance, data, size, offset]() mutable
 			{
-				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-
-				VkBufferCreateInfo buffer_create_info{};
-				buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-				buffer_create_info.size = instance->m_size;
-				
-				// create buffer
-				vkCreateBuffer(device, &buffer_create_info, nullptr, &instance->m_buffer);
-
-				// allocate memory
-				VkMemoryAllocateInfo alloc_info{};
-				alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-				alloc_info.pNext = nullptr;
-				alloc_info.allocationSize = instance->m_size;
-				alloc_info.memoryTypeIndex = 0;
-
-				// #TODO replace with VulkanAllocator
-				if (vkAllocateMemory(device, &alloc_info, nullptr, &instance->m_vk_memory) != VK_SUCCESS)
-					KB_CORE_ERROR("Vulkan uniform buffer failed to allocate memory!");
-				
-				vkBindBufferMemory(device, instance->m_buffer, instance->m_vk_memory, offest);
-
-				vkMapMemory(device, instance->m_vk_memory, offest, size, 0, (void**)&instance->m_local_storage);
-
-				memcpy(instance->m_local_storage, data, instance->m_size);
-
-				vkUnmapMemory(device, instance->m_vk_memory);
-
-				// flush mapped memory?
+				instance->RT_SetData(instance->m_local_storage, size, offset);
 			});
 	}
 
-	void VulkanUniformBuffer::Invalidate()
+	void VulkanUniformBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
+	{
+		VulkanAllocator allocator{ "UniformBuffer" };
+		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
+		memcpy(data_ptr, (const uint8_t*)data + offset, size);
+		allocator.UnmapMemory(m_vk_allocation);
+	}
+
+	void VulkanUniformBuffer::RT_Invalidate()
 	{
 		Release();
-
-		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-
-		VkMemoryAllocateInfo alloc_info{};
-		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		alloc_info.pNext = nullptr;
-		alloc_info.allocationSize = 0;
-		alloc_info.memoryTypeIndex = 0;
 
 		VkBufferCreateInfo buffer_create_info{};
 		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		buffer_create_info.size = m_size;
 
-		if (m_buffer)
-		{
-			vkDestroyBuffer(device, m_buffer, nullptr);
-			vkFreeMemory(device, m_vk_memory, nullptr);
-		}
+		VulkanAllocator allocator{ "UniformBuffer" };
+		m_vk_allocation = allocator.AllocateBuffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_ONLY, m_buffer);
 
 		m_descriptor_info.buffer = m_buffer;
 		m_descriptor_info.offset = 0;
@@ -93,10 +63,17 @@ namespace Kablunk
 
 	void VulkanUniformBuffer::Release()
 	{
-		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-		vkDestroyBuffer(device, m_buffer, nullptr);
+		if (!m_vk_allocation)
+			return;
+
+		RenderCommand::SubmitResourceFree([buffer = m_buffer, mem_alloc = m_vk_allocation]()
+			{
+				VulkanAllocator allocator{ "UniformBuffer" };
+				allocator.DestroyBuffer(buffer, mem_alloc);
+			});
 
 		m_buffer = nullptr;
+		m_vk_allocation = nullptr;
 
 		delete[] m_local_storage;
 		m_local_storage = nullptr;

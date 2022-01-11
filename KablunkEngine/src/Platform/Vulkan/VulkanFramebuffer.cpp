@@ -5,6 +5,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 #include "Platform/Vulkan/VulkanAllocator.h"
 #include "Platform/Vulkan/VulkanImage.h"
+#include "Platform/Vulkan/VulkanRenderer.h"
 
 #include "Kablunk/Core/Application.h"
 
@@ -97,6 +98,52 @@ namespace Kablunk
 	void VulkanFramebuffer::AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func)
 	{
 		m_resize_callbacks.push_back(func);
+	}
+
+	int VulkanFramebuffer::ReadPixel(uint32_t attachment_index, int x, int y)
+	{
+		KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!");
+
+		IntrusiveRef<Image2D> attachment = m_attachment_images[attachment_index];
+
+		Buffer& attachment_buffer = attachment->GetBuffer();
+		if (!attachment_buffer)
+			return -1;
+
+		return attachment_buffer[y * attachment->GetWidth() + x];
+	}
+
+	void VulkanFramebuffer::ClearAttachment(uint32_t attachment_index, int value)
+	{
+		/*KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!");
+		if (!m_attachment_images[attachment_index])
+			return;
+		
+		IntrusiveRef<VulkanFramebuffer> instance = this;
+		RenderCommand::Submit([instance, attachment_index, value]() mutable
+			{
+				VkClearColorValue clear_color_value{};
+				clear_color_value.float32[0] = value;
+				clear_color_value.float32[1] = value;
+				clear_color_value.float32[2] = value;
+				clear_color_value.float32[3] = value;
+
+				IntrusiveRef<VulkanImage2D> vulkan_image_attachment = instance->m_attachment_images[attachment_index].As<VulkanImage2D>();
+
+				VkClearAttachment clear_attachment{};
+				clear_attachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				clear_attachment.clearValue = VkClearValue{ clear_color_value };
+				clear_attachment.colorAttachment = attachment_index;
+
+				VkClearRect clear_rect{};
+				clear_rect.baseArrayLayer = 0;
+				clear_rect.layerCount = 1;
+				clear_rect.rect = { 0, 0, 1, 1 };
+
+				VkCommandBuffer cmd_buf = VulkanContext::Get()->GetDevice()->GetCommandBuffer(true);
+
+				vkCmdClearAttachments(cmd_buf, 1, &clear_attachment, 1, &clear_rect);
+			});*/
 	}
 
 	void VulkanFramebuffer::Invalidate()
@@ -239,7 +286,6 @@ namespace Kablunk
 						spec.width = m_width;
 						spec.height = m_height;
 						color_attachment = m_attachment_images.emplace_back(Image2D::Create(spec)).As<VulkanImage2D>();
-
 					}
 					else
 					{
@@ -390,7 +436,7 @@ namespace Kablunk
 		VkFramebufferCreateInfo frame_buffer_create_info = {};
 		frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		frame_buffer_create_info.renderPass = m_render_pass;
-		frame_buffer_create_info.attachmentCount = uint32_t(attachments.size());
+		frame_buffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
 		frame_buffer_create_info.pAttachments = attachments.data();
 		frame_buffer_create_info.width = m_width;
 		frame_buffer_create_info.height = m_height;

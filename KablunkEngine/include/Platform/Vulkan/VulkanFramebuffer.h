@@ -37,8 +37,8 @@ namespace Kablunk
 		}
 		virtual IntrusiveRef<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
 
-		virtual int ReadPixel(uint32_t attachment_index, int x, int y) override { KB_CORE_ASSERT(false, "not implemented!"); return -1; };
-		virtual void ClearAttachment(uint32_t attachment_index, int value) override { KB_CORE_ASSERT(false, "not implemented!"); };
+		virtual int ReadPixel(uint32_t attachment_index, int x, int y) override;
+		virtual void ClearAttachment(uint32_t attachment_index, int value) override;
 
 		size_t GetColorAttachmentCount() const { return m_specification.swap_chain_target ? 1 : m_attachment_images.size(); }
 		bool HasDepthAttachment() const { return (bool)m_depth_attachment_image; }

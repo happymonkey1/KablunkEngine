@@ -10,11 +10,21 @@ namespace Kablunk
 	public:
 		static void Init() 
 		{ 
-			// #TODO fix the renderapi because this is just horrible
+			
 			if (s_RendererAPI->GetAPI() != RendererAPI::RenderAPI_t::OpenGL)
 				s_command_queue = new RenderCommandQueue();
 
 			s_RendererAPI->Init();
+		}
+
+		static void BeginFrame()
+		{
+			s_RendererAPI->BeginFrame();
+		}
+
+		static void EndFrame()
+		{
+			s_RendererAPI->EndFrame();
 		}
 
 		static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -32,6 +42,11 @@ namespace Kablunk
 			s_RendererAPI->Clear();
 		};
 
+		static void ClearImage(IntrusiveRef<RenderCommandBuffer> command_buffer, IntrusiveRef<Image2D> image)
+		{
+			s_RendererAPI->ClearImage(command_buffer, image);
+		}
+
 		static void DrawIndexed(const IntrusiveRef<VertexArray> vertexArray, uint32_t indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
@@ -45,7 +60,7 @@ namespace Kablunk
 		static void WaitAndRender()
 		{
 			// #TODO fix the renderapi because this is just horrible
-			if (s_RendererAPI->GetAPI() != RendererAPI::RenderAPI_t::OpenGL)
+			if (s_RendererAPI->GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
 				s_command_queue->Execute();
 		}
 

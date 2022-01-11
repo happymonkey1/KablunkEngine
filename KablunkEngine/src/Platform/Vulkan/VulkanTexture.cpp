@@ -230,13 +230,13 @@ namespace Kablunk
 		else
 		{
 			// #TODO mipmap levels, final image layout
-			VkCommandBuffer transitionCommandBuffer = device->GetCommandBuffer(true);
+			VkCommandBuffer transition_cmd_buffer = device->GetCommandBuffer(true);
 			VkImageSubresourceRange subresourceRange = {};
 			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			subresourceRange.layerCount = 1;
 			subresourceRange.levelCount = 1; // #TODO mipmap levels
-			Utils::SetImageLayout(transitionCommandBuffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, subresourceRange);
-			device->FlushCommandBuffer(transitionCommandBuffer);
+			Utils::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, subresourceRange);
+			device->FlushCommandBuffer(transition_cmd_buffer);
 		}
 
 		// Release local storage

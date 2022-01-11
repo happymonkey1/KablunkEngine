@@ -6,9 +6,12 @@ namespace Kablunk
 {
 
 	RenderCommandQueue::RenderCommandQueue()
-		: m_command_buffer{ new uint8_t[10 * 1024 * 1024]{ 0 } }, m_command_buffer_ptr{ m_command_buffer }, m_command_count{ 0 }
+		: m_command_buffer{ nullptr }, m_command_buffer_ptr{ nullptr }, m_command_count{ 0 }
 	{
-
+		constexpr size_t TEN_MB = 10 * 1024 * 1024;
+		m_command_buffer = new uint8_t[TEN_MB];
+		m_command_buffer_ptr = m_command_buffer;
+		memset(m_command_buffer, 0, TEN_MB);
 	}
 
 	RenderCommandQueue::~RenderCommandQueue()

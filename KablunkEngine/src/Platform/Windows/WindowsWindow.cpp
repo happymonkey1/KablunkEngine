@@ -220,11 +220,14 @@ namespace Kablunk {
 
     void WindowsWindow::SetVsync(bool enabled)
     {
-        if (enabled)
-            glfwSwapInterval(1);
-        else
-            glfwSwapInterval(0);
-
+		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::OpenGL)
+		{
+			if (enabled)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
+		}
+      
         m_Data.VSync = enabled;
     }
 

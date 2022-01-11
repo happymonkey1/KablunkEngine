@@ -17,7 +17,7 @@ namespace Kablunk
 
 	void VulkanRenderer2D::Renderer2D_Flush()
 	{
-		KB_CORE_ERROR("VulkanRenderer2D Flush() not implemented!");
+
 	}
 
 }

@@ -10,7 +10,7 @@ namespace Kablunk
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
-		Buffer(void* data, uint32_t size) : m_data{ data }, m_size{ size } {}
+		Buffer(void* data, uint32_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
 		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
 		{
 			if (other.m_data != nullptr)
@@ -32,12 +32,12 @@ namespace Kablunk
 			return *this;
 		}
 
-		static Buffer Copy(const void* data, uint32_t size)
+		static Buffer& Copy(const void* data, uint32_t size)
 		{
 			Buffer buffer;
 			buffer.Allocate(size);
 			memcpy(buffer.m_data, data, size);
-			return buffer;
+			return std::move(buffer);
 		}
 
 		void Allocate(uint32_t size)
@@ -99,7 +99,7 @@ namespace Kablunk
 		inline const void* get() const { return m_data; }
 	private:
 		uint32_t m_size;
-		void* m_data;
+		uint8_t* m_data;
 	};
 }
 

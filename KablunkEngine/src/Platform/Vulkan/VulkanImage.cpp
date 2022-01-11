@@ -143,10 +143,10 @@ namespace Kablunk
 		image_view_create_info.image = m_info.image;
 		
 		if (vkCreateImageView(vk_device, &image_view_create_info, nullptr, &m_info.image_view) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to create image view!")
+			KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 
-		// TODO: Renderer should contain some kind of sampler cache
-		VkSamplerCreateInfo sampler_create_info = {};
+		// #TODO: Renderer should contain some kind of sampler cache
+		VkSamplerCreateInfo sampler_create_info{};
 		sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler_create_info.maxAnisotropy = 1.0f;
 		sampler_create_info.magFilter = VK_FILTER_LINEAR;
@@ -259,7 +259,7 @@ namespace Kablunk
 			image_view_create_info.subresourceRange.layerCount = 1;
 			image_view_create_info.image = m_info.image;
 			if (vkCreateImageView(vk_device, &image_view_create_info, nullptr, &m_per_layer_image_views[layer]) != VK_SUCCESS)
-				KB_CORE_ASSERT(false, "Vulkan Failed to create image view")
+				KB_CORE_ASSERT(false, "Vulkan Failed to create image view");
 		}
 	}
 

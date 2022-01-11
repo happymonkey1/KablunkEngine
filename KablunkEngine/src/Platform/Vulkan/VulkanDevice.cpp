@@ -305,10 +305,17 @@ namespace Kablunk
 		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fence_create_info.flags = 0;
 
+		// Create Fence
 		VkFence fence;
 		if (vkCreateFence(m_device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 			KB_CORE_ERROR("Vulkan failed to create fence");
 
+		// Submit Queue
+		if (vkQueueSubmit(queue, 1, &submit_info, fence) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to submit queue");
+
+		// W
+		KB_CORE_INFO("VulkanDevice waiting for fence");
 		if (vkWaitForFences(m_device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT) != VK_SUCCESS)
 			KB_CORE_ERROR("Vulkan failed to wait for fence!");
 
@@ -318,7 +325,17 @@ namespace Kablunk
 
 	VkCommandBuffer VulkanDevice::CreateSecondaryCommandBuffer()
 	{
-		KB_CORE_ASSERT(false, "not implemented");
-		return nullptr;
+		VkCommandBuffer cmd_buffer;
+
+		VkCommandBufferAllocateInfo cmd_buffer_alloc_info{};
+		cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cmd_buffer_alloc_info.commandPool = m_command_pool;
+		cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+		cmd_buffer_alloc_info.commandBufferCount = 1;
+
+		if (vkAllocateCommandBuffers(m_device, &cmd_buffer_alloc_info, &cmd_buffer) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to allocate secondary buffer!");
+		return cmd_buffer;
+
 	}
 }

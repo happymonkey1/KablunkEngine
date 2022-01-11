@@ -26,6 +26,8 @@ namespace Kablunk
 		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 
+		VkBuffer GetVkBuffer() const { return m_vk_buffer; }
+
 		virtual void SetLayout(const BufferLayout& layout) override;
 		virtual const BufferLayout& GetLayout() const override;
 
