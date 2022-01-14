@@ -8,7 +8,7 @@
 
 namespace Kablunk 
 {
-	class RendererAPI
+	class RendererAPI : public RefCounted
 	{
 	public:
 		enum class RenderAPI_t
@@ -31,6 +31,8 @@ namespace Kablunk
 		virtual void DrawIndexed(const IntrusiveRef<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
 		virtual void ClearImage(IntrusiveRef<RenderCommandBuffer> commandBuffer, IntrusiveRef<Image2D> image) = 0;
 		virtual void SetWireframeMode(bool draw_wireframe) = 0;
+
+		virtual void WaitAndRender() = 0;
 
 		static inline RenderAPI_t GetAPI() { return s_API; };
 	private:

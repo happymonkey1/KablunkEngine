@@ -121,26 +121,6 @@ namespace Kablunk
 
 		auto& info = image->GetImageInfo();
 
-		/*VkImageCreateInfo image_create_info{};
-		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		image_create_info.extent.width = static_cast<uint32_t>(m_width);
-		image_create_info.extent.height = static_cast<uint32_t>(m_height);
-		image_create_info.extent.depth = 1;
-		image_create_info.mipLevels = 1;
-		image_create_info.arrayLayers = 1;
-		image_create_info.format = Utils::VulkanImageFormat(m_format);
-		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL; // #TODO extend api so this is an option
-		image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-		image_create_info.flags = 0;
-
-		m_vk_image = {};
-		if (vkCreateImage(vk_device, &image_create_info, nullptr, &m_vk_image) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to create image!");*/
-
 		if (m_image_data)
 		{
 			VkDeviceSize size = static_cast<uint64_t>(m_size);
@@ -239,6 +219,43 @@ namespace Kablunk
 			device->FlushCommandBuffer(transition_cmd_buffer);
 		}
 
+		// create texture sampler
+		VkSamplerCreateInfo sampler{};
+		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler.maxAnisotropy = 1.0f;
+		sampler.magFilter = VK_FILTER_LINEAR; // #TODO dynamic based on properties
+		sampler.minFilter = VK_FILTER_LINEAR;
+		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // #TODO dynamic based on properties
+		sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler.mipLodBias = 0.0f;
+		sampler.compareOp = VK_COMPARE_OP_NEVER;
+		sampler.minLod = 0.0f;
+		sampler.maxLod = 1.0f;
+		sampler.maxAnisotropy = 1.0f;
+		sampler.anisotropyEnable = VK_FALSE;
+		sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+
+		VkImageViewCreateInfo view_create_info{};
+		view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		view_create_info.format = Utils::VulkanImageFormat(m_format);
+		view_create_info.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
+		// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
+		view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		view_create_info.subresourceRange.baseMipLevel = 0;
+		view_create_info.subresourceRange.baseArrayLayer = 0;
+		view_create_info.subresourceRange.layerCount = 1;
+		view_create_info.subresourceRange.levelCount = 1; // #TODO dynamic
+		view_create_info.image = info.image;
+		if (vkCreateImageView(vk_device, &view_create_info, nullptr, &info.image_view) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
+
+		image->UpdateDescriptor();
+		
 		// Release local storage
 		m_image_data.Release();
 	}
@@ -246,9 +263,10 @@ namespace Kablunk
 	bool VulkanTexture2D::LoadImage(const std::string& filepath)
 	{
 		int width, height, channels;
+		void* data;
 		if (stbi_is_hdr(filepath.c_str()))
 		{
-			void* data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
+			data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
 
 			m_size = width * height * 4 * sizeof(float);
 			m_image_data.Allocate(m_size);
@@ -258,7 +276,7 @@ namespace Kablunk
 		}
 		else
 		{
-			void* data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
+			data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 
 			m_size = width * height * 4;
 			m_image_data.Allocate(m_size);
@@ -268,7 +286,12 @@ namespace Kablunk
 		}
 
 		if (!m_image_data.get())
+		{
+			KB_CORE_ASSERT(false, "Image loaded but data is null!");
 			return false;
+		}
+
+		stbi_image_free(data);
 
 		m_width = width;
 		m_height = height;

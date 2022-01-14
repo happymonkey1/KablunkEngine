@@ -90,6 +90,7 @@ namespace Kablunk
 		static IntrusiveRef<Texture2D> GetWhiteTexture();
 
 		static IntrusiveRef<ShaderLibrary> GetShaderLibrary();
+		static IntrusiveRef<Shader> GetShader(const std::string& name);
 
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:

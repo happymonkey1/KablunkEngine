@@ -4,9 +4,10 @@
 #include "Kablunk/Renderer/RendererTypes.h"
 #include "Kablunk/Renderer/ShaderUniform.h"
 
+#include <glm/glm.hpp>
+
 #include <unordered_map>
 #include <string>
-#include <glm/glm.hpp>
 
 namespace Kablunk {
 
@@ -111,6 +112,8 @@ namespace Kablunk {
 		IntrusiveRef<Shader> Get(const std::string& name);
 
 		bool Exists(const std::string& name);
+	private:
+
 	private:
 		std::unordered_map<std::string, IntrusiveRef<Shader>> m_shaders;
 	};

@@ -179,14 +179,6 @@ namespace Kablunk
 		{
 			if (m_ptr)
 			{
-				if (m_ptr->GetRefCount() == 0)
-				{
-					std::cout << "uh oh!" << std::endl;
-					delete m_ptr;
-					Internal::RemoveFromLiveReferences((void*)m_ptr);
-					m_ptr = nullptr;
-				}
-
 				m_ptr->DecRefCount();
 				if (m_ptr->GetRefCount() == 0)
 				{

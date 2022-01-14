@@ -31,6 +31,10 @@ namespace Kablunk
 		{
 			switch (type)
 			{
+			case ShaderDataType::Int:		return VK_FORMAT_R32_SINT;
+			case ShaderDataType::Int2:		return VK_FORMAT_R32G32_SINT;
+			case ShaderDataType::Int3:		return VK_FORMAT_R32G32B32_SINT;
+			case ShaderDataType::Int4:		return VK_FORMAT_R32G32B32A32_SINT;
 			case ShaderDataType::Float:     return VK_FORMAT_R32_SFLOAT;
 			case ShaderDataType::Float2:    return VK_FORMAT_R32G32_SFLOAT;
 			case ShaderDataType::Float3:    return VK_FORMAT_R32G32B32_SFLOAT;
@@ -110,7 +114,7 @@ namespace Kablunk
 		// The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
 		pipeline_create_info.layout = m_vk_pipeline_layout;
 		// Renderpass this pipeline is attached to
-		pipeline_create_info.renderPass = framebuffer->GetRenderPass();
+		pipeline_create_info.renderPass = framebuffer->GetVkRenderPass();
 
 		// Construct the different states making up the pipeline
 		// Input assembly state describes how primitives are assembled
@@ -284,7 +288,7 @@ namespace Kablunk
 		pipeline_create_info.pMultisampleState = &multisample_state;
 		pipeline_create_info.pViewportState = &viewport_state;
 		pipeline_create_info.pDepthStencilState = &depth_stencil_state;
-		pipeline_create_info.renderPass = framebuffer->GetRenderPass();
+		pipeline_create_info.renderPass = framebuffer->GetVkRenderPass();
 		pipeline_create_info.pDynamicState = &dynamic_state;
 
 		// what is a pipeline cache?
@@ -306,13 +310,11 @@ namespace Kablunk
 			{
 				instance->RT_SetUniformBuffer(uniform_buffer, binding, set);
 			});
-
 	}
 
 	void VulkanPipeline::RT_SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
 	{
-		IntrusiveRef<VulkanShader> vulkanShader = IntrusiveRef<VulkanShader>(m_specification.shader);
-		IntrusiveRef<VulkanUniformBuffer> vulkanUniformBuffer = uniform_buffer.As<VulkanUniformBuffer>();
+		IntrusiveRef<VulkanUniformBuffer> vulkan_uniform_buffer = uniform_buffer.As<VulkanUniformBuffer>();
 
 		KB_CORE_ASSERT(set < m_descriptor_sets.descriptor_sets.size(), "out of bounds!");
 
@@ -320,7 +322,7 @@ namespace Kablunk
 		write_descriptor_sets.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write_descriptor_sets.descriptorCount = 1;
 		write_descriptor_sets.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		write_descriptor_sets.pBufferInfo = &vulkanUniformBuffer->GetDescriptorBufferInfo();
+		write_descriptor_sets.pBufferInfo = &vulkan_uniform_buffer->GetDescriptorBufferInfo();
 		write_descriptor_sets.dstBinding = binding;
 		write_descriptor_sets.dstSet = m_descriptor_sets.descriptor_sets[set];
 

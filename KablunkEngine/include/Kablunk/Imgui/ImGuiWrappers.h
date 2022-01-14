@@ -17,14 +17,23 @@
 
 namespace Kablunk::UI
 {
-
-	static uint32_t s_UIContextID = 0;
 	constexpr uint32_t MAX_CHARS = 256;
+	static char s_id_buffer[MAX_CHARS];
+	static uint32_t s_ui_context_id = 0;
+
+	static const char* GenerateID()
+	{
+		s_id_buffer[0] = '#';
+		s_id_buffer[1] = '#';
+		memset(s_id_buffer + 2, 0, 14);
+		sprintf_s(s_id_buffer + 2, 14, "%o", s_ui_context_id++);
+
+		return &s_id_buffer[0];
+	}
+
 
 	namespace Internal
 	{
-		static char s_id_buffer[MAX_CHARS];
-
 		template <typename FuncT>
 		static void CreateStaticProperty(const char* label, FuncT DrawUI)
 		{
@@ -89,13 +98,13 @@ namespace Kablunk::UI
 
 	static void PushID()
 	{
-		ImGui::PushID(s_UIContextID++);
+		ImGui::PushID(s_ui_context_id++);
 	}
 
 	static void PopID()
 	{
 		ImGui::PopID();
-		s_UIContextID--;
+		s_ui_context_id--;
 	}
 
 	static void BeginProperties()
@@ -145,8 +154,10 @@ namespace Kablunk::UI
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
 	}
 
-	void Image(const IntrusiveRef<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const IntrusiveRef<Texture2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+	ImTextureID GetTextureID(IntrusiveRef<Texture2D> texture);
+	void Image(const IntrusiveRef<Image2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	void Image(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	bool ImageButton(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
@@ -469,6 +480,82 @@ namespace Kablunk::UI
 	{
 		ImGui::TreePop();
 	}
+
+	
+	// Button Images
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+		ImVec2 rectMin, ImVec2 rectMax)
+	{
+		auto* drawList = ImGui::GetWindowDrawList();
+		if (ImGui::IsItemActive())
+			drawList->AddImage(GetTextureID(imagePressed), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintPressed);
+		else if (ImGui::IsItemHovered())
+			drawList->AddImage(GetTextureID(imageHovered), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintHovered);
+		else
+			drawList->AddImage(GetTextureID(imageNormal), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintNormal);
+	};
+
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+		ImRect rectangle)
+	{
+		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
+	};
+
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+		ImVec2 rectMin, ImVec2 rectMax)
+	{
+		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectMin, rectMax);
+	};
+
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+		ImRect rectangle)
+	{
+		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
+	};
+
+
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
+	{
+		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+	};
+
+	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
+	{
+		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+	};
+
+
+	// Rectangle
+	static inline ImRect GetItemRect()
+	{
+		return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+	}
+
+	static inline ImRect RectExpanded(const ImRect& rect, float x, float y)
+	{
+		ImRect result = rect;
+		result.Min.x -= x;
+		result.Min.y -= y;
+		result.Max.x += x;
+		result.Max.y += y;
+		return result;
+	}
+
+	// Color
+	static ImU32 ColorWithMultipliedValue(const ImColor& color, float multiplier)
+	{
+		const ImVec4& colRow = color.Value;
+		float hue, sat, val;
+		ImGui::ColorConvertRGBtoHSV(colRow.x, colRow.y, colRow.z, hue, sat, val);
+		return ImColor::HSV(hue, sat, std::min(val * multiplier, 1.0f));
+	}
+
 }
 
 #endif

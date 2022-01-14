@@ -42,9 +42,9 @@ namespace Kablunk
 
 		size_t GetColorAttachmentCount() const { return m_specification.swap_chain_target ? 1 : m_attachment_images.size(); }
 		bool HasDepthAttachment() const { return (bool)m_depth_attachment_image; }
-		VkRenderPass GetRenderPass() const { return m_render_pass; }
-		VkFramebuffer GetVulkanFramebuffer() const { return m_framebuffer; }
-		const std::vector<VkClearValue>& GetVulkanClearValues() const { return m_clear_values; }
+		VkRenderPass GetVkRenderPass() const { return m_render_pass; }
+		VkFramebuffer GetVkFramebuffer() const { return m_framebuffer; }
+		const std::vector<VkClearValue>& GetVkClearValues() const { return m_clear_values; }
 
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 

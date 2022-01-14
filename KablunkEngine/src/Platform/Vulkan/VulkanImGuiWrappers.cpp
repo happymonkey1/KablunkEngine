@@ -6,15 +6,44 @@
 
 #include <backends/imgui_impl_vulkan.h>
 
+#include <vulkan/vulkan.h>
+
 namespace Kablunk::UI
 {
+	ImTextureID GetTextureID(IntrusiveRef<Texture2D> texture)
+	{
+		IntrusiveRef<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+		if (!image_info.imageView)
+		{
+			KB_CORE_ERROR("VulkanImGuiWrapper image view is empty!");
+			return 0;
+		}
+
+		return ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
+	}
+
+	void Image(const IntrusiveRef<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	{
+		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->GetImageInfo();
+		VkDescriptorImageInfo image_desc = image.As<VulkanImage2D>()->GetDescriptor();
+		if (!image_desc.imageView)
+			return;
+
+		const auto textureID = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_desc.imageView, image_desc.imageLayout);
+		ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
+		ImGui::NextColumn();
+		ImGui::NextColumn();
+	}
+
 	void Image(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{
 		IntrusiveRef<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
 		if (!image_info.imageView)
 			return;
-		const auto textureID = 0;// ImGui_ImplVulkan_AddTexture(imageInfo.sampler, imageInfo.imageView, imageInfo.imageLayout);
+
+		const auto textureID = ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
 		ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
 		ImGui::NextColumn();
 		ImGui::NextColumn();
@@ -24,21 +53,10 @@ namespace Kablunk::UI
 	{
 		IntrusiveRef<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
-
-		RenderCommand::Submit([image_info]()
-			{
-				VkWriteDescriptorSet write_desc{};
-				write_desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				write_desc.dstSet = 
-
-				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-				vkUpdateDescriptorSets(vk_device, 1, &image_info, 0, nullptr);
-			});
-
-
 		if (!image_info.imageView)
 			return false;
-		const auto texture_id = 0;// ImGui_ImplVulkan_AddTexture(imageInfo.sampler, imageInfo.imageView, imageInfo.imageLayout);
+
+		const auto texture_id = ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
 		bool pressed = ImGui::ImageButton(texture_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
 		ImGui::NextColumn();
 		ImGui::NextColumn();

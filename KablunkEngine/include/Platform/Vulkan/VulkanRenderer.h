@@ -2,10 +2,13 @@
 #ifndef KABLUNK_PLATFORM_VULKAN_RENDERER_H
 #define KABLUNK_PLATFORM_VULKAN_RENDERER_H
 
+#include "Kablunk/Renderer/Renderer.h"
+
 #include <vulkan/vulkan.h>
 
 namespace Kablunk
 {
+
 	namespace Utils {
 
 		void InsertImageMemoryBarrier(

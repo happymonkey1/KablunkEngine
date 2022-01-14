@@ -4,8 +4,6 @@
 
 namespace Kablunk
 {
-
-
 	namespace Utils
 	{
 		void InsertImageMemoryBarrier(

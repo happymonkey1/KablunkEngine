@@ -40,7 +40,7 @@ namespace Kablunk
 		int32_t EntityID{ -1 };
 	};
 
-	class Renderer2D
+	class Renderer2D : public RefCounted
 	{
 	public:
 		// Public API

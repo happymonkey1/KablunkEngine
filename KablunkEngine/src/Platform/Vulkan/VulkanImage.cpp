@@ -7,6 +7,7 @@
 
 namespace Kablunk
 {
+	static std::map<VkImage, WeakRef<VulkanImage2D>> s_image_refs;
 
 	VulkanImage2D::VulkanImage2D(ImageSpecification spec)
 		: m_specification{ spec }
@@ -26,14 +27,12 @@ namespace Kablunk
 					vkDestroySampler(vk_device, info.sampler, nullptr);
 
 					for (auto& view : layer_views)
-					{
 						if (view)
 							vkDestroyImageView(vk_device, view, nullptr);
-					}
 
 					VulkanAllocator allocator{ "VulkanImage2D" };
 					allocator.DestroyImage(info.image, info.memory_allcation);
-
+					s_image_refs.erase(info.image);
 				});
 
 			m_per_layer_image_views.clear();
@@ -70,7 +69,7 @@ namespace Kablunk
 				}
 				VulkanAllocator allocator{ "VulkanImage2D" };
 				allocator.DestroyImage(info.image, info.memory_allcation);
-				//s_ImageReferences.erase(info.image);
+				s_image_refs.erase(info.image);
 			});
 
 		m_info.image = nullptr;
@@ -126,7 +125,7 @@ namespace Kablunk
 		image_create_info.usage = usage;
 		m_info.memory_allcation = allocator.AllocateImage(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_info.image);
 		
-		//s_ImageReferences[m_Info.Image] = this;
+		s_image_refs[m_info.image] = this;
 
 		// Create a default image view
 		VkImageViewCreateInfo image_view_create_info = {};
@@ -327,6 +326,11 @@ namespace Kablunk
 		m_descriptor_image_info.imageView = m_info.image_view;
 		m_descriptor_image_info.sampler = m_info.sampler;
 
+	}
+
+	const std::map<VkImage, WeakRef<VulkanImage2D>>& VulkanImage2D::GetImageRefs() const
+	{
+		return s_image_refs;
 	}
 
 }

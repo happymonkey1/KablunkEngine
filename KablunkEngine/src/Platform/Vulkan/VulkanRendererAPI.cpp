@@ -8,6 +8,7 @@
 #include "Platform/Vulkan/VulkanRenderCommandBuffer.h"
 #include "Platform/Vulkan/VulkanIndexBuffer.h"
 #include "Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Platform/Vulkan/VulkanFramebuffer.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
@@ -33,6 +34,10 @@ namespace Kablunk
 
 	static VulkanRendererData* s_renderer_data = nullptr;
 
+	VulkanRendererAPI::~VulkanRendererAPI()
+	{
+		delete s_renderer_data;
+	}
 
 	void VulkanRendererAPI::Init()
 	{
@@ -108,16 +113,11 @@ namespace Kablunk
 		data[3].Position = glm::vec3(x, y + height, 0.0f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
-		KB_CORE_INFO("Vulkan Renderer creating vertex buffer");
 		s_renderer_data->quad_vertex_buffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
-		KB_CORE_INFO("Vulkan Renderer creating index buffer");
 		s_renderer_data->quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 
-
-
 		// compile shaders that were submitted
-		KB_CORE_INFO("Vulkan Renderer about to compile shaders!");
 		RenderCommand::WaitAndRender();
 	}
 
@@ -178,4 +178,152 @@ namespace Kablunk
 			});
 	}
 
+	void VulkanRendererAPI::WaitAndRender()
+	{
+		RenderCommandQueue& command_queue = RenderCommand::GetRenderCommandQueue();
+		command_queue.Execute();
+	}
+
+	VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info)
+	{
+		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+		uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+		alloc_info.descriptorPool = s_renderer_data->descriptor_pools[buffer_index];
+		
+		VkDescriptorSet descriptor_set;
+		if (vkAllocateDescriptorSets(device, &alloc_info, &descriptor_set) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to allocate descriptor set!");
+
+		s_renderer_data->descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
+		return descriptor_set;
+	}
+
+	void VulkanRendererAPI::BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear)
+	{
+		RenderCommand::Submit([render_command_buffer, render_pass, explicit_clear]()
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				auto framebuffer = render_pass->GetSpecification().target_framebuffer;
+				IntrusiveRef<VulkanFramebuffer> vulkan_framebuffer = framebuffer.As<VulkanFramebuffer>();
+				const auto& framebuffer_spec = vulkan_framebuffer->GetSpecification();
+
+				uint32_t width = framebuffer_spec.width;
+				uint32_t height = framebuffer_spec.height;
+
+				VkViewport viewport{};
+				viewport.width = width;
+				viewport.height = height;
+
+				VkRenderPassBeginInfo render_pass_begin_info{};
+				render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				render_pass_begin_info.pNext = nullptr;
+				render_pass_begin_info.renderPass = vulkan_framebuffer->GetVkRenderPass();
+				render_pass_begin_info.renderArea.offset.x = 0;
+				render_pass_begin_info.renderArea.offset.y = 0;
+				render_pass_begin_info.renderArea.extent.width = width;
+				render_pass_begin_info.renderArea.extent.height = height;
+				if (framebuffer_spec.swap_chain_target)
+				{
+					VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
+					width = swap_chain.GetWidth();
+					height = swap_chain.GetHeight();
+					render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+					render_pass_begin_info.pNext = nullptr;
+					render_pass_begin_info.renderPass = vulkan_framebuffer->GetVkRenderPass();
+					render_pass_begin_info.renderArea.offset.x = 0;
+					render_pass_begin_info.renderArea.offset.y = 0;
+					render_pass_begin_info.renderArea.extent.width = width;
+					render_pass_begin_info.renderArea.extent.height = height;
+					render_pass_begin_info.framebuffer = swap_chain.GetCurrentFramebuffer();
+
+					viewport.x = 0.0f;
+					viewport.y = static_cast<float>(height);
+					viewport.width = static_cast<float>(width);
+					viewport.height = -static_cast<float>(height);
+				}
+				else
+				{
+					width = framebuffer->GetWidth();
+					height = framebuffer->GetHeight();
+					render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+					render_pass_begin_info.pNext = nullptr;
+					render_pass_begin_info.renderPass = vulkan_framebuffer->GetVkRenderPass();
+					render_pass_begin_info.renderArea.offset.x = 0;
+					render_pass_begin_info.renderArea.offset.y = 0;
+					render_pass_begin_info.renderArea.extent.width = width;
+					render_pass_begin_info.renderArea.extent.height = height;
+					render_pass_begin_info.framebuffer = vulkan_framebuffer->GetVkFramebuffer();
+
+					viewport.x = 0.0f;
+					viewport.y = 0.0f;
+					viewport.width = static_cast<float>(width);
+					viewport.height = static_cast<float>(height);
+				}
+
+				const auto& clearValues = vulkan_framebuffer->GetVkClearValues();
+				render_pass_begin_info.clearValueCount = (uint32_t)clearValues.size();
+				render_pass_begin_info.pClearValues = clearValues.data();
+
+				vkCmdBeginRenderPass(cmd_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+				if (explicit_clear)
+				{
+					const uint32_t colorAttachmentCount = static_cast<uint32_t>(vulkan_framebuffer->GetColorAttachmentCount());
+					const uint32_t totalAttachmentCount = colorAttachmentCount + (vulkan_framebuffer->HasDepthAttachment() ? 1 : 0);
+					KB_CORE_ASSERT(clearValues.size() == totalAttachmentCount, "uh oh");
+
+					std::vector<VkClearAttachment> attachments(totalAttachmentCount);
+					std::vector<VkClearRect> clearRects(totalAttachmentCount);
+					for (uint32_t i = 0; i < colorAttachmentCount; i++)
+					{
+						attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+						attachments[i].colorAttachment = i;
+						attachments[i].clearValue = clearValues[i];
+
+						clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+						clearRects[i].rect.extent = { width, height };
+						clearRects[i].baseArrayLayer = 0;
+						clearRects[i].layerCount = 1;
+					}
+
+					if (vulkan_framebuffer->HasDepthAttachment())
+					{
+						attachments[colorAttachmentCount].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+						attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
+						clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
+						clearRects[colorAttachmentCount].rect.extent = { width, height };
+						clearRects[colorAttachmentCount].baseArrayLayer = 0;
+						clearRects[colorAttachmentCount].layerCount = 1;
+					}
+
+					vkCmdClearAttachments(cmd_buffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+
+				}
+
+				// Update dynamic viewport state
+				vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+
+				// Update dynamic scissor state
+				VkRect2D scissor = {};
+				scissor.extent.width = width;
+				scissor.extent.height = height;
+				scissor.offset.x = 0;
+				scissor.offset.y = 0;
+				vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+
+			});
+	}
+
+	void VulkanRendererAPI::EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer)
+	{
+		RenderCommand::Submit([render_command_buffer]()
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				vkCmdEndRenderPass(vk_command_buffer);
+			});
+	}
 }

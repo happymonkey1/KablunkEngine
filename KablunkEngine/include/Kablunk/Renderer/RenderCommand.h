@@ -8,60 +8,57 @@ namespace Kablunk
 	class RenderCommand
 	{
 	public:
-		static void Init() 
-		{ 
-			
-			if (s_RendererAPI->GetAPI() != RendererAPI::RenderAPI_t::OpenGL)
-				s_command_queue = new RenderCommandQueue();
-
-			s_RendererAPI->Init();
-		}
+		static void Init();
+		
 
 		static void BeginFrame()
 		{
-			s_RendererAPI->BeginFrame();
+			s_renderer_api->BeginFrame();
 		}
 
 		static void EndFrame()
 		{
-			s_RendererAPI->EndFrame();
+			s_renderer_api->EndFrame();
 		}
 
 		static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 		{
-			s_RendererAPI->SetViewport(x, y, width, height);
+			s_renderer_api->SetViewport(x, y, width, height);
 		}
 
 		static void SetClearColor(const glm::vec4& color)
 		{
-			s_RendererAPI->SetClearColor(color);
+			s_renderer_api->SetClearColor(color);
 		};
 
 		static void Clear()
 		{
-			s_RendererAPI->Clear();
+			s_renderer_api->Clear();
 		};
 
 		static void ClearImage(IntrusiveRef<RenderCommandBuffer> command_buffer, IntrusiveRef<Image2D> image)
 		{
-			s_RendererAPI->ClearImage(command_buffer, image);
+			s_renderer_api->ClearImage(command_buffer, image);
 		}
 
 		static void DrawIndexed(const IntrusiveRef<VertexArray> vertexArray, uint32_t indexCount = 0)
 		{
-			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+			s_renderer_api->DrawIndexed(vertexArray, indexCount);
 		};
 
 		static void SetWireframeMode(bool draw_wireframe)
 		{
-			s_RendererAPI->SetWireframeMode(draw_wireframe);
+			s_renderer_api->SetWireframeMode(draw_wireframe);
 		}
 
 		static void WaitAndRender()
 		{
-			// #TODO fix the renderapi because this is just horrible
-			if (s_RendererAPI->GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
-				s_command_queue->Execute();
+			s_renderer_api->WaitAndRender();
+		}
+
+		static RendererAPI* GetRenderer()
+		{
+			return s_renderer_api;
 		}
 
 		// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
@@ -100,11 +97,11 @@ namespace Kablunk
 		}
 
 		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
-	private:
 		// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
 		static RenderCommandQueue& GetRenderCommandQueue();
 	private:
-		static Scope<RendererAPI> s_RendererAPI;
+	private:
+		inline static RendererAPI* s_renderer_api;
 
 		// #TODO fix the renderapi because this is just horrible
 		inline static RenderCommandQueue* s_command_queue = nullptr;

@@ -270,12 +270,31 @@ namespace Kablunk
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
 
-			IntrusiveRef<Image2D> frame_buffer_image = m_frame_buffer->GetImage();
-			ImGui::Image(
-				reinterpret_cast<void*>(frame_buffer_image.get()),
-				{ m_viewport_size.x, m_viewport_size.y },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f }
-			);
+			IntrusiveRef<Image2D> framebuffer_image = m_frame_buffer->GetImage();
+
+			switch (RendererAPI::GetAPI())
+			{
+			case RendererAPI::RenderAPI_t::OpenGL:
+				
+				ImGui::Image(
+					reinterpret_cast<void*>(framebuffer_image.get()),
+					{ m_viewport_size.x, m_viewport_size.y },
+					{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+				);
+				break;
+			case RendererAPI::RenderAPI_t::Vulkan:
+				auto* draw_list = ImGui::GetWindowDrawList();
+
+				
+				/*draw_list->AddImage(
+					UI::GetTextureID(m_frame_buffer->),
+					{ m_viewport_size.x, m_viewport_size.y },
+					{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+				);*/
+
+				break;
+			}
+			
 
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -560,10 +579,24 @@ namespace Kablunk
 		ImGui::Begin("##toolbar", nullptr, flags);
 
 		auto icon = m_scene_state == SceneState::Edit ? m_icon_play : m_icon_stop;
-		float size = ImGui::GetWindowHeight() - 4.0f;
 
+		const float size = std::min(static_cast<float>(icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
 		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
-		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { size, size }, { 0, 0 }, { 1, 1 }, 0))
+		// Invisible button to register clicks
+		const bool clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+
+		// Visible Button
+		const ImColor button_tint = IM_COL32(192, 192, 192, 255);
+		const float icon_padding = 0.0f;
+		UI::DrawButtonImage(
+			icon,
+			button_tint,
+			UI::ColorWithMultipliedValue(button_tint, 1.3f),
+			UI::ColorWithMultipliedValue(button_tint, 0.8f),
+			UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
+		);
+		
+		if (clicked)
 		{
 			if (m_scene_state == SceneState::Edit)
 				OnScenePlay();

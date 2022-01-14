@@ -21,10 +21,11 @@ namespace Kablunk
 
 	Application* Application::s_Instance = nullptr;
 
+	constexpr uint8_t NUM_JOB_THREADS = 4;
 
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_specification{ specification }, m_thread_pool{ 7 }
+		: m_specification{ specification }, m_thread_pool{ NUM_JOB_THREADS }
 	{
 		KB_PROFILE_FUNCTION();
 

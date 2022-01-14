@@ -5,11 +5,18 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Renderer/RendererAPI.h"
 
+#include "Platform/Vulkan/VulkanRenderPass.h"
+
+#include <vulkan/vulkan.h>
+
 namespace Kablunk
 {
 	class VulkanRendererAPI : public RendererAPI
 	{
 	public:
+		VulkanRendererAPI() {}
+		virtual ~VulkanRendererAPI();
+
 		virtual void Init() override;
 		virtual void BeginFrame() override;
 		virtual void EndFrame() override;
@@ -24,6 +31,13 @@ namespace Kablunk
 		virtual void ClearImage(IntrusiveRef<RenderCommandBuffer> commandBuffer, IntrusiveRef<Image2D> image) override;
 
 		virtual void SetWireframeMode(bool draw_wireframe) override { m_draw_wireframe = draw_wireframe; }
+
+		virtual void WaitAndRender() override;
+
+		// Vulkan Only
+		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info);
+		static void BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false);
+		static void EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer);
 	private:
 		bool m_draw_wireframe{ false };
 	};

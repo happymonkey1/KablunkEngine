@@ -21,6 +21,8 @@ namespace Kablunk
 		virtual void DrawIndexed(const IntrusiveRef<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 
 		virtual void SetWireframeMode(bool draw_wireframe) override { m_draw_wireframe = draw_wireframe; }
+
+		virtual void WaitAndRender() override {}
 	private:
 		bool m_draw_wireframe{ false };
 	};

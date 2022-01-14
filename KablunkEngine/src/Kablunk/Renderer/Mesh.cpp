@@ -57,7 +57,7 @@ namespace Kablunk
 		m_is_animated = m_scene->mAnimations != nullptr;
 		if (m_is_animated)
 			KB_CORE_INFO("ANIMATED MESH!");
-		m_mesh_shader = m_is_animated ? Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_anim")  : Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+		m_mesh_shader = m_is_animated ? Renderer::GetShader("Kablunk_diffuse_anim")  : Renderer::GetShader("Kablunk_diffuse_static");
 		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		size_t vertex_count = 0;

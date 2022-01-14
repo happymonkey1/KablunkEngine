@@ -39,6 +39,8 @@ namespace Kablunk
 
 		void RT_Invalidate();
 
+		const std::map<VkImage, WeakRef<VulkanImage2D>>& GetImageRefs() const;
+
 		virtual void CreatePerLayerImageViews() override;
 		void RT_CreatePerLayerImageViews();
 		void RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices);

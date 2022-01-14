@@ -5,6 +5,8 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
+#include "Kablunk/Renderer/ShaderCache.h"
+
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <spirv-tools/libspirv.h>
@@ -155,7 +157,7 @@ namespace Kablunk
 			Internal::CreateCacheDirectoryIfNecessary();
 
 			std::string source = Internal::ReadShaderFromFile(instance->m_file_path);
-			force_compile = true; // #TODO check cache if shader changed
+			force_compile = ShaderCache::HasChanged(instance->m_file_path, source);
 
 			instance->m_shader_source = instance->PreProcess(source);
 			std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
