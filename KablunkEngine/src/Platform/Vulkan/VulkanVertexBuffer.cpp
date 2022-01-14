@@ -13,11 +13,15 @@ namespace Kablunk
 	{
 		m_local_data = Buffer::Copy(data, size);
 
+		KB_CORE_ASSERT(m_local_data.size() == m_size, "sizes do not match!");
+
 		IntrusiveRef<VulkanVertexBuffer> instance = this;
 		RenderCommand::Submit([instance]() mutable
 			{
 				IntrusiveRef<VulkanDevice> device = VulkanContext::Get()->GetDevice();
 				VulkanAllocator allocator{ "VertexBuffer" };
+
+				
 
 				// create staging buffer
 				VkBufferCreateInfo staging_buffer_create_info{};

@@ -1,5 +1,6 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Kablunk/Project/Project.h"
+#include "Kablunk/Imgui/ImGuiWrappers.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -115,9 +116,10 @@ namespace Kablunk
 					ImGui::PushID(i++);
 
 					// #TODO include more file icons and adjust icon texture accordingly
-					auto icon_renderer_id = is_dir ? m_directory_icon.Get()->GetRendererID() : m_file_icon.Get()->GetRendererID();
+					
+					auto icon = is_dir ? m_directory_icon.Get() : m_file_icon.Get();
 					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
-					ImGui::ImageButton((ImTextureID)icon_renderer_id, { thumbnail_size, thumbnail_size }, { 0, 1 }, { 1, 0 });
+					UI::ImageButton(icon, { thumbnail_size, thumbnail_size });
 					ImGui::PopStyleColor();
 
 					if (ImGui::BeginDragDropSource())
@@ -183,7 +185,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (ImGui::ImageButton((ImTextureID)m_back_button->GetRendererID(), { 22, 22 }) && m_current_directory != Project::GetAssetDirectory())
+		if (UI::ImageButton(m_back_button.Get(), { 22, 22 }) && m_current_directory != Project::GetAssetDirectory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			Refresh();
@@ -191,7 +193,7 @@ namespace Kablunk
 		
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton((ImTextureID)m_forward_button->GetRendererID(), { 22, 22 }))
+		if (UI::ImageButton(m_forward_button.Get(), { 22, 22 }))
 		{
 			// #TODO go to next directory
 			KB_CORE_WARN("Forward directory not implemented!");
@@ -199,7 +201,7 @@ namespace Kablunk
 
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton((ImTextureID)m_refresh_button->GetRendererID(), { 22, 22 }))
+		if (UI::ImageButton(m_refresh_button.Get(), { 22, 22 }))
 		{
 			Refresh();
 		}

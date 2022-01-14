@@ -291,7 +291,7 @@ namespace Kablunk
 			VkFormat vk_format = Utils::VulkanImageFormat(m_specification.format);
 
 			m_per_layer_image_views.resize(m_specification.layers);
-			VkImageViewCreateInfo image_view_create_info = {};
+			VkImageViewCreateInfo image_view_create_info{};
 			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			image_view_create_info.format = vk_format;

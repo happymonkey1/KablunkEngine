@@ -10,7 +10,7 @@ namespace Kablunk
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
-		Buffer(void* data, uint32_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
+		Buffer(void* data, size_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
 		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
 		{
 			if (other.m_data != nullptr)
@@ -32,7 +32,7 @@ namespace Kablunk
 			return *this;
 		}
 
-		static Buffer& Copy(const void* data, uint32_t size)
+		static Buffer Copy(const void* data, size_t size)
 		{
 			Buffer buffer;
 			buffer.Allocate(size);
@@ -40,7 +40,8 @@ namespace Kablunk
 			return std::move(buffer);
 		}
 
-		void Allocate(uint32_t size)
+		// size in bytes
+		void Allocate(size_t size)
 		{
 			delete[] m_data;
 			m_data = nullptr;
@@ -71,7 +72,7 @@ namespace Kablunk
 			return *(T*)((uint8_t*)m_data + offset);
 		}
 
-		uint8_t* ReadBytes(uint32_t size, uint32_t offset)
+		uint8_t* ReadBytes(size_t size, size_t offset)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
 			uint8_t* buffer = new uint8_t[size];
@@ -79,7 +80,7 @@ namespace Kablunk
 			return buffer;
 		}
 
-		void Write(void* data, uint32_t size, uint32_t offset = 0)
+		void Write(void* data, size_t size, size_t offset = 0)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
 			memcpy((uint8_t*)m_data + offset, data, size);
@@ -94,11 +95,11 @@ namespace Kablunk
 		template <typename T>
 		T* As() const { return (T*)m_data; }
 
-		inline uint32_t size() const { return m_size; }
+		inline size_t size() const { return m_size; }
 		inline void* get() { return m_data; }
 		inline const void* get() const { return m_data; }
 	private:
-		uint32_t m_size;
+		size_t m_size;
 		uint8_t* m_data;
 	};
 }

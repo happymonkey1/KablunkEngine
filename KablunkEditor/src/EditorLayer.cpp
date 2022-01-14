@@ -279,17 +279,18 @@ namespace Kablunk
 				ImGui::Image(
 					reinterpret_cast<void*>(framebuffer_image.get()),
 					{ m_viewport_size.x, m_viewport_size.y },
-					{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+					{ 0.0f, 1.0f }, 
+					{ 1.0f, 0.0f }
 				);
 				break;
 			case RendererAPI::RenderAPI_t::Vulkan:
 				auto* draw_list = ImGui::GetWindowDrawList();
-
-				
-				/*draw_list->AddImage(
-					UI::GetTextureID(m_frame_buffer->),
+				/*
+				UI::Image(
+					framebuffer_image,
 					{ m_viewport_size.x, m_viewport_size.y },
-					{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+					{ 0.0f, 1.0f },
+					{ 1.0f, 0.0f }
 				);*/
 
 				break;
@@ -588,6 +589,7 @@ namespace Kablunk
 		// Visible Button
 		const ImColor button_tint = IM_COL32(192, 192, 192, 255);
 		const float icon_padding = 0.0f;
+
 		UI::DrawButtonImage(
 			icon,
 			button_tint,
@@ -595,7 +597,7 @@ namespace Kablunk
 			UI::ColorWithMultipliedValue(button_tint, 0.8f),
 			UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
 		);
-		
+
 		if (clicked)
 		{
 			if (m_scene_state == SceneState::Edit)

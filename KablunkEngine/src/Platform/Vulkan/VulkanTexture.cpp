@@ -236,7 +236,9 @@ namespace Kablunk
 		sampler.maxAnisotropy = 1.0f;
 		sampler.anisotropyEnable = VK_FALSE;
 		sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-
+		if (vkCreateSampler(vk_device, &sampler, nullptr, &info.sampler) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create sampler!");
+		
 
 		VkImageViewCreateInfo view_create_info{};
 		view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

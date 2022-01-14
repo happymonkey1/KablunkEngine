@@ -4,7 +4,7 @@
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 #include "Platform/Vulkan/VulkanTexture.h"
 
-#include <backends/imgui_impl_vulkan.h>
+#include <examples/imgui_impl_vulkan_with_textures.h>
 
 #include <vulkan/vulkan.h>
 
@@ -57,7 +57,17 @@ namespace Kablunk::UI
 			return false;
 
 		const auto texture_id = ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
-		bool pressed = ImGui::ImageButton(texture_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
+		bool pressed = ImGui::InvisibleButton("##click_button", size);
+
+		const ImColor button_tint = IM_COL32(192, 192, 192, 255);
+
+		UI::DrawButtonImage(
+			texture,
+			button_tint,
+			UI::ColorWithMultipliedValue(button_tint, 1.3f),
+			UI::ColorWithMultipliedValue(button_tint, 0.8f),
+			UI::RectExpanded(UI::GetItemRect(), -frame_padding, -frame_padding)
+		);
 		ImGui::NextColumn();
 		ImGui::NextColumn();
 		return pressed;
