@@ -1,10 +1,12 @@
 #include "kablunkpch.h"
-#include "Kablunk/Scene/Scene.h"
 
+#include "Kablunk/Scene/Scene.h"
 #include "Kablunk/Scene/Components.h"
+#include "Kablunk/Scene/Entity.h"
+
 #include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Scene/Entity.h"
+#include "Kablunk/Renderer/SceneRenderer.h"
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -21,7 +23,7 @@
 namespace Kablunk
 {
 
-	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
+	static std::unordered_map<uuid::uuid64, IntrusiveRef<Scene>> s_active_scenes;
 
 	Scene::Scene(const std::string& name)
 		: m_name{ name }
@@ -32,7 +34,8 @@ namespace Kablunk
 		auto m_scene_entity = m_registry.create();
 		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
 		
-		s_active_scenes.insert({ m_scene_id, this });
+		IntrusiveRef<Scene> instance = this;
+		s_active_scenes.insert({ m_scene_id, instance });
 	}
 
 	Scene::~Scene()
@@ -93,9 +96,9 @@ namespace Kablunk
 			return false;
 	}
 
-	Ref<Scene> Scene::Copy(Ref<Scene> src_scene)
+	IntrusiveRef<Scene> Scene::Copy(IntrusiveRef<Scene> src_scene)
 	{
-		Ref<Scene> dest_scene = CreateRef<Scene>();
+		IntrusiveRef<Scene> dest_scene = IntrusiveRef<Scene>::Create();
 		KB_CORE_INFO("copying source scene '{0}' into '{1}'", src_scene->m_scene_id, dest_scene->m_scene_id);
 		dest_scene->m_name = src_scene->m_name;
 
@@ -152,7 +155,7 @@ namespace Kablunk
 	WeakRef<Scene> Scene::GetScene(uuid::uuid64 scene_id)
 	{
 		if (s_active_scenes.find(scene_id) != s_active_scenes.end())
-			return WeakRef<Scene>(s_active_scenes.at(scene_id));
+			return WeakRef<Scene>(s_active_scenes.at(scene_id).get());
 		else
 		{
 			KB_CORE_ERROR("Could not find scene '{0}' in active scenes!", scene_id);
@@ -286,7 +289,7 @@ namespace Kablunk
 		m_box2D_world = nullptr;
 	}
 
-	void Scene::OnUpdateRuntime(Timestep ts)
+	void Scene::OnUpdateRuntime(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts)
 	{
 		// ==========
 		//	 Update
@@ -423,6 +426,7 @@ namespace Kablunk
 		//	 Render
 		// ==========
 
+
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_transform;
 		auto view = m_registry.view<CameraComponent, TransformComponent>();
@@ -439,73 +443,69 @@ namespace Kablunk
 			}
 		}
 
+		if (!main_camera)
+			return;
+
+		
+		//scene_renderer->SetScene();
+		scene_renderer->BeginScene({ *main_camera, main_camera_transform });
+		
 		{
-			if (main_camera)
+			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
+			std::vector<PointLight> point_lights_data = {};
+			uint32_t point_light_count = 0;
+			for (auto id : point_lights)
 			{
-				Renderer::BeginScene(*main_camera, main_camera_transform);
+				auto entity = Entity{ id, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-				std::vector<PointLight> point_lights_data = {};
-				uint32_t point_light_count = 0;
-				for (auto id : point_lights)
-				{
-					auto entity = Entity{ id, this };
-					auto& transform = entity.GetComponent<TransformComponent>();
-					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+				PointLight plight_data = {
+					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+					plight_comp.Multiplier,
+					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+					plight_comp.Radius,
+					plight_comp.Min_radius,
+					plight_comp.Falloff
+				};
 
-					PointLight plight_data = {
-						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
-						plight_comp.Multiplier,
-						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
-						plight_comp.Radius,
-						plight_comp.Min_radius,
-						plight_comp.Falloff
-					};
+				point_lights_data.push_back(plight_data);
+				point_light_count++;
+			}
 
-					point_lights_data.push_back(plight_data);
-					point_light_count++;
-				}
+			Renderer::SubmitPointLights(point_lights_data, point_light_count);
 
-				Renderer::SubmitPointLights(point_lights_data, point_light_count);
-
-				auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
-				for (auto entity_id : mesh_group)
-				{
-					auto entity = Entity{ entity_id, this };
-					auto& mesh_comp = entity.GetComponent<MeshComponent>();
-					auto& transform = entity.GetComponent<TransformComponent>();
-					if (mesh_comp.Mesh)
-						Renderer::SubmitMesh(mesh_comp.Mesh, transform);
-				}
-
-				Renderer::EndScene();
+			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
+			for (auto entity_id : mesh_group)
+			{
+				auto entity = Entity{ entity_id, this };
+				auto& mesh_comp = entity.GetComponent<MeshComponent>();
+				auto& transform = entity.GetComponent<TransformComponent>();
+				if (mesh_comp.Mesh)
+					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
 			}
 		}
 
-		if (main_camera)
 		{
-			Renderer2D::BeginScene(*main_camera, main_camera_transform);
+			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
+			for (auto entity : sprite_view)
+				Renderer2D::DrawSprite({ entity, this });
 			
-			{
-				auto view = m_registry.view<TransformComponent, SpriteRendererComponent>();
-				for (auto entity : view)
-					Renderer2D::DrawSprite({ entity, this });
-			}
-			
-			{
-				auto view = m_registry.view<TransformComponent, CircleRendererComponent>();
-				for (auto entity : view)
-				{
-					auto& [transform, circle_component] = view.get<TransformComponent, CircleRendererComponent>(entity);
-					Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
-				}
-			}
 
-			Renderer2D::EndScene();
+			
+			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto entity : circle_view)
+			{
+				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+			}
+			
 		}
+
+		scene_renderer->EndScene();
 	}
 
-	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
+	void Scene::OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera)
 	{
 
 #if DISABLE_NATIVE_SCRIPT
@@ -546,25 +546,10 @@ namespace Kablunk
 		);
 #endif
 
-		Renderer2D::BeginScene(camera);
+		scene_renderer->BeginScene({ camera, camera.GetViewMatrix() });
+		
 		{
-			auto view = m_registry.view<TransformComponent, SpriteRendererComponent>();
-			for (auto entity : view)
-				Renderer2D::DrawSprite({ entity, this });
-		}
-
-		{
-			auto view = m_registry.view<TransformComponent, CircleRendererComponent>();
-			for (auto entity : view)
-			{
-				auto& [transform, circle_component] = view.get<TransformComponent, CircleRendererComponent>(entity);
-				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
-			}
-		}
-		Renderer2D::EndScene();
-
-		{
-			Renderer::BeginScene(camera);
+			//Renderer::BeginScene(camera);
 
 			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
 			std::vector<PointLight> point_lights_data = {};
@@ -600,8 +585,29 @@ namespace Kablunk
 					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
 			}
 
-			Renderer::EndScene();
+			//Renderer::EndScene();
 		}
+
+		{
+			Renderer2D::BeginScene(camera);
+			
+			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
+			for (auto entity : sprite_view)
+				Renderer2D::DrawSprite({ entity, this });
+			
+
+			
+			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto entity : circle_view)
+			{
+				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
+				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+			}
+			
+			Renderer2D::EndScene();
+		}
+
+		scene_renderer->EndScene();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -793,7 +799,7 @@ namespace Kablunk
 	void Scene::OnComponentAdded<CSharpScriptComponent>(Entity entity, CSharpScriptComponent& component) { }
 
 	template <>
-	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component) { }
+	void Scene::OnComponentAdded<Kablunk::MeshComponent>(Entity entity, Kablunk::MeshComponent& component) { }
 
 	template <>
 	void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component) { }

@@ -26,11 +26,11 @@ namespace Kablunk::UI
 	void Image(const IntrusiveRef<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{
 		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->GetImageInfo();
-		VkDescriptorImageInfo image_desc = image.As<VulkanImage2D>()->GetDescriptor();
-		if (!image_desc.imageView)
+		auto image_info = image.As<VulkanImage2D>()->GetImageInfo();
+		if (!image_info.image_view)
 			return;
 
-		const auto textureID = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_desc.imageView, image_desc.imageLayout);
+		const auto textureID = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<VulkanImage2D>()->GetDescriptor().imageLayout);
 		ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
 		ImGui::NextColumn();
 		ImGui::NextColumn();

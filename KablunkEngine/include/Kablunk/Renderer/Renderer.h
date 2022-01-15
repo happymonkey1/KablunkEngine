@@ -12,6 +12,9 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/EditorCamera.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
+#include "Kablunk/Renderer/Pipeline.h"
+#include "Kablunk/Renderer/UniformBufferSet.h"
+#include "Kablunk/Renderer/Material.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -65,6 +68,10 @@ namespace Kablunk
 		IntrusiveRef<UniformBuffer> point_lights_uniform_buffer;
 	};
 
+	struct RendererOptions
+	{
+		uint32_t frames_in_flight = 2;
+	};
 	
 
 	class Renderer
@@ -85,6 +92,9 @@ namespace Kablunk
 		static void SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform);
 		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
+
+		
+
 		static uint32_t GetCurrentFrameIndex();
 
 		static IntrusiveRef<Texture2D> GetWhiteTexture();
@@ -92,8 +102,11 @@ namespace Kablunk
 		static IntrusiveRef<ShaderLibrary> GetShaderLibrary();
 		static IntrusiveRef<Shader> GetShader(const std::string& name);
 
+		static const RendererOptions& GetConfig() { return s_options; }
+
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:
+		inline static RendererOptions s_options = { 2 };
 		static Scope<SceneData> m_SceneData;
 		
 		static IntrusiveRef<ShaderLibrary> s_shader_library;

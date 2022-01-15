@@ -1,6 +1,7 @@
 #ifndef KABLUNK_SCENE_SCENE_SERIALIZER_H
 #define KABLUNK_SCENE_SCENE_SERIALIZER_H
 
+#include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Scene/Scene.h"
 
 #include <yaml-cpp/yaml.h>
@@ -10,7 +11,7 @@ namespace Kablunk
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const Ref<Scene>& scene);
+		SceneSerializer(const IntrusiveRef<Scene>& scene);
 	
 		void Serialize(const std::string& filepath);
 		void SerializeBinary(const std::string& filepath);
@@ -20,7 +21,7 @@ namespace Kablunk
 	private:
 		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
-		Ref<Scene> m_scene;
+		IntrusiveRef<Scene> m_scene;
 	};
 }
 

@@ -9,6 +9,8 @@
 #include "Platform/Vulkan/VulkanIndexBuffer.h"
 #include "Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Platform/Vulkan/VulkanFramebuffer.h"
+#include "Platform/Vulkan/VulkanMaterial.h"
+#include "Platform/Vulkan/VulkanPipeline.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
@@ -45,6 +47,8 @@ namespace Kablunk
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Circle.glsl");
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Quad.glsl");
+
+		Renderer::GetShaderLibrary()->Load("resources/shaders/scene_composite.glsl");
 
 		s_renderer_data = new VulkanRendererData{};
 
@@ -176,6 +180,46 @@ namespace Kablunk
 				VkClearColorValue clear_color{ 0.f, 0.f, 0.f, 0.f };
 				vkCmdClearColorImage(vk_command_buffer, image->GetImageInfo().image, image->GetSpecification().usage == ImageUsage::Storage ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &clear_color, 1, &subresource_range);
 			});
+	}
+
+	void VulkanRendererAPI::SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
+	{
+		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
+			{
+				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+
+				VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
+
+				auto vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+				VkDeviceSize offsets[1] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vk_vertex_buffer, offsets);
+
+				auto vulkanMeshIB = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
+				VkBuffer ibBuffer = vulkanMeshIB->GetVkBuffer();
+				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+				VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+				//RT_UpdateMaterialForRendering(vulkanMaterial, uniformBufferSet, storageBufferSet);
+
+				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				VkDescriptorSet descriptorSet = vulkan_material->GetDescriptorSet(bufferIndex);
+				if (descriptorSet)
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+
+				Buffer uniformStorageBuffer = vulkan_material->GetUniformStorageBuffer();
+				if (uniformStorageBuffer.size())
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.size(), uniformStorageBuffer.get());
+
+				vkCmdDrawIndexed(commandBuffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
+			});
+
 	}
 
 	void VulkanRendererAPI::WaitAndRender()

@@ -68,7 +68,7 @@ namespace Kablunk
 
 		// Entity
 		static void DrawSprite(Entity entity);
-
+		
 		// Texture
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
@@ -152,6 +152,8 @@ namespace Kablunk
 		static void EndBatch();
 	private:
 		inline static Renderer2D* s_renderer;
+
+		friend class SceneRenderer;
 	};
 }
 

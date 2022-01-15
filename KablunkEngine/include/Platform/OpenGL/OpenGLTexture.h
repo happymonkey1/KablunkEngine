@@ -26,6 +26,8 @@ namespace Kablunk
 
 		virtual void SetData(void* data, uint32_t size) override;
 
+		virtual uint64_t GetHash() const { KB_CORE_ASSERT(false, "not implemented!"); return 0; };
+
 		virtual Buffer GetWriteableBuffer() override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
 
 		virtual void Bind(uint32_t slot) const override;

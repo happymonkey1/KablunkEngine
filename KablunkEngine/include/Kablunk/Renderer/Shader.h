@@ -113,8 +113,6 @@ namespace Kablunk {
 
 		bool Exists(const std::string& name);
 	private:
-
-	private:
 		std::unordered_map<std::string, IntrusiveRef<Shader>> m_shaders;
 	};
 }

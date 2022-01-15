@@ -43,13 +43,13 @@ namespace Kablunk
 		}
 	}
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const IntrusiveRef<Scene>& context)
 	{
 		SetContext(context);
 
 	}
 
-	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const IntrusiveRef<Scene>& context)
 	{
 		m_context = context;
 		m_selection_context = {};

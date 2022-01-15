@@ -28,6 +28,7 @@
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/SceneRenderer.h"
 
 #include "Kablunk/Renderer/Camera.h"
 // ----------------------------------------------

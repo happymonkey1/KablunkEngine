@@ -2,10 +2,14 @@
 #ifndef KABLUNK_PLATFORM_VULKAN_RENDERER_2D_H
 #define KABLUNK_PLATFORM_VULKAN_RENDERER_2D_H
 
+#include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Renderer/Renderer2D.h"
+
+#include <Platform/Vulkan/VulkanRendererAPI.h>
 #include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 #include <Platform/Vulkan/VulkanPipeline.h>
 
+#include "Kablunk/Renderer/SceneRenderer.h"
 
 namespace Kablunk
 {
@@ -32,9 +36,8 @@ namespace Kablunk
 
 		virtual void Renderer2D_DrawCircle(const glm::mat4& transform, const glm::vec4& color, float radius = 0.5f, float thickness = 1.0f, float fade = 0.005f, int32_t entity_id = -1) override {};
 	private:
-		IntrusiveRef<RenderCommandBuffer> m_command_buffer;
-		IntrusiveRef<Pipeline> m_quad_pipeline;
-		IntrusiveRef<Pipeline> m_circle_pipeline;
+		IntrusiveRef<SceneRenderer> m_scene_renderer;
+		VulkanRendererAPI* m_vulkan_renderer;
 	};
 }
 

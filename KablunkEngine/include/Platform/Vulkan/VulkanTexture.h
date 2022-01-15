@@ -28,6 +28,7 @@ namespace Kablunk
 		virtual uint32_t GetWidth() const override { return m_width; }
 		virtual uint32_t GetHeight() const override { return m_height; }
 		virtual RendererID GetRendererID() const override { return 0; }
+		virtual uint64_t GetHash() const override { return static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)); }
 
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 

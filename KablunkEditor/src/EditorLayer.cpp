@@ -55,6 +55,8 @@ namespace Kablunk
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
+
+		
 	}
 
 	void EditorLayer::OnAttach()
@@ -68,12 +70,16 @@ namespace Kablunk
 		frame_buffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::RED32F, ImageFormat::Depth };
 		frame_buffer_spec.width  = window_dimensions.x;
 		frame_buffer_spec.height = window_dimensions.y;
-		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
+		frame_buffer_spec.swap_chain_target = true;
 
 
-		m_editor_scene = CreateRef<Scene>();
+		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
+		SceneRendererSpecification spec{};
+		spec.swap_chain_target = true;
+
+		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene, spec);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
 
@@ -109,7 +115,7 @@ namespace Kablunk
 			m_imgui_profiler_stats.Counter += ts.GetMiliseconds() / 1000.0f;
 
 		// #TODO move to a scene renderer
-		auto spec = m_frame_buffer->GetSpecification();
+		/*auto spec = m_viewport_renderer->;
 		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
 			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
 		{
@@ -117,25 +123,14 @@ namespace Kablunk
 
 			m_editor_camera.OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 			m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-		}
+		}*/
 		
 		// ==========
 		//   Render
 		// ==========
 
-
-		
-
 		Renderer2D::ResetStats();
 
-		// #TODO move to a scene renderer
-		m_frame_buffer->Bind();
-
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-		RenderCommand::Clear();
-
-		// Clear our entity ID buffer to -1
-		m_frame_buffer->ClearAttachment(1, -1);
 
 		switch (m_scene_state)
 		{
@@ -143,20 +138,20 @@ namespace Kablunk
 
 			m_editor_camera.OnUpdate(ts);
 
-			m_active_scene->OnUpdateEditor(ts, m_editor_camera);
+			m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
 
 			ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
-			m_active_scene->OnUpdateRuntime(ts);
+			m_active_scene->OnUpdateRuntime(m_viewport_renderer, ts);
 
 			break;
 		}
 
 		OnOverlayRender();
-
-		m_frame_buffer->Unbind();
+		
+		SceneRenderer::WaitForThreads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -269,32 +264,12 @@ namespace Kablunk
 			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
+			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
-			IntrusiveRef<Image2D> framebuffer_image = m_frame_buffer->GetImage();
-
-			switch (RendererAPI::GetAPI())
-			{
-			case RendererAPI::RenderAPI_t::OpenGL:
-				
-				ImGui::Image(
-					reinterpret_cast<void*>(framebuffer_image.get()),
-					{ m_viewport_size.x, m_viewport_size.y },
-					{ 0.0f, 1.0f }, 
-					{ 1.0f, 0.0f }
-				);
-				break;
-			case RendererAPI::RenderAPI_t::Vulkan:
-				auto* draw_list = ImGui::GetWindowDrawList();
-				/*
-				UI::Image(
-					framebuffer_image,
-					{ m_viewport_size.x, m_viewport_size.y },
-					{ 0.0f, 1.0f },
-					{ 1.0f, 0.0f }
-				);*/
-
-				break;
-			}
+			UI::Image(
+				m_viewport_renderer->GetFinalPassImage(),
+				{ m_viewport_size.x, m_viewport_size.y }
+			);
 			
 
 			if (ImGui::BeginDragDropTarget())
@@ -692,6 +667,7 @@ namespace Kablunk
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
+		m_viewport_renderer->SetScene(m_active_scene);
 		m_selected_entity = {};
 	}
 
@@ -705,6 +681,7 @@ namespace Kablunk
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
 
 		m_active_scene = m_editor_scene;
+		m_viewport_renderer->SetScene(m_active_scene);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -814,9 +791,10 @@ namespace Kablunk
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = CreateRef<Scene>();
+		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
+		m_viewport_renderer->SetScene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
 
@@ -854,7 +832,7 @@ namespace Kablunk
 		}
 	}
 
-	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -874,7 +852,7 @@ namespace Kablunk
 	{
 		NewScene();
 
-		Ref<Scene> new_scene = CreateRef<Scene>();
+		IntrusiveRef<Scene> new_scene = IntrusiveRef<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -885,8 +863,10 @@ namespace Kablunk
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
 
 			m_active_scene = m_editor_scene;
+			m_viewport_renderer->SetScene(m_active_scene);
 
 			m_editor_scene_path = path;
+
 		}
 	}
 
@@ -1014,6 +994,7 @@ namespace Kablunk
 					system(gen_proj_batch.c_str());
 				});
 #endif
+			
 			std::string gen_proj_batch = "\"" + project_path.string();
 			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
 			gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
@@ -1094,6 +1075,7 @@ namespace Kablunk
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
 
+		m_viewport_renderer->SetScene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);
 		m_active_scene = nullptr;
 
@@ -1111,11 +1093,11 @@ namespace Kablunk
 		}
 	}
 
-	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
+	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mouse picking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
 	void EditorLayer::ViewportClickSelectEntity()
 	{
-		// #TODO clicking outside viewport still tries to select entity, causing a deselection in most cases
+		// #TODO clicking outside viewport still tries to select entity, causing a de-selection in most cases
 
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;
@@ -1128,7 +1110,7 @@ namespace Kablunk
 		auto mouse_y = static_cast<int>(my);
 
 		//KB_CORE_TRACE("Mouse: {0}, {1}", mouse_x, mouse_y);
-		int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+		int pixel_data = 0; //m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
 		
 		//KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
 		

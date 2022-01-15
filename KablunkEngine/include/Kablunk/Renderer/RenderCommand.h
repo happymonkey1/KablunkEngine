@@ -2,6 +2,10 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Renderer/RenderCommandQueue.h"
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/Material.h"
+#include "Kablunk/Renderer/Pipeline.h"
+#include "Kablunk/Renderer/UniformBufferSet.h"
+#include "Kablunk/Renderer/StorageBufferSet.h"
 
 namespace Kablunk 
 {
@@ -9,7 +13,7 @@ namespace Kablunk
 	{
 	public:
 		static void Init();
-		
+
 
 		static void BeginFrame()
 		{
@@ -49,6 +53,16 @@ namespace Kablunk
 		static void SetWireframeMode(bool draw_wireframe)
 		{
 			s_renderer_api->SetWireframeMode(draw_wireframe);
+		}
+
+		static void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<Material> material)
+		{
+			s_renderer_api->SubmitFullscreenQuad(render_command_buffer, pipeline, uniform_buffer_set, nullptr, material);
+		}
+
+		static void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
+		{
+			s_renderer_api->SubmitFullscreenQuad(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material);
 		}
 
 		static void WaitAndRender()

@@ -39,7 +39,7 @@ namespace Kablunk
 		void NewScene();
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
+		void SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 
@@ -57,11 +57,11 @@ namespace Kablunk
 		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
-		IntrusiveRef<Framebuffer> m_frame_buffer;
+		IntrusiveRef<Scene> m_active_scene;
+		IntrusiveRef<Scene> m_editor_scene;
+		IntrusiveRef<Scene> m_runtime_scene;
 
-		Ref<Scene> m_active_scene;
-		Ref<Scene> m_editor_scene;
-		Ref<Scene> m_runtime_scene;
+		IntrusiveRef<SceneRenderer> m_viewport_renderer;
 		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;
