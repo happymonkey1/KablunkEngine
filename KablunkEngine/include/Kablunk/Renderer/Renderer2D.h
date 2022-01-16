@@ -10,6 +10,8 @@
 #include "Kablunk/Renderer/Camera.h"
 #include "Kablunk/Scene/Entity.h"
 
+#include "Kablunk/Renderer/SceneRenderer.h"
+
 #include "Kablunk/Renderer/UniformBuffer.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Buffer.h"
@@ -77,6 +79,8 @@ namespace Kablunk
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float radius = 0.5f, float thickness = 1.0f, float fade = 0.005f, int32_t entity_id = -1);
 	
+		static void SetSceneRenderer(IntrusiveRef<SceneRenderer> scene_renderer);
+
 		static void ResetStats();
 		static Renderer2DStats GetStats();
 
@@ -89,6 +93,7 @@ namespace Kablunk
 		virtual void Renderer2D_BeginScene(const OrthographicCamera& camera) = 0;
 		virtual void Renderer2D_EndScene() = 0;
 		virtual void Renderer2D_Flush() = 0;
+		virtual void Renderer2D_SetSceneRenderer(IntrusiveRef<SceneRenderer> scene_renderer) = 0;
 
 		// Texture
 		virtual void Renderer2D_DrawQuad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f }) = 0;
@@ -134,14 +139,6 @@ namespace Kablunk
 			std::array<IntrusiveRef<Texture2D>, Max_texture_slots> Texture_slots;
 
 			Renderer2D::Renderer2DStats Stats;
-
-			struct CameraData
-			{
-				glm::mat4 ViewProjection;
-			};
-
-			CameraData camera_buffer;
-			IntrusiveRef<UniformBuffer> camera_uniform_buffer;
 		};
 
 		static GenericRenderer2DData GetGenericRendererData() { return s_generic_renderer_data; }

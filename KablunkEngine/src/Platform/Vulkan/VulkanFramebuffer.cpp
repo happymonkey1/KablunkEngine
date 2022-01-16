@@ -56,13 +56,15 @@ namespace Kablunk
 				}
 				else
 				{
-					ImageSpecification spec;
-					spec.format = attachment_specification.format;
-					spec.usage = ImageUsage::Attachment;
-					spec.width = m_width * m_specification.scale;
-					spec.height = m_height * m_specification.scale;
-					spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachmentIndex);
-					m_attachment_images.emplace_back(Image2D::Create(spec));
+					{
+						ImageSpecification spec;
+						spec.format = attachment_specification.format;
+						spec.usage = ImageUsage::Attachment;
+						spec.width = m_width * m_specification.scale;
+						spec.height = m_height * m_specification.scale;
+						spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachmentIndex);
+						m_attachment_images.emplace_back(Image2D::Create(spec));
+					}
 				}
 				attachmentIndex++;
 			}
@@ -115,35 +117,7 @@ namespace Kablunk
 
 	void VulkanFramebuffer::ClearAttachment(uint32_t attachment_index, int value)
 	{
-		/*KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!");
-		if (!m_attachment_images[attachment_index])
-			return;
-		
-		IntrusiveRef<VulkanFramebuffer> instance = this;
-		RenderCommand::Submit([instance, attachment_index, value]() mutable
-			{
-				VkClearColorValue clear_color_value{};
-				clear_color_value.float32[0] = value;
-				clear_color_value.float32[1] = value;
-				clear_color_value.float32[2] = value;
-				clear_color_value.float32[3] = value;
-
-				IntrusiveRef<VulkanImage2D> vulkan_image_attachment = instance->m_attachment_images[attachment_index].As<VulkanImage2D>();
-
-				VkClearAttachment clear_attachment{};
-				clear_attachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				clear_attachment.clearValue = VkClearValue{ clear_color_value };
-				clear_attachment.colorAttachment = attachment_index;
-
-				VkClearRect clear_rect{};
-				clear_rect.baseArrayLayer = 0;
-				clear_rect.layerCount = 1;
-				clear_rect.rect = { 0, 0, 1, 1 };
-
-				VkCommandBuffer cmd_buf = VulkanContext::Get()->GetDevice()->GetCommandBuffer(true);
-
-				vkCmdClearAttachments(cmd_buf, 1, &clear_attachment, 1, &clear_rect);
-			});*/
+		// attachments in swapchain are automatically cleared
 	}
 
 	void VulkanFramebuffer::Invalidate()
@@ -306,7 +280,6 @@ namespace Kablunk
 							color_attachment->RT_CreatePerSpecificLayerImageViews(m_specification.existing_image_layers);
 						}
 					}
-
 				}
 
 				VkAttachmentDescription& attachmentDescription = attachment_descriptions.emplace_back();

@@ -94,7 +94,7 @@ namespace Kablunk
 			ImGui::TableNextColumn();
 			
 			// Calculate how many columns we need to display files/folders
-			auto files_column_width = ImGui::GetContentRegionAvailWidth();
+			auto files_column_width = ImGui::GetContentRegionAvail().x;
 			auto column_count = static_cast<int>(files_column_width / cell_size);
 			column_count = column_count < 1 ? 1 : column_count;
 
@@ -185,7 +185,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (UI::ImageButton(m_back_button.Get(), { 22, 22 }) && m_current_directory != Project::GetAssetDirectory())
+		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != Project::GetAssetDirectory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			Refresh();
@@ -209,7 +209,7 @@ namespace Kablunk
 		ImGui::SameLine();
 		
 		ImGui::PushItemWidth(200);
-		if (ImGui::InputTextWithHint("", "Search...", m_search_buffer, MAX_SEARCH_BUFFER_LENGTH))
+		if (ImGui::InputTextWithHint("##search_bar", "Search...", m_search_buffer, MAX_SEARCH_BUFFER_LENGTH))
 		{
 			if (strlen(m_search_buffer) == 0)
 			{

@@ -20,21 +20,7 @@ namespace Kablunk
 		Zero_SrcColor
 	};
 
-
-	enum class FramebufferTextureFormat
-	{
-		None = 0,
-
-		//Color
-		RGBA8,
-		RED_INTEGER,
-
-		// Depth / Stencil
-		DEPTH24STENCIL8,
-
-		// Defaults
-		Depth = DEPTH24STENCIL8
-	};
+	
 
 	struct FramebufferTextureSpecification
 	{

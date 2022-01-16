@@ -2,7 +2,7 @@ project "KablunkEngine"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
+	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -112,7 +112,8 @@ project "KablunkEngine"
 			"%{Library.ShaderC_Release}",
 			"%{Library.ShaderC_Utils_Release}",
 			"%{Library.SPIRV_Cross_Release}",
-			"%{Library.SPIRV_Cross_GLSL_Release}"
+			"%{Library.SPIRV_Cross_GLSL_Release}",
+			"%{Library.SPIRV_Tools}"
         }
         
 	

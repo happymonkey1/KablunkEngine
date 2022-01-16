@@ -41,7 +41,7 @@ layout(location = 2) in flat float v_TexIndex;
 layout(location = 3) in float v_TilingFactor;
 layout(location = 4) flat in int v_EntityID; // TODO remove when ray cast mouse picking added to editor
 
-layout(binding = 0) uniform sampler2D u_Textures[32];
+layout(binding = 1) uniform sampler2D u_Textures[32];
 
 void main()
 {

@@ -93,7 +93,9 @@ namespace Kablunk
 		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
 
-		
+		static void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline);
+		static void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material);
+		static void OnShaderReloaded(uint64_t hash);
 
 		static uint32_t GetCurrentFrameIndex();
 

@@ -25,6 +25,11 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "not implemented!");
 		}
 
+		virtual void RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) override
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
 		virtual void SetWireframeMode(bool draw_wireframe) override { m_draw_wireframe = draw_wireframe; }
 
 		virtual void WaitAndRender() override {}

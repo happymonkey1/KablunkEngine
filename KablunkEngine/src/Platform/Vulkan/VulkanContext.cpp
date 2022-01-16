@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "Platform/Vulkan/VulkanContext.h"
+#include "Platform/Vulkan/VulkanAllocator.h"
 
 #include <vector>
 
@@ -28,11 +29,20 @@ namespace Kablunk
 		enabled_features.wideLines = true;
 		enabled_features.fillModeNonSolid = true;
 		enabled_features.pipelineStatisticsQuery = true;
+		enabled_features.independentBlend = VK_TRUE;
 
 		m_device = IntrusiveRef<VulkanDevice>::Create(m_physical_device, enabled_features);
 
 		m_swap_chain = VulkanSwapChain{};
 		m_swap_chain.Init(s_instance, m_device);
+
+		VulkanAllocator::Init(VulkanContext::Get()->GetDevice());
+
+		// Pipeline Cache
+		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		if (vkCreatePipelineCache(m_device->GetVkDevice(), &pipelineCacheCreateInfo, nullptr, &m_pipeline_cache) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to create pipeline cache!");
 	}
 
 	void VulkanContext::SwapBuffers()
@@ -157,6 +167,8 @@ namespace Kablunk
 	void VulkanContext::Shutdown()
 	{
 		KB_CORE_INFO("Shutting down Vulkan instance");
+
+		m_swap_chain.Cleanup();
 
 		m_device->Destroy();
 

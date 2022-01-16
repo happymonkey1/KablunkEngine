@@ -19,8 +19,8 @@ namespace Kablunk
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 #endif
-		glCreateBuffers(1, &m_RendererID);
-		glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW);
+		glCreateBuffers(1, &m_renderer_id);
+		glNamedBufferData(m_renderer_id, size, nullptr, GL_DYNAMIC_DRAW);
 
 	}
 
@@ -34,15 +34,15 @@ namespace Kablunk
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 #endif
-		glCreateBuffers(1, &m_RendererID);
-		glNamedBufferData(m_RendererID, size, data, GL_STATIC_DRAW);
+		glCreateBuffers(1, &m_renderer_id);
+		glNamedBufferData(m_renderer_id, size, data, GL_STATIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
 		KB_PROFILE_FUNCTION();
 
-		glDeleteBuffers(1, &m_RendererID);
+		glDeleteBuffers(1, &m_renderer_id);
 	}
 
 	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
@@ -51,7 +51,7 @@ namespace Kablunk
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 #endif
-		glNamedBufferSubData(m_RendererID, 0, size, data);
+		glNamedBufferSubData(m_renderer_id, 0, size, data);
 	}
 
 	void OpenGLVertexBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset)
@@ -63,7 +63,7 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBindBuffer(GL_ARRAY_BUFFER, m_renderer_id);
 	}
 
 	void OpenGLVertexBuffer::Unbind() const
@@ -80,16 +80,16 @@ namespace Kablunk
 	*/
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t count)
-		: m_Count{ count }
+		: m_count{ count }
 	{
 		KB_PROFILE_FUNCTION();
 
-		glCreateBuffers(1, &m_RendererID);
-		glNamedBufferData(m_RendererID, count * sizeof(uint32_t), nullptr, GL_STATIC_DRAW);
+		glCreateBuffers(1, &m_renderer_id);
+		glNamedBufferData(m_renderer_id, count * sizeof(uint32_t), nullptr, GL_STATIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(const void* data, uint32_t count)
-		: m_Count{count}
+		: m_count{count}
 	{
 		KB_PROFILE_FUNCTION();
 #if 0
@@ -97,22 +97,22 @@ namespace Kablunk
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 #endif
-		glCreateBuffers(1, &m_RendererID);
-		glNamedBufferData(m_RendererID, count * sizeof(uint32_t), data, GL_STATIC_DRAW);
+		glCreateBuffers(1, &m_renderer_id);
+		glNamedBufferData(m_renderer_id, count * sizeof(uint32_t), data, GL_STATIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
 		KB_PROFILE_FUNCTION();
 
-		glDeleteBuffers(1, &m_RendererID);
+		glDeleteBuffers(1, &m_renderer_id);
 	}
 
 	void OpenGLIndexBuffer::Bind() const
 	{
 		KB_PROFILE_FUNCTION();
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_renderer_id);
 	}
 
 	void OpenGLIndexBuffer::Unbind() const

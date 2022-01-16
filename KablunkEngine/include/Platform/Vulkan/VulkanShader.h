@@ -102,7 +102,7 @@ namespace Kablunk
 			operator bool() const { return !(uniform_buffers.empty() && storage_buffers.empty() && image_samplers.empty() && storage_images.empty()); }
 		};
 
-		const std::vector<ShaderDescriptorSet>& GetShaderDescriptorSet() const { return m_shader_descriptor_sets; }
+		const std::vector<ShaderDescriptorSet>& GetShaderDescriptorSets() const { return m_shader_descriptor_sets; }
 		bool HasDescriptorSet(uint32_t set) const { return m_type_counts.find(set) != m_type_counts.end(); }
 
 		const std::vector<PushConstantRange>& GetPushConstantRanges() const { return m_push_constant_ranges; }

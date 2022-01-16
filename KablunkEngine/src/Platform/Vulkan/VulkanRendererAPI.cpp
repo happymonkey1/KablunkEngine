@@ -11,7 +11,12 @@
 #include "Platform/Vulkan/VulkanFramebuffer.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 #include "Platform/Vulkan/VulkanPipeline.h"
+#include "Platform/Vulkan/VulkanStorageBuffer.h"
+#include "Platform/Vulkan/VulkanUniformBuffer.h"
+#include "Platform/Vulkan/VulkanStorageBufferSet.h"
+#include "Platform/Vulkan/VulkanUniformBufferSet.h"
 
+#include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 
 #include "imgui.h"
@@ -30,6 +35,9 @@ namespace Kablunk
 
 		std::vector<VkDescriptorPool> descriptor_pools;
 		std::vector<uint32_t> descriptor_pool_allocation_count;
+
+		std::unordered_map<UniformBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> uniform_buffer_write_descriptor_cache;
+		std::unordered_map<StorageBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> storage_buffer_write_descriptor_cache;
 
 		int32_t draw_call_count = 0;
 	};
@@ -52,11 +60,8 @@ namespace Kablunk
 
 		s_renderer_data = new VulkanRendererData{};
 
-		VulkanAllocator::Init(VulkanContext::Get()->GetDevice());
-
 		s_renderer_data->descriptor_pools.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
 		s_renderer_data->descriptor_pool_allocation_count.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-
 
 		// Create descriptor pools
 		RenderCommand::Submit([]() mutable
@@ -117,8 +122,10 @@ namespace Kablunk
 		data[3].Position = glm::vec3(x, y + height, 0.0f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
+		KB_CORE_INFO("creating fullscreen quad vertex buffer!");
 		s_renderer_data->quad_vertex_buffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
+		KB_CORE_INFO("creating fullscreen quad index buffer!");
 		s_renderer_data->quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 
 		// compile shaders that were submitted
@@ -134,9 +141,8 @@ namespace Kablunk
 				// Reset descriptor pools here
 				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				uint32_t buffer_index = swap_chain.GetCurrentBufferIndex();
-				vkResetDescriptorPool(vk_device, s_renderer_data->descriptor_pools [buffer_index] , 0);
+				vkResetDescriptorPool(vk_device, s_renderer_data->descriptor_pools[buffer_index], 0);
 				memset(s_renderer_data->descriptor_pool_allocation_count.data(), 0, s_renderer_data->descriptor_pool_allocation_count.size() * sizeof(uint32_t));
-
 			});
 
 	}
@@ -187,8 +193,8 @@ namespace Kablunk
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
 			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
@@ -197,35 +203,191 @@ namespace Kablunk
 				auto vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
 				VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
 				VkDeviceSize offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vk_vertex_buffer, offsets);
+				vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
-				auto vulkanMeshIB = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
-				VkBuffer ibBuffer = vulkanMeshIB->GetVkBuffer();
-				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+				auto vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
+				VkBuffer ibBuffer = vulkan_index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(command_buffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 				VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				//RT_UpdateMaterialForRendering(vulkanMaterial, uniformBufferSet, storageBufferSet);
+				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-				VkDescriptorSet descriptorSet = vulkan_material->GetDescriptorSet(bufferIndex);
-				if (descriptorSet)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(buffer_index);
+				if (descriptor_set)
+					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
-				Buffer uniformStorageBuffer = vulkan_material->GetUniformStorageBuffer();
-				if (uniformStorageBuffer.size())
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.size(), uniformStorageBuffer.get());
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+				if (uniform_storage_buffer.size())
+					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniform_storage_buffer.size(), uniform_storage_buffer.get());
 
-				vkCmdDrawIndexed(commandBuffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(command_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
 			});
 
+	}
+
+	void VulkanRendererAPI::RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count /*= 0*/)
+	{
+		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+		if (index_count == 0)
+			index_count = index_buffer->GetCount();
+
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, vertex_buffer, index_buffer, transform, index_count]() mutable
+			{
+				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+
+				VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
+
+				auto vulkan_geometry_vertex_buffer = vertex_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vulkan_geometry_vertex_buffer->GetVkBuffer();
+				VkDeviceSize offsets[1] = { 0 }; // wtf is this
+				vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
+
+				auto vulkan_geometry_index_buffer = index_buffer.As<VulkanIndexBuffer>();
+				VkBuffer vk_index_buffer = vulkan_geometry_index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+				VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+				vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+				const auto& write_descriptors = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
+				vulkan_material->RT_UpdateForRendering(write_descriptors);
+
+				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(buffer_index);
+				if (descriptor_set)
+					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
+
+				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+				if (uniform_storage_buffer)
+					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
+
+				vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
+			});
 	}
 
 	void VulkanRendererAPI::WaitAndRender()
 	{
 		RenderCommandQueue& command_queue = RenderCommand::GetRenderCommandQueue();
 		command_queue.Execute();
+	}
+
+	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateUniformBufferWriteDescriptors(IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<VulkanMaterial> material)
+	{
+		size_t shader_hash = material->GetShader()->GetHash();
+		if (s_renderer_data->uniform_buffer_write_descriptor_cache.find(uniform_buffer_set.get()) != s_renderer_data->uniform_buffer_write_descriptor_cache.end())
+		{
+			const auto& shader_map = s_renderer_data->uniform_buffer_write_descriptor_cache.at(uniform_buffer_set.get());
+			if (shader_map.find(shader_hash) != shader_map.end())
+			{
+				const auto& write_descriptors = shader_map.at(shader_hash);
+				return write_descriptors;
+			}
+		}
+
+		uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+		IntrusiveRef<VulkanShader> shader = material->GetShader().As<VulkanShader>();
+		if (shader->HasDescriptorSet(0))
+		{
+			const auto& shader_descriptor_sets = shader->GetShaderDescriptorSets();
+			if (!shader_descriptor_sets.empty())
+			{
+				for (auto&& [binding, shader_uniform_buffer] : shader_descriptor_sets[0].uniform_buffers)
+				{
+					auto& writeDescriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
+					writeDescriptors.resize(framesInFlight);
+					for (uint32_t frame = 0; frame < framesInFlight; frame++)
+					{
+						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); // set = 0 for now
+
+						VkWriteDescriptorSet write_descriptor_set = {};
+						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						write_descriptor_set.descriptorCount = 1;
+						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+						write_descriptor_set.pBufferInfo = &uniform_buffer->GetDescriptorBufferInfo();
+						write_descriptor_set.dstBinding = uniform_buffer->GetBinding();
+						writeDescriptors[frame].push_back(write_descriptor_set);
+					}
+				}
+
+			}
+		}
+
+		return s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
+
+	}
+
+	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateStorageBufferWriteDescriptors(IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<VulkanMaterial> material)
+	{
+		size_t shader_hash = material->GetShader()->GetHash();
+		if (s_renderer_data->storage_buffer_write_descriptor_cache.find(storage_buffer_set.get()) != s_renderer_data->storage_buffer_write_descriptor_cache.end())
+		{
+			const auto& shader_map = s_renderer_data->storage_buffer_write_descriptor_cache.at(storage_buffer_set.get());
+			if (shader_map.find(shader_hash) != shader_map.end())
+			{
+				const auto& write_descriptors = shader_map.at(shader_hash);
+				return write_descriptors;
+			}
+		}
+
+		uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+		IntrusiveRef<VulkanShader> shader = material->GetShader().As<VulkanShader>();
+		if (shader->HasDescriptorSet(0))
+		{
+			const auto& shaderDescriptorSets = shader->GetShaderDescriptorSets();
+			if (!shaderDescriptorSets.empty())
+			{
+				for (auto&& [binding, shader_storage_buffer] : shaderDescriptorSets[0].storage_buffers)
+				{
+					auto& write_descriptor = s_renderer_data->storage_buffer_write_descriptor_cache[storage_buffer_set.get()][shader_hash];
+					write_descriptor.resize(framesInFlight);
+					for (uint32_t frame = 0; frame < framesInFlight; ++frame)
+					{
+						IntrusiveRef<VulkanStorageBuffer> storage_buffer = storage_buffer_set->Get(binding, 0, frame); // set = 0 for now
+
+						VkWriteDescriptorSet write_descriptor_set = {};
+						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						write_descriptor_set.descriptorCount = 1;
+						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+						write_descriptor_set.pBufferInfo = &storage_buffer->GetVkDescriptorInfo();
+						write_descriptor_set.dstBinding = storage_buffer->GetBinding();
+						write_descriptor[frame].push_back(write_descriptor_set);
+					}
+				}
+			}
+		}
+
+		return s_renderer_data->storage_buffer_write_descriptor_cache[storage_buffer_set.get()][shader_hash];
+	}
+
+	void VulkanRendererAPI::RT_UpdateMaterialForRendering(IntrusiveRef<VulkanMaterial> vulkan_material, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set)
+	{
+		if (uniform_buffer_set)
+		{
+			auto write_description = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
+			if (storage_buffer_set)
+			{
+				const auto& storageBufferWriteDescriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
+
+				const uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+				for (uint32_t frame = 0; frame < framesInFlight; frame++)
+				{
+					write_description[frame].reserve(write_description[frame].size() + storageBufferWriteDescriptors[frame].size());
+					write_description[frame].insert(write_description[frame].end(), storageBufferWriteDescriptors[frame].begin(), storageBufferWriteDescriptors[frame].end());
+				}
+			}
+			vulkan_material->RT_UpdateForRendering(write_description);
+		}
+		else
+		{
+			vulkan_material->RT_UpdateForRendering();
+		}
 	}
 
 	VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info)
@@ -257,8 +419,8 @@ namespace Kablunk
 				uint32_t height = framebuffer_spec.height;
 
 				VkViewport viewport{};
-				viewport.width = width;
-				viewport.height = height;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
 
 				VkRenderPassBeginInfo render_pass_begin_info{};
 				render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -306,43 +468,43 @@ namespace Kablunk
 					viewport.height = static_cast<float>(height);
 				}
 
-				const auto& clearValues = vulkan_framebuffer->GetVkClearValues();
-				render_pass_begin_info.clearValueCount = (uint32_t)clearValues.size();
-				render_pass_begin_info.pClearValues = clearValues.data();
+				const auto& clear_values = vulkan_framebuffer->GetVkClearValues();
+				render_pass_begin_info.clearValueCount = (uint32_t)clear_values.size();
+				render_pass_begin_info.pClearValues = clear_values.data();
 
 				vkCmdBeginRenderPass(cmd_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 				if (explicit_clear)
 				{
-					const uint32_t colorAttachmentCount = static_cast<uint32_t>(vulkan_framebuffer->GetColorAttachmentCount());
-					const uint32_t totalAttachmentCount = colorAttachmentCount + (vulkan_framebuffer->HasDepthAttachment() ? 1 : 0);
-					KB_CORE_ASSERT(clearValues.size() == totalAttachmentCount, "uh oh");
+					const uint32_t color_attachment_count = static_cast<uint32_t>(vulkan_framebuffer->GetColorAttachmentCount());
+					const uint32_t total_attachment_count = color_attachment_count + (vulkan_framebuffer->HasDepthAttachment() ? 1 : 0);
+					KB_CORE_ASSERT(clear_values.size() == total_attachment_count, "uh oh");
 
-					std::vector<VkClearAttachment> attachments(totalAttachmentCount);
-					std::vector<VkClearRect> clearRects(totalAttachmentCount);
-					for (uint32_t i = 0; i < colorAttachmentCount; i++)
+					std::vector<VkClearAttachment> attachments(total_attachment_count);
+					std::vector<VkClearRect> clear_rects(total_attachment_count);
+					for (uint32_t i = 0; i < color_attachment_count; i++)
 					{
 						attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 						attachments[i].colorAttachment = i;
-						attachments[i].clearValue = clearValues[i];
+						attachments[i].clearValue = clear_values[i];
 
-						clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
-						clearRects[i].rect.extent = { width, height };
-						clearRects[i].baseArrayLayer = 0;
-						clearRects[i].layerCount = 1;
+						clear_rects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+						clear_rects[i].rect.extent = { width, height };
+						clear_rects[i].baseArrayLayer = 0;
+						clear_rects[i].layerCount = 1;
 					}
 
 					if (vulkan_framebuffer->HasDepthAttachment())
 					{
-						attachments[colorAttachmentCount].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-						attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
-						clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
-						clearRects[colorAttachmentCount].rect.extent = { width, height };
-						clearRects[colorAttachmentCount].baseArrayLayer = 0;
-						clearRects[colorAttachmentCount].layerCount = 1;
+						attachments[color_attachment_count].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+						attachments[color_attachment_count].clearValue = clear_values[color_attachment_count];
+						clear_rects[color_attachment_count].rect.offset = { (int32_t)0, (int32_t)0 };
+						clear_rects[color_attachment_count].rect.extent = { width, height };
+						clear_rects[color_attachment_count].baseArrayLayer = 0;
+						clear_rects[color_attachment_count].layerCount = 1;
 					}
 
-					vkCmdClearAttachments(cmd_buffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+					vkCmdClearAttachments(cmd_buffer, total_attachment_count, attachments.data(), total_attachment_count, clear_rects.data());
 
 				}
 
@@ -356,7 +518,6 @@ namespace Kablunk
 				scissor.offset.x = 0;
 				scissor.offset.y = 0;
 				vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
-
 			});
 	}
 

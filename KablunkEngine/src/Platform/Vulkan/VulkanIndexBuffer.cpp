@@ -8,6 +8,8 @@
 
 namespace Kablunk
 {
+	
+	// #TODO size aligned with device memory allocation chunks, see imgui for help
 
 	VulkanIndexBuffer::VulkanIndexBuffer(uint32_t size)
 		: m_size{ size }
@@ -19,6 +21,7 @@ namespace Kablunk
 		: m_size{ size }
 	{
 		m_local_data = Buffer::Copy(data, size);
+		KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
 		IntrusiveRef<VulkanIndexBuffer> instance = this;
 		RenderCommand::Submit([instance]() mutable
 			{
@@ -36,8 +39,9 @@ namespace Kablunk
 				VmaAllocation staging_buffer_allocation = allocator.AllocateBuffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
 				// copy data to staging buffer (cpu)
-				uint8_t* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
-				memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
+				uint8_t* dest_ptr = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
+				memcpy(dest_ptr, instance->m_local_data.get(), instance->m_local_data.size());
+				KB_CORE_INFO("VulkanIndexBuffer mapping gpu memory of size '{0}'", instance->m_local_data.size());
 				allocator.UnmapMemory(staging_buffer_allocation);
 
 				// Create vertex buffer info
@@ -86,12 +90,6 @@ namespace Kablunk
 	void VulkanIndexBuffer::SetData(const void* buffer, uint32_t size, uint32_t offset /*= 0*/)
 	{
 		KB_CORE_WARN("VulkanIndexBuffer SetData not implemented!");
-	}
-
-	const uint32_t VulkanIndexBuffer::GetCount() const
-	{
-		KB_CORE_WARN("VulkanIndexBuffer GetCount not implemented!");
-		return 0;
 	}
 
 	RendererID VulkanIndexBuffer::GetRendererID() const

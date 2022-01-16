@@ -143,8 +143,8 @@ namespace Kablunk
 			PendingDescriptorType type = PendingDescriptorType::None;
 			VkWriteDescriptorSet write_descriptor_set;
 			VkDescriptorImageInfo image_info;
-			IntrusiveRef<Texture> texture;
-			IntrusiveRef<Image> image;
+			IntrusiveRef<Texture2D> texture;
+			IntrusiveRef<Image2D> image;
 			VkDescriptorImageInfo submitted_image_info{};
 		};
 
@@ -153,13 +153,13 @@ namespace Kablunk
 			PendingDescriptorType type = PendingDescriptorType::None;
 			VkWriteDescriptorSet write_descriptor_set;
 			std::vector<VkDescriptorImageInfo> image_infos;
-			std::vector<IntrusiveRef<Texture>> textures;
-			std::vector<IntrusiveRef<Image>> images;
+			std::vector<IntrusiveRef<Texture2D>> textures;
+			std::vector<IntrusiveRef<Image2D>> images;
 			VkDescriptorImageInfo submitted_image_info{};
 		};
-		std::unordered_map<uint32_t, WeakRef<PendingDescriptor>> m_resident_descriptors;
-		std::unordered_map<uint32_t, WeakRef<PendingDescriptorArray>> m_resident_descriptor_array;
-		std::vector<WeakRef<PendingDescriptor>> m_pending_descriptors;
+		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptor>> m_resident_descriptors;
+		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> m_resident_descriptor_array;
+		std::vector<std::shared_ptr<PendingDescriptor>> m_pending_descriptors; // #TODO weak ref
 
 		uint32_t m_material_flags;
 

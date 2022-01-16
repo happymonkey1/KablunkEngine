@@ -144,6 +144,7 @@ namespace Kablunk
 			uint8_t* dest_ptr = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
 			KB_CORE_ASSERT(m_image_data.get(), "image data is nullptr!");
 			memcpy(dest_ptr, m_image_data.get(), size);
+			KB_CORE_INFO("VulkanImage2D mapping gpu memory of size '{0}'", size);
 			allocator.UnmapMemory(staging_buffer_allocation);
 
 			VkCommandBuffer copy_cmd = device->GetCommandBuffer(true);
@@ -199,7 +200,7 @@ namespace Kablunk
 			// #TODO mipmap levels, final image layout
 			Utils::InsertImageMemoryBarrier(copy_cmd, info.image,
 				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image->GetDescriptor().imageLayout,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 				subresource_range);
 
@@ -215,7 +216,7 @@ namespace Kablunk
 			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			subresourceRange.layerCount = 1;
 			subresourceRange.levelCount = 1; // #TODO mipmap levels
-			Utils::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, subresourceRange);
+			Utils::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, image->GetDescriptor().imageLayout, subresourceRange);
 			device->FlushCommandBuffer(transition_cmd_buffer);
 		}
 

@@ -2,8 +2,10 @@
 
 #include "Platform/Vulkan/VulkanContext.h"
 #include "Platform/Vulkan/VulkanShader.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
+
 
 #include "Kablunk/Renderer/ShaderCache.h"
 
@@ -52,11 +54,6 @@ namespace Kablunk
 			}
 			KB_CORE_ASSERT(false, "Unknown type!");
 			return ShaderUniformType::None;
-		}
-
-		VkDescriptorSet AllocateDescriptorSet(VkDescriptorSetAllocateInfo info)
-		{
-			return {};
 		}
 
 		static std::string ReadShaderFromFile(const std::string& filepath)
@@ -165,6 +162,8 @@ namespace Kablunk
 			instance->LoadAndCreateShaders(shader_data);
 			instance->ReflectAllShaderStages(shader_data);
 			instance->CreateDescriptors();
+
+			Renderer::OnShaderReloaded(instance->GetHash());
 		});
 		
 	}
@@ -245,26 +244,25 @@ namespace Kablunk
 
 		result.pool = nullptr;
 
-
 		VkDescriptorSetAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &m_descriptor_set_layouts[set];
 
-		VkDescriptorSet descriptor_set = Internal::AllocateDescriptorSet(alloc_info);
+		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
+
+		VkDescriptorSet descriptor_set = vulkan_renderer->RT_AllocateDescriptorSet(alloc_info);
 		KB_CORE_ASSERT(descriptor_set, "Vulkan failed to allocate descriptor set!");
 		result.descriptor_sets.push_back(descriptor_set);
 
 		return result;
 	}
 
-	Kablunk::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set /*= 0*/)
+	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set /*= 0*/)
 	{
 		ShaderMaterialDescriptorSet result;
 
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-
-		KB_CORE_ASSERT(m_type_counts.find(set) != m_type_counts.end(), "type count set empty!");
 
 		// #TODO Move this to the centralized renderer
 		VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
@@ -290,7 +288,7 @@ namespace Kablunk
 		return result;
 	}
 
-	Kablunk::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set, uint32_t number_of_sets)
+	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set, uint32_t number_of_sets)
 	{
 		ShaderMaterialDescriptorSet result;
 
@@ -505,7 +503,185 @@ namespace Kablunk
 
 	void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector<uint32_t>& shader_data)
 	{
-		KB_CORE_INFO("NEED TO IMPLEMENT SHADER REFLECTION!");
+		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+
+		KB_CORE_TRACE("===========================");
+		KB_CORE_TRACE(" Vulkan Shader Reflection");
+		KB_CORE_TRACE(" {0}", m_file_path);
+		KB_CORE_TRACE("===========================");
+
+		spirv_cross::Compiler compiler(shader_data);
+		auto resources = compiler.get_shader_resources();
+
+		KB_CORE_TRACE("Uniform Buffers:");
+		for (const auto& resource : resources.uniform_buffers)
+		{
+			const auto& name = resource.name;
+			auto& buffer_type = compiler.get_type(resource.base_type_id);
+			int member_count = (uint32_t)buffer_type.member_types.size();
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			uint32_t size = (uint32_t)compiler.get_declared_struct_size(buffer_type);
+
+			if (descriptor_set >= m_shader_descriptor_sets.size())
+				m_shader_descriptor_sets.resize(descriptor_set + 1);
+
+			ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
+			if (s_uniform_buffers[descriptor_set].find(binding) == s_uniform_buffers[descriptor_set].end())
+			{
+				UniformBuffer* uniform_buffer = new UniformBuffer();
+				uniform_buffer->binding_point = binding;
+				uniform_buffer->size = size;
+				uniform_buffer->name = name;
+				uniform_buffer->shader_stage = VK_SHADER_STAGE_ALL;
+				s_uniform_buffers.at(descriptor_set)[binding] = uniform_buffer;
+			}
+			else
+			{
+				UniformBuffer* uniform_buffer = s_uniform_buffers.at(descriptor_set).at(binding);
+				if (size > uniform_buffer->size)
+					uniform_buffer->size = size;
+			}
+
+			shader_descriptor_set.uniform_buffers[binding] = s_uniform_buffers.at(descriptor_set).at(binding);
+
+			KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
+			KB_CORE_TRACE("  Member Count: {0}", member_count);
+			KB_CORE_TRACE("  Size: {0}", size);
+			KB_CORE_TRACE("-------------------");
+		}
+
+		KB_CORE_TRACE("Storage Buffers:");
+		for (const auto& resource : resources.storage_buffers)
+		{
+			const auto& name = resource.name;
+			auto& buf_type = compiler.get_type(resource.base_type_id);
+			uint32_t member_count = (uint32_t)buf_type.member_types.size();
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			uint32_t size = (uint32_t)compiler.get_declared_struct_size(buf_type);
+
+			if (descriptor_set >= m_shader_descriptor_sets.size())
+				m_shader_descriptor_sets.resize(descriptor_set + 1);
+
+			ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
+			if (s_storage_buffers[descriptor_set].find(binding) == s_storage_buffers[descriptor_set].end())
+			{
+				StorageBuffer* storage_buffer = new StorageBuffer();
+				storage_buffer->binding_point = binding;
+				storage_buffer->size = size;
+				storage_buffer->name = name;
+				storage_buffer->shader_stage = VK_SHADER_STAGE_ALL;
+				s_storage_buffers.at(descriptor_set)[binding] = storage_buffer;
+			}
+			else
+			{
+				StorageBuffer* storage_buffer = s_storage_buffers.at(descriptor_set).at(binding);
+				if (size > storage_buffer->size)
+					storage_buffer->size = size;
+			}
+
+			shader_descriptor_set.storage_buffers[binding] = s_storage_buffers.at(descriptor_set).at(binding);
+
+			KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
+			KB_CORE_TRACE("  Member Count: {0}", member_count);
+			KB_CORE_TRACE("  Size: {0}", size);
+			KB_CORE_TRACE("-------------------");
+		}
+
+		KB_CORE_TRACE("Push Constant Buffers:");
+		for (const auto& resource : resources.push_constant_buffers)
+		{
+			const auto& buffer_name = resource.name;
+			auto& buffer_type = compiler.get_type(resource.base_type_id);
+			auto buffer_size = static_cast<uint32_t>(compiler.get_declared_struct_size(buffer_type));
+			uint32_t member_count = static_cast<uint32_t>(buffer_type.member_types.size());
+			uint32_t buffer_offset = 0;
+			if (m_push_constant_ranges.size())
+				buffer_offset = m_push_constant_ranges.back().offset + m_push_constant_ranges.back().size;
+
+			auto& push_constant_range = m_push_constant_ranges.emplace_back();
+			push_constant_range.shader_stage = shader_stage;
+			push_constant_range.size = buffer_size - buffer_offset;
+			push_constant_range.offset = buffer_offset;
+
+			// Skip empty push constant buffers - these are for the renderer only
+			if (buffer_name.empty() || buffer_name == "u_Renderer")
+				continue;
+
+			ShaderBuffer& buffer = m_buffers[buffer_name];
+			buffer.name = buffer_name;
+			buffer.size = buffer_size - buffer_offset;
+
+			KB_CORE_TRACE("  Name: {0}", buffer_name);
+			KB_CORE_TRACE("  Member Count: {0}", member_count);
+			KB_CORE_TRACE("  Size: {0}", buffer_size);
+
+			for (uint32_t i = 0; i < member_count; i++)
+			{
+				auto type = compiler.get_type(buffer_type.member_types[i]);
+				const auto& member_name = compiler.get_member_name(buffer_type.self, i);
+				auto size = (uint32_t)compiler.get_declared_struct_member_size(buffer_type, i);
+				auto offset = compiler.type_struct_member_offset(buffer_type, i) - buffer_offset;
+
+				std::string uniformName = fmt::format("{}.{}", buffer_name, member_name);
+				buffer.uniforms[uniformName] = ShaderUniform(uniformName, Internal::SPIRTypeToShaderUniformType(type), size, offset);
+			}
+		}
+
+		KB_CORE_TRACE("Sampled Images:");
+		for (const auto& resource : resources.sampled_images)
+		{
+			const auto& name = resource.name;
+			auto& base_type = compiler.get_type(resource.base_type_id);
+			auto& type = compiler.get_type(resource.type_id);
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			uint32_t dimension = base_type.image.dim;
+			uint32_t array_size = type.array[0];
+			if (array_size == 0)
+				array_size = 1;
+			if (descriptor_set >= m_shader_descriptor_sets.size())
+				m_shader_descriptor_sets.resize(descriptor_set + 1);
+
+			ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
+			auto& image_sampler = shader_descriptor_set.image_samplers[binding];
+			image_sampler.binding_point = binding;
+			image_sampler.descriptor_set = descriptor_set;
+			image_sampler.name = name;
+			image_sampler.shader_stage = shader_stage;
+			image_sampler.array_size = array_size;
+
+			m_resources[name] = ShaderResourceDeclaration(name, binding, 1);
+
+			KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
+		}
+
+		KB_CORE_TRACE("Storage Images:");
+		for (const auto& resource : resources.storage_images)
+		{
+			const auto& name = resource.name;
+			auto& type = compiler.get_type(resource.base_type_id);
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			uint32_t dimension = type.image.dim;
+
+			if (descriptor_set >= m_shader_descriptor_sets.size())
+				m_shader_descriptor_sets.resize(descriptor_set + 1);
+
+			ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
+			auto& image_sampler = shader_descriptor_set.storage_images[binding];
+			image_sampler.binding_point = binding;
+			image_sampler.descriptor_set = descriptor_set;
+			image_sampler.name = name;
+			image_sampler.shader_stage = shader_stage;
+
+			m_resources[name] = ShaderResourceDeclaration(name, binding, 1);
+
+			KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
+		}
+
+		KB_CORE_TRACE("===========================");
 	}
 
 	void VulkanShader::ReflectAllShaderStages(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data)
@@ -552,18 +728,6 @@ namespace Kablunk
 				type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_images.size());
 			}
 
-#if 0
-			VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
-			descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-			descriptor_pool_create_info.pNext = nullptr;
-			descriptor_pool_create_info.poolSizeCount = m_type_counts.size();
-			descriptor_pool_create_info.pPoolSizes = m_type_counts.();
-			descriptor_pool_create_info.maxSets = 1;
-
-			if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &m_descriptor_) != VK_SUCCESS)
-				KB_CORE_ASSERT(false, "Vulkan failed to create descriptor pool!");
-#endif
-
 			// Uniform Buffers
 			std::vector<VkDescriptorSetLayoutBinding> layout_bindings;
 			for (auto& [binding, uniform_buffer] : shader_descriptor_set.uniform_buffers)
@@ -598,6 +762,27 @@ namespace Kablunk
 				set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				set.descriptorType = layout_binding.descriptorType;
 				set.descriptorCount = 1;
+				set.dstBinding = layout_binding.binding;
+			}
+
+			// Image Samplers
+			for (auto& [binding, image_sampler] : shader_descriptor_set.image_samplers)
+			{
+				auto& layout_binding = layout_bindings.emplace_back();
+				layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				layout_binding.descriptorCount = image_sampler.array_size;
+				layout_binding.stageFlags = image_sampler.shader_stage;
+				layout_binding.pImmutableSamplers = nullptr;
+				layout_binding.binding = binding;
+
+				KB_CORE_ASSERT(shader_descriptor_set.uniform_buffers.find(binding) == shader_descriptor_set.uniform_buffers.end(), "Binding is already present!");
+				KB_CORE_ASSERT(shader_descriptor_set.storage_buffers.find(binding) == shader_descriptor_set.storage_buffers.end(), "Binding is already present!");
+
+				VkWriteDescriptorSet& set = shader_descriptor_set.write_descriptor_sets[image_sampler.name];
+				set = {};
+				set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				set.descriptorType = layout_binding.descriptorType;
+				set.descriptorCount = image_sampler.array_size;
 				set.dstBinding = layout_binding.binding;
 			}
 
@@ -636,11 +821,13 @@ namespace Kablunk
 				shader_descriptor_set.uniform_buffers.size(),
 				shader_descriptor_set.storage_buffers.size(),
 				shader_descriptor_set.image_samplers.size(),
-				shader_descriptor_set.storage_images.size());
+				shader_descriptor_set.storage_images.size()
+			);
+
 			if (set >= m_descriptor_set_layouts.size())
 				m_descriptor_set_layouts.resize((size_t)(set + 1));
 			
-			if (vkCreateDescriptorSetLayout(device, &descriptor_layout_create_info, nullptr, &m_descriptor_set_layouts[set]) == VK_SUCCESS)
+			if (vkCreateDescriptorSetLayout(device, &descriptor_layout_create_info, nullptr, &m_descriptor_set_layouts[set]) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create descriptor set layout!");
 		}
 	}

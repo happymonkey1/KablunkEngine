@@ -42,14 +42,13 @@ namespace Kablunk
 			if (vkCreateFence(device->GetVkDevice(), &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
 
-		VkQueryPoolCreateInfo query_pool_create_info = {};
-		query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-		query_pool_create_info.pNext = nullptr;
-
 		// Timestamp queries
-		const uint32_t maxUserQueries = 10;
-		m_timestamp_query_count = 2 + 2 * maxUserQueries;
+		constexpr uint32_t MAX_USER_QUERIES = 10;
+		m_timestamp_query_count = 2 + 2 * MAX_USER_QUERIES;
 
+		VkQueryPoolCreateInfo query_pool_create_info = {};
+		query_pool_create_info.pNext = nullptr;
+		query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 		query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
 		query_pool_create_info.queryCount = m_timestamp_query_count;
 		m_timestamp_query_pools.resize(frames_in_flight);

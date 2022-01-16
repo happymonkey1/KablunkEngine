@@ -84,6 +84,7 @@ namespace Kablunk
 		{
 			switch (format)
 			{
+			case ImageFormat::RED32I:		   return VK_FORMAT_R32_SINT;
 			case ImageFormat::RED32F:          return VK_FORMAT_R32_SFLOAT;
 			case ImageFormat::RG16F:		   return VK_FORMAT_R16G16_SFLOAT;
 			case ImageFormat::RG32F:		   return VK_FORMAT_R32G32_SFLOAT;

@@ -16,7 +16,7 @@ namespace Kablunk
 		virtual ~VulkanUniformBuffer();
 
 		virtual void SetData(const void* data, uint32_t size, uint32_t offest = 0) override;
-		void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0);
+		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 		virtual RendererID GetBinding() const override { return m_binding; }
 
 		const VkDescriptorBufferInfo& GetDescriptorBufferInfo() const { return m_descriptor_info; }

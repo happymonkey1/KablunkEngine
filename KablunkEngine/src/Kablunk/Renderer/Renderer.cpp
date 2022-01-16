@@ -15,6 +15,14 @@ namespace Kablunk
 	IntrusiveRef<ShaderLibrary> Renderer::s_shader_library = IntrusiveRef<ShaderLibrary>::Create();
 	Ref<FT_Library> Renderer::s_freetype_lib = CreateRef<FT_Library>();
 
+	struct ShaderDependencies
+	{
+		std::vector<IntrusiveRef<Pipeline>> pipelines;
+		std::vector<IntrusiveRef<Material>> materials;
+	};
+
+	static std::unordered_map<uint64_t, ShaderDependencies> s_shader_dependencies;
+
 	void Renderer::Init()
 	{
 		KB_PROFILE_FUNCTION();
@@ -25,9 +33,9 @@ namespace Kablunk
 		// Setting up data
 
 		// Uniform buffers
-		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
-		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
-		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
+		//m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
+		//m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
+		//m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
 
 		// Initialize freetype
 		//if (FT_Init_FreeType(s_freetype_lib.get()))
@@ -65,7 +73,7 @@ namespace Kablunk
 		m_SceneData->camera_buffer.ProjectionMatrix = camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = view_mat;
 		m_SceneData->camera_buffer.CameraPosition = transform[3];
-		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
+		//m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
 	void Renderer::BeginScene(const EditorCamera& editor_camera)
@@ -74,12 +82,12 @@ namespace Kablunk
 		m_SceneData->camera_buffer.ProjectionMatrix = editor_camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = editor_camera.GetViewMatrix();
 		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetTranslation();
-		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
+		//m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
-		m_SceneData->camera_buffer.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+		//m_SceneData->camera_buffer.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 	}
 
 	void Renderer::EndScene()
@@ -112,7 +120,7 @@ namespace Kablunk
 		mesh->GetMeshData()->GetShader()->Bind();
 
 		m_SceneData->renderer_buffer.Transform = transform;
-		m_SceneData->renderer_uniform_buffer->SetData(&m_SceneData->renderer_buffer, sizeof(SceneData::RendererData));
+		//m_SceneData->renderer_uniform_buffer->SetData(&m_SceneData->renderer_buffer, sizeof(SceneData::RendererData));
 
 		//mesh_shader->SetMat4("u_Transform", transform);
 
@@ -129,7 +137,29 @@ namespace Kablunk
 		m_SceneData->plights_buffer.count = count;
 		memcpy(m_SceneData->plights_buffer.lights, lights.data(), sizeof(PointLight) * count);
 
-		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
+		//m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
+	}
+
+	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline)
+	{
+		s_shader_dependencies[shader->GetHash()].pipelines.push_back(pipeline);
+	}
+
+	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material)
+	{
+		s_shader_dependencies[shader->GetHash()].materials.push_back(material);
+	}
+
+	void Renderer::OnShaderReloaded(uint64_t hash)
+	{
+		if (s_shader_dependencies.find(hash) != s_shader_dependencies.end())
+		{
+			for (auto& material : s_shader_dependencies[hash].materials)
+				material->Invalidate();
+
+			for (auto& pipeline : s_shader_dependencies[hash].pipelines)
+				pipeline->Invalidate();
+		}
 	}
 
 	uint32_t Renderer::GetCurrentFrameIndex()

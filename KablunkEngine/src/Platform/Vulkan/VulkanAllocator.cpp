@@ -31,7 +31,6 @@ namespace Kablunk
 		alloc_create_info.usage = usage;
 		alloc_create_info.pool = nullptr;
 		alloc_create_info.memoryTypeBits = 0;
-		
 
 		VmaAllocation allocation;
 		VkResult res = vmaCreateBuffer(s_data->allocator, &buffer_create_info, &alloc_create_info, &out_buffer, &allocation, nullptr);
@@ -43,6 +42,7 @@ namespace Kablunk
 
 		VmaAllocationInfo alloc_info{};
 		vmaGetAllocationInfo(s_data->allocator, allocation, &alloc_info);
+		KB_CORE_INFO("{0} allocted a buffer of size {1}", m_tag, alloc_info.size);
 
 		s_data->total_allocated_bytes += alloc_info.size;
 

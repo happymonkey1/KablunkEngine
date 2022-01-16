@@ -52,6 +52,8 @@ namespace Kablunk
 		KB_CORE_ASSERT(specification.shader, "no shader set!");
 		KB_CORE_ASSERT(specification.render_pass, "no render pass set!");
 
+		Renderer::RegisterShaderDependency(specification.shader, this);
+
 		Invalidate();
 	}
 
@@ -160,12 +162,13 @@ namespace Kablunk
 
 				blend_attachment_state[i].colorWriteMask = 0xf;
 
-				const auto& attachmentSpec = framebuffer->GetSpecification().Attachments.Attachments[i];
+				const auto& attachment_spec = framebuffer->GetSpecification().Attachments.Attachments[i];
 				FramebufferBlendMode blendMode = framebuffer->GetSpecification().blend_mode == FramebufferBlendMode::None
-					? attachmentSpec.blend_mode
+					? attachment_spec.blend_mode
 					: framebuffer->GetSpecification().blend_mode;
 
-				blend_attachment_state[i].blendEnable = attachmentSpec.blend ? VK_TRUE : VK_FALSE;
+				bool attachment_supports_blend = attachment_spec.format != ImageFormat::RED32I;
+				blend_attachment_state[i].blendEnable = attachment_spec.blend && attachment_supports_blend ? VK_TRUE : VK_FALSE;
 				if (blendMode == FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha)
 				{
 					blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
@@ -292,14 +295,14 @@ namespace Kablunk
 		pipeline_create_info.pDynamicState = &dynamic_state;
 
 		// what is a pipeline cache?
-		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-		VkPipelineCache pipelineCache;
-		if (vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) != VK_SUCCESS)
+		VkPipelineCacheCreateInfo pipeline_cache_create_info = {};
+		pipeline_cache_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		VkPipelineCache pipeline_cache;
+		if (vkCreatePipelineCache(device, &pipeline_cache_create_info, nullptr, &pipeline_cache) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create Pipeline Cache!");
 
 		// Create rendering pipeline using the specified states
-		if (vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipeline_create_info, nullptr, &m_vk_pipeline) != VK_SUCCESS)
+		if (vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &m_vk_pipeline) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create pipeline!");
 	}
 

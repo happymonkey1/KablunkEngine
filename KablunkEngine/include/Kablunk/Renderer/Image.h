@@ -12,6 +12,7 @@ namespace Kablunk
 	enum class ImageFormat
 	{
 		None = 0,
+		RED32I,
 		RED32F,
 		RGB,
 		RGBA,
@@ -120,6 +121,7 @@ namespace Kablunk
 		{
 			switch (format)
 			{
+			case ImageFormat::RED32I:  return 4;
 			case ImageFormat::RED32F:  return 4;
 			case ImageFormat::RGB:
 			case ImageFormat::SRGB:    return 3;

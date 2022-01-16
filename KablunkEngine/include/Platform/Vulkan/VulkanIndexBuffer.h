@@ -23,7 +23,8 @@ namespace Kablunk
 
 		virtual void SetData(const void* buffer, uint32_t size, uint32_t offset = 0);
 
-		virtual const uint32_t GetCount() const override;
+		virtual const uint32_t GetCount() const { return m_size / sizeof(uint32_t); };
+		virtual uint32_t GetSize() const { return m_size; }
 
 		virtual RendererID GetRendererID() const override;
 
@@ -34,7 +35,6 @@ namespace Kablunk
 		uint32_t m_size = 0;
 
 		VmaAllocation m_vk_allocation;
-
 	};
 }
 

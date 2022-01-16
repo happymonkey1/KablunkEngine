@@ -20,9 +20,7 @@ namespace Kablunk
 			{
 				IntrusiveRef<VulkanDevice> device = VulkanContext::Get()->GetDevice();
 				VulkanAllocator allocator{ "VertexBuffer" };
-
 				
-
 				// create staging buffer
 				VkBufferCreateInfo staging_buffer_create_info{};
 				staging_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -36,12 +34,14 @@ namespace Kablunk
 				// copy data to staging buffer (cpu)
 				uint8_t* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
 				memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
+				KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{0}'", instance->m_local_data.size());
 				allocator.UnmapMemory(staging_buffer_allocation);
 
+				
 				// Create vertex buffer info
 				VkBufferCreateInfo vertex_buffer_create_info{};
 				vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				vertex_buffer_create_info.size = instance->m_size;
+				vertex_buffer_create_info.size = instance->m_size; 
 				vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 				instance->m_memory_allocation = allocator.AllocateBuffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
 
@@ -117,6 +117,7 @@ namespace Kablunk
 		VulkanAllocator allocator{ "VertexBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_memory_allocation);
 		memcpy(data_ptr, (uint8_t*)data + offset, size);
+		KB_CORE_INFO("VulkanVertexBuffer mapping buffer memory of size '{0}'", size);
 		allocator.UnmapMemory(m_memory_allocation);
 	}
 

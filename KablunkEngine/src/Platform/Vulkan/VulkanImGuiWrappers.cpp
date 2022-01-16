@@ -32,8 +32,6 @@ namespace Kablunk::UI
 
 		const auto textureID = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<VulkanImage2D>()->GetDescriptor().imageLayout);
 		ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
-		ImGui::NextColumn();
-		ImGui::NextColumn();
 	}
 
 	void Image(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
@@ -45,8 +43,6 @@ namespace Kablunk::UI
 
 		const auto textureID = ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
 		ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
-		ImGui::NextColumn();
-		ImGui::NextColumn();
 	}
 
 	bool ImageButton(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
@@ -68,8 +64,7 @@ namespace Kablunk::UI
 			UI::ColorWithMultipliedValue(button_tint, 0.8f),
 			UI::RectExpanded(UI::GetItemRect(), -frame_padding, -frame_padding)
 		);
-		ImGui::NextColumn();
-		ImGui::NextColumn();
+
 		return pressed;
 	}
 }

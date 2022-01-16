@@ -65,6 +65,11 @@ namespace Kablunk
 			s_renderer_api->SubmitFullscreenQuad(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material);
 		}
 
+		static void RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0)
+		{
+			s_renderer_api->RenderGeometry(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material, vertex_buffer, index_buffer, transform, index_count);
+		}
+
 		static void WaitAndRender()
 		{
 			s_renderer_api->WaitAndRender();

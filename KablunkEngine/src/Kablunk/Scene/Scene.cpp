@@ -491,8 +491,6 @@ namespace Kablunk
 			for (auto entity : sprite_view)
 				Renderer2D::DrawSprite({ entity, this });
 			
-
-			
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
 			{
@@ -589,8 +587,6 @@ namespace Kablunk
 		}
 
 		{
-			Renderer2D::BeginScene(camera);
-			
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
 				Renderer2D::DrawSprite({ entity, this });
@@ -603,8 +599,6 @@ namespace Kablunk
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
 				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
-			
-			Renderer2D::EndScene();
 		}
 
 		scene_renderer->EndScene();

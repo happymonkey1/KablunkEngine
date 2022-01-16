@@ -93,7 +93,7 @@ namespace Kablunk
 		{
 			if (Utils::IsDepthFormat(m_specification.format))
 				usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-			else
+			else //if (m_specification.format != ImageFormat::RED32I)
 				usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 		else if (m_specification.usage == ImageUsage::Texture)
@@ -325,7 +325,6 @@ namespace Kablunk
 
 		m_descriptor_image_info.imageView = m_info.image_view;
 		m_descriptor_image_info.sampler = m_info.sampler;
-
 	}
 
 	const std::map<VkImage, WeakRef<VulkanImage2D>>& VulkanImage2D::GetImageRefs() const

@@ -69,11 +69,11 @@ namespace Kablunk
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_type, TextureTarget(multisampled), id, 0);
 		}
 
-		static bool IsDepthFormat(FramebufferTextureFormat format)
+		static bool IsDepthFormat(ImageFormat format)
 		{
 			switch (format)
 			{
-			case FramebufferTextureFormat::DEPTH24STENCIL8: return true;
+			case ImageFormat::DEPTH24STENCIL8: return true;
 			}
 
 			return false;

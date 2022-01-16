@@ -15,7 +15,7 @@ namespace Kablunk
 		: m_shader{ shader }, m_name{ name }, m_write_descriptors(Renderer::GetConfig().frames_in_flight), m_dirty_descriptor_sets(Renderer::GetConfig().frames_in_flight)
 	{
 		Init();
-		// Renderer::RegisterShaderDependency(shader, this);
+		Renderer::RegisterShaderDependency(shader, this);
 	}
 
 	VulkanMaterial::VulkanMaterial(IntrusiveRef<Material> material, const std::string& name /*= ""*/)
@@ -24,7 +24,7 @@ namespace Kablunk
 		if (name.empty())
 			m_name = material->GetName();
 
-		// Renderer::RegisterShaderDependency(shader, this);
+		Renderer::RegisterShaderDependency(m_shader, this);
 
 		auto vulkan_material = material.As<VulkanMaterial>();
 		m_uniform_storage_buffer = Buffer::Copy(vulkan_material->m_uniform_storage_buffer.get(), vulkan_material->m_uniform_storage_buffer.size());
@@ -64,7 +64,7 @@ namespace Kablunk
 		auto shader = m_shader.As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
-			const auto& shader_descriptor_set = shader->GetShaderDescriptorSet();
+			const auto& shader_descriptor_set = shader->GetShaderDescriptorSets();
 			if (!shader_descriptor_set.empty())
 				for (auto&& [binding, descriptor] : m_resident_descriptors)
 					m_pending_descriptors.push_back(descriptor);
@@ -206,10 +206,12 @@ namespace Kablunk
 			{
 				if (pending_descriptor->type == PendingDescriptorType::Texture2D)
 				{
-					for (auto texture : pending_descriptor->textures)
+					for (size_t i = 0; i < pending_descriptor->textures.size(); ++i)
 					{
-						IntrusiveRef<VulkanTexture2D> texture = texture.As<VulkanTexture2D>();
-						array_image_infos.emplace_back(texture->GetVulkanDescriptorInfo());
+						IntrusiveRef<Texture2D> texture = pending_descriptor->textures[i];
+						KB_CORE_ASSERT(texture, "texture is uninitialized!");
+						IntrusiveRef<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+						array_image_infos.emplace_back(vulkan_texture->GetVulkanDescriptorInfo());
 					}
 				}
 
@@ -220,10 +222,10 @@ namespace Kablunk
 		}
 
 		auto vulkan_shader = m_shader.As<VulkanShader>();
-		auto descriptorSet = vulkan_shader->AllocateDescriptorSet();
-		m_descriptor_sets[frame_index] = descriptorSet;
-		for (auto& writeDescriptor : m_write_descriptors[frame_index])
-			writeDescriptor.dstSet = descriptorSet.descriptor_sets[0];
+		auto descriptor_set = vulkan_shader->AllocateDescriptorSet();
+		m_descriptor_sets[frame_index] = descriptor_set;
+		for (auto& write_descriptor : m_write_descriptors[frame_index])
+			write_descriptor.dstSet = descriptor_set.descriptor_sets[0];
 
 		vkUpdateDescriptorSets(
 			vulkan_device->GetVkDevice(), 
@@ -250,8 +252,8 @@ namespace Kablunk
 		if (!shader_buffers.empty())
 		{
 			uint32_t size = 0;
-			for (auto [name, shader_buffer] : shader_buffers)
-				size += shader_buffers.size();
+			for (const auto& [name, shader_buffer] : shader_buffers)
+				size += shader_buffer.size;
 
 			m_uniform_storage_buffer.Allocate(size);
 			m_uniform_storage_buffer.ZeroInitialize();
@@ -281,8 +283,8 @@ namespace Kablunk
 		const VkWriteDescriptorSet* write_descriptor_set = m_shader.As<VulkanShader>()->GetDescriptorSet(name);
 		KB_CORE_ASSERT(write_descriptor_set, "nullptr!");
 
-		m_resident_descriptors[binding] = WeakRef<PendingDescriptor>(
-			new PendingDescriptor
+		m_resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
+			PendingDescriptor
 			{
 				PendingDescriptorType::Texture2D,
 				*write_descriptor_set,
@@ -319,8 +321,8 @@ namespace Kablunk
 
 		if (m_resident_descriptor_array.find(binding) == m_resident_descriptor_array.end())
 		{
-			m_resident_descriptor_array[binding] = WeakRef<PendingDescriptorArray>(
-				new PendingDescriptorArray
+			m_resident_descriptor_array[binding] = std::make_shared<PendingDescriptorArray>(
+				PendingDescriptorArray
 				{
 					PendingDescriptorType::Texture2D,
 					*write_descriptor_set,
@@ -361,8 +363,8 @@ namespace Kablunk
 
 		const VkWriteDescriptorSet* write_descriptor_set = m_shader.As<VulkanShader>()->GetDescriptorSet(name);
 		KB_CORE_ASSERT(write_descriptor_set, "nullptr!");
-		m_resident_descriptors[binding] = WeakRef<PendingDescriptor>(
-			new PendingDescriptor
+		m_resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
+			PendingDescriptor
 			{ 
 				PendingDescriptorType::Image2D, 
 				*write_descriptor_set, 

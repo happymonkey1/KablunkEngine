@@ -65,7 +65,7 @@ namespace Kablunk
 			samplers[i] = i;
 
 		s_generic_renderer_data.Quad_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
-		s_generic_renderer_data.Quad_shader->SetIntArray("u_Textures", samplers, s_generic_renderer_data.Max_texture_slots);
+		//s_generic_renderer_data.Quad_shader->SetIntArray("u_Textures", samplers, s_generic_renderer_data.Max_texture_slots);
 
 		s_generic_renderer_data.Circle_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
 
@@ -77,8 +77,6 @@ namespace Kablunk
 		s_generic_renderer_data.Quad_vertex_positions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
 		s_generic_renderer_data.Quad_vertex_positions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 		s_generic_renderer_data.Quad_vertex_positions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
-
-		s_generic_renderer_data.camera_uniform_buffer = UniformBuffer::Create(sizeof(GenericRenderer2DData), 0);
 
 		// Initialize API specific code
 		s_renderer->Renderer2D_Init();
@@ -102,31 +100,16 @@ namespace Kablunk
 
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		glm::mat4 view_projection = camera.GetProjection() * glm::inverse(transform);
-
-		s_generic_renderer_data.camera_buffer.ViewProjection = view_projection;
-		s_generic_renderer_data.camera_uniform_buffer->SetData(&s_generic_renderer_data.camera_buffer, sizeof(GenericRenderer2DData));
-
 		StartNewBatch();
 	}
 
 	void Renderer2D::BeginScene(const EditorCamera& camera)
 	{
-		glm::mat4 view_projection = camera.GetViewProjectionMatrix();
-
-		s_generic_renderer_data.camera_buffer.ViewProjection = view_projection;
-		s_generic_renderer_data.camera_uniform_buffer->SetData(&s_generic_renderer_data.camera_buffer, sizeof(GenericRenderer2DData));
-
 		StartNewBatch();
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
-		KB_PROFILE_FUNCTION();
-
-		s_generic_renderer_data.camera_buffer.ViewProjection = camera.GetViewProjectionMatrix();
-		s_generic_renderer_data.camera_uniform_buffer->SetData(&s_generic_renderer_data.camera_buffer, sizeof(GenericRenderer2DData));
-
 		StartNewBatch();
 	}
 
@@ -134,15 +117,11 @@ namespace Kablunk
 
 	void Renderer2D::EndScene()
 	{
-		KB_PROFILE_FUNCTION();
-
 		Flush();
 	}
 
 	void Renderer2D::Flush()
 	{
-		KB_PROFILE_FUNCTION();
-		
 		s_renderer->Renderer2D_Flush();
 	}
 
@@ -192,7 +171,6 @@ namespace Kablunk
 			// Dereference shared_ptrs and compare the textures
 			if (*s_generic_renderer_data.Texture_slots[i].get() == *texture.get())
 				texture_index = (float)i;
-			
 		}
 
 		if (texture_index == 0.0f)
@@ -243,6 +221,11 @@ namespace Kablunk
 		s_generic_renderer_data.Circle_count++;
 
 		s_generic_renderer_data.Stats.Circle_count += 1;
+	}
+
+	void Renderer2D::SetSceneRenderer(IntrusiveRef<SceneRenderer> scene_renderer)
+	{
+		s_renderer->Renderer2D_SetSceneRenderer(scene_renderer);
 	}
 
 	void Renderer2D::ResetStats()

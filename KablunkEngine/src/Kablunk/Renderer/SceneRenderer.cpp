@@ -10,6 +10,11 @@ namespace Kablunk
 {
 	static std::vector<std::thread> s_thread_pool;
 
+	struct CameraDataUB
+	{
+		glm::mat4 ViewProjection;
+	};
+
 	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
 	{
@@ -30,10 +35,16 @@ namespace Kablunk
 		else
 			m_command_buffer = RenderCommandBuffer::Create(0, "SceneRenderer");
 
+
+		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
+		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
+
 		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
+		m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
 
 		FramebufferSpecification framebuffer_spec;
-		framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA16F, ImageFormat::Depth };
+		framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RED32I };
 		framebuffer_spec.samples = 1;
 		framebuffer_spec.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		framebuffer_spec.debug_name = "Renderer2D";
@@ -84,7 +95,7 @@ namespace Kablunk
 		// Geometry
 		{
 			FramebufferSpecification geometry_framebuffer_spec;
-			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA16F, ImageFormat::Depth };
+			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RED32I };
 			geometry_framebuffer_spec.samples = 1;
 			geometry_framebuffer_spec.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
 			geometry_framebuffer_spec.debug_name = "Geometry";
@@ -116,22 +127,24 @@ namespace Kablunk
 
 		// Composite
 		{
-			FramebufferSpecification compFramebufferSpec;
-			compFramebufferSpec.debug_name = "SceneComposite";
-			compFramebufferSpec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
-			compFramebufferSpec.swap_chain_target = m_specification.swap_chain_target;
+			FramebufferSpecification composite_framebuffer_spec;
+			composite_framebuffer_spec.debug_name = "SceneComposite";
+			composite_framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
+			composite_framebuffer_spec.swap_chain_target = m_specification.swap_chain_target;
 
 			// No depth for swapchain
 			if (m_specification.swap_chain_target)
-				compFramebufferSpec.Attachments = { ImageFormat::RGBA };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA };
 			else
-				compFramebufferSpec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(compFramebufferSpec);
+			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
 			RenderPassSpecification renderPassSpec;
 			renderPassSpec.target_framebuffer = framebuffer;
 			renderPassSpec.debug_name = "SceneComposite";
+
+			IntrusiveRef<Shader> composite_shader = Renderer::GetShaderLibrary()->Get("scene_composite");
 
 			PipelineSpecification pipelineSpecification;
 			pipelineSpecification.layout = {
@@ -139,12 +152,13 @@ namespace Kablunk
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
 			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.shader = Renderer::GetShaderLibrary()->Get("scene_composite");
+			pipelineSpecification.shader = composite_shader;
 			pipelineSpecification.render_pass = RenderPass::Create(renderPassSpec);
 			pipelineSpecification.debug_name = "SceneComposite";
 			pipelineSpecification.depth_write = false;
 			m_composite_pipeline = Pipeline::Create(pipelineSpecification);
 
+			m_composite_material = Material::Create(composite_shader);
 		}
 
 		IntrusiveRef<SceneRenderer> instance = this;
@@ -156,7 +170,7 @@ namespace Kablunk
 
 	void SceneRenderer::SetScene(IntrusiveRef<Scene> context)
 	{
-		KB_CORE_ASSERT(context, "Scene context is nullptr!");
+		//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 		m_context = context;
 	}
 
@@ -170,6 +184,9 @@ namespace Kablunk
 			return;
 
 		m_scene_data.camera = camera;
+
+		Renderer2D::SetSceneRenderer(this);
+
 
 		if (m_needs_resize)
 		{
@@ -188,9 +205,13 @@ namespace Kablunk
 		const auto inverse_view_projection = glm::inverse(view_projection);
 		
 		// #TODO set camera uniform buffer
-
-		
-		Renderer2D::BeginScene(camera.camera, camera.view_mat);
+		CameraDataUB camera_data = { scene_camera.camera.GetProjection() * glm::inverse(scene_camera.view_mat) };
+		IntrusiveRef<SceneRenderer> instance = this;
+		RenderCommand::Submit([instance, camera_data]() mutable
+			{
+				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
+			});
 	}
 
 	void SceneRenderer::EndScene()
@@ -243,12 +264,10 @@ namespace Kablunk
 
 	void SceneRenderer::FlushDrawList()
 	{
-		
+		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
 			PreRender();
-
-			m_command_buffer->Begin();
 
 			GeometryPass();
 			TwoDimensionalPass();
@@ -257,7 +276,6 @@ namespace Kablunk
 		}
 		else
 		{
-			m_command_buffer->Begin();
 			ClearPass();
 		}
 
@@ -296,9 +314,8 @@ namespace Kablunk
 	{
 		IntrusiveRef<SceneRenderer> instance = this;
 
-		// Quad
 		m_command_buffer->BeginTimestampQuery();
-		Renderer2D::EndScene();
+		Renderer2D::Flush();
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.two_dimensional_pass_query);
 	}
 
@@ -308,11 +325,29 @@ namespace Kablunk
 		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
 		vulkan_renderer->BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass);
 
+		constexpr float exposure = 1.0f; // #TODO dynamic based off camera
+		constexpr bool bloom_enabled = false; // #TODO dynamic
 		auto framebuffer = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer;
-		float exposure = 1.0f; // #TODO dynamic based off camera
 		int texture_samples = framebuffer->GetSpecification().samples;
 
-		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, nullptr, nullptr, nullptr);
+		m_composite_material->Set("u_Uniforms.Exposure", exposure);
+		if (bloom_enabled)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+			m_composite_material->Set("u_Uniforms.BloomIntensity", 1.0f);
+			m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 1.0f);
+		}
+		else
+		{
+			m_composite_material->Set("u_Uniforms.BloomIntensity", 0.0f);
+			m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 0.0f);
+		}
+
+		m_composite_material->Set("u_Texture", framebuffer->GetImage());
+		m_composite_material->Set("u_BloomTexture", m_bloom_texture);
+		m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
+
+		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, m_uniform_buffer_set, m_composite_material);
 
 		vulkan_renderer->EndRenderPass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);

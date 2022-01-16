@@ -10,6 +10,8 @@
 #include "Kablunk/Renderer/RenderPass.h"
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/RenderCommandBuffer.h"
+#include "Kablunk/Renderer/Material.h"
+#include "Kablunk/Renderer/UniformBufferSet.h"
 
 namespace Kablunk
 {
@@ -70,13 +72,20 @@ namespace Kablunk
 		IntrusiveRef<Pipeline> m_geometry_pipeline;
 		IntrusiveRef<Pipeline> m_composite_pipeline;
 
+		IntrusiveRef<Material> m_composite_material;
+
 		struct GPUTimeQueryIndices
 		{
-			uint32_t two_dimensional_pass_query;
-			uint32_t circle_pass_query;
-			uint32_t geometry_pass_query;
-			uint32_t composite_pass_query;
+			uint32_t two_dimensional_pass_query = 0;
+			uint32_t circle_pass_query = 1;
+			uint32_t geometry_pass_query = 2;
+			uint32_t composite_pass_query = 3;
 		};
+
+		IntrusiveRef<Texture2D> m_bloom_texture;
+		IntrusiveRef<Texture2D> m_bloom_dirt_texture;
+
+		IntrusiveRef<UniformBufferSet> m_uniform_buffer_set;
 
 		GPUTimeQueryIndices m_gpu_time_query_indices;
 

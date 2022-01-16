@@ -92,6 +92,8 @@ namespace Kablunk
 
 		VulkanSwapChain m_swap_chain;
 
+		VkPipelineCache m_pipeline_cache;
+
 		// Validation layers
 		const std::vector<const char*> m_validation_layers;
 		VkDebugUtilsMessengerEXT m_debug_messenger = nullptr;
