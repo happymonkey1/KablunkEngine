@@ -30,6 +30,9 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "not implemented!");
 		}
 
+		virtual void BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false) override { KB_CORE_ASSERT(false, "not implemented"); };
+		virtual void EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer) override { KB_CORE_ASSERT(false, "not implemented"); }
+
 		virtual void SetWireframeMode(bool draw_wireframe) override { m_draw_wireframe = draw_wireframe; }
 
 		virtual void WaitAndRender() override {}

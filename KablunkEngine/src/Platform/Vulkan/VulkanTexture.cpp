@@ -197,6 +197,7 @@ namespace Kablunk
 			// Copy mip levels from staging buffer
 			vkCmdCopyBufferToImage(copy_cmd, staging_buffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_copy_region_info);
 
+
 			// #TODO mipmap levels, final image layout
 			Utils::InsertImageMemoryBarrier(copy_cmd, info.image,
 				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
@@ -259,6 +260,8 @@ namespace Kablunk
 
 		image->UpdateDescriptor();
 		
+		KB_CORE_ASSERT(image->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout still undefined!");
+
 		// Release local storage
 		m_image_data.Release();
 	}

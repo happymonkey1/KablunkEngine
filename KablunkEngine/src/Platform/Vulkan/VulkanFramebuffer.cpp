@@ -282,16 +282,16 @@ namespace Kablunk
 					}
 				}
 
-				VkAttachmentDescription& attachmentDescription = attachment_descriptions.emplace_back();
-				attachmentDescription.flags = 0;
-				attachmentDescription.format = Utils::VulkanImageFormat(attachment_spec.format);
-				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp = m_specification.clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
-				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
-				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout = m_specification.clear_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
+				attachment_description.flags = 0;
+				attachment_description.format = Utils::VulkanImageFormat(attachment_spec.format);
+				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+				attachment_description.loadOp = m_specification.clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
+				attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				attachment_description.initialLayout = m_specification.clear_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 				const auto& clear_color = m_specification.clear_color;
 				m_clear_values[attachment_index].color = { {clear_color.r, clear_color.g, clear_color.b, clear_color.a} };
@@ -417,7 +417,6 @@ namespace Kablunk
 
 		if (vkCreateFramebuffer(device, &frame_buffer_create_info, nullptr, &m_framebuffer) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create frame buffer!");
-
 	}
 
 }

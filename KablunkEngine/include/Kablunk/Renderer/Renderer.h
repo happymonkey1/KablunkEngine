@@ -24,6 +24,11 @@ namespace Kablunk
 {
 	constexpr uint32_t MAX_POINT_LIGHTS = 16;
 
+	struct CameraDataUB
+	{
+		glm::mat4 ViewProjection;
+	};
+
 	// #TODO move to scene
 	struct PointLight
 	{

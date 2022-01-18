@@ -110,6 +110,7 @@ namespace Kablunk
 		virtual const std::string& GetName() const override { return m_name; }
 
 		Buffer GetUniformStorageBuffer() { return m_uniform_storage_buffer; }
+		const Buffer& GetUniformStorageBuffer() const { return m_uniform_storage_buffer; }
 
 		void RT_UpdateForRendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors = std::vector<std::vector<VkWriteDescriptorSet>>());
 		void InvalidateDescriptorSets();

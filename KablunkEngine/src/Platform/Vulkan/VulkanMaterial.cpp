@@ -160,6 +160,7 @@ namespace Kablunk
 			{
 				IntrusiveRef<VulkanImage2D> image = descriptor->image.As<VulkanImage2D>();
 				KB_CORE_ASSERT(image->GetImageInfo().image_view, "image view is nullptr!");
+				KB_CORE_ASSERT(image->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout is undefined!");
 				if (descriptor->write_descriptor_set.pImageInfo && image->GetImageInfo().image_view != descriptor->write_descriptor_set.pImageInfo->imageView)
 				{
 					m_pending_descriptors.emplace_back(descriptor);
@@ -199,6 +200,8 @@ namespace Kablunk
 					pending_descriptor->write_descriptor_set.pImageInfo = &pending_descriptor->image_info;
 				}
 
+				KB_CORE_ASSERT(pending_descriptor->image_info.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout undefined!");
+
 				m_write_descriptors[frame_index].push_back(pending_descriptor->write_descriptor_set);
 			}
 
@@ -214,6 +217,7 @@ namespace Kablunk
 						array_image_infos.emplace_back(vulkan_texture->GetVulkanDescriptorInfo());
 					}
 				}
+
 
 				pending_descriptor->write_descriptor_set.pImageInfo = array_image_infos.data();
 				pending_descriptor->write_descriptor_set.descriptorCount = array_image_infos.size();

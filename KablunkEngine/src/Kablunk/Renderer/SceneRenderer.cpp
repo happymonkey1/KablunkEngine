@@ -10,10 +10,7 @@ namespace Kablunk
 {
 	static std::vector<std::thread> s_thread_pool;
 
-	struct CameraDataUB
-	{
-		glm::mat4 ViewProjection;
-	};
+	
 
 	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
@@ -36,61 +33,12 @@ namespace Kablunk
 			m_command_buffer = RenderCommandBuffer::Create(0, "SceneRenderer");
 
 
-		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
-		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
+		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA32F, 1, 1);
+		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA32F, 1, 1);
 
 		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
-
-		FramebufferSpecification framebuffer_spec;
-		framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RED32I };
-		framebuffer_spec.samples = 1;
-		framebuffer_spec.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		framebuffer_spec.debug_name = "Renderer2D";
-
-		RenderPassSpecification render_pass_spec{};
-		render_pass_spec.target_framebuffer = Framebuffer::Create(framebuffer_spec);
-		render_pass_spec.debug_name = "Renderer2D";
-
-		// Quad
-		{
-			PipelineSpecification pipeline_spec;
-			pipeline_spec.debug_name = "QuadPipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
-			pipeline_spec.backface_culling = false;
-			pipeline_spec.layout = {
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float4, "a_Color" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Float, "a_TexIndex" },
-				{ ShaderDataType::Float, "a_TilingFactor" },
-				{ ShaderDataType::Int, "a_EntityID" }
-			};
-			pipeline_spec.render_pass = RenderPass::Create(render_pass_spec);
-
-			m_quad_pipeline = Pipeline::Create(pipeline_spec);
-		}
-
-		// Circle
-		{
-			PipelineSpecification pipeline_spec;
-			pipeline_spec.debug_name = "CirclePipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
-			pipeline_spec.backface_culling = false;
-			pipeline_spec.layout = {
-				{ ShaderDataType::Float3, "a_WorldPosition" },
-				{ ShaderDataType::Float3, "a_LocalPosition" },
-				{ ShaderDataType::Float4, "a_Color"},
-				{ ShaderDataType::Float, "a_Radius" },
-				{ ShaderDataType::Float, "a_Thickness" },
-				{ ShaderDataType::Float, "a_Fade" },
-				{ ShaderDataType::Int, "a_EntityID" }
-			};
-			pipeline_spec.render_pass = RenderPass::Create(render_pass_spec);
-
-			m_circle_pipeline = Pipeline::Create(pipeline_spec);
-		}
 
 		// Geometry
 		{
@@ -134,9 +82,9 @@ namespace Kablunk
 
 			// No depth for swapchain
 			if (m_specification.swap_chain_target)
-				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F };
 			else
-				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 
 			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
@@ -159,6 +107,28 @@ namespace Kablunk
 			m_composite_pipeline = Pipeline::Create(pipelineSpecification);
 
 			m_composite_material = Material::Create(composite_shader);
+		}
+
+		// external compositing
+		{
+			FramebufferSpecification external_composite_framebuffer_spec;
+			external_composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+			external_composite_framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
+			external_composite_framebuffer_spec.clear_on_load  = false;
+			external_composite_framebuffer_spec.debug_name = "External Composite";
+
+			// Use the color buffer from the final compositing pass, but the depth buffer from
+			// the actual 3D geometry pass, in case we want to composite elements behind meshes
+			// in the scene
+			external_composite_framebuffer_spec.existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
+			external_composite_framebuffer_spec.existing_images[1] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
+
+			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
+
+			RenderPassSpecification renderPassSpec;
+			renderPassSpec.target_framebuffer = framebuffer;
+			renderPassSpec.debug_name = "External Composite";
+			m_external_composite_render_pass = RenderPass::Create(renderPassSpec);
 		}
 
 		IntrusiveRef<SceneRenderer> instance = this;
@@ -185,17 +155,18 @@ namespace Kablunk
 
 		m_scene_data.camera = camera;
 
-		Renderer2D::SetSceneRenderer(this);
-
-
 		if (m_needs_resize)
 		{
-			m_quad_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
-			m_circle_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
 			m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
 			m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
 
+			if (m_external_composite_render_pass)
+				m_external_composite_render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
+
 			m_needs_resize = false;
+
+			if (m_specification.swap_chain_target)
+				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
 		auto& scene_camera = m_scene_data.camera;
@@ -270,7 +241,6 @@ namespace Kablunk
 			PreRender();
 
 			GeometryPass();
-			TwoDimensionalPass();
 
 			CompositePass();
 		}
@@ -310,20 +280,10 @@ namespace Kablunk
 		// #TODO
 	}
 
-	void SceneRenderer::TwoDimensionalPass()
-	{
-		IntrusiveRef<SceneRenderer> instance = this;
-
-		m_command_buffer->BeginTimestampQuery();
-		Renderer2D::Flush();
-		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.two_dimensional_pass_query);
-	}
-
 	void SceneRenderer::CompositePass()
 	{
 		m_command_buffer->BeginTimestampQuery();
-		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
-		vulkan_renderer->BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass);
+		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass);
 
 		constexpr float exposure = 1.0f; // #TODO dynamic based off camera
 		constexpr bool bloom_enabled = false; // #TODO dynamic
@@ -349,7 +309,7 @@ namespace Kablunk
 
 		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, m_uniform_buffer_set, m_composite_material);
 
-		vulkan_renderer->EndRenderPass(m_command_buffer);
+		RenderCommand::EndRenderPass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);
 	}
 

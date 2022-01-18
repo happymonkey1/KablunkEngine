@@ -10,13 +10,14 @@ namespace Kablunk
 	static std::map<VkImage, WeakRef<VulkanImage2D>> s_image_refs;
 
 	VulkanImage2D::VulkanImage2D(ImageSpecification spec)
-		: m_specification{ spec }
+		: m_specification{ spec }, m_descriptor_image_info{}
 	{
 
 	}
 
 	VulkanImage2D::~VulkanImage2D()
 	{
+
 		if (m_info.image)
 		{
 			const VulkanImageInfo& info = m_info;
@@ -144,6 +145,8 @@ namespace Kablunk
 		if (vkCreateImageView(vk_device, &image_view_create_info, nullptr, &m_info.image_view) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 
+		KB_CORE_INFO("Created VkImage '{0}' of width '{1}', height '{2}'", (void*)m_info.image, m_specification.width, m_specification.height);
+
 		// #TODO: Renderer should contain some kind of sampler cache
 		VkSamplerCreateInfo sampler_create_info{};
 		sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -184,6 +187,7 @@ namespace Kablunk
 
 		UpdateDescriptor();
 
+		KB_CORE_ASSERT(m_descriptor_image_info.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout undefined!");
 	}
 
 	void VulkanImage2D::CreatePerLayerImageViews()

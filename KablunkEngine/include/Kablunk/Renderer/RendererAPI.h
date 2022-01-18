@@ -8,6 +8,7 @@
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/Material.h"
+#include "Kablunk/Renderer/RenderPass.h"
 
 #include <glm/glm.hpp>
 
@@ -39,6 +40,9 @@ namespace Kablunk
 
 		virtual void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material) = 0;
 		virtual void RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) = 0;
+
+		virtual void BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false) = 0;
+		virtual void EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer) = 0;
 
 		virtual void WaitAndRender() = 0;
 

@@ -70,6 +70,16 @@ namespace Kablunk
 			s_renderer_api->RenderGeometry(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material, vertex_buffer, index_buffer, transform, index_count);
 		}
 
+		static void BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false)
+		{
+			s_renderer_api->BeginRenderPass(render_command_buffer, render_pass, explicit_clear);
+		}
+
+		static void EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer)
+		{
+			s_renderer_api->EndRenderPass(render_command_buffer);
+		}
+
 		static void WaitAndRender()
 		{
 			s_renderer_api->WaitAndRender();

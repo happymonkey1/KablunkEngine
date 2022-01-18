@@ -23,7 +23,7 @@
 namespace Kablunk
 {
 
-	static std::unordered_map<uuid::uuid64, IntrusiveRef<Scene>> s_active_scenes;
+	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
 
 	Scene::Scene(const std::string& name)
 		: m_name{ name }
@@ -34,8 +34,7 @@ namespace Kablunk
 		auto m_scene_entity = m_registry.create();
 		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
 		
-		IntrusiveRef<Scene> instance = this;
-		s_active_scenes.insert({ m_scene_id, instance });
+		s_active_scenes.insert({ m_scene_id, this });
 	}
 
 	Scene::~Scene()
@@ -155,7 +154,7 @@ namespace Kablunk
 	WeakRef<Scene> Scene::GetScene(uuid::uuid64 scene_id)
 	{
 		if (s_active_scenes.find(scene_id) != s_active_scenes.end())
-			return WeakRef<Scene>(s_active_scenes.at(scene_id).get());
+			return WeakRef<Scene>(s_active_scenes.at(scene_id));
 		else
 		{
 			KB_CORE_ERROR("Could not find scene '{0}' in active scenes!", scene_id);
@@ -485,8 +484,14 @@ namespace Kablunk
 					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
 			}
 		}
+		scene_renderer->EndScene();
 
+		// Renderer2D
+		if (scene_renderer->GetFinalPassImage())
 		{
+			Renderer2D::BeginScene(*main_camera, main_camera_transform);
+			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
+
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
 				Renderer2D::DrawSprite({ entity, this });
@@ -498,9 +503,9 @@ namespace Kablunk
 				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 			
+			Renderer2D::EndScene();
 		}
 
-		scene_renderer->EndScene();
 	}
 
 	void Scene::OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera)
@@ -585,23 +590,28 @@ namespace Kablunk
 
 			//Renderer::EndScene();
 		}
+		scene_renderer->EndScene();
 
+		// Renderer2D
+		if (scene_renderer->GetFinalPassImage())
 		{
+			Renderer2D::BeginScene(camera, camera.GetViewMatrix());
+			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
+
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
 				Renderer2D::DrawSprite({ entity, this });
-			
 
-			
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
 			{
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
 				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
+
+			Renderer2D::EndScene();
 		}
 
-		scene_renderer->EndScene();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

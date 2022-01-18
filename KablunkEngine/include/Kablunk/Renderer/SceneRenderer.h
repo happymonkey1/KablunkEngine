@@ -35,7 +35,7 @@ namespace Kablunk
 	class SceneRenderer : public RefCounted
 	{
 	public:
-		SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec);
+		SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec = {});
 		~SceneRenderer();
 
 		void Init();
@@ -46,17 +46,19 @@ namespace Kablunk
 
 		void SetViewportSize(uint32_t width, uint32_t height);
 		IntrusiveRef<RenderPass> GetFinalRenderPass();
+		IntrusiveRef<RenderPass> GetCompositeRenderPass() { return m_composite_pipeline->GetSpecification().render_pass; }
+		IntrusiveRef<RenderPass> GetExternalCompositeRenderPass() { return m_external_composite_render_pass; }
 		IntrusiveRef<Image2D> GetFinalPassImage();
 
 		void OnImGuiRender();
 
 		static void WaitForThreads();
+
 	private:
 		void FlushDrawList();
 		void PreRender();
 		void ClearPass();
 		void GeometryPass();
-		void TwoDimensionalPass();
 		void CompositePass();
 
 		void ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear = false);
@@ -67,17 +69,15 @@ namespace Kablunk
 
 		IntrusiveRef<RenderCommandBuffer> m_command_buffer;
 
-		IntrusiveRef<Pipeline> m_quad_pipeline;
-		IntrusiveRef<Pipeline> m_circle_pipeline;
 		IntrusiveRef<Pipeline> m_geometry_pipeline;
 		IntrusiveRef<Pipeline> m_composite_pipeline;
 
 		IntrusiveRef<Material> m_composite_material;
 
+		IntrusiveRef<RenderPass> m_external_composite_render_pass;
+
 		struct GPUTimeQueryIndices
 		{
-			uint32_t two_dimensional_pass_query = 0;
-			uint32_t circle_pass_query = 1;
 			uint32_t geometry_pass_query = 2;
 			uint32_t composite_pass_query = 3;
 		};

@@ -285,7 +285,7 @@ namespace Kablunk
 
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount = 1;// static_cast<uint32_t>(attachments.size());
+		render_pass_info.attachmentCount = 1; // static_cast<uint32_t>(attachments.size());
 		render_pass_info.pAttachments = attachments.data();
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pSubpasses = &subpass_description;

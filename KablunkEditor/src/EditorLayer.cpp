@@ -55,8 +55,6 @@ namespace Kablunk
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
-
-		
 	}
 
 	void EditorLayer::OnAttach()
@@ -65,21 +63,10 @@ namespace Kablunk
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		FramebufferSpecification frame_buffer_spec;
-		auto window_dimensions = Application::Get().GetWindowDimensions();
-		frame_buffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::RED32F, ImageFormat::Depth };
-		frame_buffer_spec.width  = window_dimensions.x;
-		frame_buffer_spec.height = window_dimensions.y;
-		frame_buffer_spec.swap_chain_target = true;
-
-
 		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
-		SceneRendererSpecification spec{};
-		spec.swap_chain_target = true;
-
-		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene, spec);
+		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 
 
@@ -113,17 +100,6 @@ namespace Kablunk
 		}
 		else
 			m_imgui_profiler_stats.Counter += ts.GetMiliseconds() / 1000.0f;
-
-		// #TODO move to a scene renderer
-		/*auto spec = m_viewport_renderer->;
-		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
-			&& (spec.width != m_viewport_size.x || spec.height != m_viewport_size.y))
-		{
-			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-
-			m_editor_camera.OnViewportResize(m_viewport_size.x, m_viewport_size.y);
-			m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-		}*/
 		
 		// ==========
 		//   Render
@@ -138,7 +114,7 @@ namespace Kablunk
 
 			m_editor_camera.OnUpdate(ts);
 
-			m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
+			//m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
 
 			ViewportClickSelectEntity();
 			break;
@@ -251,6 +227,9 @@ namespace Kablunk
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		if (ImGui::Begin("Viewport"))
 		{
+			// Fixes drag drop not working. see https://github.com/ocornut/imgui/issues/1771. Appears to be a bug with the docking branch
+			ImGui::BeginChild("##drag_drop_target");
+
 			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
 			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
 			auto viewport_offset = ImGui::GetWindowPos();
@@ -261,26 +240,29 @@ namespace Kablunk
 			m_viewport_hovered = ImGui::IsWindowHovered();
 			Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused || m_viewport_hovered);
 
-			auto panel_size = ImGui::GetContentRegionAvail();
+			auto panel_size = ImGui::GetWindowSize();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
 			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+
+			IntrusiveRef<Image2D> image = m_viewport_renderer->GetFinalPassImage();
+			
 
 			UI::Image(
 				m_viewport_renderer->GetFinalPassImage(),
 				{ m_viewport_size.x, m_viewport_size.y }
 			);
-			
 
+			ImGui::EndChild(); // see comment above
 			if (ImGui::BeginDragDropTarget())
 			{
-				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM", ImGuiDragDropFlags_SourceAllowNullID))
 				{
 					const auto path_wchar_str = (const wchar_t*)payload->Data;
 					auto path = std::filesystem::path{ Project::GetAssetDirectory() / path_wchar_str };
-					if (path.extension() == FILE_EXTENSIONS::KABLUNK_SCENE)
+					if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
 						OpenScene(path);
-					else if (path.extension() == FILE_EXTENSIONS::FBX)
+					else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
 					{
 						auto entity = m_active_scene->CreateEntity("Untitled Model");
 						auto& mesh_comp = entity.AddComponent<MeshComponent>();
@@ -1128,25 +1110,30 @@ namespace Kablunk
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (m_scene_state == SceneState::Play)
-		{
-			auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-			if (cam_entity.Valid())
-				Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
-			else
-			{
-				KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
-				return;
-			}
-		}
-		else
-		{
-			Renderer2D::BeginScene(m_editor_camera);
-		}
+		if (!m_viewport_renderer->GetFinalPassImage())
+			return;
 
 		if (m_show_physics_colliders)
 		{
 			auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, CircleCollider2DComponent>();
+			if (view.size_hint() == 0)
+				return;
+			
+			if (m_scene_state == SceneState::Play)
+			{
+				auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+				if (cam_entity.Valid())
+					Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
+				else
+				{
+					KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+					return;
+				}
+			}
+			else
+				Renderer2D::BeginScene(m_editor_camera);
+		
+			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
 			for (auto e : view)
 			{
 				auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);
@@ -1156,10 +1143,9 @@ namespace Kablunk
 				auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
 				Renderer2D::DrawCircle(transform, glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f }, cc2D_comp.Radius, 0.025f);
 			}
+
+			Renderer2D::EndScene();
 		}
-
-
-		Renderer2D::EndScene();
 	}
 
 	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)

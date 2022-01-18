@@ -122,8 +122,14 @@ namespace Kablunk
 					UI::ImageButton(icon, { thumbnail_size, thumbnail_size });
 					ImGui::PopStyleColor();
 
-					if (ImGui::BeginDragDropSource())
+					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 					{
+
+						// drag drop selection icon + name 
+						UI::Image(icon, { 20, 20 });
+						ImGui::SameLine();
+						ImGui::TextUnformatted(relative_path.stem().string().c_str());
+						
 						const auto item_path = relative_path.c_str();
 						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (wcslen(item_path) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::EndDragDropSource();
@@ -136,7 +142,7 @@ namespace Kablunk
 							m_current_directory /= path.filename();
 							Refresh();
 						}
-						else if (directory_entry.path().extension() == FILE_EXTENSIONS::FBX)
+						else if (directory_entry.path().extension() == FileExtensions::FBX)
 						{
 						
 							// #TODO open model in asset viewer

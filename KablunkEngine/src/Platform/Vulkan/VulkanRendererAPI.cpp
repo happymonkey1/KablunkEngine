@@ -264,7 +264,7 @@ namespace Kablunk
 					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
 				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
-				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+				const Buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer)
 					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
 
