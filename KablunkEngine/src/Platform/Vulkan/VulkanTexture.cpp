@@ -15,6 +15,11 @@ namespace Kablunk
 	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data)
 		: m_width{ width }, m_height{ height }, m_format{ format }
 	{
+		size_t size = Utils::GetImageMemorySize(format, width, height);
+
+		if (data)
+			m_image_data = Buffer::Copy(data, size);
+
 		ImageSpecification spec;
 		spec.format = m_format;
 		spec.width = m_width;
@@ -123,7 +128,7 @@ namespace Kablunk
 
 		if (m_image_data)
 		{
-			VkDeviceSize size = static_cast<uint64_t>(m_size);
+			VkDeviceSize size = m_image_data.size();
 
 			VkMemoryAllocateInfo mem_alloc_info{};
 			mem_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -144,7 +149,7 @@ namespace Kablunk
 			uint8_t* dest_ptr = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
 			KB_CORE_ASSERT(m_image_data.get(), "image data is nullptr!");
 			memcpy(dest_ptr, m_image_data.get(), size);
-			KB_CORE_INFO("VulkanImage2D mapping gpu memory of size '{0}'", size);
+			KB_CORE_INFO("VulkanTexture2D mapping gpu memory of size '{0}'", size);
 			allocator.UnmapMemory(staging_buffer_allocation);
 
 			VkCommandBuffer copy_cmd = device->GetCommandBuffer(true);
@@ -197,7 +202,6 @@ namespace Kablunk
 			// Copy mip levels from staging buffer
 			vkCmdCopyBufferToImage(copy_cmd, staging_buffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_copy_region_info);
 
-
 			// #TODO mipmap levels, final image layout
 			Utils::InsertImageMemoryBarrier(copy_cmd, info.image,
 				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
@@ -241,7 +245,7 @@ namespace Kablunk
 		if (vkCreateSampler(vk_device, &sampler, nullptr, &info.sampler) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create sampler!");
 		
-
+		
 		VkImageViewCreateInfo view_create_info{};
 		view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -273,21 +277,19 @@ namespace Kablunk
 		if (stbi_is_hdr(filepath.c_str()))
 		{
 			data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
+			size_t size = width * height * 4 * sizeof(float);
+			m_image_data.Allocate(size);
 
-			m_size = width * height * 4 * sizeof(float);
-			m_image_data.Allocate(m_size);
-
-			m_image_data.Write(data, m_size, 0);
+			m_image_data.Write(data, size, 0);
 			m_format = ImageFormat::RGBA32F;
 		}
 		else
 		{
 			data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
+			size_t size  = width * height * 4;
+			m_image_data.Allocate(size);
 
-			m_size = width * height * 4;
-			m_image_data.Allocate(m_size);
-
-			m_image_data.Write(data, m_size, 0);
+			m_image_data.Write(data, size, 0);
 			m_format = ImageFormat::RGBA;
 		}
 
@@ -296,8 +298,6 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Image loaded but data is null!");
 			return false;
 		}
-
-		stbi_image_free(data);
 
 		m_width = width;
 		m_height = height;

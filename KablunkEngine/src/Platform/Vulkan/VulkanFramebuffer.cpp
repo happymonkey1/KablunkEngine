@@ -17,7 +17,7 @@ namespace Kablunk
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec)
 		: m_specification{ spec }
 	{
-		if (m_specification.width == 0)
+		if (m_specification.width == 0 || m_specification.height == 0)
 		{
 			m_width = Application::Get().GetWindow().GetWidth();
 			m_height = Application::Get().GetWindow().GetHeight();
@@ -29,7 +29,7 @@ namespace Kablunk
 		}
 
 		// Create images
-		uint32_t attachmentIndex = 0;
+		uint32_t attachment_index = 0;
 		if (!m_specification.existing_framebuffer)
 		{
 			for (auto& attachment_specification : m_specification.Attachments.Attachments)
@@ -39,7 +39,7 @@ namespace Kablunk
 					KB_CORE_ASSERT(!Utils::IsDepthFormat(attachment_specification.format), "Only supported for color attachments");
 					m_attachment_images.emplace_back(m_specification.existing_image);
 				}
-				else if (m_specification.existing_images.find(attachmentIndex) != m_specification.existing_images.end())
+				else if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 				{
 					if (!Utils::IsDepthFormat(attachment_specification.format))
 						m_attachment_images.emplace_back(); // This will be set later
@@ -51,7 +51,7 @@ namespace Kablunk
 					spec.usage = ImageUsage::Attachment;
 					spec.width = m_width * m_specification.scale;
 					spec.height = m_height * m_specification.scale;
-					spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachmentIndex);
+					spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_depth_attachment_image = Image2D::Create(spec);
 				}
 				else
@@ -62,11 +62,11 @@ namespace Kablunk
 						spec.usage = ImageUsage::Attachment;
 						spec.width = m_width * m_specification.scale;
 						spec.height = m_height * m_specification.scale;
-						spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachmentIndex);
+						spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 						m_attachment_images.emplace_back(Image2D::Create(spec));
 					}
 				}
-				attachmentIndex++;
+				attachment_index++;
 			}
 		}
 
@@ -94,7 +94,6 @@ namespace Kablunk
 
 		for (auto& callback : m_resize_callbacks)
 			callback(this);
-
 	}
 
 	void VulkanFramebuffer::AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func)
@@ -132,15 +131,15 @@ namespace Kablunk
 
 	void VulkanFramebuffer::RT_Invalidate()
 	{
-		auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 		if (m_framebuffer)
 		{
-			VkFramebuffer framebuffer = m_framebuffer;
-			RenderCommand::SubmitResourceFree([framebuffer]()
+			VkFramebuffer vk_framebuffer = m_framebuffer;
+			RenderCommand::SubmitResourceFree([vk_framebuffer]()
 				{
 					const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-					vkDestroyFramebuffer(device, framebuffer, nullptr);
+					vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
 				});
 
 			// Don't free the images if we don't own them
@@ -155,6 +154,7 @@ namespace Kablunk
 					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
 					if (!image->GetSpecification().deinterleaved || attachment_index == 0 && !image->GetLayerImageView(0))
 						image->Release();
+
 					attachment_index++;
 				}
 
@@ -177,7 +177,7 @@ namespace Kablunk
 
 		m_clear_values.resize(m_specification.Attachments.Attachments.size());
 
-		bool createImages = m_attachment_images.empty();
+		bool create_images = m_attachment_images.empty();
 
 		if (m_specification.existing_framebuffer)
 			m_attachment_images.clear();
@@ -252,7 +252,7 @@ namespace Kablunk
 				}
 				else
 				{
-					if (createImages)
+					if (create_images)
 					{
 						ImageSpecification spec;
 						spec.format = attachment_spec.format;
@@ -279,6 +279,9 @@ namespace Kablunk
 						{
 							color_attachment->RT_CreatePerSpecificLayerImageViews(m_specification.existing_image_layers);
 						}
+
+						if (image.As<VulkanImage2D>()->GetDescriptor().imageLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+							color_attachment->RT_Invalidate();
 					}
 				}
 
@@ -303,7 +306,7 @@ namespace Kablunk
 
 		VkSubpassDescription subpass_description = {};
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_description.colorAttachmentCount = uint32_t(color_attachment_references.size());
+		subpass_description.colorAttachmentCount = static_cast<uint32_t>(color_attachment_references.size());
 		subpass_description.pColorAttachments = color_attachment_references.data();
 		if (m_depth_attachment_image)
 			subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
@@ -324,6 +327,7 @@ namespace Kablunk
 				depedency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 				depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 			}
+
 			{
 				VkSubpassDependency& depedency = dependencies.emplace_back();
 				depedency.srcSubpass = 0;

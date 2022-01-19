@@ -75,7 +75,7 @@ namespace Kablunk
 
 	struct RendererOptions
 	{
-		uint32_t frames_in_flight = 2;
+		uint32_t frames_in_flight = 3;
 	};
 	
 
@@ -113,7 +113,7 @@ namespace Kablunk
 
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:
-		inline static RendererOptions s_options = { 2 };
+		inline static RendererOptions s_options = { };
 		static Scope<SceneData> m_SceneData;
 		
 		static IntrusiveRef<ShaderLibrary> s_shader_library;

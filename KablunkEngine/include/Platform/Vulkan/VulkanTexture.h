@@ -46,7 +46,6 @@ namespace Kablunk
 		std::string m_filepath;
 		uint32_t m_width;
 		uint32_t m_height;
-		uint32_t m_size;
 
 		IntrusiveRef<Image2D> m_image;
 

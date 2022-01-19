@@ -218,7 +218,6 @@ namespace Kablunk
 					}
 				}
 
-
 				pending_descriptor->write_descriptor_set.pImageInfo = array_image_infos.data();
 				pending_descriptor->write_descriptor_set.descriptorCount = array_image_infos.size();
 				m_write_descriptors[frame_index].push_back(pending_descriptor->write_descriptor_set);

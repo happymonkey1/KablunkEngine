@@ -78,8 +78,8 @@ namespace Kablunk
 
 		struct GPUTimeQueryIndices
 		{
-			uint32_t geometry_pass_query = 2;
-			uint32_t composite_pass_query = 3;
+			uint32_t geometry_pass_query;
+			uint32_t composite_pass_query;
 		};
 
 		IntrusiveRef<Texture2D> m_bloom_texture;

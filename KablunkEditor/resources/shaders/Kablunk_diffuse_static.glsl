@@ -108,7 +108,7 @@ layout(location = 15) in vec3 v_Color;
 layout(location = 16) flat in int v_EntityID;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID;
+//layout(location = 1) out int o_EntityID;
 
 vec3 GetPointLightAttenuationValues(in float distance)
 {
@@ -212,5 +212,5 @@ void main()
     vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
     o_Color = vec4(v_Color, 1.0) * (pLightsColor);
-    o_EntityID = v_EntityID;
+    //o_EntityID = v_EntityID;
 }

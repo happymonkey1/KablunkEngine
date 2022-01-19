@@ -27,6 +27,7 @@ namespace Kablunk::UI
 	{
 		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->GetImageInfo();
 		auto image_info = image.As<VulkanImage2D>()->GetImageInfo();
+
 		if (!image_info.image_view)
 			return;
 

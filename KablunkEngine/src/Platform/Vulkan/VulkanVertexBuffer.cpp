@@ -117,7 +117,6 @@ namespace Kablunk
 		VulkanAllocator allocator{ "VertexBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_memory_allocation);
 		memcpy(data_ptr, (uint8_t*)data + offset, size);
-		KB_CORE_INFO("VulkanVertexBuffer mapping buffer memory of size '{0}'", size);
 		allocator.UnmapMemory(m_memory_allocation);
 	}
 

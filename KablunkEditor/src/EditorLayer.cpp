@@ -114,9 +114,9 @@ namespace Kablunk
 
 			m_editor_camera.OnUpdate(ts);
 
-			//m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
+			m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
 
-			ViewportClickSelectEntity();
+			//ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
@@ -240,14 +240,11 @@ namespace Kablunk
 			m_viewport_hovered = ImGui::IsWindowHovered();
 			Application::Get().GetImGuiLayer()->SetAllowEventPassing(m_viewport_focused || m_viewport_hovered);
 
-			auto panel_size = ImGui::GetWindowSize();
+			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
 			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-
-			IntrusiveRef<Image2D> image = m_viewport_renderer->GetFinalPassImage();
 			
-
 			UI::Image(
 				m_viewport_renderer->GetFinalPassImage(),
 				{ m_viewport_size.x, m_viewport_size.y }
@@ -281,11 +278,12 @@ namespace Kablunk
 			if (selected_entity && m_gizmo_type != -1)
 			{
 				ImGuizmo::SetOrthographic(false);
-				ImGuizmo::SetDrawlist();
+				ImDrawList* draw_list = ImGui::GetWindowDrawList();
+				ImGuizmo::SetDrawlist(draw_list);
 
-				float window_width = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
-				float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
-				ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
+				float window_width = ImGui::GetWindowWidth();
+				float window_height = ImGui::GetWindowHeight();
+				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
 
 				// Runtime camera
 				/*
@@ -317,7 +315,6 @@ namespace Kablunk
 					nullptr,
 					snap ? snap_values : nullptr
 				);
-
 
 				if (ImGuizmo::IsUsing())
 				{
@@ -354,6 +351,8 @@ namespace Kablunk
 
 		UI_Toolbar();
 		UI_KablunkInstallPopup();
+
+		m_viewport_renderer->OnImGuiRender();
 
 		if (m_show_create_new_project_popup)
 		{
@@ -1119,21 +1118,28 @@ namespace Kablunk
 			if (view.size_hint() == 0)
 				return;
 			
-			if (m_scene_state == SceneState::Play)
+			switch (m_scene_state)
 			{
-				auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-				if (cam_entity.Valid())
-					Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
-				else
+				case SceneState::Play:
 				{
-					KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
-					return;
+					auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+					if (cam_entity.Valid())
+						Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
+					else
+					{
+						KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+						return;
+					}
+					break;
+				}
+				case SceneState::Edit:
+				{
+					Renderer2D::BeginScene(m_editor_camera);
+					break;
 				}
 			}
-			else
-				Renderer2D::BeginScene(m_editor_camera);
-		
 			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
+		
 			for (auto e : view)
 			{
 				auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);

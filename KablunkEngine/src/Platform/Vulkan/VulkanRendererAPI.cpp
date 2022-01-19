@@ -60,8 +60,8 @@ namespace Kablunk
 
 		s_renderer_data = new VulkanRendererData{};
 
-		s_renderer_data->descriptor_pools.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-		s_renderer_data->descriptor_pool_allocation_count.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
+		s_renderer_data->descriptor_pools.resize(Renderer::GetConfig().frames_in_flight);
+		s_renderer_data->descriptor_pool_allocation_count.resize(Renderer::GetConfig().frames_in_flight);
 
 		// Create descriptor pools
 		RenderCommand::Submit([]() mutable
@@ -89,7 +89,7 @@ namespace Kablunk
 				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 				pool_info.pPoolSizes = pool_sizes;
 				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-				uint32_t frames_in_flight = VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
+				uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 				for (uint32_t i = 0; i < frames_in_flight; i++)
 				{
 					if (vkCreateDescriptorPool(vk_device, &pool_info, nullptr, &s_renderer_data->descriptor_pools[i]) != VK_SUCCESS)
@@ -206,8 +206,8 @@ namespace Kablunk
 				vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
 				auto vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
-				VkBuffer ibBuffer = vulkan_index_buffer->GetVkBuffer();
-				vkCmdBindIndexBuffer(command_buffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+				VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
 				VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
 				vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -320,7 +320,6 @@ namespace Kablunk
 		}
 
 		return s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
-
 	}
 
 	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateStorageBufferWriteDescriptors(IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<VulkanMaterial> material)
@@ -336,18 +335,18 @@ namespace Kablunk
 			}
 		}
 
-		uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 		IntrusiveRef<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
-			const auto& shaderDescriptorSets = shader->GetShaderDescriptorSets();
-			if (!shaderDescriptorSets.empty())
+			const auto& shader_descriptor_set = shader->GetShaderDescriptorSets();
+			if (!shader_descriptor_set.empty())
 			{
-				for (auto&& [binding, shader_storage_buffer] : shaderDescriptorSets[0].storage_buffers)
+				for (auto&& [binding, shader_storage_buffer] : shader_descriptor_set[0].storage_buffers)
 				{
 					auto& write_descriptor = s_renderer_data->storage_buffer_write_descriptor_cache[storage_buffer_set.get()][shader_hash];
-					write_descriptor.resize(framesInFlight);
-					for (uint32_t frame = 0; frame < framesInFlight; ++frame)
+					write_descriptor.resize(frames_in_flight);
+					for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
 					{
 						IntrusiveRef<VulkanStorageBuffer> storage_buffer = storage_buffer_set->Get(binding, 0, frame); // set = 0 for now
 
@@ -373,21 +372,19 @@ namespace Kablunk
 			auto write_description = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
 			if (storage_buffer_set)
 			{
-				const auto& storageBufferWriteDescriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
+				const auto& storage_buffer_write_descriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
 
 				const uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
 				for (uint32_t frame = 0; frame < framesInFlight; frame++)
 				{
-					write_description[frame].reserve(write_description[frame].size() + storageBufferWriteDescriptors[frame].size());
-					write_description[frame].insert(write_description[frame].end(), storageBufferWriteDescriptors[frame].begin(), storageBufferWriteDescriptors[frame].end());
+					write_description[frame].reserve(write_description[frame].size() + storage_buffer_write_descriptors[frame].size());
+					write_description[frame].insert(write_description[frame].end(), storage_buffer_write_descriptors[frame].begin(), storage_buffer_write_descriptors[frame].end());
 				}
 			}
 			vulkan_material->RT_UpdateForRendering(write_description);
 		}
 		else
-		{
 			vulkan_material->RT_UpdateForRendering();
-		}
 	}
 
 	VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info)

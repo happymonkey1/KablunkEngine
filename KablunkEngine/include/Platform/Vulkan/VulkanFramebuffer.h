@@ -7,6 +7,8 @@
 
 #include "Kablunk/Renderer/Texture.h"
 
+#include "Platform/Vulkan/VulkanImage.h"
+
 #include <vulkan/vulkan.h>
 
 namespace Kablunk
@@ -33,7 +35,9 @@ namespace Kablunk
 		virtual IntrusiveRef<Image2D> GetImage(uint32_t attachment_index = 0) const override
 		{ 
 			KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!"); 
-			return m_attachment_images[attachment_index]; 
+			//KB_CORE_ASSERT(m_attachment_images[attachment_index].As<VulkanImage2D>()->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout undefined!");
+
+			return m_attachment_images[attachment_index];
 		}
 		virtual IntrusiveRef<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
 

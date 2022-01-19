@@ -110,12 +110,12 @@ namespace Kablunk
 		if (m_specification.format == ImageFormat::DEPTH24STENCIL8)
 			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-		VkFormat vulkanFormat = Utils::VulkanImageFormat(m_specification.format);
+		VkFormat vulkan_format = Utils::VulkanImageFormat(m_specification.format);
 
 		VkImageCreateInfo image_create_info = {};
 		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		image_create_info.format = vulkanFormat;
+		image_create_info.format = vulkan_format;
 		image_create_info.extent.width = m_specification.width;
 		image_create_info.extent.height = m_specification.height;
 		image_create_info.extent.depth = 1;
@@ -132,7 +132,7 @@ namespace Kablunk
 		VkImageViewCreateInfo image_view_create_info = {};
 		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		image_view_create_info.viewType = m_specification.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-		image_view_create_info.format = vulkanFormat;
+		image_view_create_info.format = vulkan_format;
 		image_view_create_info.flags = 0;
 		image_view_create_info.subresourceRange = {};
 		image_view_create_info.subresourceRange.aspectMask = aspect_mask;
@@ -168,21 +168,21 @@ namespace Kablunk
 		if (m_specification.usage == ImageUsage::Storage)
 		{
 			// Transition image to GENERAL layout
-			VkCommandBuffer commandBuffer = VulkanContext::Get()->GetDevice()->GetCommandBuffer(true);
+			VkCommandBuffer command_buffer = VulkanContext::Get()->GetDevice()->GetCommandBuffer(true);
 
-			VkImageSubresourceRange subresourceRange = {};
-			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			subresourceRange.baseMipLevel = 0;
-			subresourceRange.levelCount = m_specification.mips;
-			subresourceRange.layerCount = m_specification.layers;
+			VkImageSubresourceRange subresource_range = {};
+			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			subresource_range.baseMipLevel = 0;
+			subresource_range.levelCount = m_specification.mips;
+			subresource_range.layerCount = m_specification.layers;
 
-			Utils::InsertImageMemoryBarrier(commandBuffer, m_info.image,
+			Utils::InsertImageMemoryBarrier(command_buffer, m_info.image,
 				0, 0,
 				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
 				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-				subresourceRange);
+				subresource_range);
 
-			VulkanContext::Get()->GetDevice()->FlushCommandBuffer(commandBuffer);
+			VulkanContext::Get()->GetDevice()->FlushCommandBuffer(command_buffer);
 		}
 
 		UpdateDescriptor();

@@ -625,7 +625,7 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<CircleRendererComponent>("Sprite Renderer", entity, [this](CircleRendererComponent& component)
+		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& component)
 			{
 
 				UI::BeginProperties();

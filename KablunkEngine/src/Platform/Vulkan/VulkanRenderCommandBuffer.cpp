@@ -9,10 +9,10 @@ namespace Kablunk
 {
 
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count /*= 0*/, const std::string& debug_name /*= ""*/)
-		: m_debug_name{ debug_name }
+		: m_debug_name{ debug_name }, m_owned_by_swapchain{ false }
 	{
 		auto device = VulkanContext::Get()->GetDevice();
-		uint32_t frames_in_flight = VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
+		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 
 		VkCommandPoolCreateInfo cmd_pool_create_info{};
 		cmd_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -68,10 +68,10 @@ namespace Kablunk
 	}
 
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(const std::string& debug_name, bool swap_chain)
-		: m_debug_name{ debug_name }, m_owned_by_swapchain{ swap_chain }
+		: m_debug_name{ debug_name }, m_owned_by_swapchain{ true }
 	{
 		auto device = VulkanContext::Get()->GetDevice();
-		uint32_t frames_in_flight = VulkanSwapChain::MAX_FRAMES_IN_FLIGHT;
+		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 
 		m_command_buffers.resize(frames_in_flight);
 		VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
@@ -214,11 +214,11 @@ namespace Kablunk
 		RenderCommand::Submit([instance, query_index]()
 			{
 				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = instance->m_command_buffers[frame_index];
-				vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], query_index);
+				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], query_index);
 			});
-		return query_index;
 
+		return query_index;
 	}
 
 	void VulkanRenderCommandBuffer::EndTimestampQuery(uint64_t query_index)
@@ -230,7 +230,6 @@ namespace Kablunk
 				VkCommandBuffer commandBuffer = instance->m_command_buffers[frame_index];
 				vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], query_index + 1);
 			});
-
 	}
 
 }

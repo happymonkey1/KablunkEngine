@@ -9,7 +9,8 @@ namespace Kablunk
 	class RenderCommandQueue
 	{
 	public:
-		using RenderCommandFn = void(*)(void*);
+		//using RenderCommandFn = void(*)(void*);
+		typedef void(*RenderCommandFn)(void*);
 
 		RenderCommandQueue();
 		~RenderCommandQueue();

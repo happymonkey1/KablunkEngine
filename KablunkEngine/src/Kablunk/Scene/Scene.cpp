@@ -611,7 +611,6 @@ namespace Kablunk
 
 			Renderer2D::EndScene();
 		}
-
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -645,7 +644,6 @@ namespace Kablunk
 
 	Entity Scene::GetEntityFromUUID(uuid::uuid64 id) const
 	{
-
 		auto it = m_entity_map.find(id);
 		return it != m_entity_map.end() ? it->second : Entity{};
 	}

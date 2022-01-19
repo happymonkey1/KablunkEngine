@@ -2,6 +2,8 @@
 
 #include "Platform/Vulkan/VulkanSwapChain.h"
 
+#include "Kablunk/Renderer/Renderer.h"
+
 #include <GLFW/glfw3.h>
 
 namespace Kablunk
@@ -228,7 +230,7 @@ namespace Kablunk
 		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		
-		m_wait_fences.resize(MAX_FRAMES_IN_FLIGHT);
+		m_wait_fences.resize(Renderer::GetConfig().frames_in_flight);
 		for (auto& fence : m_wait_fences)
 			if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
@@ -318,6 +320,10 @@ namespace Kablunk
 
 	void VulkanSwapChain::BeginFrame()
 	{
+		// execute resource release queue
+		auto& queue = RenderCommand::GetRenderResourceReleaseQueue(m_current_buffer_index);
+		queue.Execute();
+
 		if (AcquireNextImage(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
 			KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
 	}
@@ -356,7 +362,7 @@ namespace Kablunk
 			}
 		}
 
-		m_current_buffer_index = (m_current_image_index + 1) % MAX_FRAMES_IN_FLIGHT;
+		m_current_buffer_index = (m_current_image_index + 1) % Renderer::GetConfig().frames_in_flight;
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
 	}

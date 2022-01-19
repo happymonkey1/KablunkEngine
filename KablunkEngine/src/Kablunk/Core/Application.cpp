@@ -5,6 +5,7 @@
 #include "Kablunk/Events/Event.h"
 
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
@@ -56,6 +57,14 @@ namespace Kablunk
 		CSharpScriptEngine::Shutdown();
 
 		RenderCommand::WaitAndRender();
+
+		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
+		{
+			auto& queue = RenderCommand::GetRenderResourceReleaseQueue(i);
+			queue.Execute();
+		}
+
+		Renderer2D::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -88,8 +97,8 @@ namespace Kablunk
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 
 
-		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) {
-
+		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) 
+		{
 			(*it)->OnEvent(e);
 			if (e.GetStatus())
 				break;

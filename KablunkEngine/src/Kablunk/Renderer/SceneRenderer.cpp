@@ -6,6 +6,8 @@
 
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
+#include <imgui.h>
+
 namespace Kablunk
 {
 	static std::vector<std::thread> s_thread_pool;
@@ -43,9 +45,9 @@ namespace Kablunk
 		// Geometry
 		{
 			FramebufferSpecification geometry_framebuffer_spec;
-			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::RED32I };
+			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 			geometry_framebuffer_spec.samples = 1;
-			geometry_framebuffer_spec.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			geometry_framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
 			geometry_framebuffer_spec.debug_name = "Geometry";
 
 			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
@@ -110,6 +112,7 @@ namespace Kablunk
 		}
 
 		// external compositing
+		if (!m_specification.swap_chain_target)
 		{
 			FramebufferSpecification external_composite_framebuffer_spec;
 			external_composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
@@ -121,14 +124,14 @@ namespace Kablunk
 			// the actual 3D geometry pass, in case we want to composite elements behind meshes
 			// in the scene
 			external_composite_framebuffer_spec.existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
-			external_composite_framebuffer_spec.existing_images[1] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
+			external_composite_framebuffer_spec.existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
 
 			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
-
-			RenderPassSpecification renderPassSpec;
-			renderPassSpec.target_framebuffer = framebuffer;
-			renderPassSpec.debug_name = "External Composite";
-			m_external_composite_render_pass = RenderPass::Create(renderPassSpec);
+			
+			RenderPassSpecification render_pass_spec;
+			render_pass_spec.target_framebuffer = framebuffer;
+			render_pass_spec.debug_name = "External Composite";
+			m_external_composite_render_pass = RenderPass::Create(render_pass_spec);
 		}
 
 		IntrusiveRef<SceneRenderer> instance = this;
@@ -176,7 +179,7 @@ namespace Kablunk
 		const auto inverse_view_projection = glm::inverse(view_projection);
 		
 		// #TODO set camera uniform buffer
-		CameraDataUB camera_data = { scene_camera.camera.GetProjection() * glm::inverse(scene_camera.view_mat) };
+		CameraDataUB camera_data = { scene_camera.camera.GetProjection() * scene_camera.view_mat };
 		IntrusiveRef<SceneRenderer> instance = this;
 		RenderCommand::Submit([instance, camera_data]() mutable
 			{
@@ -217,12 +220,20 @@ namespace Kablunk
 		if (!m_resources_created)
 			return nullptr;
 
-		return m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
+		auto image = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
+		return image;
 	}
 
 	void SceneRenderer::OnImGuiRender()
 	{
-		// #TODO
+		ImGui::Begin("Render Statistics");
+
+		uint32_t current_frame_index = Renderer::GetCurrentFrameIndex();
+		ImGui::Text("GPU time: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index));
+		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
+		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
+
+		ImGui::End();
 	}
 
 	void SceneRenderer::WaitForThreads()
@@ -262,27 +273,30 @@ namespace Kablunk
 
 	void SceneRenderer::ClearPass()
 	{
-		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
-		vulkan_renderer->BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
-		vulkan_renderer->EndRenderPass(m_command_buffer);
+		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
+		RenderCommand::EndRenderPass(m_command_buffer);
 	}
 
 	void SceneRenderer::ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
-		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
-
-		vulkan_renderer->BeginRenderPass(m_command_buffer, render_pass, explicit_clear);
-		vulkan_renderer->EndRenderPass(m_command_buffer);
+		RenderCommand::BeginRenderPass(m_command_buffer, render_pass, explicit_clear);
+		RenderCommand::EndRenderPass(m_command_buffer);
 	}
 
 	void SceneRenderer::GeometryPass()
 	{
+		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
+		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
+
 		// #TODO
+
+		RenderCommand::EndRenderPass(m_command_buffer);
+		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.geometry_pass_query);
 	}
 
 	void SceneRenderer::CompositePass()
 	{
-		m_command_buffer->BeginTimestampQuery();
+		m_gpu_time_query_indices.composite_pass_query = m_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass);
 
 		constexpr float exposure = 1.0f; // #TODO dynamic based off camera

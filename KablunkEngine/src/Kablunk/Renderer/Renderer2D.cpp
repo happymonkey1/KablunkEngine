@@ -27,7 +27,6 @@ namespace Kablunk
 		IntrusiveRef <IndexBuffer> quad_index_buffer;
 
 		IntrusiveRef <VertexBuffer> circle_vertex_buffer;
-		IntrusiveRef <IndexBuffer> circle_index_buffer;
 
 		IntrusiveRef<Shader> quad_shader;
 		IntrusiveRef<Shader> circle_shader;
@@ -98,27 +97,24 @@ namespace Kablunk
 			quad_indices[i + uint32_t{ 4 }] = offset + uint32_t{ 3 };
 			quad_indices[i + uint32_t{ 5 }] = offset + uint32_t{ 0 };
 
-			offset += uint32_t{ 4 };
+			offset += 4;
 		}
 
 		s_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, s_renderer_data.max_indices);
-		s_renderer_data.circle_index_buffer = IndexBuffer::Create(quad_indices, s_renderer_data.max_indices);
 		delete[] quad_indices;
 
 		s_renderer_data.circle_vertex_buffer = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(CircleVertex));
 		s_renderer_data.circle_vertex_buffer_base_ptr = new CircleVertex[s_renderer_data.max_vertices];
 
-		s_renderer_data.white_texture = Texture2D::Create(ImageFormat::RGBA32F, 1, 1);
-
-		int32_t samplers[s_renderer_data.max_texture_slots];
-		for (int32_t i = 0; i < s_renderer_data.max_texture_slots; ++i)
-			samplers[i] = i;
+		uint32_t white_texture_data = 0xffffffff;
+		s_renderer_data.white_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &white_texture_data);
 
 		s_renderer_data.quad_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
 		s_renderer_data.circle_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
+		
 		s_renderer_data.texture_slots[0] = s_renderer_data.white_texture;
 
 		s_renderer_data.quad_vertex_positions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
@@ -131,7 +127,7 @@ namespace Kablunk
 		framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 		framebuffer_spec.samples = 1;
 		framebuffer_spec.clear_on_load = false;
-		framebuffer_spec.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
 		framebuffer_spec.debug_name = "Renderer2D Framebuffer";
 
 		IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(framebuffer_spec);
@@ -208,7 +204,7 @@ namespace Kablunk
 		s_renderer_data.camera = camera;
 		s_renderer_data.camera_transform = transform;
 
-		auto view_proj = camera.GetProjection() * glm::inverse(transform);
+		auto view_proj = camera.GetProjection() * transform;
 		s_renderer_data.camera_view_projection = view_proj;
 
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = s_renderer_data.uniform_buffer_set;
@@ -235,8 +231,6 @@ namespace Kablunk
 		StartNewBatch();
 	}
 
-	
-
 	void Renderer2D::EndScene()
 	{
 		Flush();
@@ -250,30 +244,46 @@ namespace Kablunk
 		RenderCommand::BeginRenderPass(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline->GetSpecification().render_pass);
 		
 		// Quad
+		bool prev_set = false;
+		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptr);
+		if (data_size)
 		{
-			uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptr);
 			s_renderer_data.quad_vertex_buffer->SetData(s_renderer_data.quad_vertex_buffer_base_ptr, data_size);
 
 			// Set Textures
 			auto& textures = s_renderer_data.texture_slots;
-			for (uint32_t i = 0; i < s_renderer_data.texture_slot_index; i++)
+			for (uint32_t i = 0; i < s_renderer_data.max_texture_slots; i++)
 			{
 				if (textures[i])
 					s_renderer_data.quad_material->Set("u_Textures", textures[i], i);
 				else
 					s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
 			}
+			prev_set = true;
 
 			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.quad_material, s_renderer_data.quad_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.quad_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
 
 		// Circle
+		data_size = (uint32_t)((uint8_t*)s_renderer_data.circle_vertex_buffer_ptr - (uint8_t*)s_renderer_data.circle_vertex_buffer_base_ptr);
+		if (data_size)
 		{
-			uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.circle_vertex_buffer_ptr - (uint8_t*)s_renderer_data.circle_vertex_buffer_base_ptr);
 			s_renderer_data.circle_vertex_buffer->SetData(s_renderer_data.circle_vertex_buffer_base_ptr, data_size);
 
-			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.circle_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.circle_material, s_renderer_data.circle_vertex_buffer, s_renderer_data.circle_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.circle_index_count);
+			if (!prev_set) // idk why this needs to be set, but circles won't appear if it isn't
+			{
+				auto& textures = s_renderer_data.texture_slots;
+				for (uint32_t i = 0; i < s_renderer_data.max_texture_slots; i++)
+				{
+					if (textures[i])
+						s_renderer_data.quad_material->Set("u_Textures", textures[i], i);
+					else
+						s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
+				}
+			}
+
+			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.circle_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.circle_material, s_renderer_data.circle_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.circle_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
 
@@ -433,6 +443,10 @@ namespace Kablunk
 		s_renderer_data.circle_vertex_buffer_ptr = s_renderer_data.circle_vertex_buffer_base_ptr;
 
 		s_renderer_data.texture_slot_index = 1;
+
+		for (size_t i = 0; i < s_renderer_data.max_texture_slots; ++i)
+			if (i != 0)
+				s_renderer_data.texture_slots[i] = nullptr;
 	}
 
 	void Renderer2D::EndBatch()

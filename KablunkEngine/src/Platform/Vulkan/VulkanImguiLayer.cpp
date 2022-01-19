@@ -133,8 +133,8 @@ namespace Kablunk
 					ImGui_ImplVulkan_DestroyFontUploadObjects();
 				}
 
-				s_imgui_command_buffers.resize(VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
-				for (uint32_t i = 0; i < VulkanSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+				s_imgui_command_buffers.resize(Renderer::GetConfig().frames_in_flight);
+				for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
 					s_imgui_command_buffers[i] = vulkan_context->GetDevice()->CreateSecondaryCommandBuffer();
 			});
 
