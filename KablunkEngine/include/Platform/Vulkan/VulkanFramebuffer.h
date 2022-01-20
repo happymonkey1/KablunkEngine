@@ -17,6 +17,7 @@ namespace Kablunk
 	{
 	public:
 		VulkanFramebuffer(const FramebufferSpecification& spec);
+		virtual ~VulkanFramebuffer() override;
 
 		virtual void Resize(uint32_t width, uint32_t height, bool forceRecreate = false) override;
 		virtual void AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func) override;

@@ -56,6 +56,8 @@ namespace Kablunk
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
 
+		FramebufferPool::Get()->GetAll().clear();
+
 		RenderCommand::WaitAndRender();
 
 		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
@@ -64,7 +66,8 @@ namespace Kablunk
 			queue.Execute();
 		}
 
-		Renderer2D::Shutdown();
+		Renderer::Shutdown();
+		//Renderer2D::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

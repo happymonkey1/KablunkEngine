@@ -98,10 +98,9 @@ namespace Kablunk
 
 	}
 
-	bool VulkanTexture2D::operator==(const Texture& other) const
+	bool VulkanTexture2D::operator==(const Texture2D& other) const
 	{
-		KB_CORE_ASSERT(false, "not implemented");
-		return false;
+		return m_image == other.GetImage();
 	}
 
 	void VulkanTexture2D::Invalidate()

@@ -243,6 +243,7 @@ namespace Kablunk
 			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
+			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
 			UI::Image(

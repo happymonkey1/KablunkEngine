@@ -67,7 +67,7 @@ namespace Kablunk
 
 	}
 
-	const std::string& ShaderUniform::UniformTypeToString(ShaderUniformType type)
+	std::string ShaderUniform::UniformTypeToString(ShaderUniformType type)
 	{
 		if (type == ShaderUniformType::Bool)
 			return std::string{ "Boolean" };

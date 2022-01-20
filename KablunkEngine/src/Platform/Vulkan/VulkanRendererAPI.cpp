@@ -46,6 +46,7 @@ namespace Kablunk
 
 	VulkanRendererAPI::~VulkanRendererAPI()
 	{
+		VulkanShader::ClearUniformBuffers();
 		delete s_renderer_data;
 	}
 
@@ -130,6 +131,12 @@ namespace Kablunk
 
 		// compile shaders that were submitted
 		RenderCommand::WaitAndRender();
+	}
+
+	void VulkanRendererAPI::Shutdown()
+	{
+		delete s_renderer_data;
+		
 	}
 
 	void VulkanRendererAPI::BeginFrame()
@@ -221,7 +228,7 @@ namespace Kablunk
 
 				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer.size())
-					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniform_storage_buffer.size(), uniform_storage_buffer.get());
+					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
 				vkCmdDrawIndexed(command_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
 			});
@@ -266,7 +273,7 @@ namespace Kablunk
 				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 				const Buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer)
-					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
+					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
 				vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
 			});

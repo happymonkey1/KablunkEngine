@@ -441,6 +441,8 @@ namespace Kablunk
 				}
 			}
 		}
+
+		return true;
 	}
 
 	void CSharpScriptEngine::SetSceneContext(Scene* scene)

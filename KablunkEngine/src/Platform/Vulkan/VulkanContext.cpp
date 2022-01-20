@@ -10,7 +10,7 @@
 namespace Kablunk
 {
 	VulkanContext::VulkanContext(GLFWwindow* window_handle)
-		: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }
+		: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }, m_pipeline_cache{ nullptr }
 	{
 		s_context = IntrusiveRef<VulkanContext>(this);
 	}
@@ -32,11 +32,11 @@ namespace Kablunk
 		enabled_features.independentBlend = VK_TRUE;
 
 		m_device = IntrusiveRef<VulkanDevice>::Create(m_physical_device, enabled_features);
+		VulkanAllocator::Init(VulkanContext::Get()->GetDevice());
 
 		m_swap_chain = VulkanSwapChain{};
 		m_swap_chain.Init(s_instance, m_device);
 
-		VulkanAllocator::Init(VulkanContext::Get()->GetDevice());
 
 		// Pipeline Cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};

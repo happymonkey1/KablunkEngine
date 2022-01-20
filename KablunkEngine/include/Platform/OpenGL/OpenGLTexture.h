@@ -31,11 +31,7 @@ namespace Kablunk
 		virtual Buffer GetWriteableBuffer() override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
 
 		virtual void Bind(uint32_t slot) const override;
-
-		virtual bool operator==(const Texture& other) const override
-		{
-			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
-		}
+		virtual bool operator==(const Texture2D& other) const override { return m_RendererID == other.GetRendererID(); }
 	private:
 		std::string m_Path;
 		uint32_t m_Width;

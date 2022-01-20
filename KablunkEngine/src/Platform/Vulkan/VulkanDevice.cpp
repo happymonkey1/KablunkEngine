@@ -55,21 +55,55 @@ namespace Kablunk
 
 	void VulkanPhysicalDevice::FindPresentingIndices(VkSurfaceKHR surface)
 	{
-		// query if device has presenting support
+		// query if device has presenting support. Iterate to find which queues support present
+		std::vector<VkBool32> supports_present(m_queue_family_properties.size());
 		uint32_t i = 0;
 		for (const auto& queue_family : m_queue_family_properties)
 		{
-			VkBool32 present_support = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(m_device, i, surface, &present_support);
-			
-			if (present_support)
-			{
-				m_queue_family_indices.Present_family = i;
-				break;
-			}
+			vkGetPhysicalDeviceSurfaceSupportKHR(m_device, i, surface, &supports_present[i]);
 
 			i++;
 		}
+
+		uint32_t graphics_queue_index = UINT32_MAX;
+		uint32_t present_queue_index = UINT32_MAX;
+		for (uint32_t i = 0; i < m_queue_family_properties.size(); i++)
+		{
+			if ((m_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
+			{
+				if (graphics_queue_index == UINT32_MAX)
+				{
+					graphics_queue_index = i;
+				}
+
+				if (supports_present[i] == VK_TRUE)
+				{
+					graphics_queue_index = i;
+					present_queue_index = i;
+					break;
+				}
+			}
+		}
+
+		if (present_queue_index == UINT32_MAX)
+		{
+			// If there's no queue that supports both present and graphics
+			// try to find a separate present queue
+			for (uint32_t i = 0; i < m_queue_family_properties.size(); ++i)
+			{
+				if (supports_present[i] == VK_TRUE)
+				{
+					present_queue_index = i;
+					break;
+				}
+			}
+		}
+
+		KB_CORE_ASSERT(present_queue_index != UINT32_MAX, "no present queue found!");
+		KB_CORE_ASSERT(graphics_queue_index != UINT32_MAX, "no graphics queue found!");
+
+		m_queue_family_indices.Graphics_family = graphics_queue_index;
+		m_queue_family_indices.Present_family = present_queue_index;
 	}
 
 	QueueFamilyIndices VulkanPhysicalDevice::FindQueueFamilies(VkPhysicalDevice device)

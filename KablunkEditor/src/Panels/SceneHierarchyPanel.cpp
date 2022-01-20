@@ -772,7 +772,7 @@ namespace Kablunk
 
 
 				std::vector<std::string> options = { "Static", "Dynamic", "Kinematic" };
-				int32_t index = std::find(options.begin(), options.end(), KablunkRigidBodyTypeToString(component.Type)) - options.begin();
+				int32_t index = static_cast<int32_t>(std::find(options.begin(), options.end(), KablunkRigidBodyTypeToString(component.Type)) - options.begin());
 				if (UI::PropertyDropdown("Type", options, options.size(), &index))
 					component.Type = StringToKablunkRigidBodyType(options[index]);
 				

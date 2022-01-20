@@ -115,7 +115,6 @@ namespace Kablunk
 				auto device = VulkanContext::Get()->GetDevice();
 				vkDestroyCommandPool(device->GetVkDevice(), command_pool, nullptr);
 			});
-
 	}
 
 	void VulkanRenderCommandBuffer::Begin()
@@ -227,8 +226,8 @@ namespace Kablunk
 		RenderCommand::Submit([instance, query_index]()
 			{
 				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = instance->m_command_buffers[frame_index];
-				vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], query_index + 1);
+				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index + 1));
 			});
 	}
 

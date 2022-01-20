@@ -58,12 +58,13 @@ namespace Kablunk::UI
 
 		const ImColor button_tint = IM_COL32(192, 192, 192, 255);
 
+		float frame_padding_f = static_cast<float>(frame_padding);
 		UI::DrawButtonImage(
 			texture,
 			button_tint,
 			UI::ColorWithMultipliedValue(button_tint, 1.3f),
 			UI::ColorWithMultipliedValue(button_tint, 0.8f),
-			UI::RectExpanded(UI::GetItemRect(), -frame_padding, -frame_padding)
+			UI::RectExpanded(UI::GetItemRect(), -frame_padding_f, -frame_padding_f)
 		);
 
 		return pressed;

@@ -139,6 +139,8 @@ namespace Kablunk
 		if (vkCreateSwapchainKHR(device, &swapchain_create_info, nullptr, &m_swapchain) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create swapchain!");
 
+		// destroy old swap chain if it exists, since we are recreating the swapchain.
+		// also cleans up old presenting images
 		if (old_swapchain != VK_NULL_HANDLE)
 		{
 			for (uint32_t i = 0; i < m_image_count; ++i)
@@ -185,6 +187,7 @@ namespace Kablunk
 		}
 
 		// create command buffers
+		KB_CORE_ASSERT(m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.has_value(), "graphics family queue has no index set!");
 		VkCommandPoolCreateInfo cmd_pool_info{};
 		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		cmd_pool_info.queueFamilyIndex = m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.value(); // #TODO could be wrong value
@@ -198,8 +201,8 @@ namespace Kablunk
 		cmd_buf_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		uint32_t count = m_image_count;
 		cmd_buf_allocate_info.commandBufferCount = count;
+
 		m_command_buffers.resize(count);
-		
 		if (vkAllocateCommandBuffers(device, &cmd_buf_allocate_info, m_command_buffers.data()) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffers");
 
@@ -234,6 +237,9 @@ namespace Kablunk
 		for (auto& fence : m_wait_fences)
 			if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
+
+		// Swapchain doesn't need depth stencil?
+		//CreateDepthStencil();
 
 		// render pass
 		VkFormat depth_format = m_device->GetPhysicalDevice()->GetDepthFormat();
@@ -270,7 +276,7 @@ namespace Kablunk
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
-		//subpassDescription.pDepthStencilAttachment = &depthReference;
+		//subpass_description.pDepthStencilAttachment = &depth_reference;
 		subpass_description.inputAttachmentCount = 0;
 		subpass_description.pInputAttachments = nullptr;
 		subpass_description.preserveAttachmentCount = 0;
@@ -320,9 +326,20 @@ namespace Kablunk
 
 	void VulkanSwapChain::BeginFrame()
 	{
+		// Make sure the frame we're requesting has finished rendering
+		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
+
 		// execute resource release queue
 		auto& queue = RenderCommand::GetRenderResourceReleaseQueue(m_current_buffer_index);
 		queue.Execute();
+
+		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
+
+		if (vkResetCommandPool(m_device->GetVkDevice(), m_command_pool, 0))
+			KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 
 		if (AcquireNextImage(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
 			KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
@@ -389,6 +406,7 @@ namespace Kablunk
 
 	VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index)
 	{
+		// why no fence?
 		return vkAcquireNextImageKHR(m_device->GetVkDevice(), m_swapchain, UINT64_MAX, present_complete_sem, (VkFence)nullptr, image_index);
 	}
 
@@ -453,7 +471,8 @@ namespace Kablunk
 	{
 		VkImageView image_view_attachments[2];
 
-		image_view_attachments[1] = m_depth_stencil.image_view;
+		// Depth stencil not needed?
+		//image_view_attachments[1] = m_depth_stencil.image_view;
 
 		VkFramebufferCreateInfo frame_buffer_create_info{};
 		frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -489,8 +508,10 @@ namespace Kablunk
 		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 		image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		image_create_info.pQueueFamilyIndices = nullptr;
 
-		// #TODO allocator for depth stencil
+		VulkanAllocator allocator{ "Swapchain Depth Stencil" };
+		m_depth_stencil.memory_allocation = allocator.AllocateImage(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_depth_stencil.image);
 
 		VkImageViewCreateInfo image_view_create_info;
 		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

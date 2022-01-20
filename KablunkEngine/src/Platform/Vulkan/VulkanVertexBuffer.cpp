@@ -128,6 +128,7 @@ namespace Kablunk
 	const BufferLayout& VulkanVertexBuffer::GetLayout() const
 	{
 		KB_CORE_WARN("VulkanVertexBuffer does not implement layouts");
+		KB_CORE_ASSERT(false, "");
 		return {};
 	}
 

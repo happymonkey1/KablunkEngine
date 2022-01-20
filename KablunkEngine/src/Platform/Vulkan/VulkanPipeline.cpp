@@ -163,32 +163,42 @@ namespace Kablunk
 				blend_attachment_state[i].colorWriteMask = 0xf;
 
 				const auto& attachment_spec = framebuffer->GetSpecification().Attachments.Attachments[i];
-				FramebufferBlendMode blendMode = framebuffer->GetSpecification().blend_mode == FramebufferBlendMode::None
+				FramebufferBlendMode blend_mode = framebuffer->GetSpecification().blend_mode == FramebufferBlendMode::None
 					? attachment_spec.blend_mode
 					: framebuffer->GetSpecification().blend_mode;
 
-				bool attachment_supports_blend = attachment_spec.format != ImageFormat::RED32I;
-				blend_attachment_state[i].blendEnable = attachment_spec.blend && attachment_supports_blend ? VK_TRUE : VK_FALSE;
-				if (blendMode == FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha)
+				blend_attachment_state[i].blendEnable = attachment_spec.blend ? VK_TRUE : VK_FALSE;
+				switch (blend_mode)
 				{
-					blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-					blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-					blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-					blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-				}
-				else if (blendMode == FramebufferBlendMode::OneZero)
-				{
-					blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-					blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-					blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				}
-				else if (blendMode == FramebufferBlendMode::Zero_SrcColor)
-				{
-					blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
-					blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
+					case FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha:
+					{
+						blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+						blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+						blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+						blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+						break;
+					}
+					case FramebufferBlendMode::OneZero:
+					{
+						blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+						blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+						blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+						blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+						break;
+					}
+					case FramebufferBlendMode::Zero_SrcColor:
+					{
+						blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+						blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
+						blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+						blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
+						break;
+					}
+					default:
+					{
+						KB_CORE_ASSERT(false, "unknown FramebufferBlendMode!");
+						break;
+					}
 				}
 
 				blend_attachment_state[i].colorBlendOp = VK_BLEND_OP_ADD;
@@ -329,7 +339,7 @@ namespace Kablunk
 		write_descriptor_sets.dstBinding = binding;
 		write_descriptor_sets.dstSet = m_descriptor_sets.descriptor_sets[set];
 
-		KB_CORE_INFO("VulkanPipeline - Updating descriptor set (VulkanPipeline::SetUniformBuffer)");
+		KB_CORE_WARN("VulkanPipeline - Updating descriptor set (VulkanPipeline::SetUniformBuffer)");
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 		vkUpdateDescriptorSets(device, 1, &write_descriptor_sets, 0, nullptr);
 	}

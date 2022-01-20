@@ -49,22 +49,20 @@ namespace Kablunk
 					ImageSpecification spec;
 					spec.format = attachment_specification.format;
 					spec.usage = ImageUsage::Attachment;
-					spec.width = m_width * m_specification.scale;
-					spec.height = m_height * m_specification.scale;
+					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
+					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
 					spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_depth_attachment_image = Image2D::Create(spec);
 				}
 				else
 				{
-					{
-						ImageSpecification spec;
-						spec.format = attachment_specification.format;
-						spec.usage = ImageUsage::Attachment;
-						spec.width = m_width * m_specification.scale;
-						spec.height = m_height * m_specification.scale;
-						spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
-						m_attachment_images.emplace_back(Image2D::Create(spec));
-					}
+					ImageSpecification spec;
+					spec.format = attachment_specification.format;
+					spec.usage = ImageUsage::Attachment;
+					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
+					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
+					spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
+					m_attachment_images.emplace_back(Image2D::Create(spec));
 				}
 				attachment_index++;
 			}
@@ -74,13 +72,48 @@ namespace Kablunk
 		Resize(m_width, m_height, true);
 	}
 
+	VulkanFramebuffer::~VulkanFramebuffer()
+	{
+		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
+		VkFramebuffer vk_framebuffer = m_framebuffer;
+		RenderCommand::SubmitResourceFree([vk_framebuffer]()
+			{
+				const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+				vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
+			});
+
+		if (!m_specification.existing_framebuffer)
+		{
+			uint32_t attachment_index = 0;
+			for (IntrusiveRef<VulkanImage2D> image : m_attachment_images)
+			{
+				if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
+					continue;
+
+				// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
+				if (!image->GetSpecification().deinterleaved || attachment_index == 0 && !image->GetLayerImageView(0))
+					image->Release();
+
+				attachment_index++;
+			}
+
+			if (m_depth_attachment_image)
+			{
+				// Do we own the depth image?
+				if (m_specification.existing_images.find(static_cast<uint32_t>(m_specification.Attachments.Attachments.size()) - 1) == m_specification.existing_images.end())
+					m_depth_attachment_image->Release();
+			}
+
+		}
+	}
+
 	void VulkanFramebuffer::Resize(uint32_t width, uint32_t height, bool force_recreate /*= false*/)
 	{
 		if (!force_recreate && (m_width == width && m_height == height))
 			return;
 
-		m_width = width * m_specification.scale;
-		m_height = height * m_specification.scale;
+		m_width = std::ceil(static_cast<float>(width) * m_specification.scale);
+		m_height = std::ceil(static_cast<float>(height) * m_specification.scale);
 		if (!m_specification.swap_chain_target)
 			Invalidate();
 		else

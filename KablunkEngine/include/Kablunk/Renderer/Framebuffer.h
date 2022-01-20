@@ -20,8 +20,6 @@ namespace Kablunk
 		Zero_SrcColor
 	};
 
-	
-
 	struct FramebufferTextureSpecification
 	{
 		FramebufferTextureSpecification() = default;
@@ -98,6 +96,25 @@ namespace Kablunk
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 
 		static IntrusiveRef<Framebuffer> Create(const FramebufferSpecification& specs);
+	};
+
+	class FramebufferPool final
+	{
+	public:
+		FramebufferPool(uint32_t max_framebuffers = 32);
+		~FramebufferPool();
+
+		std::weak_ptr<Framebuffer> AllocateBuffer();
+		void Add(const IntrusiveRef<Framebuffer>& framebuffer);
+
+		std::vector<IntrusiveRef<Framebuffer>>& GetAll() { return m_pool; }
+		const std::vector<IntrusiveRef<Framebuffer>> &GetAll() const { return m_pool; }
+
+		inline static FramebufferPool* Get() { return s_instance; }
+	private:
+		std::vector<IntrusiveRef<Framebuffer>> m_pool;
+
+		static FramebufferPool* s_instance;
 	};
 }
 

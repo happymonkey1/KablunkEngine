@@ -28,7 +28,7 @@ namespace Kablunk {
 		uint32_t GetSize() const { return m_size; }
 		uint32_t GetOffset() const { return m_offset; }
 
-		static const std::string& UniformTypeToString(ShaderUniformType type);
+		static std::string UniformTypeToString(ShaderUniformType type);
 	private:
 		std::string m_name;
 		ShaderUniformType m_type = ShaderUniformType::None;

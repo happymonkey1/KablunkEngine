@@ -21,8 +21,6 @@ namespace Kablunk
 		virtual uint64_t GetHash() const = 0;
 
 		virtual void Bind(uint32_t slot = 0) const = 0;
-
-		virtual bool operator==(const Texture& other) const = 0;
 	};
 
 	class Texture2D : public Texture
@@ -36,6 +34,7 @@ namespace Kablunk
 		virtual uint32_t GetHeight() const = 0;
 
 		virtual Buffer GetWriteableBuffer() = 0;
+		virtual bool operator==(const Texture2D& other) const = 0;
 
 		static IntrusiveRef<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr);
 		static IntrusiveRef<Texture2D> Create(const std::string& path);

@@ -13,10 +13,13 @@ namespace Kablunk
 		Buffer(void* data, size_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
 		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
 		{
-			if (other.m_data != nullptr)
+			if (other.m_data)
 			{
 				Allocate(m_size);
-				memcpy(m_data, other.m_data, m_size);
+				if (m_data && other.m_data)
+					memcpy(m_data, other.m_data, m_size);
+				else
+					KB_CORE_ASSERT(false, "memcpy C6381 warning");
 			}
 		}
 
@@ -26,7 +29,10 @@ namespace Kablunk
 			{
 				m_size = other.m_size;
 				Allocate(m_size);
-				memcpy(m_data, other.m_data, m_size);
+				if (m_data && other.m_data)
+					memcpy(m_data, other.m_data, m_size);
+				else
+					KB_CORE_ASSERT(false, "memcpy C6381 warning");
 			}
 
 			return *this;
@@ -37,7 +43,7 @@ namespace Kablunk
 			Buffer buffer;
 			buffer.Allocate(size);
 			memcpy(buffer.m_data, data, size);
-			return std::move(buffer);
+			return buffer;
 		}
 
 		// size in bytes
@@ -62,42 +68,45 @@ namespace Kablunk
 
 		void ZeroInitialize()
 		{
-			if (m_data)
+			if (m_data && m_size > 0)
 				memset(m_data, 0, m_size);
+			else
+				KB_CORE_ERROR("Trying to Zero Initialize an invalid buffer!");
 		}
 
 		template <typename T>
 		T& Read(uint32_t offset)
 		{
-			return *(T*)((uint8_t*)m_data + offset);
+			KB_CORE_ASSERT(offset + sizeof(T) <= m_size, "trying to access memory out of bounds!");
+			return *(T*)(m_data + offset);
 		}
 
 		uint8_t* ReadBytes(size_t size, size_t offset)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
 			uint8_t* buffer = new uint8_t[size];
-			memcpy(buffer, (uint8_t*)m_data + offset, size);
+			memcpy(buffer, m_data + offset, size);
 			return buffer;
 		}
 
 		void Write(void* data, size_t size, size_t offset = 0)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
-			memcpy((uint8_t*)m_data + offset, data, size);
+			memcpy(m_data + offset, data, size);
 		}
 
 		operator bool() const { return m_data; }
 
-		uint8_t& operator[](int index) { return ((uint8_t*)m_data)[index]; }
+		uint8_t& operator[](int index) { return m_data[index]; }
 
-		uint8_t operator[](int index) const { return ((uint8_t*)m_data)[index]; }
+		uint8_t operator[](int index) const { return m_data[index]; }
 
 		template <typename T>
 		T* As() const { return (T*)m_data; }
 
 		inline size_t size() const { return m_size; }
-		inline void* get() { return m_data; }
-		inline const void* get() const { return m_data; }
+		inline void* get() { return (void*)m_data; }
+		inline const void* get() const { return (void*)m_data; }
 	private:
 		size_t m_size;
 		uint8_t* m_data;

@@ -139,7 +139,7 @@ namespace Kablunk
 		{
 			// Avoid unecessary allocations during invalidate
 			m_color_attachments.resize(m_color_attachment_specs.size());
-			Utilities::CreateTextures(multisample, m_color_attachments.data(), m_color_attachments.size());
+			Utilities::CreateTextures(multisample, m_color_attachments.data(), static_cast<uint32_t>(m_color_attachments.size()));
 
 			// Color Attachments
 			for (size_t i = 0; i < m_color_attachments.size(); ++i)

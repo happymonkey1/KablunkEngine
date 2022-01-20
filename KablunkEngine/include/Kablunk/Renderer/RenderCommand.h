@@ -13,6 +13,13 @@ namespace Kablunk
 	{
 	public:
 		static void Init();
+		static void Shutdown()
+		{
+			s_renderer_api->Shutdown();
+
+			delete s_command_queue;
+			delete s_renderer_api;
+		}
 
 
 		static void BeginFrame()

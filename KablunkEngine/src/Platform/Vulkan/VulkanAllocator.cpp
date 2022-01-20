@@ -49,14 +49,14 @@ namespace Kablunk
 		return allocation;
 	}
 
-	VmaAllocation VulkanAllocator::AllocateImage(VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VkImage& out_image)
+	VmaAllocation VulkanAllocator::AllocateImage(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image)
 	{
 		VmaAllocationCreateInfo alloc_create_info{};
 		alloc_create_info.usage = usage;
 
 		VmaAllocation allocation;
 		if (vmaCreateImage(s_data->allocator, &image_create_info, &alloc_create_info, &out_image, &allocation, nullptr) != VK_SUCCESS)
-			KB_CORE_ERROR("VulkanAllocator failed to create image!");
+			KB_CORE_ASSERT(false, "VulkanAllocator failed to create image!");
 
 		VmaAllocationInfo alloc_info{};
 		vmaGetAllocationInfo(s_data->allocator, allocation, &alloc_info);

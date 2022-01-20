@@ -26,7 +26,7 @@ namespace Kablunk
 		~VulkanAllocator();
 
 		VmaAllocation AllocateBuffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer);
-		VmaAllocation AllocateImage(VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VkImage& out_image);
+		VmaAllocation AllocateImage(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image);
 
 		void Free(VmaAllocation allocation);
 		void DestroyImage(VkImage image, VmaAllocation allocation);

@@ -4,6 +4,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Platform/Vulkan/VulkanDevice.h"
+#include "Platform/Vulkan/VulkanAllocator.h"
 
 #include <vulkan/vulkan.h>
 
@@ -84,8 +85,9 @@ namespace Kablunk
 		{
 			VkImage image;
 			VkImageView image_view;
+			VmaAllocation memory_allocation;
 		};
-		DepthStencilData m_depth_stencil;
+		DepthStencilData m_depth_stencil{};
 
 		std::vector<VkFramebuffer> m_framebuffers;
 		VkCommandPool m_command_pool = nullptr;
