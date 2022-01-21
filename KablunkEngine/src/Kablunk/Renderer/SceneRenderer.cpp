@@ -35,8 +35,8 @@ namespace Kablunk
 			m_command_buffer = RenderCommandBuffer::Create(0, "SceneRenderer");
 
 
-		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA32F, 1, 1);
-		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA32F, 1, 1);
+		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
+		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
 
 		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
@@ -45,7 +45,7 @@ namespace Kablunk
 		// Geometry
 		{
 			FramebufferSpecification geometry_framebuffer_spec;
-			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+			geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 			geometry_framebuffer_spec.samples = 1;
 			geometry_framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
 			geometry_framebuffer_spec.debug_name = "Geometry";
@@ -84,9 +84,9 @@ namespace Kablunk
 
 			// No depth for swapchain
 			if (m_specification.swap_chain_target)
-				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA };
 			else
-				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 
 			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
@@ -115,8 +115,8 @@ namespace Kablunk
 		if (!m_specification.swap_chain_target)
 		{
 			FramebufferSpecification external_composite_framebuffer_spec;
-			external_composite_framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
-			external_composite_framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
+			external_composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+			external_composite_framebuffer_spec.clear_color = { 1.0f, 0.1f, 0.1f, 1.0f };
 			external_composite_framebuffer_spec.clear_on_load  = false;
 			external_composite_framebuffer_spec.debug_name = "External Composite";
 
@@ -279,6 +279,7 @@ namespace Kablunk
 
 	void SceneRenderer::ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
+		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
 		RenderCommand::BeginRenderPass(m_command_buffer, render_pass, explicit_clear);
 		RenderCommand::EndRenderPass(m_command_buffer);
 	}
@@ -297,12 +298,11 @@ namespace Kablunk
 	void SceneRenderer::CompositePass()
 	{
 		m_gpu_time_query_indices.composite_pass_query = m_command_buffer->BeginTimestampQuery();
-		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass);
+		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 
 		constexpr float exposure = 1.0f; // #TODO dynamic based off camera
 		constexpr bool bloom_enabled = false; // #TODO dynamic
 		auto framebuffer = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer;
-		int texture_samples = framebuffer->GetSpecification().samples;
 
 		m_composite_material->Set("u_Uniforms.Exposure", exposure);
 		if (bloom_enabled)
@@ -321,7 +321,7 @@ namespace Kablunk
 		m_composite_material->Set("u_BloomTexture", m_bloom_texture);
 		m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
 
-		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, m_uniform_buffer_set, m_composite_material);
+		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, nullptr, m_composite_material);
 
 		RenderCommand::EndRenderPass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);

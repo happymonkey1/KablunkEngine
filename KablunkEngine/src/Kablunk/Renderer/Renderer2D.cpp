@@ -124,7 +124,7 @@ namespace Kablunk
 
 		// Create framebuffer
 		FramebufferSpecification framebuffer_spec{};
-		framebuffer_spec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+		framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 		framebuffer_spec.samples = 1;
 		framebuffer_spec.clear_on_load = false;
 		framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
@@ -245,6 +245,7 @@ namespace Kablunk
 		
 		// Quad
 		bool prev_set = false;
+		// calculate data size in bytes
 		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptr);
 		if (data_size)
 		{
@@ -377,6 +378,7 @@ namespace Kablunk
 		{
 			texture_index = (float)s_renderer_data.texture_slot_index;
 			s_renderer_data.texture_slots[s_renderer_data.texture_slot_index++] = texture;
+			KB_CORE_ASSERT(s_renderer_data.texture_slot_index < s_renderer_data.max_texture_slots, "texture slot overflow!");
 		}
 
 		constexpr glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
