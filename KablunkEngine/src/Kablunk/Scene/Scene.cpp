@@ -618,6 +618,20 @@ namespace Kablunk
 		}
 	}
 
+	void Scene::OnImGuiRender()
+	{
+		
+#if KB_DEBUG
+		auto view = m_registry.view<NativeScriptComponent>();
+		for (auto id : view)
+		{
+			Entity entity = { id, this };
+			entity.GetComponent<NativeScriptComponent>().Instance->OnImGuiRender();
+		}
+#endif
+
+	}
+
 	Entity Scene::GetPrimaryCameraEntity()
 	{
 		auto view = m_registry.view<CameraComponent>();

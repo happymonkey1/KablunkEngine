@@ -37,7 +37,7 @@ project "KablunkEditor"
     {
         "KablunkEngine",
         "Sandbox",
-        "Sandbox.dll",
+        --"Sandbox.dll",
         "FreeType",
         "%{Library.mono}"
     }

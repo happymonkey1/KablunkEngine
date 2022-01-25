@@ -348,6 +348,7 @@ namespace Kablunk
 			ImGui::End();
 		}
 		
+		m_active_scene->OnImGuiRender();
 		CSharpScriptEngine::OnImGuiRender();
 
 		UI_Toolbar();

@@ -6,7 +6,8 @@
 #include <iostream>
 #include <string>
 
-extern "C" __declspec(dllimport) Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string & type_str);
+/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
+extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string & type_str);
 
 namespace Kablunk
 {
@@ -18,6 +19,8 @@ namespace Kablunk
 		static bool Update();
 
 		static void Shutdown();
+
+		static Scope<NativeScriptInterface> GetScript(const std::string& name);
 	};
 }
 
@@ -31,8 +34,9 @@ namespace Kablunk
 		}
 
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
+/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" __declspec(dllexport) Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
+	extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		auto type_namespace_stripped = Kablunk::Parser::CPP::strip_namespace(std::string{ #T }); \

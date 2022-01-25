@@ -17,6 +17,9 @@ namespace Kablunk
 
 		virtual void OnAwake() { }
 		virtual void OnUpdate(Timestep ts) { }
+		// DEBUG BUILDS ONLY
+		virtual void OnImGuiRender() { }
+
 		// #TODO virtual function not working
 		virtual void OnDestroy() { }
 	private:

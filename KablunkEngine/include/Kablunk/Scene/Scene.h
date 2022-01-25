@@ -38,6 +38,8 @@ namespace Kablunk
 		void OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
+		void OnImGuiRender();
+
 		Entity GetPrimaryCameraEntity();
 
 		size_t GetEntityCount() const { return m_registry.size(); }

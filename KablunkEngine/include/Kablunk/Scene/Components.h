@@ -168,7 +168,7 @@ namespace Kablunk
 			}
 			auto struct_name = struct_names[0];
 
-			Instance = NativeScriptEngine::Get()->GetScript(struct_name);
+			Instance = NativeScriptEngine::GetScript(struct_name);
 
 			if (!Instance)
 			{

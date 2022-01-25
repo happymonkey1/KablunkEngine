@@ -31,6 +31,11 @@ namespace Kablunk
 	{
 		cr_plugin_close(s_ctx);
 	}
+
+	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
+	{
+		return Scope<NativeScriptInterface>(GetScriptFromRegistry(name));
+	}
 }
 
 
