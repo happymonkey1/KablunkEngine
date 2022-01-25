@@ -10,13 +10,6 @@
 #include "Kablunk/Scripts/NativeScriptCompilerLogger.h"
 #include "Kablunk/Scripts/NativeScriptModule.h"
 
-#include "RCCPP/RuntimeObjectSystem/IObject.h"
-#include "RCCPP/RuntimeCompiler/BuildTool.h"
-#include "RCCPP/RuntimeCompiler/ICompilerLogger.h"
-#include "RCCPP/RuntimeCompiler/FileChangeNotifier.h"
-#include "RCCPP/RuntimeObjectSystem/ObjectFactorySystem/ObjectFactorySystem.h"
-#include "RCCPP/RuntimeObjectSystem/RuntimeObjectSystem.h"
-
 
 namespace Kablunk
 {
