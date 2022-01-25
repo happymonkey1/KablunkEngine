@@ -39,9 +39,7 @@ namespace Kablunk
 	extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
-		auto type_namespace_stripped = Kablunk::Parser::CPP::strip_namespace(std::string{ #T }); \
-		std::cout << type_namespace_stripped << " registered!" << std::endl; \
-		if (type_namespace_stripped == type_str) \
+		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
 			return T::Create();
 #	define END_REGISTER_NATIVE_SCRIPTS() \
 		return nullptr; \

@@ -626,7 +626,9 @@ namespace Kablunk
 		for (auto id : view)
 		{
 			Entity entity = { id, this };
-			entity.GetComponent<NativeScriptComponent>().Instance->OnImGuiRender();
+			auto& nsc = entity.GetComponent<NativeScriptComponent>();
+			if (nsc.Instance)
+				nsc.Instance->OnImGuiRender();
 		}
 #endif
 
