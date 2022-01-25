@@ -9,13 +9,6 @@
 
 //REGISTER_NATIVE_SCRIPT(CameraController);
 
-// #TODO Remove
-#ifdef ECLIPSE
-#include "Eclipse/EclipseSandbox.h"
-namespace Eclipse
-{
-	REGISTER_NATIVE_SCRIPT(ReadTokensTest);
-}
-#endif
+
 
 #endif

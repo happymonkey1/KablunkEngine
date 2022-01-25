@@ -1,5 +1,5 @@
 project "Sandbox"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -25,8 +25,7 @@ project "Sandbox"
         "%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
         "%{IncludeDir.gsl}",
-		"%{IncludeDir.FreeType}",
-		"%{IncludeDir.RCCPP}"
+		"%{IncludeDir.FreeType}"
 	}
 
 	links

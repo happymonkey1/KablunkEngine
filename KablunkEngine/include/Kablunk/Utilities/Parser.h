@@ -74,6 +74,15 @@ namespace Kablunk::Parser
 
 		}
 
+		static std::string strip_namespace(const std::string& str_with_namespace)
+		{
+			size_t index = str_with_namespace.find_last_of(':', str_with_namespace.size());
+			if (index == std::string::npos)
+				return str_with_namespace;
+			else
+				return str_with_namespace.substr(index + 1);
+		}
+
 		static std::vector<std::string> find_all_of(const char* identifier, const std::string& filepath, uint32_t num_structs_to_find = 0)
 		{
 			std::string text;
@@ -100,6 +109,7 @@ namespace Kablunk::Parser
 					{
 						ss >> word;
 						struct_names.emplace_back(word);
+
 						count++;
 
 						if (num_structs_to_find != 0)

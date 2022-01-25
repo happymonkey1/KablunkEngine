@@ -7,10 +7,8 @@
 #define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
-#if KB_NATIVE_SCRIPTING
-#	include "Kablunk/Scripts/NativeScriptEngine.h"
-#	include "Kablunk/Scripts/NativeScript.h"
-#endif
+#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Scripts/NativeScript.h"
 
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Renderer/Texture.h"
@@ -57,41 +55,6 @@ namespace Kablunk
 		ParentingComponent(const ParentingComponent&) = default;
 		ParentingComponent(uuid::uuid64 parent) : Parent{ parent } {}
 	};
-
-#if 0
-	// #TODO make children transforms relative to parents
-	struct ParentEntityComponent
-	{
-		// #TODO should probably switch to a hashmap or something faster
-		std::vector<EntityHandle> Child_entities_handles;
-
-		ParentEntityComponent() = default;
-		ParentEntityComponent(const ParentEntityComponent&) = default;
-		ParentEntityComponent(std::initializer_list<EntityHandle> l) : Child_entities_handles{ l } { }
-		
-		void AddChildHandle(EntityHandle child_handle) { Child_entities_handles.push_back(child_handle); }
-		void AddChildrenHandles(std::initializer_list<EntityHandle> l) { Child_entities_handles.insert(Child_entities_handles.end(), l.begin(), l.end()); }
-		void RemoveChildHandle(EntityHandle child_handle) { Child_entities_handles.erase(std::find(Child_entities_handles.begin(), Child_entities_handles.end(), child_handle)); }
-		bool ContainsHandle(EntityHandle child_handle) { return std::find(Child_entities_handles.begin(), Child_entities_handles.end(), child_handle) != Child_entities_handles.end(); }
-
-		std::vector<EntityHandle>::const_iterator begin() const { return Child_entities_handles.begin(); }
-		std::vector<EntityHandle>::const_iterator end() const { return Child_entities_handles.end(); }
-		//std::vector<Entity*>::iterator begin() { return Child_entities_ptrs.begin(); }
-		//std::vector<Entity*>::iterator end() { return Child_entities_ptrs.end(); }
-	};
-
-	struct ChildEntityComponent
-	{
-		EntityHandle Parent_entity_handle{ null_entity };
-
-		ChildEntityComponent() = default;
-		ChildEntityComponent(const ChildEntityComponent&) = default;
-
-		bool HasParent() const { return Parent_entity_handle != null_entity; }
-		void SetParent(EntityHandle parent_handle) { Parent_entity_handle = parent_handle; }
-		EntityHandle GetParent() const { return Parent_entity_handle; }
-	};
-#endif
 
 	struct TransformComponent
 	{
@@ -153,13 +116,12 @@ namespace Kablunk
 	};
 
 	// #TODO allow for multiple scripts to be attached to the same entity
-#if KB_NATIVE_SCRIPTING
 	struct NativeScriptComponent
 	{
-		NativeScript** Instance = nullptr;
+		Scope<NativeScriptInterface> Instance = nullptr;
 		std::filesystem::path Filepath = "";
 
-		using InstantiateScriptFunc = Scope<NativeScript>(*)();
+		using InstantiateScriptFunc = Scope<NativeScriptInterface>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
 		InstantiateScriptFunc InstantiateScript = nullptr;
 
@@ -184,17 +146,16 @@ namespace Kablunk
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
 		{
-			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
+			InstantiateScript	= [args...]() -> Scope<NativeScriptInterface> { return CreateScope<T>(args...) };
 		}
 
-		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
-		void BindEditor(Entity entity)
+		void BindEditor()
 		{
-			BindEditor(Filepath, entity);
+			BindEditor(Filepath);
 		}
 
 		// #TODO maybe add preprocessor to remove this from runtime builds, only necessary for editor
-		void BindEditor(const std::filesystem::path& filepath, Entity entity)
+		void BindEditor(const std::filesystem::path& filepath)
 		{
 			if (filepath.empty())
 				return;
@@ -207,7 +168,7 @@ namespace Kablunk
 			}
 			auto struct_name = struct_names[0];
 
-			Instance = NativeScriptEngine::Get()->AddScript(struct_name, filepath.string());
+			Instance = NativeScriptEngine::Get()->GetScript(struct_name);
 
 			if (!Instance)
 			{
@@ -217,30 +178,29 @@ namespace Kablunk
 
 			if (Instance)
 			{
-				(*Instance)->SetEntity(entity);
 				Filepath = filepath;
 
 				try
 				{
-					(*Instance)->OnAwake();
+					Instance->OnAwake();
 				}
 				catch (std::bad_alloc& e)
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					delete Instance;
+					Instance.reset();
 				}
 				catch (std::exception& e)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					delete Instance;
+					Instance.reset();
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					delete Instance;
+					Instance.reset();
 				}
 			}
 		}
@@ -248,7 +208,6 @@ namespace Kablunk
 
 		friend class Scene;
 	};
-#endif
 
 	struct MeshComponent
 	{

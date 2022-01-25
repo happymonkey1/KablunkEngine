@@ -23,7 +23,8 @@ project "KablunkEngine"
 		"vendor/ImGuizmo/ImGuizmo.cpp",
 
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.h",
-		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp"
+		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp",
+		"vendor/cr/cr.h"
 
 	}
 
@@ -54,7 +55,7 @@ project "KablunkEngine"
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.FreeType}",
 		"%{IncludeDir.Box2d}",
-		"%{IncludeDir.RCCPP}",
+		"%{IncludeDir.cr}",
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
@@ -70,7 +71,6 @@ project "KablunkEngine"
 		"spdlog",
 		"FreeType",
 		"Box2d",
-		"RCCPP",
 		"opengl32.lib",
 
 		"%{Library.Vulkan}",

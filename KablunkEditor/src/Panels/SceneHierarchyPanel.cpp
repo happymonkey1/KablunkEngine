@@ -466,13 +466,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
-#if DISABLE_NATIVE_SCRIPT
 			if (!m_selection_context.HasComponent<NativeScriptComponent>() && ImGui::MenuItem("Native Script"))
 			{
 				m_selection_context.AddComponent<NativeScriptComponent>();
 				ImGui::CloseCurrentPopup();
 			}
-#endif
+
 			if (!m_selection_context.HasComponent<CSharpScriptComponent>() && ImGui::MenuItem("C# Script"))
 			{
 				m_selection_context.AddComponent<CSharpScriptComponent>();
@@ -638,7 +637,6 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-#if KB_NATIVE_SCRIPTING
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
 			{
 				UI::BeginProperties();
@@ -663,13 +661,12 @@ namespace Kablunk
 						{
 							// #FIXME relative path when projects are implemented
 							//std::filesystem::path relative_path = std::filesystem::relative(filepath, g_asset_path);
-							component.BindEditor(filepath, entity);
+							component.BindEditor(filepath);
 						}
 					}
 				}
 				UI::EndProperties();
 			});
-#endif 
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{

@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Core/Application.h"
 
-
+#include "Kablunk/Scripts/NativeScriptEngine.h"
 #include "Kablunk/Events/Event.h"
 
 #include "Kablunk/Renderer/Renderer.h"
@@ -38,6 +38,7 @@ namespace Kablunk
 			m_window->SetVsync(specification.Vsync);
 		}
 
+		NativeScriptEngine::Init();
 
 		Renderer::Init();
 		RenderCommand::WaitAndRender();
@@ -49,6 +50,14 @@ namespace Kablunk
 		}
 
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
+
+		// #TODO should be based on projects later
+#if KB_DEBUG
+		constexpr const char* SANDBOX_PATH = "../bin/Debug-windows-x86_64/Sandbox/Sandbox.dll";
+#else
+		constexpr const char* SANDBOX_PATH = "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll";
+#endif
+		NativeScriptEngine::Open(SANDBOX_PATH);
 	}
 
 	Application::~Application()
@@ -68,6 +77,8 @@ namespace Kablunk
 
 		Renderer::Shutdown();
 		//Renderer2D::Shutdown();
+
+		NativeScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -142,6 +153,8 @@ namespace Kablunk
 			KB_PROFILE_SCOPE("RunLoop - Application::Run");
 
 			//KB_CORE_TRACE("Vsync: {0}", GetWindow().IsVsync());
+			if (NativeScriptEngine::Update())
+				continue;
 
 			m_window->PollEvents();
 
@@ -174,7 +187,6 @@ namespace Kablunk
 				}
 
 				m_window->OnUpdate();
-
 			}
 
 			float time = PlatformAPI::GetTime(); // Platform::GetTime

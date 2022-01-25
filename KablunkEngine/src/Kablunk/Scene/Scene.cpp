@@ -18,7 +18,6 @@
 
 #include <exception>
 
-#define DISABLE_NATIVE_SCRIPT 0
 
 namespace Kablunk
 {
@@ -121,9 +120,7 @@ namespace Kablunk
 		CopyComponent<SpriteRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CameraComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-#if KB_NATIVE_SCRIPTING
 		CopyComponent<NativeScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-#endif
 		CopyComponent<CSharpScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<MeshComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<PointLightComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
@@ -135,16 +132,14 @@ namespace Kablunk
 		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
 			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
-#if KB_NATIVE_SCRIPTING
 		// Bind all native script components
 		auto view = dest_scene_reg.view<NativeScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity{ e, dest_scene.get() };
 			auto& nsc = entity.GetComponent<NativeScriptComponent>();
-			nsc.BindEditor(entity);
+			nsc.BindEditor();
 		}
-#endif
 
 		// #TODO copy parenting components
 
@@ -294,7 +289,6 @@ namespace Kablunk
 		//	 Update
 		// ==========
 
-#if DISABLE_NATIVE_SCRIPT
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
@@ -305,29 +299,28 @@ namespace Kablunk
 				if (!native_script_component.Instance)
 				{
 					native_script_component.InstantiateScript();
-					(*native_script_component.Instance)->SetEntity({ entity, this });
 
 					try
 					{
-						(*native_script_component.Instance)->OnAwake();
+						native_script_component.Instance->OnAwake();
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
 						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 
 				}
@@ -336,30 +329,29 @@ namespace Kablunk
 				{
 					try
 					{
-						(*native_script_component.Instance)->OnUpdate(ts);
+						native_script_component.Instance->OnUpdate(ts);
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 				}
 			}
 		);
-#endif
 
 		// update fixed timestep
 		auto current_time = last_time + ts;
@@ -511,7 +503,6 @@ namespace Kablunk
 	void Scene::OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera)
 	{
 
-#if DISABLE_NATIVE_SCRIPT
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
@@ -523,31 +514,29 @@ namespace Kablunk
 				{
 					try
 					{
-						if (!NativeScriptEngine::AreScriptsCompiling())
-							(*native_script_component.Instance)->OnUpdate(ts);
+						native_script_component.Instance->OnUpdate(ts);
 					}
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance = nullptr;
+						native_script_component.Instance.reset();
 					}
 				}
 			}
 		);
-#endif
 
 		scene_renderer->BeginScene({ camera, camera.GetViewMatrix() });
 		
@@ -666,10 +655,8 @@ namespace Kablunk
 		CopyComponentIfItExists<SpriteRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CircleRendererComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CameraComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
-#if KB_NATIVE_SCRIPTING
 		if (CopyComponentIfItExists<NativeScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry))
-			new_entity.GetComponent<NativeScriptComponent>().BindEditor(new_entity);
-#endif
+			new_entity.GetComponent<NativeScriptComponent>().BindEditor();
 		CopyComponentIfItExists<CSharpScriptComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<MeshComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<PointLightComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
@@ -792,10 +779,8 @@ namespace Kablunk
 	template <>
 	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component) { }
 
-#if KB_NATIVE_SCRIPTING
 	template <>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component) { }
-#endif
 
 	template <>
 	void Scene::OnComponentAdded<CSharpScriptComponent>(Entity entity, CSharpScriptComponent& component) { }

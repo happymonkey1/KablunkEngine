@@ -21,7 +21,7 @@
 #include "Kablunk/Project/ProjectSerializer.h"
 
 // #TODO replace when runtime is figured out
-#include "Sandbox/Core.h"
+#include "Eclipse/EclipseCore.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -940,7 +940,7 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
 
-#if DISABLE_NATIVE_SCRIPTING
+#if KB_NATIVE_SCRIPTING
 			// Native scripts
 			std::filesystem::create_directories(project_path / "assets" / "bin");
 			std::filesystem::create_directories(project_path / "include");

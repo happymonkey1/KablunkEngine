@@ -12,9 +12,9 @@ namespace Kablunk
 }
 
 #ifdef KB_BUILD_DLL
-#	define KB_API __declspec(dllexport)
+#	define KB_API extern "C" __declspec(dllexport)
 #else
-#	define KB_API __declspec(dllimport)
+#	define KB_API extern "C" __declspec(dllimport)
 #endif
 
 // Platform detection
