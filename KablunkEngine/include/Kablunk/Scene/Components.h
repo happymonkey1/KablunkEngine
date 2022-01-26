@@ -129,14 +129,14 @@ namespace Kablunk
 		NativeScriptComponent(const NativeScriptComponent& other) 
 			: Instance{ nullptr }, Filepath{ other.Filepath }
 		{
-			KB_CORE_WARN("Copied native script! BindEditor needs to be called seperately!");
+			BindEditor();
 		}
 		
 		NativeScriptComponent& operator=(const NativeScriptComponent& other)
 		{
 			Instance = nullptr;
 			Filepath = other.Filepath;
-			KB_CORE_WARN("Copied native script! BindEditor needs to be called seperately!");
+			BindEditor();
 			return *this;
 		}
 

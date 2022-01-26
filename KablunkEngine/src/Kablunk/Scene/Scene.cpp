@@ -132,7 +132,7 @@ namespace Kablunk
 		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
 			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
-		// Bind all native script components
+		// all native script components
 		auto view = dest_scene_reg.view<NativeScriptComponent>();
 		for (auto e : view)
 		{
