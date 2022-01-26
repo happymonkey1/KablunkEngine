@@ -44,6 +44,9 @@ namespace Kablunk
 		void BeginScene(const SceneRendererCamera& camera);
 		void EndScene();
 
+		void SetMultiThreaded(bool threaded) { m_use_threads = threaded; }
+		bool GetMultiThreaded() const { return m_use_threads; }
+
 		void SetViewportSize(uint32_t width, uint32_t height);
 		IntrusiveRef<RenderPass> GetFinalRenderPass();
 		IntrusiveRef<RenderPass> GetCompositeRenderPass() { return m_composite_pipeline->GetSpecification().render_pass; }
@@ -93,6 +96,8 @@ namespace Kablunk
 		bool m_active = false;
 		bool m_needs_resize = false;
 		bool m_resources_created = false;
+
+		bool m_use_threads = false;
 
 		SceneRendererData m_scene_data;
 

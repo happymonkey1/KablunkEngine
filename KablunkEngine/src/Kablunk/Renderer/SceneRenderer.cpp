@@ -90,9 +90,9 @@ namespace Kablunk
 
 			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
-			RenderPassSpecification renderPassSpec;
-			renderPassSpec.target_framebuffer = framebuffer;
-			renderPassSpec.debug_name = "SceneComposite";
+			RenderPassSpecification composite_render_pass_spec;
+			composite_render_pass_spec.target_framebuffer = framebuffer;
+			composite_render_pass_spec.debug_name = "SceneComposite";
 
 			IntrusiveRef<Shader> composite_shader = Renderer::GetShaderLibrary()->Get("scene_composite");
 
@@ -103,7 +103,7 @@ namespace Kablunk
 			};
 			pipelineSpecification.backface_culling = false;
 			pipelineSpecification.shader = composite_shader;
-			pipelineSpecification.render_pass = RenderPass::Create(renderPassSpec);
+			pipelineSpecification.render_pass = RenderPass::Create(composite_render_pass_spec);
 			pipelineSpecification.debug_name = "SceneComposite";
 			pipelineSpecification.depth_write = false;
 			m_composite_pipeline = Pipeline::Create(pipelineSpecification);
@@ -190,12 +190,17 @@ namespace Kablunk
 
 	void SceneRenderer::EndScene()
 	{
-		IntrusiveRef<SceneRenderer> instance = this;
-		s_thread_pool.emplace_back(([instance]() mutable
-			{
-				instance->FlushDrawList();
-			}
-		));
+		if (m_use_threads)
+		{
+			IntrusiveRef<SceneRenderer> instance = this;
+			s_thread_pool.emplace_back(([instance]() mutable
+				{
+					instance->FlushDrawList();
+				}
+			));
+		}
+		else
+			FlushDrawList();
 
 		m_active = false;
 	}
