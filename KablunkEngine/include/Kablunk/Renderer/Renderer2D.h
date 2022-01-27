@@ -73,6 +73,8 @@ namespace Kablunk
 		static void EndScene();
 		static void Flush();
 
+		static void OnImGuiRender();
+
 		static IntrusiveRef<RenderPass> GetTargetRenderPass();
 		static void SetTargetRenderPass(IntrusiveRef<RenderPass> render_pass);
 		static void OnRecreateSwapchain();
@@ -85,6 +87,11 @@ namespace Kablunk
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
 		// #TODO figure out how to pass 64 bit integers to OpenGL so we can support int64_t instead of int32_t
 		static void DrawQuad(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f }, int32_t entity_id = -1);
+
+		// Texture Atlas
+		static void DrawQuadFromTextureAtlas(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		static void DrawQuadFromTextureAtlas(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		static void DrawQuadFromTextureAtlas(const glm::mat4& transform, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float radius = 0.5f, float thickness = 1.0f, float fade = 0.005f, int32_t entity_id = -1);
 

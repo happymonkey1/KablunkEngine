@@ -10,6 +10,9 @@
 
 namespace Kablunk 
 {
+	// Forward declaration
+	struct SpriteRendererComponent;
+
 	class NativeScriptInterface
 	{
 	public:
@@ -19,6 +22,8 @@ namespace Kablunk
 		virtual void OnUpdate(Timestep ts) { }
 		// DEBUG BUILDS ONLY
 		virtual void OnImGuiRender() { }
+
+		virtual bool OnRender2D(const SpriteRendererComponent&) { return false; }
 
 		// #TODO virtual function not working
 		virtual void OnDestroy() { }

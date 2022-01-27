@@ -587,9 +587,26 @@ namespace Kablunk
 			Renderer2D::BeginScene(camera, camera.GetViewMatrix());
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
+			// Draw entities who have native script components that override 2D rendering
+			std::map<entt::entity, bool> already_rendered_entites;
+			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
+			for (auto e : nsc_sprite_override_view)
+			{
+				Entity entity = { e, this };
+				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+				auto& src = entity.GetComponent<SpriteRendererComponent>();
+				if (nsc.Instance)
+				{
+					if (nsc.Instance->OnRender2D(src))
+						already_rendered_entites[e] = true;
+				}
+			}
+
+
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
-				Renderer2D::DrawSprite({ entity, this });
+				if (!already_rendered_entites[entity])
+					Renderer2D::DrawSprite({ entity, this });
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
@@ -621,7 +638,6 @@ namespace Kablunk
 	void Scene::OnImGuiRender()
 	{
 		
-#if KB_DEBUG
 		auto view = m_registry.view<NativeScriptComponent>();
 		for (auto id : view)
 		{
@@ -630,7 +646,6 @@ namespace Kablunk
 			if (nsc.Instance)
 				nsc.Instance->OnImGuiRender();
 		}
-#endif
 
 	}
 

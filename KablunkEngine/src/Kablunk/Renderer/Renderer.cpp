@@ -13,7 +13,6 @@ namespace Kablunk
 {
 	Scope<SceneData> Renderer::m_SceneData = CreateScope<SceneData>();
 	IntrusiveRef<ShaderLibrary> Renderer::s_shader_library = IntrusiveRef<ShaderLibrary>::Create();
-	Ref<FT_Library> Renderer::s_freetype_lib = CreateRef<FT_Library>();
 
 	struct ShaderDependencies
 	{

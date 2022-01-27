@@ -11,6 +11,7 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 
 
 namespace Kablunk
@@ -65,6 +66,11 @@ namespace Kablunk
 		Renderer2DSpecification specification;
 
 		Renderer2D::Renderer2DStats Stats = {};
+
+		struct GPUQueryTimeIndex
+		{
+			uint64_t renderer_2D_query;
+		} gpu_time_query;
 	};
 
 	static GenericRenderer2DData s_renderer_data;
@@ -106,7 +112,7 @@ namespace Kablunk
 		s_renderer_data.circle_vertex_buffer = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(CircleVertex));
 		s_renderer_data.circle_vertex_buffer_base_ptr = new CircleVertex[s_renderer_data.max_vertices];
 
-		uint32_t white_texture_data = 0xffffffff;
+		uint32_t white_texture_data = 0xFFFFFFFF;
 		s_renderer_data.white_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &white_texture_data);
 
 		s_renderer_data.quad_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
@@ -114,7 +120,7 @@ namespace Kablunk
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
-		
+
 		s_renderer_data.texture_slots[0] = s_renderer_data.white_texture;
 
 		s_renderer_data.quad_vertex_positions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
@@ -239,10 +245,12 @@ namespace Kablunk
 	void Renderer2D::Flush()
 	{
 		KB_CORE_ASSERT(s_renderer_data.Stats.batch_count < 1, "Multiple batches per frame not supported!");
-		
+
 		s_renderer_data.render_command_buffer->Begin();
+
+		s_renderer_data.gpu_time_query.renderer_2D_query = s_renderer_data.render_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline->GetSpecification().render_pass);
-		
+
 		// Quad
 		bool prev_set = false;
 		// calculate data size in bytes
@@ -289,10 +297,18 @@ namespace Kablunk
 		}
 
 		RenderCommand::EndRenderPass(s_renderer_data.render_command_buffer);
+		s_renderer_data.render_command_buffer->EndTimestampQuery(s_renderer_data.gpu_time_query.renderer_2D_query);
+
 		s_renderer_data.render_command_buffer->End();
 		s_renderer_data.render_command_buffer->Submit();
 
 		s_renderer_data.Stats.batch_count++;
+	}
+
+	void Renderer2D::OnImGuiRender()
+	{
+		uint32_t current_frame_index = Renderer::GetCurrentFrameIndex();
+		ImGui::Text("2D Geometry Pass: %.3fms", s_renderer_data.render_command_buffer->GetExecutionGPUTime(current_frame_index, s_renderer_data.gpu_time_query.renderer_2D_query));
 	}
 
 	IntrusiveRef<RenderPass> Renderer2D::GetTargetRenderPass()
@@ -335,7 +351,7 @@ namespace Kablunk
 		auto transform = entity.GetComponent<TransformComponent>().GetTransform();
 
 		auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
-		
+
 		const auto& texture = sprite_renderer_comp.Texture.Get();
 		auto tint_color = sprite_renderer_comp.Color;
 		auto tiling_factor = sprite_renderer_comp.Tiling_factor;
@@ -356,7 +372,7 @@ namespace Kablunk
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-		
+
 		DrawQuad(transform, texture, tiling_factor, tint_color);
 	}
 
@@ -392,6 +408,57 @@ namespace Kablunk
 			s_renderer_data.quad_vertex_buffer_ptr->TexIndex = texture_index;
 			s_renderer_data.quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 			s_renderer_data.quad_vertex_buffer_ptr->EntityID = entity_id;
+			s_renderer_data.quad_vertex_buffer_ptr++;
+		}
+		s_renderer_data.quad_index_count += 6;
+		s_renderer_data.quad_count++;
+
+		s_renderer_data.Stats.Quad_count += 1;
+	}
+
+	// DrawQuadTextureAtlas
+	void Renderer2D::DrawQuadFromTextureAtlas(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	{
+		DrawQuadFromTextureAtlas(glm::vec3{ position.x, position.y, 0.0f }, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
+	}
+	void Renderer2D::DrawQuadFromTextureAtlas(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	{
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawQuadFromTextureAtlas(transform, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
+	}
+	void Renderer2D::DrawQuadFromTextureAtlas(const glm::mat4& transform, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	{
+		if (s_renderer_data.quad_count + 1 > s_renderer_data.max_quads)
+			EndBatch();
+
+		//constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float texture_index = 0.0f;
+		for (uint32_t i = 1; i < s_renderer_data.texture_slot_index; ++i)
+		{
+			// Dereference shared_ptrs and compare the textures
+			if (*s_renderer_data.texture_slots[i].get() == *texture.get())
+				texture_index = (float)i;
+		}
+
+		if (texture_index == 0.0f)
+		{
+			texture_index = (float)s_renderer_data.texture_slot_index;
+			s_renderer_data.texture_slots[s_renderer_data.texture_slot_index++] = texture;
+			KB_CORE_ASSERT(s_renderer_data.texture_slot_index < s_renderer_data.max_texture_slots, "texture slot overflow!");
+		}
+
+		constexpr size_t quad_vertex_count = 4;
+
+		for (uint32_t i = 0; i < quad_vertex_count; ++i)
+		{
+			s_renderer_data.quad_vertex_buffer_ptr->Position = transform * s_renderer_data.quad_vertex_positions[i];
+			s_renderer_data.quad_vertex_buffer_ptr->Color = tint_color;
+			s_renderer_data.quad_vertex_buffer_ptr->TexCoord = texture_atlas_offsets[i];
+			s_renderer_data.quad_vertex_buffer_ptr->TexIndex = texture_index;
+			s_renderer_data.quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
+			s_renderer_data.quad_vertex_buffer_ptr->EntityID = 0;
 			s_renderer_data.quad_vertex_buffer_ptr++;
 		}
 		s_renderer_data.quad_index_count += 6;

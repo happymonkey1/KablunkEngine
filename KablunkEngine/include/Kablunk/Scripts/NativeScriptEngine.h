@@ -21,6 +21,7 @@ namespace Kablunk
 		static void Shutdown();
 
 		static Scope<NativeScriptInterface> GetScript(const std::string& name);
+	private:
 	};
 }
 

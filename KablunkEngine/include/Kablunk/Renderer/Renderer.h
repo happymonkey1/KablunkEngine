@@ -16,8 +16,9 @@
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Kablunk/Renderer/Material.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+
+//#include FT_FREETYPE_H
+//#include <ft2build.h>
 
 
 namespace Kablunk
@@ -118,8 +119,6 @@ namespace Kablunk
 		static Scope<SceneData> m_SceneData;
 		
 		static IntrusiveRef<ShaderLibrary> s_shader_library;
-
-		static Ref<FT_Library> s_freetype_lib;
 
 		
 	};

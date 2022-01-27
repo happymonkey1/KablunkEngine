@@ -238,6 +238,8 @@ namespace Kablunk
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
+		Renderer2D::OnImGuiRender();
+
 		ImGui::End();
 	}
 

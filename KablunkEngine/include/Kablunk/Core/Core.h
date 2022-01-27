@@ -48,11 +48,11 @@ namespace Kablunk
 
 
 #ifdef KB_ENABLE_ASSERTS
-#	define KB_ASSERT(x, ...)      { if(!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } }
-#	define KB_CORE_ASSERT(x, ...) { if(!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } } 
+#	define KB_ASSERT(x, ...)      { if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } }
+#	define KB_CORE_ASSERT(x, ...) { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } } 
 #else
-#	define KB_ASSERT(x, ...)
-#	define KB_CORE_ASSERT(x, ...)
+#	define KB_ASSERT(x, ...)		{ if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); } }
+#	define KB_CORE_ASSERT(x, ...)   { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); } } 
 #endif
 
 #define BIT(x) (1 << x)
@@ -65,7 +65,6 @@ namespace Kablunk
 
 namespace Kablunk
 {
-
 	template <typename T>
 	using Scope = std::unique_ptr<T>;
 

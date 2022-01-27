@@ -39,7 +39,7 @@ namespace Kablunk
 }
 
 
-#if KB_NATIVE_SCRIPTING
+#if 0
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
