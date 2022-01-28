@@ -126,17 +126,37 @@ namespace Kablunk
 		InstantiateScriptFunc InstantiateScript = nullptr;
 
 		NativeScriptComponent() = default;
-		NativeScriptComponent(const NativeScriptComponent& other) 
-			: Instance{ nullptr }, Filepath{ other.Filepath }
+		NativeScriptComponent(const NativeScriptComponent& other)
+			: Instance{nullptr}, Filepath{other.Filepath}
 		{
 			BindEditor();
+		}
+		NativeScriptComponent(NativeScriptComponent&& other) noexcept
+		{
+			Instance = std::move(other.Instance);
+			Filepath = std::move(other.Filepath);
+
+			other.Instance = nullptr;
+			other.Filepath = "";
 		}
 		
 		NativeScriptComponent& operator=(const NativeScriptComponent& other)
 		{
 			Instance = nullptr;
 			Filepath = other.Filepath;
-			BindEditor();
+
+			return *this;
+		}
+
+		NativeScriptComponent& operator=(NativeScriptComponent&& other) noexcept
+		{
+			Instance = std::move(other.Instance);
+			Filepath = other.Filepath;
+			//BindEditor();
+
+			other.Instance = nullptr;
+			other.Filepath = "";
+
 			return *this;
 		}
 

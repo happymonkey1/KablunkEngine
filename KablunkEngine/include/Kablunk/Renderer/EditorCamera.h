@@ -36,7 +36,7 @@ namespace Kablunk
 		glm::vec3 GetUpDirection() const;
 		glm::vec3 GetRightDirection() const;
 		glm::vec3 GetForwardDirection() const;
-		const glm::vec3& GetTranslation() const { return m_translation; }
+		const glm::vec3& GetPosition() const { return m_position; }
 		glm::quat GetOrientation() const;
 
 		float GetPitch() const { return m_pitch; }
@@ -53,7 +53,7 @@ namespace Kablunk
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
 
-		glm::vec3 CalculateTranslation() const;
+		glm::vec3 CalculatePosition() const;
 		std::pair<float, float> GetPanSpeed() const;
 		constexpr float GetRotationSpeed() const { return 0.8f; };
 		float GetZoomSpeed() const;
@@ -61,13 +61,18 @@ namespace Kablunk
 		float m_fov = 45.0f, m_aspect_ratio = 1.778f, m_near_clip = 0.1f, m_far_clip = 1000.0f;
 
 		glm::mat4 m_view_matrix;
-		glm::vec3 m_translation{ 0.0f };
-		glm::vec3 m_focal_point{ 0.0f };
+		glm::vec3 m_focal_point;
 
-		glm::vec2 m_initial_mouse_position{ 0.0f };
+		glm::vec2 m_initial_mouse_position;
 
-		float m_distance{ 10.0f };
-		float m_pitch{ 0.0f }, m_yaw{ 0.0f };
+		float m_distance;
+		glm::vec3 m_position;
+		glm::vec3 m_position_delta;
+		float m_pitch, m_yaw;
+		float m_pitch_delta, m_yaw_delta;
+
+		float m_min_focus_distance = 100.0f;
+
 		float m_viewport_width = 1600, m_viewport_height = 900;
 	};
 }

@@ -1163,7 +1163,7 @@ namespace Kablunk
 		auto inverse_projection = glm::inverse(camera.GetProjection());
 		auto inverse_view		= glm::inverse(glm::mat3{ camera.GetViewMatrix() });
 		glm::vec4 ray			= inverse_projection * mouse_clip_position;
-		glm::vec3 ray_pos		= camera.GetTranslation();
+		glm::vec3 ray_pos		= camera.GetPosition();
 		glm::vec3 ray_dir		= inverse_view * glm::vec3{ ray };
 
 		return { ray_pos, ray_dir };

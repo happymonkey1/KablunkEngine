@@ -194,6 +194,14 @@ namespace Kablunk
 						blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
 						break;
 					}
+					case FramebufferBlendMode::Additive:
+					{
+						blend_attachment_state[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+						blend_attachment_state[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+						blend_attachment_state[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+						blend_attachment_state[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+						break;
+					}
 					default:
 					{
 						KB_CORE_ASSERT(false, "unknown FramebufferBlendMode!");

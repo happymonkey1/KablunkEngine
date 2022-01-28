@@ -45,7 +45,7 @@ namespace Kablunk {
 		GLFWwindow* window = static_cast<GLFWwindow*>(viewport->PlatformHandle);
 		if (!window)
 		{
-			KB_CORE_ASSERT(false, "could not find window!");
+			KB_CORE_ERROR("could not find window!");
 			return std::make_pair(0, 0);
 		}
 

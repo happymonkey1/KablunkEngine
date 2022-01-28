@@ -89,7 +89,7 @@ namespace Kablunk
 		m_SceneData->camera_buffer.ViewProjectionMatrix = editor_camera.GetViewProjectionMatrix();
 		m_SceneData->camera_buffer.ProjectionMatrix = editor_camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = editor_camera.GetViewMatrix();
-		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetTranslation();
+		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetPosition();
 		//m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 

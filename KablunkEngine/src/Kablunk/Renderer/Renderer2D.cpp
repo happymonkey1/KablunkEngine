@@ -135,6 +135,8 @@ namespace Kablunk
 		framebuffer_spec.clear_on_load = false;
 		framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
 		framebuffer_spec.debug_name = "Renderer2D Framebuffer";
+		framebuffer_spec.blend_mode = FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha;
+		framebuffer_spec.blend = true;
 
 		IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(framebuffer_spec);
 
