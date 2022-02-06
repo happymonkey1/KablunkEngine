@@ -56,6 +56,11 @@
 #include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 // ----------------------------------------------
  
+// ---Utilities----------------------------------
+#include "Kablunk/Utilities/BinarySearch.hpp"
+#include "Kablunk/Utilities/Containers/PriorityQueue.hpp"
+// ----------------------------------------------
+
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"
 #include "imgui.h"

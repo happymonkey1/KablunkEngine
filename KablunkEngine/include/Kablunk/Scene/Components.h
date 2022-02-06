@@ -84,6 +84,11 @@ namespace Kablunk
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
 
+		glm::vec2 GetTextureDimensions() const 
+		{ 
+			return { Texture.Get()->GetWidth(), Texture.Get()->GetHeight() }; 
+		}
+
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(glm::vec4 color) 

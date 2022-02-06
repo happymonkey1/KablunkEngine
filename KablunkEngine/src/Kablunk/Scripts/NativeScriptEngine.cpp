@@ -2,34 +2,36 @@
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
-#define CR_HOST // tell cr.h that this is the host application
-#include <cr.h>
+//#define CR_HOST // tell cr.h that this is the host application
+//#include <cr.h>
 
 namespace Kablunk
 {
-	static cr_plugin s_ctx;
+	//static cr_plugin s_ctx;
 
 	void NativeScriptEngine::Init()
 	{
-		s_ctx = {};
+		//s_ctx = {};
 	}
 
 	void NativeScriptEngine::Open(const char* path)
 	{
-		cr_plugin_open(s_ctx, path);
+		//cr_plugin_open(s_ctx, path);
 	}
 
 	bool NativeScriptEngine::Update()
 	{
-		if (!s_ctx.p)
-			return true;
+		//if (!s_ctx.p)
+		//	return true;
 
-		return cr_plugin_update(s_ctx);
+		//return cr_plugin_update(s_ctx);
+
+		return true;
 	}
 
 	void NativeScriptEngine::Shutdown()
 	{
-		cr_plugin_close(s_ctx);
+		//cr_plugin_close(s_ctx);
 	}
 
 	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
