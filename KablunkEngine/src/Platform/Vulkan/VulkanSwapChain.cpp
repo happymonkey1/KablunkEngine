@@ -332,6 +332,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
 
 		// execute resource release queue
+
 		auto& queue = RenderCommand::GetRenderResourceReleaseQueue(m_current_buffer_index);
 		queue.Execute();
 

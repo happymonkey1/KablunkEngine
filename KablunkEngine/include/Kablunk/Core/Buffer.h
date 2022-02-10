@@ -22,6 +22,11 @@ namespace Kablunk
 					KB_CORE_ASSERT(false, "memcpy C6381 warning");
 			}
 		}
+		~Buffer()
+		{
+			if (m_data && m_size > 0)
+				delete[] m_data;
+		}
 
 		Buffer& operator=(const Buffer& other)
 		{

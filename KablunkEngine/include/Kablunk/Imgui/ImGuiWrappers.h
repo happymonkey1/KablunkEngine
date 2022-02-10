@@ -14,6 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <string>
+#include <string_view>
 
 namespace Kablunk::UI
 {
@@ -31,6 +32,11 @@ namespace Kablunk::UI
 		return &s_id_buffer[0];
 	}
 
+	static const char* GenerateLabelID(std::string_view label)
+	{
+		*fmt::format_to_n(s_id_buffer, std::size(s_id_buffer), "{}##{}", label, s_ui_context_id++).out = 0;
+		return s_id_buffer;
+	}
 
 	namespace Internal
 	{
@@ -44,18 +50,9 @@ namespace Kablunk::UI
 			ShiftCursorY(-3.0f);
 			ImGui::NextColumn();
 			ImGui::PushItemWidth(-1);
-
-			// Account for null terminator
-			size_t label_size = std::strlen(label) + 1;
-			size_t buffer_size = label_size + 2;
-			KB_CORE_ASSERT(buffer_size <= MAX_CHARS, "label too long!");
-			memset(s_id_buffer, 0, MAX_CHARS);
-			s_id_buffer[0] = '#';
-			s_id_buffer[1] = '#';
-			strcpy_s(s_id_buffer + 2, MAX_CHARS, label);
 			
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-			DrawUI(s_id_buffer);
+			DrawUI(GenerateID());
 			ImGui::PopStyleVar();
 
 			ImGui::PopItemWidth();
@@ -73,18 +70,10 @@ namespace Kablunk::UI
 			ImGui::NextColumn();
 			ImGui::PushItemWidth(-1);
 
-			size_t label_size = std::strlen(label) + 1;
-			size_t buffer_size = label_size + 2;
-			KB_CORE_ASSERT(buffer_size <= MAX_CHARS, "label too long!");
-			memset(s_id_buffer, 0, MAX_CHARS);
-			s_id_buffer[0] = '#';
-			s_id_buffer[1] = '#';
-			strcpy_s(s_id_buffer + 2, MAX_CHARS, label);
-
 			if (IsItemDisabled())
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
-			bool modified = DrawUI(s_id_buffer);
+			bool modified = DrawUI(GenerateID());
 
 			if (IsItemDisabled())
 				ImGui::PopStyleVar();
@@ -99,6 +88,7 @@ namespace Kablunk::UI
 	static void PushID()
 	{
 		ImGui::PushID(s_ui_context_id++);
+		s_ui_context_id = 0;
 	}
 
 	static void PopID()
@@ -111,7 +101,9 @@ namespace Kablunk::UI
 	{
 		PushID();
 		// #TODO update to table api before columns are deprecated
-		ImGui::BeginColumns("##properties", 2, ImGuiOldColumnFlags_NoResize | ImGuiOldColumnFlags_NoBorder);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 8.0f, 8.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
+		ImGui::Columns(2);
 	}
 
 	static void PushItemDisabled()
@@ -163,7 +155,7 @@ namespace Kablunk::UI
 	static bool Property(const char* label, std::string& value)
 	{
 		KB_CORE_ASSERT(strlen(label) + 1 < MAX_CHARS, "string is too long!");
-		return Internal::CreateProperty(label, [&value](char* id_buffer) -> bool
+		return Internal::CreateProperty(label, [&value](const char* id_buffer) -> bool
 			{
 				char buffer[MAX_CHARS];
 				strcpy_s(buffer, value.c_str());
@@ -182,7 +174,7 @@ namespace Kablunk::UI
 	// Use BeginProperties() before and EndProperties() after!
 	static void Property(const char* label, const std::string& value)
 	{
-		Internal::CreateStaticProperty(label, [&value](char* id_buffer)
+		Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
 			{
 				ImGui::InputText(id_buffer, (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
 			});
@@ -190,7 +182,7 @@ namespace Kablunk::UI
 
 	static void PropertyWithHint(const char* label, const std::string& hint, std::string& value)
 	{
-		Internal::CreateStaticProperty(label, [&](char* id_buffer)
+		Internal::CreateStaticProperty(label, [&](const char* id_buffer)
 			{
 				ImGui::InputTextWithHint(id_buffer, hint.c_str(), (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
 			});
@@ -209,7 +201,7 @@ namespace Kablunk::UI
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, char* value, size_t length)
 	{
-		return Internal::CreateProperty(label, [&value, &length](char* id_buffer) -> bool
+		return Internal::CreateProperty(label, [&value, &length](const char* id_buffer) -> bool
 			{
 				return ImGui::InputText(id_buffer, (char*)value, length);
 			});
@@ -217,7 +209,7 @@ namespace Kablunk::UI
 
 	static bool PropertyWithHint(const char* label, const char* hint, char* value, size_t length)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer) -> bool
+		return Internal::CreateProperty(label, [&](const char* id_buffer) -> bool
 			{
 				return ImGui::InputTextWithHint(id_buffer, hint, (char*)value, length);
 			});
@@ -226,7 +218,7 @@ namespace Kablunk::UI
 	// Use BeginProperties() before and EndProperties() after!
 	static void Property(const char* label, const char* value)
 	{
-		Internal::CreateStaticProperty(label, [&value](char* id_buffer)
+		Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
 			{
 				ImGui::InputText(id_buffer, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
 			});
@@ -234,7 +226,7 @@ namespace Kablunk::UI
 
 	static void PropertyWithHint(const char* label, const char* hint, const char* value)
 	{
-		Internal::CreateStaticProperty(label, [&](char* id_buffer)
+		Internal::CreateStaticProperty(label, [&](const char* id_buffer)
 			{
 				ImGui::InputTextWithHint(id_buffer, hint, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
 			});
@@ -252,7 +244,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::DragFloat(id_buffer, &value, delta, min, max);
 			});
@@ -270,7 +262,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, int& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::DragInt(id_buffer, &value, delta, min, max);
 			});
@@ -278,7 +270,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, uint32_t& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				int casted_int = static_cast<int>(value);
 				return ImGui::DragInt(id_buffer, &casted_int, delta, min, max);
@@ -292,7 +284,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::DragFloat2(id_buffer, glm::value_ptr(value), delta, min, max);
 			});
@@ -300,7 +292,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, glm::vec3& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::DragFloat3(id_buffer, glm::value_ptr(value), delta, min, max);
 			});
@@ -308,7 +300,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, bool* value)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::Checkbox(id_buffer, value);
 			});
@@ -316,7 +308,7 @@ namespace Kablunk::UI
 
 	static bool Property(const char* label, glm::vec4& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::DragFloat4(id_buffer, glm::value_ptr(value), delta, min, max);
 			});
@@ -324,7 +316,7 @@ namespace Kablunk::UI
 
 	static bool PropertyColorEdit3(const char* label, glm::vec3& value)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::ColorEdit3(id_buffer, glm::value_ptr(value));
 			});
@@ -332,7 +324,7 @@ namespace Kablunk::UI
 
 	static bool PropertyColorEdit4(const char* label, glm::vec4& value)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				return ImGui::ColorEdit4(id_buffer, glm::value_ptr(value));
 			});
@@ -341,7 +333,7 @@ namespace Kablunk::UI
 	template <typename EnumT, typename UnderlyingT = int32_t>
 	static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT& selected)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				UnderlyingT selected_index = (UnderlyingT)selected;
 				const char* current = options[selected_index];
@@ -372,7 +364,7 @@ namespace Kablunk::UI
 
 	static bool PropertyDropdown(const char* label, const std::vector<std::string>& options, int32_t option_count, int32_t* selected_index)
 	{
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				const char* current = options[*selected_index].c_str();
 				bool updated = false;
@@ -403,7 +395,7 @@ namespace Kablunk::UI
 	static bool PropertyImageButton(const char* label, IntrusiveRef<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
 	{
 		ShiftCursorY(size.y / 4.0f);
-		return Internal::CreateProperty(label, [&](char* id_buffer)
+		return Internal::CreateProperty(label, [&](const char* id_buffer)
 			{
 				//ShiftCursorY(-5.0f);
 				return ImageButton(image, size, uv0, uv1, frame_padding, bg_col, tint_col);
@@ -463,7 +455,9 @@ namespace Kablunk::UI
 
 	static void EndProperties()
 	{
-		ImGui::EndColumns();
+		ImGui::Columns(1);
+		ImGui::PopStyleVar(2);
+		UI::ShiftCursorY(18.0f);
 		PopID();
 	}
 

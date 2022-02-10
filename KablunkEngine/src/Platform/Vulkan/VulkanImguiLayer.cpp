@@ -273,7 +273,6 @@ namespace Kablunk
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
-
 	}
 
 }

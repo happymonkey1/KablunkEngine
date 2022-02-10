@@ -59,8 +59,7 @@ namespace Kablunk
 			if (!decl)
 				return;
 
-			auto& buffer = m_uniform_storage_buffer;
-			buffer.Write((uint8_t*)&value, decl->GetSize(), decl->GetOffset());
+			m_uniform_storage_buffer.Write((uint8_t*)&value, decl->GetSize(), decl->GetOffset());
 		}
 
 		template<typename T>
@@ -68,8 +67,7 @@ namespace Kablunk
 		{
 			auto decl = FindUniformDeclaration(name);
 			KB_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
-			auto& buffer = m_uniform_storage_buffer;
-			return buffer.Read<T>(decl->GetOffset());
+			return m_uniform_storage_buffer.Read<T>(decl->GetOffset());
 		}
 
 		template<typename T>
