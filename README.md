@@ -2,7 +2,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/wmtieejd651lye65?svg=true)](https://ci.appveyor.com/project/happymonkey1/kablunkengine)
 
-Personal project to develop a basic 2D game engine. Currently still in development.
+Personal project to develop a basic 2D game engine. Currently still in development, meaning features might be broken or not implemented yet. 
 
 ## Setup
 
@@ -14,7 +14,13 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [x] C# Scripting
 - [x] Editor
 - [x] Basic 3D Renderer
-- [x] Entity Component System   
+- [x] Entity Component System
+
+## In Progress
+
+- Vulkan integration
+- Editor Improvements
+- Hot swappable C++ scripts
 
 ## Roadmap
 
@@ -22,9 +28,4 @@ https://trello.com/b/cYhcr9CG/kablunkengine
 
 ## Credits
 
-Inspiration and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube. 
-
-## Conventions
-
-Mostly follows [Stroustrup's](https://www.stroustrup.com/bs_faq2.html) style with some personal preferences.
-
+Inspiration, help, and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube from his game engine development series. 
