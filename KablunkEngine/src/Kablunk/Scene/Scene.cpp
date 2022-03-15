@@ -32,7 +32,7 @@ namespace Kablunk
 
 		auto m_scene_entity = m_registry.create();
 		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
-		
+
 		s_active_scenes.insert({ m_scene_id, this });
 	}
 
@@ -46,10 +46,10 @@ namespace Kablunk
 	{
 		switch (type)
 		{
-		case RigidBody2DComponent::RigidBodyType::Static:		return b2BodyType::b2_staticBody;
-		case RigidBody2DComponent::RigidBodyType::Dynamic:		return b2BodyType::b2_dynamicBody;
-		case RigidBody2DComponent::RigidBodyType::Kinematic:	return b2BodyType::b2_kinematicBody;
-		default:												KB_CORE_ASSERT(false, "unknown body type"); return b2_staticBody;
+			case RigidBody2DComponent::RigidBodyType::Static:		return b2BodyType::b2_staticBody;
+			case RigidBody2DComponent::RigidBodyType::Dynamic:		return b2BodyType::b2_dynamicBody;
+			case RigidBody2DComponent::RigidBodyType::Kinematic:	return b2BodyType::b2_kinematicBody;
+			default:												KB_CORE_ASSERT(false, "unknown body type"); return b2_staticBody;
 		}
 	}
 
@@ -116,16 +116,16 @@ namespace Kablunk
 			Entity new_entity = dest_scene->CreateEntity(tag, uuid);
 		}
 
-		CopyComponent<TransformComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<SpriteRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<CircleRendererComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<CameraComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<NativeScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<CSharpScriptComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<MeshComponent>			(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<PointLightComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<RigidBody2DComponent>		(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
-		CopyComponent<BoxCollider2DComponent>	(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<TransformComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<SpriteRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CircleRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<NativeScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<CSharpScriptComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<MeshComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<PointLightComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<RigidBody2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 
 		const auto& entity_instance_map = CSharpScriptEngine::GetEntityInstanceMap();
@@ -161,7 +161,7 @@ namespace Kablunk
 	{
 		Entity entity = { m_registry.create(), this };
 		entity.AddComponent<TransformComponent>();
-		
+
 		// Check if we should use uuid passed into when creating the id component
 		uuid::uuid64 entity_uuid;
 		if (uuid::is_nil(id))
@@ -176,7 +176,7 @@ namespace Kablunk
 		tag_comp.Tag = name.empty() ? "Blank Entity" : name;
 
 		entity.AddComponent<ParentingComponent>();
-		
+
 		m_entity_map.insert({ entity_uuid, entity });
 		KB_CORE_ASSERT(entity.GetSceneUUID() == m_scene_id, "scene ids do not match");
 		KB_CORE_ASSERT(entity.GetSceneUUID() == m_entity_map.at(entity_uuid).GetSceneUUID(), "scene ids do not match");
@@ -213,7 +213,7 @@ namespace Kablunk
 			body_def.angle = transform.Rotation.z;
 
 			b2Body* body = m_box2D_world->CreateBody(&body_def);
-			
+
 			body->SetGravityScale(rb2d_comp.Does_gravity_affect ? 1.0f : 0.0f);
 			body->SetFixedRotation(rb2d_comp.Fixed_rotation);
 			rb2d_comp.Runtime_body = body;
@@ -275,15 +275,85 @@ namespace Kablunk
 					CSharpScriptEngine::OnCreateEntity(entity);
 			}
 		}
+
+		{
+			auto view = m_registry.view<NativeScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = Entity{ e, this };
+				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+
+				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
+
+				try
+				{
+					nsc.Instance->OnAwake();
+				}
+				catch (std::bad_alloc& e)
+				{
+					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+				catch (std::exception& e)
+				{
+					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+				catch (...)
+				{
+					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+
+			}
+		}
 	}
 
 	void Scene::OnStopRuntime()
 	{
+		{
+			auto view = m_registry.view<NativeScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = Entity{ e, this };
+				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+
+				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
+
+				try
+				{
+					nsc.Instance->OnDestroy();
+				}
+				catch (std::bad_alloc& e)
+				{
+					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+				catch (std::exception& e)
+				{
+					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+				catch (...)
+				{
+					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					nsc.Instance.reset();
+				}
+
+			}
+		}
+
 		delete m_box2D_world;
 		m_box2D_world = nullptr;
 	}
 
-	void Scene::OnUpdateRuntime(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts)
+	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		// ==========
 		//	 Update
@@ -292,39 +362,6 @@ namespace Kablunk
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
-				/*	#TODO
-				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
-				*	function if the instance has not been set
-				*/
-				if (!native_script_component.Instance)
-				{
-					native_script_component.InstantiateScript();
-
-					try
-					{
-						native_script_component.Instance->OnAwake();
-					}
-					catch (std::bad_alloc& e)
-					{
-						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
-						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
-					}
-					catch (std::exception& e)
-					{
-						KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
-						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
-					}
-					catch (...)
-					{
-						KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
-						KB_CORE_TRACE("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
-					}
-
-				}
-
 				if (native_script_component.Instance)
 				{
 					try
@@ -363,7 +400,7 @@ namespace Kablunk
 			last_time -= FIXED_TIMESTEP;
 			fixed_ts = FIXED_TIMESTEP + last_time;
 		}
-		
+
 		last_time += ts;
 		{
 			auto view = m_registry.view<CSharpScriptComponent>();
@@ -385,7 +422,7 @@ namespace Kablunk
 						CSharpScriptEngine::OnFixedUpdateEntity(entity, Timestep{ fixed_ts });
 			}
 		}
-		
+
 		// ===========	
 		//	 Physics
 		// ===========
@@ -412,35 +449,41 @@ namespace Kablunk
 				transform.Rotation.z = body->GetAngle();
 			}
 		}
+	}
 
-		// ==========	
-		//	 Render
-		// ==========
-
-
+	void Scene::OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* editor_cam /*= nullptr*/)
+	{
 		Camera*		main_camera{ nullptr };
-		glm::mat4	main_camera_transform;
-		auto view = m_registry.view<CameraComponent, TransformComponent>();
-		for (auto entity : view)
+		glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
+		if (editor_cam)
 		{
-			auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
-			
-			// Find main camera in scene
-			if (camera.Primary)
+			main_camera = editor_cam;
+			main_camera_transform = editor_cam->GetViewMatrix();
+		}
+		else
+		{
+			auto view = m_registry.view<CameraComponent, TransformComponent>();
+			for (auto entity : view)
 			{
-				main_camera = &camera.Camera;
-				main_camera_transform = transform.GetTransform();
-				break;
+				auto [camera, transform] = view.get<CameraComponent, TransformComponent>(entity);
+
+				// Find main camera in scene
+				if (camera.Primary)
+				{
+					main_camera = &camera.Camera;
+					main_camera_transform = transform.GetTransform();
+					break;
+				}
 			}
 		}
 
 		if (!main_camera)
 			return;
 
-		
+
 		//scene_renderer->SetScene();
 		scene_renderer->BeginScene({ *main_camera, main_camera_transform });
-		
+
 		{
 			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
 			std::vector<PointLight> point_lights_data = {};
@@ -484,32 +527,42 @@ namespace Kablunk
 			Renderer2D::BeginScene(*main_camera, main_camera_transform);
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
+			std::map<entt::entity, bool> already_rendered_entites;
+			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
+			for (auto e : nsc_sprite_override_view)
+			{
+				Entity entity = Entity{ e, this };
+				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+				auto& src = entity.GetComponent<SpriteRendererComponent>();
+
+				if (nsc.Instance)
+					nsc.Instance->OnRender2D(src);
+
+				already_rendered_entites[e] = true;
+			}
+
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
-				Renderer2D::DrawSprite({ entity, this });
-			
+				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
+					Renderer2D::DrawSprite({ entity, this });
+
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
 			{
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
 				Renderer2D::DrawCircle(transform.GetTransform(), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
-			
+
 			Renderer2D::EndScene();
 		}
-
 	}
 
-	void Scene::OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera)
+	void Scene::OnUpdateEditor(Timestep ts)
 	{
-
+		/*
 		m_registry.view<NativeScriptComponent>().each(
 			[=](auto entity, auto& native_script_component)
 			{
-				/*	#TODO
-				*	Since there is no concept of creation or destruction of a scene, instead "creation" happens during the update
-				*	function if the instance has not been set
-				*/
 				if (native_script_component.Instance)
 				{
 					try
@@ -537,9 +590,13 @@ namespace Kablunk
 				}
 			}
 		);
+		*/
+	}
 
+	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
+	{
 		scene_renderer->BeginScene({ camera, camera.GetViewMatrix() });
-		
+
 		{
 			//Renderer::BeginScene(camera);
 
@@ -564,7 +621,7 @@ namespace Kablunk
 				point_lights_data.push_back(plight_data);
 				point_light_count++;
 			}
-			
+
 			Renderer::SubmitPointLights(point_lights_data, point_light_count);
 
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -589,23 +646,22 @@ namespace Kablunk
 
 			// Draw entities who have native script components that override 2D rendering
 			std::map<entt::entity, bool> already_rendered_entites;
-			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
+			/*auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
 			for (auto e : nsc_sprite_override_view)
 			{
 				Entity entity = { e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 				auto& src = entity.GetComponent<SpriteRendererComponent>();
 				if (nsc.Instance)
-				{
-					if (nsc.Instance->OnRender2D(src))
-						already_rendered_entites[e] = true;
-				}
-			}
+					nsc.Instance->OnRender2D(src);
+
+				already_rendered_entites[e] = true;
+			}*/
 
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
-				if (!already_rendered_entites[entity])
+				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
 					Renderer2D::DrawSprite({ entity, this });
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();

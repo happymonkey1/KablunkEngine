@@ -52,6 +52,7 @@ namespace Kablunk
 
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
+		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
@@ -68,7 +69,7 @@ namespace Kablunk
 
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
-
+		NativeScriptEngine::Get()->SetScene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
@@ -114,13 +115,21 @@ namespace Kablunk
 
 			m_editor_camera.OnUpdate(ts);
 
-			m_active_scene->OnUpdateEditor(m_viewport_renderer, ts, m_editor_camera);
+			m_active_scene->OnUpdateEditor(ts);
+			m_active_scene->OnRenderEditor(m_viewport_renderer, m_editor_camera);
 
 			//ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
-			m_active_scene->OnUpdateRuntime(m_viewport_renderer, ts);
+			m_active_scene->OnUpdateRuntime(ts);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer);
+
+			break;
+		case SceneState::Pause:
+
+			m_editor_camera.OnUpdate(ts);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, &m_editor_camera);
 
 			break;
 		}
@@ -348,7 +357,9 @@ namespace Kablunk
 			ImGui::End();
 		}
 		
+		
 		m_active_scene->OnImGuiRender();
+
 		CSharpScriptEngine::OnImGuiRender();
 
 		UI_Toolbar();
@@ -537,31 +548,67 @@ namespace Kablunk
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.15f, 0.1505f, 0.151f, 0.5f });
 		ImGui::Begin("##toolbar", nullptr, flags);
 
-		auto icon = m_scene_state == SceneState::Edit ? m_icon_play : m_icon_stop;
 
-		const float size = std::min(static_cast<float>(icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
-		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
-		// Invisible button to register clicks
-		const bool clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+		auto play_stop_icon = m_icon_play;
+		if (m_scene_state != SceneState::Edit)
+			play_stop_icon = m_icon_stop;
 
-		// Visible Button
-		const ImColor button_tint = IM_COL32(192, 192, 192, 255);
+		const float size = std::min(static_cast<float>(play_stop_icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
 		const float icon_padding = 0.0f;
-
-		UI::DrawButtonImage(
-			icon,
-			button_tint,
-			UI::ColorWithMultipliedValue(button_tint, 1.3f),
-			UI::ColorWithMultipliedValue(button_tint, 0.8f),
-			UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
-		);
-
-		if (clicked)
+		// #TODO offset so buttons are centered
+		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
+		
+		// Play / Stop Button
 		{
-			if (m_scene_state == SceneState::Edit)
-				OnScenePlay();
-			else if (m_scene_state == SceneState::Play)
-				OnSceneStop();
+			// Invisible button to register clicks
+			const bool play_stop_clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+
+			// Visible Button
+			const ImColor play_stop_button_tint = IM_COL32(192, 192, 192, 255);
+
+			UI::DrawButtonImage(
+				play_stop_icon,
+				play_stop_button_tint,
+				UI::ColorWithMultipliedValue(play_stop_button_tint, 1.3f),
+				UI::ColorWithMultipliedValue(play_stop_button_tint, 0.8f),
+				UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
+			);
+
+			if (play_stop_clicked)
+			{
+				if (m_scene_state == SceneState::Edit)
+					OnScenePlay();
+				else if (m_scene_state != SceneState::Edit)
+					OnSceneStop();
+			}
+		}
+
+		// #TODO offset so buttons are centered
+		ImGui::SameLine();
+
+		// Pause Button
+		{
+			const bool pause_clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+
+			ImColor pause_button_tint = m_scene_state == SceneState::Pause ?
+				IM_COL32(173, 216, 230, 255) : IM_COL32(192, 192, 192, 255);
+
+			// #TODO tint background as well
+			UI::DrawButtonImage(
+				m_icon_pause,
+				pause_button_tint,
+				UI::ColorWithMultipliedValue(pause_button_tint, 1.3f),
+				UI::ColorWithMultipliedValue(pause_button_tint, 0.8f),
+				UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
+			);
+
+			if (pause_clicked)
+			{
+				if (m_scene_state == SceneState::Play)
+					m_scene_state = SceneState::Pause;
+				else if (m_scene_state == SceneState::Pause)
+					m_scene_state = SceneState::Play;
+			}
 		}
 
 		ImGui::PopStyleVar(2);
@@ -651,6 +698,7 @@ namespace Kablunk
 
 		m_active_scene = m_runtime_scene;
 		m_viewport_renderer->SetScene(m_active_scene);
+		NativeScriptEngine::Get()->SetScene(m_active_scene.get());
 		m_selected_entity = {};
 	}
 
@@ -665,6 +713,7 @@ namespace Kablunk
 
 		m_active_scene = m_editor_scene;
 		m_viewport_renderer->SetScene(m_active_scene);
+		NativeScriptEngine::Get()->SetScene(m_active_scene);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -780,6 +829,7 @@ namespace Kablunk
 		m_viewport_renderer->SetScene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
+		NativeScriptEngine::Get()->SetScene(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 
@@ -844,6 +894,7 @@ namespace Kablunk
 			
 			m_scene_hierarchy_panel.SetContext(m_editor_scene);
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
+			NativeScriptEngine::Get()->SetScene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
 			m_viewport_renderer->SetScene(m_active_scene);
@@ -1057,6 +1108,7 @@ namespace Kablunk
 		SaveProject();
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
+		NativeScriptEngine::Get()->SetScene(nullptr);
 
 		m_viewport_renderer->SetScene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);
@@ -1135,6 +1187,11 @@ namespace Kablunk
 					break;
 				}
 				case SceneState::Edit:
+				{
+					Renderer2D::BeginScene(m_editor_camera);
+					break;
+				}
+				case SceneState::Pause:
 				{
 					Renderer2D::BeginScene(m_editor_camera);
 					break;

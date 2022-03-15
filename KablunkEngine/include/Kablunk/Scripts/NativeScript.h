@@ -25,7 +25,6 @@ namespace Kablunk
 
 		virtual bool OnRender2D(const SpriteRendererComponent&) { return false; }
 
-		// #TODO virtual function not working
 		virtual void OnDestroy() { }
 	private:
 		friend class Scene;

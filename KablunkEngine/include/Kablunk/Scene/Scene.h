@@ -34,8 +34,10 @@ namespace Kablunk
 		void OnStartRuntime();
 		void OnStopRuntime();
 
-		void OnUpdateRuntime(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts);
-		void OnUpdateEditor(IntrusiveRef<SceneRenderer> scene_renderer, Timestep ts, EditorCamera& camera);
+		void OnUpdateRuntime(Timestep ts);
+		void OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* camera = nullptr);
+		void OnUpdateEditor(Timestep ts);
+		void OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
 		void OnImGuiRender();

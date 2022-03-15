@@ -23,6 +23,8 @@ IncludeDir["VulkanSDK_LocalInclude"] = "%{wks.location}/KablunkEngine/vendor/Vul
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 LibraryDir["VulkanSDK_Debug"] = "%{VULKAN_SDK}/Lib"
+LibraryDir["VulkanSDK_Bin"] = "%{VULKAN_SDK}/Bin"
+LibraryDir["VulkanSDK_Debug_Bin"] = "%{VULKAN_SDK}/Bin"
 
 Library = {}
 Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/Debug/mono-2.0-sgen.lib"

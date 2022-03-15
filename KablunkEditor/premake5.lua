@@ -63,7 +63,8 @@ project "KablunkEditor"
         {
             '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
-           -- '{COPY} "../bin/Debug-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
+            '{COPY} "%{LibraryDir.VulkanSDK_Debug_Bin}/shaderc_sharedd.dll" "%{cfg.targetdir}"'
+            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }
 	
 	filter "configurations:Release"
@@ -80,6 +81,7 @@ project "KablunkEditor"
         {
             '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
+            '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }
 	
@@ -97,5 +99,6 @@ project "KablunkEditor"
         {
             '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
-            '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
+            '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
+            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }

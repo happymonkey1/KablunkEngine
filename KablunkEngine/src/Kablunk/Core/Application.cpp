@@ -38,8 +38,6 @@ namespace Kablunk
 			m_window->SetVsync(specification.Vsync);
 		}
 
-		//NativeScriptEngine::Init();
-
 		Renderer::Init();
 		RenderCommand::WaitAndRender();
 
@@ -50,6 +48,7 @@ namespace Kablunk
 		}
 
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
+		NativeScriptEngine::Init();
 
 		// #TODO should be based on projects later
 #if KB_DEBUG
@@ -78,7 +77,7 @@ namespace Kablunk
 		Renderer::Shutdown();
 		//Renderer2D::Shutdown();
 
-		//NativeScriptEngine::Shutdown();
+		NativeScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

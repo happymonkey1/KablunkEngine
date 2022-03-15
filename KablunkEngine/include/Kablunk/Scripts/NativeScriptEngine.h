@@ -11,6 +11,8 @@ extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::stri
 
 namespace Kablunk
 {
+	class Scene;
+
 	class NativeScriptEngine
 	{
 	public:
@@ -21,7 +23,14 @@ namespace Kablunk
 		static void Shutdown();
 
 		static Scope<NativeScriptInterface> GetScript(const std::string& name);
+		static NativeScriptEngine* Get() { KB_CORE_ASSERT(s_instance, "Instance is not set! Make sure Init is called!"); return s_instance; }
+
+		void SetScene(WeakRef<Scene> scene);
+		WeakRef<Scene> GetScene();
 	private:
+		Scene* m_current_scene = nullptr;
+
+		inline static NativeScriptEngine* s_instance;
 	};
 }
 

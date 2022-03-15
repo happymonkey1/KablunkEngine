@@ -200,8 +200,8 @@ namespace Kablunk
 	{
 	public:
 		WeakRef() = default;
-		WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
-		WeakRef(const IntrusiveRef<T>& ref) : m_ptr{ ref.get() } { }
+		//WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
+		WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.get() } { }
 		WeakRef(T* ptr) : m_ptr{ ptr } { }
 
 		// #TODO make sure pointer is valid in the live reference map

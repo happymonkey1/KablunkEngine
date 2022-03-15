@@ -11,7 +11,8 @@ namespace Kablunk
 
 	void NativeScriptEngine::Init()
 	{
-		//s_ctx = {};
+		KB_CORE_ASSERT(!s_instance, "Instance is already set! Init might be being called twice?!");
+		s_instance = new NativeScriptEngine{};
 	}
 
 	void NativeScriptEngine::Open(const char* path)
@@ -32,12 +33,25 @@ namespace Kablunk
 	void NativeScriptEngine::Shutdown()
 	{
 		//cr_plugin_close(s_ctx);
+
+		delete s_instance;
 	}
 
 	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
 	{
 		return Scope<NativeScriptInterface>(GetScriptFromRegistry(name));
 	}
+
+	void NativeScriptEngine::SetScene(WeakRef<Scene> scene)
+	{
+		m_current_scene = scene.get();
+	}
+
+	WeakRef<Scene> NativeScriptEngine::GetScene()
+	{
+		return WeakRef<Scene>(m_current_scene);
+	}
+
 }
 
 

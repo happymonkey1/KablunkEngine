@@ -91,11 +91,11 @@ namespace Kablunk
 
 
 		// Resources
-		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop;
+		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
 
 		enum class SceneState
 		{
-			Edit = 0, Play = 1
+			Edit = 0, Play = 1, Pause = 2
 		};
 		SceneState m_scene_state{ SceneState::Edit };
 

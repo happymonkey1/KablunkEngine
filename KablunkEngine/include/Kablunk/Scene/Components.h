@@ -134,8 +134,9 @@ namespace Kablunk
 		NativeScriptComponent(const NativeScriptComponent& other)
 			: Instance{nullptr}, Filepath{other.Filepath}
 		{
-			BindEditor();
+
 		}
+
 		NativeScriptComponent(NativeScriptComponent&& other) noexcept
 		{
 			Instance = std::move(other.Instance);
@@ -205,6 +206,8 @@ namespace Kablunk
 			{
 				Filepath = filepath;
 
+				
+				// #TODO Move to scene OnStartRuntime
 				try
 				{
 					Instance->OnAwake();
