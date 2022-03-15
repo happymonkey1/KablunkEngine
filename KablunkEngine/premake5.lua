@@ -2,7 +2,7 @@ project "KablunkEngine"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
+	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -20,7 +20,12 @@ project "KablunkEngine"
 		"vendor/glm/glm/**.inl",
 		"vendor/stduuid/include/uuid.h",
 		"vendor/ImGuizmo/ImGuizmo.h",
-		"vendor/ImGuizmo/ImGuizmo.cpp"
+		"vendor/ImGuizmo/ImGuizmo.cpp",
+
+		"vendor/VulkanMemoryAllocator/vk_mem_alloc.h",
+		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp",
+		"vendor/cr/cr.h"
+
 	}
 
 	defines
@@ -50,8 +55,9 @@ project "KablunkEngine"
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.FreeType}",
 		"%{IncludeDir.Box2d}",
-		"%{IncludeDir.RCCPP}",
+		"%{IncludeDir.cr}",
 		"%{IncludeDir.mono}",
+		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}"
 	}
@@ -65,7 +71,6 @@ project "KablunkEngine"
 		"spdlog",
 		"FreeType",
 		"Box2d",
-		"RCCPP",
 		"opengl32.lib",
 
 		"%{Library.Vulkan}",
@@ -88,7 +93,12 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib",
+			"%{Library.ShaderC_Debug}",
+			"%{Library.ShaderC_Utils_Debug}",
+			"%{Library.SPIRV_Cross_Debug}",
+			"%{Library.SPIRV_Cross_GLSL_Debug}",
+			"%{Library.SPIRV_Tools_Debug}"
         }
 	
 	filter "configurations:Release"
@@ -98,7 +108,12 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+			"%{Library.ShaderC_Release}",
+			"%{Library.ShaderC_Utils_Release}",
+			"%{Library.SPIRV_Cross_Release}",
+			"%{Library.SPIRV_Cross_GLSL_Release}",
+			"%{Library.SPIRV_Tools}"
         }
         
 	
@@ -109,5 +124,9 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+			"%{Library.ShaderC_Release}",
+			"%{Library.ShaderC_Utils_Release}",
+			"%{Library.SPIRV_Cross_Release}",
+			"%{Library.SPIRV_Cross_GLSL_Release}",
         }

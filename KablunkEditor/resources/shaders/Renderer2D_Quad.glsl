@@ -13,11 +13,17 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_ViewProjection;
 };
 
-out vec4 v_Color;
-out vec2 v_TexCoord;
-out flat float v_TexIndex;
-out float v_TilingFactor;
-flat out int v_EntityID; // TODO remove when ray cast mouse picking added to editor
+layout (push_constant) uniform Transform
+{
+	mat4 Transform;
+} u_Renderer;
+
+
+layout(location = 0) out vec4 v_Color;
+layout(location = 1) out vec2 v_TexCoord;
+layout(location = 2) out flat float v_TexIndex;
+layout(location = 3) out float v_TilingFactor;
+layout(location = 4) flat out int v_EntityID; // TODO remove when ray cast mouse picking added to editor
 
 void main()
 {
@@ -26,25 +32,25 @@ void main()
 	v_TexIndex = a_TexIndex;
 	v_TilingFactor = a_TilingFactor;
 	v_EntityID = a_EntityID; // TODO remove when ray cast mouse picking added to editor
-	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+	gl_Position = u_ViewProjection * u_Renderer.Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID; // TODO remove when ray cast mouse picking added to editor
+//layout(location = 1) out int o_EntityID; // TODO remove when ray cast mouse picking added to editor
 
-in vec4 v_Color;
-in vec2 v_TexCoord;
-in flat float v_TexIndex;
-in float v_TilingFactor;
-flat in int v_EntityID; // TODO remove when ray cast mouse picking added to editor
+layout(location = 0) in vec4 v_Color;
+layout(location = 1) in vec2 v_TexCoord;
+layout(location = 2) in flat float v_TexIndex;
+layout(location = 3) in float v_TilingFactor;
+layout(location = 4) flat in int v_EntityID; // TODO remove when ray cast mouse picking added to editor
 
-uniform sampler2D u_Textures[32];
+layout(binding = 1) uniform sampler2D u_Textures[32];
 
 void main()
 {
 	o_Color  = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
-	o_EntityID = v_EntityID; // TODO remove when ray cast mouse picking added to editor
+	//o_EntityID = v_EntityID; // TODO remove when ray cast mouse picking added to editor
 }

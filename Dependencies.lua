@@ -15,13 +15,16 @@ IncludeDir["ImGuizmo"] = "%{wks.location}/KablunkEngine/vendor/ImGuizmo"
 IncludeDir["assimp"] = "%{wks.location}/KablunkEngine/vendor/assimp/include"
 IncludeDir["FreeType"] = "%{wks.location}/KablunkEngine/vendor/FreeType/include"
 IncludeDir["Box2d"] = "%{wks.location}/KablunkEngine/vendor/box2d/include"
-IncludeDir["RCCPP"] = "%{wks.location}/KablunkEngine/vendor/RuntimeCompiledCPlusPlus"
+IncludeDir["cr"] = "%{wks.location}/KablunkEngine/vendor/cr"
 IncludeDir["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/include"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 IncludeDir["VulkanSDK_LocalInclude"] = "%{wks.location}/KablunkEngine/vendor/VulkanSDK/Include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
+LibraryDir["VulkanSDK_Debug"] = "%{VULKAN_SDK}/Lib"
+LibraryDir["VulkanSDK_Bin"] = "%{VULKAN_SDK}/Bin"
+LibraryDir["VulkanSDK_Debug_Bin"] = "%{VULKAN_SDK}/Bin"
 
 Library = {}
 Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/Debug/mono-2.0-sgen.lib"
@@ -38,3 +41,4 @@ Library["ShaderC_Release"] = "%{LibraryDir.VulkanSDK}/shaderc_shared.lib"
 Library["ShaderC_Utils_Release"] = "%{LibraryDir.VulkanSDK}/shaderc_util.lib"
 Library["SPIRV_Cross_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-core.lib"
 Library["SPIRV_Cross_GLSL_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-glsl.lib"
+Library["SPIRV_Tools"] = "%{LibraryDir.VulkanSDK}/SPIRV-Tools.lib"

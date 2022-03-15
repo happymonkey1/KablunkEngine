@@ -18,18 +18,19 @@ namespace Kablunk
 		OpenGLVertexBuffer(const void* data, uint32_t size);
 		virtual ~OpenGLVertexBuffer();
 
-		virtual void SetData(const void* data, uint32_t size) override;
+		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
-		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
+		virtual const BufferLayout& GetLayout() const override { return m_layout; }
+		virtual void SetLayout(const BufferLayout& layout) override { m_layout = layout; }
 
-		virtual RendererID GetRendererID() const override { return m_RendererID; }
+		virtual RendererID GetRendererID() const override { return m_renderer_id; }
 	private:
-		RendererID m_RendererID;
-		BufferLayout m_Layout;
+		RendererID m_renderer_id;
+		BufferLayout m_layout;
 	};
 
 	/*
@@ -47,11 +48,14 @@ namespace Kablunk
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual const uint32_t GetCount() const override { return m_Count; }
-		virtual RendererID GetRendererID() const override { return m_RendererID; }
+		virtual void SetData(const void* buffer, uint32_t size, uint32_t offset /* = 0 */) override;
+
+		virtual const uint32_t GetCount() const override { return m_count; }
+		virtual uint32_t GetSize() const override { return m_count * sizeof(uint32_t); }
+		virtual RendererID GetRendererID() const override { return m_renderer_id; }
 	private:
-		RendererID m_RendererID;
-		uint32_t m_Count;
+		RendererID m_renderer_id;
+		uint32_t m_count;
 	};
 }
 

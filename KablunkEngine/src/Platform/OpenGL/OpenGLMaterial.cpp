@@ -8,8 +8,8 @@
 namespace Kablunk
 {
 
-	OpenGLMaterial::OpenGLMaterial(const Ref<Shader>& shader, const std::string& name /*= ""*/)
-		: m_shader{ shader }, m_name{ name }, m_textures{ std::vector<Ref<Texture2D>>{} }
+	OpenGLMaterial::OpenGLMaterial(const IntrusiveRef<Shader>& shader, const std::string& name /*= ""*/)
+		: m_shader{ shader }, m_name{ name }, m_textures{ std::vector<IntrusiveRef<Texture2D>>{} }
 	{
 
 	}
@@ -127,7 +127,19 @@ namespace Kablunk
 			});
 	}
 
-	void OpenGLMaterial::Set(const std::string& name, const Ref<Texture2D>& texture)
+	void OpenGLMaterial::Set(const std::string& name, const IntrusiveRef<Texture2D>& texture)
+	{
+		// #TODO
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	void OpenGLMaterial::Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index)
+	{
+		// #TODO
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	void OpenGLMaterial::Set(const std::string& name, const IntrusiveRef<Image2D>& image)
 	{
 		// #TODO
 		KB_CORE_ASSERT(false, "not implemented!");
@@ -184,7 +196,7 @@ namespace Kablunk
 		return glm::mat4{1.0f};
 	}
 
-	Kablunk::Ref<Kablunk::Texture2D> OpenGLMaterial::GetTexture2D(const std::string& name)
+	IntrusiveRef<Texture2D> OpenGLMaterial::GetTexture2D(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;

@@ -11,9 +11,9 @@ namespace Kablunk
 	constexpr const int MAX_SEARCH_BUFFER_LENGTH = 128;
 
 	// #TODO move elsewhere
-	struct FILE_EXTENSIONS
+	struct FileExtensions
 	{
-		static constexpr const char* KABLUNK_SCENE = ".kablunkscene";
+		static constexpr const char* KABLUNK_SCENE  = ".kablunkscene";
 		static constexpr const char* FBX			= ".fbx";
 		static constexpr const char* OBJ			= ".obj";
 		static constexpr const char* PNG			= ".png";

@@ -198,6 +198,34 @@ namespace Kablunk
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::Reload(bool force_compile /*= false*/)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	size_t OpenGLShader::GetHash() const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+		return 0;
+	}
+
+	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	const std::unordered_map<std::string, ShaderBuffer>& OpenGLShader::GetShaderBuffers() const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+		return {};
+	}
+
+	const std::unordered_map<std::string, ShaderResourceDeclaration>& OpenGLShader::GetResources() const
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+		return {};
+	}
+
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		KB_PROFILE_FUNCTION();
@@ -249,7 +277,7 @@ namespace Kablunk
 
 	void OpenGLShader::SetUniformBuffer(const ShaderUniformBuffer& buffer, const void* data, uint32_t size, uint32_t offset)
 	{
-		glNamedBufferSubData(buffer.RendererID, offset, size, data);
+		glNamedBufferSubData(buffer.renderer_ID, offset, size, data);
 	}
 
 	void OpenGLShader::SetUniformBuffer(const std::string& name, const void* data, uint32_t size)

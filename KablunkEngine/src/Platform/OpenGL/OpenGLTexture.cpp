@@ -7,8 +7,8 @@
 namespace Kablunk
 {
 
-	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
-		: m_Width{width}, m_Height{height}
+	OpenGLTexture2D::OpenGLTexture2D(ImageFormat format, uint32_t width, uint32_t height)
+		: m_Width{width}, m_Height{height}, m_format{ format }
 	{
 		KB_PROFILE_FUNCTION();
 

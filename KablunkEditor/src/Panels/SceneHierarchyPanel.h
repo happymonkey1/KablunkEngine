@@ -14,9 +14,9 @@ namespace Kablunk
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& context);
+		SceneHierarchyPanel(const IntrusiveRef<Scene>& context);
 
-		void SetContext(const Ref<Scene>& context);
+		void SetContext(const IntrusiveRef<Scene>& context);
 		
 		void OnImGuiRender();
 		
@@ -31,7 +31,7 @@ namespace Kablunk
 		void UI_DrawComponents(Entity entity);
 		void UI_RenameScenePopup();
 	private:
-		Ref<Scene> m_context;
+		IntrusiveRef<Scene> m_context;
 		Entity m_selection_context;
 
 		// #TODO move to properties panel class

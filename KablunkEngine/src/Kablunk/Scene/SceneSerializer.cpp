@@ -15,7 +15,7 @@ namespace Kablunk
 	// #FIXME almost all of the serialization code is garbage, just there for an MVP
 	// #TODO refactor to use reflection.
 
-	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
+	SceneSerializer::SceneSerializer(const IntrusiveRef<Scene>& scene)
 		: m_scene{ scene }
 	{
 		
@@ -99,12 +99,11 @@ namespace Kablunk
 				out << YAML::Key << "Thickness" << YAML::Value << component.Thickness;
 				out << YAML::Key << "Fade" << YAML::Value << component.Fade;
 			});
-#if KB_NATIVE_SCRIPTING
+
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
-#endif
 
 		WriteComponentData<CSharpScriptComponent>(out, entity, [](auto& out, CSharpScriptComponent& component)
 			{
@@ -265,15 +264,14 @@ namespace Kablunk
 				component.Thickness = data["Thickness"].as<float>();
 				component.Fade		= data["Fade"].as<float>();
 			});
-#if KB_NATIVE_SCRIPTING
+
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{
 				auto filepath = data["Filepath"].as<std::string>();
-				component.BindEditor(filepath, entity);
+				component.BindEditor(filepath);
 
 				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 			});
-#endif
 
 		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
 			{
@@ -349,14 +347,6 @@ namespace Kablunk
 		out << YAML::Key << "Scene"		<< YAML::Value << scene_name;
 		out << YAML::Key << "Entities"	<< YAML::Value << YAML::BeginSeq;
 
-		/*m_scene->m_registry.each([&](auto entity_handle)
-			{
-				auto entity = Entity{ entity_handle, m_scene.get() };
-				if (!entity)
-					return;
-
-				SerializeEntity(out, entity);
-			});*/
 		auto view = m_scene->m_registry.view<IdComponent>();
 		for (auto e : view)
 			SerializeEntity(out, { e, m_scene.get() });

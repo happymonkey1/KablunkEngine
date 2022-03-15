@@ -1,6 +1,64 @@
 #ifndef KABLUNK_MODULES_MODULE_H
 #define KABLUNK_MODULES_MODULE_H
 
+#include "Kablunk/Scripts/NativeScript.h"
+
+#include <iostream>
+#include <string>
+
+/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
+extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string & type_str);
+
+namespace Kablunk
+{
+	class Scene;
+
+	class NativeScriptEngine
+	{
+	public:
+		static void Init();
+		static void Open(const char* path);
+		static bool Update();
+
+		static void Shutdown();
+
+		static Scope<NativeScriptInterface> GetScript(const std::string& name);
+		static NativeScriptEngine* Get() { KB_CORE_ASSERT(s_instance, "Instance is not set! Make sure Init is called!"); return s_instance; }
+
+		void SetScene(WeakRef<Scene> scene);
+		WeakRef<Scene> GetScene();
+	private:
+		Scene* m_current_scene = nullptr;
+
+		inline static NativeScriptEngine* s_instance;
+	};
+}
+
+#ifndef KB_DISTRIBUTION
+/* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
+// #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
+#	define IMPLEMENT_NATIVE_SCRIPT(T) \
+		static Kablunk::NativeScriptInterface* Create() \
+		{ \
+			return new T(); \
+		}
+
+/* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
+/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
+#	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
+	extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
+	{ 
+#	define REGISTER_NATIVE_SCRIPT(T) \
+		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
+			return T::Create();
+#	define END_REGISTER_NATIVE_SCRIPTS() \
+		return nullptr; \
+	};
+#else
+#	define IMPLEMENT_NATIVE_SCRIPT
+#	define REGISTER_NATIVE_SCRIPT
+#endif
+
 #if KB_NATIVE_SCRIPTING
 
 #include "Kablunk/Core/Core.h"
@@ -8,11 +66,6 @@
 #include "Kablunk/Utilities/PlatformUtils.h"
 #include "Kablunk/Scripts/NativeScriptModule.h"
 #include "Kablunk/Core/SharedMemoryBuffer.h"
-
-#include "RCCPP/RuntimeObjectSystem/IObjectFactorySystem.h"
-#include "RCCPP/RuntimeObjectSystem/ObjectInterface.h"
-#include "RCCPP/RuntimeCompiler/AUArray.h"
-
 
 #include <string>
 #include <unordered_map>
@@ -26,7 +79,7 @@ namespace Kablunk
 	{
 		struct NativeScriptRuntimeObject
 		{
-			NativeScript* ptr;
+			NativeScriptInterface* ptr;
 			ObjectId id;
 		};
 	}
@@ -37,7 +90,7 @@ namespace Kablunk
 	class NativeScriptEngine : public IObjectFactoryListener
 	{
 	public:
-		using CreateMethodFunc = NativeScript * (*)();
+		using CreateMethodFunc = NativeScriptInterface * (*)();
 
 		static NativeScriptEngine* Get()
 		{
@@ -57,12 +110,12 @@ namespace Kablunk
 		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		[[deprecated("Replaced by rccpp")]]
-		Scope<NativeScript> GetScript(const std::string& script_name);
+		Scope<NativeScriptInterface> GetScript(const std::string& script_name);
 
 		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
 
-		NativeScript** AddScript(const std::string& name, const std::filesystem::path& filepath);
+		NativeScriptInterface** AddScript(const std::string& name, const std::filesystem::path& filepath);
 		virtual void OnConstructorsAdded() override;
 		void OnUpdate(Timestep ts);
 
@@ -83,23 +136,7 @@ namespace Kablunk
 }
 
 
-#ifndef KB_DISTRIBUTION
-/* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
-// #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
-#	define IMPLEMENT_NATIVE_SCRIPT(T) \
-		static bool s_registered; \
-		static NativeScript* Create() \
-		{ \
-			return new T(); \
-		}
 
-/* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
-#	define REGISTER_NATIVE_SCRIPT(T) bool T::s_registered = \
-		Kablunk::NativeScriptEngine::Get()->RegisterScript(#T, T::Create);
-#else
-#	define IMPLEMENT_NATIVE_SCRIPT
-#	define REGISTER_NATIVE_SCRIPT
-#endif
 
 #endif
 

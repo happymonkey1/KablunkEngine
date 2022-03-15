@@ -14,6 +14,12 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_ViewProjection;
 };
 
+layout (push_constant) uniform Transform
+{
+	mat4 Transform;
+} u_Renderer;
+
+
 struct VertexOutput
 {
 	vec3 LocalPosition;
@@ -35,14 +41,14 @@ void main()
 	v_Output.Fade = a_Fade;
 	v_EntityID = a_EntityID; // TODO remove when ray cast mouse picking added to editor
 	
-	gl_Position = u_ViewProjection * vec4(a_WorldPosition, 1.0);
+	gl_Position = u_ViewProjection * u_Renderer.Transform * vec4(a_WorldPosition, 1.0);
 }
 
 #type fragment
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID; // TODO remove when ray cast mouse picking added to editor
+//layout(location = 1) out int o_EntityID; // TODO remove when ray cast mouse picking added to editor
 
 struct VertexOutput
 {
@@ -68,5 +74,5 @@ void main()
 	o_Color = v_Output.Color;
 	o_Color.a *= alpha;
 
-	o_EntityID = v_EntityID; // TODO remove when ray cast mouse picking added to editor
+	//o_EntityID = v_EntityID; // TODO remove when ray cast mouse picking added to editor
 }

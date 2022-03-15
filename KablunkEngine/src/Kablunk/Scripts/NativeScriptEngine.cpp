@@ -1,6 +1,61 @@
 #include "kablunkpch.h"
 
-#if KB_NATIVE_SCRIPTING
+#include "Kablunk/Scripts/NativeScriptEngine.h"
+
+//#define CR_HOST // tell cr.h that this is the host application
+//#include <cr.h>
+
+namespace Kablunk
+{
+	//static cr_plugin s_ctx;
+
+	void NativeScriptEngine::Init()
+	{
+		KB_CORE_ASSERT(!s_instance, "Instance is already set! Init might be being called twice?!");
+		s_instance = new NativeScriptEngine{};
+	}
+
+	void NativeScriptEngine::Open(const char* path)
+	{
+		//cr_plugin_open(s_ctx, path);
+	}
+
+	bool NativeScriptEngine::Update()
+	{
+		//if (!s_ctx.p)
+		//	return true;
+
+		//return cr_plugin_update(s_ctx);
+
+		return true;
+	}
+
+	void NativeScriptEngine::Shutdown()
+	{
+		//cr_plugin_close(s_ctx);
+
+		delete s_instance;
+	}
+
+	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
+	{
+		return Scope<NativeScriptInterface>(GetScriptFromRegistry(name));
+	}
+
+	void NativeScriptEngine::SetScene(WeakRef<Scene> scene)
+	{
+		m_current_scene = scene.get();
+	}
+
+	WeakRef<Scene> NativeScriptEngine::GetScene()
+	{
+		return WeakRef<Scene>(m_current_scene);
+	}
+
+}
+
+
+#if 0
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
@@ -9,13 +64,6 @@
 
 #include "Kablunk/Scripts/NativeScriptCompilerLogger.h"
 #include "Kablunk/Scripts/NativeScriptModule.h"
-
-#include "RCCPP/RuntimeObjectSystem/IObject.h"
-#include "RCCPP/RuntimeCompiler/BuildTool.h"
-#include "RCCPP/RuntimeCompiler/ICompilerLogger.h"
-#include "RCCPP/RuntimeCompiler/FileChangeNotifier.h"
-#include "RCCPP/RuntimeObjectSystem/ObjectFactorySystem/ObjectFactorySystem.h"
-#include "RCCPP/RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 
 namespace Kablunk
@@ -103,7 +151,7 @@ namespace Kablunk
 	}
 
 	// #TODO currently searches for files during runtime, probably better to do at statically with reflection
-	Scope<NativeScript> NativeScriptEngine::GetScript(const std::string& script_name)
+	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& script_name)
 	{
 		KB_CORE_ASSERT(false, "deprecated");
 		//auto it = m_native_scripts.find(script_name);
@@ -134,7 +182,7 @@ namespace Kablunk
 		return true;
 	}
 
-	NativeScript** NativeScriptEngine::AddScript(const std::string& name, const std::filesystem::path& filepath)
+	NativeScriptInterface** NativeScriptEngine::AddScript(const std::string& name, const std::filesystem::path& filepath)
 	{
 		auto filename = filepath.filename();
 		m_runtime_object_system->AddToRuntimeFileList(filename.string().c_str());
@@ -148,7 +196,7 @@ namespace Kablunk
 			if (ctr_ptr)
 			{
 				IObject* obj_ptr = ctr_ptr->Construct();
-				NativeScript* nsc_ptr = nullptr;
+				NativeScriptInterface* nsc_ptr = nullptr;
 				obj_ptr->GetInterface(&nsc_ptr);
 				if (!nsc_ptr)
 				{

@@ -28,6 +28,7 @@
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/SceneRenderer.h"
 
 #include "Kablunk/Renderer/Camera.h"
 // ----------------------------------------------
@@ -45,9 +46,6 @@
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 // ----------------------------------------------
 
-// ---RCCPP--------------------------------------
-#include "RCCPP/RuntimeObjectSystem/IObject.h"
-#include "RCCPP/RuntimeObjectSystem/ObjectInterfacePerModule.h"
 // ----------------------------------------------
 
 // ---Assets-------------------------------------
@@ -58,6 +56,11 @@
 #include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 // ----------------------------------------------
  
+// ---Utilities----------------------------------
+#include "Kablunk/Utilities/BinarySearch.hpp"
+#include "Kablunk/Utilities/Containers/PriorityQueue.hpp"
+// ----------------------------------------------
+
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"
 #include "imgui.h"

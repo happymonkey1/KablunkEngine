@@ -10,9 +10,10 @@ namespace Kablunk
 	{
 	public:
 		OpenGLMaterial() = default;
-		OpenGLMaterial(const Ref<Shader>& shader, const std::string& name = "");
+		OpenGLMaterial(const IntrusiveRef<Shader>& shader, const std::string& name = "");
 		virtual ~OpenGLMaterial() = default;
 
+		virtual void Invalidate() override { KB_CORE_ASSERT(false, "not implemented!"); };
 		virtual void Bind() override;
 
 		virtual void Set(const std::string& name, float value) override;
@@ -27,7 +28,9 @@ namespace Kablunk
 		virtual void Set(const std::string& name, const glm::ivec4& value) override;
 		virtual void Set(const std::string& name, const glm::mat3& value) override;
 		virtual void Set(const std::string& name, const glm::mat4& value) override;
-		virtual void Set(const std::string& name, const Ref<Texture2D>& texture) override;
+		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture) override;
+		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) override;
+		virtual void Set(const std::string& name, const IntrusiveRef<Image2D>& image) override;
 
 		virtual float& GetFloat(const std::string& name) override;
 		virtual int& GetInt(const std::string& name) override;
@@ -37,9 +40,9 @@ namespace Kablunk
 		virtual glm::vec4& GetVec4(const std::string& name) override;
 		virtual glm::mat3& GetMat3(const std::string& name) override;
 		virtual glm::mat4& GetMat4(const std::string& name) override;
-		virtual Ref<Texture2D> GetTexture2D(const std::string& name) override;
+		virtual IntrusiveRef<Texture2D> GetTexture2D(const std::string& name) override;
 
-		virtual Ref<Shader> GetShader() override { return m_shader; };
+		virtual IntrusiveRef<Shader> GetShader() override { return m_shader; };
 		virtual const std::string& GetName() const override { return m_name; };
 	private:
 
@@ -58,10 +61,10 @@ namespace Kablunk
 		}
 
 	private:
-		Ref<Shader> m_shader;
+		IntrusiveRef<Shader> m_shader;
 		std::string m_name;
 
-		std::vector<Ref<Texture2D>> m_textures;
+		std::vector<IntrusiveRef<Texture2D>> m_textures;
 	};
 }
 

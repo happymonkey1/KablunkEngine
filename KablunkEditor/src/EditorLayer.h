@@ -9,6 +9,7 @@
 #include "Panels/ProjectPropertiesPanel.h"
 
 
+
 namespace Kablunk
 {
 	class EditorLayer : public Layer
@@ -39,7 +40,7 @@ namespace Kablunk
 		void NewScene();
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
+		void SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 
@@ -57,11 +58,11 @@ namespace Kablunk
 		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
-		Ref<Framebuffer> m_frame_buffer;
+		IntrusiveRef<Scene> m_active_scene;
+		IntrusiveRef<Scene> m_editor_scene;
+		IntrusiveRef<Scene> m_runtime_scene;
 
-		Ref<Scene> m_active_scene;
-		Ref<Scene> m_editor_scene;
-		Ref<Scene> m_runtime_scene;
+		IntrusiveRef<SceneRenderer> m_viewport_renderer;
 		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;
@@ -90,11 +91,11 @@ namespace Kablunk
 
 
 		// Resources
-		Ref<Texture2D> m_icon_play, m_icon_stop;
+		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
 
 		enum class SceneState
 		{
-			Edit = 0, Play = 1
+			Edit = 0, Play = 1, Pause = 2
 		};
 		SceneState m_scene_state{ SceneState::Edit };
 

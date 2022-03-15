@@ -57,7 +57,7 @@ namespace Kablunk
 		m_is_animated = m_scene->mAnimations != nullptr;
 		if (m_is_animated)
 			KB_CORE_INFO("ANIMATED MESH!");
-		m_mesh_shader = m_is_animated ? Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_anim")  : Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+		m_mesh_shader = m_is_animated ? Renderer::GetShader("Kablunk_diffuse_anim")  : Renderer::GetShader("Kablunk_diffuse_static");
 		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		size_t vertex_count = 0;
@@ -372,7 +372,7 @@ namespace Kablunk
 			TraverseNodes(root->mChildren[i], transform, level + 1);
 	}
 
-	Mesh::Mesh(Ref<MeshData> mesh_data)
+	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data)
 		: m_mesh_data{ mesh_data }
 	{
 		m_vertex_array = VertexArray::Create();
@@ -380,7 +380,7 @@ namespace Kablunk
 		m_vertex_array->SetIndexBuffer(m_mesh_data->GetIndexBuffer());
 	}
 
-	Mesh::Mesh(const Ref<Mesh>& other)
+	Mesh::Mesh(const IntrusiveRef<Mesh>& other)
 		: m_mesh_data{ other->m_mesh_data }
 	{
 		m_vertex_array = VertexArray::Create();
@@ -398,7 +398,7 @@ namespace Kablunk
 		KB_CORE_WARN("Mesh OnUpdate() not implemented!");
 	}
 
-	Ref<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
+	IntrusiveRef<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	{
 		std::vector<Vertex> verts;
 		verts.resize(8);
@@ -487,6 +487,6 @@ namespace Kablunk
 		indices[10] = { 3, 2, 6 };
 		indices[11] = { 6, 7, 3 };
 
-		return CreateRef<Mesh>(CreateRef<MeshData>(verts, indices, glm::mat4{ 1.0f }));
+		return IntrusiveRef<Mesh>::Create(IntrusiveRef<MeshData>::Create(verts, indices, glm::mat4{ 1.0f }));
 	}
 }

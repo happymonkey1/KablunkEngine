@@ -47,7 +47,7 @@ namespace Kablunk
 		glBindVertexArray(0);
 	}
 
-	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
+	void OpenGLVertexArray::AddVertexBuffer(const IntrusiveRef<VertexBuffer>& vertexBuffer)
 	{
 		KB_PROFILE_FUNCTION();
 
@@ -125,7 +125,7 @@ namespace Kablunk
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
-	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
+	void OpenGLVertexArray::SetIndexBuffer(const IntrusiveRef<IndexBuffer>& indexBuffer)
 	{
 		KB_PROFILE_FUNCTION();
 

@@ -1,10 +1,16 @@
 #ifndef KABLUNK_RENDERER_BUFFER_H
 #define KABLUNK_RENDERER_BUFFER_H
 
+#include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/RendererTypes.h"
 
 namespace Kablunk 
 {
+
+	enum class VertexBufferUsage
+	{
+		Static = 0, Dynamic
+	};
 
 	enum class ShaderDataType
 	{
@@ -103,7 +109,7 @@ namespace Kablunk
 		uint32_t m_Stride = 0;
 	};
 
-	class VertexBuffer 
+	class VertexBuffer : public RefCounted
 	{
 	public:
 		virtual ~VertexBuffer() {}
@@ -111,19 +117,20 @@ namespace Kablunk
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetData(const void* data, uint32_t size) = 0;
+		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
+		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
 
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 		virtual const BufferLayout& GetLayout() const = 0;
 
 
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(const void* data, uint32_t size);
+		static IntrusiveRef<VertexBuffer> Create(uint32_t size);
+		static IntrusiveRef<VertexBuffer> Create(const void* data, uint32_t size);
 
 		virtual RendererID GetRendererID() const = 0;
 	};
 
-	class IndexBuffer
+	class IndexBuffer : public RefCounted
 	{
 	public:
 		virtual ~IndexBuffer() {}
@@ -131,12 +138,15 @@ namespace Kablunk
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t count);
-		static Ref<IndexBuffer> Create(const void* data, uint32_t count);
+		virtual void SetData(const void* buffer, uint32_t size, uint32_t offset = 0) = 0;
 
 		virtual const uint32_t GetCount() const = 0;
+		virtual uint32_t GetSize() const = 0;
 
 		virtual RendererID GetRendererID() const = 0;
+
+		static IntrusiveRef<IndexBuffer> Create(uint32_t count);
+		static IntrusiveRef<IndexBuffer> Create(const void* data, uint32_t count);
 	};
 }
 

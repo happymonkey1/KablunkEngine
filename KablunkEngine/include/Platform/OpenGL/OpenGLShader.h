@@ -22,6 +22,13 @@ namespace Kablunk
 		virtual void Bind() const;
 		virtual void Unbind() const;
 
+		virtual void Reload(bool force_compile = false) override;
+		virtual size_t GetHash() const override;
+
+		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
+		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const override;
+		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const override;
+
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 		virtual void SetFloat(const std::string& name, float value) override;
 		virtual void SetFloat2(const std::string& name, const glm::vec2& value) override;

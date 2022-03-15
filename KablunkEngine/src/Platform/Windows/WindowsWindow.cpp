@@ -9,9 +9,10 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
-#include "GLFW/glfw3.h"
+#include "Platform/Vulkan/VulkanContext.h"
 
-
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 namespace Kablunk {
 
@@ -58,6 +59,14 @@ namespace Kablunk {
 			int success = glfwInit();
             KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
 
+			// Hint to glfw that this will be rendered with Vulkan
+			if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+			{
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+			}
+			
+
             glfwSetErrorCallback(GLFWErrorCallback);
         }
 
@@ -69,6 +78,17 @@ namespace Kablunk {
         }
 		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
+
+		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+		{
+			// #TODO bad!
+			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_Context.get());
+			vk_context->GetSwapchain().InitSurface(m_Window);
+
+			uint32_t width = m_Data.Width, height = m_Data.Height;
+			vk_context->GetSwapchain().Create(&width, &height, m_Data.VSync);
+		}
+
 		KB_CORE_INFO("Context created!");
         
         
@@ -176,6 +196,8 @@ namespace Kablunk {
     {
         KB_PROFILE_FUNCTION();
 
+		m_Context->Shutdown();
+
         glfwDestroyWindow(m_Window);
 		--s_glfw_window_count;
 
@@ -198,11 +220,14 @@ namespace Kablunk {
 
     void WindowsWindow::SetVsync(bool enabled)
     {
-        if (enabled)
-            glfwSwapInterval(1);
-        else
-            glfwSwapInterval(0);
-
+		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::OpenGL)
+		{
+			if (enabled)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
+		}
+      
         m_Data.VSync = enabled;
     }
 

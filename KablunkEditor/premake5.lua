@@ -2,7 +2,7 @@ project "KablunkEditor"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "on"
+    staticruntime "off"
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -29,7 +29,6 @@ project "KablunkEditor"
 		"%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.FreeType}",
-        "%{IncludeDir.RCCPP}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.Vulkan}",
     }
@@ -38,6 +37,7 @@ project "KablunkEditor"
     {
         "KablunkEngine",
         "Sandbox",
+        --"Sandbox.dll",
         "FreeType",
         "%{Library.mono}"
     }
@@ -62,7 +62,9 @@ project "KablunkEditor"
         postbuildcommands
         {
             '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
-            '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
+            '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
+            '{COPY} "%{LibraryDir.VulkanSDK_Debug_Bin}/shaderc_sharedd.dll" "%{cfg.targetdir}"'
+            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }
 	
 	filter "configurations:Release"
@@ -78,7 +80,9 @@ project "KablunkEditor"
         postbuildcommands
         {
             '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
-            '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
+            '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
+            '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
+           -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }
 	
 	filter "configurations:Distribution"
@@ -93,5 +97,8 @@ project "KablunkEditor"
         
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"'
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
+            '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
+            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
         }

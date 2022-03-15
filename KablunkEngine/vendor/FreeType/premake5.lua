@@ -62,12 +62,12 @@ project "FreeType"
 
 	filter "system:windows"
 		systemversion "latest"
-		staticruntime "on"
+		staticruntime "off"
 
 	filter "system:linux"
 		pic "on"
 		systemversion "latest"
-		staticruntime "on"
+		staticruntime "off"
 
 	filter "configurations:Debug"
 		runtime "Debug"

@@ -12,7 +12,7 @@ import os
 import zipfile
 
 
-PREMAKE_BINARY_URL = 'https://github.com/premake/premake-core/releases/download/v5.0.0-alpha16/premake-5.0.0-alpha16-windows.zip'
+PREMAKE_BINARY_URL = 'https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-windows.zip'
 PREMAKE_LOCAL_PATH = 'vendor/premake/bin'
 PREMAKE_BINARY_LOCAL_PATH = f'{PREMAKE_LOCAL_PATH}/premake5.exe'
 PREMAKE_ZIP_LOCAL_PATH = f'{PREMAKE_LOCAL_PATH}/premake5.zip'

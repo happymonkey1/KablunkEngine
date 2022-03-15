@@ -47,6 +47,8 @@ namespace Kablunk {
 		void Close();
 
 		ImGuiLayer* GetImGuiLayer() { return m_imgui_layer; }
+		void RenderImGui();
+
 
 		void SetWindowTitle(const std::string& title) { m_window->SetWindowTitle(title); }
 		glm::vec2 GetWindowDimensions() const { return m_window->GetDimensions(); }

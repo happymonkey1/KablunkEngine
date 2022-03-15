@@ -4,67 +4,54 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
+#include "Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Platform/Vulkan/VulkanIndexBuffer.h"
+
 namespace Kablunk
 {
-	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	IntrusiveRef<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:
-			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
-			return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(size);
-		default:
-			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
-			return nullptr;
+		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:	return IntrusiveRef<OpenGLVertexBuffer>::Create(size);
+		case RendererAPI::RenderAPI_t::Vulkan:	return IntrusiveRef<VulkanVertexBuffer>::Create(size);
+		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 	}
 
-	Kablunk::Ref<Kablunk::VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
+	IntrusiveRef<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:
-			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
-			return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(data, size);
-		default:
-			KB_CORE_ASSERT(false, "Unkown RenderAPI!");
-			return nullptr;
+		case RendererAPI::RenderAPI_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLVertexBuffer>::Create(data, size);
+		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanVertexBuffer>::Create(data, size);
+		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t count)
+	IntrusiveRef<IndexBuffer> IndexBuffer::Create(uint32_t count)
 	{
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:
-			KB_CORE_FATAL("RendererAPI::None is not supported!");
-			return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(count);
-		default:
-			KB_CORE_FATAL("Unkown RenderAPI!");
-			return nullptr;
+		case RendererAPI::RenderAPI_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(count);
+		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(count);
+		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
 		}
 	}
 
-	Kablunk::Ref<Kablunk::IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
+	IntrusiveRef<IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
 	{
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:
-			KB_CORE_FATAL("RendererAPI::None is not supported!");
-			return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(data, count);
-		default:
-			KB_CORE_FATAL("Unkown RenderAPI!");
-			return nullptr;
+		case RendererAPI::RenderAPI_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
+		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(data, count);
+		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(data, count);
+		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
 		}
 	}
 

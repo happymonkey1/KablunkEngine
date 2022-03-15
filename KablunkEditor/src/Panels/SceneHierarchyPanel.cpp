@@ -43,13 +43,13 @@ namespace Kablunk
 		}
 	}
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const IntrusiveRef<Scene>& context)
 	{
 		SetContext(context);
 
 	}
 
-	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const IntrusiveRef<Scene>& context)
 	{
 		m_context = context;
 		m_selection_context = {};
@@ -466,13 +466,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
-#if DISABLE_NATIVE_SCRIPT
 			if (!m_selection_context.HasComponent<NativeScriptComponent>() && ImGui::MenuItem("Native Script"))
 			{
 				m_selection_context.AddComponent<NativeScriptComponent>();
 				ImGui::CloseCurrentPopup();
 			}
-#endif
+
 			if (!m_selection_context.HasComponent<CSharpScriptComponent>() && ImGui::MenuItem("C# Script"))
 			{
 				m_selection_context.AddComponent<CSharpScriptComponent>();
@@ -625,7 +624,7 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<CircleRendererComponent>("Sprite Renderer", entity, [this](CircleRendererComponent& component)
+		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& component)
 			{
 
 				UI::BeginProperties();
@@ -638,7 +637,6 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-#if KB_NATIVE_SCRIPTING
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [&](auto& component)
 			{
 				UI::BeginProperties();
@@ -663,13 +661,12 @@ namespace Kablunk
 						{
 							// #FIXME relative path when projects are implemented
 							//std::filesystem::path relative_path = std::filesystem::relative(filepath, g_asset_path);
-							component.BindEditor(filepath, entity);
+							component.BindEditor(filepath);
 						}
 					}
 				}
 				UI::EndProperties();
 			});
-#endif 
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{
@@ -772,7 +769,7 @@ namespace Kablunk
 
 
 				std::vector<std::string> options = { "Static", "Dynamic", "Kinematic" };
-				int32_t index = std::find(options.begin(), options.end(), KablunkRigidBodyTypeToString(component.Type)) - options.begin();
+				int32_t index = static_cast<int32_t>(std::find(options.begin(), options.end(), KablunkRigidBodyTypeToString(component.Type)) - options.begin());
 				if (UI::PropertyDropdown("Type", options, options.size(), &index))
 					component.Type = StringToKablunkRigidBodyType(options[index]);
 				

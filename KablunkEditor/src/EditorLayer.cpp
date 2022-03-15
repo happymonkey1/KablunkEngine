@@ -21,7 +21,7 @@
 #include "Kablunk/Project/ProjectSerializer.h"
 
 // #TODO replace when runtime is figured out
-#include "Sandbox/Core.h"
+#include "Eclipse/EclipseCore.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -52,6 +52,7 @@ namespace Kablunk
 
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
+		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
@@ -63,19 +64,12 @@ namespace Kablunk
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		FramebufferSpecification frame_buffer_spec;
-		auto window_dimensions = Application::Get().GetWindowDimensions();
-		frame_buffer_spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
-		frame_buffer_spec.Width  = window_dimensions.x;
-		frame_buffer_spec.Height = window_dimensions.y;
-		m_frame_buffer = Framebuffer::Create(frame_buffer_spec);
-
-
-		m_editor_scene = CreateRef<Scene>();
+		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
+		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
-
+		NativeScriptEngine::Get()->SetScene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
@@ -107,35 +101,13 @@ namespace Kablunk
 		}
 		else
 			m_imgui_profiler_stats.Counter += ts.GetMiliseconds() / 1000.0f;
-
-		// #TODO move to a scene renderer
-		auto spec = m_frame_buffer->GetSpecification();
-		if (m_viewport_size.x > 0.0f && m_viewport_size.y > 0.0f 
-			&& (spec.Width != m_viewport_size.x || spec.Height != m_viewport_size.y))
-		{
-			m_frame_buffer->Resize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-
-			m_editor_camera.OnViewportResize(m_viewport_size.x, m_viewport_size.y);
-			m_active_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
-		}
 		
 		// ==========
 		//   Render
 		// ==========
 
-
-		
-
 		Renderer2D::ResetStats();
 
-		// #TODO move to a scene renderer
-		m_frame_buffer->Bind();
-
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-		RenderCommand::Clear();
-
-		// Clear our entity ID buffer to -1
-		m_frame_buffer->ClearAttachment(1, -1);
 
 		switch (m_scene_state)
 		{
@@ -143,20 +115,28 @@ namespace Kablunk
 
 			m_editor_camera.OnUpdate(ts);
 
-			m_active_scene->OnUpdateEditor(ts, m_editor_camera);
+			m_active_scene->OnUpdateEditor(ts);
+			m_active_scene->OnRenderEditor(m_viewport_renderer, m_editor_camera);
 
-			ViewportClickSelectEntity();
+			//ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
 			m_active_scene->OnUpdateRuntime(ts);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer);
+
+			break;
+		case SceneState::Pause:
+
+			m_editor_camera.OnUpdate(ts);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, &m_editor_camera);
 
 			break;
 		}
 
 		OnOverlayRender();
-
-		m_frame_buffer->Unbind();
+		
+		SceneRenderer::WaitForThreads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -256,6 +236,9 @@ namespace Kablunk
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		if (ImGui::Begin("Viewport"))
 		{
+			// Fixes drag drop not working. see https://github.com/ocornut/imgui/issues/1771. Appears to be a bug with the docking branch
+			ImGui::BeginChild("##drag_drop_target");
+
 			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
 			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
 			auto viewport_offset = ImGui::GetWindowPos();
@@ -269,23 +252,24 @@ namespace Kablunk
 			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
-
-			auto frame_buffer_id = m_frame_buffer->GetColorAttachmentRendererID();
-			ImGui::Image(
-				reinterpret_cast<void*>(static_cast<uint64_t>(frame_buffer_id)),
-				{ m_viewport_size.x, m_viewport_size.y },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f }
+			m_editor_camera.OnViewportResize(width, height);
+			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			
+			UI::Image(
+				m_viewport_renderer->GetFinalPassImage(),
+				{ m_viewport_size.x, m_viewport_size.y }
 			);
 
+			ImGui::EndChild(); // see comment above
 			if (ImGui::BeginDragDropTarget())
 			{
-				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM", ImGuiDragDropFlags_SourceAllowNullID))
 				{
 					const auto path_wchar_str = (const wchar_t*)payload->Data;
 					auto path = std::filesystem::path{ Project::GetAssetDirectory() / path_wchar_str };
-					if (path.extension() == FILE_EXTENSIONS::KABLUNK_SCENE)
+					if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
 						OpenScene(path);
-					else if (path.extension() == FILE_EXTENSIONS::FBX)
+					else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
 					{
 						auto entity = m_active_scene->CreateEntity("Untitled Model");
 						auto& mesh_comp = entity.AddComponent<MeshComponent>();
@@ -304,11 +288,12 @@ namespace Kablunk
 			if (selected_entity && m_gizmo_type != -1)
 			{
 				ImGuizmo::SetOrthographic(false);
-				ImGuizmo::SetDrawlist();
+				ImDrawList* draw_list = ImGui::GetWindowDrawList();
+				ImGuizmo::SetDrawlist(draw_list);
 
-				float window_width = m_viewport_bounds[1].x - m_viewport_bounds[0].x;
-				float window_height = m_viewport_bounds[1].y - m_viewport_bounds[0].y;
-				ImGuizmo::SetRect(m_viewport_bounds[0].x, m_viewport_bounds[0].y, window_width, window_height);
+				float window_width = ImGui::GetWindowWidth();
+				float window_height = ImGui::GetWindowHeight();
+				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
 
 				// Runtime camera
 				/*
@@ -341,7 +326,6 @@ namespace Kablunk
 					snap ? snap_values : nullptr
 				);
 
-
 				if (ImGuizmo::IsUsing())
 				{
 					auto original_rotation = transform_component.Rotation;
@@ -373,10 +357,15 @@ namespace Kablunk
 			ImGui::End();
 		}
 		
+		
+		m_active_scene->OnImGuiRender();
+
 		CSharpScriptEngine::OnImGuiRender();
 
 		UI_Toolbar();
 		UI_KablunkInstallPopup();
+
+		m_viewport_renderer->OnImGuiRender();
 
 		if (m_show_create_new_project_popup)
 		{
@@ -559,16 +548,67 @@ namespace Kablunk
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.15f, 0.1505f, 0.151f, 0.5f });
 		ImGui::Begin("##toolbar", nullptr, flags);
 
-		auto icon = m_scene_state == SceneState::Edit ? m_icon_play : m_icon_stop;
-		float size = ImGui::GetWindowHeight() - 4.0f;
 
+		auto play_stop_icon = m_icon_play;
+		if (m_scene_state != SceneState::Edit)
+			play_stop_icon = m_icon_stop;
+
+		const float size = std::min(static_cast<float>(play_stop_icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
+		const float icon_padding = 0.0f;
+		// #TODO offset so buttons are centered
 		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
-		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { size, size }, { 0, 0 }, { 1, 1 }, 0))
+		
+		// Play / Stop Button
 		{
-			if (m_scene_state == SceneState::Edit)
-				OnScenePlay();
-			else if (m_scene_state == SceneState::Play)
-				OnSceneStop();
+			// Invisible button to register clicks
+			const bool play_stop_clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+
+			// Visible Button
+			const ImColor play_stop_button_tint = IM_COL32(192, 192, 192, 255);
+
+			UI::DrawButtonImage(
+				play_stop_icon,
+				play_stop_button_tint,
+				UI::ColorWithMultipliedValue(play_stop_button_tint, 1.3f),
+				UI::ColorWithMultipliedValue(play_stop_button_tint, 0.8f),
+				UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
+			);
+
+			if (play_stop_clicked)
+			{
+				if (m_scene_state == SceneState::Edit)
+					OnScenePlay();
+				else if (m_scene_state != SceneState::Edit)
+					OnSceneStop();
+			}
+		}
+
+		// #TODO offset so buttons are centered
+		ImGui::SameLine();
+
+		// Pause Button
+		{
+			const bool pause_clicked = ImGui::InvisibleButton(UI::GenerateID(), { size, size });
+
+			ImColor pause_button_tint = m_scene_state == SceneState::Pause ?
+				IM_COL32(173, 216, 230, 255) : IM_COL32(192, 192, 192, 255);
+
+			// #TODO tint background as well
+			UI::DrawButtonImage(
+				m_icon_pause,
+				pause_button_tint,
+				UI::ColorWithMultipliedValue(pause_button_tint, 1.3f),
+				UI::ColorWithMultipliedValue(pause_button_tint, 0.8f),
+				UI::RectExpanded(UI::GetItemRect(), -icon_padding, -icon_padding)
+			);
+
+			if (pause_clicked)
+			{
+				if (m_scene_state == SceneState::Play)
+					m_scene_state = SceneState::Pause;
+				else if (m_scene_state == SceneState::Pause)
+					m_scene_state = SceneState::Play;
+			}
 		}
 
 		ImGui::PopStyleVar(2);
@@ -657,6 +697,8 @@ namespace Kablunk
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
+		m_viewport_renderer->SetScene(m_active_scene);
+		NativeScriptEngine::Get()->SetScene(m_active_scene.get());
 		m_selected_entity = {};
 	}
 
@@ -670,6 +712,8 @@ namespace Kablunk
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
 
 		m_active_scene = m_editor_scene;
+		m_viewport_renderer->SetScene(m_active_scene);
+		NativeScriptEngine::Get()->SetScene(m_active_scene);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -779,11 +823,13 @@ namespace Kablunk
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = CreateRef<Scene>();
+		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
+		m_viewport_renderer->SetScene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
+		NativeScriptEngine::Get()->SetScene(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 
@@ -819,7 +865,7 @@ namespace Kablunk
 		}
 	}
 
-	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -839,7 +885,7 @@ namespace Kablunk
 	{
 		NewScene();
 
-		Ref<Scene> new_scene = CreateRef<Scene>();
+		IntrusiveRef<Scene> new_scene = IntrusiveRef<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -848,10 +894,13 @@ namespace Kablunk
 			
 			m_scene_hierarchy_panel.SetContext(m_editor_scene);
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
+			NativeScriptEngine::Get()->SetScene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
+			m_viewport_renderer->SetScene(m_active_scene);
 
 			m_editor_scene_path = path;
+
 		}
 	}
 
@@ -943,7 +992,7 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
 
-#if DISABLE_NATIVE_SCRIPTING
+#if KB_NATIVE_SCRIPTING
 			// Native scripts
 			std::filesystem::create_directories(project_path / "assets" / "bin");
 			std::filesystem::create_directories(project_path / "include");
@@ -979,6 +1028,7 @@ namespace Kablunk
 					system(gen_proj_batch.c_str());
 				});
 #endif
+			
 			std::string gen_proj_batch = "\"" + project_path.string();
 			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
 			gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
@@ -1058,7 +1108,9 @@ namespace Kablunk
 		SaveProject();
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
+		NativeScriptEngine::Get()->SetScene(nullptr);
 
+		m_viewport_renderer->SetScene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);
 		m_active_scene = nullptr;
 
@@ -1076,11 +1128,11 @@ namespace Kablunk
 		}
 	}
 
-	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mousepicking.
+	// #TODO Currently streams a second full viewport width and height framebuffer from GPU to use for mouse picking.
 	//		 Consider refactoring to only stream a 3x3 framebuffer around the mouse click to save on bandwidth 
 	void EditorLayer::ViewportClickSelectEntity()
 	{
-		// #TODO clicking outside viewport still tries to select entity, causing a deselection in most cases
+		// #TODO clicking outside viewport still tries to select entity, causing a de-selection in most cases
 
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_viewport_bounds[0].x;
@@ -1093,7 +1145,7 @@ namespace Kablunk
 		auto mouse_y = static_cast<int>(my);
 
 		//KB_CORE_TRACE("Mouse: {0}, {1}", mouse_x, mouse_y);
-		int pixel_data = m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
+		int pixel_data = 0; //m_frame_buffer->ReadPixel(1, mouse_x, mouse_y);
 		
 		//KB_CORE_TRACE("Mouse picked entity id: {0}", pixel_data);
 		
@@ -1111,25 +1163,42 @@ namespace Kablunk
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (m_scene_state == SceneState::Play)
-		{
-			auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-			if (cam_entity.Valid())
-				Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
-			else
-			{
-				KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
-				return;
-			}
-		}
-		else
-		{
-			Renderer2D::BeginScene(m_editor_camera);
-		}
+		if (!m_viewport_renderer->GetFinalPassImage())
+			return;
 
 		if (m_show_physics_colliders)
 		{
 			auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, CircleCollider2DComponent>();
+			if (view.size_hint() == 0)
+				return;
+			
+			switch (m_scene_state)
+			{
+				case SceneState::Play:
+				{
+					auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+					if (cam_entity.Valid())
+						Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
+					else
+					{
+						KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+						return;
+					}
+					break;
+				}
+				case SceneState::Edit:
+				{
+					Renderer2D::BeginScene(m_editor_camera);
+					break;
+				}
+				case SceneState::Pause:
+				{
+					Renderer2D::BeginScene(m_editor_camera);
+					break;
+				}
+			}
+			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
+		
 			for (auto e : view)
 			{
 				auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);
@@ -1139,10 +1208,9 @@ namespace Kablunk
 				auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
 				Renderer2D::DrawCircle(transform, glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f }, cc2D_comp.Radius, 0.025f);
 			}
+
+			Renderer2D::EndScene();
 		}
-
-
-		Renderer2D::EndScene();
 	}
 
 	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)
@@ -1152,7 +1220,7 @@ namespace Kablunk
 		auto inverse_projection = glm::inverse(camera.GetProjection());
 		auto inverse_view		= glm::inverse(glm::mat3{ camera.GetViewMatrix() });
 		glm::vec4 ray			= inverse_projection * mouse_clip_position;
-		glm::vec3 ray_pos		= camera.GetTranslation();
+		glm::vec3 ray_pos		= camera.GetPosition();
 		glm::vec3 ray_dir		= inverse_view * glm::vec3{ ray };
 
 		return { ray_pos, ray_dir };

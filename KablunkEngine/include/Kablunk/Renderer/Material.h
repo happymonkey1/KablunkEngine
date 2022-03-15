@@ -7,12 +7,21 @@
 
 namespace Kablunk
 {
-	class Material
+	enum class MaterialFlag
+	{
+		None		= BIT(0),
+		DepthTest	= BIT(1),
+		Blend		= BIT(2),
+		TwoSided	= BIT(3)
+	};
+
+
+	class Material : public RefCounted
 	{
 	public:
-
 		virtual ~Material() = default;
 
+		virtual void Invalidate() = 0;
 		virtual void Bind() = 0;
 
 		virtual void Set(const std::string& name, float value) = 0;
@@ -27,7 +36,9 @@ namespace Kablunk
 		virtual void Set(const std::string& name, const glm::ivec4& value) = 0;
 		virtual void Set(const std::string& name, const glm::mat3& value) = 0;
 		virtual void Set(const std::string& name, const glm::mat4& value) = 0;
-		virtual void Set(const std::string& name, const Ref<Texture2D>& texture) = 0;
+		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture) = 0;
+		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) = 0;
+		virtual void Set(const std::string& name, const IntrusiveRef<Image2D>& texture) = 0;
 
 		virtual float& GetFloat(const std::string& name) = 0;
 		virtual int& GetInt(const std::string& name) = 0;
@@ -37,13 +48,18 @@ namespace Kablunk
 		virtual glm::vec4& GetVec4(const std::string& name) = 0;
 		virtual glm::mat3& GetMat3(const std::string& name) = 0;
 		virtual glm::mat4& GetMat4(const std::string& name) = 0;
-		virtual Ref<Texture2D> GetTexture2D(const std::string& name) = 0;
+		virtual IntrusiveRef<Texture2D> GetTexture2D(const std::string& name) = 0;
+		virtual IntrusiveRef<Texture2D> TryGetTexture2D(const std::string& name) = 0;
 
-		virtual Ref<Shader> GetShader() = 0;
+		virtual IntrusiveRef<Shader> GetShader() = 0;
 		virtual const std::string& GetName() const = 0;
 
-		static Ref<Material> Create(const Ref<Shader>& shader, const std::string& name = "");
-		static Ref<Material> Copy(const Ref<Material>& other, const std::string& name = "");
+		virtual uint32_t GetFlags() const = 0;
+		virtual bool GetFlag(MaterialFlag flag) const = 0;
+		virtual void SetFlag(MaterialFlag flag, bool value = true) = 0;
+
+		static IntrusiveRef<Material> Create(const IntrusiveRef<Shader>& shader, const std::string& name = "");
+		static IntrusiveRef<Material> Copy(const IntrusiveRef<Material>& other, const std::string& name = "");
 	};
 }
 

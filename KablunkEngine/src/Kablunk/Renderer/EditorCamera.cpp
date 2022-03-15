@@ -10,31 +10,52 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#define M_PI 3.14159f
+
 namespace Kablunk
 {
 
 	EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
-		: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip },
+		: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip }, m_focal_point{ 0.0f },
 		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
 	{
-		UpdateView();
+		m_focal_point = glm::vec3{ 0.0f };
+
+		m_position_delta = glm::vec3{ 0.0f };
+		glm::vec3 position = { 0, 0, 50 };
+		m_distance = glm::distance(position, m_focal_point);
+
+		m_yaw = 3.0f * (float)M_PI / 4.0f;
+		m_pitch = M_PI / 4.0f;
+
+		m_position = CalculatePosition();
+
+		const glm::quat orientation = GetOrientation();
+		m_view_matrix = glm::translate(glm::mat4(1.0f), m_position) * glm::toMat4(orientation);
+		m_view_matrix = glm::inverse(m_view_matrix);
 	}
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
+		const auto& mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
+		auto delta = (mouse - m_initial_mouse_position) * 0.003f * ts.GetMiliseconds();
 		if (Input::IsKeyPressed(Camera_control_key))
 		{
-			const auto& mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
-			auto delta = (mouse - m_initial_mouse_position) * 0.003f * ts.GetMiliseconds();
-			m_initial_mouse_position = mouse;
-
 			if (Input::IsMouseButtonPressed(Mouse::ButtonLeft)) // Left
 				MousePan(delta);
 			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight)) // Right
-				MouseZoom(delta.y);
+				MouseZoom(delta.x + delta.y);
 			else if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle)) // Middle
 				MouseRotate(delta);
+
+			m_initial_mouse_position = mouse;
 		}
+
+		m_position += m_position_delta;
+		m_yaw += m_yaw_delta;
+		m_pitch += m_pitch_delta;
+
+		m_position = CalculatePosition();
 
 		UpdateView();
 	}
@@ -53,12 +74,26 @@ namespace Kablunk
 
 	void EditorCamera::UpdateView()
 	{
-		// m_yaw = m_pitch = 0.0f // Lock camera rotation
-		m_translation = CalculateTranslation();
+		const float yaw_sign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
 
-		auto orientation = GetOrientation();
-		m_view_matrix = glm::translate(glm::mat4{ 1.0f }, m_translation) * glm::toMat4(orientation);
-		m_view_matrix = glm::inverse(m_view_matrix);
+		//handle when camera direction is same as up direction
+		const float cos_angle = glm::dot(GetForwardDirection(), GetUpDirection());
+		if (cos_angle * yaw_sign > 0.99f)
+			m_pitch_delta = 0.0f;
+
+		const glm::vec3 look_at = m_position + GetForwardDirection();
+		m_focal_point = m_position + GetForwardDirection() * m_distance;
+		m_distance = glm::distance(m_position, m_focal_point);
+		m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f }) * glm::toMat4(GetOrientation());
+		//m_translation = CalculateTranslation();
+
+		//auto orientation = GetOrientation();
+		//m_view_matrix = glm::translate(glm::mat4{ 1.0f }, m_position) * glm::toMat4(orientation);
+		//m_view_matrix = glm::inverse(m_view_matrix);
+
+		m_yaw_delta *= 0.6f;
+		m_pitch_delta *= 0.6f;
+		m_position_delta *= 0.8f;
 	}
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
@@ -80,18 +115,21 @@ namespace Kablunk
 	{
 		float yaw_sign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
 		auto rotation_speed = GetRotationSpeed();
-		m_yaw += yaw_sign * delta.x * rotation_speed;
-		m_pitch += delta.y * rotation_speed;
+		m_yaw_delta += yaw_sign * delta.x * rotation_speed;
+		m_pitch_delta += delta.y * rotation_speed;
 	}
 
 	void EditorCamera::MouseZoom(float delta)
 	{
 		m_distance -= delta * GetZoomSpeed();
+		m_position = m_focal_point - GetForwardDirection() * m_distance;
 		if (m_distance < 1.0f)
 		{
 			m_focal_point += GetForwardDirection();
 			m_distance = 1.0f;
 		}
+
+		m_position_delta += delta * GetZoomSpeed() * GetForwardDirection();
 	}
 
 	std::pair<float, float> EditorCamera::GetPanSpeed() const
@@ -130,12 +168,12 @@ namespace Kablunk
 
 	glm::quat EditorCamera::GetOrientation() const
 	{
-		return glm::quat(glm::vec3{ -m_pitch, -m_yaw, 0.0f });
+		return glm::quat(glm::vec3{ -m_pitch - m_pitch_delta, -m_yaw - m_yaw_delta, 0.0f });
 	}
 
-	glm::vec3 EditorCamera::CalculateTranslation() const
+	glm::vec3 EditorCamera::CalculatePosition() const
 	{
-		return m_focal_point - GetForwardDirection() * m_distance;
+		return m_focal_point - GetForwardDirection() * m_distance + m_position_delta;
 	}
 
 }

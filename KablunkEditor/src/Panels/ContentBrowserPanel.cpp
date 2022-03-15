@@ -1,5 +1,6 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Kablunk/Project/Project.h"
+#include "Kablunk/Imgui/ImGuiWrappers.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -93,7 +94,7 @@ namespace Kablunk
 			ImGui::TableNextColumn();
 			
 			// Calculate how many columns we need to display files/folders
-			auto files_column_width = ImGui::GetContentRegionAvailWidth();
+			auto files_column_width = ImGui::GetContentRegionAvail().x;
 			auto column_count = static_cast<int>(files_column_width / cell_size);
 			column_count = column_count < 1 ? 1 : column_count;
 
@@ -115,13 +116,20 @@ namespace Kablunk
 					ImGui::PushID(i++);
 
 					// #TODO include more file icons and adjust icon texture accordingly
-					auto icon_renderer_id = is_dir ? m_directory_icon.Get()->GetRendererID() : m_file_icon.Get()->GetRendererID();
+					
+					auto icon = is_dir ? m_directory_icon.Get() : m_file_icon.Get();
 					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
-					ImGui::ImageButton((ImTextureID)icon_renderer_id, { thumbnail_size, thumbnail_size }, { 0, 1 }, { 1, 0 });
+					UI::ImageButton(icon, { thumbnail_size, thumbnail_size });
 					ImGui::PopStyleColor();
 
-					if (ImGui::BeginDragDropSource())
+					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 					{
+
+						// drag drop selection icon + name 
+						UI::Image(icon, { 20, 20 });
+						ImGui::SameLine();
+						ImGui::TextUnformatted(relative_path.stem().string().c_str());
+						
 						const auto item_path = relative_path.c_str();
 						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (wcslen(item_path) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::EndDragDropSource();
@@ -134,7 +142,7 @@ namespace Kablunk
 							m_current_directory /= path.filename();
 							Refresh();
 						}
-						else if (directory_entry.path().extension() == FILE_EXTENSIONS::FBX)
+						else if (directory_entry.path().extension() == FileExtensions::FBX)
 						{
 						
 							// #TODO open model in asset viewer
@@ -183,7 +191,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (ImGui::ImageButton((ImTextureID)m_back_button->GetRendererID(), { 22, 22 }) && m_current_directory != Project::GetAssetDirectory())
+		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != Project::GetAssetDirectory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			Refresh();
@@ -191,7 +199,7 @@ namespace Kablunk
 		
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton((ImTextureID)m_forward_button->GetRendererID(), { 22, 22 }))
+		if (UI::ImageButton(m_forward_button.Get(), { 22, 22 }))
 		{
 			// #TODO go to next directory
 			KB_CORE_WARN("Forward directory not implemented!");
@@ -199,7 +207,7 @@ namespace Kablunk
 
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton((ImTextureID)m_refresh_button->GetRendererID(), { 22, 22 }))
+		if (UI::ImageButton(m_refresh_button.Get(), { 22, 22 }))
 		{
 			Refresh();
 		}
@@ -207,7 +215,7 @@ namespace Kablunk
 		ImGui::SameLine();
 		
 		ImGui::PushItemWidth(200);
-		if (ImGui::InputTextWithHint("", "Search...", m_search_buffer, MAX_SEARCH_BUFFER_LENGTH))
+		if (ImGui::InputTextWithHint("##search_bar", "Search...", m_search_buffer, MAX_SEARCH_BUFFER_LENGTH))
 		{
 			if (strlen(m_search_buffer) == 0)
 			{

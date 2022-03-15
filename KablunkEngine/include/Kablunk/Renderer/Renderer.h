@@ -12,14 +12,23 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/EditorCamera.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
+#include "Kablunk/Renderer/Pipeline.h"
+#include "Kablunk/Renderer/UniformBufferSet.h"
+#include "Kablunk/Renderer/Material.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+
+//#include FT_FREETYPE_H
+//#include <ft2build.h>
 
 
 namespace Kablunk
 {
 	constexpr uint32_t MAX_POINT_LIGHTS = 16;
+
+	struct CameraDataUB
+	{
+		glm::mat4 ViewProjection;
+	};
 
 	// #TODO move to scene
 	struct PointLight
@@ -60,17 +69,22 @@ namespace Kablunk
 		CameraData camera_buffer;
 		RendererData renderer_buffer;
 		PointLightsData plights_buffer;
-		Ref<UniformBuffer> camera_uniform_buffer;
-		Ref<UniformBuffer> renderer_uniform_buffer;
-		Ref<UniformBuffer> point_lights_uniform_buffer;
+		IntrusiveRef<UniformBuffer> camera_uniform_buffer;
+		IntrusiveRef<UniformBuffer> renderer_uniform_buffer;
+		IntrusiveRef<UniformBuffer> point_lights_uniform_buffer;
 	};
 
+	struct RendererOptions
+	{
+		uint32_t frames_in_flight = 3;
+	};
 	
 
 	class Renderer
 	{
 	public:
 		static void Init();
+		static void Shutdown();
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
@@ -79,21 +93,34 @@ namespace Kablunk
 		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
 
-		static void Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
-		static void SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform);
+		
+
+		static void SubmitData(const IntrusiveRef<Shader> shader, const IntrusiveRef<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform);
 		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
-		static Ref<Texture2D> GetWhiteTexture();
 
-		static Ref<ShaderLibrary> GetShaderLibrary();
+		static void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline);
+		static void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material);
+		static void OnShaderReloaded(uint64_t hash);
+
+		static uint32_t GetCurrentFrameIndex();
+
+		static IntrusiveRef<Texture2D> GetWhiteTexture();
+
+		static IntrusiveRef<ShaderLibrary> GetShaderLibrary();
+		static IntrusiveRef<Shader> GetShader(const std::string& name);
+
+		static const RendererOptions& GetConfig() { return s_options; }
 
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:
+		inline static RendererOptions s_options = { };
 		static Scope<SceneData> m_SceneData;
 		
-		static Ref<ShaderLibrary> s_shader_library;
+		static IntrusiveRef<ShaderLibrary> s_shader_library;
 
-		static Ref<FT_Library> s_freetype_lib;
+		
 	};
 
 	

@@ -3,45 +3,68 @@
 #include "Kablunk/Renderer/Renderer2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/Vulkan/VulkanShader.h"
+
+#include "Platform/Vulkan/VulkanContext.h"
+
+#include "Kablunk/Renderer/RendererAPI.h"
 
 namespace Kablunk
 {
 	Scope<SceneData> Renderer::m_SceneData = CreateScope<SceneData>();
-	Ref<ShaderLibrary> Renderer::s_shader_library = CreateRef<ShaderLibrary>();
-	Ref<FT_Library> Renderer::s_freetype_lib = CreateRef<FT_Library>();
+	IntrusiveRef<ShaderLibrary> Renderer::s_shader_library = IntrusiveRef<ShaderLibrary>::Create();
+
+	struct ShaderDependencies
+	{
+		std::vector<IntrusiveRef<Pipeline>> pipelines;
+		std::vector<IntrusiveRef<Material>> materials;
+	};
+
+	static std::unordered_map<uint64_t, ShaderDependencies> s_shader_dependencies;
 
 	void Renderer::Init()
 	{
 		KB_PROFILE_FUNCTION();
 
-		// #TODO move elsewhere when refactoring renderer
-		s_shader_library->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+		// Renderer initialization
+		RenderCommand::Init();
 
 		// Setting up data
 
 		// Uniform buffers
-		m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
-		m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
-		m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
+		//m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
+		//m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
+		//m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
 
 		// Initialize freetype
 		//if (FT_Init_FreeType(s_freetype_lib.get()))
 		//	KB_CORE_ASSERT(false, "Could not initialize FreeType");
 		
-
-		// OpenGL initialization
-		RenderCommand::Init();
 		Renderer2D::Init();
 	}
 
-	Ref<Texture2D> Renderer::GetWhiteTexture()
+	void Renderer::Shutdown()
+	{
+		RenderCommand::Shutdown();
+
+		Renderer2D::Shutdown();
+
+		s_shader_dependencies.clear();
+	}
+
+	IntrusiveRef<Texture2D> Renderer::GetWhiteTexture()
 	{
 		return Renderer2D::GetWhiteTexture();
 	}
 
-	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
+	IntrusiveRef<ShaderLibrary> Renderer::GetShaderLibrary()
 	{
 		return s_shader_library;
+	}
+
+	IntrusiveRef<Shader> Renderer::GetShader(const std::string& shader_name)
+	{
+		return s_shader_library->Get(shader_name);
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -58,7 +81,7 @@ namespace Kablunk
 		m_SceneData->camera_buffer.ProjectionMatrix = camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = view_mat;
 		m_SceneData->camera_buffer.CameraPosition = transform[3];
-		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
+		//m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
 	void Renderer::BeginScene(const EditorCamera& editor_camera)
@@ -66,13 +89,13 @@ namespace Kablunk
 		m_SceneData->camera_buffer.ViewProjectionMatrix = editor_camera.GetViewProjectionMatrix();
 		m_SceneData->camera_buffer.ProjectionMatrix = editor_camera.GetProjection();
 		m_SceneData->camera_buffer.ViewMatrix = editor_camera.GetViewMatrix();
-		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetTranslation();
-		m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
+		m_SceneData->camera_buffer.CameraPosition = editor_camera.GetPosition();
+		//m_SceneData->camera_uniform_buffer->SetData(&m_SceneData->camera_buffer, sizeof(SceneData::CameraData));
 	}
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
-		m_SceneData->camera_buffer.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+		//m_SceneData->camera_buffer.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 	}
 
 	void Renderer::EndScene()
@@ -80,24 +103,32 @@ namespace Kablunk
 
 	}
 
-	void Renderer::Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	void Renderer::SubmitData(const IntrusiveRef<Shader> shader, const IntrusiveRef<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
-		shader->Bind();
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_Transform", transform);
+		if (Renderer::GetAPI() == RendererAPI::RenderAPI_t::OpenGL)
+		{
+			shader->Bind();
+			shader.As<OpenGLShader>()->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
+			shader.As<OpenGLShader>()->UploadUniformMat4("u_Transform", transform);
+		}
+		else
+		{
+			//shader.As<VulkanShader>()->UploadUniformMat4("u_ViewProjection", m_SceneData->camera_buffer.ViewProjectionMatrix);
+			//shader.As<VulkanShader>()->UploadUniformMat4("u_Transform", transform);
+		}
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}
 
-	void Renderer::SubmitMesh(Ref<Mesh> mesh, glm::mat4 transform)
+	void Renderer::SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform)
 	{
 		// #FIXME bad
-		auto mesh_shader = std::dynamic_pointer_cast<OpenGLShader>(mesh->GetMeshData()->GetShader());
-		mesh_shader->Bind();
+		//auto mesh_shader = mesh->GetMeshData()->GetShader().As<OpenGLShader>();
+		mesh->GetMeshData()->GetShader()->Bind();
 
 		m_SceneData->renderer_buffer.Transform = transform;
-		m_SceneData->renderer_uniform_buffer->SetData(&m_SceneData->renderer_buffer, sizeof(SceneData::RendererData));
+		//m_SceneData->renderer_uniform_buffer->SetData(&m_SceneData->renderer_buffer, sizeof(SceneData::RendererData));
 
 		//mesh_shader->SetMat4("u_Transform", transform);
 
@@ -114,6 +145,39 @@ namespace Kablunk
 		m_SceneData->plights_buffer.count = count;
 		memcpy(m_SceneData->plights_buffer.lights, lights.data(), sizeof(PointLight) * count);
 
-		m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
+		//m_SceneData->point_lights_uniform_buffer->SetData(&m_SceneData->plights_buffer, sizeof(uint32_t) + sizeof(PointLight) * count);
 	}
+
+	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline)
+	{
+		s_shader_dependencies[shader->GetHash()].pipelines.push_back(pipeline);
+	}
+
+	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material)
+	{
+		s_shader_dependencies[shader->GetHash()].materials.push_back(material);
+	}
+
+	void Renderer::OnShaderReloaded(uint64_t hash)
+	{
+		if (s_shader_dependencies.find(hash) != s_shader_dependencies.end())
+		{
+			for (auto& material : s_shader_dependencies[hash].materials)
+				material->Invalidate();
+
+			for (auto& pipeline : s_shader_dependencies[hash].pipelines)
+				pipeline->Invalidate();
+		}
+	}
+
+	uint32_t Renderer::GetCurrentFrameIndex()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::RenderAPI_t::Vulkan:	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
+		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return 0;
+		}
+
+	}
+
 }

@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 
+#include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
@@ -133,7 +134,7 @@ namespace Kablunk
 		std::string node_name, mesh_name;
 	};
 
-	class MeshData
+	class MeshData : public RefCounted
 	{
 	public:
 		MeshData(const std::string& filename, Kablunk::Entity entity);
@@ -142,9 +143,9 @@ namespace Kablunk
 
 		const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 		const std::vector<Index>& GetIndicies() const { return m_indices; }
-		Ref<Shader> GetShader() { return m_mesh_shader; }
-		Ref<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
-		Ref<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
+		IntrusiveRef<Shader> GetShader() { return m_mesh_shader; }
+		IntrusiveRef<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
+		IntrusiveRef<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
 		const BufferLayout& GetBufferLayout() const { return m_vertex_buffer_layout; }
 
 		const std::vector<Ref<Texture2D>> GetTextures() const { return m_textures; }
@@ -173,8 +174,8 @@ namespace Kablunk
 	private:
 		Scope<Assimp::Importer> m_importer;
 
-		Ref<VertexBuffer> m_vertex_buffer;
-		Ref<IndexBuffer> m_index_buffer;
+		IntrusiveRef<VertexBuffer> m_vertex_buffer;
+		IntrusiveRef<IndexBuffer> m_index_buffer;
 		BufferLayout m_vertex_buffer_layout;
 
 		std::vector<Vertex> m_static_vertices;
@@ -191,7 +192,7 @@ namespace Kablunk
 
 		glm::mat4 m_inverse_transform{ 1.0f };
 
-		Ref<Shader> m_mesh_shader;
+		IntrusiveRef<Shader> m_mesh_shader;
 		std::vector<Ref<Texture2D>> m_textures;
 		std::vector<Ref<Texture2D>> m_normal_map;
 		
@@ -210,29 +211,29 @@ namespace Kablunk
 	};
 
 
-	class Mesh
+	class Mesh : public RefCounted
 	{
 	public:
-		Mesh(Ref<MeshData> mesh_data);
-		Mesh(const Ref<Mesh>& other);
+		Mesh(IntrusiveRef<MeshData> mesh_data);
+		Mesh(const IntrusiveRef<Mesh>& other);
 		virtual ~Mesh();
 
 		void OnUpdate(Timestep ts);
 
-		Ref<MeshData> GetMeshData() { return m_mesh_data; }
-		Ref<MeshData> GetMeshData() const { return m_mesh_data; }
-		Ref<VertexArray> GetVertexArray() const { return m_vertex_array; }
-		void SetMeshData(Ref<MeshData> mesh_data) { m_mesh_data = mesh_data; }
+		IntrusiveRef<MeshData> GetMeshData() { return m_mesh_data; }
+		IntrusiveRef<MeshData> GetMeshData() const { return m_mesh_data; }
+		IntrusiveRef<VertexArray> GetVertexArray() const { return m_vertex_array; }
+		void SetMeshData(IntrusiveRef<MeshData> mesh_data) { m_mesh_data = mesh_data; }
 	private:
-		Ref<MeshData> m_mesh_data;
-		Ref<VertexArray> m_vertex_array;
+		IntrusiveRef<MeshData> m_mesh_data;
+		IntrusiveRef<VertexArray> m_vertex_array;
 	};
 
 	// #TODO move elsewhere
 	class MeshFactory
 	{
 	public:
-		static Ref<Mesh> CreateCube(float side_length, Entity entity);
+		static IntrusiveRef<Mesh> CreateCube(float side_length, Entity entity);
 	};
 }
 

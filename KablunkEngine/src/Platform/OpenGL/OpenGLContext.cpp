@@ -47,4 +47,9 @@ namespace Kablunk {
 		glfwSwapBuffers(m_WindowHandle);
 	}
 
+	void OpenGLContext::Shutdown()
+	{
+
+	}
+
 }
