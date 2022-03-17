@@ -56,6 +56,7 @@ namespace Kablunk
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Circle.glsl");
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Quad.glsl");
+		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Line.glsl");
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/scene_composite.glsl");
 
@@ -235,6 +236,46 @@ namespace Kablunk
 
 	}
 
+	void VulkanRendererAPI::RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
+	{
+		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+
+				VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
+
+				IntrusiveRef<VulkanVertexBuffer> vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+				// WTF is this for?
+				VkDeviceSize offsets[1] = { 0 };
+
+				vkCmdBindVertexBuffers(vk_cmd_buffer, 0, 1, &vk_vertex_buffer, offsets);
+
+				IntrusiveRef<VulkanIndexBuffer> vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
+				VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(vk_cmd_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+				VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+				vkCmdBindPipeline(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
+
+				VkDescriptorSet vk_descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+				if (vk_descriptor_set)
+					vkCmdBindDescriptorSets(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout, 0, 1, &vk_descriptor_set, 0, nullptr);
+
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+
+				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
+				vkCmdDrawIndexed(vk_cmd_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
+			});
+	}
+
 	void VulkanRendererAPI::RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count /*= 0*/)
 	{
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
@@ -277,6 +318,16 @@ namespace Kablunk
 
 				vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
 			});
+	}
+
+	void VulkanRendererAPI::SetLineWidth(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width)
+	{
+		RenderCommand::Submit([width = line_width, render_cmd_buffer = render_command_buffer]()
+		{
+			uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+			vkCmdSetLineWidth(vk_cmd_buffer, width);
+		});
 	}
 
 	void VulkanRendererAPI::WaitAndRender()

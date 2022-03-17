@@ -42,6 +42,12 @@ namespace Kablunk
 		int32_t EntityID{ -1 };
 	};
 
+	struct LineVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+	};
+
 	struct Renderer2DSpecification
 	{
 		bool swap_chain_target = false;
@@ -94,6 +100,13 @@ namespace Kablunk
 		static void DrawQuadFromTextureAtlas(const glm::mat4& transform, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float radius = 0.5f, float thickness = 1.0f, float fade = 0.005f, int32_t entity_id = -1);
+
+		// Line
+		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4{ 1.0f });
+
+		// Rect
+		static void DrawRect(const glm::vec2& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
+		static void DrawRect(const glm::vec3& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
 
 		static void ResetStats();
 		static Renderer2DStats GetStats();

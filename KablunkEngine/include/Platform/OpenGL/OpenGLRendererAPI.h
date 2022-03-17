@@ -25,8 +25,16 @@ namespace Kablunk
 		{
 			KB_CORE_ASSERT(false, "not implemented!");
 		}
-
+		virtual void RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
 		virtual void RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) override
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
+		virtual void SetLineWidth(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width) override
 		{
 			KB_CORE_ASSERT(false, "not implemented!");
 		}
