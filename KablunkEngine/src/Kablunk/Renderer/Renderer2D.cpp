@@ -302,7 +302,6 @@ namespace Kablunk
 		RenderCommand::BeginRenderPass(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline->GetSpecification().render_pass);
 
 		// Quad
-		bool prev_set = false;
 		// calculate data size in bytes
 		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptr);
 		if (data_size)
@@ -318,7 +317,6 @@ namespace Kablunk
 				else
 					s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
 			}
-			prev_set = true;
 
 			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.quad_material, s_renderer_data.quad_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.quad_index_count);
 			s_renderer_data.Stats.Draw_calls++;
@@ -330,18 +328,6 @@ namespace Kablunk
 		{
 			s_renderer_data.circle_vertex_buffer->SetData(s_renderer_data.circle_vertex_buffer_base_ptr, data_size);
 
-			if (!prev_set) // idk why this needs to be set, but circles won't appear if it isn't
-			{
-				auto& textures = s_renderer_data.texture_slots;
-				for (uint32_t i = 0; i < s_renderer_data.max_texture_slots; i++)
-				{
-					if (textures[i])
-						s_renderer_data.quad_material->Set("u_Textures", textures[i], i);
-					else
-						s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
-				}
-			}
-
 			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.circle_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.circle_material, s_renderer_data.circle_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.circle_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
@@ -350,19 +336,8 @@ namespace Kablunk
 		data_size = (uint32_t)((uint8_t*)s_renderer_data.line_vertex_buffer_ptr - (uint8_t*)s_renderer_data.line_vertex_buffer_base_ptr);
 		if (data_size)
 		{
+			KB_CORE_INFO("rendering lines");
 			s_renderer_data.line_vertex_buffer->SetData(s_renderer_data.line_vertex_buffer_base_ptr, data_size);
-
-			if (!prev_set) // idk why this needs to be set, but lines won't appear if it isn't
-			{
-				auto& textures = s_renderer_data.texture_slots;
-				for (uint32_t i = 0; i < s_renderer_data.max_texture_slots; i++)
-				{
-					if (textures[i])
-						s_renderer_data.quad_material->Set("u_Textures", textures[i], i);
-					else
-						s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
-				}
-			}
 
 			RenderCommand::SetLineWidth(s_renderer_data.render_command_buffer, s_renderer_data.line_width);
 
@@ -643,6 +618,10 @@ namespace Kablunk
 		s_renderer_data.circle_count = 0;
 		s_renderer_data.circle_index_count = 0;
 		s_renderer_data.circle_vertex_buffer_ptr = s_renderer_data.circle_vertex_buffer_base_ptr;
+
+		s_renderer_data.line_count = 0;
+		s_renderer_data.line_index_count = 0;
+		s_renderer_data.line_vertex_buffer_ptr = s_renderer_data.line_vertex_buffer_base_ptr;
 
 		s_renderer_data.texture_slot_index = 1;
 

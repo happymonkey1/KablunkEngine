@@ -1168,18 +1168,18 @@ namespace Kablunk
 
 		if (m_show_physics_colliders)
 		{
-			auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, CircleCollider2DComponent>();
-			if (view.size_hint() == 0)
-				return;
 			
+			Camera* camera = nullptr;
+			glm::mat4 transform = glm::mat4{ 1.0f };
+
 			switch (m_scene_state)
 			{
 				case SceneState::Play:
 				{
 					auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-					if (cam_entity.Valid())
-						Renderer2D::BeginScene(cam_entity.GetComponent<CameraComponent>().Camera, cam_entity.GetComponent<TransformComponent>().GetTransform());
-					else
+					camera = &cam_entity.GetComponent<CameraComponent>().Camera;
+					transform = cam_entity.GetComponent<TransformComponent>().GetTransform();
+					if (!cam_entity.Valid())
 					{
 						KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
 						return;
@@ -1188,28 +1188,61 @@ namespace Kablunk
 				}
 				case SceneState::Edit:
 				{
-					Renderer2D::BeginScene(m_editor_camera);
+					camera = &m_editor_camera;
+					transform = m_editor_camera.GetViewMatrix();
 					break;
 				}
 				case SceneState::Pause:
 				{
-					Renderer2D::BeginScene(m_editor_camera);
+					camera = &m_editor_camera;
+					transform = m_editor_camera.GetViewMatrix();
 					break;
 				}
 			}
-			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
-		
-			for (auto e : view)
-			{
-				auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);
-				auto translate = transform_comp.Translation + glm::vec3{ cc2D_comp.Offset, 0.001f };
-				auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
 
-				auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-				Renderer2D::DrawCircle(transform, glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f }, cc2D_comp.Radius, 0.025f);
+			if (!camera)
+			{
+				KB_CORE_ASSERT(false, "could not find camera!");
+				return;
 			}
 
+			Renderer2D::BeginScene(*camera, transform);
+			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
+
+			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
+
+			// Quads
+			{
+				auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, BoxCollider2DComponent>();
+				for (auto e : view)
+				{
+					auto& [transform, bc2D_comp] = view.get<TransformComponent, BoxCollider2DComponent>(e);
+					auto translate = transform.Translation + glm::vec3{ bc2D_comp.Offset, 0.001f };
+					//auto scale = transform.Scale * glm::vec3{ bc2D_comp.Size.x, bc2D_comp.Size.y, 1.0f };
+					auto scale = glm::vec2{ transform.Scale.x, transform.Scale.y } *bc2D_comp.Size;
+
+					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
+					Renderer2D::DrawRect(translate, scale, 0, LIGHT_GREEN_COL);
+
+				}
+			}
+			// Circles
+			{
+				auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, CircleCollider2DComponent>();
+				for (auto e : view)
+				{
+					auto& [transform_comp, cc2D_comp] = view.get<TransformComponent, CircleCollider2DComponent>(e);
+					auto translate = transform_comp.Translation + glm::vec3{ cc2D_comp.Offset, 0.001f };
+					auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
+
+					auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
+					Renderer2D::DrawCircle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
+				}
+			}
+
+
 			Renderer2D::EndScene();
+			
 		}
 	}
 
