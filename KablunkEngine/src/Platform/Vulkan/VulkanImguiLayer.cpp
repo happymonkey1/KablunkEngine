@@ -1,5 +1,7 @@
 #include "kablunkpch.h"
 
+#include <vulkan/vulkan.h>
+
 #include "Platform/Vulkan/VulkanImGuiLayer.h"
 #include "Platform/Vulkan/VulkanContext.h"
 

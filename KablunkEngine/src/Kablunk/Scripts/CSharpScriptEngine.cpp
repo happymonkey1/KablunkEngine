@@ -436,7 +436,7 @@ namespace Kablunk
 				const auto& entity_map = scene->GetEntityMap();
 				for (auto& [entity_id, entity_instance_data] : entity_instance_map->second)
 				{
-					KB_CORE_ASSERT(entity_map.find(entity_id) != entity_map.end(), "Invalid entity id '{0}'", entity_id);
+					KB_CORE_ASSERT(entity_map.find(entity_id) != entity_map.end(), "Invalid entity id '{0}'", static_cast<uint64_t>(entity_id));
 					InitScriptEntity(entity_map.at(entity_id));
 				}
 			}
@@ -646,7 +646,7 @@ namespace Kablunk
 		script_class.Class = GetClass(s_app_assembly_image, script_class);
 		script_class.InitClassMethods(s_app_assembly_image);
 
-		KB_CORE_INFO("InitScriptEntity called for scene '{0}'", context->GetUUID());
+		KB_CORE_INFO("InitScriptEntity called for scene '{0}'",static_cast<uint64_t>(context->GetUUID()));
 		
 		EntityInstanceData& entity_instance_data = s_entity_instance_map[context->GetUUID()][id];
 		EntityInstance& entity_instance = entity_instance_data.Instance;
@@ -669,7 +669,7 @@ namespace Kablunk
 	{
 		Scene* context = entity.m_scene;
 		UUID id = entity.GetComponent<IdComponent>().Id;
-		KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, entity.m_entity_handle);
+		KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, static_cast<uint64_t>(entity.m_entity_handle));
 		auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
 		auto& module_name = script_comp.Module_name;
 

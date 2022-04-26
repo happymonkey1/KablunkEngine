@@ -186,6 +186,10 @@ namespace Kablunk
 			if (filepath.empty())
 				return;
 
+			auto annotations = Parser::CPP::FindParserTokens(filepath.string());
+			for (const auto& annot : annotations)
+				KB_CORE_INFO("{}", annot.ToString());
+
 			auto struct_names = Parser::CPP::FindClassAndStructNames(filepath.string(), 1);
 			if (struct_names.empty())
 			{
@@ -203,34 +207,7 @@ namespace Kablunk
 			}
 
 			if (Instance)
-			{
 				Filepath = filepath;
-
-				
-				// #TODO Move to scene OnStartRuntime
-				try
-				{
-					Instance->OnAwake();
-				}
-				catch (std::bad_alloc& e)
-				{
-					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-				catch (std::exception& e)
-				{
-					KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-				catch (...)
-				{
-					KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-			}
 		}
 
 

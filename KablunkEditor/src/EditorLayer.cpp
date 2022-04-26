@@ -226,6 +226,7 @@ namespace Kablunk
 			UI::Property("Editor Selected Entity", m_selected_entity.GetHandleAsString());
 			UI::Property("Hierarchy Panel Selected Entity", m_scene_hierarchy_panel.GetSelectedEntity().GetHandleAsString());
 			UI::Property("Show Physics Colliders", &m_show_physics_colliders);
+			UI::PropertyReadOnlyUint32("Selected Manipulation Tool", m_gizmo_type);
 
 			UI::EndProperties();
 
@@ -288,8 +289,8 @@ namespace Kablunk
 			if (selected_entity && m_gizmo_type != -1)
 			{
 				ImGuizmo::SetOrthographic(false);
-				ImDrawList* draw_list = ImGui::GetWindowDrawList();
-				ImGuizmo::SetDrawlist(draw_list);
+				//ImDrawList* draw_list = ImGui::GetWindowDrawList();
+				ImGuizmo::SetDrawlist();
 
 				float window_width = ImGui::GetWindowWidth();
 				float window_height = ImGui::GetWindowHeight();
@@ -773,36 +774,47 @@ namespace Kablunk
 
 			break;
 		}
-
-		// Gizmos
-		case Key::Q:
-		{
-			if (!ImGuizmo::IsUsing()) 
-				m_gizmo_type = -1;
-			break;
-		}
-		case Key::W:
-		{
-			if (!ImGuizmo::IsUsing()) 
-				m_gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
-			break;
-		}
-		case Key::E:
-		{
-			if (!ImGuizmo::IsUsing()) 
-				m_gizmo_type = ImGuizmo::OPERATION::ROTATE;
-			break;
-		}
-		case Key::R:
-		{
-			if (!ImGuizmo::IsUsing()) 
-				m_gizmo_type = ImGuizmo::OPERATION::SCALE;
-			break;
-		}
-
-
 		default:
 			break;
+		}
+
+		// wtf does this do?
+		if (GImGui->ActiveId == 0)
+		{
+			// Gizmos
+			if ((m_viewport_hovered || m_viewport_focused) && !Input::IsMouseButtonPressed(Mouse::ButtonRight) && m_scene_state == SceneState::Edit)
+			{
+				switch (e.GetKeyCode())
+				{
+					case Key::Q:
+					{
+						m_gizmo_type = -1;
+						break;
+					}
+					case Key::W:
+					{
+						KB_CORE_INFO("W pressed");
+						m_gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
+						break;
+					}
+					case Key::E:
+					{
+						KB_CORE_INFO("E pressed");
+						m_gizmo_type = ImGuizmo::OPERATION::ROTATE;
+						break;
+					}
+					case Key::R:
+					{
+						KB_CORE_INFO("R pressed");
+						m_gizmo_type = ImGuizmo::OPERATION::SCALE;
+						break;
+					}
+				}
+			}
+
+			if (m_scene_hierarchy_panel.GetSelectedEntity() && Input::IsKeyPressed(Key::F))
+				m_editor_camera.Focus(m_scene_hierarchy_panel.GetSelectedEntity().GetComponent<TransformComponent>().Translation);
+			
 		}
 
 		return true;

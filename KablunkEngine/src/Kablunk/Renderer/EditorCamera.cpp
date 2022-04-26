@@ -10,8 +10,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-#define M_PI 3.14159f
-
 namespace Kablunk
 {
 
@@ -22,48 +20,121 @@ namespace Kablunk
 		m_focal_point = glm::vec3{ 0.0f };
 
 		m_position_delta = glm::vec3{ 0.0f };
-		glm::vec3 position = { 0, 0, 50 };
+		glm::vec3 position = { 0, 0, 10 };
 		m_distance = glm::distance(position, m_focal_point);
 
-		m_yaw = 3.0f * (float)M_PI / 4.0f;
-		m_pitch = M_PI / 4.0f;
+		m_yaw = glm::pi<float>() / 2.0f;
+		m_pitch = 0.0f; //glm::pi<float>() / 4.0f;
 
 		m_position = CalculatePosition();
 
 		const glm::quat orientation = GetOrientation();
-		m_view_matrix = glm::translate(glm::mat4(1.0f), m_position) * glm::toMat4(orientation);
-		m_view_matrix = glm::inverse(m_view_matrix);
+		m_direction = glm::eulerAngles(orientation) * (180.f / glm::pi<float>());
+		glm::mat4 inverse_view = glm::translate(glm::mat4(1.0f), m_position) * glm::toMat4(orientation);
+		m_view_matrix = glm::inverse(inverse_view);
 	}
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		const auto& mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
-		auto delta = (mouse - m_initial_mouse_position) * 0.003f * ts.GetMiliseconds();
-		if (Input::IsKeyPressed(Camera_control_key))
-		{
-			if (Input::IsMouseButtonPressed(Mouse::ButtonLeft)) // Left
-				MousePan(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight)) // Right
-				MouseZoom(delta.x + delta.y);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle)) // Middle
-				MouseRotate(delta);
+		auto mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
+		auto delta = (mouse - m_initial_mouse_position) * 0.002f;
 
-			m_initial_mouse_position = mouse;
+		// FlyCam
+		if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && !Input::IsKeyPressed(Camera_control_key))
+		{
+			m_camera_mode = CameraMode::FlyCam;
+			DisableMouse();
+
+			const float yaw_sign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
+			const float speed = 10.0f;
+
+			if (Input::IsKeyPressed(Key::Q))
+				m_position_delta -= glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
+			else if (Input::IsKeyPressed(Key::E))
+				m_position_delta += glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
+			else if (Input::IsKeyPressed(Key::S))
+				m_position_delta -= m_direction * speed * (float)ts;
+			else if (Input::IsKeyPressed(Key::W))
+				m_position_delta += m_direction * speed * (float)ts;
+			else if (Input::IsKeyPressed(Key::A))
+				m_position_delta -= m_right_direction * speed * (float)ts;
+			else if (Input::IsKeyPressed(Key::D))
+				m_position_delta += m_right_direction * speed * (float)ts;
+
+			constexpr float max_rate = 0.12f;
+			m_yaw_delta += glm::clamp(yaw_sign * delta.x * GetRotationSpeed(), -max_rate, max_rate);
+			m_pitch_delta += glm::clamp(delta.y * GetRotationSpeed(), -max_rate, max_rate);
+
+			m_right_direction = glm::cross(m_direction, glm::vec3{ 0.0f, yaw_sign, 0.0f });
+
+			m_direction = glm::rotate(
+				glm::normalize(
+					glm::cross(
+						glm::angleAxis(-m_pitch_delta, m_right_direction),
+						glm::angleAxis(-m_yaw_delta, glm::vec3{ 0.0f, yaw_sign, 0.0f })
+					)
+				),
+				m_direction
+			);
+
+			const float distance = glm::distance(m_focal_point, m_position);
+			m_focal_point = m_position + GetForwardDirection() * distance;
+			m_distance = distance;
 		}
+		// ArcBall
+		else if (Input::IsKeyPressed(Camera_control_key))
+		{
+			m_camera_mode = CameraMode::ArcBall;
+
+			if (Input::IsMouseButtonPressed(Mouse::ButtonLeft)) // Left
+			{
+				DisableMouse();
+				MousePan(delta);
+			}
+			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight)) // Right
+			{
+				DisableMouse();
+				MouseZoom(delta.x + delta.y);
+			}
+			else if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle)) // Middle
+			{
+				DisableMouse();
+				MouseRotate(delta);
+			}
+			else
+				EnableMouse();
+
+		}
+		else
+			EnableMouse();
+
+		m_initial_mouse_position = mouse;
+
 
 		m_position += m_position_delta;
 		m_yaw += m_yaw_delta;
 		m_pitch += m_pitch_delta;
 
-		m_position = CalculatePosition();
+		if (m_camera_mode == CameraMode::ArcBall)
+			m_position = CalculatePosition();
 
 		UpdateView();
 	}
 
 	void EditorCamera::OnEvent(Event& e)
 	{
-		EventDispatcher dispatcher{ e };
-		dispatcher.Dispatch<MouseScrolledEvent>(KABLUNK_BIND_EVENT_FN(EditorCamera::OnMouseScroll));
+		//EventDispatcher dispatcher{ e };
+		//dispatcher.Dispatch<MouseScrolledEvent>(KABLUNK_BIND_EVENT_FN(EditorCamera::OnMouseScroll));
+	}
+
+	void EditorCamera::EnableMouse() const
+	{
+		Input::SetCursorMode(CursorMode::Normal);
+	}
+
+	void EditorCamera::DisableMouse() const
+	{
+		Input::SetCursorMode(CursorMode::Locked);
 	}
 
 	void EditorCamera::UpdateProjection()
@@ -82,7 +153,7 @@ namespace Kablunk
 			m_pitch_delta = 0.0f;
 
 		const glm::vec3 look_at = m_position + GetForwardDirection();
-		m_focal_point = m_position + GetForwardDirection() * m_distance;
+		m_direction = glm::normalize(look_at - m_position);
 		m_distance = glm::distance(m_position, m_focal_point);
 		m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f }) * glm::toMat4(GetOrientation());
 		//m_translation = CalculateTranslation();
@@ -94,6 +165,21 @@ namespace Kablunk
 		m_yaw_delta *= 0.6f;
 		m_pitch_delta *= 0.6f;
 		m_position_delta *= 0.8f;
+	}
+
+	void EditorCamera::Focus(const glm::vec3& focus_point)
+	{
+		m_focal_point = focus_point;
+		m_camera_mode = CameraMode::FlyCam;
+
+		if (m_distance > m_min_focus_distance)
+		{
+			m_distance -= m_distance - m_min_focus_distance;
+			m_position = m_focal_point - GetForwardDirection() * m_distance;
+		}
+
+		m_position = m_focal_point - GetForwardDirection() * m_distance;
+		UpdateView();
 	}
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)

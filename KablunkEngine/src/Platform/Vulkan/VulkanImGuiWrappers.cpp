@@ -1,5 +1,7 @@
 #include "kablunkpch.h"
 
+#include <vulkan/vulkan.h>
+
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 #include "Platform/Vulkan/VulkanTexture.h"
@@ -20,7 +22,7 @@ namespace Kablunk::UI
 			return 0;
 		}
 
-		return ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
+		return (ImTextureID)ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
 	}
 
 	void Image(const IntrusiveRef<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)

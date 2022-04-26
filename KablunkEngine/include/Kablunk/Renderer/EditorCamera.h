@@ -11,6 +11,13 @@
 
 namespace Kablunk
 {
+	enum class CameraMode
+	{
+		FlyCam = 0,
+		ArcBall = 1,
+		NONE
+	};
+
 	class EditorCamera : public Camera
 	{
 	public:
@@ -33,6 +40,8 @@ namespace Kablunk
 		const glm::mat4& GetViewMatrix() const { return m_view_matrix; }
 		glm::mat4 GetViewProjectionMatrix() const { return m_projection * m_view_matrix; }
 
+		void Focus(const glm::vec3& focus_point);
+
 		glm::vec3 GetUpDirection() const;
 		glm::vec3 GetRightDirection() const;
 		glm::vec3 GetForwardDirection() const;
@@ -44,6 +53,9 @@ namespace Kablunk
 
 		static constexpr int Camera_control_key = Key::LeftAlt;
 	private:
+		void EnableMouse() const;
+		void DisableMouse() const;
+
 		void UpdateProjection();
 		void UpdateView();
 
@@ -62,16 +74,22 @@ namespace Kablunk
 
 		glm::mat4 m_view_matrix;
 		glm::vec3 m_focal_point;
+		glm::vec3 m_position;
+		glm::vec3 m_position_delta;
+		glm::vec3 m_right_direction;
+		glm::vec3 m_direction;
 
 		glm::vec2 m_initial_mouse_position;
 
+		CameraMode m_camera_mode = CameraMode::ArcBall;
+
 		float m_distance;
-		glm::vec3 m_position;
-		glm::vec3 m_position_delta;
+		float m_normal_speed{ 0.002f };
+
 		float m_pitch, m_yaw;
 		float m_pitch_delta, m_yaw_delta;
 
-		float m_min_focus_distance = 100.0f;
+		float m_min_focus_distance = 5.0f;
 
 		float m_viewport_width = 1600, m_viewport_height = 900;
 	};

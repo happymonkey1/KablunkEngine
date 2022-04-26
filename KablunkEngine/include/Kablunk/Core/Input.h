@@ -15,6 +15,9 @@ namespace Kablunk {
 		static std::pair<float, float> GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
+
+		static void SetCursorMode(CursorMode mode);
+		static CursorMode GetCursorMode();
 	};
 }
 

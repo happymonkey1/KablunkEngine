@@ -2,6 +2,10 @@
 #define KABLUNK_UTILITIES_PARSER_CPP_H
 
 #include "Kablunk/Core/Log.h"
+
+#include "Kablunk/Utilities/ParserToken.h"
+#include "Kablunk/Utilities/Reflection/KablunkTypes.h"
+
 #include <string>
 #include <vector>
 #include <sstream>
@@ -144,6 +148,74 @@ namespace Kablunk::Parser
 			auto cclass = find_all_of(FindIdentifier::CLASS, filepath, num_to_find);
 			structs.insert(structs.end(), cclass.begin(), cclass.end());
 			return structs;
+		}
+
+		static std::string parse_type_and_field_name(const std::string& text)
+		{
+			std::stringstream ss{ text };
+			std::string sanitized_string;
+
+			std::string word;
+			while (ss)
+			{
+				ss >> word;
+				if (Reflect::ValidTypes::is_valid_type(word))
+				{
+					sanitized_string += word + " ";
+
+					// get variable name
+					ss >> word;
+					sanitized_string += word;
+
+					return sanitized_string;
+				}
+			}
+
+			KB_CORE_ERROR("failed to parse type and field name from '{}'", text);
+			return "INV_TYPE_AND_FIELD_DATA";
+		}
+
+		static std::vector<ParserToken> FindParserTokens(const std::string& filepath)
+		{
+			std::vector<ParserToken> parser_tokens = {};
+			std::string text;
+			std::ifstream in{ filepath, std::ios::in | std::ios::binary };
+			if (in)
+			{
+				// Read filetext into string
+				in.seekg(0, std::ios::end);
+				text.resize(in.tellg());
+				in.seekg(0, std::ios::beg);
+				in.read(&text[0], text.size());
+				in.close();
+
+
+				auto struct_names = std::vector<std::string>{ };
+				auto ss = std::stringstream{ text };
+				auto count = uint32_t{ 0 };
+
+				std::string word;
+				while (ss)
+				{
+					ss >> word;
+					if (Annotations::is_annotation_valid(word))
+					{
+						std::string next_line;
+						std::getline(ss, next_line, '\n');
+						if (next_line.size() == 1)
+							std::getline(ss, next_line, '\n');
+						
+						parser_tokens.emplace_back(ParserToken{ ParserTokenDescriptor::Annotation, parse_type_and_field_name(next_line) });
+					}
+				}
+
+				return parser_tokens;
+			}
+			else
+			{
+				KB_CORE_ERROR("Source file could not be opened '{0}'", filepath);
+				return {};
+			}
 		}
 	}
 
