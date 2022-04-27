@@ -20,6 +20,8 @@ namespace Kablunk
 
 		virtual void OnAwake() { }
 		virtual void OnUpdate(Timestep ts) { }
+
+		virtual void OnEvent(Event& e) { };
 		// DEBUG BUILDS ONLY
 		virtual void OnImGuiRender() { }
 

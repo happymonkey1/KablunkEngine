@@ -193,6 +193,11 @@ namespace Kablunk
 		m_registry.destroy(entity);
 	}
 
+	void Scene::OnEvent(Event& e)
+	{
+
+	}
+
 	void Scene::OnStartRuntime()
 	{
 		// #TODO expose gravity in editor panel
@@ -554,6 +559,18 @@ namespace Kablunk
 			}
 
 			Renderer2D::EndScene();
+		}
+	}
+
+	void Scene::OnEventRuntime(Event& e)
+	{
+		auto view = m_registry.view<NativeScriptComponent>();
+		for (auto id : view)
+		{
+			Entity entity = Entity{ id, this };
+			auto& nsc = entity.GetComponent<NativeScriptComponent>();
+			if (nsc.Instance)
+				nsc.Instance->OnEvent(e);
 		}
 	}
 

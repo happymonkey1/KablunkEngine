@@ -31,13 +31,17 @@ namespace Kablunk
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
+		void OnEvent(Event& e);
+
 		void OnStartRuntime();
 		void OnStopRuntime();
 
 		void OnUpdateRuntime(Timestep ts);
 		void OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* camera = nullptr);
+		void OnEventRuntime(Event& e);
 		void OnUpdateEditor(Timestep ts);
 		void OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera);
+		void OnEventEditor(Event& e);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
 		void OnImGuiRender();

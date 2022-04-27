@@ -732,6 +732,9 @@ namespace Kablunk
 		EventDispatcher dispatcher{ e };
 		dispatcher.Dispatch<KeyPressedEvent>(KABLUNK_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(KABLUNK_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+
+		if (m_scene_state == SceneState::Play)
+			m_active_scene->OnEventRuntime(e);
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)

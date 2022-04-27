@@ -137,4 +137,22 @@ namespace Kablunk {
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		return static_cast<CursorMode>(glfwGetInputMode(window, GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
 	}
+
+	void Input::SetMouseMotionMode(MouseMotionMode mode)
+	{
+		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		if (glfwRawMouseMotionSupported())
+		{
+			bool use_raw = mode == MouseMotionMode::Raw ? true : false;
+			glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, use_raw);
+		}
+	}
+	
+	MouseMotionMode Input::GetMouseMotionMode()
+	{
+		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		int ret_code = glfwGetInputMode(window, GLFW_RAW_MOUSE_MOTION);
+
+		return ret_code == GLFW_TRUE ? MouseMotionMode::Raw : MouseMotionMode::Normal;
+	}
 }
