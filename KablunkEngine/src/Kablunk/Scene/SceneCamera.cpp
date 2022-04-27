@@ -74,8 +74,8 @@ namespace Kablunk
 
 			if (!found)
 			{
-				KB_CORE_ERROR("GameManagerEntity::OnUpdate(): ImGui enabled but could not find viewport!");
-				return;
+				KB_CORE_ERROR("SceneCamera::ScreenToWorldPoint(): ImGui enabled but could not find viewport!");
+				return glm::vec3{ 0.0f };
 			}
 		}
 		else
