@@ -260,7 +260,7 @@ namespace Kablunk
 		s_renderer_data.camera = camera;
 		s_renderer_data.camera_transform = transform;
 
-		auto view_proj = camera.GetProjection() * transform;
+		glm::mat4 view_proj = camera.GetProjection() * transform;
 		s_renderer_data.camera_view_projection = view_proj;
 
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = s_renderer_data.uniform_buffer_set;

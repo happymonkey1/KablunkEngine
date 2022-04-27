@@ -227,6 +227,8 @@ namespace Kablunk
 			UI::Property("Hierarchy Panel Selected Entity", m_scene_hierarchy_panel.GetSelectedEntity().GetHandleAsString());
 			UI::Property("Show Physics Colliders", &m_show_physics_colliders);
 			UI::PropertyReadOnlyUint32("Selected Manipulation Tool", m_gizmo_type);
+			UI::PropertyReadOnlyUint64("Editor Scene UUID", m_editor_scene->GetUUID());
+			UI::PropertyReadOnlyUint64("Runtime Scene UUID", m_runtime_scene.get() ? m_runtime_scene->GetUUID() : 0ull);
 
 			UI::EndProperties();
 
@@ -695,11 +697,13 @@ namespace Kablunk
 				CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
 
 		m_runtime_scene = Scene::Copy(m_active_scene);
+		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
+		NativeScriptEngine::Get()->SetScene(m_runtime_scene);
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
 		m_viewport_renderer->SetScene(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(m_active_scene.get());
+		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		m_selected_entity = {};
 	}
 
@@ -711,10 +715,11 @@ namespace Kablunk
 		m_runtime_scene.reset();
 
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
+		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 		m_viewport_renderer->SetScene(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(m_active_scene);
+		NativeScriptEngine::Get()->SetScene(nullptr);
 	}
 
 	void EditorLayer::OnEvent(Event& e)

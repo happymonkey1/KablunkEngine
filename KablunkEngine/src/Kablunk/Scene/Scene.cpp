@@ -60,7 +60,7 @@ namespace Kablunk
 		for (auto e : view)
 		{
 			uuid::uuid64 UUID = src.get<IdComponent>(e).Id;
-			entt::entity dst_entt_id = entity_map.at(UUID);
+			entt::entity dst_entt_id = entity_map.at(UUID).GetHandle();
 
 
 			auto& component = src.get<ComponentT>(e);

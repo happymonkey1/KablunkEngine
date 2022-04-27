@@ -358,11 +358,12 @@ namespace Kablunk
 			{
 				for (auto&& [binding, shader_uniform_buffer] : shader_descriptor_sets[0].uniform_buffers)
 				{
-					auto& writeDescriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
-					writeDescriptors.resize(framesInFlight);
-					for (uint32_t frame = 0; frame < framesInFlight; frame++)
+					auto& write_descriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
+					write_descriptors.resize(framesInFlight);
+					for (uint32_t frame = 0; frame < framesInFlight; ++frame)
 					{
-						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); // set = 0 for now
+						// set = 0 for now
+						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); 
 
 						VkWriteDescriptorSet write_descriptor_set = {};
 						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -370,7 +371,7 @@ namespace Kablunk
 						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 						write_descriptor_set.pBufferInfo = &uniform_buffer->GetDescriptorBufferInfo();
 						write_descriptor_set.dstBinding = uniform_buffer->GetBinding();
-						writeDescriptors[frame].push_back(write_descriptor_set);
+						write_descriptors[frame].push_back(write_descriptor_set);
 					}
 				}
 

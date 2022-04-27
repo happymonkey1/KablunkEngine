@@ -54,7 +54,7 @@ namespace Kablunk
 		buffer_create_info.size = m_size;
 
 		VulkanAllocator allocator{ "UniformBuffer" };
-		m_vk_allocation = allocator.AllocateBuffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_ONLY, m_buffer);
+		m_vk_allocation = allocator.AllocateBuffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, m_buffer);
 
 		m_descriptor_info.buffer = m_buffer;
 		m_descriptor_info.offset = 0;

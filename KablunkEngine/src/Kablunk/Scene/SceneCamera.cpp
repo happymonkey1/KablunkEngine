@@ -2,6 +2,11 @@
 #include "Kablunk/Scene/SceneCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Kablunk/Core/Application.h"
+// #TODO try to remove 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 namespace Kablunk
 {
 	SceneCamera::SceneCamera()
@@ -44,6 +49,55 @@ namespace Kablunk
 	{
 		m_aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
 		RecalculateProjection();
+	}
+
+	glm::vec3 SceneCamera::ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const
+	{
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			ImGuiContext* imgui_context = ImGui::GetCurrentContext();
+			bool found = false;
+			for (ImGuiViewport* viewport : imgui_context->Viewports)
+			{
+				if (!viewport->PlatformUserData)
+					continue;
+
+				window_pos = { viewport->Pos.x, viewport->Pos.y };
+				window_size = { viewport->Size.x, viewport->Size.y };
+
+				found = true;
+				break;
+			}
+
+			if (!found)
+			{
+				KB_CORE_ERROR("GameManagerEntity::OnUpdate(): ImGui enabled but could not find viewport!");
+				return;
+			}
+		}
+		else
+			window_size = Application::Get().GetWindowDimensions();
+
+
+		glm::mat4 inverse = glm::inverse(GetProjection() * transform);
+
+		// account for viewport if running scene in editor
+		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };
+
+		// transform position to screen space x: [-1, 1], y: [-1, 1]
+		glm::vec2 screen_space_pos = {
+			(2.0f * (transformed_screen_pos.x / window_size.x)) - 1.0f,
+			1.0f - (2.0f * (transformed_screen_pos.y / window_size.y))
+		};
+		glm::vec4 in = { screen_space_pos.x, screen_space_pos.y, 0.0f, 1.0f };
+
+		glm::vec4 res_out = in * inverse;
+
+		
+		return { res_out.x / res_out.w, res_out.y / res_out.w, res_out.z / res_out.w };
 	}
 
 	void SceneCamera::RecalculateProjection()

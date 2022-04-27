@@ -28,6 +28,8 @@ namespace Kablunk
 		void SetPerspective(float vertical_fov, float near_clip, float far_clip);
 		void SetViewportSize(uint32_t width, uint32_t height);
 
+		glm::vec3 ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const;
+
 		// Perspective
 
 		float GetPerspectiveVerticalFOV() const { return m_perspective_fov; }

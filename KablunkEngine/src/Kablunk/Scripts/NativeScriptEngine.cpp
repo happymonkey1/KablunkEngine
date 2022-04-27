@@ -49,6 +49,7 @@ namespace Kablunk
 
 	WeakRef<Scene> NativeScriptEngine::GetScene()
 	{
+		KB_CORE_ASSERT(m_current_scene, "scene is not set!");
 		return WeakRef<Scene>(m_current_scene);
 	}
 
