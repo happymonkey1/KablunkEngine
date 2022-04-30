@@ -34,6 +34,9 @@ namespace Kablunk::Utilties
 
 		size_t size() const { return m_list.size(); }
 
+		auto begin() { return m_list.begin(); }
+		auto end() { return m_list.end(); }
+
 		bool contains(const T& val) const { return m_list.contains(val); }
 	private:
 		LinkedList<T, CompareFunc> m_list;
