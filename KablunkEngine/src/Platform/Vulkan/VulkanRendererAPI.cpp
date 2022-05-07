@@ -88,6 +88,7 @@ namespace Kablunk
 				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 				pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 				pool_info.maxSets = 100000;
+				// #TODO Why are we using IM_ARRAYSIZE here?
 				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 				pool_info.pPoolSizes = pool_sizes;
 				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();

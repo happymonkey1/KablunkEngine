@@ -550,29 +550,48 @@ namespace Kablunk
 
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
-				auto& camera = component.Camera;
+				SceneCamera& camera = component.Camera;
 				UI::BeginProperties();
 
 				UI::Property("Primary", &component.Primary);
 
 				const char* projection_type_strings[] = { "Perspective", "Orthographic" };
 
-				UI::PropertyDropdown("Projection Type", projection_type_strings, 2, camera.GetProjectionType());
+				SceneCamera::ProjectionType proj_type = camera.GetProjectionType();
+				if (UI::PropertyDropdown("Projection Type", projection_type_strings, 2, proj_type))
+					camera.SetProjectionType(proj_type);
 				
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
+					bool changed = false;
 					float fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
 					if (UI::Property("FOV", fov, 1.0f, 1.0f, 200.0f))
 						camera.SetPerspectiveVerticalFOV(glm::radians(fov));
-					UI::Property("Near Clip", camera.GetPerspectiveNearClip(), 0.1f, 0.001f, 10000.0f);
-					UI::Property("Far Clip", camera.GetPerspectiveFarClip(), 0.1f, 0.001f, 10000.0f);
+
+					float near_clip = camera.GetPerspectiveNearClip();
+					if (UI::Property("Near Clip", near_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetPerspectiveNearClip(near_clip);
+
+					float far_clip = camera.GetPerspectiveFarClip();
+					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetPerspectiveFarClip(far_clip);
 				}
 
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 				{
-					UI::Property("Size", camera.GetOrthographicSize(), 1.0f, 1.0f, 200.0f);
-					UI::Property("Near Clip", camera.GetOrthographicNearClip(), 0.1f, 0.001f, 10000.0f);
-					UI::Property("Far Clip", camera.GetOrthographicFarClip(), 0.1f, 0.001f, 10000.0f);
+					bool changed = false;
+
+					float ortho_size = camera.GetOrthographicSize();
+					if (UI::Property("Size", ortho_size, 1.0f, 1.0f, 200.0f))
+						camera.SetOrthographicSize(ortho_size);
+					
+					float near_clip = camera.GetOrthographicNearClip();
+					if (UI::Property("Near Clip", near_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetOrthographicNearClip(near_clip);
+
+					float far_clip = camera.GetOrthographicFarClip();
+					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetOrthographicFarClip(far_clip);
 				}
 
 				UI::EndProperties();

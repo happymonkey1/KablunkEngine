@@ -459,10 +459,12 @@ namespace Kablunk
 	void Scene::OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* editor_cam /*= nullptr*/)
 	{
 		Camera*		main_camera{ nullptr };
+		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
 		glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
 		if (editor_cam)
 		{
 			main_camera = editor_cam;
+			main_camera_proj = editor_cam->GetProjection();
 			main_camera_transform = editor_cam->GetViewMatrix();
 		}
 		else
@@ -476,7 +478,8 @@ namespace Kablunk
 				if (camera.Primary)
 				{
 					main_camera = &camera.Camera;
-					main_camera_transform = transform.GetTransform();
+					main_camera_proj = main_camera->GetProjection();
+					main_camera_transform = glm::inverse(transform.GetTransform());
 					break;
 				}
 			}
@@ -529,7 +532,7 @@ namespace Kablunk
 		// Renderer2D
 		if (scene_renderer->GetFinalPassImage())
 		{
-			Renderer2D::BeginScene(*main_camera, main_camera_transform);
+			Renderer2D::BeginScene(main_camera_proj * main_camera_transform);
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
 			std::map<entt::entity, bool> already_rendered_entites;

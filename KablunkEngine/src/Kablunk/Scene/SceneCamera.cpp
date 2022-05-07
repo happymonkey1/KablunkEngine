@@ -81,8 +81,8 @@ namespace Kablunk
 		else
 			window_size = Application::Get().GetWindowDimensions();
 
-
-		glm::mat4 inverse = glm::inverse(GetProjection() * transform);
+		glm::mat4 view_proj = GetProjection() * transform;
+		glm::mat4 inverse = glm::inverse(view_proj);
 
 		// account for viewport if running scene in editor
 		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };
@@ -107,7 +107,7 @@ namespace Kablunk
 			case ProjectionType::Perspective:
 			{
 				m_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
-
+				m_unreversed_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 				break;
 			}
 			case ProjectionType::Orthographic:
@@ -118,7 +118,7 @@ namespace Kablunk
 				float ortho_bottom = -m_orthographic_size * 0.5f;
 
 				m_projection = glm::ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, m_orthographic_near, m_orthographic_far);
-
+				m_unreversed_projection = glm::ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, m_orthographic_near, m_orthographic_far);
 				break;
 			}
 		}

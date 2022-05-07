@@ -70,7 +70,6 @@ namespace Kablunk
 
 
 		float m_aspect_ratio{ 1.788f };
-
 	};
 }
 #endif

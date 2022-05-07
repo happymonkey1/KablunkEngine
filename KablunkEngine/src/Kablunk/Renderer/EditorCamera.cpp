@@ -15,7 +15,7 @@ namespace Kablunk
 
 	EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
 		: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip }, m_focal_point{ 0.0f },
-		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
+		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, far_clip, near_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
 	{
 		m_focal_point = glm::vec3{ 0.0f };
 
@@ -23,15 +23,18 @@ namespace Kablunk
 		glm::vec3 position = { 0, 0, 10 };
 		m_distance = glm::distance(position, m_focal_point);
 
-		m_yaw = glm::pi<float>() / 2.0f;
-		m_pitch = 0.0f; //glm::pi<float>() / 4.0f;
+		m_yaw = 0.0f; // =3.0f * glm::pi<float>() / 4.0f;
+		m_pitch = 0.0f; //= glm::pi<float>() / 4.0f;
+
+		m_yaw_delta = 0.0f;
+		m_pitch_delta = 0.0f;
 
 		m_position = CalculatePosition();
 
 		const glm::quat orientation = GetOrientation();
 		m_direction = glm::eulerAngles(orientation) * (180.f / glm::pi<float>());
-		glm::mat4 inverse_view = glm::translate(glm::mat4(1.0f), m_position) * glm::toMat4(orientation);
-		m_view_matrix = glm::inverse(inverse_view);
+		glm::mat4 view_mat = glm::translate(glm::mat4(1.0f), m_position) * glm::toMat4(orientation);
+		m_view_matrix = glm::inverse(view_mat);
 	}
 
 	void EditorCamera::OnUpdate(Timestep ts)
@@ -141,6 +144,7 @@ namespace Kablunk
 	{
 		m_aspect_ratio = m_viewport_width / m_viewport_height;
 		m_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near_clip, m_far_clip);
+		m_unreversed_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near_clip, m_far_clip);
 	}
 
 	void EditorCamera::UpdateView()
@@ -155,7 +159,7 @@ namespace Kablunk
 		const glm::vec3 look_at = m_position + GetForwardDirection();
 		m_direction = glm::normalize(look_at - m_position);
 		m_distance = glm::distance(m_position, m_focal_point);
-		m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f }) * glm::toMat4(GetOrientation());
+		m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f }); //* glm::toMat4(GetOrientation());
 		//m_translation = CalculateTranslation();
 
 		//auto orientation = GetOrientation();
@@ -193,7 +197,7 @@ namespace Kablunk
 	void EditorCamera::MousePan(const glm::vec2& delta)
 	{
 		auto [x_speed, y_speed] = GetPanSpeed();
-		m_focal_point += -GetRightDirection() * delta.x * x_speed * m_distance;
+		m_focal_point -= GetRightDirection() * delta.x * x_speed * m_distance;
 		m_focal_point += GetUpDirection() * delta.y * y_speed * m_distance;
 	}
 
@@ -208,14 +212,15 @@ namespace Kablunk
 	void EditorCamera::MouseZoom(float delta)
 	{
 		m_distance -= delta * GetZoomSpeed();
-		m_position = m_focal_point - GetForwardDirection() * m_distance;
+		const glm::vec3 forward_dir = GetForwardDirection();
+		m_position = m_focal_point - forward_dir * m_distance;
 		if (m_distance < 1.0f)
 		{
-			m_focal_point += GetForwardDirection();
+			m_focal_point += forward_dir * m_distance;
 			m_distance = 1.0f;
 		}
 
-		m_position_delta += delta * GetZoomSpeed() * GetForwardDirection();
+		m_position_delta += delta * GetZoomSpeed() * forward_dir;
 	}
 
 	std::pair<float, float> EditorCamera::GetPanSpeed() const

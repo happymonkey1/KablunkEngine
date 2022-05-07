@@ -75,7 +75,7 @@ namespace Kablunk
 				* glm::scale(glm::mat4{ 1.0f }, Scale);
 		}
 
-		operator glm::mat4 () const { return GetTransform(); }
+		operator glm::mat4() const { return GetTransform(); }
 	};
 
 	struct SpriteRendererComponent

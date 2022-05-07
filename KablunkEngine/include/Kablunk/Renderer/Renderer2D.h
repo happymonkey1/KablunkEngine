@@ -76,6 +76,7 @@ namespace Kablunk
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera);
+		static void BeginScene(const glm::mat4& view_proj);
 		static void EndScene();
 		static void Flush();
 

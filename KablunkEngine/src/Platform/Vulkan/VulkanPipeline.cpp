@@ -130,12 +130,13 @@ namespace Kablunk
 		VkPipelineRasterizationStateCreateInfo raster_state = {};
 		raster_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		raster_state.polygonMode = m_specification.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-		raster_state.cullMode = m_specification.backface_culling? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
+		raster_state.cullMode = m_specification.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
 		raster_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		raster_state.depthClampEnable = VK_FALSE;
 		raster_state.rasterizerDiscardEnable = VK_FALSE;
 		raster_state.depthBiasEnable = VK_FALSE;
-		raster_state.lineWidth = 1.0f; // #TODO make dynamic when lines are implemented!
+		// #TODO make dynamic when lines are implemented!
+		raster_state.lineWidth = 1.0f; 
 
 		// Color blend state describes how blend factors are calculated (if used)
 		// We need one blend attachment state per color attachment (even if blending is not used)

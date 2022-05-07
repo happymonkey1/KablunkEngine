@@ -263,6 +263,8 @@ namespace Kablunk
 				{ m_viewport_size.x, m_viewport_size.y }
 			);
 
+			ImDrawList* viewport_draw_list = ImGui::GetWindowDrawList();
+
 			ImGui::EndChild(); // see comment above
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -290,25 +292,14 @@ namespace Kablunk
 			auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
 			if (selected_entity && m_gizmo_type != -1)
 			{
+				// #TODO based off editorCamera perspective vs orthographic.
 				ImGuizmo::SetOrthographic(false);
 				//ImDrawList* draw_list = ImGui::GetWindowDrawList();
-				ImGuizmo::SetDrawlist();
+				ImGuizmo::SetDrawlist(viewport_draw_list);
 
 				float window_width = ImGui::GetWindowWidth();
 				float window_height = ImGui::GetWindowHeight();
 				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
-
-				// Runtime camera
-				/*
-				auto camera_entity = m_active_scene->GetPrimaryCameraEntity();
-				const auto& camera = camera_entity.GetComponent<CameraComponent>().Camera;
-				const auto& camera_projection = camera.GetProjection();
-				auto camera_view = glm::inverse(camera_entity.GetComponent<TransformComponent>().GetTransform());
-				*/
-
-				// Editor Camera
-				const auto& camera_projection = m_editor_camera.GetProjection();
-				auto camera_view = m_editor_camera.GetViewMatrix();
 
 				// Selected Entity Transform
 				auto& transform_component = selected_entity.GetComponent<TransformComponent>();
@@ -320,8 +311,9 @@ namespace Kablunk
 
 				float snap_values[3] = { snap_value, snap_value, snap_value };
 
-				ImGuizmo::Manipulate(glm::value_ptr(camera_view),
-					glm::value_ptr(camera_projection),
+
+				ImGuizmo::Manipulate(glm::value_ptr(m_editor_camera.GetViewMatrix()),
+					glm::value_ptr(m_editor_camera.GetUnreversedProjection()),
 					static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
 					ImGuizmo::LOCAL,
 					glm::value_ptr(transform),
@@ -790,7 +782,7 @@ namespace Kablunk
 		if (GImGui->ActiveId == 0)
 		{
 			// Gizmos
-			if ((m_viewport_hovered || m_viewport_focused) && !Input::IsMouseButtonPressed(Mouse::ButtonRight) && m_scene_state == SceneState::Edit)
+			if ((m_viewport_hovered || m_viewport_focused) && !Input::IsMouseButtonPressed(Mouse::ButtonRight) && m_scene_state != SceneState::Play)
 			{
 				switch (e.GetKeyCode())
 				{

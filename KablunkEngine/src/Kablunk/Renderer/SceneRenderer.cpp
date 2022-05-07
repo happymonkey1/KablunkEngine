@@ -96,17 +96,17 @@ namespace Kablunk
 
 			IntrusiveRef<Shader> composite_shader = Renderer::GetShaderLibrary()->Get("scene_composite");
 
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.layout = {
+			PipelineSpecification pipeline_spec;
+			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
-			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.shader = composite_shader;
-			pipelineSpecification.render_pass = RenderPass::Create(composite_render_pass_spec);
-			pipelineSpecification.debug_name = "SceneComposite";
-			pipelineSpecification.depth_write = false;
-			m_composite_pipeline = Pipeline::Create(pipelineSpecification);
+			pipeline_spec.backface_culling = false;
+			pipeline_spec.shader = composite_shader;
+			pipeline_spec.render_pass = RenderPass::Create(composite_render_pass_spec);
+			pipeline_spec.debug_name = "SceneComposite";
+			pipeline_spec.depth_write = false;
+			m_composite_pipeline = Pipeline::Create(pipeline_spec);
 
 			m_composite_material = Material::Create(composite_shader);
 		}

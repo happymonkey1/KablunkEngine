@@ -287,6 +287,25 @@ namespace Kablunk
 		StartNewBatch();
 	}
 
+	void Renderer2D::BeginScene(const glm::mat4& view_proj)
+	{
+		s_renderer_data.camera = {};
+		s_renderer_data.camera_transform = glm::mat4{ 1.0f };
+
+		s_renderer_data.camera_view_projection = view_proj;
+
+		IntrusiveRef<UniformBufferSet> uniform_buffer_set = s_renderer_data.uniform_buffer_set;
+		RenderCommand::Submit([uniform_buffer_set, view_proj]() mutable
+			{
+				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(CameraDataUB));
+			});
+
+		s_renderer_data.Stats = {};
+
+		StartNewBatch();
+	}
+
 	void Renderer2D::EndScene()
 	{
 		Flush();
@@ -472,8 +491,9 @@ namespace Kablunk
 	}
 	void Renderer2D::DrawQuadFromTextureAtlas(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
 	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+			* glm::rotate(glm::mat4{ 1.0f }, 0.0f, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4{ 1.0f }, { size.x, size.y, 1.0f });
 
 		DrawQuadFromTextureAtlas(transform, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
 	}
