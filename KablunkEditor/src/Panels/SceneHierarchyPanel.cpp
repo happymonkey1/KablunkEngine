@@ -628,6 +628,8 @@ namespace Kablunk
 					ImGui::EndDragDropTarget();
 				}
 
+				UI::Property("Visible", &component.Visible);
+
 #if 0
 				if (m_display_debug_properties)
 				{

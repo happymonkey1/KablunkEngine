@@ -83,11 +83,16 @@ namespace Kablunk
 		Asset<Texture2D> Texture{ Asset<Texture2D>("") };
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
+		// #TODO should this be entity wide, instead of just on SpriteRenderers?
+		bool Visible = true;
 
 		glm::vec2 GetTextureDimensions() const 
 		{ 
 			return { Texture.Get()->GetWidth(), Texture.Get()->GetHeight() }; 
 		}
+
+		void SetVisible(bool v) { Visible = v; }
+		bool GetVisible() const { return Visible; }
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;

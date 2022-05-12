@@ -90,6 +90,7 @@ namespace Kablunk
 
 				out << YAML::Key << "Color"			<< YAML::Value << component.Color;
 				out << YAML::Key << "Tiling_factor" << YAML::Value << component.Tiling_factor;
+				out << YAML::Key << "Visible"		<< YAML::Value << component.Visible;
 			});
 
 		WriteComponentData<CircleRendererComponent>(out, entity, [](auto& out, CircleRendererComponent& component)
@@ -240,21 +241,26 @@ namespace Kablunk
 				component.Fixed_aspect_ratio = data["Fixed_aspect_ratio"].as<bool>();
 			});
 
-		ReadComponentData<SpriteRendererComponent>(entity_data, entity, [this](auto& component, auto& data) {
-			
-			auto texture_data = data["Texture"];
-			if (texture_data)
+		ReadComponentData<SpriteRendererComponent>(entity_data, entity, [this](auto& component, auto& data) 
 			{
-				auto uuid = texture_data["m_uuid"].as<uint64_t>();
-				auto filepath = texture_data["m_filepath"].as<std::string>();
+				auto texture_data = data["Texture"];
+				if (texture_data)
+				{
+					auto uuid = texture_data["m_uuid"].as<uint64_t>();
+					auto filepath = texture_data["m_filepath"].as<std::string>();
 
-				auto texture_asset = Asset<Texture2D>(filepath, uuid);
-				component.Texture = texture_asset;
-			}
+					auto texture_asset = Asset<Texture2D>(filepath, uuid);
+					component.Texture = texture_asset;
+				}
 
-			component.Color = data["Color"].as<glm::vec4>();
-			component.Tiling_factor = data["Tiling_factor"].as<float>();
-			
+				component.Color = data["Color"].as<glm::vec4>();
+				component.Tiling_factor = data["Tiling_factor"].as<float>();
+
+				// #TODO remove after parsing all previously serialized scenes.
+				if (data["Visible"])
+					component.Visible = data["Visible"].as<bool>();
+				else
+					component.Visible = true;
 			});
 
 		ReadComponentData<CircleRendererComponent>(entity_data, entity, [this](CircleRendererComponent& component, auto& data) 

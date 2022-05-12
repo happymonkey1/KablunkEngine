@@ -190,6 +190,9 @@ namespace Kablunk
 		if (entity.HasComponent<CSharpScriptComponent>())
 			CSharpScriptEngine::OnScriptComponentDestroyed(m_scene_id, entity.GetUUID());
 
+		if (entity.HasComponent<NativeScriptComponent>())
+			entity.GetComponent<NativeScriptComponent>().Instance->OnDestroy();
+
 		m_registry.destroy(entity);
 	}
 
@@ -287,6 +290,7 @@ namespace Kablunk
 			{
 				Entity entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+				nsc.Instance->BindEntity(entity);
 
 				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
 
@@ -543,16 +547,24 @@ namespace Kablunk
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 				auto& src = entity.GetComponent<SpriteRendererComponent>();
 
-				if (nsc.Instance)
-					nsc.Instance->OnRender2D(src);
+				if (!src.Visible)
+					continue;
 
-				already_rendered_entites[e] = true;
+				if (nsc.Instance)
+					already_rendered_entites[e] = nsc.Instance->OnRender2D(src);
 			}
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
+			{
+				Entity kb_entity = Entity{ entity, this };
+				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
+				if (!src.Visible)
+					continue;
+
 				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
 					Renderer2D::DrawSprite({ entity, this });
+			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
@@ -661,28 +673,20 @@ namespace Kablunk
 		// Renderer2D
 		if (scene_renderer->GetFinalPassImage())
 		{
-			Renderer2D::BeginScene(camera, camera.GetViewMatrix());
+			Renderer2D::BeginScene(camera.GetViewProjectionMatrix());
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
-			// Draw entities who have native script components that override 2D rendering
-			std::map<entt::entity, bool> already_rendered_entites;
-			/*auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
-			for (auto e : nsc_sprite_override_view)
-			{
-				Entity entity = { e, this };
-				auto& nsc = entity.GetComponent<NativeScriptComponent>();
-				auto& src = entity.GetComponent<SpriteRendererComponent>();
-				if (nsc.Instance)
-					nsc.Instance->OnRender2D(src);
-
-				already_rendered_entites[e] = true;
-			}*/
 
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
-				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
+			{
+				Entity kb_entity = Entity{ entity, this };
+				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
+
+				if (src.Visible)
 					Renderer2D::DrawSprite({ entity, this });
+			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)

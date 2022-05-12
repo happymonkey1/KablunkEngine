@@ -290,7 +290,7 @@ namespace Kablunk
 
 			// #TODO refactor to use callbacks instead of querying current scene
 			auto selected_entity = m_scene_hierarchy_panel.GetSelectedEntity();
-			if (selected_entity && m_gizmo_type != -1)
+			if (selected_entity && m_gizmo_type != -1 && m_scene_state != SceneState::Play)
 			{
 				// #TODO based off editorCamera perspective vs orthographic.
 				ImGuizmo::SetOrthographic(false);

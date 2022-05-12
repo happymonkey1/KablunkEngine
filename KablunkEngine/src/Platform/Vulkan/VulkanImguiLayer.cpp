@@ -237,8 +237,8 @@ namespace Kablunk
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = static_cast<float>(height);
-		viewport.height = -static_cast<float>(height);
 		viewport.width = static_cast<float>(width);
+		viewport.height = -static_cast<float>(height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(s_imgui_command_buffers[command_buffer_index], 0, 1, &viewport);

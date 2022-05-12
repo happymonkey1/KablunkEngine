@@ -23,8 +23,8 @@ namespace Kablunk
 		glm::vec3 position = { 0, 0, 10 };
 		m_distance = glm::distance(position, m_focal_point);
 
-		m_yaw = 0.0f; // =3.0f * glm::pi<float>() / 4.0f;
-		m_pitch = 0.0f; //= glm::pi<float>() / 4.0f;
+		m_yaw = 0; //= 3.0f * glm::pi<float>() / 4.0f;
+		m_pitch = 0; //= glm::pi<float>() / 4.0f;
 
 		m_yaw_delta = 0.0f;
 		m_pitch_delta = 0.0f;
