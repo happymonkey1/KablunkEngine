@@ -76,10 +76,12 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
-		RenderCommand::SubmitResourceFree([vk_framebuffer]()
+		VkRenderPass vk_render_pass = m_render_pass;
+		RenderCommand::SubmitResourceFree([vk_framebuffer, vk_render_pass]()
 			{
 				const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
+				vkDestroyRenderPass(device, vk_render_pass, nullptr);
 			});
 
 		if (!m_specification.existing_framebuffer)

@@ -59,7 +59,13 @@ namespace Kablunk
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		KB_CORE_ERROR("Pipeline leaking!");
+		const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+		RenderCommand::SubmitResourceFree([vk_device, pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
+			{
+				vkDestroyPipeline(vk_device, pipeline, nullptr);
+				vkDestroyPipelineLayout(vk_device, pipeline_layout, nullptr);
+			}
+		);
 	}
 
 	void VulkanPipeline::Invalidate()

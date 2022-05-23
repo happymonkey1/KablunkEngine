@@ -38,8 +38,9 @@ namespace Kablunk
 	private:
 		PipelineSpecification m_specification;
 
-		VkPipeline m_vk_pipeline;
-		VkPipelineLayout m_vk_pipeline_layout;
+		VkPipeline m_vk_pipeline = nullptr;
+		VkPipelineLayout m_vk_pipeline_layout = nullptr;
+		// #TODO pipeline caching
 		VulkanShader::ShaderMaterialDescriptorSet m_descriptor_sets;
 	};
 }
