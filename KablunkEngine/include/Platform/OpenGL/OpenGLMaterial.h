@@ -16,6 +16,7 @@ namespace Kablunk
 		virtual void Invalidate() override { KB_CORE_ASSERT(false, "not implemented!"); };
 		virtual void Bind() override;
 
+
 		virtual void Set(const std::string& name, float value) override;
 		virtual void Set(const std::string& name, int value) override;
 		virtual void Set(const std::string& name, uint32_t value) override;
@@ -32,6 +33,7 @@ namespace Kablunk
 		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) override;
 		virtual void Set(const std::string& name, const IntrusiveRef<Image2D>& image) override;
 
+		virtual bool& GetBool(const std::string& name) override { KB_CORE_ASSERT(false, "not implemented!"); }
 		virtual float& GetFloat(const std::string& name) override;
 		virtual int& GetInt(const std::string& name) override;
 		virtual uint32_t& GetUInt(const std::string& name) override;

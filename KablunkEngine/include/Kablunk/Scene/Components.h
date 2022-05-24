@@ -222,12 +222,14 @@ namespace Kablunk
 	struct MeshComponent
 	{
 		IntrusiveRef<Kablunk::Mesh> Mesh;
+		IntrusiveRef<Kablunk::MaterialTable> Material_table = IntrusiveRef<Kablunk::MaterialTable>::Create();
 		std::string Filepath = "";
 
 		MeshComponent() = default;
 		MeshComponent(const IntrusiveRef<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
-		MeshComponent(const MeshComponent&) = default;
+		MeshComponent(const MeshComponent& other)
+			: Mesh{ other.Mesh }, Material_table{ IntrusiveRef<Kablunk::MaterialTable>::Create(other.Material_table) };
 
 		void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 		{

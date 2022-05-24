@@ -410,6 +410,11 @@ namespace Kablunk
 		return nullptr;
 	}
 
+	bool& VulkanMaterial::GetBool(const std::string& name)
+	{
+		return Get<bool>(name);
+	}
+
 	float& VulkanMaterial::GetFloat(const std::string& name)
 	{
 		return Get<float>(name);

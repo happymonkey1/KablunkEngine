@@ -40,6 +40,7 @@ namespace Kablunk
 		virtual void Set(const std::string & name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) override;
 		virtual void Set(const std::string & name, const IntrusiveRef<Image2D>& image) override;
 
+		virtual bool& GetBool(const std::string& name) override;
 		virtual float& GetFloat(const std::string & name) override;
 		virtual int& GetInt(const std::string & name) override;
 		virtual uint32_t& GetUInt(const std::string & name) override;

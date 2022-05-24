@@ -528,7 +528,7 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, transform);
 			}
 		}
 		scene_renderer->EndScene();
