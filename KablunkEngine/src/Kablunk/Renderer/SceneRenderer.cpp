@@ -42,6 +42,8 @@ namespace Kablunk
 		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
 
+		m_storage_buffer_set = StorageBufferSet::Create(frames_in_flight);
+
 		// Geometry
 		{
 			FramebufferSpecification geometry_framebuffer_spec;
@@ -54,7 +56,7 @@ namespace Kablunk
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "GeometryPipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Kablunk_pbr_static");
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -70,7 +72,7 @@ namespace Kablunk
 			geo_render_pass_spec.debug_name = "Geometry";
 
 			pipeline_spec.render_pass = RenderPass::Create(geo_render_pass_spec);
-			pipeline_spec.debug_name = "diffuse_static";
+			pipeline_spec.debug_name = "pbr_static";
 
 			m_geometry_pipeline = Pipeline::Create(pipeline_spec);
 		}
@@ -205,6 +207,14 @@ namespace Kablunk
 		m_active = false;
 	}
 
+	void SceneRenderer::SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
+	{
+		IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
+		uint32_t material_index = 0; // #TODO fix
+
+		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 0, 0, transform });
+	}
+
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
 	{
 		if (m_viewport_width != width || m_viewport_height!= height)
@@ -296,7 +306,11 @@ namespace Kablunk
 		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
-		// #TODO
+		for (const auto& draw_command_data : m_draw_list)
+		{
+
+			RenderCommand::RenderMeshWithMaterial(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, nullptr, 0, 0, Buffer{});
+		}
 
 		RenderCommand::EndRenderPass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.geometry_pass_query);

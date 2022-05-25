@@ -16,6 +16,7 @@
 #include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Mesh.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
 
 #include <filesystem>
 
@@ -229,7 +230,7 @@ namespace Kablunk
 		MeshComponent(const IntrusiveRef<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
 		MeshComponent(const MeshComponent& other)
-			: Mesh{ other.Mesh }, Material_table{ IntrusiveRef<Kablunk::MaterialTable>::Create(other.Material_table) };
+			: Mesh{ other.Mesh }, Material_table{ IntrusiveRef<Kablunk::MaterialTable>::Create(other.Material_table) } {};
 
 		void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 		{

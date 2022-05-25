@@ -6,6 +6,9 @@
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Kablunk/Renderer/StorageBufferSet.h"
+#include "Kablunk/Renderer/Mesh.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
+
 
 namespace Kablunk 
 {
@@ -60,6 +63,20 @@ namespace Kablunk
 		static void SetWireframeMode(bool draw_wireframe)
 		{
 			s_renderer_api->SetWireframeMode(draw_wireframe);
+		}
+
+		// ======
+		// Meshes
+		// ======
+
+		static void RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
+		{
+			s_renderer_api->RenderMesh(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material_table, transform_buffer, transform_offset, instance_count);
+		}
+
+		static void RenderMeshWithMaterial(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms)
+		{
+			s_renderer_api->RenderMeshWithMaterial(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material, transform_buffer, transform_offset, instance_count, additional_uniforms);
 		}
 
 		static void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<Material> material)
