@@ -15,7 +15,7 @@ namespace Kablunk
 	{
 	public:
 		MaterialAsset();
-		MaterialAsset(IntrusiveRef<MaterialAsset> material);
+		MaterialAsset(IntrusiveRef<Material> material);
 		~MaterialAsset();
 
 		glm::vec3& GetAlbedoColor();
@@ -73,7 +73,7 @@ namespace Kablunk
 		std::map<uint32_t, IntrusiveRef<MaterialAsset>>& GetMaterials() { return m_materials; }
 		const std::map<uint32_t, IntrusiveRef<MaterialAsset>>& GetMaterials() const { return m_materials; }
 
-		uint32_t GetMaterialCount() { return m_material_count; }
+		uint32_t GetMaterialCount() const { return m_material_count; }
 		void SetMaterialCount(uint32_t new_count) { m_material_count = new_count; }
 
 		void Clear();

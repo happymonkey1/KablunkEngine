@@ -492,35 +492,38 @@ namespace Kablunk
 		if (!main_camera)
 			return;
 
+		// Lights
+		{
+			m_light_environment = LightEnvironmentData{};
 
-		//scene_renderer->SetScene();
+			// Point Lights
+			{
+				auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
+				m_light_environment.point_lights.resize(point_lights.size());
+				size_t point_light_index = 0;
+				for (auto id : point_lights)
+				{
+					auto entity = Entity{ id, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+					PointLight plight_data = {
+						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+						plight_comp.Multiplier,
+						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+						plight_comp.Radius,
+						plight_comp.Min_radius,
+						plight_comp.Falloff
+					};
+
+					m_light_environment.point_lights[point_light_index++] = plight_data;
+				}
+			}
+		}
+
 		scene_renderer->BeginScene({ *main_camera, main_camera_transform });
 
 		{
-			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-			std::vector<PointLight> point_lights_data = {};
-			uint32_t point_light_count = 0;
-			for (auto id : point_lights)
-			{
-				auto entity = Entity{ id, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& plight_comp = entity.GetComponent<PointLightComponent>();
-
-				PointLight plight_data = {
-					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
-					plight_comp.Multiplier,
-					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
-					plight_comp.Radius,
-					plight_comp.Min_radius,
-					plight_comp.Falloff
-				};
-
-				point_lights_data.push_back(plight_data);
-				point_light_count++;
-			}
-
-			Renderer::SubmitPointLights(point_lights_data, point_light_count);
-
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
 			for (auto entity_id : mesh_group)
 			{
@@ -531,6 +534,7 @@ namespace Kablunk
 					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, transform);
 			}
 		}
+
 		scene_renderer->EndScene();
 
 		// Renderer2D
@@ -627,35 +631,38 @@ namespace Kablunk
 
 	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
 	{
+		// Lights
+		{
+			m_light_environment = LightEnvironmentData{};
+
+			// Point Lights
+			{
+				auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
+				m_light_environment.point_lights.resize(point_lights.size());
+				size_t point_light_index = 0;
+				for (auto id : point_lights)
+				{
+					auto entity = Entity{ id, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+					PointLight plight_data = {
+						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+						plight_comp.Multiplier,
+						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+						plight_comp.Radius,
+						plight_comp.Min_radius,
+						plight_comp.Falloff
+					};
+
+					m_light_environment.point_lights[point_light_index++] = plight_data;
+				}
+			}
+		}
+
 		scene_renderer->BeginScene({ camera, camera.GetViewMatrix() });
 
 		{
-			//Renderer::BeginScene(camera);
-
-			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-			std::vector<PointLight> point_lights_data = {};
-			uint32_t point_light_count = 0;
-			for (auto id : point_lights)
-			{
-				auto entity = Entity{ id, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& plight_comp = entity.GetComponent<PointLightComponent>();
-
-				PointLight plight_data = {
-					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
-					plight_comp.Multiplier,
-					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
-					plight_comp.Radius,
-					plight_comp.Min_radius,
-					plight_comp.Falloff
-				};
-
-				point_lights_data.push_back(plight_data);
-				point_light_count++;
-			}
-
-			Renderer::SubmitPointLights(point_lights_data, point_light_count);
-
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
 			for (auto entity_id : mesh_group)
 			{
@@ -663,7 +670,7 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, transform);
 			}
 
 			//Renderer::EndScene();

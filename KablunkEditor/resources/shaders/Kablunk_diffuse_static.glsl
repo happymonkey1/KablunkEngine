@@ -6,7 +6,6 @@ layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec3 a_Tangent;
 layout(location = 3) in vec3 a_Binormal;
 layout(location = 4) in vec2 a_TexCoord;
-layout(location = 5) in int a_EntityID; // TODO remove when ray cast mouse picking added to editor
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -21,15 +20,6 @@ layout(std140, binding = 1) uniform Renderer
 {
     uniform mat4 u_Transform;
 };
-
-
-// Material
-//layout(set = 0, binding = 2) uniform sampler2D DiffuseMap;
-//layout(set = 0, binding = 3) uniform sampler2D SpecularMap;
-//layout(std140, binding = 4) uniform MaterialShininess
-//{
-//    float Shininess;
-//};
 
 struct VertexOutput
 {
@@ -46,47 +36,27 @@ struct VertexOutput
     vec3 ViewPosition;
 };
 
-layout(location = 0) out VertexOutput v_Input;
-layout(location = 15) out vec3 v_Color;
-layout(location = 16) flat out int v_EntityID;
+layout(location = 0) out VertexOutput v_Output;
 
 void main()
 {
-    v_Input.WorldPosition = vec3(u_Transform * vec4(a_Position, 1.0));
-    v_Input.Normal = mat3(u_Transform) * a_Normal;
-    v_Input.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
-    v_Input.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
-    v_Input.WorldTransform = mat3(u_Transform);
-    v_Input.Binormal = a_Binormal;
+    vec4 worldPosition = vec4(a_Position, 1.0);
+    v_Output.WorldPosition = worldPosition.xyz;
+    v_Output.Normal = mat3(u_Transform) * a_Normal;
+    v_Output.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
+    v_Output.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
+    v_Output.WorldTransform = mat3(u_Transform);
+    v_Output.Binormal = a_Binormal;
 
-    v_Input.CameraView = mat3(u_ViewMatrix);
-    v_Input.CameraPosition = u_CameraPosition;
-    v_Input.ViewPosition = vec3(u_ViewMatrix * vec4(v_Input.WorldPosition, 1.0));
+    v_Output.CameraView = mat3(u_ViewMatrix);
+    v_Output.CameraPosition = u_CameraPosition;
+    v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
 
-    v_Color = vec3(1.0, 1.0, 1.0);
-    v_EntityID = a_EntityID;
-
-    gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
+    gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
 
 #type fragment
 #version 450 core
-
-struct PointLight
-{
-    vec3 Position;
-    float Multiplier;
-    vec3 Radiance;
-    float Radius;
-    float MinRadius;
-    float Falloff;
-};
-
-layout(std140, binding = 5) uniform PointLightsData
-{
-    uint u_PointLightsCount;
-    PointLight u_PointLights[16];
-};
 
 struct VertexOutput
 {
@@ -104,11 +74,31 @@ struct VertexOutput
 };
 
 layout(location = 0) in VertexOutput v_Input;
-layout(location = 15) in vec3 v_Color;
-layout(location = 16) flat in int v_EntityID;
 
 layout(location = 0) out vec4 o_Color;
-//layout(location = 1) out int o_EntityID;
+
+struct PointLight
+{
+    vec3 Position;
+    float Multiplier;
+    vec3 Radiance;
+    float Radius;
+    float MinRadius;
+    float Falloff;
+};
+
+layout(std140, binding = 2) uniform PointLightsData
+{
+    uint Count;
+    PointLight Lights[1000];
+} u_PointLights;
+
+layout(push_constant) uniform Material
+{
+	float AmbientStrength;
+    float DiffuseStrength;
+    float SpecularStrength;
+} u_MaterialUniforms;
 
 vec3 GetPointLightAttenuationValues(in float distance)
 {
@@ -166,14 +156,10 @@ vec3 GetPointLightAttenuationValues(in float distance)
 
 vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 {
-    float ambientStrength = 0.3;
-    float diffuseStrength = 1.0;
-    float specularStrength = 0.5;
-    
     vec3 result = vec3(0.33);
-    for (int i = 0; i < u_PointLightsCount; i++)
+    for (int i = 0; i < u_PointLights.Count; i++)
     {
-        PointLight light = u_PointLights[i];
+        PointLight light = u_PointLights.Lights[i];
         float distance = length(light.Position - v_Input.WorldPosition);
         vec3 attenuationValues = GetPointLightAttenuationValues(distance);
         float constant = attenuationValues.x;
@@ -185,18 +171,18 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         vec3 radiance = light.Radiance * light.Multiplier;
 
         // Ambient
-        vec3 ambient = ambientStrength * radiance;
+        vec3 ambient = u_MaterialUniforms.AmbientStrength * radiance;
 
         // Diffuse
         vec3 lightDir = normalize(light.Position - v_Input.WorldPosition);
         float diffuseImpact = max(dot(normal, lightDir), 0.0);
-        vec3 diffuse = diffuseImpact * diffuseStrength * radiance;
+        vec3 diffuse = diffuseImpact * u_MaterialUniforms.DiffuseStrength * radiance;
 
         // Specular
         float shininess = 32;
         vec3 reflectDir = reflect(lightDir, normal);
         float specularImpact = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        vec3 specular = specularStrength * specularImpact * radiance;
+        vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * radiance;
 
         result += (ambient + diffuse + specular) * attenuation;
         //result += vec3(light.MinRadius);
@@ -207,10 +193,10 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 
 void main()
 {
+    vec3 color = vec3(1.0);
     vec3 normal = normalize(v_Input.Normal);
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
     vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
-    o_Color = vec4(v_Color, 1.0) * (pLightsColor);
-    //o_EntityID = v_EntityID;
+    o_Color = vec4(color, 1.0) * (pLightsColor);
 }

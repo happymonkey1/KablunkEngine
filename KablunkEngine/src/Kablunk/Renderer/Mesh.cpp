@@ -17,6 +17,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include <filesystem>
 
 namespace Kablunk
 {
@@ -71,7 +72,7 @@ namespace Kablunk
 			Submesh& submesh = m_sub_meshes.emplace_back();
 			submesh.BaseVertex = vertex_count;
 			submesh.BaseIndex = index_count;
-			submesh.MaterialIndex = mesh->mMaterialIndex;
+			submesh.Material_index = mesh->mMaterialIndex;
 			submesh.VertexCount = mesh->mNumVertices;
 			submesh.IndexCount = mesh->mNumFaces * 3;
 			submesh.mesh_name = mesh->mName.C_Str();
@@ -110,7 +111,6 @@ namespace Kablunk
 					Vertex v;
 					v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 					v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-					v.EntityID = static_cast<int32_t>(entity);
 
 					if (mesh->HasTangentsAndBitangents())
 					{
@@ -180,39 +180,215 @@ namespace Kablunk
 			
 		}
 
-		// #TODO materials
-
-
-		if (m_is_animated)
+		IntrusiveRef<Texture2D> white_texture = Renderer::GetWhiteTexture();
+		if (scene->HasMaterials() && Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
 		{
-			m_vertex_buffer = VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
-			m_vertex_buffer_layout = {
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float3, "a_Normal" },
-				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Int4, "a_BoneIDs" },
-				{ ShaderDataType::Float4, "a_Weights" },
-				{ ShaderDataType::Int, "a_EntityID" }
-			};
-			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
+			m_textures.resize(scene->mNumMaterials);
+			m_materials.resize(scene->mNumMaterials);
+
+			for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
+			{
+				auto ai_material = scene->mMaterials[i];
+				auto ai_material_name = ai_material->GetName();
+
+				auto mat = Material::Create(m_mesh_shader, ai_material_name.data);
+				m_materials[i] = mat;
+
+				aiString ai_texture_path;
+				uint32_t texture_count = ai_material->GetTextureCount(aiTextureType_DIFFUSE);
+
+				glm::vec3 albedo_color{ 0.8f };
+				float emission = 0.0f;
+				aiColor3D ai_color, ai_emission;
+
+				float shininess, metalness;
+
+				if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, ai_color) == AI_SUCCESS)
+					albedo_color = { ai_color.r, ai_color.g, ai_color.b };
+
+				if (ai_material->Get(AI_MATKEY_COLOR_EMISSIVE, ai_emission) == AI_SUCCESS)
+					emission = ai_emission.r;
+
+				if (ai_material->Get(AI_MATKEY_SHININESS, shininess) != AI_SUCCESS)
+					shininess = 80.0f;
+
+				if (ai_material->Get(AI_MATKEY_REFLECTIVITY, metalness) != AI_SUCCESS)
+					metalness = 0.0f;
+
+				float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
+
+				mat->Set("u_MaterialUniforms.AlbedoColor", albedo_color);
+				mat->Set("u_MaterialUniforms.Emission", emission);
+
+				// Albedo
+				bool has_albedo_map = ai_material->GetTexture(aiTextureType_DIFFUSE, 0, &ai_texture_path) == AI_SUCCESS;
+				bool fallback = !has_albedo_map;
+				if (has_albedo_map)
+				{
+					std::filesystem::path path = m_filepath;
+					auto parent_path = path.parent_path();
+					parent_path /= std::string(ai_texture_path.data);
+					std::string texture_path = parent_path.string();
+
+					// #TODO texture properties
+					//TextureProperties props;
+					//props.SRGB = true;
+					auto texture = Texture2D::Create(texture_path);
+					if (texture)
+					{
+						m_textures[i] = texture;
+						mat->Set("u_AlbedoTexture", texture);
+						mat->Set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
+					}
+					else
+					{
+						m_textures[i] = white_texture;
+						fallback = true;
+					}
+				}
+				
+				if (fallback)
+					mat->Set("u_AlbedoTexture", white_texture);
+
+				// Normal Map
+				bool has_normal_map = ai_material->GetTexture(aiTextureType_NORMALS, 0, &ai_texture_path) == AI_SUCCESS;
+				fallback = !has_normal_map;
+				if (has_normal_map)
+				{
+					std::filesystem::path path = m_filepath;
+					auto parent_path = path.parent_path();
+					parent_path /= std::string(ai_texture_path.data);
+					std::string texture_path = parent_path.string();
+
+					// #TODO texture properties
+					//TextureProperties props;
+					//props.SRGB = true;
+					auto texture = Texture2D::Create(texture_path);
+					if (texture)
+					{
+						m_textures[i] = texture;
+						mat->Set("u_NormalTexture", texture);
+						mat->Set("u_MaterialUniforms.UseNormalMap", true);
+					}
+					else
+					{
+						m_textures[i] = white_texture;
+						fallback = true;
+					}
+				}
+
+				if (fallback)
+				{
+					mat->Set("u_NormalTexture", white_texture);
+					mat->Set("u_MaterialUniforms.UseNormalMap", false);
+				}
+
+				// Roughness map
+				bool has_roughness_map = ai_material->GetTexture(aiTextureType_SHININESS, 0, &ai_texture_path) == AI_SUCCESS;
+				fallback = !has_roughness_map;
+				if (has_roughness_map)
+				{
+					// TODO: Temp - this should be handled by Hazel's filesystem
+					std::filesystem::path path = m_filepath;
+					auto parent_path = path.parent_path();
+					parent_path /= std::string(ai_texture_path.data);
+					std::string texture_path = parent_path.string();
+					auto texture = Texture2D::Create(texture_path);
+					if (texture)
+					{
+						m_textures.push_back(texture);
+						mat->Set("u_RoughnessTexture", texture);
+						mat->Set("u_MaterialUniforms.Roughness", 1.0f);
+					}
+					else
+						fallback = true;
+					
+				}
+
+				if (fallback)
+				{
+					mat->Set("u_RoughnessTexture", white_texture);
+					mat->Set("u_MaterialUniforms.Roughness", roughness);
+				}
+
+				// Metalness Textures
+				bool metalness_texture_found = false;
+				for (uint32_t p = 0; p < ai_material->mNumProperties; p++)
+				{
+					auto prop = ai_material->mProperties[p];
+
+					if (prop->mType == aiPTI_String)
+					{
+						uint32_t strLength = *(uint32_t*)prop->mData;
+						std::string str(prop->mData + 4, strLength);
+
+						std::string key = prop->mKey.data;
+						if (key == "$raw.ReflectionFactor|file")
+						{
+							// TODO: Temp - this should be handled by Hazel's filesystem
+							std::filesystem::path path = m_filepath;
+							auto parent_path = path.parent_path();
+							parent_path /= str;
+							std::string texture_path = parent_path.string();
+							auto texture = Texture2D::Create(texture_path);
+							if (texture)
+							{
+								metalness_texture_found = true;
+								m_textures.push_back(texture);
+								mat->Set("u_MetalnessTexture", texture);
+								mat->Set("u_MaterialUniforms.Metalness", 1.0f);
+							}
+
+							break;
+						}
+					}
+				}
+
+				fallback = !metalness_texture_found;
+				if (fallback)
+				{
+					mat->Set("u_MetalnessTexture", white_texture);
+					mat->Set("u_MaterialUniforms.Metalness", metalness);
+				}
+
+			}
 		}
 		else
 		{
-			m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
-			m_vertex_buffer_layout = {
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float3, "a_Normal" },
-				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Int, "a_EntityID" }
-			};
-			m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
+			if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
+			{
+				auto mat = Material::Create(m_mesh_shader, "Kablunk-Default");
+				// Props
+				mat->Set("u_MaterialUniforms.AlbedoColor", glm::vec3(0.8f));
+				mat->Set("u_MaterialUniforms.Emission", 0.0f);
+				mat->Set("u_MaterialUniforms.Metalness", 0.0f);
+				mat->Set("u_MaterialUniforms.Roughness", 0.8f);
+				mat->Set("u_MaterialUniforms.UseNormalMap", false);
+
+				// textures
+				mat->Set("u_AlbedoTexture", white_texture);
+				mat->Set("u_MetalnessTexture", white_texture);
+				mat->Set("u_RoughnessTexture", white_texture);
+				m_materials.push_back(mat);
+			}
+			else if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+			{
+				auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
+				mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
+				mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+				mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
+				m_materials.push_back(mat);
+			}
 		}
 
-		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index) / sizeof(uint32_t)));
+
+		if (m_is_animated)
+			m_vertex_buffer = VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
+		else
+			m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
+		
+
+		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 	}
 
 	MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
@@ -223,6 +399,7 @@ namespace Kablunk
 		submesh.BaseIndex = 0;
 		submesh.IndexCount = (uint32_t)indices.size() * 3u;
 		submesh.Transform = transform;
+		submesh.Material_index = 0;
 		m_sub_meshes.push_back(submesh);
 
 		
@@ -230,18 +407,17 @@ namespace Kablunk
 
 		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
-		m_vertex_buffer_layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float3, "a_Normal" },
-			{ ShaderDataType::Float3, "a_Tangent" },
-			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Int, "a_EntityID" }
-		};
-		m_vertex_buffer->SetLayout(m_vertex_buffer_layout);
-
 		KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
-		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index) / sizeof(uint32_t)));
+		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+
+		if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+		{
+			auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
+			mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
+			mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+			mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
+			m_materials.push_back(mat);
+		}
 	}
 
 	MeshData::~MeshData()
@@ -375,17 +551,33 @@ namespace Kablunk
 	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data)
 		: m_mesh_data{ mesh_data }
 	{
-		m_vertex_array = VertexArray::Create();
-		m_vertex_array->AddVertexBuffer(m_mesh_data->GetVertexBuffer());
-		m_vertex_array->SetIndexBuffer(m_mesh_data->GetIndexBuffer());
+		SetSubmeshes({});
+
+		const auto& mesh_materials = m_mesh_data->GetMaterials();
+		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		for (size_t i = 0; i < mesh_materials.size(); ++i)
+			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::Mesh(const IntrusiveRef<Mesh>& other)
 		: m_mesh_data{ other->m_mesh_data }
 	{
-		m_vertex_array = VertexArray::Create();
-		m_vertex_array->AddVertexBuffer(m_mesh_data->GetVertexBuffer());
-		m_vertex_array->SetIndexBuffer(m_mesh_data->GetIndexBuffer());
+		SetSubmeshes({});
+
+		const auto& mesh_materials = m_mesh_data->GetMaterials();
+		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		for (size_t i = 0; i < mesh_materials.size(); ++i)
+			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+	}
+
+	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
+	{
+		SetSubmeshes(submeshes);
+
+		const auto& mesh_materials = m_mesh_data->GetMaterials();
+		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		for (size_t i = 0; i < mesh_materials.size(); ++i)
+			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::~Mesh()
@@ -396,6 +588,19 @@ namespace Kablunk
 	void Mesh::OnUpdate(Timestep ts)
 	{
 		KB_CORE_WARN("Mesh OnUpdate() not implemented!");
+	}
+
+	void Mesh::SetSubmeshes(const std::vector<uint32_t>& submeshes)
+	{
+		if (!submeshes.empty())
+			m_submeshes = submeshes;
+		else
+		{
+			const auto& submeshes = m_mesh_data->GetSubmeshes();
+			m_submeshes.resize(submeshes.size());
+			for (uint32_t i = 0; i < submeshes.size(); ++i)
+				m_submeshes[i] = i;
+		}
 	}
 
 	IntrusiveRef<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
@@ -450,16 +655,6 @@ namespace Kablunk
 		verts[5].TexCoord = { 1.0f, 1.0f, };
 		verts[6].TexCoord = { 1.0f, 1.0f, };
 		verts[7].TexCoord = { 1.0f, 1.0f, };
-
-
-		verts[0].EntityID = static_cast<int32_t>(entity);
-		verts[1].EntityID = static_cast<int32_t>(entity);
-		verts[2].EntityID = static_cast<int32_t>(entity);
-		verts[3].EntityID = static_cast<int32_t>(entity);
-		verts[4].EntityID = static_cast<int32_t>(entity);
-		verts[5].EntityID = static_cast<int32_t>(entity);
-		verts[6].EntityID = static_cast<int32_t>(entity);
-		verts[7].EntityID = static_cast<int32_t>(entity);
 
 		std::vector<Index> indices;
 		indices.resize(12);

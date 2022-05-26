@@ -41,8 +41,10 @@ namespace Kablunk
 		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
+		m_uniform_buffer_set->Create(sizeof(glm::mat4), 1);
+		m_uniform_buffer_set->Create(sizeof(PointLightUB), 2);
 
-		m_storage_buffer_set = StorageBufferSet::Create(frames_in_flight);
+		m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
 		// Geometry
 		{
@@ -56,15 +58,15 @@ namespace Kablunk
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "GeometryPipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Kablunk_pbr_static");
+			std::string shader_to_use = Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR ? "Kablunk_pbr_static" : "Kablunk_diffuse_static";
+ 			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get(shader_to_use);
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
 				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Int, "a_EntityID" }
+				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
 
 			RenderPassSpecification geo_render_pass_spec{};
@@ -72,7 +74,7 @@ namespace Kablunk
 			geo_render_pass_spec.debug_name = "Geometry";
 
 			pipeline_spec.render_pass = RenderPass::Create(geo_render_pass_spec);
-			pipeline_spec.debug_name = "pbr_static";
+			pipeline_spec.debug_name = "diffuse_static";
 
 			m_geometry_pipeline = Pipeline::Create(pipeline_spec);
 		}
@@ -159,6 +161,7 @@ namespace Kablunk
 			return;
 
 		m_scene_data.camera = camera;
+		m_scene_data.light_environment = m_context->m_light_environment;
 
 		if (m_needs_resize)
 		{
@@ -174,20 +177,53 @@ namespace Kablunk
 				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
+		m_draw_list = {};
+
+		// Update uniform buffers
+		PointLightUB& point_light_ub_data = m_point_lights_ub;
+
 		auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
 		const glm::vec3 camera_position = glm::inverse(scene_camera.view_mat)[3];
 
 		const auto inverse_view_projection = glm::inverse(view_projection);
 		
-		// #TODO set camera uniform buffer
-		CameraDataUB camera_data = { scene_camera.camera.GetProjection() * scene_camera.view_mat };
+		// Set camera uniform buffer
+		CameraDataUB camera_data = { 
+			scene_camera.camera.GetProjection() * scene_camera.view_mat, 
+			scene_camera.camera.GetProjection(), 
+			scene_camera.view_mat, 
+			camera_position
+		};
+		
 		IntrusiveRef<SceneRenderer> instance = this;
 		RenderCommand::Submit([instance, camera_data]() mutable
 			{
 				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
 				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
 			});
+
+		// Set Renderer Transform
+		RenderCommand::Submit([instance]() mutable
+			{
+				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				glm::mat4 transform = glm::mat4{ 1.0f };
+				instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
+			});
+
+		// Submit point lights uniform buffer
+		const auto light_enviornment_copy = m_scene_data.light_environment;
+		const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
+		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize());
+		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
+		RenderCommand::Submit([instance, &point_light_ub_data]() mutable
+			{
+				const uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
+				size_t point_light_vec_offset = 16ull;
+				buffer_set->RT_SetData(&point_light_ub_data, point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count);
+			}
+		);
 	}
 
 	void SceneRenderer::EndScene()
@@ -209,10 +245,13 @@ namespace Kablunk
 
 	void SceneRenderer::SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
 	{
-		IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
-		uint32_t material_index = 0; // #TODO fix
+		//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
+		//uint32_t material_index = 0; // #TODO fix
+		const auto& submeshes = mesh->GetMeshData()->GetSubmeshes();
+		uint32_t material_index = submeshes[submesh_index].Material_index;
 
-		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 0, 0, transform });
+		// #TODO instancing
+		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
@@ -308,8 +347,7 @@ namespace Kablunk
 
 		for (const auto& draw_command_data : m_draw_list)
 		{
-
-			RenderCommand::RenderMeshWithMaterial(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, nullptr, 0, 0, Buffer{});
+			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, nullptr, 0, 0);
 		}
 
 		RenderCommand::EndRenderPass(m_command_buffer);

@@ -38,7 +38,7 @@ namespace Kablunk
 
 	}
 
-	MaterialAsset::MaterialAsset(IntrusiveRef<MaterialAsset> material)
+	MaterialAsset::MaterialAsset(IntrusiveRef<Material> material)
 	{
 		m_material = Material::Copy(material);
 	}

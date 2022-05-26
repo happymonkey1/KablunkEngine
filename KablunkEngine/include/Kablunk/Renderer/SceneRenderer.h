@@ -23,6 +23,14 @@ namespace Kablunk
 		bool swap_chain_target = false;
 	};
 
+	struct CameraDataUB
+	{
+		glm::mat4 view_projection;
+		glm::mat4 projection;
+		glm::mat4 view;
+		glm::vec3 position;
+	};
+
 	struct SceneRendererCamera
 	{
 		Camera camera;
@@ -32,6 +40,7 @@ namespace Kablunk
 	struct SceneRendererData
 	{
 		SceneRendererCamera camera;
+		LightEnvironmentData light_environment;
 	};
 
 
@@ -95,6 +104,13 @@ namespace Kablunk
 
 		IntrusiveRef<UniformBufferSet> m_uniform_buffer_set;
 		IntrusiveRef<StorageBufferSet> m_storage_buffer_set;
+
+		struct PointLightUB
+		{
+			uint32_t count{ 0 };
+			glm::vec3 padding{};
+			PointLight point_lights[1024]{};
+		} m_point_lights_ub;
 
 		GPUTimeQueryIndices m_gpu_time_query_indices;
 

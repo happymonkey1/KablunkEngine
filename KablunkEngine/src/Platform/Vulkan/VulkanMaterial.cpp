@@ -19,7 +19,9 @@ namespace Kablunk
 	}
 
 	VulkanMaterial::VulkanMaterial(IntrusiveRef<Material> material, const std::string& name /*= ""*/)
-		: m_shader{ material->GetShader() }, m_name{ name }, m_write_descriptors(Renderer::GetConfig().frames_in_flight), m_dirty_descriptor_sets(Renderer::GetConfig().frames_in_flight)
+		: m_shader{ material->GetShader() }, m_name{ name }, 
+		m_write_descriptors(Renderer::GetConfig().frames_in_flight), 
+		m_dirty_descriptor_sets(Renderer::GetConfig().frames_in_flight, true)
 	{
 		if (name.empty())
 			m_name = material->GetName();

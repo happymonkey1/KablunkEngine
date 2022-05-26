@@ -9,6 +9,7 @@
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/VertexArray.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
 
 #include <vector>
 #include <string>
@@ -40,7 +41,6 @@ namespace Kablunk
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 TexCoord;
-		int32_t EntityID;
 	};
 
 	struct AnimatedVertex
@@ -124,7 +124,7 @@ namespace Kablunk
 	public:
 		uint32_t BaseVertex;
 		uint32_t BaseIndex;
-		uint32_t MaterialIndex;
+		uint32_t Material_index;
 		uint32_t IndexCount;
 		uint32_t VertexCount;
 
@@ -146,10 +146,12 @@ namespace Kablunk
 		IntrusiveRef<Shader> GetShader() { return m_mesh_shader; }
 		IntrusiveRef<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
 		IntrusiveRef<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
-		const BufferLayout& GetBufferLayout() const { return m_vertex_buffer_layout; }
 
-		const std::vector<Ref<Texture2D>> GetTextures() const { return m_textures; }
-		const std::vector<Ref<Texture2D>> GetNormalMap() const { return m_normal_map; }
+		std::vector<IntrusiveRef<Material>>& GetMaterials() { return m_materials; }
+		const std::vector<IntrusiveRef<Material>> GetMaterials() const { return m_materials; }
+
+		const std::vector<IntrusiveRef<Texture2D>> GetTextures() const { return m_textures; }
+		const std::vector<IntrusiveRef<Texture2D>> GetNormalMaps() const { return m_normal_map; }
 		const std::string& GetFilepath() const { return m_filepath; }
 
 		void SetSubmeshes(const std::vector<Submesh>& submeshes);
@@ -167,8 +169,6 @@ namespace Kablunk
 		glm::vec3 InterpolateScale(float animation_time, const aiNodeAnim* node_anim);
 
 		void ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform);
-
-		void BindVertexBuffer() { KB_CORE_ASSERT(false, "MeshData BindVertexBuffer() not implemented!"); };
 	private:
 		void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, uint32_t level = 0);
 	private:
@@ -176,7 +176,6 @@ namespace Kablunk
 
 		IntrusiveRef<VertexBuffer> m_vertex_buffer;
 		IntrusiveRef<IndexBuffer> m_index_buffer;
-		BufferLayout m_vertex_buffer_layout;
 
 		std::vector<Vertex> m_static_vertices;
 		std::vector<AnimatedVertex> m_animated_vertices;
@@ -193,8 +192,9 @@ namespace Kablunk
 		glm::mat4 m_inverse_transform{ 1.0f };
 
 		IntrusiveRef<Shader> m_mesh_shader;
-		std::vector<Ref<Texture2D>> m_textures;
-		std::vector<Ref<Texture2D>> m_normal_map;
+		std::vector<IntrusiveRef<Texture2D>> m_textures;
+		std::vector<IntrusiveRef<Texture2D>> m_normal_map;
+		std::vector<IntrusiveRef<Material>> m_materials;
 		
 		std::unordered_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
 
@@ -216,17 +216,27 @@ namespace Kablunk
 	public:
 		Mesh(IntrusiveRef<MeshData> mesh_data);
 		Mesh(const IntrusiveRef<Mesh>& other);
+		Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
 		virtual ~Mesh();
 
 		void OnUpdate(Timestep ts);
 
+		std::vector<uint32_t>& GetSubmeshes() { return m_submeshes; }
+		const std::vector<uint32_t>& GetSubmeshes() const { return m_submeshes; }
+
+		void SetSubmeshes(const std::vector<uint32_t>& submeshes);
+
 		IntrusiveRef<MeshData> GetMeshData() { return m_mesh_data; }
 		IntrusiveRef<MeshData> GetMeshData() const { return m_mesh_data; }
-		IntrusiveRef<VertexArray> GetVertexArray() const { return m_vertex_array; }
 		void SetMeshData(IntrusiveRef<MeshData> mesh_data) { m_mesh_data = mesh_data; }
+
+		IntrusiveRef<MaterialTable>& GetMaterials() { return m_material_table; }
+		const IntrusiveRef<MaterialTable>& GetMaterials() const { return m_material_table; }
 	private:
 		IntrusiveRef<MeshData> m_mesh_data;
-		IntrusiveRef<VertexArray> m_vertex_array;
+		std::vector<uint32_t> m_submeshes;
+
+		IntrusiveRef<MaterialTable> m_material_table;
 	};
 
 	// #TODO move elsewhere

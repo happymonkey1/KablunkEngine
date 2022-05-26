@@ -267,7 +267,7 @@ namespace Kablunk
 		RenderCommand::Submit([uniform_buffer_set, view_proj]() mutable
 			{
 				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
-				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(CameraDataUB));
+				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
 			});
 
 		s_renderer_data.Stats = {};

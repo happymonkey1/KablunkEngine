@@ -25,58 +25,18 @@ namespace Kablunk
 {
 	constexpr uint32_t MAX_POINT_LIGHTS = 16;
 
-	struct CameraDataUB
+	enum RendererPipelineDescriptor
 	{
-		glm::mat4 ViewProjection;
-	};
+		PHONG_DIFFUSE = 0,
+		PBR = 1,
 
-	// #TODO move to scene
-	struct PointLight
-	{
-		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
-		float Multiplier = { 1.0f };
-		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
-		float Radius = { 10.0f };
-		float Min_radius = { 1.0f };
-		float Falloff = { 1.0f };
-
-		char Padding[8]{}; // Don't know why this is needed, but sizeof PointLight = 48 bytes makes it work???
-	};
-
-	// #TODO rename to avoid confusion
-	struct PointLightsData
-	{
-		uint32_t count;
-		glm::vec3 Padding{}; // I have no idea why this is needed but it is
-		PointLight lights[MAX_POINT_LIGHTS]{};
-	};
-
-	struct SceneData
-	{
-		struct CameraData
-		{
-			glm::mat4 ViewProjectionMatrix;
-			glm::mat4 ProjectionMatrix;
-			glm::mat4 ViewMatrix;
-			glm::vec3 CameraPosition;
-		};
-		
-		struct RendererData
-		{
-			glm::mat4 Transform;
-		};
-
-		CameraData camera_buffer;
-		RendererData renderer_buffer;
-		PointLightsData plights_buffer;
-		IntrusiveRef<UniformBuffer> camera_uniform_buffer;
-		IntrusiveRef<UniformBuffer> renderer_uniform_buffer;
-		IntrusiveRef<UniformBuffer> point_lights_uniform_buffer;
+		NONE
 	};
 
 	struct RendererOptions
 	{
 		uint32_t frames_in_flight = 3;
+		RendererPipelineDescriptor pipeline = PHONG_DIFFUSE;
 	};
 	
 
@@ -86,18 +46,6 @@ namespace Kablunk
 		static void Init();
 		static void Shutdown();
 		static void OnWindowResize(uint32_t width, uint32_t height);
-
-		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void BeginScene(const EditorCamera& camera);
-		// #TODO remove
-		static void BeginScene(OrthographicCamera& camera);
-		static void EndScene();
-
-		
-
-		static void SubmitData(const IntrusiveRef<Shader> shader, const IntrusiveRef<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
-		static void SubmitMesh(IntrusiveRef<Mesh> mesh, glm::mat4 transform);
-		static void SubmitPointLights(std::vector<PointLight>& data, uint32_t count);
 
 
 		static void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline);
@@ -113,10 +61,12 @@ namespace Kablunk
 
 		static const RendererOptions& GetConfig() { return s_options; }
 
+		static const RendererPipelineDescriptor GetRendererPipeline() { return s_options.pipeline; }
+		static void SetRendererPipeline(RendererPipelineDescriptor new_pipeline) { s_options.pipeline = new_pipeline; }
+
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
 	private:
 		inline static RendererOptions s_options = { };
-		static Scope<SceneData> m_SceneData;
 		
 		static IntrusiveRef<ShaderLibrary> s_shader_library;
 

@@ -52,6 +52,7 @@ namespace Kablunk
 
 	void VulkanRendererAPI::Init()
 	{
+		//Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_pbr_static.glsl");
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Circle.glsl");
@@ -210,10 +211,11 @@ namespace Kablunk
 				VkDeviceSize vertex_offsets[1] = { 0 };
 				vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
-				IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+				// #TODO instancing transform buffer
+				/*IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 				VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
 				VkDeviceSize transform_offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
+				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);*/
 
 				IntrusiveRef<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
 				VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
@@ -221,10 +223,12 @@ namespace Kablunk
 
 				std::vector<std::vector<VkWriteDescriptorSet>> write_cescriptors;
 
-				auto& mesh_material_table = mesh->GetMaterials();
+				const auto& mesh_asset_submeshes = mesh_data->GetSubmeshes();
+				const Submesh& submesh = mesh_asset_submeshes[submesh_index];
+				const auto& mesh_material_table = mesh->GetMaterials();
 				uint32_t material_count = mesh_material_table->GetMaterialCount();
-				uint32_t material_index = mesh->GetMeshData()->GetMaterialIndex();
-				IntrusiveRef<MaterialAsset> material = material_table->HasMaterial(material_index) ? material_table->GetMaterial(material_index) : mesh_material_table->GetMaterial(material_index);
+				IntrusiveRef<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? 
+					material_table->GetMaterial(submesh.Material_index) : mesh_material_table->GetMaterial(submesh.Material_index);
 				IntrusiveRef<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
 				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
@@ -241,11 +245,28 @@ namespace Kablunk
 
 				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer)
-					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniform_storage_buffer.size(), uniform_storage_buffer.get());
+				{
+					vkCmdPushConstants(
+						vk_command_buffer, 
+						pipeline_layout, 
+						VK_SHADER_STAGE_FRAGMENT_BIT, 
+						0, 
+						uniform_storage_buffer.size(), 
+						uniform_storage_buffer.get()
+					);
+				}
 
 				// #TODO submeshes
 
-				vkCmdDrawIndexed(vk_command_buffer, mesh_data->GetIndicies().size(), instance_count, 0, 0, 0);
+				// #TODO INSTANCING
+				vkCmdDrawIndexed(
+					vk_command_buffer, 
+					submesh.IndexCount, 
+					1, 
+					submesh.BaseIndex, 
+					submesh.BaseVertex, 
+					0
+				);
 
 				//push_constant_buffer.Release();
 			}
@@ -552,8 +573,8 @@ namespace Kablunk
 			{
 				const auto& storage_buffer_write_descriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
 
-				const uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
-				for (uint32_t frame = 0; frame < framesInFlight; frame++)
+				const uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+				for (uint32_t frame = 0; frame < frames_in_flight; frame++)
 				{
 					write_description[frame].reserve(write_description[frame].size() + storage_buffer_write_descriptors[frame].size());
 					write_description[frame].insert(write_description[frame].end(), storage_buffer_write_descriptors[frame].begin(), storage_buffer_write_descriptors[frame].end());

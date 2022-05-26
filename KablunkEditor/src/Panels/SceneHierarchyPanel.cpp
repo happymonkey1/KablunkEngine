@@ -373,6 +373,57 @@ namespace Kablunk
 		return updated;
 	}
 
+	template <typename ComponentT>
+	void DrawMaterialTable(IntrusiveRef<MaterialTable> mesh_material_table)
+	{
+		if (UI::BeginTreeNode("Materials"))
+		{
+			UI::BeginProperties();
+
+			for (size_t i = 0; i < mesh_material_table->GetMaterialCount(); i++)
+			{
+				if (i == mesh_material_table->GetMaterialCount())
+					ImGui::Separator();
+
+
+				std::string label = fmt::format("[Material {0}]", i);
+
+				std::string id = fmt::format("{0}-{1}", label, i);
+				ImGui::PushID(id.c_str());
+
+				IntrusiveRef<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+				std::string mesh_material_name = mesh_material_asset->GetMaterial()->GetName();
+				if (mesh_material_name.empty())
+					mesh_material_name = "Unnamed Material";
+
+				UI::PushItemDisabled();
+				UI::Property("Name", mesh_material_name);
+				UI::PopItemDisabled();
+
+				if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+				{
+					float& ambient_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.AmbientStrength");
+					if (UI::Property("Ambient Strength", ambient_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.AmbientStrength", ambient_strength);
+
+					float& diffuse_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.DiffuseStrength");
+					if (UI::Property("Diffuse Strength", diffuse_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.DiffuseStrength", diffuse_strength);
+
+					float& specular_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.SpecularStrength");
+					if (UI::Property("Specular Strength", specular_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.SpecularStrength", specular_strength);
+				}
+
+
+				ImGui::PopID();
+			}
+
+			UI::EndProperties();
+			UI::EndTreeNode();
+		}
+	}
+
 	template <typename ComponentType, typename UIFunction>
 	static void DrawComponent(const std::string& label, Entity entity, UIFunction UIDrawFunction)
 	{
@@ -750,7 +801,7 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<MeshComponent>("Mesh", entity, [&](auto& component)
+		DrawComponent<MeshComponent>("Mesh", entity, [&](MeshComponent& component)
 			{
 				const char* add_or_change_button_text;
 				if (!component.Mesh)
@@ -765,10 +816,24 @@ namespace Kablunk
 						component.LoadMeshFromFileEditor(filepath, entity);
 				}
 
-				ImGui::Text("File:");
-				ImGui::PushStyleColor(ImGuiCol_Text, { 0.494f, 0.494f, 0.494f, 1.0f });
-				ImGui::TextWrapped(component.Filepath.c_str());
-				ImGui::PopStyleColor();
+				UI::BeginProperties();
+
+				UI::PushItemDisabled();
+				UI::Property("Filename:", component.Filepath.c_str());
+				UI::PopItemDisabled();
+
+				IntrusiveRef<Mesh> mesh = component.Mesh;
+				if (mesh)
+				{
+					for (uint32_t submesh_index : mesh->GetSubmeshes())
+					{
+						UI::Property("Submesh Index", submesh_index);
+					}
+
+					DrawMaterialTable<MeshComponent>(mesh->GetMaterials());
+				}
+
+				UI::EndProperties();
 			});
 
 		DrawComponent<PointLightComponent>("Point Light", entity, [&](auto& component)
