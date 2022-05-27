@@ -68,6 +68,11 @@ namespace Kablunk
 				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
+			pipeline_spec.instance_layout = {
+				{ ShaderDataType::Float4, "a_MRow0" },
+				{ ShaderDataType::Float4, "a_MRow1" },
+				{ ShaderDataType::Float4, "a_MRow2" },
+			};
 
 			RenderPassSpecification geo_render_pass_spec{};
 			geo_render_pass_spec.target_framebuffer = framebuffer;
@@ -137,6 +142,10 @@ namespace Kablunk
 			render_pass_spec.debug_name = "External Composite";
 			m_external_composite_render_pass = RenderPass::Create(render_pass_spec);
 		}
+
+		const size_t transform_buffer_count = 100 * 1024;
+		m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
+		m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
 		IntrusiveRef<SceneRenderer> instance = this;
 		RenderCommand::Submit([instance]() mutable
@@ -212,7 +221,7 @@ namespace Kablunk
 		// Submit point lights uniform buffer
 		const auto light_enviornment_copy = m_scene_data.light_environment;
 		const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
-		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize());
+		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
 		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
 		RenderCommand::Submit([instance, &point_light_ub_data]() mutable
 			{
@@ -248,7 +257,10 @@ namespace Kablunk
 		const auto& submeshes = mesh->GetMeshData()->GetSubmeshes();
 		uint32_t material_index = submeshes[submesh_index].Material_index;
 
-		// #TODO push transforms to a vector
+		m_transform_vertex_data[m_draw_list.size()].MRow[0] = {transform[0][0], transform[1][0], transform[2][0], transform[3][0]};
+		m_transform_vertex_data[m_draw_list.size()].MRow[1] = {transform[0][1], transform[1][1], transform[2][1], transform[3][1]};
+		m_transform_vertex_data[m_draw_list.size()].MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
+
 
 		// #TODO instancing
 		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
@@ -346,10 +358,18 @@ namespace Kablunk
 		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
+		// submit transform data
+		RenderCommand::Submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
+			{
+				transform_buffer->RT_SetData(transform_data, sizeof(TransformVertexData) * transform_count);
+			}
+		);
+		
+		size_t transform_offset_ind = 0;
 		for (const auto& draw_command_data : m_draw_list)
 		{
 			// #TODO update transform buffer and pass through
-			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, nullptr, 0, 0);
+			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, m_transform_buffer, transform_offset_ind++, 1);
 		}
 
 		RenderCommand::EndRenderPass(m_command_buffer);

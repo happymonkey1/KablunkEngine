@@ -378,10 +378,11 @@ namespace Kablunk
 	{
 		if (UI::BeginTreeNode("Materials"))
 		{
-			UI::BeginProperties();
 
 			for (size_t i = 0; i < mesh_material_table->GetMaterialCount(); i++)
 			{
+				UI::BeginProperties();
+
 				if (i == mesh_material_table->GetMaterialCount())
 					ImGui::Separator();
 
@@ -402,6 +403,7 @@ namespace Kablunk
 
 				if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 				{
+					// #TODO check if this needs to be set on render thread
 					float& ambient_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.AmbientStrength");
 					if (UI::Property("Ambient Strength", ambient_strength, 0.01f, 0.0f, 1.0f))
 						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.AmbientStrength", ambient_strength);
@@ -417,9 +419,10 @@ namespace Kablunk
 
 
 				ImGui::PopID();
+
+				UI::EndProperties();
 			}
 
-			UI::EndProperties();
 			UI::EndTreeNode();
 		}
 	}

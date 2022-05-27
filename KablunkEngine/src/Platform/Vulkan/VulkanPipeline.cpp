@@ -273,6 +273,7 @@ namespace Kablunk
 
 		// Vertex input descriptor
 		BufferLayout& layout = m_specification.layout;
+		BufferLayout& instance_layout = m_specification.instance_layout;
 
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_desc;
 
@@ -281,13 +282,30 @@ namespace Kablunk
 		vertex_input_binding.stride = layout.GetStride();
 		vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
+		if (!instance_layout.GetElements().empty())
+		{
+			VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_desc.emplace_back();
+			instance_input_binding.binding = 1;
+			instance_input_binding.stride = instance_layout.GetStride();
+			instance_input_binding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+		}
+
 		// Input attribute bindings describe shader attribute locations and memory layouts
-		std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.GetElements().size());
+		std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.GetElements().size() + instance_layout.GetElements().size());
 
 		uint32_t location = 0;
 		for (auto element : layout)
 		{
 			vertex_input_attributes[location].binding = 0;
+			vertex_input_attributes[location].location = location;
+			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
+			vertex_input_attributes[location].offset = element.Offset;
+			location++;
+		}
+
+		for (auto element : instance_layout)
+		{
+			vertex_input_attributes[location].binding = 1;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
 			vertex_input_attributes[location].offset = element.Offset;

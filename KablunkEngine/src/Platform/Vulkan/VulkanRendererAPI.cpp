@@ -212,10 +212,10 @@ namespace Kablunk
 				vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
 				// #TODO transform buffer
-				/*IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+				IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 				VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
-				VkDeviceSize transform_offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);*/
+				VkDeviceSize transform_offsets[1] = { transform_offset };
+				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
 				IntrusiveRef<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
 				VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
@@ -262,7 +262,7 @@ namespace Kablunk
 				vkCmdDrawIndexed(
 					vk_command_buffer, 
 					submesh.IndexCount, 
-					1, 
+					instance_count, 
 					submesh.BaseIndex, 
 					submesh.BaseVertex, 
 					0

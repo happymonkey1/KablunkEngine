@@ -26,6 +26,7 @@ namespace Kablunk
 	{
 		IntrusiveRef<Shader> shader;
 		BufferLayout layout;
+		BufferLayout instance_layout;
 		IntrusiveRef<RenderPass> render_pass;
 		PrimitiveTopology topology = PrimitiveTopology::Triangles;
 		bool backface_culling = true;

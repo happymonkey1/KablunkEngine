@@ -102,6 +102,13 @@ namespace Kablunk
 		IntrusiveRef<Texture2D> m_bloom_texture;
 		IntrusiveRef<Texture2D> m_bloom_dirt_texture;
 
+		struct TransformVertexData
+		{
+			glm::vec4 MRow[3];
+		};
+		IntrusiveRef<VertexBuffer> m_transform_buffer;
+		TransformVertexData* m_transform_vertex_data = nullptr;
+
 		IntrusiveRef<UniformBufferSet> m_uniform_buffer_set;
 		IntrusiveRef<StorageBufferSet> m_storage_buffer_set;
 

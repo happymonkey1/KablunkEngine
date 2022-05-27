@@ -631,7 +631,9 @@ namespace Kablunk
 
 	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
 	{
+
 		// Lights
+		// #TODO move to scene renderer?
 		{
 			m_light_environment = LightEnvironmentData{};
 
