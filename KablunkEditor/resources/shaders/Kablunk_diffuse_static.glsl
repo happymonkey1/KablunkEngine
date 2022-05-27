@@ -195,8 +195,10 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 
         // Specular
         float shininess = 32;
-        vec3 reflectDir = reflect(-lightDir, normal);
-        float specularImpact = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+        // Blinn-Phong 
+        //vec3 reflectDir = reflect(-lightDir, normal);
+        vec3 halfDir = normalize(lightDir + viewDir);
+        float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
         vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * radiance;
 
         result += (ambient + diffuse + specular) * attenuation;
