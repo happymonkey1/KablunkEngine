@@ -177,8 +177,6 @@ namespace Kablunk
 				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
-		m_draw_list = {};
-
 		// Update uniform buffers
 		PointLightUB& point_light_ub_data = m_point_lights_ub;
 
@@ -250,6 +248,8 @@ namespace Kablunk
 		const auto& submeshes = mesh->GetMeshData()->GetSubmeshes();
 		uint32_t material_index = submeshes[submesh_index].Material_index;
 
+		// #TODO push transforms to a vector
+
 		// #TODO instancing
 		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 	}
@@ -320,6 +320,7 @@ namespace Kablunk
 		m_command_buffer->Submit();
 
 		m_scene_data = {};
+		m_draw_list = {};
 	}
 
 	void SceneRenderer::PreRender()
@@ -347,6 +348,7 @@ namespace Kablunk
 
 		for (const auto& draw_command_data : m_draw_list)
 		{
+			// #TODO update transform buffer and pass through
 			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, nullptr, 0, 0);
 		}
 

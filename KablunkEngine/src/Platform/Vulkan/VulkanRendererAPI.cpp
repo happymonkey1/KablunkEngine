@@ -211,7 +211,7 @@ namespace Kablunk
 				VkDeviceSize vertex_offsets[1] = { 0 };
 				vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
-				// #TODO instancing transform buffer
+				// #TODO transform buffer
 				/*IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 				VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
 				VkDeviceSize transform_offsets[1] = { 0 };
