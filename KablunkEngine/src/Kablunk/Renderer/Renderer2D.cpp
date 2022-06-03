@@ -27,12 +27,12 @@ namespace Kablunk
 		static const uint32_t max_texture_slots = 32;
 		glm::vec4 quad_vertex_positions[4] = {};
 
-		IntrusiveRef <VertexBuffer> quad_vertex_buffer;
+		std::vector<IntrusiveRef<VertexBuffer>> quad_vertex_buffers;
 		IntrusiveRef <IndexBuffer> quad_index_buffer;
 
-		IntrusiveRef <VertexBuffer> circle_vertex_buffer;
+		std::vector<IntrusiveRef<VertexBuffer>> circle_vertex_buffers;
 
-		IntrusiveRef<VertexBuffer> line_vertex_buffer;
+		std::vector<IntrusiveRef<VertexBuffer>> line_vertex_buffers;
 		IntrusiveRef<IndexBuffer> line_index_buffer;
 
 		IntrusiveRef<Shader> quad_shader;
@@ -42,19 +42,19 @@ namespace Kablunk
 		IntrusiveRef <Texture2D> white_texture;
 
 		// Quads
-		QuadVertex* quad_vertex_buffer_base_ptr = nullptr;
+		std::vector<QuadVertex*> quad_vertex_buffer_base_ptrs;
 		QuadVertex* quad_vertex_buffer_ptr = nullptr;
 		uint32_t quad_count = 0;
 		uint32_t quad_index_count = 0;
 
 		// Circles
-		CircleVertex* circle_vertex_buffer_base_ptr = nullptr;
+		std::vector<CircleVertex*> circle_vertex_buffer_base_ptrs;
 		CircleVertex* circle_vertex_buffer_ptr = nullptr;
 		uint32_t circle_count = 0;
 		uint32_t circle_index_count = 0;
 
 		// Lines
-		LineVertex* line_vertex_buffer_base_ptr = nullptr;
+		std::vector<LineVertex*> line_vertex_buffer_base_ptrs;
 		LineVertex* line_vertex_buffer_ptr = nullptr;
 		uint32_t line_count = 0;
 		uint32_t line_index_count = 0;
@@ -106,8 +106,19 @@ namespace Kablunk
 		else
 			s_renderer_data.render_command_buffer = RenderCommandBuffer::Create(0, "Renderer2D");
 
-		s_renderer_data.quad_vertex_buffer = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(QuadVertex));
-		s_renderer_data.quad_vertex_buffer_base_ptr = new QuadVertex[s_renderer_data.max_vertices];
+		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		
+		// =====
+		// Quads
+		// =====
+
+		s_renderer_data.quad_vertex_buffers.resize(frames_in_flight);
+		s_renderer_data.quad_vertex_buffer_base_ptrs.resize(frames_in_flight);
+		for (size_t i = 0; i < frames_in_flight; ++i)
+		{
+			s_renderer_data.quad_vertex_buffers[i] = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(QuadVertex));
+			s_renderer_data.quad_vertex_buffer_base_ptrs[i] = new QuadVertex[s_renderer_data.max_vertices];
+		}
 
 		uint32_t* quad_indices = new uint32_t[s_renderer_data.max_indices];
 
@@ -128,12 +139,29 @@ namespace Kablunk
 		s_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, s_renderer_data.max_indices);
 		delete[] quad_indices;
 
-		s_renderer_data.circle_vertex_buffer = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(CircleVertex));
-		s_renderer_data.circle_vertex_buffer_base_ptr = new CircleVertex[s_renderer_data.max_vertices];
+		// =======
+		// Circles
+		// =======
 
-		s_renderer_data.line_vertex_buffer = VertexBuffer::Create(s_renderer_data.max_line_vertices * sizeof(LineVertex));
-		s_renderer_data.line_vertex_buffer_base_ptr = new LineVertex[s_renderer_data.max_lines];
-		s_renderer_data.line_vertex_buffer_ptr = s_renderer_data.line_vertex_buffer_base_ptr;
+		s_renderer_data.circle_vertex_buffers.resize(frames_in_flight);
+		s_renderer_data.circle_vertex_buffer_base_ptrs.resize(frames_in_flight);
+		for (size_t i = 0; i < frames_in_flight; ++i)
+		{
+			s_renderer_data.circle_vertex_buffers[i] = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(CircleVertex));
+			s_renderer_data.circle_vertex_buffer_base_ptrs[i] = new CircleVertex[s_renderer_data.max_vertices];
+		}
+
+		// =====
+		// Lines
+		// =====
+
+		s_renderer_data.line_vertex_buffers.resize(frames_in_flight);
+		s_renderer_data.line_vertex_buffer_base_ptrs.resize(frames_in_flight);
+		for (size_t i = 0; i < frames_in_flight; ++i)
+		{
+			s_renderer_data.line_vertex_buffers[i] = VertexBuffer::Create(s_renderer_data.max_vertices * sizeof(LineVertex));
+			s_renderer_data.line_vertex_buffer_base_ptrs[i] = new LineVertex[s_renderer_data.max_vertices];
+		}
 
 		uint32_t white_texture_data = 0xFFFFFFFF;
 		s_renderer_data.white_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &white_texture_data);
@@ -235,7 +263,6 @@ namespace Kablunk
 		s_renderer_data.circle_material = Material::Create(s_renderer_data.circle_shader);
 		s_renderer_data.line_material = Material::Create(s_renderer_data.line_shader);
 
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
 		s_renderer_data.uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		s_renderer_data.uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
 	}
@@ -245,9 +272,14 @@ namespace Kablunk
 		KB_PROFILE_FUNCTION();
 
 		// Cleanup memory
-		delete[] s_renderer_data.quad_vertex_buffer_base_ptr;
-		delete[] s_renderer_data.circle_vertex_buffer_base_ptr;
-		delete[] s_renderer_data.line_vertex_buffer_base_ptr;
+		for (auto buffer : s_renderer_data.quad_vertex_buffer_base_ptrs)
+			delete[] buffer;
+
+		for (auto buffer : s_renderer_data.circle_vertex_buffer_base_ptrs)
+			delete[] buffer;
+
+		for (auto buffer : s_renderer_data.line_vertex_buffer_base_ptrs)
+			delete[] buffer;
 	}
 
 	IntrusiveRef<Texture2D> Renderer2D::GetWhiteTexture()
@@ -320,12 +352,14 @@ namespace Kablunk
 		s_renderer_data.gpu_time_query.renderer_2D_query = s_renderer_data.render_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline->GetSpecification().render_pass);
 
+		uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+
 		// Quad
 		// calculate data size in bytes
-		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptr);
+		uint32_t data_size = (uint32_t)((uint8_t*)s_renderer_data.quad_vertex_buffer_ptr - (uint8_t*)s_renderer_data.quad_vertex_buffer_base_ptrs[frame_index]);
 		if (data_size)
 		{
-			s_renderer_data.quad_vertex_buffer->SetData(s_renderer_data.quad_vertex_buffer_base_ptr, data_size);
+			s_renderer_data.quad_vertex_buffers[frame_index]->SetData(s_renderer_data.quad_vertex_buffer_base_ptrs[frame_index], data_size);
 
 			// Set Textures
 			auto& textures = s_renderer_data.texture_slots;
@@ -337,30 +371,30 @@ namespace Kablunk
 					s_renderer_data.quad_material->Set("u_Textures", s_renderer_data.white_texture, i);
 			}
 
-			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.quad_material, s_renderer_data.quad_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.quad_index_count);
+			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.quad_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.quad_material, s_renderer_data.quad_vertex_buffers[frame_index], s_renderer_data.quad_index_buffer, glm::mat4{1.0f}, s_renderer_data.quad_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
 
 		// Circle
-		data_size = (uint32_t)((uint8_t*)s_renderer_data.circle_vertex_buffer_ptr - (uint8_t*)s_renderer_data.circle_vertex_buffer_base_ptr);
+		data_size = (uint32_t)((uint8_t*)s_renderer_data.circle_vertex_buffer_ptr - (uint8_t*)s_renderer_data.circle_vertex_buffer_base_ptrs[frame_index]);
 		if (data_size)
 		{
-			s_renderer_data.circle_vertex_buffer->SetData(s_renderer_data.circle_vertex_buffer_base_ptr, data_size);
+			s_renderer_data.circle_vertex_buffers[frame_index]->SetData(s_renderer_data.circle_vertex_buffer_base_ptrs[frame_index], data_size);
 
-			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.circle_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.circle_material, s_renderer_data.circle_vertex_buffer, s_renderer_data.quad_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.circle_index_count);
+			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.circle_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.circle_material, s_renderer_data.circle_vertex_buffers[frame_index], s_renderer_data.quad_index_buffer, glm::mat4{1.0f}, s_renderer_data.circle_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
 
 		// Line
-		data_size = (uint32_t)((uint8_t*)s_renderer_data.line_vertex_buffer_ptr - (uint8_t*)s_renderer_data.line_vertex_buffer_base_ptr);
+		data_size = (uint32_t)((uint8_t*)s_renderer_data.line_vertex_buffer_ptr - (uint8_t*)s_renderer_data.line_vertex_buffer_base_ptrs[frame_index]);
 		if (data_size)
 		{
 			KB_CORE_INFO("rendering lines");
-			s_renderer_data.line_vertex_buffer->SetData(s_renderer_data.line_vertex_buffer_base_ptr, data_size);
+			s_renderer_data.line_vertex_buffers[frame_index]->SetData(s_renderer_data.line_vertex_buffer_base_ptrs[frame_index], data_size);
 
 			RenderCommand::SetLineWidth(s_renderer_data.render_command_buffer, s_renderer_data.line_width);
 
-			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.line_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.line_material, s_renderer_data.line_vertex_buffer, s_renderer_data.line_index_buffer, glm::mat4{ 1.0f }, s_renderer_data.line_index_count);
+			RenderCommand::RenderGeometry(s_renderer_data.render_command_buffer, s_renderer_data.line_pipeline, s_renderer_data.uniform_buffer_set, nullptr, s_renderer_data.line_material, s_renderer_data.line_vertex_buffers[frame_index], s_renderer_data.line_index_buffer, glm::mat4{1.0f}, s_renderer_data.line_index_count);
 			s_renderer_data.Stats.Draw_calls++;
 		}
 
@@ -631,17 +665,19 @@ namespace Kablunk
 
 	void Renderer2D::StartNewBatch()
 	{
+		uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+
 		s_renderer_data.quad_count = 0;
 		s_renderer_data.quad_index_count = 0;
-		s_renderer_data.quad_vertex_buffer_ptr = s_renderer_data.quad_vertex_buffer_base_ptr;
+		s_renderer_data.quad_vertex_buffer_ptr = s_renderer_data.quad_vertex_buffer_base_ptrs[frame_index];
 
 		s_renderer_data.circle_count = 0;
 		s_renderer_data.circle_index_count = 0;
-		s_renderer_data.circle_vertex_buffer_ptr = s_renderer_data.circle_vertex_buffer_base_ptr;
+		s_renderer_data.circle_vertex_buffer_ptr = s_renderer_data.circle_vertex_buffer_base_ptrs[frame_index];
 
 		s_renderer_data.line_count = 0;
 		s_renderer_data.line_index_count = 0;
-		s_renderer_data.line_vertex_buffer_ptr = s_renderer_data.line_vertex_buffer_base_ptr;
+		s_renderer_data.line_vertex_buffer_ptr = s_renderer_data.line_vertex_buffer_base_ptrs[frame_index];
 
 		s_renderer_data.texture_slot_index = 1;
 
