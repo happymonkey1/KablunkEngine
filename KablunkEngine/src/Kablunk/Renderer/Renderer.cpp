@@ -44,11 +44,12 @@ namespace Kablunk
 
 	void Renderer::Shutdown()
 	{
-		RenderCommand::Shutdown();
+		s_shader_dependencies.clear();
+		s_shader_library->
 
 		Renderer2D::Shutdown();
 
-		s_shader_dependencies.clear();
+		RenderCommand::Shutdown();
 	}
 
 	IntrusiveRef<Texture2D> Renderer::GetWhiteTexture()

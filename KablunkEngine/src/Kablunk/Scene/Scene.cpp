@@ -680,6 +680,7 @@ namespace Kablunk
 		scene_renderer->EndScene();
 
 		// Renderer2D
+		// #TODO move to scene renderer
 		if (scene_renderer->GetFinalPassImage())
 		{
 			Renderer2D::BeginScene(camera.GetViewProjectionMatrix());

@@ -280,15 +280,21 @@ namespace Kablunk
 
 	VulkanDevice::~VulkanDevice()
 	{
-		Destroy();
+		if (!m_destroyed)
+			Destroy();
 	}
 
 	void VulkanDevice::Destroy()
 	{
+		if (m_destroyed)
+			return;
+
 		vkDestroyCommandPool(m_device, m_command_pool, nullptr);
 		
 		vkDeviceWaitIdle(m_device);
 		vkDestroyDevice(m_device, nullptr);
+
+		m_destroyed = true;
 	}
 
 	VkCommandBuffer VulkanDevice::GetCommandBuffer(bool begin)

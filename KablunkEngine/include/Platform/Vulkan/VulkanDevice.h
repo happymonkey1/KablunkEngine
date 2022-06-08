@@ -87,6 +87,8 @@ namespace Kablunk
 		VkCommandPool m_command_pool;
 
 		VkQueue m_graphics_queue;
+
+		bool m_destroyed = false;
 	};
 }
 

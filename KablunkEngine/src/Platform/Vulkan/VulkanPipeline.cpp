@@ -59,9 +59,9 @@ namespace Kablunk
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-		RenderCommand::SubmitResourceFree([vk_device, pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
+		RenderCommand::SubmitResourceFree([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
 			{
+				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyPipeline(vk_device, pipeline, nullptr);
 				vkDestroyPipelineLayout(vk_device, pipeline_layout, nullptr);
 			}

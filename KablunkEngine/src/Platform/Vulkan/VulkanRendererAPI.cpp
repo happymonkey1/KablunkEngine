@@ -44,10 +44,11 @@ namespace Kablunk
 
 	static VulkanRendererData* s_renderer_data = nullptr;
 
+	
+
 	VulkanRendererAPI::~VulkanRendererAPI()
 	{
-		VulkanShader::ClearUniformBuffers();
-		delete s_renderer_data;
+		
 	}
 
 	void VulkanRendererAPI::Init()
@@ -138,8 +139,15 @@ namespace Kablunk
 
 	void VulkanRendererAPI::Shutdown()
 	{
-		delete s_renderer_data;
+		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+		vkDeviceWaitIdle(device);
+
+		VulkanShader::ClearUniformBuffers();
+
+		if (s_renderer_data)
+			delete s_renderer_data;
 		
+		s_renderer_data = nullptr;
 	}
 
 	void VulkanRendererAPI::BeginFrame()
