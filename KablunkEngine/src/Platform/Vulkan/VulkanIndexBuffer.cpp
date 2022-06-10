@@ -45,11 +45,11 @@ namespace Kablunk
 				allocator.UnmapMemory(staging_buffer_allocation);
 
 				// Create vertex buffer info
-				VkBufferCreateInfo vertex_buffer_create_info{};
-				vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				vertex_buffer_create_info.size = instance->m_size;
-				vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-				instance->m_vk_allocation = allocator.AllocateBuffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
+				VkBufferCreateInfo index_buffer_create_info{};
+				index_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				index_buffer_create_info.size = instance->m_size;
+				index_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+				instance->m_vk_allocation = allocator.AllocateBuffer(index_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
 
 				// setup vk command to copy data from staging (cpu) to vertex buffer on gpu
 				VkCommandBuffer copy_cmd = device->GetCommandBuffer(true);

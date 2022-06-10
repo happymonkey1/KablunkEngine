@@ -138,6 +138,9 @@ namespace Kablunk
 
 	int VulkanFramebuffer::ReadPixel(uint32_t attachment_index, int x, int y)
 	{
+		KB_CORE_ASSERT(false, "Not implemented in Vulkan!");
+		return 0;
+#if 0
 		KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!");
 
 		IntrusiveRef<Image2D> attachment = m_attachment_images[attachment_index];
@@ -147,6 +150,7 @@ namespace Kablunk
 			return -1;
 
 		return attachment_buffer[y * attachment->GetWidth() + x];
+#endif
 	}
 
 	void VulkanFramebuffer::ClearAttachment(uint32_t attachment_index, int value)

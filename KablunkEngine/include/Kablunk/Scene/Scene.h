@@ -28,7 +28,7 @@ namespace Kablunk
 		float Min_radius = { 1.0f };
 		float Falloff = { 1.0f };
 
-		char Padding[8]{}; // Don't know why this is needed, but sizeof PointLight = 48 bytes makes it work???
+		char Padding[8]{}; 
 	};
 
 	struct LightEnvironmentData

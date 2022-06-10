@@ -23,6 +23,16 @@ namespace Kablunk
 		return res;
 	}
 
+	ShaderLibrary::~ShaderLibrary()
+	{
+		Destroy();
+	}
+
+	void ShaderLibrary::Destroy()
+	{
+		m_shaders.clear();
+	}
+
 	void ShaderLibrary::Add(const std::string& name, const IntrusiveRef<Shader>& shader)
 	{
 		KB_CORE_ASSERT(!Exists(name), "Shader already exists!");

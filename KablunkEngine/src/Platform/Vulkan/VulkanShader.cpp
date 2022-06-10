@@ -129,10 +129,10 @@ namespace Kablunk
 
 	VulkanShader::~VulkanShader()
 	{
-		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 		IntrusiveRef<VulkanShader> instance = this;
-		RenderCommand::SubmitResourceFree([device, instance]() 
+		RenderCommand::SubmitResourceFree([instance]() 
 			{
+				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				for (const auto& pipeline_create_info : instance->m_pipeline_shader_stage_create_infos)
 					vkDestroyShaderModule(device, pipeline_create_info.module, nullptr);
 			}
