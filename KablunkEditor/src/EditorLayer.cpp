@@ -21,7 +21,12 @@
 #include "Kablunk/Project/ProjectSerializer.h"
 
 // #TODO replace when runtime is figured out
-#include "Eclipse/EclipseCore.h"
+//#include "Eclipse/EclipseCore.h"
+
+// #TODO the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS macro must be used somewhere
+//		 to generate a function definition. Currently defined in Sandbox/Core.h and Eclipse/EclipseCore.h.
+//	     Only include one of these files until this issue is resolved.
+#include "Sandbox/Core.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
