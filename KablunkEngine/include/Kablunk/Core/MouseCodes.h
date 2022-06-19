@@ -4,6 +4,12 @@ namespace Kablunk
 {
 	using MouseCode = uint16_t;
 
+	enum class MouseMotionMode : uint8_t
+	{
+		Raw = 0,
+		Normal = 1
+	};
+
 	namespace Mouse
 	{
 		// FROM glfw3.h

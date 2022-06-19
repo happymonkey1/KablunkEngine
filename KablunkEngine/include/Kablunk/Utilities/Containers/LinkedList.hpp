@@ -14,8 +14,8 @@ namespace Kablunk::Utilties
 		public:
 			Iterator(ListNode<T>* ptr) : m_ptr{ ptr } {}
 
-			T& operator*() const { return *m_ptr; }
-			T operator->() { return m_ptr->data; }
+			T& operator*() { return m_ptr->data; }
+			T* operator->() { return &(m_ptr->data); }
 
 			Iterator& operator++()
 			{
@@ -28,7 +28,7 @@ namespace Kablunk::Utilties
 			bool operator==(const Iterator& other) const { return m_ptr == other.m_ptr; }
 			bool operator!=(const Iterator& other) const { return !(*this == other); }
 		private:
-			ListNode<T> m_ptr;
+			ListNode<T>* m_ptr;
 		};
 
 		class ConstIterator

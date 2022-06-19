@@ -25,12 +25,11 @@ namespace Kablunk
 		void SwapBuffers() override;
 		void Shutdown() override;
 
-		IntrusiveRef<VulkanDevice> GetDevice() { return m_device; }
 
 		static IntrusiveRef<VulkanContext> Get() { return s_context; }
-
 		static VkInstance GetInstance() { return s_instance; }
 
+		IntrusiveRef<VulkanDevice> GetDevice() { return m_device; }
 		VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
 	private:
 		void CreateInstance();

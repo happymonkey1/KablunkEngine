@@ -7,6 +7,8 @@
 
 namespace Kablunk {
 
+	
+
 	class Input {
 	public:
 		static bool IsKeyPressed(int keycode);
@@ -15,6 +17,12 @@ namespace Kablunk {
 		static std::pair<float, float> GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
+
+		static void SetCursorMode(CursorMode mode);
+		static CursorMode GetCursorMode();
+
+		static void SetMouseMotionMode(MouseMotionMode mode);
+		static MouseMotionMode GetMouseMotionMode();
 	};
 }
 

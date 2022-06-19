@@ -19,6 +19,26 @@ namespace Kablunk
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
 	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
 
+	struct PointLight
+	{
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		float Multiplier = { 1.0f };
+		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+		float Radius = { 10.0f };
+		float Min_radius = { 1.0f };
+		float Falloff = { 1.0f };
+
+		char Padding[8]{}; 
+	};
+
+	struct LightEnvironmentData
+	{
+		// #TODO Directional Lights
+
+		std::vector<PointLight> point_lights;
+		size_t GetPointLightsSize() const { return point_lights.size() * sizeof(PointLight); }
+	};
+
 	class Scene : public RefCounted
 	{
 	public:
@@ -31,13 +51,17 @@ namespace Kablunk
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 		void DestroyEntity(Entity entity);
 
+		void OnEvent(Event& e);
+
 		void OnStartRuntime();
 		void OnStopRuntime();
 
 		void OnUpdateRuntime(Timestep ts);
 		void OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* camera = nullptr);
+		void OnEventRuntime(Event& e);
 		void OnUpdateEditor(Timestep ts);
 		void OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera);
+		void OnEventEditor(Event& e);
 		void OnViewportResize(uint32_t x, uint32_t y);
 
 		void OnImGuiRender();
@@ -78,9 +102,12 @@ namespace Kablunk
 
 		b2World* m_box2D_world = nullptr;
 
+		LightEnvironmentData m_light_environment;
+
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
+		friend class SceneRenderer;
 
 		// fixed update
 		float last_time = 0.0f;

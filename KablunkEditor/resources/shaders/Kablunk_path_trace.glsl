@@ -208,12 +208,48 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
     return result;
 }
 
+int MAX_BOUNCES = 3
+float PI = 3.141592
+
+vec3 getRandomDirectionHemisphere(in vec3 normal)
+{
+    float rotMat[2][2] = { {normal.y, -normal.x}, {normal.x, normal.y} };
+    float theta = rand() * PI;
+    float cosTheta = cos(theta);
+    float sinTheta = sin(theta);
+
+}
+
+vec3 rayCast(in vec3 origin, in vec3 dir, in int bounces)
+{
+    if (bounces >= MAX_BOUNCES)
+        return vec3(0.0)
+    
+    vec3 indirectDiffuse = vec3(0.0);
+
+    int samples = 16;
+    for (int i = 0; i < samples; ++i)
+    {
+        vec3 sampleVec = ...;
+        vec3 sampleLocalVec = ...;
+
+        indirectDiffuse += dir.dot(sampleLocalVec) * rayCast(origin, sampleLocalVec, bounces + 1);
+    }
+
+    vec3 contribution = (indirectDiffuse / samples) / PI;
+    return contribution;
+}
+
 void main()
 {
     vec3 color = vec3(1.0);
     vec3 normal = normalize(v_Input.Normal);
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
-    vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
+    vec4 directLightContribution = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
-    o_Color = vec4(color, 1.0) * (pLightsColor);
+
+    vec3 indirectLightApprox = rayCast(v_Input.WorldPosition, , 0)
+
+    vec4 indirectLightContribution = vec4(indirectLightApprox, 1.0);
+    o_Color = vec4(color, 1.0) * (directLightContribution + indirectLightContribution);
 }

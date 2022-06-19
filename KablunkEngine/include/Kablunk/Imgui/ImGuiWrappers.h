@@ -282,6 +282,11 @@ namespace Kablunk::UI
 		Property(label, std::to_string(value));
 	}
 
+	static void PropertyReadOnlyUint64(const char* label, const uint64_t& value)
+	{
+		Property(label, std::to_string(value));
+	}
+
 	static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](const char* id_buffer)

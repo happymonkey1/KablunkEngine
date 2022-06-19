@@ -12,12 +12,23 @@
 #include "Kablunk/Renderer/RenderCommandBuffer.h"
 #include "Kablunk/Renderer/Material.h"
 #include "Kablunk/Renderer/UniformBufferSet.h"
+#include "Kablunk/Renderer/StorageBufferSet.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/Mesh.h"
 
 namespace Kablunk
 {
 	struct SceneRendererSpecification
 	{
 		bool swap_chain_target = false;
+	};
+
+	struct CameraDataUB
+	{
+		glm::mat4 view_projection;
+		glm::mat4 projection;
+		glm::mat4 view;
+		glm::vec3 position;
 	};
 
 	struct SceneRendererCamera
@@ -29,6 +40,7 @@ namespace Kablunk
 	struct SceneRendererData
 	{
 		SceneRendererCamera camera;
+		LightEnvironmentData light_environment;
 	};
 
 
@@ -43,6 +55,8 @@ namespace Kablunk
 
 		void BeginScene(const SceneRendererCamera& camera);
 		void EndScene();
+
+		void SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, IntrusiveRef<Material> override_material = nullptr);
 
 		void SetMultiThreaded(bool threaded) { m_use_threads = threaded; }
 		bool GetMultiThreaded() const { return m_use_threads; }
@@ -88,7 +102,22 @@ namespace Kablunk
 		IntrusiveRef<Texture2D> m_bloom_texture;
 		IntrusiveRef<Texture2D> m_bloom_dirt_texture;
 
+		struct TransformVertexData
+		{
+			glm::vec4 MRow[3];
+		};
+		IntrusiveRef<VertexBuffer> m_transform_buffer;
+		TransformVertexData* m_transform_vertex_data = nullptr;
+
 		IntrusiveRef<UniformBufferSet> m_uniform_buffer_set;
+		IntrusiveRef<StorageBufferSet> m_storage_buffer_set;
+
+		struct PointLightUB
+		{
+			uint32_t count{ 0 };
+			glm::vec3 padding{};
+			PointLight point_lights[1024]{};
+		} m_point_lights_ub;
 
 		GPUTimeQueryIndices m_gpu_time_query_indices;
 
@@ -100,6 +129,25 @@ namespace Kablunk
 		bool m_use_threads = false;
 
 		SceneRendererData m_scene_data;
+
+		struct DrawCommandData
+		{
+			IntrusiveRef<MeshData> Mesh;
+			uint32_t Submesh_index;
+			IntrusiveRef<MaterialTable> Material_table;
+			IntrusiveRef<Material> Override_material;
+
+			uint32_t Instance_count = 0;
+			uint32_t Instance_offset = 0;
+			glm::mat4 Transform; // #TODO store separately in a map that maps MeshKey to transforms
+		};
+
+		// #TODO MeshKeys
+		// Mesh Keys store AssetHandles to the mesh data and material handle, as well as the submesh index of the mesh
+		// implement a operator< so they can be sorted into a map
+
+		// #TODO replace with a map that maps MeshKeys to DrawCommandData
+		std::vector<DrawCommandData> m_draw_list;
 
 		friend class VulkanRenderer2D;
 	};

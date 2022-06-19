@@ -76,10 +76,12 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
-		RenderCommand::SubmitResourceFree([vk_framebuffer]()
+		VkRenderPass vk_render_pass = m_render_pass;
+		RenderCommand::SubmitResourceFree([vk_framebuffer, vk_render_pass]()
 			{
 				const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
+				vkDestroyRenderPass(device, vk_render_pass, nullptr);
 			});
 
 		if (!m_specification.existing_framebuffer)
@@ -136,6 +138,9 @@ namespace Kablunk
 
 	int VulkanFramebuffer::ReadPixel(uint32_t attachment_index, int x, int y)
 	{
+		KB_CORE_ASSERT(false, "Not implemented in Vulkan!");
+		return 0;
+#if 0
 		KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!");
 
 		IntrusiveRef<Image2D> attachment = m_attachment_images[attachment_index];
@@ -145,6 +150,7 @@ namespace Kablunk
 			return -1;
 
 		return attachment_buffer[y * attachment->GetWidth() + x];
+#endif
 	}
 
 	void VulkanFramebuffer::ClearAttachment(uint32_t attachment_index, int value)

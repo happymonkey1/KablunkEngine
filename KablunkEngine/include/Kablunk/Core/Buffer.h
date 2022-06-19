@@ -24,8 +24,7 @@ namespace Kablunk
 		}
 		~Buffer()
 		{
-			if (m_data && m_size > 0)
-				delete[] m_data;
+			Release();
 		}
 
 		Buffer& operator=(const Buffer& other)

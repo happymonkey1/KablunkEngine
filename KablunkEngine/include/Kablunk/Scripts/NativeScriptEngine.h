@@ -6,8 +6,11 @@
 #include <iostream>
 #include <string>
 
-/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
-extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string & type_str);
+/* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll 
+ * A function not defined compilation message means the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS
+ * are not used/included. 
+*/
+extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str);
 
 namespace Kablunk
 {
@@ -34,6 +37,9 @@ namespace Kablunk
 	};
 }
 
+// #TODO If these macros are not used, compilation will result in a function definition not found.
+//		 Potentially replace with a static map Map<string, NativeScriptInterface*>
+//       with a function macro that can insert { string script_names : NativeScriptInterface* script }.
 #ifndef KB_DISTRIBUTION
 /* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
 // #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.

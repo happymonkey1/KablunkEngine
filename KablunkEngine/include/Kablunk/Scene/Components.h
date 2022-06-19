@@ -16,6 +16,7 @@
 #include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Mesh.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
 
 #include <filesystem>
 
@@ -75,7 +76,7 @@ namespace Kablunk
 				* glm::scale(glm::mat4{ 1.0f }, Scale);
 		}
 
-		operator glm::mat4 () const { return GetTransform(); }
+		operator glm::mat4() const { return GetTransform(); }
 	};
 
 	struct SpriteRendererComponent
@@ -83,11 +84,16 @@ namespace Kablunk
 		Asset<Texture2D> Texture{ Asset<Texture2D>("") };
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
+		// #TODO should this be entity wide, instead of just on SpriteRenderers?
+		bool Visible = true;
 
 		glm::vec2 GetTextureDimensions() const 
 		{ 
 			return { Texture.Get()->GetWidth(), Texture.Get()->GetHeight() }; 
 		}
+
+		void SetVisible(bool v) { Visible = v; }
+		bool GetVisible() const { return Visible; }
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
@@ -186,6 +192,10 @@ namespace Kablunk
 			if (filepath.empty())
 				return;
 
+			auto annotations = Parser::CPP::FindParserTokens(filepath.string());
+			for (const auto& annot : annotations)
+				KB_CORE_INFO("{}", annot.ToString());
+
 			auto struct_names = Parser::CPP::FindClassAndStructNames(filepath.string(), 1);
 			if (struct_names.empty())
 			{
@@ -203,34 +213,7 @@ namespace Kablunk
 			}
 
 			if (Instance)
-			{
 				Filepath = filepath;
-
-				
-				// #TODO Move to scene OnStartRuntime
-				try
-				{
-					Instance->OnAwake();
-				}
-				catch (std::bad_alloc& e)
-				{
-					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnAwake()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-				catch (std::exception& e)
-				{
-					KB_CORE_ERROR("Generic exception '{0}' occurred during OnAwake()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-				catch (...)
-				{
-					KB_CORE_ERROR("Unkown exception occurred during OnAwake()");
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", Filepath);
-					Instance.reset();
-				}
-			}
 		}
 
 
@@ -240,12 +223,14 @@ namespace Kablunk
 	struct MeshComponent
 	{
 		IntrusiveRef<Kablunk::Mesh> Mesh;
+		IntrusiveRef<Kablunk::MaterialTable> Material_table = IntrusiveRef<Kablunk::MaterialTable>::Create();
 		std::string Filepath = "";
 
 		MeshComponent() = default;
 		MeshComponent(const IntrusiveRef<Kablunk::Mesh>& mesh)
 			: Mesh{ mesh } { }
-		MeshComponent(const MeshComponent&) = default;
+		MeshComponent(const MeshComponent& other)
+			: Mesh{ other.Mesh }, Material_table{ IntrusiveRef<Kablunk::MaterialTable>::Create(other.Material_table) } {};
 
 		void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 		{

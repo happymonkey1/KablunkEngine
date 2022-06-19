@@ -44,18 +44,21 @@ namespace Kablunk
 
 	static VulkanRendererData* s_renderer_data = nullptr;
 
+	
+
 	VulkanRendererAPI::~VulkanRendererAPI()
 	{
-		VulkanShader::ClearUniformBuffers();
-		delete s_renderer_data;
+		
 	}
 
 	void VulkanRendererAPI::Init()
 	{
+		//Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_pbr_static.glsl");
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Circle.glsl");
 		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Quad.glsl");
+		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Line.glsl");
 
 		Renderer::GetShaderLibrary()->Load("resources/shaders/scene_composite.glsl");
 
@@ -87,6 +90,7 @@ namespace Kablunk
 				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 				pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 				pool_info.maxSets = 100000;
+				// #TODO Why are we using IM_ARRAYSIZE here?
 				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 				pool_info.pPoolSizes = pool_sizes;
 				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -135,8 +139,15 @@ namespace Kablunk
 
 	void VulkanRendererAPI::Shutdown()
 	{
-		delete s_renderer_data;
+		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+		vkDeviceWaitIdle(device);
+
+		VulkanShader::ClearUniformBuffers();
+
+		if (s_renderer_data)
+			delete s_renderer_data;
 		
+		s_renderer_data = nullptr;
 	}
 
 	void VulkanRendererAPI::BeginFrame()
@@ -195,6 +206,144 @@ namespace Kablunk
 			});
 	}
 
+	void VulkanRendererAPI::RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
+	{
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material_table, transform_buffer, transform_offset, instance_count]()
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
+				IntrusiveRef<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
+				VkDeviceSize vertex_offsets[1] = { 0 };
+				vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
+
+				// #TODO transform buffer
+				IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
+				VkDeviceSize transform_offsets[1] = { transform_offset };
+				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
+
+				IntrusiveRef<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+				VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+				std::vector<std::vector<VkWriteDescriptorSet>> write_cescriptors;
+
+				const auto& mesh_asset_submeshes = mesh_data->GetSubmeshes();
+				const Submesh& submesh = mesh_asset_submeshes[submesh_index];
+				const auto& mesh_material_table = mesh->GetMaterials();
+				uint32_t material_count = mesh_material_table->GetMaterialCount();
+				IntrusiveRef<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? 
+					material_table->GetMaterial(submesh.Material_index) : mesh_material_table->GetMaterial(submesh.Material_index);
+				IntrusiveRef<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
+				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+				VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
+				VkPipelineLayout pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
+				vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+				// #TODO line width
+
+				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+				if (descriptor_set)
+					vkCmdBindDescriptorSets(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
+
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+				if (uniform_storage_buffer)
+				{
+					vkCmdPushConstants(
+						vk_command_buffer, 
+						pipeline_layout, 
+						VK_SHADER_STAGE_FRAGMENT_BIT, 
+						0, 
+						uniform_storage_buffer.size(), 
+						uniform_storage_buffer.get()
+					);
+				}
+
+				// #TODO submeshes
+
+				// #TODO INSTANCING
+				vkCmdDrawIndexed(
+					vk_command_buffer, 
+					submesh.IndexCount, 
+					instance_count, 
+					submesh.BaseIndex, 
+					submesh.BaseVertex, 
+					0
+				);
+
+				//push_constant_buffer.Release();
+			}
+		);
+	}
+
+	void VulkanRendererAPI::RenderMeshWithMaterial(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms)
+	{
+		KB_CORE_ASSERT(mesh, "Mesh is null!");
+		KB_CORE_ASSERT(mesh->GetMeshData(), "MeshData is null!");
+
+		// Why are we copying the uniform buffer to a new one?
+		Buffer push_constant_buffer;
+		if (additional_uniforms.size() > 0)
+		{
+			push_constant_buffer.Allocate(additional_uniforms.size());
+			push_constant_buffer.Write(additional_uniforms.get(), additional_uniforms.size());
+		}
+
+		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, vulkan_material, transform_buffer, transform_offset, instance_count, push_constant_buffer]()
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
+				IntrusiveRef<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
+				VkDeviceSize vertex_offsets[1] = { 0 };
+				vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
+
+				IntrusiveRef<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
+				VkDeviceSize transform_offsets[1] = { 0 };
+				vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
+
+				IntrusiveRef<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+				VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+				VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
+				VkPipelineLayout pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
+				vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+				// #TODO line width
+
+				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+				if (descriptor_set)
+					vkCmdBindDescriptorSets(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
+
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+				if (uniform_storage_buffer)
+					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniform_storage_buffer.size(), uniform_storage_buffer.get());
+
+				// #TODO submeshes
+
+				if (push_constant_buffer.size() > 0)
+					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, push_constant_buffer.size(), push_constant_buffer.get());
+
+				vkCmdDrawIndexed(vk_command_buffer, mesh_data->GetIndicies().size(), instance_count, 0, 0, 0);
+
+				//push_constant_buffer.Release();
+			}
+		);
+	}
+
 	void VulkanRendererAPI::SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
 	{
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
@@ -233,6 +382,46 @@ namespace Kablunk
 				vkCmdDrawIndexed(command_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
 			});
 
+	}
+
+	void VulkanRendererAPI::RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
+	{
+		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
+			{
+				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+
+				VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
+
+				IntrusiveRef<VulkanVertexBuffer> vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
+				VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+				// WTF is this for?
+				VkDeviceSize offsets[1] = { 0 };
+
+				vkCmdBindVertexBuffers(vk_cmd_buffer, 0, 1, &vk_vertex_buffer, offsets);
+
+				IntrusiveRef<VulkanIndexBuffer> vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
+				VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+				vkCmdBindIndexBuffer(vk_cmd_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+				VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+				vkCmdBindPipeline(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
+
+				VkDescriptorSet vk_descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+				if (vk_descriptor_set)
+					vkCmdBindDescriptorSets(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout, 0, 1, &vk_descriptor_set, 0, nullptr);
+
+				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+
+				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
+				vkCmdDrawIndexed(vk_cmd_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
+			});
 	}
 
 	void VulkanRendererAPI::RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count /*= 0*/)
@@ -279,6 +468,16 @@ namespace Kablunk
 			});
 	}
 
+	void VulkanRendererAPI::SetLineWidth(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width)
+	{
+		RenderCommand::Submit([width = line_width, render_cmd_buffer = render_command_buffer]()
+		{
+			uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+			vkCmdSetLineWidth(vk_cmd_buffer, width);
+		});
+	}
+
 	void VulkanRendererAPI::WaitAndRender()
 	{
 		RenderCommandQueue& command_queue = RenderCommand::GetRenderCommandQueue();
@@ -307,11 +506,12 @@ namespace Kablunk
 			{
 				for (auto&& [binding, shader_uniform_buffer] : shader_descriptor_sets[0].uniform_buffers)
 				{
-					auto& writeDescriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
-					writeDescriptors.resize(framesInFlight);
-					for (uint32_t frame = 0; frame < framesInFlight; frame++)
+					auto& write_descriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
+					write_descriptors.resize(framesInFlight);
+					for (uint32_t frame = 0; frame < framesInFlight; ++frame)
 					{
-						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); // set = 0 for now
+						// set = 0 for now
+						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); 
 
 						VkWriteDescriptorSet write_descriptor_set = {};
 						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -319,7 +519,7 @@ namespace Kablunk
 						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 						write_descriptor_set.pBufferInfo = &uniform_buffer->GetDescriptorBufferInfo();
 						write_descriptor_set.dstBinding = uniform_buffer->GetBinding();
-						writeDescriptors[frame].push_back(write_descriptor_set);
+						write_descriptors[frame].push_back(write_descriptor_set);
 					}
 				}
 
@@ -381,8 +581,8 @@ namespace Kablunk
 			{
 				const auto& storage_buffer_write_descriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
 
-				const uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
-				for (uint32_t frame = 0; frame < framesInFlight; frame++)
+				const uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+				for (uint32_t frame = 0; frame < frames_in_flight; frame++)
 				{
 					write_description[frame].reserve(write_description[frame].size() + storage_buffer_write_descriptors[frame].size());
 					write_description[frame].insert(write_description[frame].end(), storage_buffer_write_descriptors[frame].begin(), storage_buffer_write_descriptors[frame].end());

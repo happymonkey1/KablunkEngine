@@ -373,6 +373,60 @@ namespace Kablunk
 		return updated;
 	}
 
+	template <typename ComponentT>
+	void DrawMaterialTable(IntrusiveRef<MaterialTable> mesh_material_table)
+	{
+		if (UI::BeginTreeNode("Materials"))
+		{
+
+			for (size_t i = 0; i < mesh_material_table->GetMaterialCount(); i++)
+			{
+				UI::BeginProperties();
+
+				if (i == mesh_material_table->GetMaterialCount())
+					ImGui::Separator();
+
+
+				std::string label = fmt::format("[Material {0}]", i);
+
+				std::string id = fmt::format("{0}-{1}", label, i);
+				ImGui::PushID(id.c_str());
+
+				IntrusiveRef<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+				std::string mesh_material_name = mesh_material_asset->GetMaterial()->GetName();
+				if (mesh_material_name.empty())
+					mesh_material_name = "Unnamed Material";
+
+				UI::PushItemDisabled();
+				UI::Property("Name", mesh_material_name);
+				UI::PopItemDisabled();
+
+				if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+				{
+					// #TODO check if this needs to be set on render thread
+					float& ambient_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.AmbientStrength");
+					if (UI::Property("Ambient Strength", ambient_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.AmbientStrength", ambient_strength);
+
+					float& diffuse_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.DiffuseStrength");
+					if (UI::Property("Diffuse Strength", diffuse_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.DiffuseStrength", diffuse_strength);
+
+					float& specular_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.SpecularStrength");
+					if (UI::Property("Specular Strength", specular_strength, 0.01f, 0.0f, 1.0f))
+						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.SpecularStrength", specular_strength);
+				}
+
+
+				ImGui::PopID();
+
+				UI::EndProperties();
+			}
+
+			UI::EndTreeNode();
+		}
+	}
+
 	template <typename ComponentType, typename UIFunction>
 	static void DrawComponent(const std::string& label, Entity entity, UIFunction UIDrawFunction)
 	{
@@ -550,29 +604,48 @@ namespace Kablunk
 
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 			{
-				auto& camera = component.Camera;
+				SceneCamera& camera = component.Camera;
 				UI::BeginProperties();
 
 				UI::Property("Primary", &component.Primary);
 
 				const char* projection_type_strings[] = { "Perspective", "Orthographic" };
 
-				UI::PropertyDropdown("Projection Type", projection_type_strings, 2, camera.GetProjectionType());
+				SceneCamera::ProjectionType proj_type = camera.GetProjectionType();
+				if (UI::PropertyDropdown("Projection Type", projection_type_strings, 2, proj_type))
+					camera.SetProjectionType(proj_type);
 				
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
+					bool changed = false;
 					float fov = glm::degrees(camera.GetPerspectiveVerticalFOV());
 					if (UI::Property("FOV", fov, 1.0f, 1.0f, 200.0f))
 						camera.SetPerspectiveVerticalFOV(glm::radians(fov));
-					UI::Property("Near Clip", camera.GetPerspectiveNearClip(), 0.1f, 0.001f, 10000.0f);
-					UI::Property("Far Clip", camera.GetPerspectiveFarClip(), 0.1f, 0.001f, 10000.0f);
+
+					float near_clip = camera.GetPerspectiveNearClip();
+					if (UI::Property("Near Clip", near_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetPerspectiveNearClip(near_clip);
+
+					float far_clip = camera.GetPerspectiveFarClip();
+					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetPerspectiveFarClip(far_clip);
 				}
 
 				if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 				{
-					UI::Property("Size", camera.GetOrthographicSize(), 1.0f, 1.0f, 200.0f);
-					UI::Property("Near Clip", camera.GetOrthographicNearClip(), 0.1f, 0.001f, 10000.0f);
-					UI::Property("Far Clip", camera.GetOrthographicFarClip(), 0.1f, 0.001f, 10000.0f);
+					bool changed = false;
+
+					float ortho_size = camera.GetOrthographicSize();
+					if (UI::Property("Size", ortho_size, 1.0f, 1.0f, 200.0f))
+						camera.SetOrthographicSize(ortho_size);
+					
+					float near_clip = camera.GetOrthographicNearClip();
+					if (UI::Property("Near Clip", near_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetOrthographicNearClip(near_clip);
+
+					float far_clip = camera.GetOrthographicFarClip();
+					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
+						camera.SetOrthographicFarClip(far_clip);
 				}
 
 				UI::EndProperties();
@@ -608,6 +681,8 @@ namespace Kablunk
 					}
 					ImGui::EndDragDropTarget();
 				}
+
+				UI::Property("Visible", &component.Visible);
 
 #if 0
 				if (m_display_debug_properties)
@@ -729,7 +804,7 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<MeshComponent>("Mesh", entity, [&](auto& component)
+		DrawComponent<MeshComponent>("Mesh", entity, [&](MeshComponent& component)
 			{
 				const char* add_or_change_button_text;
 				if (!component.Mesh)
@@ -744,10 +819,24 @@ namespace Kablunk
 						component.LoadMeshFromFileEditor(filepath, entity);
 				}
 
-				ImGui::Text("File:");
-				ImGui::PushStyleColor(ImGuiCol_Text, { 0.494f, 0.494f, 0.494f, 1.0f });
-				ImGui::TextWrapped(component.Filepath.c_str());
-				ImGui::PopStyleColor();
+				UI::BeginProperties();
+
+				UI::PushItemDisabled();
+				UI::Property("Filename:", component.Filepath.c_str());
+				UI::PopItemDisabled();
+
+				IntrusiveRef<Mesh> mesh = component.Mesh;
+				if (mesh)
+				{
+					for (uint32_t submesh_index : mesh->GetSubmeshes())
+					{
+						UI::Property("Submesh Index", submesh_index);
+					}
+
+					DrawMaterialTable<MeshComponent>(mesh->GetMaterials());
+				}
+
+				UI::EndProperties();
 			});
 
 		DrawComponent<PointLightComponent>("Point Light", entity, [&](auto& component)

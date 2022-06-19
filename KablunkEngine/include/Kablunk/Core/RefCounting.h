@@ -8,6 +8,9 @@
 
 namespace Kablunk
 {
+
+	// #TODO deprecate
+	
 	template <typename T>
 	using Ref = std::shared_ptr<T>;
 
@@ -16,6 +19,8 @@ namespace Kablunk
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
+
+	// ================
 
 	class RefCounted
 	{

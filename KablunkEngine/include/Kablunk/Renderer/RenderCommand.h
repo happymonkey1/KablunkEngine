@@ -6,6 +6,9 @@
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Kablunk/Renderer/StorageBufferSet.h"
+#include "Kablunk/Renderer/Mesh.h"
+#include "Kablunk/Renderer/MaterialAsset.h"
+
 
 namespace Kablunk 
 {
@@ -62,6 +65,20 @@ namespace Kablunk
 			s_renderer_api->SetWireframeMode(draw_wireframe);
 		}
 
+		// ======
+		// Meshes
+		// ======
+
+		static void RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
+		{
+			s_renderer_api->RenderMesh(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material_table, transform_buffer, transform_offset, instance_count);
+		}
+
+		static void RenderMeshWithMaterial(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms)
+		{
+			s_renderer_api->RenderMeshWithMaterial(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material, transform_buffer, transform_offset, instance_count, additional_uniforms);
+		}
+
 		static void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<Material> material)
 		{
 			s_renderer_api->SubmitFullscreenQuad(render_command_buffer, pipeline, uniform_buffer_set, nullptr, material);
@@ -72,9 +89,19 @@ namespace Kablunk
 			s_renderer_api->SubmitFullscreenQuad(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material);
 		}
 
+		static void RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
+		{
+			s_renderer_api->RenderQuad(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material, transform);
+		}
+
 		static void RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0)
 		{
 			s_renderer_api->RenderGeometry(render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, material, vertex_buffer, index_buffer, transform, index_count);
+		}
+
+		static void SetLineWidth(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width)
+		{
+			s_renderer_api->SetLineWidth(render_command_buffer, line_width);
 		}
 
 		static void BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false)

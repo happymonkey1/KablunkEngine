@@ -131,13 +131,21 @@ namespace Kablunk
 				cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 				cmd_buf_info.pNext = nullptr;
 
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
-				if (vkBeginCommandBuffer(command_buffer, &cmd_buf_info) != VK_SUCCESS)
+				VkCommandBuffer vk_command_buffer = nullptr;
+				if (instance->m_owned_by_swapchain)
+				{
+					VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
+					vk_command_buffer = swap_chain.GetDrawCommandBuffer(frame_index);
+				}
+				else
+					vk_command_buffer = instance->m_command_buffers[frame_index];
+				
+				if (vkBeginCommandBuffer(vk_command_buffer, &cmd_buf_info) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to begin command buffer");
 
 				// Timestamp query
-				vkCmdResetQueryPool(command_buffer, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_query_count);
-				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 0);
+				vkCmdResetQueryPool(vk_command_buffer, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_query_count);
+				vkCmdWriteTimestamp(vk_command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 0);
 
 				// #TODO Pipeline stats query
 			});

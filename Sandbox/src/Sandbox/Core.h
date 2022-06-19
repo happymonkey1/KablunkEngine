@@ -1,14 +1,13 @@
 #ifndef SANDBOX_CORE_H
 #define SANDBOX_CORE_H
 
-#include "Sandbox/TestScript.h"
-#include "Sandbox/CameraController.h"
-#include "Sandbox/ReflectionTest.h"
 // #TODO Remove
 
-
+#include <Kablunk.h>
 //REGISTER_NATIVE_SCRIPT(CameraController);
 
+BEGIN_REGISTER_NATIVE_SCRIPTS()
+END_REGISTER_NATIVE_SCRIPTS()
 
 
 #endif

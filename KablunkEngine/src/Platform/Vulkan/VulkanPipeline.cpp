@@ -59,7 +59,13 @@ namespace Kablunk
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		KB_CORE_ERROR("Pipeline leaking!");
+		RenderCommand::SubmitResourceFree([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
+			{
+				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+				vkDestroyPipeline(vk_device, pipeline, nullptr);
+				vkDestroyPipelineLayout(vk_device, pipeline_layout, nullptr);
+			}
+		);
 	}
 
 	void VulkanPipeline::Invalidate()
@@ -130,12 +136,13 @@ namespace Kablunk
 		VkPipelineRasterizationStateCreateInfo raster_state = {};
 		raster_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		raster_state.polygonMode = m_specification.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-		raster_state.cullMode = m_specification.backface_culling? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
+		raster_state.cullMode = m_specification.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
 		raster_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		raster_state.depthClampEnable = VK_FALSE;
 		raster_state.rasterizerDiscardEnable = VK_FALSE;
 		raster_state.depthBiasEnable = VK_FALSE;
-		raster_state.lineWidth = 1.0f; // #TODO make dynamic when lines are implemented!
+		// #TODO make dynamic when lines are implemented!
+		raster_state.lineWidth = 1.0f; 
 
 		// Color blend state describes how blend factors are calculated (if used)
 		// We need one blend attachment state per color attachment (even if blending is not used)
@@ -266,6 +273,7 @@ namespace Kablunk
 
 		// Vertex input descriptor
 		BufferLayout& layout = m_specification.layout;
+		BufferLayout& instance_layout = m_specification.instance_layout;
 
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_desc;
 
@@ -274,13 +282,30 @@ namespace Kablunk
 		vertex_input_binding.stride = layout.GetStride();
 		vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
+		if (!instance_layout.GetElements().empty())
+		{
+			VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_desc.emplace_back();
+			instance_input_binding.binding = 1;
+			instance_input_binding.stride = instance_layout.GetStride();
+			instance_input_binding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+		}
+
 		// Input attribute bindings describe shader attribute locations and memory layouts
-		std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.GetElements().size());
+		std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.GetElements().size() + instance_layout.GetElements().size());
 
 		uint32_t location = 0;
 		for (auto element : layout)
 		{
 			vertex_input_attributes[location].binding = 0;
+			vertex_input_attributes[location].location = location;
+			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
+			vertex_input_attributes[location].offset = element.Offset;
+			location++;
+		}
+
+		for (auto element : instance_layout)
+		{
+			vertex_input_attributes[location].binding = 1;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
 			vertex_input_attributes[location].offset = element.Offset;

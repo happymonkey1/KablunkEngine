@@ -66,6 +66,8 @@ namespace Kablunk
 
 		FramebufferPool::Get()->GetAll().clear();
 
+		m_layer_stack.Destroy();
+
 		RenderCommand::WaitAndRender();
 
 		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
@@ -75,7 +77,6 @@ namespace Kablunk
 		}
 
 		Renderer::Shutdown();
-		//Renderer2D::Shutdown();
 
 		NativeScriptEngine::Shutdown();
 	}

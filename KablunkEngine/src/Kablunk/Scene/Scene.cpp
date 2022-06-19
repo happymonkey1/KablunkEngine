@@ -60,7 +60,7 @@ namespace Kablunk
 		for (auto e : view)
 		{
 			uuid::uuid64 UUID = src.get<IdComponent>(e).Id;
-			entt::entity dst_entt_id = entity_map.at(UUID);
+			entt::entity dst_entt_id = entity_map.at(UUID).GetHandle();
 
 
 			auto& component = src.get<ComponentT>(e);
@@ -190,7 +190,15 @@ namespace Kablunk
 		if (entity.HasComponent<CSharpScriptComponent>())
 			CSharpScriptEngine::OnScriptComponentDestroyed(m_scene_id, entity.GetUUID());
 
+		if (entity.HasComponent<NativeScriptComponent>())
+			entity.GetComponent<NativeScriptComponent>().Instance->OnDestroy();
+
 		m_registry.destroy(entity);
+	}
+
+	void Scene::OnEvent(Event& e)
+	{
+
 	}
 
 	void Scene::OnStartRuntime()
@@ -282,6 +290,7 @@ namespace Kablunk
 			{
 				Entity entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
+				nsc.Instance->BindEntity(entity);
 
 				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
 
@@ -454,10 +463,12 @@ namespace Kablunk
 	void Scene::OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* editor_cam /*= nullptr*/)
 	{
 		Camera*		main_camera{ nullptr };
+		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
 		glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
 		if (editor_cam)
 		{
 			main_camera = editor_cam;
+			main_camera_proj = editor_cam->GetProjection();
 			main_camera_transform = editor_cam->GetViewMatrix();
 		}
 		else
@@ -471,7 +482,8 @@ namespace Kablunk
 				if (camera.Primary)
 				{
 					main_camera = &camera.Camera;
-					main_camera_transform = transform.GetTransform();
+					main_camera_proj = main_camera->GetProjection();
+					main_camera_transform = glm::inverse(transform.GetTransform());
 					break;
 				}
 			}
@@ -480,35 +492,38 @@ namespace Kablunk
 		if (!main_camera)
 			return;
 
+		// Lights
+		{
+			m_light_environment = LightEnvironmentData{};
 
-		//scene_renderer->SetScene();
+			// Point Lights
+			{
+				auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
+				m_light_environment.point_lights.resize(point_lights.size());
+				size_t point_light_index = 0;
+				for (auto id : point_lights)
+				{
+					auto entity = Entity{ id, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+					PointLight plight_data = {
+						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+						plight_comp.Multiplier,
+						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+						plight_comp.Radius,
+						plight_comp.Min_radius,
+						plight_comp.Falloff
+					};
+
+					m_light_environment.point_lights[point_light_index++] = plight_data;
+				}
+			}
+		}
+
 		scene_renderer->BeginScene({ *main_camera, main_camera_transform });
 
 		{
-			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-			std::vector<PointLight> point_lights_data = {};
-			uint32_t point_light_count = 0;
-			for (auto id : point_lights)
-			{
-				auto entity = Entity{ id, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& plight_comp = entity.GetComponent<PointLightComponent>();
-
-				PointLight plight_data = {
-					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
-					plight_comp.Multiplier,
-					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
-					plight_comp.Radius,
-					plight_comp.Min_radius,
-					plight_comp.Falloff
-				};
-
-				point_lights_data.push_back(plight_data);
-				point_light_count++;
-			}
-
-			Renderer::SubmitPointLights(point_lights_data, point_light_count);
-
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
 			for (auto entity_id : mesh_group)
 			{
@@ -516,15 +531,16 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, transform);
 			}
 		}
+
 		scene_renderer->EndScene();
 
 		// Renderer2D
 		if (scene_renderer->GetFinalPassImage())
 		{
-			Renderer2D::BeginScene(*main_camera, main_camera_transform);
+			Renderer2D::BeginScene(main_camera_proj * main_camera_transform);
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
 			std::map<entt::entity, bool> already_rendered_entites;
@@ -535,16 +551,24 @@ namespace Kablunk
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 				auto& src = entity.GetComponent<SpriteRendererComponent>();
 
-				if (nsc.Instance)
-					nsc.Instance->OnRender2D(src);
+				if (!src.Visible)
+					continue;
 
-				already_rendered_entites[e] = true;
+				if (nsc.Instance)
+					already_rendered_entites[e] = nsc.Instance->OnRender2D(src);
 			}
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
+			{
+				Entity kb_entity = Entity{ entity, this };
+				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
+				if (!src.Visible)
+					continue;
+
 				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
 					Renderer2D::DrawSprite({ entity, this });
+			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)
@@ -554,6 +578,18 @@ namespace Kablunk
 			}
 
 			Renderer2D::EndScene();
+		}
+	}
+
+	void Scene::OnEventRuntime(Event& e)
+	{
+		auto view = m_registry.view<NativeScriptComponent>();
+		for (auto id : view)
+		{
+			Entity entity = Entity{ id, this };
+			auto& nsc = entity.GetComponent<NativeScriptComponent>();
+			if (nsc.Instance)
+				nsc.Instance->OnEvent(e);
 		}
 	}
 
@@ -595,35 +631,40 @@ namespace Kablunk
 
 	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
 	{
+
+		// Lights
+		// #TODO move to scene renderer?
+		{
+			m_light_environment = LightEnvironmentData{};
+
+			// Point Lights
+			{
+				auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
+				m_light_environment.point_lights.resize(point_lights.size());
+				size_t point_light_index = 0;
+				for (auto id : point_lights)
+				{
+					auto entity = Entity{ id, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					auto& plight_comp = entity.GetComponent<PointLightComponent>();
+
+					PointLight plight_data = {
+						transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
+						plight_comp.Multiplier,
+						plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
+						plight_comp.Radius,
+						plight_comp.Min_radius,
+						plight_comp.Falloff
+					};
+
+					m_light_environment.point_lights[point_light_index++] = plight_data;
+				}
+			}
+		}
+
 		scene_renderer->BeginScene({ camera, camera.GetViewMatrix() });
 
 		{
-			//Renderer::BeginScene(camera);
-
-			auto point_lights = m_registry.view<TransformComponent, PointLightComponent>();
-			std::vector<PointLight> point_lights_data = {};
-			uint32_t point_light_count = 0;
-			for (auto id : point_lights)
-			{
-				auto entity = Entity{ id, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& plight_comp = entity.GetComponent<PointLightComponent>();
-
-				PointLight plight_data = {
-					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
-					plight_comp.Multiplier,
-					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
-					plight_comp.Radius,
-					plight_comp.Min_radius,
-					plight_comp.Falloff
-				};
-
-				point_lights_data.push_back(plight_data);
-				point_light_count++;
-			}
-
-			Renderer::SubmitPointLights(point_lights_data, point_light_count);
-
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
 			for (auto entity_id : mesh_group)
 			{
@@ -631,7 +672,7 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					Renderer::SubmitMesh(mesh_comp.Mesh, transform);
+					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, transform);
 			}
 
 			//Renderer::EndScene();
@@ -639,30 +680,23 @@ namespace Kablunk
 		scene_renderer->EndScene();
 
 		// Renderer2D
+		// #TODO move to scene renderer
 		if (scene_renderer->GetFinalPassImage())
 		{
-			Renderer2D::BeginScene(camera, camera.GetViewMatrix());
+			Renderer2D::BeginScene(camera.GetViewProjectionMatrix());
 			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
 
-			// Draw entities who have native script components that override 2D rendering
-			std::map<entt::entity, bool> already_rendered_entites;
-			/*auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
-			for (auto e : nsc_sprite_override_view)
-			{
-				Entity entity = { e, this };
-				auto& nsc = entity.GetComponent<NativeScriptComponent>();
-				auto& src = entity.GetComponent<SpriteRendererComponent>();
-				if (nsc.Instance)
-					nsc.Instance->OnRender2D(src);
-
-				already_rendered_entites[e] = true;
-			}*/
 
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
-				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
+			{
+				Entity kb_entity = Entity{ entity, this };
+				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
+
+				if (src.Visible)
 					Renderer2D::DrawSprite({ entity, this });
+			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
 			for (auto entity : circle_view)

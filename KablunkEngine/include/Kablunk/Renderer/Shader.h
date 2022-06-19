@@ -102,7 +102,9 @@ namespace Kablunk {
 	{
 	public: 
 		ShaderLibrary() = default;
-		~ShaderLibrary() = default;
+		~ShaderLibrary();
+
+		void Destroy();
 
 		void Add(const IntrusiveRef<Shader>& shader);
 		void Add(const std::string& name, const IntrusiveRef<Shader>& shader);

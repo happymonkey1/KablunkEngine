@@ -30,11 +30,11 @@ namespace Kablunk
 
 		VkBuffer GetVkBuffer() { return m_vk_buffer; }
 	private:
-		VkBuffer m_vk_buffer;
+		VkBuffer m_vk_buffer = nullptr;
 		Buffer m_local_data;
 		uint32_t m_size = 0;
 
-		VmaAllocation m_vk_allocation;
+		VmaAllocation m_vk_allocation = nullptr;
 	};
 }
 

@@ -4,6 +4,14 @@ namespace Kablunk
 {
 	using KeyCode = uint16_t;
 
+	// #TODO probably should be moved elsewhere
+	enum class CursorMode : uint8_t
+	{
+		Normal = 0,
+		Hidden = 1,
+		Locked = 2
+	};
+
 	namespace Key
 	{
 		enum : KeyCode
