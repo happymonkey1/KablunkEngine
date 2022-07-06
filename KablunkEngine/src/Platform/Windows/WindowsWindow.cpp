@@ -48,7 +48,6 @@ namespace Kablunk {
         m_data.Width = props.Width;
         m_data.Height = props.Height;
 		m_data.Fullscreen = props.Fullscreen;
-
         
         KB_CORE_INFO("Creating Window {0} ({1}x{2}), fullscreen={3}", props.Title, props.Width, props.Height, props.Fullscreen);
         
@@ -64,9 +63,9 @@ namespace Kablunk {
 			if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
 			{
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+				// #TODO resizing at runtime
 				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 			}
-			
 
             glfwSetErrorCallback(GLFWErrorCallback);
         }

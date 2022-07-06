@@ -168,7 +168,6 @@ namespace Kablunk
 				vkResetDescriptorPool(vk_device, s_renderer_data->descriptor_pools[buffer_index], 0);
 				memset(s_renderer_data->descriptor_pool_allocation_count.data(), 0, s_renderer_data->descriptor_pool_allocation_count.size() * sizeof(uint32_t));
 			});
-
 	}
 
 	void VulkanRendererAPI::EndFrame()

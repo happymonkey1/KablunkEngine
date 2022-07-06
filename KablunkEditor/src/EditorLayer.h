@@ -29,12 +29,12 @@ namespace Kablunk
 
 		bool CanPickFromViewport() const;
 
-		void CreateProject(std::filesystem::path project_path);
+		void CreateProject(std::filesystem::path project_path, bool create_native_script_project);
 		void OpenProject();
 		void OpenProject(const std::string& filepath);
 		void SaveProject();
 		void CloseProject(bool unload = true);
-		void ReplaceToken(const char* token, std::string& data, const std::string& new_token);
+		void ReplaceToken(const char* token, std::string& data, const std::string& new_token) const;
 		void UpdateProjectEngineFiles();
 
 		void NewScene();
@@ -43,6 +43,8 @@ namespace Kablunk
 		void SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
+
+		void CreateNewNativeScript(const std::string& script_name) const;
 
 		void ViewportClickSelectEntity();
 

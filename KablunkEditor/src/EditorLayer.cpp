@@ -405,6 +405,10 @@ namespace Kablunk
 			
 			UI::PropertyReadOnlyChars("Project Location", s_project_filepath_buffer);
 		
+			// #TODO dropdown selector
+			bool create_native_script_project = true;
+			UI::Property("Native Project?", &create_native_script_project);
+
 			auto px = ImGui::GetColumnWidth() - button_size.x / 2.0f - style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1;
 			ImGui::NextColumn();
 			UI::ShiftCursorX(px);
@@ -435,7 +439,7 @@ namespace Kablunk
 			ImGui::PushFont(bold_font);
 			if (ImGui::Button("Create"))
 			{
-				CreateProject(full_project_path);
+				CreateProject(full_project_path, create_native_script_project);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -921,12 +925,40 @@ namespace Kablunk
 		}
 	}
 
+	void EditorLayer::CreateNewNativeScript(const std::string& script_name) const
+	{
+		if (!Project::GetActive())
+		{
+			KB_CORE_WARN("Trying to create new script without an active project!");
+			return;
+		}
+
+		// #TODO check if this project is actually a native script!
+
+		std::filesystem::path project_path = Project::GetActive()->GetProjectDirectory();
+		std::filesystem::path resources_path = std::filesystem::path{ s_kablunk_install_path } / "KablunkEditor" / "resources";
+		std::filesystem::copy(resources_path / "new_script_template/native_script_template.h", project_path / "include/native_script_template.h");
+
+		// Parse script template and replace symbols
+		std::ifstream stream{ project_path / "include/native_script_template.h" };
+		std::stringstream ss;
+		ss << stream.rdbuf();
+
+		std::string data = ss.str();
+		ReplaceToken("$SCRIPT_NAME$", data, script_name);
+		std::replace(data.begin(), data.end(), '\\', '/');
+
+		std::ofstream ostream{ project_path / "include/native_script_template.h" };
+		ostream << data;
+		ostream.close();
+	}
+
 	bool EditorLayer::CanPickFromViewport() const
 	{
 		return m_viewport_hovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
 	}
 
-	void EditorLayer::CreateProject(std::filesystem::path project_path)
+	void EditorLayer::CreateProject(std::filesystem::path project_path, bool create_native_script_project)
 	{
 		if (!FileSystem::HasEnvironmentVariable("KABLUNK_DIR"))
 		{
@@ -943,8 +975,15 @@ namespace Kablunk
 		if (!std::filesystem::exists(project_path))
 			std::filesystem::create_directories(project_path);
 
+		bool create_csharp_project = !create_native_script_project;
+
 		std::filesystem::path resources_path = std::filesystem::path{ s_kablunk_install_path } / "KablunkEditor" / "resources";
-		std::filesystem::copy(resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
+		// #TODO currently copies both C# and Native project files
+		if (create_csharp_project)
+			std::filesystem::copy(resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
+
+		if (create_native_script_project)
+			std::filesystem::copy(resources_path / "new_project_template_native", project_path, std::filesystem::copy_options::recursive);
 
 		{
 			// Kablunk Project
@@ -963,7 +1002,7 @@ namespace Kablunk
 				ostream.close();
 			}
 
-			// Premake
+			// Parse Premake template and replace symbols
 			{
 				std::ifstream stream{ project_path / "premake5.lua" };
 				std::stringstream ss;
@@ -1003,11 +1042,15 @@ namespace Kablunk
 			std::filesystem::rename(project_path / "Project.kablunkproj", project_path / new_project_filename);
 
 			std::filesystem::create_directories(project_path / "assets" / "scenes");
-			std::filesystem::create_directories(project_path / "assets" / "scripts" / "source");
+			if (create_csharp_project)
+				std::filesystem::create_directories(project_path / "assets" / "scripts" / "source");
 			std::filesystem::create_directories(project_path / "assets" / "textures");
 			std::filesystem::create_directories(project_path / "assets" / "audio"); 
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
+
+			if (create_native_script_project)
+				std::filesystem::create_directories(project_path / "include");
 
 #if KB_NATIVE_SCRIPTING
 			// Native scripts
@@ -1034,24 +1077,30 @@ namespace Kablunk
 				});
 
 			
-
-			std::string gen_proj_batch = "\"" + project_path.string();
-			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
-			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
-			
-			//KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
-			Threading::JobSystem::AddJob([&gen_proj_batch]()
-				{
-					system(gen_proj_batch.c_str());
-				});
 #endif
-			
-			std::string gen_proj_batch = "\"" + project_path.string();
-			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
-			gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
+			if (create_native_script_project)
+			{
+				std::string gen_proj_batch = "\"" + project_path.string();
+				std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
+				gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
 
-			system(gen_proj_batch.c_str());
-			//Threading::JobSystem::AddJob([&gen_proj_batch]() { system(gen_proj_batch.c_str()); });
+				//KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
+				system(gen_proj_batch.c_str());
+				/*Threading::JobSystem::AddJob([&gen_proj_batch]()
+					{
+						system(gen_proj_batch.c_str());
+					});*/
+			}
+
+			if (create_csharp_project)
+			{
+				std::string gen_proj_batch = "\"" + project_path.string();
+				std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
+				gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
+
+				system(gen_proj_batch.c_str());
+				//Threading::JobSystem::AddJob([&gen_proj_batch]() { system(gen_proj_batch.c_str()); });
+			}
 
 			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");
 		}
@@ -1059,6 +1108,8 @@ namespace Kablunk
 
 	void EditorLayer::UpdateProjectEngineFiles()
 	{
+		KB_CORE_ASSERT(false, "deprecated!");
+
 		auto project = Project::GetActive();
 		if (!project)
 			return;
@@ -1081,6 +1132,7 @@ namespace Kablunk
 		serializer.Deserialize(filepath);
 		Project::SetActive(project);
 
+		// #TODO only load when c# project.
 		CSharpScriptEngine::LoadAppAssembly(Project::GetCSharpScriptModuleFilePath());
 
 		m_content_browser_panel.SetCurrentDirectory(Project::GetAssetDirectoryPath());
@@ -1135,7 +1187,7 @@ namespace Kablunk
 			Project::SetActive(nullptr);
 	}
 
-	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token)
+	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const
 	{
 		size_t p = 0;
 		while ((p = data.find(token, p)) != std::string::npos)
