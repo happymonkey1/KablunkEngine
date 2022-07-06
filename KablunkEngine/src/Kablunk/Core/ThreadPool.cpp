@@ -28,6 +28,7 @@ namespace Kablunk::Threading
 		while (true)
 		{
 			JobFunc job = nullptr;
+
 			{
 				std::unique_lock queue_lock{ m_job_queue_mutex };
 				m_wait_for_job.wait(queue_lock, [this]() { return !m_job_queue.empty() || m_terminate; });

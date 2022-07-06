@@ -13,6 +13,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 
 //#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
 
@@ -47,6 +48,7 @@ namespace Kablunk
 			PushOverlay(m_imgui_layer);
 		}
 
+		PluginManager::Init();
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
 		NativeScriptEngine::Init();
 
@@ -70,15 +72,11 @@ namespace Kablunk
 
 		RenderCommand::WaitAndRender();
 
-		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
-		{
-			auto& queue = RenderCommand::GetRenderResourceReleaseQueue(i);
-			queue.Execute();
-		}
-
 		Renderer::Shutdown();
 
 		NativeScriptEngine::Shutdown();
+
+		PluginManager::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

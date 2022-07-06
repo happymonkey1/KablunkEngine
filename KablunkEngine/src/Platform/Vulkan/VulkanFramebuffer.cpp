@@ -74,6 +74,9 @@ namespace Kablunk
 
 	VulkanFramebuffer::~VulkanFramebuffer()
 	{
+		if (!m_framebuffer)
+			return;
+
 		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
 		VkRenderPass vk_render_pass = m_render_pass;
@@ -84,6 +87,7 @@ namespace Kablunk
 				vkDestroyRenderPass(device, vk_render_pass, nullptr);
 			});
 
+		// Only destroy images we own
 		if (!m_specification.existing_framebuffer)
 		{
 			uint32_t attachment_index = 0;

@@ -144,6 +144,12 @@ namespace Kablunk
 
 		VulkanShader::ClearUniformBuffers();
 
+		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
+		{
+			auto& queue = RenderCommand::GetRenderResourceReleaseQueue(i);
+			queue.Execute();
+		}
+
 		if (s_renderer_data)
 			delete s_renderer_data;
 		

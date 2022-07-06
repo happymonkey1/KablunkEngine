@@ -168,7 +168,7 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Shutting down Vulkan instance");
 
-		m_swap_chain.Cleanup();
+		m_swap_chain.Destroy();
 
 		m_device->Destroy();
 

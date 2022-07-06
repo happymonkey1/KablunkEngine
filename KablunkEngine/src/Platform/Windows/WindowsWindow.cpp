@@ -44,12 +44,13 @@ namespace Kablunk {
 
     void WindowsWindow::Init(const WindowProps& props)
     {
-        m_Data.Title = props.Title;
-        m_Data.Width = props.Width;
-        m_Data.Height = props.Height;
+        m_data.Title = props.Title;
+        m_data.Width = props.Width;
+        m_data.Height = props.Height;
+		m_data.Fullscreen = props.Fullscreen;
 
         
-        KB_CORE_INFO("Creating Window {0} ({1} {2})", props.Title, props.Width, props.Height);
+        KB_CORE_INFO("Creating Window {0} ({1}x{2}), fullscreen={3}", props.Title, props.Width, props.Height, props.Fullscreen);
         
 
         if (s_glfw_window_count == 0) 
@@ -70,33 +71,48 @@ namespace Kablunk {
             glfwSetErrorCallback(GLFWErrorCallback);
         }
 
-        {
-			KB_PROFILE_SCOPE("glfwCreateWindow");
+		{
+			KB_PROFILE_SCOPE("glfwCreateWindow fullscreen");
 
-            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			GLFWmonitor* primary_monitor = nullptr;
+			if (m_data.Fullscreen)
+			{
+				primary_monitor = glfwGetPrimaryMonitor();
+				const GLFWvidmode* mode = glfwGetVideoMode(primary_monitor);
+
+				glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+				glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+				glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+				glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+				m_data.Width = mode->width;
+				m_data.Height = mode->height;
+			}
+
+			m_window = glfwCreateWindow((int)m_data.Width, (int)m_data.Height, m_data.Title.c_str(), primary_monitor, nullptr);
 			++s_glfw_window_count;
-        }
-		m_Context = GraphicsContext::Create(m_Window);
-		m_Context->Init();
+		}
+		m_context = GraphicsContext::Create(m_window);
+		m_context->Init();
 
 		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
 		{
-			// #TODO bad!
-			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_Context.get());
-			vk_context->GetSwapchain().InitSurface(m_Window);
+			// #TODO dynamic_cast bad!
+			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
+			vk_context->GetSwapchain().InitSurface(m_window);
 
-			uint32_t width = m_Data.Width, height = m_Data.Height;
-			vk_context->GetSwapchain().Create(&width, &height, m_Data.VSync);
+			uint32_t width = m_data.Width, height = m_data.Height;
+			vk_context->GetSwapchain().Create(&width, &height, m_data.VSync);
 		}
 
 		KB_CORE_INFO("Context created!");
         
         
-        glfwSetWindowUserPointer(m_Window, &m_Data);
+        glfwSetWindowUserPointer(m_window, &m_data);
         SetVsync(false);
 
         //GLFW Callbacks
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height){
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             WindowResizeEvent event(width, height);
@@ -111,7 +127,7 @@ namespace Kablunk {
             }
         });
 
-        glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             WindowCloseEvent event;
@@ -119,7 +135,7 @@ namespace Kablunk {
             
         });
 
-        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             switch (action) {
@@ -144,13 +160,13 @@ namespace Kablunk {
             }
         });
 
-        glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode) {
+        glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int keycode) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
             KeyTypedEvent event(keycode);
             data.EventCallback(event);
         });
 
-        glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
+        glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             switch (action) {
@@ -169,14 +185,14 @@ namespace Kablunk {
             }
         });
 
-        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset) {
+        glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xOffset, double yOffset) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             MouseScrolledEvent event((float)xOffset, (float)yOffset);
             data.EventCallback(event);
         });
 
-        glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xPos, double yPos) {
+        glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             MouseMovedEvent event((float)xPos, (float)yPos);
@@ -186,19 +202,27 @@ namespace Kablunk {
 		// Make sure window data about size is actual size
 		{
 			int width, height;
-			glfwGetWindowSize(m_Window, &width, &height);
-			m_Data.Width = width;
-			m_Data.Height = height;
+			glfwGetWindowSize(m_window, &width, &height);
+			m_data.Width = width;
+			m_data.Height = height;
 		}
 
     }
+
     void WindowsWindow::Shutdown()
     {
         KB_PROFILE_FUNCTION();
 
-		m_Context->Shutdown();
+		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+		{
+			// #TODO dynamic_cast bad!
+			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
+			vk_context->GetSwapchain().Destroy();
+		}
 
-        glfwDestroyWindow(m_Window);
+		m_context->Shutdown();
+
+        glfwDestroyWindow(m_window);
 		--s_glfw_window_count;
 
 		if (s_glfw_window_count == 0)
@@ -214,7 +238,7 @@ namespace Kablunk {
     {
         KB_PROFILE_FUNCTION();
 
-        m_Context->SwapBuffers();
+        m_context->SwapBuffers();
     }
 
 
@@ -228,18 +252,18 @@ namespace Kablunk {
 				glfwSwapInterval(0);
 		}
       
-        m_Data.VSync = enabled;
+        m_data.VSync = enabled;
     }
 
     bool WindowsWindow::IsVsync() const
     {
-        return m_Data.VSync;
+        return m_data.VSync;
     }
 
 	void WindowsWindow::SetWindowTitle(const std::string& title)
 	{
-        m_Data.Title = title;
-        glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+        m_data.Title = title;
+        glfwSetWindowTitle(m_window, m_data.Title.c_str());
 	}
 
 }

@@ -385,7 +385,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
 	}
 
-	void VulkanSwapChain::Cleanup()
+	void VulkanSwapChain::Destroy()
 	{
 		VkDevice device = m_device->GetVkDevice();
 
