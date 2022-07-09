@@ -5,6 +5,8 @@
 namespace Kablunk
 {
 
+	Ref<Project> Project::s_active_project = nullptr;
+
 	Project::Project()
 	{
 

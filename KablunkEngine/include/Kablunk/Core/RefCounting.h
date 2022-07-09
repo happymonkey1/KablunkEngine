@@ -1,10 +1,14 @@
 #ifndef KABLUNK_CORE_REF_COUNTING_H
 #define KABLUNK_CORE_REF_COUNTING_H
 
+#include "Kablunk/Core/KablunkAPI.h"
+
 #include <atomic>
 #include <memory>
 #include <cassert>
 #include <iostream>
+#include <mutex>
+#include <unordered_set>
 
 namespace Kablunk
 {
@@ -182,15 +186,16 @@ namespace Kablunk
 
 		void DecRef() const
 		{
-			if (m_ptr)
+			if (!m_ptr)
+				return;
+			
+			m_ptr->DecRefCount();
+			
+			if (!m_ptr->GetRefCount())
 			{
-				m_ptr->DecRefCount();
-				if (m_ptr->GetRefCount() == 0)
-				{
-					delete m_ptr;
-					Internal::RemoveFromLiveReferences((void*)m_ptr);
-					m_ptr = nullptr;
-				}
+				delete m_ptr;
+				Internal::RemoveFromLiveReferences((void*)m_ptr);
+				m_ptr = nullptr;
 			}
 		}
 

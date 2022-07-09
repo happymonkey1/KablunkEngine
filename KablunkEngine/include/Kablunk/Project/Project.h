@@ -77,7 +77,8 @@ namespace Kablunk
 	private:
 		ProjectConfig m_config;
 
-		inline static Ref<Project> s_active_project = nullptr;
+		// #TODO change to IntrusiveRef
+		static Ref<Project> s_active_project;
 
 		friend class ProjectSerializer;
 		friend class ProjectPropertiesPanel;

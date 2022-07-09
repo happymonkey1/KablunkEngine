@@ -8,6 +8,8 @@ namespace Kablunk
 	//   Singleton Interface
 	// =======================
 
+	PluginManager* PluginManager::s_instance = nullptr;
+
 	void PluginManager::Init() noexcept
 	{
 		KB_CORE_ASSERT(!s_instance, "Plugin manager already initialized!");
@@ -24,30 +26,30 @@ namespace Kablunk
 		KB_CORE_INFO("PluginManager initialized!");
 	}
 
-	bool PluginManager::load_plugin(const std::string& plugin_name, bool force_reload /*= false*/) noexcept
+	WeakRef<Plugin> PluginManager::load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, bool force_reload /*= false*/) noexcept
 	{
-		if (!is_plugin_loaded(plugin_name))
+		if (is_plugin_loaded(plugin_name))
 		{
 			if (!force_reload)
 			{
 				KB_CORE_WARN("Trying to load plugin that is already loaded!");
 				KB_CORE_INFO("  Use force_reload = true to reload plugins in memory.");
-				return false;
+				return nullptr;
 			}
 			else
 			{
 				// #TODO Plugin reloading
 				KB_CORE_ASSERT(false, "Plugin reloading not implemented!");
 				
-				return false;
+				return nullptr;
 			}
 		}
 
-		auto pair = m_plugins.emplace(plugin_name, CreateScope<Plugin>(plugin_name));
-
+		auto pair = m_plugins.emplace(plugin_name, CreateScope<Plugin>(plugin_name, plugin_path));
+		
 		// #TODO load function pointers
 
-		return true;
+		return m_plugins.at(plugin_name).get();
 	}
 
 	void PluginManager::unload_plugin(const std::string& plugin_name) noexcept

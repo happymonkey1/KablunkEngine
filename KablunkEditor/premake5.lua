@@ -44,7 +44,7 @@ project "KablunkEditor"
 
     defines
     {
-        
+        "KB_BUILD_DLL"
     }
 
     filter "system:windows"

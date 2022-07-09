@@ -95,7 +95,7 @@ namespace Kablunk {
 
 		static IntrusiveRef<Shader> Create(const std::string& filePath, bool force_compile = false);
 	private:
-		inline static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
+		static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
 	};
 
 	class ShaderLibrary : public RefCounted

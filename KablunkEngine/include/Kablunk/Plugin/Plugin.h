@@ -5,6 +5,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <filesystem>
 
 #ifdef KB_PLATFORM_WINDOWS
 #	include <windows.h>
@@ -18,13 +19,13 @@ namespace Kablunk
 	class Plugin
 	{
 	public:
-		using VoidFunc = void(*)();
+		using void_func_t = void(*)();
 	public:
-		explicit Plugin(const std::string& dll_name) noexcept;
+		explicit Plugin(const std::string& dll_name, const std::filesystem::path& dll_path) noexcept;
 		~Plugin() noexcept;
 		
 		bool is_loaded() const noexcept { return m_handle && m_handle != INVALID_HANDLE_VALUE; }
-	private:
+	// #TODO private:
 
 		void load_function_from_plugin(const std::string& name) noexcept;
 
@@ -35,8 +36,9 @@ namespace Kablunk
 	private:
 		HINSTANCE m_handle = nullptr;
 		std::string m_dll_name = "INV_DLL_NAME";
+		std::filesystem::path m_path;
 
-		std::unordered_map<std::string, VoidFunc> m_void_funcs_cache;
+		std::unordered_map<std::string, void_func_t> m_void_funcs_cache;
 	};
 
 
@@ -46,24 +48,25 @@ namespace Kablunk
 	{
 		KB_CORE_ASSERT(m_handle, "dll was not loaded into memory!");
 
-		if (m_void_funcs_cache.find(name) != m_void_funcs_cache.end())
+		/* #TODO figure out how to check and store function pointers of all types
+		if (m_void_funcs_cache.find(func_name) != m_void_funcs_cache.end())
 		{
-			KB_CORE_WARN("Function '{}' from dll '{}' is already loaded! Exiting early.", name, m_dll_name);
-			return;
-		}
+			KB_CORE_WARN("Function '{}' from dll '{}' is already loaded! Exiting early.", func_name, m_dll_name);
+			return m_void_funcs_cache.at(func_name);
+		}*/
 
 		// #TODO c++ style casting
-		FuncT dll_func = (FuncT)(GetProcAddress(m_handle, name.c_str()));
+		FuncT dll_func = (FuncT)(GetProcAddress(m_handle, func_name.c_str()));
 
 		if (!dll_func)
 		{
-			KB_CORE_ASSERT("Failed to load function '{}' from dll '{}'", name, m_dll_name);
-			return;
+			KB_CORE_ASSERT(false, "Failed to load function '{}' from dll '{}'", func_name, m_dll_name);
+			return nullptr;
 		}
 
-		KB_CORE_INFO("Successfully loaded function '{}' from dll '{}'", name, m_dll_name);
+		KB_CORE_INFO("Successfully loaded function '{}' from dll '{}'", func_name, m_dll_name);
 
-		m_void_funcs_cache.insert({ name, dll_func });
+		//m_void_funcs_cache.insert({ func_name, dll_func });
 		return dll_func;
 	}
 

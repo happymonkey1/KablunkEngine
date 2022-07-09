@@ -4,12 +4,12 @@
 namespace Kablunk
 {
 
-	Plugin::Plugin(const std::string& dll_name) noexcept
-		: m_dll_name{ dll_name }
+	Plugin::Plugin(const std::string& dll_name, const std::filesystem::path& dll_path) noexcept
+		: m_dll_name{ dll_name }, m_path{ dll_path } 
 	{
-		// cast string to wstring for use with LoadLibrary.
-		std::wstring str_casted = std::wstring{ dll_name.begin(), dll_name.end() };
-		m_handle = LoadLibrary(str_casted.c_str());
+		std::string dll_path_as_str = dll_path.string();
+		// don't load dllmain or other references so we aren't worried about DLL hijacks.
+		m_handle = LoadLibraryExA(dll_path_as_str.c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
 
 		if (!is_loaded())
 			KB_CORE_ASSERT("failed to load dll '{}'", dll_name);
@@ -40,7 +40,7 @@ namespace Kablunk
 		}
 
 		// #TODO c++ style casting
-		VoidFunc dll_func = (VoidFunc)(GetProcAddress(m_handle, name.c_str()));
+		void_func_t dll_func = (void_func_t)(GetProcAddress(m_handle, name.c_str()));
 
 		if (!dll_func)
 		{

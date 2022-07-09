@@ -7,6 +7,7 @@
 
 namespace Kablunk
 {
+	std::vector<IntrusiveRef<Shader>> Shader::s_all_shaders;
 
 	IntrusiveRef<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 	{

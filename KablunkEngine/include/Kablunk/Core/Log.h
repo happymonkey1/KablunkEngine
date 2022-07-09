@@ -10,7 +10,7 @@
 
 namespace Kablunk {
 
-	class Log {
+	KB_API class Log {
 	public:
 		static void Init();
 
@@ -24,8 +24,8 @@ namespace Kablunk {
 
 		static void Shutdown();
 	private:
-		inline static spdlog::logger* s_core_logger = nullptr;
-		inline static spdlog::logger* s_client_logger = nullptr;
+		inline static spdlog::logger* s_core_logger;
+		inline static spdlog::logger* s_client_logger;
 	};
 
 	

@@ -11,7 +11,7 @@
 
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 
-#include <Kablunk/Scene/SceneSerializer.h>
+#include "Kablunk/Scene/SceneSerializer.h"
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -19,6 +19,8 @@
 
 #include "Kablunk/Project/Project.h"
 #include "Kablunk/Project/ProjectSerializer.h"
+
+#include "Kablunk/Plugin/PluginManager.h"
 
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
@@ -515,10 +517,10 @@ namespace Kablunk
 #if KB_NATIVE_SCRIPTING
 				if (ImGui::MenuItem("Update Project Engine Files"))
 					UpdateProjectEngineFiles();
-
-				if (ImGui::MenuItem("Reload NativeScript DLLs"))
-					NativeScriptEngine::Get()->LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
 #endif
+				if (ImGui::MenuItem("Reload NativeScript Assembly"))
+					LoadNativeScriptModule();
+
 
 				if (ImGui::MenuItem("Reload C# Assemblies"))
 					CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
@@ -951,6 +953,27 @@ namespace Kablunk
 		std::ofstream ostream{ project_path / "include/native_script_template.h" };
 		ostream << data;
 		ostream.close();
+	}
+
+	void EditorLayer::LoadNativeScriptModule() const
+	{
+		if (!Project::GetActive())
+			return;
+
+		// #TODO make sure we are in native script project
+
+		std::string plugin_name = Project::GetActive()->GetProjectName();
+		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
+
+		using create_nsc_func_t = NativeScriptInterface*(*)();
+
+		WeakRef<Plugin> plugin = PluginManager::Get()->load_plugin(plugin_name, plugin_path);
+		create_nsc_func_t create_nsc = plugin->get_function<create_nsc_func_t>("CreateTest");
+		NativeScriptInterface* nsc = create_nsc();
+
+		nsc->OnAwake();
+
+		delete nsc;
 	}
 
 	bool EditorLayer::CanPickFromViewport() const

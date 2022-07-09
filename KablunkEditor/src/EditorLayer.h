@@ -8,8 +8,6 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/ProjectPropertiesPanel.h"
 
-
-
 namespace Kablunk
 {
 	class EditorLayer : public Layer
@@ -45,6 +43,7 @@ namespace Kablunk
 		void OpenScene(const std::filesystem::path& path);
 
 		void CreateNewNativeScript(const std::string& script_name) const;
+		void LoadNativeScriptModule() const;
 
 		void ViewportClickSelectEntity();
 

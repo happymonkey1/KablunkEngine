@@ -1,5 +1,6 @@
 ProjectName = "$PROJECT_NAME$"
 KablunkRootDirectory = os.getenv("KABLUNK_DIR")
+include "Dependencies.lua"
 
 workspace "%{ProjectName}"
     architecture "x64"
@@ -36,8 +37,31 @@ project "$PROJECT_NAME$"
 
 	includedirs
 	{
-		"%{KablunkRootDirectory}/KablunkEngine/include/**.h",
-		"%{KablunkRootDirectory}/KablunkEngine/include/**.hpp"
+		"include",
+		"src",
+		
+		"%{KablunkRootDirectory}/KablunkEngine/include/",
+
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stduuid}",
+		"%{IncludeDir.gsl}",
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.assimp}",
+		"%{IncludeDir.FreeType}",
+		"%{IncludeDir.Box2d}",
+		"%{IncludeDir.cr}",
+		"%{IncludeDir.mono}",
+		"%{IncludeDir.Vulkan}",
+		"%{IncludeDir.VulkanSDK}",
+		"%{IncludeDir.VulkanSDK_LocalInclude}"
 	}
 
 	links

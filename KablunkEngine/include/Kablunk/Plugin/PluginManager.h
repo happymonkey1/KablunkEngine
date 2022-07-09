@@ -15,10 +15,7 @@ namespace Kablunk
 	class PluginManager
 	{
 	public:
-		explicit PluginManager() noexcept;
-		PluginManager(const PluginManager&) = delete;
-		PluginManager(PluginManager&&) = delete;
-
+		~PluginManager() = default;
 		// =======================
 		//   Singleton Interface
 		// =======================
@@ -31,7 +28,7 @@ namespace Kablunk
 		//   PluginManager Interface
 		// ===========================
 
-		bool load_plugin(const std::string& plugin_name, bool force_reload = false) noexcept;
+		WeakRef<Plugin> load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, bool force_reload = false) noexcept;
 		bool is_plugin_loaded(const std::string& plugin_name) const noexcept { return m_plugins.find(plugin_name) != m_plugins.end(); };
 		void unload_plugin(const std::string& plugin_name) noexcept;
 
@@ -40,7 +37,11 @@ namespace Kablunk
 
 		void update() noexcept;
 	private:
-		inline static PluginManager* s_instance = nullptr;
+		explicit PluginManager() noexcept;
+		PluginManager(const PluginManager&) = delete;
+		PluginManager(PluginManager&&) = delete;
+	private:
+		static PluginManager* s_instance;
 
 		std::unordered_map<std::string, Scope<Plugin>> m_plugins;
 	};

@@ -9,15 +9,15 @@
 namespace Kablunk {
 
 	void Log::Init() {
-		std::vector<spdlog::sink_ptr> logSinks;
-		logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-		logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Kablunk.log", true));
+		std::vector<spdlog::sink_ptr> log_sinks;
+		log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+		log_sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Kablunk.log", true));
 
-		logSinks[0]->set_pattern("%^[%T] %n: %v%$");
-		logSinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
+		log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
+		log_sinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
 
-		s_core_logger = new spdlog::logger{ "KABLUNK", begin(logSinks), end(logSinks) };
-		s_client_logger = new spdlog::logger{ "APP", begin(logSinks), end(logSinks) };
+		s_core_logger = new spdlog::logger{ "KABLUNK", begin(log_sinks), end(log_sinks) };
+		s_client_logger = new spdlog::logger{ "APP", begin(log_sinks), end(log_sinks) };
 		
 		spdlog::register_logger(std::shared_ptr<spdlog::logger>(s_core_logger));
 		s_core_logger->set_level(spdlog::level::trace);
