@@ -10,7 +10,7 @@
  * A function not defined compilation message means the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS
  * are not used/included. 
 */
-extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str);
+extern "C" Kablunk::INativeScript* GetScriptFromRegistry(const std::string& type_str);
 
 namespace Kablunk
 {
@@ -25,7 +25,7 @@ namespace Kablunk
 
 		static void Shutdown();
 
-		static Scope<NativeScriptInterface> GetScript(const std::string& name);
+		static Scope<INativeScript> GetScript(const std::string& name);
 		static NativeScriptEngine* Get() { KB_CORE_ASSERT(s_instance, "Instance is not set! Make sure Init is called!"); return s_instance; }
 
 		void SetScene(WeakRef<Scene> scene);
@@ -44,7 +44,7 @@ namespace Kablunk
 /* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
 // #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
 #	define IMPLEMENT_NATIVE_SCRIPT(T) \
-		static Kablunk::NativeScriptInterface* Create() \
+		static Kablunk::INativeScript* Create() \
 		{ \
 			return new T(); \
 		}
@@ -52,7 +52,7 @@ namespace Kablunk
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
+	extern "C" Kablunk::INativeScript* GetScriptFromRegistry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
@@ -85,7 +85,7 @@ namespace Kablunk
 	{
 		struct NativeScriptRuntimeObject
 		{
-			NativeScriptInterface* ptr;
+			NativeScript* ptr;
 			ObjectId id;
 		};
 	}
@@ -96,7 +96,7 @@ namespace Kablunk
 	class NativeScriptEngine : public IObjectFactoryListener
 	{
 	public:
-		using CreateMethodFunc = NativeScriptInterface * (*)();
+		using CreateMethodFunc = NativeScript * (*)();
 
 		static NativeScriptEngine* Get()
 		{
@@ -116,12 +116,12 @@ namespace Kablunk
 		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		[[deprecated("Replaced by rccpp")]]
-		Scope<NativeScriptInterface> GetScript(const std::string& script_name);
+		Scope<NativeScript> GetScript(const std::string& script_name);
 
 		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
 
-		NativeScriptInterface** AddScript(const std::string& name, const std::filesystem::path& filepath);
+		NativeScript** AddScript(const std::string& name, const std::filesystem::path& filepath);
 		virtual void OnConstructorsAdded() override;
 		void OnUpdate(Timestep ts);
 

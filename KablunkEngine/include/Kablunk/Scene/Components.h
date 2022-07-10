@@ -129,10 +129,10 @@ namespace Kablunk
 	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
-		Scope<NativeScriptInterface> Instance = nullptr;
+		Scope<INativeScript> Instance = nullptr;
 		std::filesystem::path Filepath = "";
 
-		using InstantiateScriptFunc = Scope<NativeScriptInterface>(*)();
+		using InstantiateScriptFunc = Scope<NativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
 		InstantiateScriptFunc InstantiateScript = nullptr;
 
@@ -178,7 +178,7 @@ namespace Kablunk
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
 		{
-			InstantiateScript	= [args...]() -> Scope<NativeScriptInterface> { return CreateScope<T>(args...) };
+			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
 		void BindEditor()

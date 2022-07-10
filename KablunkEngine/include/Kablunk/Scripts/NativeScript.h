@@ -13,19 +13,33 @@ namespace Kablunk
 	// Forward declaration
 	struct SpriteRendererComponent;
 
-	class NativeScriptInterface
+	class INativeScript
 	{
 	public:
-		virtual ~NativeScriptInterface() { OnDestroy(); }
+		virtual ~INativeScript() { };
 
-		virtual void OnAwake() { }
-		virtual void OnUpdate(Timestep ts) { }
+		virtual void OnAwake() = 0;
+		virtual void OnUpdate(Timestep ts) = 0;
+		virtual void OnDestroy() = 0;
 
-		virtual void OnEvent(Event& e) { };
+		virtual void OnEvent(Event& e) = 0;
+		virtual void OnImGuiRender() = 0;
+		virtual bool OnRender2D(const SpriteRendererComponent&) = 0;
+	};
+
+	class NativeScript : public INativeScript
+	{
+	public:
+		virtual ~NativeScript() override { OnDestroy(); }
+
+		virtual void OnAwake() override { }
+		virtual void OnUpdate(Timestep ts) override { }
+
+		virtual void OnEvent(Event& e) override { };
 		// DEBUG BUILDS ONLY
-		virtual void OnImGuiRender() { }
+		virtual void OnImGuiRender() override { }
 
-		virtual bool OnRender2D(const SpriteRendererComponent&) { return false; }
+		virtual bool OnRender2D(const SpriteRendererComponent&) override { return false; }
 
 		virtual void OnDestroy() { }
 

@@ -290,7 +290,8 @@ namespace Kablunk
 			{
 				Entity entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
-				nsc.Instance->BindEntity(entity);
+
+				dynamic_cast<NativeScript*>(nsc.Instance.get())->BindEntity(entity);
 
 				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
 

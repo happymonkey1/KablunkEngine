@@ -965,11 +965,12 @@ namespace Kablunk
 		std::string plugin_name = Project::GetActive()->GetProjectName();
 		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
 
-		using create_nsc_func_t = NativeScriptInterface*(*)();
+		using create_nsc_func_t = INativeScript*(*)();
 
 		WeakRef<Plugin> plugin = PluginManager::Get()->load_plugin(plugin_name, plugin_path);
 		create_nsc_func_t create_nsc = plugin->get_function<create_nsc_func_t>("CreateTest");
-		NativeScriptInterface* nsc = create_nsc();
+
+		INativeScript* nsc = create_nsc();
 
 		nsc->OnAwake();
 

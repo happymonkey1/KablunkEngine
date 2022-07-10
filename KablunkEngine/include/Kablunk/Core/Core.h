@@ -4,6 +4,7 @@
 #include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Singleton.h"
 #include <memory>
 
 namespace Kablunk

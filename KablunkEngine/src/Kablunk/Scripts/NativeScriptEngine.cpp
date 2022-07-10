@@ -37,9 +37,9 @@ namespace Kablunk
 		delete s_instance;
 	}
 
-	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
+	Scope<INativeScript> NativeScriptEngine::GetScript(const std::string& name)
 	{
-		return Scope<NativeScriptInterface>(GetScriptFromRegistry(name));
+		return Scope<INativeScript>(GetScriptFromRegistry(name));
 	}
 
 	void NativeScriptEngine::SetScene(WeakRef<Scene> scene)

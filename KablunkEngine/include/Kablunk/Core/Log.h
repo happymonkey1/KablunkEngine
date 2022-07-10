@@ -1,6 +1,8 @@
 #pragma once
 #include "Kablunk/Core/Core.h"
 
+#include "Kablunk/Core/Singleton.h"
+
 
 // ignore warnings raises in external headers
 #pragma warning(push, 0)
@@ -24,8 +26,8 @@ namespace Kablunk {
 
 		static void Shutdown();
 	private:
-		inline static spdlog::logger* s_core_logger;
-		inline static spdlog::logger* s_client_logger;
+		inline static spdlog::logger* s_core_logger = nullptr;
+		inline static spdlog::logger* s_client_logger = nullptr;
 	};
 
 	

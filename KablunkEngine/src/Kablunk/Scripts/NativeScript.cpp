@@ -7,7 +7,7 @@
 namespace Kablunk
 {
 
-	void NativeScriptInterface::Destroy()
+	void NativeScript::Destroy()
 	{
 		WeakRef<Scene> scene = NativeScriptEngine::Get()->GetScene();
 
