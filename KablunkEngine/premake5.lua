@@ -40,7 +40,6 @@ project "KablunkEngine"
 	{
 		"include",
 		"src",
-		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",

@@ -2,6 +2,8 @@ ProjectName = "$PROJECT_NAME$"
 KablunkRootDirectory = os.getenv("KABLUNK_DIR")
 include "Dependencies.lua"
 
+
+
 workspace "%{ProjectName}"
     architecture "x64"
 	targetdir "build"
@@ -66,7 +68,7 @@ project "$PROJECT_NAME$"
 
 	links
 	{
-		
+		"%{Library.Kablunk}"
 	}
 
 	filter "system:windows"

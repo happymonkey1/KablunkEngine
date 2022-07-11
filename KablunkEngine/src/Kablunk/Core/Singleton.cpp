@@ -6,15 +6,25 @@
 #include <typeindex>
 #include <unordered_map>
 
-namespace Kablunk::Internal
+namespace Kablunk
 {
-		std::mutex& get_singleton_mutex()
+
+	namespace Internal
+	{
+		struct SingletonManager
+		{
+			void* obj = nullptr;
+			// #TODO should this be Kablunk::IntrusiveRef?
+			std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
+		};
+
+		static std::mutex& get_singleton_mutex()
 		{
 			static std::mutex s_singleton_mutex;
 			return s_singleton_mutex;
 		}
 
-		SingletonManager* get_singleton_manager(const std::type_index& type_index)
+		static SingletonManager* get_singleton_manager(const std::type_index& type_index)
 		{
 			static std::unordered_map<std::type_index, SingletonManager> s_manager_map;
 
@@ -25,4 +35,33 @@ namespace Kablunk::Internal
 			it = s_manager_map.emplace(type_index, SingletonManager{}).first;
 			return &it->second;
 		}
+	}
+
+	void get_shared_instance(const std::type_index& type_index, GetStaticInstanceFuncT get_static_instance, void** instance)
+	{
+		Internal::SingletonManager* manager = nullptr;
+
+		// grab manager that holds mutex and the instance
+		{
+			std::lock_guard<std::mutex> lock(Internal::get_singleton_mutex());
+			// exit if instance is already initialized
+			if (*instance)
+				return;
+
+			manager = Internal::get_singleton_manager(type_index);
+		}
+
+		// create instance
+		{
+			std::lock_guard<std::mutex> lock(*manager->mutex);
+			if (!manager->obj)
+				manager->obj = get_static_instance();
+		}
+
+		// save instance
+		{
+			std::lock_guard<std::mutex> lock(Internal::get_singleton_mutex());
+			*instance = manager->obj;
+		}
+	}
 }

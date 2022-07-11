@@ -12,38 +12,39 @@
 
 namespace Kablunk {
 
-	KB_API class Log {
+	class KB_API Log : public ISingleton {
 	public:
-		static void Init();
+		spdlog::logger* get_core_logger() { return s_core_logger; }
+		spdlog::logger* get_client_logger() { return s_client_logger; }
 
-		static spdlog::logger* GetCoreLogger() { return s_core_logger; }
-		static spdlog::logger* GetClientLogger() { return s_client_logger; }
+	protected:
+		virtual void init() override;
+		virtual void shutdown() override;
 
-		// #TODO DANGEROUS API
-		static spdlog::logger* DLLGetCoreLoggerPtr() { return s_core_logger; }
-		// #TODO DANGEROUS API
-		static spdlog::logger* DLLGetClientLoggerPtr() { return s_client_logger; }
-
-		static void Shutdown();
 	private:
-		inline static spdlog::logger* s_core_logger = nullptr;
-		inline static spdlog::logger* s_client_logger = nullptr;
+		SINGLETON_CONSTRUCTOR(Log)
+
+	private:
+		spdlog::logger* s_core_logger = nullptr;
+		spdlog::logger* s_client_logger = nullptr;
+
+		friend class Singleton<Log>;
 	};
 
 	
 }
 
-#define KB_CORE_TRACE(...)   ::Kablunk::Log::GetCoreLogger()->trace(__VA_ARGS__)
-#define KB_CORE_INFO(...)    ::Kablunk::Log::GetCoreLogger()->info(__VA_ARGS__)
-#define KB_CORE_WARN(...)    ::Kablunk::Log::GetCoreLogger()->warn(__VA_ARGS__)
-#define KB_CORE_ERROR(...)   ::Kablunk::Log::GetCoreLogger()->error(__VA_ARGS__)
-#define KB_CORE_FATAL(...)   ::Kablunk::Log::GetCoreLogger()->critical(__VA_ARGS__)
-
-#define KB_CLIENT_TRACE(...) ::Kablunk::Log::GetClientLogger()->trace(__VA_ARGS__)
-#define KB_CLIENT_INFO(...)  ::Kablunk::Log::GetClientLogger()->info(__VA_ARGS__)
-#define KB_CLIENT_WARN(...)  ::Kablunk::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define KB_CLIENT_ERROR(...) ::Kablunk::Log::GetClientLogger()->error(__VA_ARGS__)
-#define KB_CLIENT_FATAL(...) ::Kablunk::Log::GetClientLogger()->critical(__VA_ARGS__)
+#define KB_CORE_TRACE(...)   ::Kablunk::Singleton<Kablunk::Log>::get()->get_core_logger()->trace(__VA_ARGS__)
+#define KB_CORE_INFO(...)    ::Kablunk::Singleton<Kablunk::Log>::get()->get_core_logger()->info(__VA_ARGS__)
+#define KB_CORE_WARN(...)    ::Kablunk::Singleton<Kablunk::Log>::get()->get_core_logger()->warn(__VA_ARGS__)
+#define KB_CORE_ERROR(...)   ::Kablunk::Singleton<Kablunk::Log>::get()->get_core_logger()->error(__VA_ARGS__)
+#define KB_CORE_FATAL(...)   ::Kablunk::Singleton<Kablunk::Log>::get()->get_core_logger()->critical(__VA_ARGS__)
+												  
+#define KB_CLIENT_TRACE(...) ::Kablunk::Singleton<Kablunk::Log>::get()->get_client_logger()->trace(__VA_ARGS__)
+#define KB_CLIENT_INFO(...)  ::Kablunk::Singleton<Kablunk::Log>::get()->get_client_logger()->info(__VA_ARGS__)
+#define KB_CLIENT_WARN(...)  ::Kablunk::Singleton<Kablunk::Log>::get()->get_client_logger()->warn(__VA_ARGS__)
+#define KB_CLIENT_ERROR(...) ::Kablunk::Singleton<Kablunk::Log>::get()->get_client_logger()->error(__VA_ARGS__)
+#define KB_CLIENT_FATAL(...) ::Kablunk::Singleton<Kablunk::Log>::get()->get_client_logger()->critical(__VA_ARGS__)
 
 #ifdef KB_DEBUG
 #	define KB_TIME_FUNCTION_BEGIN()	float delta##__FUNCSIG__ = PlatformAPI::GetTime();

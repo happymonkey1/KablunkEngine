@@ -3,10 +3,10 @@
 #define KABLUNK_CORE_API_H
 
 #ifdef KB_BUILD_DLL
-#	define KB_API extern "C" __declspec(dllexport)
+#	define KB_API __declspec(dllexport)
 #	define KB_API_CPP __declspec(dllexport)
 #else
-#	define KB_API extern "C" __declspec(dllimport)
+#	define KB_API __declspec(dllimport)
 #	define KB_API_CPP __declspec(dllimport)
 #endif
 
