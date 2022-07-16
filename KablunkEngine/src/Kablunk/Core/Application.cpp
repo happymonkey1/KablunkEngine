@@ -48,9 +48,9 @@ namespace Kablunk
 			PushOverlay(m_imgui_layer);
 		}
 
-		PluginManager::Init();
+		Singleton<PluginManager>::init();
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
-		NativeScriptEngine::Init();
+		
 
 		// #TODO should be based on projects later
 #if KB_DEBUG
@@ -74,9 +74,8 @@ namespace Kablunk
 
 		Renderer::Shutdown();
 
-		NativeScriptEngine::Shutdown();
-
-		PluginManager::Shutdown();
+		Singleton<NativeScriptEngine>::shutdown();
+		Singleton<PluginManager>::shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

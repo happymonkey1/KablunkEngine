@@ -76,7 +76,7 @@ namespace Kablunk
 
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(m_active_scene);
+		Singleton<NativeScriptEngine>::get()->set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
@@ -701,7 +701,7 @@ namespace Kablunk
 
 		m_runtime_scene = Scene::Copy(m_active_scene);
 		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
-		NativeScriptEngine::Get()->SetScene(m_runtime_scene);
+		Singleton<NativeScriptEngine>::get()->set_scene(m_runtime_scene);
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
@@ -722,7 +722,7 @@ namespace Kablunk
 
 		m_active_scene = m_editor_scene;
 		m_viewport_renderer->SetScene(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(nullptr);
+		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -852,7 +852,7 @@ namespace Kablunk
 		m_viewport_renderer->SetScene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-		NativeScriptEngine::Get()->SetScene(m_editor_scene);
+		Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 
@@ -917,7 +917,7 @@ namespace Kablunk
 			
 			m_scene_hierarchy_panel.SetContext(m_editor_scene);
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-			NativeScriptEngine::Get()->SetScene(m_editor_scene);
+			Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
 			m_viewport_renderer->SetScene(m_active_scene);
@@ -965,16 +965,7 @@ namespace Kablunk
 		std::string plugin_name = Project::GetActive()->GetProjectName();
 		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
 
-		using create_nsc_func_t = INativeScript*(*)();
-
-		WeakRef<Plugin> plugin = PluginManager::Get()->load_plugin(plugin_name, plugin_path);
-		create_nsc_func_t create_nsc = plugin->get_function<create_nsc_func_t>("CreateTest");
-
-		INativeScript* nsc = create_nsc();
-
-		nsc->OnAwake();
-
-		delete nsc;
+		Singleton<PluginManager>::get()->load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
 	}
 
 	bool EditorLayer::CanPickFromViewport() const
@@ -1042,26 +1033,6 @@ namespace Kablunk
 				ostream.close();
 			}
 
-#if KB_NATIVE_SCRIPTING
-			// Generate NativeScript batch
-			{
-				std::ifstream stream{ project_path / "Windows-CreateNativeScriptProject.bat" };
-				std::stringstream ss;
-				ss << stream.rdbuf();
-
-				std::string data = ss.str();
-				std::string project_path_windows = "\'" + project_path.string();
-				std::replace(project_path_windows.begin(), project_path_windows.end(), '/', '\\');
-				project_path_windows += "\'";
-				ReplaceToken("$PROJECT_DIR$", data, project_path_windows);
-
-				std::ofstream ostream{ project_path / "Windows-CreateNativeScriptProject.bat" };
-				ostream << data;
-				ostream.close();
-			}
-#endif
-
-
 			std::string new_project_filename = std::string{ s_project_name_buffer } + ".kablunkproj";
 			std::filesystem::rename(project_path / "Project.kablunkproj", project_path / new_project_filename);
 
@@ -1076,32 +1047,6 @@ namespace Kablunk
 			if (create_native_script_project)
 				std::filesystem::create_directories(project_path / "include");
 
-#if KB_NATIVE_SCRIPTING
-			// Native scripts
-			std::filesystem::create_directories(project_path / "assets" / "bin");
-			std::filesystem::create_directories(project_path / "include");
-			std::filesystem::create_directories(project_path / "src");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "engine");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "vendor");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "bin");
-
-			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", project_path / "KablunkEngine" / "bin", std::filesystem::copy_options::recursive);
-			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", project_path / "KablunkEngine" / "engine", std::filesystem::copy_options::recursive);
-
-			// #TODO replace with better code
-			std::string get_vendor_includes_path = "\"" + s_kablunk_install_path;
-			std::replace(get_vendor_includes_path.begin(), get_vendor_includes_path.end(), '/', '\\');
-			get_vendor_includes_path += "\\scripts\\CopyVendorIncludes.py\"";
-			std::string run_python_cmd = "python " + get_vendor_includes_path + " "
-				+ "\"" + std::filesystem::path{project_path / "KablunkEngine" / "vendor"}.string() + "\"";
-
-			Threading::JobSystem::AddJob([&run_python_cmd]()
-				{
-					system(run_python_cmd.c_str());
-				});
-
-			
-#endif
 			if (create_native_script_project)
 			{
 				std::string gen_proj_batch = "\"" + project_path.string();
@@ -1150,7 +1095,7 @@ namespace Kablunk
 		if (Project::GetActive())
 			CloseProject();
 
-		Ref<Project> project = CreateRef<Project>();
+		IntrusiveRef<Project> project = IntrusiveRef<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
@@ -1201,7 +1146,7 @@ namespace Kablunk
 		SaveProject();
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
-		NativeScriptEngine::Get()->SetScene(nullptr);
+		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
 
 		m_viewport_renderer->SetScene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);

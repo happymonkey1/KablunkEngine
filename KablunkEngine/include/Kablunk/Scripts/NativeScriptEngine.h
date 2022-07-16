@@ -1,6 +1,7 @@
 #ifndef KABLUNK_MODULES_MODULE_H
 #define KABLUNK_MODULES_MODULE_H
 
+#include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Scripts/NativeScript.h"
 
 #include <iostream>
@@ -10,30 +11,31 @@
  * A function not defined compilation message means the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS
  * are not used/included. 
 */
-extern "C" Kablunk::INativeScript* GetScriptFromRegistry(const std::string& type_str);
 
 namespace Kablunk
 {
 	class Scene;
 
-	class NativeScriptEngine
+	class NativeScriptEngine : ISingleton
 	{
 	public:
-		static void Init();
-		static void Open(const char* path);
-		static bool Update();
+		using GetScriptFromRegistryFuncT = INativeScript* (*)(std::string);
+	public:
+		Scope<INativeScript> get_script(const std::string& name);
 
-		static void Shutdown();
+		WeakRef<Scene> get_scene();
+		void set_scene(WeakRef<Scene> scene);
 
-		static Scope<INativeScript> GetScript(const std::string& name);
-		static NativeScriptEngine* Get() { KB_CORE_ASSERT(s_instance, "Instance is not set! Make sure Init is called!"); return s_instance; }
-
-		void SetScene(WeakRef<Scene> scene);
-		WeakRef<Scene> GetScene();
+		void set_get_script_from_registry_func(GetScriptFromRegistryFuncT func_ptr) { m_get_script_from_registry = func_ptr; }
+	private:
+		SINGLETON_CONSTRUCTOR(NativeScriptEngine)
+		virtual void init() override;
+		virtual void shutdown() override;
 	private:
 		Scene* m_current_scene = nullptr;
+		GetScriptFromRegistryFuncT m_get_script_from_registry = nullptr;
 
-		inline static NativeScriptEngine* s_instance;
+		friend class Singleton<NativeScriptEngine>;
 	};
 }
 
@@ -52,7 +54,7 @@ namespace Kablunk
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" Kablunk::INativeScript* GetScriptFromRegistry(const std::string& type_str) \
+	extern "C" Kablunk::INativeScript* get_script_from_registry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
@@ -116,7 +118,7 @@ namespace Kablunk
 		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		[[deprecated("Replaced by rccpp")]]
-		Scope<NativeScript> GetScript(const std::string& script_name);
+		Scope<NativeScript> get_script(const std::string& script_name);
 
 		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);

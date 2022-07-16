@@ -1,6 +1,7 @@
 #ifndef KABLUNK_CORE_CORE_H
 #define KABLUNK_CORE_CORE_H
 
+#include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Logger.h"

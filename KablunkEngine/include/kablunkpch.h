@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <chrono>
 
+#include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Events/Event.h"

@@ -29,7 +29,7 @@ namespace Kablunk
 		std::string Project_directory;
 	};
 	
-	class Project
+	class Project : public RefCounted
 	{
 	public:
 		Project();
@@ -37,8 +37,8 @@ namespace Kablunk
 
 		const ProjectConfig& GetConfig() const { return m_config; }
 
-		static Ref<Project> GetActive() { return s_active_project; }
-		static void SetActive(const Ref<Project>& project);
+		static IntrusiveRef<Project> GetActive() { return s_active_project; }
+		static void SetActive(const IntrusiveRef<Project>& project);
 
 		static const void SetProjectName(const std::string& new_name) { s_active_project->m_config.Name = new_name; }
 		static const std::string& GetProjectName() { return s_active_project->GetConfig().Name; }
@@ -70,15 +70,13 @@ namespace Kablunk
 			return GetCSharpScriptModulePath() / GetCSharpScriptModuleFileName();
 		}
 
-
 		static const std::string& GetStartSceneName() { return s_active_project->GetConfig().Start_scene; }
 		static const void SetStartSceneName(const std::string& new_name) { s_active_project->m_config.Start_scene = new_name; }
 
 	private:
 		ProjectConfig m_config;
 
-		// #TODO change to IntrusiveRef
-		static Ref<Project> s_active_project;
+		static IntrusiveRef<Project> s_active_project;
 
 		friend class ProjectSerializer;
 		friend class ProjectPropertiesPanel;

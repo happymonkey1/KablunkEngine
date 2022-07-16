@@ -5,7 +5,7 @@
 namespace Kablunk
 {
 
-	Ref<Project> Project::s_active_project = nullptr;
+	IntrusiveRef<Project> Project::s_active_project = nullptr;
 
 	Project::Project()
 	{
@@ -17,7 +17,7 @@ namespace Kablunk
 
 	}
 
-	void Project::SetActive(const Ref<Project>& project)
+	void Project::SetActive(const IntrusiveRef<Project>& project)
 	{
 		s_active_project = project;
 	}

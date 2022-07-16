@@ -2,6 +2,7 @@
 #define KABLUNK_CORE_REF_COUNTING_H
 
 #include "Kablunk/Core/KablunkAPI.h"
+#include "Kablunk/Core/CoreTypes.h"
 
 #include <atomic>
 #include <memory>
@@ -33,7 +34,7 @@ namespace Kablunk
 		void DecRefCount() const { m_ref_count--; }
 		uint32_t GetRefCount() const { return m_ref_count.load(); }
 	private:
-		mutable std::atomic<uint32_t> m_ref_count = 0;
+		mutable std::atomic<u32> m_ref_count = 0;
 	};
 
 	namespace Internal
@@ -202,6 +203,9 @@ namespace Kablunk
 		template <class T2>
 		friend class IntrusiveRef;
 
+		template <class T2>
+		friend class WeakRef;
+
 		mutable T* m_ptr;
 	};
 
@@ -211,8 +215,8 @@ namespace Kablunk
 	public:
 		WeakRef() = default;
 		//WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
-		WeakRef(const IntrusiveRef<T>& ref) : m_ptr{ ref.get() } { }
-		WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.get() } { }
+		WeakRef(const IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
+		WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
 		WeakRef(T* ptr) : m_ptr{ ptr } { }
 
 		~WeakRef() = default;
@@ -222,7 +226,7 @@ namespace Kablunk
 
 		T* operator->() { return m_ptr; }
 		T& operator*() { return *m_ptr; }
-		operator bool() const { return m_ptr != nullptr; }
+		operator bool() const { return Valid(); }
 
 		T* get() { return m_ptr; }
 	private:

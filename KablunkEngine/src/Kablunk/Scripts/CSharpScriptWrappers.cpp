@@ -263,12 +263,12 @@ namespace Kablunk::Scripts
 		return nullptr;
 	}
 
-	void Kablunk_Texture2D_Destructor(Ref<Texture2D>* _this)
+	void Kablunk_Texture2D_Destructor(IntrusiveRef<Texture2D>* _this)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
 
-	void Kablunk_Texture2D_SetData(Ref<Texture2D>* _this, MonoArray* in_data, int32_t count)
+	void Kablunk_Texture2D_SetData(IntrusiveRef<Texture2D>* _this, MonoArray* in_data, int32_t count)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 	}

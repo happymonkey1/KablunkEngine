@@ -15,30 +15,37 @@
 
 namespace Kablunk
 {
+	enum class PluginType : u8
+	{
+		NativeScript = 0,
+		Other 
+	};
 
-	class Plugin
+	class Plugin : public RefCounted
 	{
 	public:
 		using void_func_t = void(*)();
 	public:
-		explicit Plugin(const std::string& dll_name, const std::filesystem::path& dll_path) noexcept;
+		explicit Plugin(const std::string& dll_name, const std::filesystem::path& dll_path, PluginType plugin_type) noexcept;
 		~Plugin() noexcept;
 		
+		void init() noexcept;
 		bool is_loaded() const noexcept { return m_handle && m_handle != INVALID_HANDLE_VALUE; }
-	// #TODO private:
+		void unload() noexcept;
 
-		void load_function_from_plugin(const std::string& name) noexcept;
+		PluginType get_plugin_type() const { return m_plugin_type; }
 
 		// #TODO figure out how to cache templated function pointers
 		template <typename FuncT>
 		FuncT get_function(const std::string& func_name) noexcept;
-		
+	private:
+		void load_native_script_entry_point();
+
 	private:
 		HINSTANCE m_handle = nullptr;
 		std::string m_dll_name = "INV_DLL_NAME";
 		std::filesystem::path m_path;
-
-		std::unordered_map<std::string, void_func_t> m_void_funcs_cache;
+		PluginType m_plugin_type;
 	};
 
 
@@ -46,14 +53,7 @@ namespace Kablunk
 	template <typename FuncT>
 	FuncT Plugin::get_function(const std::string& func_name) noexcept
 	{
-		KB_CORE_ASSERT(m_handle, "dll was not loaded into memory!");
-
-		/* #TODO figure out how to check and store function pointers of all types
-		if (m_void_funcs_cache.find(func_name) != m_void_funcs_cache.end())
-		{
-			KB_CORE_WARN("Function '{}' from dll '{}' is already loaded! Exiting early.", func_name, m_dll_name);
-			return m_void_funcs_cache.at(func_name);
-		}*/
+		KB_CORE_ASSERT(is_loaded(), "dll was not loaded into memory!");
 
 		// #TODO c++ style casting
 		FuncT dll_func = (FuncT)(GetProcAddress(m_handle, func_name.c_str()));
@@ -66,7 +66,6 @@ namespace Kablunk
 
 		KB_CORE_INFO("Successfully loaded function '{}' from dll '{}'", func_name, m_dll_name);
 
-		//m_void_funcs_cache.insert({ func_name, dll_func });
 		return dll_func;
 	}
 

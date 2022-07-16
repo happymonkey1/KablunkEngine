@@ -204,7 +204,7 @@ namespace Kablunk
 			}
 			auto struct_name = struct_names[0];
 
-			Instance = NativeScriptEngine::GetScript(struct_name);
+			Instance = Singleton<NativeScriptEngine>::get()->get_script(struct_name);
 
 			if (!Instance)
 			{

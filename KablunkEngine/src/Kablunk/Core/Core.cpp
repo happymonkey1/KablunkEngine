@@ -9,6 +9,7 @@ namespace Kablunk
 	void InitCore()
 	{
 		auto logger = Singleton<Logger>::get();
+		Singleton<Logger>::init();
 
 		KB_CORE_INFO("Core initilized");
 	}
@@ -17,6 +18,6 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Core shutting down!");
 
-		Singleton<Logger>::destroy();
+		Singleton<Logger>::shutdown();
 	}
 }

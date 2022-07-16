@@ -12,13 +12,16 @@
 
 namespace Kablunk 
 {
+	enum class LoggerType : uint8_t
+	{
+		CORE = 0,
+		CLIENT
+	};
 
 	class KB_API Logger : public ISingleton {
 	public:
 		spdlog::logger* get_core_logger() { return s_core_logger; }
 		spdlog::logger* get_client_logger() { return s_client_logger; }
-
-	protected:
 		virtual void init() override;
 		virtual void shutdown() override;
 
@@ -31,7 +34,6 @@ namespace Kablunk
 
 		friend class Singleton<Logger>;
 	};
-
 	
 }
 

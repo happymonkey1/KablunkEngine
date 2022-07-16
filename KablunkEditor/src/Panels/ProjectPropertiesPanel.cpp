@@ -12,7 +12,7 @@ namespace Kablunk
 	static char s_scene_path_buffer[MAX_PATH_BUFFER_SIZE];
 	static bool s_serialize_project = false;
 
-	ProjectPropertiesPanel::ProjectPropertiesPanel(const Ref<Project>& project)
+	ProjectPropertiesPanel::ProjectPropertiesPanel(const IntrusiveRef<Project>& project)
 		: m_project{ project }, m_default_scene{ project != nullptr ? project->GetStartSceneName() : "Untitled Scene"}
 	{
 		memset(s_scene_path_buffer, 0, MAX_PATH_BUFFER_SIZE);
