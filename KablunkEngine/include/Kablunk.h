@@ -3,7 +3,7 @@
 //FOR USE BY CLIENT APPLICATIONS
 
 // ---Core---------------------------------------
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Layer.h"
 #include "Kablunk/Imgui/ImGuiLayer.h"

@@ -3,7 +3,7 @@
 #include "Platform/Vulkan/VulkanStorageBuffer.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 
 namespace Kablunk
 {

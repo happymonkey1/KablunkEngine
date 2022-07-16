@@ -25,11 +25,7 @@ namespace Kablunk
 		Singleton(Singleton&&) = delete;
 
 		inline static T* get() { return get_instance(); }
-
-		inline static void destroy()
-		{
-			get_instance()->shutdown();
-		}
+		inline static void destroy() { get_instance()->shutdown(); }
 	private:
 		static T* get_instance()
 		{
@@ -47,6 +43,10 @@ namespace Kablunk
 		}
 	};
 
+	/*
+	* Abstract class for classes that will be singletons.
+	* Don't forget to use SINGLETON_CONSTRUCTOR(ClassName) and SINGLETON_FRIEND(ClassName)!
+	*/
 	class KB_API ISingleton
 	{
 	public:
@@ -57,6 +57,7 @@ namespace Kablunk
 	};
 	 
 # define SINGLETON_CONSTRUCTOR(T) T::T() { init(); }
+# define SINGLETON_FRIEND(T) friend class Singleton<T>;
 
 }
 

@@ -1,15 +1,14 @@
 #include "kablunkpch.h"
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Log.h"
-#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Core/Logger.h"
 
 namespace Kablunk
 {
 
 	void InitCore()
 	{
-		auto logger = Singleton<Log>::get();
+		auto logger = Singleton<Logger>::get();
 
 		KB_CORE_INFO("Core initilized");
 	}
@@ -18,6 +17,6 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Core shutting down!");
 
-		Singleton<Log>::destroy();
+		Singleton<Logger>::destroy();
 	}
 }

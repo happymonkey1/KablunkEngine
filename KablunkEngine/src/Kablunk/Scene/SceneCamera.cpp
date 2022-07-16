@@ -53,6 +53,7 @@ namespace Kablunk
 
 	glm::vec3 SceneCamera::ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const
 	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
@@ -77,13 +78,32 @@ namespace Kablunk
 				KB_CORE_ERROR("SceneCamera::ScreenToWorldPoint(): ImGui enabled but could not find viewport!");
 				return glm::vec3{ 0.0f };
 			}
+
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
 		}
 		else
+		{
 			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ screen_pos };
+		}
 
-		glm::mat4 view_proj = GetProjection() * transform;
-		glm::mat4 inverse = glm::inverse(view_proj);
+		// get viewport mouse position
+		float mx = 0.0f, my = 0.0f;
+		
+		{
+			mouse_pos -= glm::vec2{ window_pos.x, window_pos.y };
+			mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
+			my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f) * -1.0f;
+		}
 
+		glm::vec4 mouse_clip_pos = { mx, my, -1.0f, 1.0f };
+
+		glm::mat4 inverse_projection = glm::inverse(GetProjection());
+		glm::mat4 inverse_view = glm::inverse(glm::mat3(transform));
+
+		return inverse_view * (inverse_projection * mouse_clip_pos);
+		/*
 		// account for viewport if running scene in editor
 		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };
 
@@ -97,7 +117,7 @@ namespace Kablunk
 		glm::vec4 res_out = in * inverse;
 
 		
-		return { res_out.x / res_out.w, res_out.y / res_out.w, res_out.z / res_out.w };
+		return { res_out.x / res_out.w, res_out.y / res_out.w, res_out.z / res_out.w };*/
 	}
 
 	void SceneCamera::RecalculateProjection()

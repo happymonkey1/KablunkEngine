@@ -1,5 +1,5 @@
 #include "kablunkpch.h"
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
@@ -9,7 +9,7 @@
 namespace Kablunk 
 {
 
-	void Log::init()
+	void Logger::init()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;
 		log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -33,7 +33,7 @@ namespace Kablunk
 		std::cout << "Log::init() called!" << std::endl;
 	}
 
-	void Log::shutdown()
+	void Logger::shutdown()
 	{
 		delete s_core_logger;
 		delete s_client_logger;

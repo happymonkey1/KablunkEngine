@@ -1,7 +1,7 @@
 #ifndef KABLUNK_IMGUI_IMGUI_WRAPPERS_H
 #define KABLUNK_IMGUI_IMGUI_WRAPPERS_H
 
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 #include "Kablunk/Renderer/Texture.h"
 
 #include "imgui.h"
