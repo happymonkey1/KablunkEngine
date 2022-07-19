@@ -76,6 +76,8 @@ namespace Kablunk
 		Scene* m_scene{ nullptr };
 
 		friend class CSharpScriptEngine;
+		friend class Prefab;
+		friend class Renderer2D;
 	};
 
 	template <typename T>

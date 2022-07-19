@@ -49,7 +49,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface present modes!");
 
 		VkExtent2D swapchain_extent{};
-		if (surface_cap.currentExtent.width == (uint32_t)-1)
+		if (surface_cap.currentExtent.width == 0xFFFFFFFF)
 		{
 			swapchain_extent.width  = *width;
 			swapchain_extent.height = *height;

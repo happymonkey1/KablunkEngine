@@ -44,6 +44,7 @@ namespace Kablunk
 
 		RenderTopBar();
 
+		bool should_refresh = false;
 		static float padding = 16.0f;
 		static float thumbnail_size = 48.0f;
 		float cell_size = thumbnail_size + padding;
@@ -105,9 +106,10 @@ namespace Kablunk
 			{
 				
 				auto mouse_double_click = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-				for (auto& directory_entry : m_directory_entries)
+				for (const auto& directory_entry : m_directory_entries)
 				{
 					const auto& path = directory_entry.path();
+					// #TODO this does not return the correct path.
 					auto relative_path = std::filesystem::relative(path, Project::GetAssetDirectory());
 					auto filename_string = relative_path.filename().string();
 					auto is_dir = directory_entry.is_directory();
@@ -128,9 +130,9 @@ namespace Kablunk
 						// drag drop selection icon + name 
 						UI::Image(icon, { 20, 20 });
 						ImGui::SameLine();
-						ImGui::TextUnformatted(relative_path.stem().string().c_str());
+						ImGui::TextUnformatted(path.stem().string().c_str());
 						
-						const auto item_path = relative_path.c_str();
+						const auto item_path = path.c_str();
 						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (wcslen(item_path) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::EndDragDropSource();
 					}
@@ -140,7 +142,7 @@ namespace Kablunk
 						if (directory_entry.is_directory())
 						{
 							m_current_directory /= path.filename();
-							Refresh();
+							should_refresh = true;
 						}
 						else if (directory_entry.path().extension() == FileExtensions::FBX)
 						{
@@ -172,6 +174,9 @@ namespace Kablunk
 		}
 
 		ImGui::End();
+
+		if (should_refresh)
+			Refresh();
 	}
 
 	void ContentBrowserPanel::OnUpdate(Timestep ts)
@@ -188,13 +193,14 @@ namespace Kablunk
 
 	void ContentBrowserPanel::RenderTopBar()
 	{
+		bool should_refresh = false;
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
 		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != Project::GetAssetDirectory())
 		{
 			m_current_directory = m_current_directory.parent_path();
-			Refresh();
+			should_refresh = true;
 		}
 		
 		ImGui::SameLine();
@@ -208,9 +214,7 @@ namespace Kablunk
 		ImGui::SameLine();
 
 		if (UI::ImageButton(m_refresh_button.Get(), { 22, 22 }))
-		{
-			Refresh();
-		}
+			should_refresh = true;
 
 		ImGui::SameLine();
 		
@@ -244,9 +248,10 @@ namespace Kablunk
 
 		// #TODO add other directories in current path
 
-
-
 		ImGui::EndChild();
+
+		if (should_refresh)
+			Refresh();
 	}
 
 	void ContentBrowserPanel::Refresh()

@@ -52,6 +52,30 @@ namespace Kablunk
 				out << YAML::Key << "Scale"			<< YAML::Value << component.Scale;
 			});
 
+		// relationship component has different structure so we can't use WriteComponentData
+		if (entity.HasComponent<ParentingComponent>())
+		{
+			auto& parenting_component = entity.GetComponent<ParentingComponent>();
+			out << YAML::Key << "Parent" << YAML::Value << parenting_component.Parent;
+			out << YAML::Key << "Children";
+			out << YAML::Value << YAML::BeginSeq;
+
+			for (const auto& child_uuid : parenting_component.Children)
+			{
+				out << YAML::BeginMap;
+				out << YAML::Key << "Handle" << YAML::Value << child_uuid;
+				out << YAML::EndMap;
+			}
+
+			out << YAML::EndSeq;
+		}
+
+		WriteComponentData<PrefabComponent>(out, entity, [](auto& out, PrefabComponent& component)
+			{
+				out << YAML::Key << "Prefab_id" << YAML::Value << component.Prefab_id;
+				out << YAML::Key << "Entity_id" << YAML::Value << component.Entity_id;
+			});
+
 		WriteComponentData<CameraComponent>(out, entity, [](auto& out, auto& component)
 			{
 				const auto& camera = component.Camera;
@@ -187,8 +211,6 @@ namespace Kablunk
 	{
 		auto uuid = entity_data["Entity"].as<uuid::uuid64>();
 
-
-
 		std::string name;
 		auto tag_comp = entity_data["TagComponent"];
 		if (tag_comp)
@@ -200,7 +222,29 @@ namespace Kablunk
 
 		Entity entity = m_scene->CreateEntity(name, uuid);
 
-		// #FIXME Beyond this is pretty much boilerplate garbage code just to have a 'usable' deserialization feature
+		// #FIXME Beyond this is pretty much boilerplate garbage code just to have a 'usable' deserialization feature. Once reflection is implemented, this can be much more elegant.
+
+		
+		// ParentingComponent is not serialized like other components, so we read manually.
+		auto& parenting_component = entity.GetOrAddComponent<ParentingComponent>();
+		uuid::uuid64 parent_id = entity_data["Parent"] ? entity_data["Parent"].as<uuid::uuid64>() : 0;
+		parenting_component.Parent = parent_id;
+
+		auto children_data = entity_data["Children"];
+		if (children_data)
+		{
+			for (auto child_data : children_data)
+			{
+				uuid::uuid64 child_id = child_data["Handle"].as<uuid::uuid64>();
+				parenting_component.Children.push_back(child_id);
+			}
+		}
+
+		ReadComponentData<PrefabComponent>(entity_data, entity, [this](PrefabComponent& prefab_component, auto& data)
+			{
+				prefab_component.Prefab_id = data["Prefab_id"].as<uuid::uuid64>();
+				prefab_component.Entity_id = data["Entity_id"].as<uuid::uuid64>();
+			});
 
 		ReadComponentData<TransformComponent>(entity_data, entity, [this](auto& component, auto& data)
 			{

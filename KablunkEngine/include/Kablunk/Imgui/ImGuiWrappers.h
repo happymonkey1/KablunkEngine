@@ -287,6 +287,11 @@ namespace Kablunk::UI
 		Property(label, std::to_string(value));
 	}
 
+	static void PropertyReadOnlyVec3(const char* label, const glm::vec3& value)
+	{
+		Property(label, fmt::format("{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z));
+	}
+
 	static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
 	{
 		return Internal::CreateProperty(label, [&](const char* id_buffer)

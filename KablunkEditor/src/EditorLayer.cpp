@@ -222,6 +222,7 @@ namespace Kablunk
 
 			UI::PropertyReadOnlyFloat("Frame time", m_imgui_profiler_stats.Delta_time);
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
+			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
 			Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
 
@@ -262,6 +263,7 @@ namespace Kablunk
 			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
+			// #TODO recreating editor camera projection every frame seems unnecessary 
 			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
@@ -278,17 +280,23 @@ namespace Kablunk
 				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM", ImGuiDragDropFlags_SourceAllowNullID))
 				{
 					const auto path_wchar_str = (const wchar_t*)payload->Data;
-					auto path = std::filesystem::path{ Project::GetAssetDirectory() / path_wchar_str };
-					if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
-						OpenScene(path);
-					else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
+					auto path = std::filesystem::path{ path_wchar_str };
+					if (std::filesystem::is_regular_file(path))
 					{
-						auto entity = m_active_scene->CreateEntity("Untitled Model");
-						auto& mesh_comp = entity.AddComponent<MeshComponent>();
-						mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+						if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
+							OpenScene(path);
+						else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
+						{
+							auto entity = m_active_scene->CreateEntity("Untitled Model");
+							auto& mesh_comp = entity.AddComponent<MeshComponent>();
+							mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+						}
+						else
+							KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
 					}
 					else
-						KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
+						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path);
+					
 				}
 				ImGui::EndDragDropTarget();
 			}
@@ -923,7 +931,6 @@ namespace Kablunk
 			m_viewport_renderer->SetScene(m_active_scene);
 
 			m_editor_scene_path = path;
-
 		}
 	}
 
@@ -1043,6 +1050,7 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "audio"); 
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
+			std::filesystem::create_directories(project_path / "assets" / "prefabs");
 
 			if (create_native_script_project)
 				std::filesystem::create_directories(project_path / "include");

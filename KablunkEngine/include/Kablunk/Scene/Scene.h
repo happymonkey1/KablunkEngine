@@ -15,6 +15,7 @@ namespace Kablunk
 {
 	class Entity;
 	class SceneRenderer;
+	class TransformComponent;
 	
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
 	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
@@ -45,6 +46,7 @@ namespace Kablunk
 		Scene(const std::string& name = DEFAULT_SCENE_NAME);
 		~Scene();
 
+		static IntrusiveRef<Scene> Create();
 		static IntrusiveRef<Scene> Copy(IntrusiveRef<Scene> src_scene);
 		static WeakRef<Scene> GetScene(uuid::uuid64 scene_id);
 
@@ -85,13 +87,32 @@ namespace Kablunk
 			return m_registry.view<Components...>();
 		}
 
+		template <typename ComponentT>
+		bool CopyComponentIfItExists(entt::entity dst, entt::entity src, entt::registry& dest_reg)
+		{
+			if (m_registry.any_of<ComponentT>(src))
+			{
+				auto& src_comp = m_registry.get<ComponentT>(src);
+				dest_reg.emplace_or_replace<ComponentT>(dst, src_comp);
+				return true;
+			}
+			else
+				return false;
+		}
+
 		const std::string& GetSceneName() const { return m_name; }
+
+		glm::mat4 get_world_space_transform_matrix(Entity entity) const;
+		TransformComponent get_world_space_transform(Entity entity) const;
 	private:
 		template <typename T>
 		void OnComponentAdded(Entity entity, T& component);
 	
 		void OnCSharpScriptComponentConstruct(entt::registry& registry, entt::entity entity);
 		void OnCSharpScriptComponentDestroy(entt::registry& registry, entt::entity entity);
+
+		void on_native_script_component_construct(entt::registry& registry, entt::entity entity);
+		void on_native_script_component_destroy(entt::registry& registry, entt::entity entity);
 	private:
 		std::string m_name{ DEFAULT_SCENE_NAME };
 		uuid::uuid64 m_scene_id = uuid::generate();
@@ -104,14 +125,15 @@ namespace Kablunk
 
 		LightEnvironmentData m_light_environment;
 
+		// fixed update
+		float last_time = 0.0f;
+		const float FIXED_TIMESTEP = 0.5f; // #TODO expose to project settings
+
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
 		friend class SceneRenderer;
-
-		// fixed update
-		float last_time = 0.0f;
-		const float FIXED_TIMESTEP = 0.5f; // #TODO expose to project settings
+		friend class Prefab;
 	};
 }
 

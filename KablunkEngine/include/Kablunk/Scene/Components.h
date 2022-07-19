@@ -57,6 +57,15 @@ namespace Kablunk
 		ParentingComponent(uuid::uuid64 parent) : Parent{ parent } {}
 	};
 
+	struct PrefabComponent
+	{
+		uuid::uuid64 Prefab_id = uuid::nil_uuid;
+		uuid::uuid64 Entity_id = uuid::nil_uuid;
+
+		PrefabComponent() = default;
+		PrefabComponent(const PrefabComponent&) = default;
+	};
+
 	struct TransformComponent
 	{
 		glm::vec3 Translation	= glm::vec3{ 0.0f };

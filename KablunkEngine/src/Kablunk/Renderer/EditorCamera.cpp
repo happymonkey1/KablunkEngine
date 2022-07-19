@@ -15,7 +15,7 @@ namespace Kablunk
 
 	EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
 		: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip }, m_focal_point{ 0.0f },
-		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, far_clip, near_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
+		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
 	{
 		m_focal_point = glm::vec3{ 0.0f };
 
@@ -49,24 +49,26 @@ namespace Kablunk
 			DisableMouse();
 
 			const float yaw_sign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
-			const float speed = 10.0f;
+			const float speed = 2.5f;
 
 			if (Input::IsKeyPressed(Key::Q))
 				m_position_delta -= glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
 			else if (Input::IsKeyPressed(Key::E))
 				m_position_delta += glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::S))
+
+			if (Input::IsKeyPressed(Key::S))
 				m_position_delta -= m_direction * speed * (float)ts;
 			else if (Input::IsKeyPressed(Key::W))
 				m_position_delta += m_direction * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::A))
+
+			if (Input::IsKeyPressed(Key::A))
 				m_position_delta -= m_right_direction * speed * (float)ts;
 			else if (Input::IsKeyPressed(Key::D))
 				m_position_delta += m_right_direction * speed * (float)ts;
 
 			constexpr float max_rate = 0.12f;
 			m_yaw_delta += glm::clamp(yaw_sign * delta.x * GetRotationSpeed(), -max_rate, max_rate);
-			m_pitch_delta += glm::clamp(delta.y * GetRotationSpeed(), -max_rate, max_rate);
+			m_pitch_delta += glm::clamp(-delta.y * GetRotationSpeed(), -max_rate, max_rate);
 
 			m_right_direction = glm::cross(m_direction, glm::vec3{ 0.0f, yaw_sign, 0.0f });
 
@@ -112,8 +114,6 @@ namespace Kablunk
 			EnableMouse();
 
 		m_initial_mouse_position = mouse;
-
-
 		m_position += m_position_delta;
 		m_yaw += m_yaw_delta;
 		m_pitch += m_pitch_delta;

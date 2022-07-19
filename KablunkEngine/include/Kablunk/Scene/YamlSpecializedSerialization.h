@@ -1,8 +1,9 @@
 #ifndef KABLUNK_SCENE_YAML_SPECIALIZED_SERIALIZATION_H
 #define KABLUNK_SCENE_YAML_SPECIALIZED_SERIALIZATION_H
 
-#include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
+#include <glm/glm.hpp>
+#include "Kablunk/Core/Uuid64.h"
 
 namespace Kablunk
 {
@@ -36,6 +37,7 @@ namespace Kablunk
 
 namespace YAML
 {
+
 	template <>
 	struct convert<glm::vec2>
 	{
