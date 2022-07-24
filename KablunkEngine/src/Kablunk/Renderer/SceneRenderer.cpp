@@ -19,7 +19,7 @@ namespace Kablunk
 	{
 		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan, "SceneRenderer only supports Vulkan!");
 
-		Init();
+		init();
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -27,7 +27,7 @@ namespace Kablunk
 
 	}
 
-	void SceneRenderer::Init()
+	void SceneRenderer::init()
 	{
 		if (m_specification.swap_chain_target)
 			m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
@@ -154,13 +154,13 @@ namespace Kablunk
 			});
 	}
 
-	void SceneRenderer::SetScene(IntrusiveRef<Scene> context)
+	void SceneRenderer::set_scene(IntrusiveRef<Scene> context)
 	{
 		//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 		m_context = context;
 	}
 
-	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
+	void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 	{
 		KB_CORE_ASSERT(m_context, "No scene context set!");
 		KB_CORE_ASSERT(!m_active, "Already active!");
@@ -233,24 +233,24 @@ namespace Kablunk
 		);
 	}
 
-	void SceneRenderer::EndScene()
+	void SceneRenderer::end_scene()
 	{
 		if (m_use_threads)
 		{
 			IntrusiveRef<SceneRenderer> instance = this;
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
-					instance->FlushDrawList();
+					instance->flush_draw_list();
 				}
 			));
 		}
 		else
-			FlushDrawList();
+			flush_draw_list();
 
 		m_active = false;
 	}
 
-	void SceneRenderer::SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
+	void SceneRenderer::submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
 	{
 		//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 		//uint32_t material_index = 0; // #TODO fix
@@ -266,7 +266,7 @@ namespace Kablunk
 		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 	}
 
-	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
+	void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	{
 		if (m_viewport_width != width || m_viewport_height!= height)
 		{
@@ -276,12 +276,12 @@ namespace Kablunk
 		}
 	}
 
-	IntrusiveRef<RenderPass> SceneRenderer::GetFinalRenderPass()
+	IntrusiveRef<RenderPass> SceneRenderer::get_final_render_pass()
 	{
 		return m_composite_pipeline->GetSpecification().render_pass;
 	}
 
-	IntrusiveRef<Image2D> SceneRenderer::GetFinalPassImage()
+	IntrusiveRef<Image2D> SceneRenderer::get_final_render_pass_image()
 	{
 		if (!m_resources_created)
 			return nullptr;
@@ -304,7 +304,7 @@ namespace Kablunk
 		ImGui::End();
 	}
 
-	void SceneRenderer::WaitForThreads()
+	void SceneRenderer::wait_for_threads()
 	{
 		for (auto& thread : s_thread_pool)
 			thread.join();
@@ -312,20 +312,20 @@ namespace Kablunk
 		s_thread_pool.clear();
 	}
 
-	void SceneRenderer::FlushDrawList()
+	void SceneRenderer::flush_draw_list()
 	{
 		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
-			PreRender();
+			pre_render();
 
-			GeometryPass();
+			geometry_pass();
 
-			CompositePass();
+			composite_pass();
 		}
 		else
 		{
-			ClearPass();
+			clear_pass();
 		}
 
 		m_command_buffer->End();
@@ -335,25 +335,25 @@ namespace Kablunk
 		m_draw_list = {};
 	}
 
-	void SceneRenderer::PreRender()
+	void SceneRenderer::pre_render()
 	{
 		// #TODO
 	}
 
-	void SceneRenderer::ClearPass()
+	void SceneRenderer::clear_pass()
 	{
 		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 		RenderCommand::EndRenderPass(m_command_buffer);
 	}
 
-	void SceneRenderer::ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
+	void SceneRenderer::clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
 		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
 		RenderCommand::BeginRenderPass(m_command_buffer, render_pass, explicit_clear);
 		RenderCommand::EndRenderPass(m_command_buffer);
 	}
 
-	void SceneRenderer::GeometryPass()
+	void SceneRenderer::geometry_pass()
 	{
 		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
@@ -376,7 +376,7 @@ namespace Kablunk
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.geometry_pass_query);
 	}
 
-	void SceneRenderer::CompositePass()
+	void SceneRenderer::composite_pass()
 	{
 		m_gpu_time_query_indices.composite_pass_query = m_command_buffer->BeginTimestampQuery();
 		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);

@@ -517,7 +517,7 @@ namespace Kablunk
 			}
 		}
 
-		scene_renderer->BeginScene({ *main_camera, glm::inverse(main_camera_transform) });
+		scene_renderer->begin_scene({ *main_camera, glm::inverse(main_camera_transform) });
 
 		{
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -527,17 +527,20 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
+					scene_renderer->submit_mesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
 			}
 		}
 
-		scene_renderer->EndScene();
+		scene_renderer->end_scene();
+
+		if (scene_renderer->is_multi_threaded())
+			SceneRenderer::wait_for_threads();
 
 		// Renderer2D
-		if (scene_renderer->GetFinalPassImage())
+		if (scene_renderer->get_final_render_pass_image())
 		{
 			Renderer2D::BeginScene(main_camera_proj * main_camera_transform);
-			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
+			Renderer2D::SetTargetRenderPass(scene_renderer->get_external_composite_render_pass());
 
 			std::map<entt::entity, bool> already_rendered_entites;
 			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
@@ -628,7 +631,7 @@ namespace Kablunk
 			}
 		}
 
-		scene_renderer->BeginScene({ camera, glm::inverse(camera.GetViewMatrix()) });
+		scene_renderer->begin_scene({ camera, glm::inverse(camera.GetViewMatrix()) });
 
 		{
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -638,19 +641,21 @@ namespace Kablunk
 				auto& mesh_comp = entity.GetComponent<MeshComponent>();
 				auto& transform = entity.GetComponent<TransformComponent>();
 				if (mesh_comp.Mesh)
-					scene_renderer->SubmitMesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
+					scene_renderer->submit_mesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
 			}
 
 			//Renderer::EndScene();
 		}
-		scene_renderer->EndScene();
+		scene_renderer->end_scene();
+		if (scene_renderer->is_multi_threaded())
+			SceneRenderer::wait_for_threads();
 
 		// Renderer2D
 		// #TODO move to scene renderer
-		if (scene_renderer->GetFinalPassImage())
+		if (scene_renderer->get_final_render_pass_image())
 		{
 			Renderer2D::BeginScene(camera.GetProjection() * camera.GetViewMatrix());
-			Renderer2D::SetTargetRenderPass(scene_renderer->GetExternalCompositeRenderPass());
+			Renderer2D::SetTargetRenderPass(scene_renderer->get_external_composite_render_pass());
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)

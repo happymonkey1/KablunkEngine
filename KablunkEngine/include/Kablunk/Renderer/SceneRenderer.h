@@ -50,35 +50,35 @@ namespace Kablunk
 		SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec = {});
 		~SceneRenderer();
 
-		void Init();
-		void SetScene(IntrusiveRef<Scene> context);
+		void init();
+		void set_scene(IntrusiveRef<Scene> context);
 
-		void BeginScene(const SceneRendererCamera& camera);
-		void EndScene();
+		void begin_scene(const SceneRendererCamera& camera);
+		void end_scene();
 
-		void SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, IntrusiveRef<Material> override_material = nullptr);
+		void submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, IntrusiveRef<Material> override_material = nullptr);
 
-		void SetMultiThreaded(bool threaded) { m_use_threads = threaded; }
-		bool GetMultiThreaded() const { return m_use_threads; }
+		void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
+		bool is_multi_threaded() const { return m_use_threads; }
 
-		void SetViewportSize(uint32_t width, uint32_t height);
-		IntrusiveRef<RenderPass> GetFinalRenderPass();
-		IntrusiveRef<RenderPass> GetCompositeRenderPass() { return m_composite_pipeline->GetSpecification().render_pass; }
-		IntrusiveRef<RenderPass> GetExternalCompositeRenderPass() { return m_external_composite_render_pass; }
-		IntrusiveRef<Image2D> GetFinalPassImage();
+		void set_viewport_size(uint32_t width, uint32_t height);
+		IntrusiveRef<RenderPass> get_final_render_pass();
+		IntrusiveRef<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
+		IntrusiveRef<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
+		IntrusiveRef<Image2D> get_final_render_pass_image();
 
 		void OnImGuiRender();
 
-		static void WaitForThreads();
+		static void wait_for_threads();
 
 	private:
-		void FlushDrawList();
-		void PreRender();
-		void ClearPass();
-		void GeometryPass();
-		void CompositePass();
+		void flush_draw_list();
+		void pre_render();
+		void clear_pass();
+		void geometry_pass();
+		void composite_pass();
 
-		void ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear = false);
+		void clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear = false);
 		
 	private:
 		IntrusiveRef<Scene> m_context;
@@ -126,7 +126,7 @@ namespace Kablunk
 		bool m_needs_resize = false;
 		bool m_resources_created = false;
 
-		bool m_use_threads = false;
+		bool m_use_threads = true;
 
 		SceneRendererData m_scene_data;
 

@@ -9,6 +9,8 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 
+#include <mutex>
+
 
 namespace Kablunk 
 {
@@ -128,6 +130,7 @@ namespace Kablunk
 		template <typename FuncT>
 		static void Submit(FuncT&& func)
 		{
+			std::lock_guard lock{ s_submit_mutex };
 			auto render_cmd = [](void* ptr)
 			{
 				auto p_func = (FuncT*)ptr;
@@ -163,10 +166,10 @@ namespace Kablunk
 		// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
 		static RenderCommandQueue& GetRenderCommandQueue();
 	private:
-	private:
 		inline static RendererAPI* s_renderer_api;
 
 		// #TODO fix the renderapi because this is just horrible
 		inline static RenderCommandQueue* s_command_queue = nullptr;
+		inline static std::mutex s_submit_mutex;
 	};
 }
