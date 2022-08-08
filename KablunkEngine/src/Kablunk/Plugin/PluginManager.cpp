@@ -52,6 +52,14 @@ namespace Kablunk
 		return plugin;
 	}
 
+	WeakRef<Plugin> PluginManager::try_load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
+	{
+		if (is_plugin_loaded(plugin_name))
+			return get_plugin(plugin_name);
+
+		return load_plugin(plugin_name, plugin_path, plugin_type);
+	}
+
 	WeakRef<Plugin> PluginManager::reload_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
 	{
 		KB_CORE_ASSERT(is_plugin_loaded(plugin_name), "Trying to reload {}, which is not loaded!", plugin_name);

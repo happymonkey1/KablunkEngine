@@ -19,7 +19,7 @@ namespace Kablunk
 	class NativeScriptEngine : ISingleton
 	{
 	public:
-		using GetScriptFromRegistryFuncT = INativeScript* (*)(std::string);
+		using GetScriptFromRegistryFuncT = INativeScript* (*)(const std::string&);
 	public:
 		Scope<INativeScript> get_script(const std::string& name);
 
@@ -54,7 +54,7 @@ namespace Kablunk
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" Kablunk::INativeScript* get_script_from_registry(const std::string& type_str) \
+	extern "C" __declspec(dllexport) Kablunk::INativeScript* get_script_from_registry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \

@@ -64,9 +64,12 @@ namespace Kablunk
 
 	void Plugin::load_native_script_entry_point()
 	{
-		NativeScriptEngine::GetScriptFromRegistryFuncT get_script_from_registry_func = get_function<NativeScriptEngine::GetScriptFromRegistryFuncT>("get_script_from_registry");
+		const char* entry_point_func_c_str = "get_script_from_registry";
+		KB_CORE_INFO("loading native script module '{}' entry point '{}'", m_dll_name, entry_point_func_c_str);
 
-		KB_CORE_ASSERT(get_script_from_registry_func, "{} failed to load GetScriptFromRegistry!", m_dll_name);
+		NativeScriptEngine::GetScriptFromRegistryFuncT get_script_from_registry_func = get_function<NativeScriptEngine::GetScriptFromRegistryFuncT>(entry_point_func_c_str);
+
+		KB_CORE_ASSERT(get_script_from_registry_func, "{} failed to load get_script_from_registry!", m_dll_name);
 
 		Singleton<NativeScriptEngine>::get()->set_get_script_from_registry_func(get_script_from_registry_func);
 	}

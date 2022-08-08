@@ -56,11 +56,13 @@ namespace Kablunk
 		KB_CORE_ASSERT(is_loaded(), "dll was not loaded into memory!");
 
 		// #TODO c++ style casting
-		FuncT dll_func = (FuncT)(GetProcAddress(m_handle, func_name.c_str()));
+		FARPROC raw_ptr = GetProcAddress(m_handle, func_name.c_str());
+		FuncT dll_func = (FuncT)(raw_ptr);
 
 		if (!dll_func)
 		{
-			KB_CORE_ASSERT(false, "Failed to load function '{}' from dll '{}'", func_name, m_dll_name);
+			KB_CORE_ERROR("Failed to load function '{}' from dll '{}'", func_name, m_dll_name);
+			KB_CORE_ASSERT(false, "failure!");
 			return nullptr;
 		}
 

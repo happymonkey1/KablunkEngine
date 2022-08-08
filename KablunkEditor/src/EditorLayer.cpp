@@ -143,7 +143,7 @@ namespace Kablunk
 
 		OnOverlayRender();
 		
-		SceneRenderer::WaitForThreads();
+		SceneRenderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -265,10 +265,10 @@ namespace Kablunk
 			m_viewport_size = { width, height };
 			// #TODO recreating editor camera projection every frame seems unnecessary 
 			m_editor_camera.OnViewportResize(width, height);
-			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
 			UI::Image(
-				m_viewport_renderer->GetFinalPassImage(),
+				m_viewport_renderer->get_final_render_pass_image(),
 				{ m_viewport_size.x, m_viewport_size.y }
 			);
 
@@ -713,7 +713,7 @@ namespace Kablunk
 		m_runtime_scene->OnStartRuntime();
 
 		m_active_scene = m_runtime_scene;
-		m_viewport_renderer->SetScene(m_active_scene);
+		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		m_selected_entity = {};
 	}
@@ -729,7 +729,7 @@ namespace Kablunk
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
-		m_viewport_renderer->SetScene(m_active_scene);
+		m_viewport_renderer->set_scene(m_active_scene);
 		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
 	}
 
@@ -857,7 +857,7 @@ namespace Kablunk
 		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
-		m_viewport_renderer->SetScene(m_active_scene);
+		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
 		Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
@@ -928,7 +928,7 @@ namespace Kablunk
 			Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
-			m_viewport_renderer->SetScene(m_active_scene);
+			m_viewport_renderer->set_scene(m_active_scene);
 
 			m_editor_scene_path = path;
 		}
@@ -971,6 +971,7 @@ namespace Kablunk
 
 		std::string plugin_name = Project::GetActive()->GetProjectName();
 		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
+		KB_CORE_INFO("KablunkEditor loading native script module '{}'", plugin_name);
 
 		Singleton<PluginManager>::get()->load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
 	}
@@ -1156,7 +1157,7 @@ namespace Kablunk
 		CSharpScriptEngine::SetSceneContext(nullptr);
 		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
 
-		m_viewport_renderer->SetScene(nullptr);
+		m_viewport_renderer->set_scene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);
 		m_active_scene = nullptr;
 
@@ -1209,7 +1210,7 @@ namespace Kablunk
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (!m_viewport_renderer->GetFinalPassImage())
+		if (!m_viewport_renderer->get_final_render_pass_image())
 			return;
 
 		if (m_show_physics_colliders)
@@ -1253,7 +1254,7 @@ namespace Kablunk
 			}
 
 			Renderer2D::BeginScene(*camera, transform);
-			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
+			Renderer2D::SetTargetRenderPass(m_viewport_renderer->get_external_composite_render_pass());
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 

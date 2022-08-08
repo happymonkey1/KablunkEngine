@@ -2,6 +2,9 @@
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
+#include "Kablunk/Plugin/PluginManager.h"
+#include "Kablunk/Project/Project.h"
+
 namespace Kablunk
 {
 
@@ -17,6 +20,14 @@ namespace Kablunk
 
 	Scope<INativeScript> NativeScriptEngine::get_script(const std::string& name)
 	{
+		// Try load function pointer from dll module
+		if (!m_get_script_from_registry && Project::GetActive())
+		{
+			const std::string& plugin_name = Project::GetActive()->GetProjectName();
+			std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
+			Singleton<PluginManager>::get()->try_load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
+		}
+
 		KB_CORE_ASSERT(m_get_script_from_registry, "GetScriptFromRegistry function ptr not set!");
 
 		return Scope<INativeScript>(m_get_script_from_registry(name));
