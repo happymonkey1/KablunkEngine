@@ -367,8 +367,10 @@ namespace Kablunk
 			ImGui::End();
 		}
 		
-		
-		m_active_scene->OnImGuiRender();
+		// #TODO separate editor and runtime imgui render paths
+		if (m_scene_state != SceneState::Edit)
+			m_active_scene->OnImGuiRender();
+
 
 		CSharpScriptEngine::OnImGuiRender();
 
@@ -708,11 +710,12 @@ namespace Kablunk
 				CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
 
 		m_runtime_scene = Scene::Copy(m_active_scene);
-		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
-		Singleton<NativeScriptEngine>::get()->set_scene(m_runtime_scene);
-		m_runtime_scene->OnStartRuntime();
-
 		m_active_scene = m_runtime_scene;
+
+		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
+		Singleton<NativeScriptEngine>::get()->set_scene(m_active_scene);
+		m_active_scene->OnStartRuntime();
+
 		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		m_selected_entity = {};

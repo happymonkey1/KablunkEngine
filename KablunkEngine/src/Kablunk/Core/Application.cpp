@@ -16,6 +16,8 @@
 #include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
 
 
 namespace Kablunk
@@ -46,7 +48,13 @@ namespace Kablunk
 		{
 			m_imgui_layer = ImGuiLayer::Create();
 			PushOverlay(m_imgui_layer);
-		}
+
+			// #TODO clean up so this is necessary
+			// Get and set global ImGuiContext* for use in dll(s)
+			ImGuiGlobalContext* g_imgui_context = ImGuiGlobalContext::get();
+			g_imgui_context->init();
+			g_imgui_context->set_context(ImGui::GetCurrentContext());
+		}	
 
 		Singleton<PluginManager>::init();
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");

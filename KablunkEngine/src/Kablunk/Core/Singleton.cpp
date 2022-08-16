@@ -37,7 +37,7 @@ namespace Kablunk
 		}
 	}
 
-	void get_shared_instance(const std::type_index& type_index, GetStaticInstanceFuncT get_static_instance, void** instance)
+	KB_API void get_shared_instance(const std::type_index& type_index, GetStaticInstanceFuncT get_static_instance, void** instance)
 	{
 		Internal::SingletonManager* manager = nullptr;
 

@@ -70,8 +70,8 @@ namespace Kablunk
 			aiMesh* mesh = scene->mMeshes[m];
 
 			Submesh& submesh = m_sub_meshes.emplace_back();
-			submesh.BaseVertex = vertex_count;
-			submesh.BaseIndex = index_count;
+			submesh.BaseVertex = static_cast<uint32_t>(vertex_count);
+			submesh.BaseIndex = static_cast<uint32_t>(index_count);
 			submesh.Material_index = mesh->mMaterialIndex;
 			submesh.VertexCount = mesh->mNumVertices;
 			submesh.IndexCount = mesh->mNumFaces * 3;
@@ -556,7 +556,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::Mesh(const IntrusiveRef<Mesh>& other)
@@ -567,7 +567,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
@@ -577,7 +577,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::~Mesh()

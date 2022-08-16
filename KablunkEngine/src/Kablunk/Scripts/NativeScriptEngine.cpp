@@ -18,7 +18,7 @@ namespace Kablunk
 
 	}
 
-	Scope<INativeScript> NativeScriptEngine::get_script(const std::string& name)
+	INativeScript* NativeScriptEngine::get_script(const std::string& name)
 	{
 		// Try load function pointer from dll module
 		if (!m_get_script_from_registry && Project::GetActive())
@@ -30,7 +30,7 @@ namespace Kablunk
 
 		KB_CORE_ASSERT(m_get_script_from_registry, "GetScriptFromRegistry function ptr not set!");
 
-		return Scope<INativeScript>(m_get_script_from_registry(name));
+		return m_get_script_from_registry(name);
 	}
 
 	void NativeScriptEngine::set_scene(WeakRef<Scene> scene)

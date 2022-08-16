@@ -25,6 +25,11 @@ namespace Kablunk
 		virtual void OnEvent(Event& e) = 0;
 		virtual void OnImGuiRender() = 0;
 		virtual bool OnRender2D(const SpriteRendererComponent&) = 0;
+
+	protected:
+		virtual void bind_entity(Entity entity) = 0;
+	private:
+		friend class Scene;
 	};
 
 	class NativeScript : public INativeScript
@@ -54,7 +59,7 @@ namespace Kablunk
 		template <typename T>
 		T& GetComponent() const { return m_entity.GetComponent<T>() }
 	private:
-		void BindEntity(Entity entity) { m_entity = entity; }
+		virtual void bind_entity(Entity entity) override { m_entity = entity; }
 	private:
 		Entity m_entity = {};
 

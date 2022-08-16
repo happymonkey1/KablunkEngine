@@ -15,7 +15,7 @@ namespace Kablunk
 {
 	class Entity;
 	class SceneRenderer;
-	class TransformComponent;
+	struct TransformComponent;
 	
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
 	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";

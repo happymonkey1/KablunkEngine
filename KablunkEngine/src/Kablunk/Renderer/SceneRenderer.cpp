@@ -228,7 +228,7 @@ namespace Kablunk
 				const uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
 				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
-				buffer_set->RT_SetData(&point_light_ub_data, point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count);
+				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
 			}
 		);
 	}
@@ -355,13 +355,13 @@ namespace Kablunk
 
 	void SceneRenderer::geometry_pass()
 	{
-		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
+		m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
 		// submit transform data
 		RenderCommand::Submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 			{
-				transform_buffer->RT_SetData(transform_data, sizeof(TransformVertexData) * transform_count);
+				transform_buffer->RT_SetData(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
 			}
 		);
 		
@@ -369,7 +369,7 @@ namespace Kablunk
 		for (const auto& draw_command_data : m_draw_list)
 		{
 			// #TODO update transform buffer and pass through
-			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, m_transform_buffer, transform_offset_ind++, 1);
+			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, m_transform_buffer, transform_offset_ind++, 1ul);
 		}
 
 		RenderCommand::EndRenderPass(m_command_buffer);
@@ -378,7 +378,7 @@ namespace Kablunk
 
 	void SceneRenderer::composite_pass()
 	{
-		m_gpu_time_query_indices.composite_pass_query = m_command_buffer->BeginTimestampQuery();
+		m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 
 		constexpr float exposure = 1.0f; // #TODO dynamic based off camera

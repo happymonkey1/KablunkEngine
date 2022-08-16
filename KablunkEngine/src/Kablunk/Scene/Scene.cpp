@@ -285,9 +285,10 @@ namespace Kablunk
 				Entity entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 
-				dynamic_cast<NativeScript*>(nsc.Instance.get())->BindEntity(entity);
+				nsc.Instance->bind_entity(entity);
 
-				KB_CORE_ASSERT(nsc.Instance, "Instance not set");
+				if (!nsc.Instance)
+					KB_CORE_ASSERT(false, "Instance not set");
 
 				try
 				{
@@ -297,19 +298,19 @@ namespace Kablunk
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 				catch (std::exception& e)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 
 			}
@@ -335,19 +336,19 @@ namespace Kablunk
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 				catch (std::exception& e)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
-					nsc.Instance.reset();
+					nsc.destroy_script();
 				}
 
 			}
@@ -376,19 +377,19 @@ namespace Kablunk
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.destroy_script();
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.destroy_script();
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
 						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
-						native_script_component.Instance.reset();
+						native_script_component.destroy_script();
 					}
 				}
 			}
@@ -872,6 +873,7 @@ namespace Kablunk
 
 	void Scene::on_native_script_component_construct(entt::registry& registry, entt::entity entity)
 	{
+		KB_CORE_INFO("Scene::on_native_script_component_construct called!");
 		registry.get<NativeScriptComponent>(entity).BindEditor();
 	}
 

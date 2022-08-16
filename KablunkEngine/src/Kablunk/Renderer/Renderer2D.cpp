@@ -412,7 +412,7 @@ namespace Kablunk
 	void Renderer2D::OnImGuiRender()
 	{
 		uint32_t current_frame_index = Renderer::GetCurrentFrameIndex();
-		ImGui::Text("2D Geometry Pass: %.3fms", s_renderer_data->render_command_buffer->GetExecutionGPUTime(current_frame_index, s_renderer_data->gpu_time_query.renderer_2D_query));
+		ImGui::Text("2D Geometry Pass: %.3fms", s_renderer_data->render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(s_renderer_data->gpu_time_query.renderer_2D_query)));
 	}
 
 	IntrusiveRef<RenderPass> Renderer2D::GetTargetRenderPass()

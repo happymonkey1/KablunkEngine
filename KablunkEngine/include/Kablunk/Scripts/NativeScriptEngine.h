@@ -21,7 +21,8 @@ namespace Kablunk
 	public:
 		using GetScriptFromRegistryFuncT = INativeScript* (*)(const std::string&);
 	public:
-		Scope<INativeScript> get_script(const std::string& name);
+		// Returns a pointer to the script instance that is instantiated by the game module.
+		INativeScript* get_script(const std::string& name);
 
 		WeakRef<Scene> get_scene();
 		void set_scene(WeakRef<Scene> scene);

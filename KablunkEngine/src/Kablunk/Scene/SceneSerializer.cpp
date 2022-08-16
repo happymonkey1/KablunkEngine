@@ -318,9 +318,10 @@ namespace Kablunk
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{
 				auto filepath = data["Filepath"].as<std::string>();
-				component.BindEditor(filepath);
-
-				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
+				if (!filepath.empty())
+					component.BindEditor(filepath);
+				else
+					KB_CORE_WARN("Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 			});
 
 		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
