@@ -113,6 +113,11 @@ namespace Kablunk
 
 		void on_native_script_component_construct(entt::registry& registry, entt::entity entity);
 		void on_native_script_component_destroy(entt::registry& registry, entt::entity entity);
+
+		// callback when CameraComponent is created in registry
+		void on_camera_component_construct(entt::registry& registry, entt::entity entity);
+		// callback when CameraComponent is removed from registry
+		void on_camera_component_destroy(entt::registry& registry, entt::entity entity);
 	private:
 		std::string m_name{ DEFAULT_SCENE_NAME };
 		uuid::uuid64 m_scene_id = uuid::generate();
@@ -124,6 +129,10 @@ namespace Kablunk
 		b2World* m_box2D_world = nullptr;
 
 		LightEnvironmentData m_light_environment;
+
+		// reference to primary camera entity. set when a CameraComponent is created that is tagged with primary, 
+		// or when the reference is null and GetPrimaryCameraEntity is called for the first time.
+		Entity* m_primary_camera_entity = nullptr;
 
 		// fixed update
 		float last_time = 0.0f;

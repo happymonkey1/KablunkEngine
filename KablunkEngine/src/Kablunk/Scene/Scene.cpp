@@ -35,6 +35,9 @@ namespace Kablunk
 		m_registry.on_construct<NativeScriptComponent>().connect<&Scene::on_native_script_component_construct>(this);
 		m_registry.on_destroy<NativeScriptComponent>().connect<&Scene::on_native_script_component_destroy>(this);
 
+		m_registry.on_construct<CameraComponent>().connect<&Scene::on_camera_component_construct>(this);
+		m_registry.on_destroy<CameraComponent>().connect<&Scene::on_camera_component_destroy>(this);
+
 		auto m_scene_entity = m_registry.create();
 		m_registry.emplace_or_replace<SceneComponent>(m_scene_entity, m_scene_id);
 
@@ -51,6 +54,12 @@ namespace Kablunk
 
 		m_registry.on_construct<NativeScriptComponent>().disconnect<&Scene::on_native_script_component_construct>(this);
 		m_registry.on_destroy<NativeScriptComponent>().disconnect<&Scene::on_native_script_component_destroy>(this);
+
+		m_registry.on_construct<CameraComponent>().disconnect<&Scene::on_camera_component_construct>(this);
+		m_registry.on_destroy<CameraComponent>().disconnect < &Scene::on_camera_component_destroy> (this);
+
+		if (m_primary_camera_entity)
+			delete m_primary_camera_entity;
 	}
 
 	IntrusiveRef<Scene> Scene::Create()
@@ -120,6 +129,8 @@ namespace Kablunk
 		}
 
 		CopyComponent<TransformComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<ParentingComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<PrefabComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<SpriteRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleRendererComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CameraComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
@@ -136,6 +147,7 @@ namespace Kablunk
 			CSharpScriptEngine::CopyEntityScriptData(dest_scene->GetUUID(), src_scene->GetUUID());
 
 		// #TODO copy parent hierarchy
+		KB_CORE_WARN("Entity hierarchy not copied to scene '{}'", dest_scene->GetUUID());
 
 		return dest_scene;
 	}
@@ -285,10 +297,10 @@ namespace Kablunk
 				Entity entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 
-				nsc.Instance->bind_entity(entity);
-
-				if (!nsc.Instance)
+				if (!nsc.Instance.get())
 					KB_CORE_ASSERT(false, "Instance not set");
+				
+				nsc.Instance->bind_entity(entity);
 
 				try
 				{
@@ -712,12 +724,22 @@ namespace Kablunk
 
 	Entity Scene::GetPrimaryCameraEntity()
 	{
+		if (m_primary_camera_entity)
+			return *m_primary_camera_entity;
+
+		// #TODO view is not working for one CameraComponent in copied scene...
 		auto view = m_registry.view<CameraComponent>();
 		for (auto entity : view)
 		{
 			const auto& camera = view.get<CameraComponent>(entity);
 			if (camera.Primary)
+			{
+				// set primary camera entity if not already set.
+				if (!m_primary_camera_entity)
+					m_primary_camera_entity = new Entity{ entity, this };
+
 				return { entity, this };
+			}
 		}
 
 		return {};
@@ -880,6 +902,30 @@ namespace Kablunk
 	void Scene::on_native_script_component_destroy(entt::registry& registry, entt::entity entity)
 	{
 
+	}
+
+	void Scene::on_camera_component_construct(entt::registry& registry, entt::entity entity)
+	{
+		Entity camera_entity = { entity, this };
+		CameraComponent& camera_comp = camera_entity.GetComponent<CameraComponent>();
+#if KB_DEBUG
+		KB_CORE_INFO("Constructing CameraComponent with tag '{}'", camera_entity.GetComponent<TagComponent>().Tag);
+#endif
+		if (camera_comp.Primary && !m_primary_camera_entity)
+			m_primary_camera_entity = new Entity{ entity, this };
+		else if (camera_comp.Primary)
+			KB_CORE_WARN("Secondary primary camera entity constructed!");
+	}
+
+	void Scene::on_camera_component_destroy(entt::registry& registry, entt::entity entity)
+	{
+		Entity camera_entity = { entity, this };
+		CameraComponent& camera_comp = camera_entity.GetComponent<CameraComponent>();
+		if (camera_comp.Primary && m_primary_camera_entity && camera_entity == *m_primary_camera_entity)
+		{
+			delete m_primary_camera_entity;
+			m_primary_camera_entity = nullptr;
+		}
 	}
 
 	template <>

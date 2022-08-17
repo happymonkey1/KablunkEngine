@@ -19,10 +19,10 @@ namespace Kablunk
 	class NativeScriptEngine
 	{
 	public:
-		using GetScriptFromRegistryFuncT = INativeScript* (*)(const std::string&);
+		using GetScriptFromRegistryFuncT = std::unique_ptr<INativeScript> (*)(const std::string&);
 	public:
 		// Returns a pointer to the script instance that is instantiated by the game module.
-		INativeScript* get_script(const std::string& name);
+		std::unique_ptr<INativeScript> get_script(const std::string& name);
 
 		WeakRef<Scene> get_scene();
 		void set_scene(WeakRef<Scene> scene);
@@ -46,21 +46,21 @@ namespace Kablunk
 /* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
 // #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
 #	define IMPLEMENT_NATIVE_SCRIPT(T) \
-		static Kablunk::INativeScript* Create() \
+		static std::unique_ptr<Kablunk::INativeScript> Create() \
 		{ \
-			return new T(); \
+			return std::make_unique<T>(); \
 		}
 
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" __declspec(dllexport) Kablunk::INativeScript* get_script_from_registry(const std::string& type_str) \
+	extern "C" __declspec(dllexport) std::unique_ptr<Kablunk::INativeScript> get_script_from_registry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
 			return T::Create();
 #	define END_REGISTER_NATIVE_SCRIPTS() \
-		return nullptr; \
+		return std::unique_ptr<Kablunk::INativeScript>(nullptr); \
 	};
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT

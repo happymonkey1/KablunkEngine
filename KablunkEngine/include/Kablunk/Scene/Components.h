@@ -138,7 +138,7 @@ namespace Kablunk
 	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
-		INativeScript* Instance = nullptr;
+		std::unique_ptr<INativeScript> Instance = nullptr;
 		std::filesystem::path Filepath = "";
 
 		using InstantiateScriptFunc = Scope<INativeScript>(*)();
@@ -234,15 +234,7 @@ namespace Kablunk
 		// Destroy the instance of the script and potentially free memory.
 		void destroy_script(bool free_memory = true)
 		{
-			// #TODO leaking memory!
-			if (free_memory)
-			{
-				auto struct_names = Parser::CPP::FindClassAndStructNames(Filepath.string(), 1);
-				auto name = struct_names.empty() ? "INV_SCRIPT_NAME" : struct_names[0].c_str();
-				KB_CORE_WARN("{} is leaking memory!", name);
-			}
-
-			Instance = nullptr;
+			Instance.reset();
 		}
 
 		friend class Scene;

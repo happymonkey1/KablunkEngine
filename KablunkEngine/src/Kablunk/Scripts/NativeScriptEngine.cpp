@@ -18,7 +18,7 @@ namespace Kablunk
 
 	}
 
-	INativeScript* NativeScriptEngine::get_script(const std::string& name)
+	std::unique_ptr<INativeScript> NativeScriptEngine::get_script(const std::string& name)
 	{
 		// Try load function pointer from dll module
 		if (!m_get_script_from_registry && Project::GetActive())

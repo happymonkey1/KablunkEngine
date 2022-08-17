@@ -13,6 +13,7 @@ project "KablunkEngine"
 	files
 	{
 		"include/**.h",
+		"include/**.hpp",
 		"src/**.cpp",
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
