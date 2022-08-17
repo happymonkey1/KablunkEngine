@@ -63,7 +63,8 @@ project "$PROJECT_NAME$"
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
-		"%{IncludeDir.VulkanSDK_LocalInclude}"
+		"%{IncludeDir.VulkanSDK_LocalInclude}",
+		"%{IncludeDir.boost}"
 	}
 
 	links

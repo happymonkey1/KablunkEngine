@@ -76,7 +76,7 @@ namespace Kablunk
 
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
-		Singleton<NativeScriptEngine>::get()->set_scene(m_active_scene);
+		NativeScriptEngine::get().set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
@@ -713,7 +713,7 @@ namespace Kablunk
 		m_active_scene = m_runtime_scene;
 
 		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
-		Singleton<NativeScriptEngine>::get()->set_scene(m_active_scene);
+		NativeScriptEngine::get().set_scene(m_active_scene);
 		m_active_scene->OnStartRuntime();
 
 		m_viewport_renderer->set_scene(m_active_scene);
@@ -733,7 +733,7 @@ namespace Kablunk
 
 		m_active_scene = m_editor_scene;
 		m_viewport_renderer->set_scene(m_active_scene);
-		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
+		NativeScriptEngine::get().set_scene(nullptr);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -863,7 +863,7 @@ namespace Kablunk
 		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-		Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
+		NativeScriptEngine::get().set_scene(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 
@@ -928,7 +928,7 @@ namespace Kablunk
 			
 			m_scene_hierarchy_panel.SetContext(m_editor_scene);
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-			Singleton<NativeScriptEngine>::get()->set_scene(m_editor_scene);
+			NativeScriptEngine::get().set_scene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
 			m_viewport_renderer->set_scene(m_active_scene);
@@ -976,7 +976,7 @@ namespace Kablunk
 		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
 		KB_CORE_INFO("KablunkEditor loading native script module '{}'", plugin_name);
 
-		Singleton<PluginManager>::get()->load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
+		PluginManager::get().load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
 	}
 
 	bool EditorLayer::CanPickFromViewport() const
@@ -1158,7 +1158,7 @@ namespace Kablunk
 		SaveProject();
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
-		Singleton<NativeScriptEngine>::get()->set_scene(nullptr);
+		NativeScriptEngine::get().set_scene(nullptr);
 
 		m_viewport_renderer->set_scene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);

@@ -14,6 +14,7 @@
 #ifdef _WIN32
 #	ifdef _WIN64
 #		define KB_PLATFORM_WINDOWS
+#		define BOOST_INTERPROCESS_WINDOWS
 #	else
 #		error "x86 is not supported!"
 #	endif

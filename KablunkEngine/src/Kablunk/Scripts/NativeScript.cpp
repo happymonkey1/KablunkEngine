@@ -9,7 +9,7 @@ namespace Kablunk
 
 	void NativeScript::Destroy()
 	{
-		WeakRef<Scene> scene = Singleton<NativeScriptEngine>::get()->get_scene();
+		WeakRef<Scene> scene = NativeScriptEngine::get().get_scene();
 
 		KB_CORE_ASSERT(scene, "scene not set!");
 

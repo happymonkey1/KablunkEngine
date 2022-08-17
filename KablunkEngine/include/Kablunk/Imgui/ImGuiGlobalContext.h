@@ -12,11 +12,11 @@
 namespace Kablunk
 {
 
-	class ImGuiGlobalContext : public ISingleton
+	class ImGuiGlobalContext
 	{
 	public:
-		virtual void init() override {};
-		virtual void shutdown() override { m_imgui_context = nullptr; }
+		void init() {};
+		void shutdown() { m_imgui_context = nullptr; }
 
 		// Set internal pointer to the current ImGui context
 		void set_context(ImGuiContext* context) { KB_CORE_ASSERT(!m_imgui_context, "context already set!"); m_imgui_context = context; }
@@ -25,14 +25,10 @@ namespace Kablunk
 		ImGuiContext* get_context() const { KB_CORE_ASSERT(m_imgui_context, "context not set!"); return m_imgui_context; }
 
 		// Get singleton instance
-		static ImGuiGlobalContext* get() { return Singleton<ImGuiGlobalContext>::get(); }
-	protected:
-		SINGLETON_CONSTRUCTOR(ImGuiGlobalContext)
-
+		SINGLETON_GET_FUNC(ImGuiGlobalContext)
 	private:
 		// pointer to the current ImGui context; must be set manually by engine
 		ImGuiContext* m_imgui_context = nullptr;
-		SINGLETON_FRIEND(ImGuiGlobalContext)
 	};
 
 }

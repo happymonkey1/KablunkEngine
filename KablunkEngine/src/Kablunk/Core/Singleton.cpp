@@ -8,7 +8,9 @@
 
 namespace Kablunk
 {
+#ifndef KB_SINGLETON_INTERNAL_IMPL
 
+#else
 	namespace Internal
 	{
 		struct SingletonManager
@@ -64,4 +66,5 @@ namespace Kablunk
 			*instance = manager->obj;
 		}
 	}
+#endif
 }

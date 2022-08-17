@@ -16,7 +16,7 @@ namespace Kablunk
 {
 	class Scene;
 
-	class NativeScriptEngine : ISingleton
+	class NativeScriptEngine
 	{
 	public:
 		using GetScriptFromRegistryFuncT = INativeScript* (*)(const std::string&);
@@ -28,15 +28,14 @@ namespace Kablunk
 		void set_scene(WeakRef<Scene> scene);
 
 		void set_get_script_from_registry_func(GetScriptFromRegistryFuncT func_ptr) { m_get_script_from_registry = func_ptr; }
-	private:
-		SINGLETON_CONSTRUCTOR(NativeScriptEngine)
-		virtual void init() override;
-		virtual void shutdown() override;
+
+		void init();
+		void shutdown();
+
+		SINGLETON_GET_FUNC(NativeScriptEngine)
 	private:
 		Scene* m_current_scene = nullptr;
 		GetScriptFromRegistryFuncT m_get_script_from_registry = nullptr;
-
-		friend class Singleton<NativeScriptEngine>;
 	};
 }
 

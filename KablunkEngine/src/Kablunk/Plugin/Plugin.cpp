@@ -56,7 +56,7 @@ namespace Kablunk
 		{
 			case PluginType::NativeScript:
 			{
-				Singleton<NativeScriptEngine>::get()->set_get_script_from_registry_func(nullptr);
+				NativeScriptEngine::get().set_get_script_from_registry_func(nullptr);
 				break;
 			}
 		}
@@ -71,7 +71,7 @@ namespace Kablunk
 
 		KB_CORE_ASSERT(get_script_from_registry_func, "{} failed to load get_script_from_registry!", m_dll_name);
 
-		Singleton<NativeScriptEngine>::get()->set_get_script_from_registry_func(get_script_from_registry_func);
+		NativeScriptEngine::get().set_get_script_from_registry_func(get_script_from_registry_func);
 	}
 
 }

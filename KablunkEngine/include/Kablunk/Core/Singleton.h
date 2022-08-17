@@ -4,13 +4,23 @@
 
 #include "Kablunk/Core/KablunkAPI.h"
 
-#include <typeinfo>
-#include <typeindex>
-#include <memory>
-#include <mutex>
+#ifndef KB_SINGLETON_INTERNAL_IMPL
+#	include <boost/interprocess/detail/intermodule_singleton.hpp>
+#else
+#	include <typeinfo>
+#	include <typeindex>
+#	include <memory>
+#	include <mutex>
+#endif
 
 namespace Kablunk
 {
+#ifndef KB_SINGLETON_INTERNAL_IMPL
+	template <typename T>
+	using Singleton = boost::interprocess::ipcdetail::intermodule_singleton<T>;
+
+#	define SINGLETON_GET_FUNC(T) static inline T& get() { return Singleton<T>::get(); }
+#else
 	// typedef for singleton instance function
 	using GetStaticInstanceFuncT = void*(*)();
 
@@ -67,6 +77,7 @@ namespace Kablunk
 	 
 # define SINGLETON_CONSTRUCTOR(T) T::T() { }
 # define SINGLETON_FRIEND(T) friend class Singleton<T>;
+#endif
 
 }
 

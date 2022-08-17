@@ -775,7 +775,7 @@ namespace Kablunk
 		if (entity.HasParent())
 		{
 			Entity parent = GetEntityFromUUID(entity.GetParentUUID());
-			KB_CORE_ASSERT(parent, "Failed to find parent entity. Scene probably corrup!");
+			KB_CORE_ASSERT(parent, "Failed to find parent entity. Scene probably corrupt!");
 			new_entity.SetParentUUID(entity.GetParentUUID());
 			parent.GetChildren().push_back(new_entity.GetUUID());
 		}

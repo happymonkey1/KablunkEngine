@@ -1,5 +1,6 @@
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 KablunkRootDirectory = os.getenv("KABLUNK_DIR")
+PROGRAM_FILES = os.getenv("ProgramW6432")
 
 IncludeDir = {}
 IncludeDir["stb_image"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/stb_image"
@@ -20,6 +21,7 @@ IncludeDir["cr"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/cr"
 IncludeDir["mono"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/mono/include"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 IncludeDir["VulkanSDK_LocalInclude"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/VulkanSDK/Include"
+IncludeDir["boost"] = "%{PROGRAM_FILES}/boost"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
