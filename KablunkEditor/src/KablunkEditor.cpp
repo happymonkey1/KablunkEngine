@@ -5,19 +5,6 @@
 
 namespace Kablunk
 {
-	class KablunkEditor : public Application
-	{
-	public:
-		KablunkEditor(const ApplicationSpecification& specification)
-			: Application{ specification }
-		{
-			PushLayer(new EditorLayer());
-		}
-
-		~KablunkEditor()
-		{
-		}
-	};
 
 	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
 	{
@@ -31,6 +18,12 @@ namespace Kablunk
 			true,
 			true
 		};
-		return new KablunkEditor(specification);
+
+		Application& app = Singleton<Application>::get();
+		app.set_application_specification(specification);
+		app.init();
+		app.PushLayer(new EditorLayer{});
+		
+		return &app;
 	}
 }

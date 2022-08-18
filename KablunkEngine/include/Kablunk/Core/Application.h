@@ -29,18 +29,25 @@ namespace Kablunk {
 	class Application
 	{
 	public:
-		Application(const ApplicationSpecification& specification);
+		Application();
 		virtual ~Application();
+
+		// initialize application based off application specification. Called by run function before main loop.
+		void init();
+
+		// shutdown application and release memory. Called by run function before exiting.
+		void shutdown();
+
+		// Set application specification for the application. Does not inherently modify application parameters.
+		void set_application_specification(const ApplicationSpecification& specification) { m_specification = specification; }
 
 		void Run();
 		void OnEvent(Event& e);
-		void OnStartup();
-		void OnShutdown();
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		static Application& Get() { return *s_Instance; }
+		static Application& Get() { return Singleton<Application>::get(); }
 		Window& GetWindow() { return *m_window; }
 		const ApplicationSpecification& GetSpecification() const { return m_specification; }
 
@@ -73,9 +80,6 @@ namespace Kablunk {
 		float m_last_frame_time = 0.0f;
 		
 		friend int ::main(int argc, char** argv);
-		
-	private:
-		static Application* s_Instance;
 	};
 
 	// function defined as extern in entrypoint.h, client needs to implement

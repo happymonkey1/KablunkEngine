@@ -5,7 +5,11 @@
 #include "Kablunk/Core/KablunkAPI.h"
 
 #ifndef KB_SINGLETON_INTERNAL_IMPL
-#	include <boost/interprocess/detail/intermodule_singleton.hpp>
+#	ifndef KB_DISTRIBUTION
+#		include <boost/interprocess/detail/intermodule_singleton.hpp>
+#	else
+#		include <boost/serialization/singleton.hpp>
+#	endif
 #else
 #	include <typeinfo>
 #	include <typeindex>
@@ -16,8 +20,17 @@
 namespace Kablunk
 {
 #ifndef KB_SINGLETON_INTERNAL_IMPL
-	template <typename T>
-	using Singleton = boost::interprocess::ipcdetail::intermodule_singleton<T>;
+#	ifndef KB_DISTRIBUTION
+		template <typename T>
+		using Singleton = boost::interprocess::ipcdetail::intermodule_singleton<T>;
+#	else
+		template <typename T>
+		class Singleton
+		{
+		public:
+			static T& get() { return boost::serialization::singleton<T>::get_instance(); }
+		};
+#	endif
 
 #	define SINGLETON_GET_FUNC(T) static inline T& get() { return Singleton<T>::get(); }
 #else

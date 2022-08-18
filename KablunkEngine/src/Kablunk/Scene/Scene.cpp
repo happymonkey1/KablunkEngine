@@ -896,7 +896,10 @@ namespace Kablunk
 	void Scene::on_native_script_component_construct(entt::registry& registry, entt::entity entity)
 	{
 		KB_CORE_INFO("Scene::on_native_script_component_construct called!");
-		registry.get<NativeScriptComponent>(entity).BindEditor();
+		NativeScriptComponent& nsc = registry.get<NativeScriptComponent>(entity);
+		nsc.BindEditor();
+		if (nsc.Instance)
+			nsc.Instance->bind_entity(Entity{ entity, this });
 	}
 
 	void Scene::on_native_script_component_destroy(entt::registry& registry, entt::entity entity)

@@ -22,29 +22,35 @@
 
 namespace Kablunk
 {
-
-	Application* Application::s_Instance = nullptr;
-
 	constexpr uint8_t NUM_JOB_THREADS = 4;
 
 
-	Application::Application(const ApplicationSpecification& specification)
-		: m_specification{ specification }, m_thread_pool{ NUM_JOB_THREADS }
+	Application::Application()
+		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }
 	{
-		KB_PROFILE_FUNCTION();
+		
+	}
 
-		KB_CORE_ASSERT(!s_Instance, "Application already exists!");
-		s_Instance = this;
+	Application::~Application()
+	{
+		shutdown();
+	}
+
+	void Application::init()
+	{
+		KB_CORE_INFO("Application initialized")
+
+		KB_PROFILE_FUNCTION();
 		{
-			m_window = Window::Create({ specification.Name, specification.Width, specification.height });
+			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height });
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
-			m_window->SetVsync(specification.Vsync);
+			m_window->SetVsync(m_specification.Vsync);
 		}
 
 		Renderer::Init();
 		RenderCommand::WaitAndRender();
 
-		if (specification.Enable_imgui)
+		if (m_specification.Enable_imgui)
 		{
 			m_imgui_layer = ImGuiLayer::Create();
 			PushOverlay(m_imgui_layer);
@@ -54,11 +60,11 @@ namespace Kablunk
 			ImGuiGlobalContext& g_imgui_context = ImGuiGlobalContext::get();
 			g_imgui_context.init();
 			g_imgui_context.set_context(ImGui::GetCurrentContext());
-		}	
+		}
 
 		PluginManager::get().init();
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
-		
+
 
 		// #TODO should be based on projects later
 #if KB_DEBUG
@@ -69,7 +75,7 @@ namespace Kablunk
 		//NativeScriptEngine::Open(SANDBOX_PATH);
 	}
 
-	Application::~Application()
+	void Application::shutdown()
 	{
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
@@ -151,8 +157,6 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
-		OnStartup();
-
 		while (m_running)
 		{
 			KB_PROFILE_SCOPE("RunLoop - Application::Run");
@@ -199,7 +203,7 @@ namespace Kablunk
 			m_last_frame_time = time;
 		}
 
-		OnShutdown();
+		shutdown();
 	}
 
 	void Application::RenderImGui()
@@ -211,15 +215,5 @@ namespace Kablunk
 				layer->OnImGuiRender(m_timestep);
 		}
 		
-	}
-
-	void Application::OnStartup()
-	{
-
-	}
-
-	void Application::OnShutdown()
-	{
-		//NativeScriptEngine::Shutdown();
 	}
 }

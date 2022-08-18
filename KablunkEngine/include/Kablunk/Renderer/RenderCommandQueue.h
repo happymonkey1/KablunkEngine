@@ -15,9 +15,12 @@ namespace Kablunk
 		RenderCommandQueue();
 		~RenderCommandQueue();
 
+		void shutdown();
+
 		void* Allocate(RenderCommandFn func, uint32_t size);
 
 		void Execute();
+
 	private:
 		uint8_t* m_command_buffer;
 		uint8_t* m_command_buffer_ptr;

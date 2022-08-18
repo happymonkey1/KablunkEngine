@@ -21,8 +21,8 @@ namespace Kablunk
 		static void Shutdown()
 		{
 			s_renderer_api->Shutdown();
+			Singleton<RenderCommandQueue>::get().shutdown();
 
-			delete s_command_queue;
 			delete s_renderer_api;
 		}
 
@@ -167,9 +167,6 @@ namespace Kablunk
 		static RenderCommandQueue& GetRenderCommandQueue();
 	private:
 		inline static RendererAPI* s_renderer_api;
-
-		// #TODO fix the renderapi because this is just horrible
-		inline static RenderCommandQueue* s_command_queue = nullptr;
 		inline static std::mutex s_submit_mutex;
 	};
 }

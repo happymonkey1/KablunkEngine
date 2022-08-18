@@ -19,7 +19,6 @@ namespace Kablunk
 			case RendererAPI::RenderAPI_t::Vulkan:  
 			{
 				s_renderer_api = new VulkanRendererAPI{};
-				s_command_queue = new RenderCommandQueue();
 				break;
 			}
 			default:
@@ -41,7 +40,7 @@ namespace Kablunk
 
 	RenderCommandQueue& RenderCommand::GetRenderCommandQueue()
 	{
-		return *s_command_queue;
+		return Singleton<RenderCommandQueue>::get();
 	}
 
 }
