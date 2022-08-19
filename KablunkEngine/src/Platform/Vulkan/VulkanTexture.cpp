@@ -184,9 +184,13 @@ namespace Kablunk
 				VK_PIPELINE_STAGE_HOST_BIT,
 				VK_PIPELINE_STAGE_TRANSFER_BIT,
 				0,
-				0, nullptr,
-				0, nullptr,
-				1, &image_memory_barrier);
+				0, 
+				nullptr,
+				0, 
+				nullptr,
+				1, 
+				&image_memory_barrier
+			);
 
 			VkBufferImageCopy buffer_copy_region_info = {};
 			buffer_copy_region_info.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
