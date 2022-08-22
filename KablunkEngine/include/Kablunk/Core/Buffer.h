@@ -11,6 +11,7 @@ namespace Kablunk
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
 		Buffer(void* data, size_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
+		Buffer(size_t size) : m_data{ nullptr }, m_size{ size } { Allocate(size); }
 		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
 		{
 			if (other.m_data)
@@ -53,8 +54,11 @@ namespace Kablunk
 		// size in bytes
 		void Allocate(size_t size)
 		{
-			delete[] m_data;
-			m_data = nullptr;
+			if (m_data)
+			{
+				delete[] m_data;
+				m_data = nullptr;
+			}
 
 			if (size == 0)
 				return;

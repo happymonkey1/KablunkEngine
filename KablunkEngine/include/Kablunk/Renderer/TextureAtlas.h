@@ -63,6 +63,9 @@ namespace Kablunk
 	private:
 		// split up texture atlas into sub sprites
 		void splice_texture_atlas();
+
+		// create a texture atlas from individual textures
+		void create_texture_atlas_from_images(const std::vector<IntrusiveRef<Texture2D>> textures);
 	private:
 		// primary atlas texture that is used to create sub sprites
 		IntrusiveRef<Texture2D> m_atlas_texture;

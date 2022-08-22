@@ -83,7 +83,7 @@ namespace Kablunk
 			});
 	}
 
-	Buffer VulkanTexture2D::GetWriteableBuffer()
+	Buffer& VulkanTexture2D::GetWriteableBuffer()
 	{
 		return m_image_data;
 	}

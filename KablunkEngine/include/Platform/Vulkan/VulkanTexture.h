@@ -32,7 +32,7 @@ namespace Kablunk
 
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
-		virtual Buffer GetWriteableBuffer() override;
+		virtual Buffer& GetWriteableBuffer() override;
 
 		virtual void SetData(void* data, uint32_t size) override;
 
