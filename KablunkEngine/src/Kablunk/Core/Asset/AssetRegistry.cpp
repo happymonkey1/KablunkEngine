@@ -18,11 +18,13 @@ namespace Kablunk::asset
 	bool AssetRegistry::deserialize(const std::filesystem::path& filepath)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
+		return false;
 	}
 
 	bool AssetRegistry::deserialize_binary(const std::filesystem::path& filepath)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
+		return false;
 	}
 
 }

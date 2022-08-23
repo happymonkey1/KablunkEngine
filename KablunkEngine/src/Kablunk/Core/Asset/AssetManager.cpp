@@ -28,7 +28,8 @@ namespace Kablunk::asset
 
 	const std::filesystem::path& AssetManager::get_relative_path(const std::filesystem::path& path) const
 	{
-
+		KB_CORE_ASSERT(false, "not implemented!");
+		return {};
 	}
 
 	AssetType AssetManager::get_asset_type_from_filepath(const std::filesystem::path& path) const
@@ -50,7 +51,7 @@ namespace Kablunk::asset
 
 	const asset_id_t& AssetManager::find_asset_id_based_on_filepath(const std::filesystem::path& filepath) const
 	{
-		get_metadata(filepath).id;
+		return get_metadata(filepath).id;
 	}
 
 	AssetMetadata& AssetManager::get_metadata(const asset_id_t& id)

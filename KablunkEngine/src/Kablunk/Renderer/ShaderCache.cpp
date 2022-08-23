@@ -14,7 +14,7 @@ namespace Kablunk
 		std::map<std::string, uint32_t> shader_cache;
 		Deserialize(shader_cache);
 
-		uint32_t hash = Hash::GenerateFNVHash(source.c_str());
+		uint32_t hash = Hash::generate_fnv_hash(source.c_str());
 		if (shader_cache.find(shader.string()) == shader_cache.end() || shader_cache.at(shader.string()) != hash)
 		{
 			shader_cache[shader.string()] = hash;
