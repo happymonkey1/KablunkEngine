@@ -474,9 +474,12 @@ namespace Kablunk
 
 				// #TODO replace with filesystem instead of c
 				FILE* f;
-				fopen_s(&f, cached_filepath.c_str(), "wb");
-				fwrite(output_binary[stage].data(), sizeof(uint32_t), output_binary[stage].size(), f);
-				fclose(f);
+				errno_t err = fopen_s(&f, cached_filepath.c_str(), "wb");
+				if (!err)
+				{
+					fwrite(output_binary[stage].data(), sizeof(uint32_t), output_binary[stage].size(), f);
+					fclose(f);
+				}
 			}
 		}
 	}

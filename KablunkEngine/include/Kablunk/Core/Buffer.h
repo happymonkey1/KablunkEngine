@@ -10,7 +10,7 @@ namespace Kablunk
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
-		Buffer(void* data, size_t size) : m_data{ (uint8_t*)data }, m_size{ size } {}
+		Buffer(void* data, size_t size) : m_data{ (u8*)data }, m_size{ size } {}
 		Buffer(size_t size) : m_data{ nullptr }, m_size{ size } { Allocate(size); }
 		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
 		{
@@ -28,7 +28,7 @@ namespace Kablunk
 			Release();
 		}
 
-		Buffer& operator=(const Buffer& other)
+		inline Buffer& operator=(const Buffer& other)
 		{
 			if (other.m_data != nullptr)
 			{
@@ -43,7 +43,7 @@ namespace Kablunk
 			return *this;
 		}
 
-		static Buffer Copy(const void* data, size_t size)
+		inline static Buffer Copy(const void* data, size_t size)
 		{
 			Buffer buffer;
 			buffer.Allocate(size);
@@ -52,7 +52,7 @@ namespace Kablunk
 		}
 
 		// size in bytes
-		void Allocate(size_t size)
+		inline void Allocate(size_t size)
 		{
 			if (m_data)
 			{
@@ -63,18 +63,20 @@ namespace Kablunk
 			if (size == 0)
 				return;
 
-			m_data = new uint8_t[size];
+			//m_data = new uint8_t[size];
+			m_data = kb_new_array(u8, size);
 			m_size = size;
 		}
 
-		void Release()
+		inline void Release()
 		{
-			delete[] m_data;
+			kb_delete(m_data);
+			// detete[] m_data;
 			m_data = nullptr;
 			m_size = 0;
 		}
 
-		void ZeroInitialize()
+		inline void ZeroInitialize()
 		{
 			if (m_data && m_size > 0)
 				memset(m_data, 0, m_size);
@@ -89,15 +91,15 @@ namespace Kablunk
 			return *(T*)(m_data + offset);
 		}
 
-		uint8_t* ReadBytes(size_t size, size_t offset)
+		inline uint8_t* ReadBytes(size_t size, size_t offset)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
-			uint8_t* buffer = new uint8_t[size];
+			u8* buffer = kb_new_array(u8, size);
 			memcpy(buffer, m_data + offset, size);
 			return buffer;
 		}
 
-		void Write(void* data, size_t size, size_t offset = 0)
+		inline void Write(void* data, size_t size, size_t offset = 0)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
 			memcpy(m_data + offset, data, size);
@@ -105,9 +107,9 @@ namespace Kablunk
 
 		operator bool() const { return m_data; }
 
-		uint8_t& operator[](int index) { return m_data[index]; }
+		u8& operator[](int index) { return m_data[index]; }
 
-		uint8_t operator[](int index) const { return m_data[index]; }
+		u8 operator[](int index) const { return m_data[index]; }
 
 		template <typename T>
 		T* As() const { return (T*)m_data; }
@@ -116,8 +118,10 @@ namespace Kablunk
 		inline void* get() { return (void*)m_data; }
 		inline const void* get() const { return (void*)m_data; }
 	private:
+		// capacity of the buffer
 		size_t m_size;
-		uint8_t* m_data;
+		// pointer to the head of the block of memory
+		u8* m_data;
 	};
 }
 

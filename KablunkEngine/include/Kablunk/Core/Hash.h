@@ -30,7 +30,7 @@ namespace Kablunk
 			return hash;
 		}
 
-		template <typename T>
+		template <typename T = u32>
 		inline static T generate_fnv_hash(const std::string& string)
 		{
 			return generate_fnv_hash<T>(string.c_str());

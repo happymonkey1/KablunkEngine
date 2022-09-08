@@ -10,7 +10,11 @@ namespace Kablunk
 	{
 		Logger::get().init();
 
-		KB_CORE_INFO("Core initilized");
+		KB_CORE_INFO("Logger initilized");
+
+		memory::GeneralAllocator::get_mutable().init();
+
+		KB_CORE_INFO("Core initialized");
 	}
 
 	void ShutdownCore()

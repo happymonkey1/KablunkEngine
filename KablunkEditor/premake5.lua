@@ -40,7 +40,8 @@ project "KablunkEditor"
         "Sandbox",
         --"Sandbox.dll",
         "FreeType",
-        "%{Library.mono}"
+        "%{Library.mono}",
+        "GLFW"
     }
 
     defines

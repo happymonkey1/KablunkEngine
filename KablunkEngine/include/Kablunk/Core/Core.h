@@ -6,6 +6,7 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Singleton.h"
+#include "Kablunk/Core/Memory/Memory.h"
 #include <memory>
 
 namespace Kablunk

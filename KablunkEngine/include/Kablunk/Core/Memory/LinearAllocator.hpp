@@ -8,10 +8,13 @@
 
 #include <memory>
 
-namespace Kablunk
+namespace Kablunk::memory
 {
 
-	/* Linear allocator which just increments a pointer for every allocated object*/
+	/* 
+	Linear allocator which just increments a pointer for every allocated object
+	Default size of 10mb
+	*/
 	template <size_t Size = 102400Ui64>
 	class LinearAllocator
 	{

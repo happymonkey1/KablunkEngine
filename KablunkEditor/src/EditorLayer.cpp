@@ -472,6 +472,40 @@ namespace Kablunk
 				OpenProject(s_project_filepath_buffer);
 		}
 
+		/* Memory tracking panel */
+
+		if (ImGui::Begin("Tracked Memory Usage"))
+		{
+			float total_allocated = static_cast<float>(memory::GeneralAllocator::get().get_total_allocated()) / 1024.0f;
+			float total_freed = static_cast<float>(memory::GeneralAllocator::get().get_total_freed()) / 1024.0f;
+
+			UI::BeginProperties();
+
+			// #TODO downcasting bad!
+			UI::PropertyReadOnlyFloat("total allocations (Kb)", total_allocated);
+			UI::PropertyReadOnlyFloat("total frees (Kb)", total_freed);
+
+			const auto& allocation_stat_map = memory::GeneralAllocator::get().get_allocation_statistics_map();
+			for (const auto& [desc, usage_stats] : allocation_stat_map)
+			{
+				ImGui::Separator();
+				
+				std::filesystem::path filepath = std::filesystem::path{ desc };
+				float allocated_kb = static_cast<float>(usage_stats.total_allocated) / 1024.0f;
+				float freed_kb = static_cast<float>(usage_stats.total_freed) / 1024.0f;
+
+				UI::PropertyReadOnlyString("File", filepath.stem().string());
+				UI::PropertyReadOnlyFloat("total allocations (Kb)", allocated_kb);
+				UI::PropertyReadOnlyFloat("total frees (Kb)", freed_kb);
+			}
+
+			UI::EndProperties();
+
+			ImGui::End();
+		}
+
+		/* End memory tracking panel */
+
 
 		ImGui::PopStyleVar(2);
 
