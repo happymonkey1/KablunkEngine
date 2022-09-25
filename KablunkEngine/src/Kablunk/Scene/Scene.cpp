@@ -4,7 +4,7 @@
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Scene/Entity.h"
 
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/SceneRenderer.h"
 
@@ -552,8 +552,8 @@ namespace Kablunk
 		// Renderer2D
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			Renderer2D::BeginScene(main_camera_proj * main_camera_transform);
-			Renderer2D::SetTargetRenderPass(scene_renderer->get_external_composite_render_pass());
+			render2d::begin_scene(main_camera_proj * main_camera_transform);
+			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			std::map<entt::entity, bool> already_rendered_entites;
 			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
@@ -579,7 +579,7 @@ namespace Kablunk
 					continue;
 
 				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
-					Renderer2D::DrawSprite({ entity, this });
+					render2d::draw_sprite({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
@@ -587,10 +587,10 @@ namespace Kablunk
 			{
 				Entity circle_entity = Entity{ entity, this };
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
-				Renderer2D::DrawCircle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+				render2d::draw_circle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 
-			Renderer2D::EndScene();
+			render2d::end_scene();
 		}
 	}
 
@@ -667,8 +667,8 @@ namespace Kablunk
 		// #TODO move to scene renderer
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			Renderer2D::BeginScene(camera.GetProjection() * camera.GetViewMatrix());
-			Renderer2D::SetTargetRenderPass(scene_renderer->get_external_composite_render_pass());
+			render2d::begin_scene(camera.GetProjection() * camera.GetViewMatrix());
+			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
@@ -677,7 +677,7 @@ namespace Kablunk
 				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
 
 				if (src.Visible)
-					Renderer2D::DrawSprite({ entity, this });
+					render2d::draw_sprite({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
@@ -685,10 +685,10 @@ namespace Kablunk
 			{
 				Entity circle_entity = Entity{ entity, this };
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
-				Renderer2D::DrawCircle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+				render2d::draw_circle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 
-			Renderer2D::EndScene();
+			render2d::end_scene();
 		}
 	}
 

@@ -20,8 +20,8 @@
 
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Framebuffer.h"

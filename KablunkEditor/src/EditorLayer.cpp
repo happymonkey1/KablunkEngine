@@ -22,6 +22,8 @@
 
 #include "Kablunk/Plugin/PluginManager.h"
 
+#include "Kablunk/Renderer/RenderCommand2D.h"
+
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
 
@@ -113,7 +115,7 @@ namespace Kablunk
 		//   Render
 		// ==========
 
-		Renderer2D::ResetStats();
+		render2d::reset_stats();
 
 
 		switch (m_scene_state)
@@ -224,7 +226,7 @@ namespace Kablunk
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+			render2d::renderer_2d_stats_t stats = render2d::get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -1301,12 +1303,14 @@ namespace Kablunk
 				return;
 			}
 
-			Renderer2D::BeginScene(*camera, transform);
-			Renderer2D::SetTargetRenderPass(m_viewport_renderer->get_external_composite_render_pass());
+			// #TODO move to scene renderer
+
+			render2d::begin_scene(*camera, transform);
+			render2d::set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
-			// Quads
+			// Rectangles (Quads)
 			{
 				auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, BoxCollider2DComponent>();
 				for (auto e : view)
@@ -1317,7 +1321,7 @@ namespace Kablunk
 					auto scale = glm::vec2{ transform.Scale.x, transform.Scale.y } *bc2D_comp.Size;
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					Renderer2D::DrawRect(translate, scale, 0, LIGHT_GREEN_COL);
+					render2d::draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
 
 				}
 			}
@@ -1331,12 +1335,12 @@ namespace Kablunk
 					auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
 
 					auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					Renderer2D::DrawCircle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
+					render2d::draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
 
 
-			Renderer2D::EndScene();
+			render2d::end_scene();
 			
 		}
 	}

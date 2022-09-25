@@ -1,6 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
@@ -39,7 +39,7 @@ namespace Kablunk
 		//if (FT_Init_FreeType(s_freetype_lib.get()))
 		//	KB_CORE_ASSERT(false, "Could not initialize FreeType");
 		
-		Renderer2D::Init();
+		render2d::init();
 	}
 
 	void Renderer::Shutdown()
@@ -48,14 +48,14 @@ namespace Kablunk
 		
 		s_shader_library.reset();
 
-		Renderer2D::Shutdown();
+		render2d::shutdown();
 
 		RenderCommand::Shutdown();
 	}
 
 	IntrusiveRef<Texture2D> Renderer::GetWhiteTexture()
 	{
-		return Renderer2D::GetWhiteTexture();
+		return render2d::get_white_texture();
 	}
 
 	IntrusiveRef<ShaderLibrary> Renderer::GetShaderLibrary()
