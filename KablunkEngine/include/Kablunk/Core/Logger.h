@@ -20,8 +20,8 @@ namespace Kablunk
 
 	class KB_API Logger {
 	public:
-		spdlog::logger* get_core_logger() { return s_core_logger; }
-		spdlog::logger* get_client_logger() { return s_client_logger; }
+		std::shared_ptr<spdlog::logger> get_core_logger() { return s_core_logger; }
+		std::shared_ptr<spdlog::logger> get_client_logger() { return s_client_logger; }
 
 		void init();
 		void shutdown();
@@ -29,8 +29,9 @@ namespace Kablunk
 		SINGLETON_GET_FUNC(Logger)
 
 	private:
-		spdlog::logger* s_core_logger = nullptr;
-		spdlog::logger* s_client_logger = nullptr;
+		std::shared_ptr<spdlog::logger> s_core_logger = nullptr;
+		std::shared_ptr<spdlog::logger> s_client_logger = nullptr;
+		bool m_has_shutdown = false;
 	};
 	
 }

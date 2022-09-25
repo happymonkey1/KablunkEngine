@@ -26,7 +26,7 @@ namespace Kablunk
 
 
 	Application::Application()
-		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }
+		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }
 	{
 		
 	}
@@ -77,11 +77,15 @@ namespace Kablunk
 
 	void Application::shutdown()
 	{
+		if (m_has_shutdown)
+			return;
+		
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
 
 		FramebufferPool::Get()->GetAll().clear();
 
+		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
 		RenderCommand::WaitAndRender();
@@ -90,6 +94,11 @@ namespace Kablunk
 
 		NativeScriptEngine::get().shutdown();
 		PluginManager::get().shutdown();
+
+		// delete window
+		m_window.reset();
+
+		m_has_shutdown = true;
 	}
 
 	void Application::PushLayer(Layer* layer)

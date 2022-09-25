@@ -16,7 +16,11 @@
 #include <chrono>
 #include <thread>
 
-#include <windows.h>
+#ifdef KB_PLATFORM_WINDOWS
+#	include <windows.h>
+#else
+#	error c-sharp script engine only supports windows!
+#endif
 #include <fileapi.h>
 
 #include <box2d/b2_shape.h>

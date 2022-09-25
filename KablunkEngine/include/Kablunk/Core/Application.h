@@ -79,6 +79,8 @@ namespace Kablunk {
 		Timestep m_timestep;
 		float m_last_frame_time = 0.0f;
 		
+		bool m_has_shutdown = false;
+
 		friend int ::main(int argc, char** argv);
 	};
 

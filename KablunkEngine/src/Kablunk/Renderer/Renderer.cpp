@@ -46,6 +46,7 @@ namespace Kablunk
 	{
 		s_shader_dependencies.clear();
 		
+		s_shader_library.reset();
 
 		Renderer2D::Shutdown();
 

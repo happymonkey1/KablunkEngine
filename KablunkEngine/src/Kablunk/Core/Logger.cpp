@@ -18,8 +18,8 @@ namespace Kablunk
 		log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
 		log_sinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
 
-		s_core_logger = new spdlog::logger{ "KABLUNK", begin(log_sinks), end(log_sinks) };
-		s_client_logger = new spdlog::logger{ "APP", begin(log_sinks), end(log_sinks) };
+		s_core_logger = std::make_shared<spdlog::logger>( "KABLUNK", begin(log_sinks), end(log_sinks) );
+		s_client_logger = std::make_shared<spdlog::logger>( "APP", begin(log_sinks), end(log_sinks) );
 		
 		spdlog::register_logger(std::shared_ptr<spdlog::logger>(s_core_logger));
 		s_core_logger->set_level(spdlog::level::trace);
@@ -35,8 +35,13 @@ namespace Kablunk
 
 	void Logger::shutdown()
 	{
-		delete s_core_logger;
-		delete s_client_logger;
+		if (m_has_shutdown)
+			return;
+
+		s_core_logger.reset();
+		s_client_logger.reset();
+
+		m_has_shutdown = true;
 	}
 
 }

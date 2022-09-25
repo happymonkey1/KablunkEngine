@@ -19,6 +19,8 @@ namespace Kablunk
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
+		virtual void destroy() override { KB_CORE_ASSERT(false, "not implemented!"); }
+
 		virtual void Bind() const;
 		virtual void Unbind() const;
 

@@ -271,6 +271,8 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
+		KB_CORE_INFO("Shutting down Renderer2D!");
+
 		// Cleanup memory
 		for (auto buffer : s_renderer_data->quad_vertex_buffer_base_ptrs)
 			delete[] buffer;

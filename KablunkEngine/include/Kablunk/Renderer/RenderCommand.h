@@ -18,9 +18,14 @@ namespace Kablunk
 	{
 	public:
 		static void Init();
+
 		static void Shutdown()
 		{
+			KB_CORE_INFO("Renderer shutdown called!");
+
 			s_renderer_api->Shutdown();
+
+			KB_CORE_INFO("Shutting down render command queue!");
 			Singleton<RenderCommandQueue>::get().shutdown();
 
 			delete s_renderer_api;

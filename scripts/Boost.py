@@ -4,7 +4,7 @@ from pathlib import Path
 import zipfile
 import shutil
 
-PROGRAM_FILES = os.enviorn.get("PROGRAMFILES")
+PROGRAM_FILES = os.environ.get("PROGRAMFILES")
 BOOST_LIBRARY_URL = "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip"
 BOOST_LOCAL_PATH = f"{PROGRAM_FILES}/boost"
 BOOST_DOWNLOAD_TEMP_PATH = f"{BOOST_LOCAL_PATH}/temp"

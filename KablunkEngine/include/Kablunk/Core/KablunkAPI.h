@@ -25,14 +25,17 @@
 #	error "Android is not supported"
 #elif defined(__linux__)
 #	error "Linux is not supported!"
+#	define KB_PLATFORM_LINUX
 #else
 #	error "Unknown platform"
 #endif
 
 
 #ifdef KB_DEBUG
-#	ifdef KB_PLATFORM_WINDOWS
+#	if defined(KB_PLATFORM_WINDOWS)
 #		define KB_DEBUG_BREAK() __debugbreak()
+#	elif defined(KB_PLATFORM_LINUX)
+#		define KB_DEBUG_BREAK() raise(SIGTRAP)
 #	else
 #		error "Platform doesn't support debugbreak!"
 #	endif	

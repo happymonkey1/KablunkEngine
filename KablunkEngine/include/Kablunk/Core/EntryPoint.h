@@ -5,7 +5,6 @@
 
 #ifdef KB_PLATFORM_WINDOWS
 
-
 extern Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv);
 
 #ifdef KB_PLATFORM_WINDOWS
@@ -32,8 +31,9 @@ int main(int argc, char** argv)
 	KB_END_SESSION();
 
 	KB_BEGIN_SESSION("Shutdown", "KablunkProfile-Shutdown.json");
-	delete app;
+	app->shutdown();
 	KB_END_SESSION();
+	
 
 	Kablunk::ShutdownCore();
 }

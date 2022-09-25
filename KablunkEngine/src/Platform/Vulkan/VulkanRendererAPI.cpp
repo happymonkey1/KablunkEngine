@@ -139,6 +139,7 @@ namespace Kablunk
 
 	void VulkanRendererAPI::Shutdown()
 	{
+		KB_CORE_INFO("Shutting down VulkanRenderer!");
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 		vkDeviceWaitIdle(device);
 

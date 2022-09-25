@@ -31,6 +31,11 @@ namespace Kablunk
 
 	void ShaderLibrary::Destroy()
 	{
+		KB_CORE_INFO("Destroying shader library!");
+
+		for (auto& [shader_name, shader] : m_shaders)
+			shader->destroy();
+
 		m_shaders.clear();
 	}
 

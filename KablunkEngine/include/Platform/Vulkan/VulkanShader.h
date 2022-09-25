@@ -50,6 +50,8 @@ namespace Kablunk
 		VulkanShader(const std::string& path, bool force_compile);
 		virtual ~VulkanShader();
 
+		virtual void destroy() override;
+
 		virtual void Reload(bool force_compile = false) override;
 		virtual size_t GetHash() const override;
 
@@ -144,6 +146,9 @@ namespace Kablunk
 		VkDescriptorSet m_descriptor_set;
 
 		std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> m_type_counts;
+
+		// flag for whether this shader has been freed
+		bool m_has_destroyed = false;
 	};
 }
 

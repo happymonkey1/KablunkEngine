@@ -71,6 +71,9 @@ namespace Kablunk {
 		using ShaderReloadedCallback = std::function<void()>;
 		virtual ~Shader() {}
 
+		// destroy shader and free resources
+		virtual void destroy() = 0;
+
 		virtual void Reload(bool force_compile = false) = 0;
 		virtual size_t GetHash() const = 0;
 

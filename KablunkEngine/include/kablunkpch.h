@@ -27,7 +27,7 @@
 #include "Kablunk/Core/Singleton.h"
 
 #ifdef KB_PLATFORM_WINDOWS
-#	include <Windows.h>
+#	include <windows.h>
 #endif
 
 #endif
