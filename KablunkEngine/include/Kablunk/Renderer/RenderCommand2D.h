@@ -56,6 +56,14 @@ namespace Kablunk::render2d
 		Singleton<Renderer2D>::get().draw_circle(transform, color, radius, thickness, fade, entity_id); 
 	}
 
+	// draw a texture from a texture atlas (single, combined texture)
+	static void draw_quad_from_texture_atlas(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, 
+											 const glm::vec2* texture_atlas_offsets, float tiling_factor = 1.0f, 
+											 const glm::vec4& tint_color = glm::vec4{ 1.0f })
+	{
+		Singleton<Renderer2D>::get().draw_quad_from_texture_atlas(position, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
+	}
+
 	// get renderer 2d statistics
 	static renderer_2d_stats_t get_stats() { return Singleton<Renderer2D>::get().get_stats(); }
 

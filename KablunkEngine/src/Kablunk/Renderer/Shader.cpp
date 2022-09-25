@@ -26,7 +26,7 @@ namespace Kablunk
 
 	ShaderLibrary::~ShaderLibrary()
 	{
-		Destroy();
+
 	}
 
 	void ShaderLibrary::Destroy()
