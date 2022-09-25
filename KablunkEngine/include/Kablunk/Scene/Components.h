@@ -90,6 +90,7 @@ namespace Kablunk
 
 	struct SpriteRendererComponent
 	{
+		// #TODO old "asset" class uses absolute path. 
 		Asset<Texture2D> Texture{ Asset<Texture2D>("") };
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
@@ -207,11 +208,14 @@ namespace Kablunk
 			if (filepath.empty())
 				return;
 
-			auto annotations = Parser::CPP::FindParserTokens(filepath.string());
+			KB_CORE_ASSERT(Project::GetActive(), "no active project!");
+			std::filesystem::path absolute_path = Project::GetActive()->GetProjectDirectory() / filepath;
+
+			auto annotations = Parser::CPP::FindParserTokens(absolute_path.string());
 			for (const auto& annot : annotations)
 				KB_CORE_INFO("{}", annot.ToString());
 
-			auto struct_names = Parser::CPP::FindClassAndStructNames(filepath.string(), 1);
+			auto struct_names = Parser::CPP::FindClassAndStructNames(absolute_path.string(), 1);
 			if (struct_names.empty())
 			{
 				KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);
@@ -223,7 +227,7 @@ namespace Kablunk
 
 			if (!Instance)
 			{
-				KB_CORE_ERROR("Script could not be loaded from file '{0}'", filepath);
+				KB_CORE_ERROR("Script could not be loaded from file '{0}'", absolute_path);
 				return;
 			}
 

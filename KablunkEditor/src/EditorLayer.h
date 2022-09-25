@@ -89,7 +89,8 @@ namespace Kablunk
 		SceneHierarchyPanel m_scene_hierarchy_panel;
 		ContentBrowserPanel m_content_browser_panel;
 		ProjectPropertiesPanel m_project_properties_panel;
-
+		// temporary "panel" for memory statistics
+		bool m_show_memory_statistics_window = false;
 
 		// Resources
 		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;

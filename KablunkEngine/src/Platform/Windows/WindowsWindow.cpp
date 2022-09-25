@@ -64,7 +64,7 @@ namespace Kablunk {
 			{
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 				// #TODO resizing at runtime
-				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+				glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 			}
 
             glfwSetErrorCallback(GLFWErrorCallback);

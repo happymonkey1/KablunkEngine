@@ -43,6 +43,7 @@ namespace Kablunk
 
 		if (!plugin || !plugin->is_loaded())
 		{
+			// #TODO auto build plugin using kb build system
 			KB_CORE_ASSERT(false, "Plugin {} failed to load", plugin_name);
 			return nullptr;
 		}

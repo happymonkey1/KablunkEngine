@@ -732,10 +732,10 @@ namespace Kablunk
 					if (UI::Button("Add"))
 					{
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
+						KB_CORE_ASSERT(Project::GetActive(), "no active project!");
 						if (!filepath.empty())
 						{
-							// #FIXME relative path when projects are implemented
-							//std::filesystem::path relative_path = std::filesystem::relative(filepath, g_asset_path);
+							std::filesystem::path relative_path = std::filesystem::relative(filepath, Project::GetActive()->GetProjectDirectory());
 							component.BindEditor(filepath);
 						}
 					}

@@ -5,6 +5,7 @@
 #include "Kablunk/Renderer/Image.h"
 #include "Kablunk/Renderer/RendererTypes.h"
 
+#include <filesystem>
 #include <string>
 
 namespace Kablunk 
@@ -38,6 +39,7 @@ namespace Kablunk
 
 		static IntrusiveRef<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr);
 		static IntrusiveRef<Texture2D> Create(const std::string& path);
+
 	};
 }
 

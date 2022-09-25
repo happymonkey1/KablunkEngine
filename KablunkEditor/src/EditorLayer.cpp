@@ -474,7 +474,7 @@ namespace Kablunk
 
 		/* Memory tracking panel */
 
-		if (ImGui::Begin("Tracked Memory Usage"))
+		if (m_show_memory_statistics_window && ImGui::Begin("Tracked Memory Usage", &m_show_memory_statistics_window))
 		{
 			float total_allocated = static_cast<float>(memory::GeneralAllocator::get().get_total_allocated()) / 1024.0f;
 			float total_freed = static_cast<float>(memory::GeneralAllocator::get().get_total_freed()) / 1024.0f;
@@ -577,6 +577,17 @@ namespace Kablunk
 
 				if (ImGui::MenuItem("Select KablunkEngine Install"))
 					m_show_replace_kablunk_install_popup = true;
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("View"))
+			{
+				if (ImGui::MenuItem("Memory Statistics", nullptr, m_show_memory_statistics_window))
+					m_show_memory_statistics_window ^= true;
+
+				if (ImGui::MenuItem("Debug Statistics", nullptr, m_show_debug_panel))
+					m_show_debug_panel ^= true;
 
 				ImGui::EndMenu();
 			}
