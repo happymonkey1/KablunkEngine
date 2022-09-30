@@ -718,7 +718,7 @@ namespace Kablunk
 				if (component.Instance)
 				{
 					std::string name = "placeholder";
-					std::vector<std::string> name_vec = Parser::CPP::FindClassAndStructNames(component.GetFilepath());
+					std::vector<std::string> name_vec = Parser::CPP::FindClassAndStructNames( (Project::GetActive()->GetProjectDirectory() / std::filesystem::path{ component.GetFilepath() }).string());
 					if (!name_vec.empty())
 						name = name_vec[0];
 

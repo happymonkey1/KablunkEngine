@@ -473,6 +473,8 @@ namespace Kablunk
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
 		glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
+
+		// editor cam is used during runtime when paused
 		if (editor_cam)
 		{
 			main_camera = editor_cam;
@@ -498,8 +500,12 @@ namespace Kablunk
 			}
 		}
 
+		// #TODO default camera if no runtime camera found?
 		if (!main_camera)
+		{
+			KB_CORE_WARN("no runtime camera, nothing will be renderered!");
 			return;
+		}
 
 		// Lights
 		{
@@ -549,13 +555,17 @@ namespace Kablunk
 		if (scene_renderer->is_multi_threaded())
 			SceneRenderer::wait_for_threads();
 
+		// #TODO SceneRenderer2D
 		// Renderer2D
 		if (scene_renderer->get_final_render_pass_image())
 		{
 			render2d::begin_scene(main_camera_proj * main_camera_transform);
 			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
+			// map for checking whether sprites have 'already been rendered by code'
+			// this is a hack for a tilemap implementation while the engine does not support
 			std::map<entt::entity, bool> already_rendered_entites;
+
 			auto nsc_sprite_override_view = m_registry.view<TransformComponent, SpriteRendererComponent, NativeScriptComponent>();
 			for (auto e : nsc_sprite_override_view)
 			{
@@ -592,6 +602,8 @@ namespace Kablunk
 
 			render2d::end_scene();
 		}
+		else
+			KB_CORE_WARN("Skipping render2d, final render pass image is not ready!");
 	}
 
 	void Scene::OnEventRuntime(Event& e)

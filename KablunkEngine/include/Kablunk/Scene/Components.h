@@ -206,7 +206,10 @@ namespace Kablunk
 		void BindEditor(const std::filesystem::path& filepath)
 		{
 			if (filepath.empty())
+			{
+				KB_CORE_ERROR("Empty filepath passed to BindEditor()!");
 				return;
+			}
 
 			KB_CORE_ASSERT(Project::GetActive(), "no active project!");
 			std::filesystem::path absolute_path = Project::GetActive()->GetProjectDirectory() / filepath;
