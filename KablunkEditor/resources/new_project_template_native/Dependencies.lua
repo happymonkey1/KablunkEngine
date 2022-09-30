@@ -28,7 +28,8 @@ LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 LibraryDir["VulkanSDK_Debug"] = "%{VULKAN_SDK}/Lib"
 LibraryDir["VulkanSDK_Bin"] = "%{VULKAN_SDK}/Bin"
 LibraryDir["VulkanSDK_Debug_Bin"] = "%{VULKAN_SDK}/Bin"
-LibraryDir["KablunkSDK"] = "%{KablunkRootDirectory}/bin"
+LibraryDir["KablunkSDK"] = "%{KablunkRootDirectory}"
+LibraryDir["KablunkSDK_Bin"] = "%{KablunkRootDirectory}/bin"
 
 Library = {}
 Library["mono"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/mono/lib/Debug/mono-2.0-sgen.lib"
@@ -48,4 +49,9 @@ Library["SPIRV_Cross_GLSL_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-glsl.
 Library["SPIRV_Tools"] = "%{LibraryDir.VulkanSDK}/SPIRV-Tools.lib"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-Library["Kablunk"] = "%{LibraryDir.KablunkSDK}/" .. outputdir .. "/KablunkEngine/KablunkEngine.lib"
+Library["Kablunk"] = "%{LibraryDir.KablunkSDK_Bin}/" .. outputdir .. "/KablunkEngine/KablunkEngine.lib"
+Library["GLFW"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/GLFW/bin/" .. outputdir .. "/GLFW/GLFW.lib"
+Library["ImGui"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/imgui/bin/" .. outputdir .. "/ImGui/ImGui.lib"
+Library["Box2d"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/box2d/bin/" .. outputdir .. "/Box2d/Box2d.lib"
+Library["Glad"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/Glad/bin/" .. outputdir .. "/Glad/Glad.lib"
+Library["yaml_cpp"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/yaml-cpp/bin/" .. outputdir .. "/yaml-cpp/yaml-cpp.lib"

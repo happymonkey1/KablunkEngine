@@ -18,8 +18,11 @@ namespace Kablunk
 		CLIENT
 	};
 
-	class KB_API Logger {
+	class Logger {
 	public:
+		Logger() = default;
+		~Logger() = default;
+
 		std::shared_ptr<spdlog::logger> get_core_logger() { return s_core_logger; }
 		std::shared_ptr<spdlog::logger> get_client_logger() { return s_client_logger; }
 

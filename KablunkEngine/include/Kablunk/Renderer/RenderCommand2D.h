@@ -37,6 +37,18 @@ namespace Kablunk::render2d
 	// draw a sprite
 	static void draw_sprite(Kablunk::Entity entity) { Singleton<Renderer2D>::get().draw_sprite(entity); }
 
+	// draw a quad with vec2 position
+	static void draw_quad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })
+	{
+		Singleton<Renderer2D>::get().draw_quad(position, size, texture, tiling_factor, tint_color);
+	}
+
+	// draw a quad with vec3 position
+	static void draw_quad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })
+	{
+		Singleton<Renderer2D>::get().draw_quad(position, size, texture, tiling_factor, tint_color);
+	}
+
 	// draw a rect with a 2d position
 	static void draw_rect(const glm::vec2& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f })
 	{

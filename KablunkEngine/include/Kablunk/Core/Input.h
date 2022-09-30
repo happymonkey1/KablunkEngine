@@ -5,11 +5,10 @@
 #include "Kablunk/Core/KeyCodes.h"
 #include "Kablunk/Core/MouseCodes.h"
 
-namespace Kablunk {
-
-	
-
-	class Input {
+namespace Kablunk 
+{
+	class Input 
+	{
 	public:
 		static bool IsKeyPressed(int keycode);
 		

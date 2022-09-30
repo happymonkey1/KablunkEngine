@@ -9,11 +9,18 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+// #TODO temporary workaround for imgui context not being set in dll.
+#define CHECK_IMGUI_WINDOW 0
+
 namespace Kablunk {
 
 	bool Input::IsKeyPressed(int keycode)
 	{
+#if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
+#else
+		bool imgui_enabled = false;
+#endif
 		if (!imgui_enabled)
 		{
 			auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
@@ -45,7 +52,11 @@ namespace Kablunk {
 
 	bool Input::IsMouseButtonPressed(int button)
 	{
+#if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
+#else
+		bool imgui_enabled = false;
+#endif
 		if (!imgui_enabled)
 		{
 			auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());

@@ -69,7 +69,12 @@ project "$PROJECT_NAME$"
 
 	links
 	{
-		"%{Library.Kablunk}"
+		"%{Library.Kablunk}",
+		"%{Library.GLFW}",
+		"%{Library.ImGui}",
+		"%{Library.Box2d}",
+		"%{Library.Glad}",
+		"%{Library.yaml_cpp}"
 	}
 
 	filter "system:windows"

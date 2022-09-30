@@ -315,7 +315,7 @@ namespace Kablunk
 				component.Fade		= data["Fade"].as<float>();
 			});
 
-		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
+		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](NativeScriptComponent& component, auto& data)
 			{
 				auto filepath = data["Filepath"].as<std::string>();
 				if (!filepath.empty())
@@ -327,13 +327,18 @@ namespace Kablunk
 		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
 			{
 				component.Module_name = data["Module_name"].as<std::string>();
+				if (script_comp)
+				{
+					auto module_name = script_comp["Module_name"].as<std::string>();
+					CSharpScriptComponent& csharp_script_comp = entity.AddComponent<CSharpScriptComponent>(module_name);
+				}
 			});*/
-		auto script_comp = entity_data["CSharpScriptComponent"];
+		/*auto script_comp = entity_data["CSharpScriptComponent"];
 		if (script_comp)
 		{
 			auto module_name = script_comp["Module_name"].as<std::string>();
 			CSharpScriptComponent& csharp_script_comp = entity.AddComponent<CSharpScriptComponent>(module_name);
-		}
+		}*/
 
 		ReadComponentData<MeshComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{
