@@ -7,6 +7,8 @@
 
 #include "imgui/imgui_internal.h"
 
+#include "Kablunk/Asset/AssetManager.h"
+
 #include <thread>
 
 #include <assimp/Importer.hpp>
@@ -25,6 +27,7 @@ namespace Kablunk
 		m_back_button = Asset<Texture2D>("resources/content_browser/icons/back_button.png");
 		m_forward_button = Asset<Texture2D>("resources/content_browser/icons/forward_button.png");
 		m_refresh_button = Asset<Texture2D>("resources/content_browser/icons/refresh_button.png");
+		m_asset_icon = Texture2D::Create("resources/content_browser/icons/asset_icon.png");
 
 		memset(m_search_buffer, 0, sizeof(char) * MAX_SEARCH_BUFFER_LENGTH);
 		Refresh();
@@ -110,9 +113,14 @@ namespace Kablunk
 				{
 					const auto& path = directory_entry.path();
 					// #TODO this does not return the correct path.
-					auto relative_path = std::filesystem::relative(path, Project::GetAssetDirectory());
+					auto relative_path = std::filesystem::relative(path, Project::GetActive()->GetAssetDirectoryPath());
 					auto filename_string = relative_path.filename().string();
 					auto is_dir = directory_entry.is_directory();
+
+					// skip asset registry file
+					auto extension = relative_path.extension();
+					if (extension == asset::AssetManager::s_asset_registry_path.extension())
+						continue;
 
 					ImGui::TableNextColumn();
 					ImGui::PushID(i++);
@@ -121,7 +129,30 @@ namespace Kablunk
 					
 					auto icon = is_dir ? m_directory_icon.Get() : m_file_icon.Get();
 					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+
+					ImVec2 min = { ImGui::GetCursorPosX(), ImGui::GetCursorPosY() };
+					ImVec2 max = min + ImVec2{ thumbnail_size, thumbnail_size };
 					UI::ImageButton(icon, { thumbnail_size, thumbnail_size });
+					
+					if (ImGui::BeginPopupContextWindow(0, 1, false))
+					{
+						/*if (ImGui::BeginMenu("Import"))
+						{
+
+							ImGui::EndMenu();
+						}*/
+
+						ImGui::EndPopup();
+					}
+
+
+					// display icon indicating asset has been loaded into asset manager
+					if (asset::asset_exists(relative_path))
+					{
+						ImGui::SetCursorPosX(ImGui::GetCursorPosX() - thumbnail_size);
+
+						UI::Image(m_asset_icon, { thumbnail_size / 4, thumbnail_size / 4 });
+					}
 					ImGui::PopStyleColor();
 
 					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
@@ -189,6 +220,37 @@ namespace Kablunk
 
 			m_update_directory_timer -= m_update_directory_timer_max;
 		}*/
+	}
+
+	void ContentBrowserPanel::process_directory(const std::filesystem::path& dir_path)
+	{
+		// #TODO probably better to store as a hashmap instead of recreating vector
+		if (dir_path == m_current_directory)
+			m_directory_entries = {};
+
+		for (auto entry : std::filesystem::directory_iterator(dir_path))
+		{
+			if (dir_path == m_current_directory)
+				m_directory_entries.push_back(entry);
+
+			if (entry.is_directory())
+			{
+				process_directory(entry.path());
+				continue;
+			}
+			
+			std::filesystem::path relative_path = std::filesystem::relative(entry.path(), Project::GetActive()->GetAssetDirectoryPath());
+			auto metadata = asset::try_get_asset_metadata(relative_path);
+			if (metadata.is_valid())
+			{
+				asset::AssetType asset_type = asset::get_asset_type_from_path(relative_path);
+				if (asset_type == asset::AssetType::NONE)
+					continue;
+
+				KB_CORE_INFO("trying to import asset '{}'!", relative_path);
+				asset::import_asset(relative_path);
+			}
+		}
 	}
 
 	void ContentBrowserPanel::RenderTopBar()
@@ -259,10 +321,7 @@ namespace Kablunk
 		if (m_current_directory.empty())
 			return;
 
-		// #TODO probably better to store as a hashmap instead of recreating vector 
-		m_directory_entries = {};
-		for (auto& directory_entry : std::filesystem::directory_iterator{ m_current_directory })
-			m_directory_entries.push_back(directory_entry);
+		process_directory(m_current_directory);
 	}
 
 }

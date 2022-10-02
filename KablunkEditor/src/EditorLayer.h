@@ -7,6 +7,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/ProjectPropertiesPanel.h"
+#include "Panels/AssetRegistryPanel.h"
 
 namespace Kablunk
 {
@@ -89,6 +90,7 @@ namespace Kablunk
 		SceneHierarchyPanel m_scene_hierarchy_panel;
 		ContentBrowserPanel m_content_browser_panel;
 		ProjectPropertiesPanel m_project_properties_panel;
+		AssetRegistryPanel m_asset_registry_panel;
 		// temporary "panel" for memory statistics
 		bool m_show_memory_statistics_window = false;
 

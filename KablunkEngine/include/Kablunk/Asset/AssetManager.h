@@ -6,6 +6,7 @@
 #include "Kablunk/Asset/AssetRegistry.h"
 #include "Kablunk/Asset/Asset.h"
 #include "Kablunk/Asset/AssetType.h"
+#include "Kablunk/Asset/AssetSerializer.h"
 
 #include "Kablunk/Project/Project.h"
 
@@ -22,7 +23,7 @@ namespace Kablunk::asset
 		// shutdown logic for the asset manager
 		void shutdown();
 
-		const AssetMetadata& get_metadata(const asset_id_t& id) const { return m_asset_registry.at(id); }
+		const AssetMetadata& get_metadata(const asset_id_t& id) const { return m_asset_registry.contains(id) ? m_asset_registry.at(id) : s_null_metadata; }
 		const AssetMetadata& get_metadata(const std::filesystem::path& filepath) const;
 		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 
@@ -51,7 +52,30 @@ namespace Kablunk::asset
 				true,  // is_data_loaded
 			};
 
-			// #TODO check if asset already exists in registry
+			// check if we need to modify filepath because it already exists in our project
+			if (file_exists(metadata))
+			{
+				bool filename_available = false;
+				size_t index = 1;
+
+				while (!filename_available)
+				{
+					std::filesystem::path new_filepath = directory_path / metadata.filepath.stem();
+					new_filepath += (index < 10) ? "(0" + std::to_string(index) + ")" : "(" + std::to_string(index) + ")";
+					new_filepath += metadata.filepath.extension();
+
+					if (!FileSystem::file_exists(Project::GetActive()->GetAssetDirectoryPath() / get_relative_path(new_filepath)))
+					{
+						filename_available = true;
+						metadata.filepath = new_filepath;
+						break;
+					}
+
+					// sanity check
+					KB_CORE_ASSERT(index < 10000, "logic error!");
+					index++;
+				}
+			}
 
 			m_asset_registry[metadata.id] = metadata;
 
@@ -62,6 +86,8 @@ namespace Kablunk::asset
 			asset->set_id(metadata.id);
 			m_loaded_assets[metadata.id] = asset;
 
+			serialize_asset(metadata, asset);
+
 			return asset;
 		}
 		// get an asset based off an asset id
@@ -71,7 +97,7 @@ namespace Kablunk::asset
 			static_assert(std::is_base_of<IAsset, T>::value, "get_asset() only works for types derived from IAsset!");
 
 			if (is_memory_asset(id))
-				return m_memory_assets.at(asset_id_t).As<T>();
+				return m_memory_assets.at(id).As<T>();
 
 			AssetMetadata& metadata = get_metadata(id);
 			if (!metadata.is_valid())
@@ -80,8 +106,11 @@ namespace Kablunk::asset
 			IntrusiveRef<T> asset = nullptr;
 			if (!metadata.is_data_loaded)
 			{
-				// #TODO try load data
-				KB_CORE_ASSERT(false, "not implemented!");
+				metadata.is_data_loaded = try_load_asset(metadata, asset.As<IAsset>());
+				if (!metadata.is_data_loaded)
+					return nullptr;
+
+				m_loaded_assets[id] = asset;
 			}
 			else
 				asset = m_loaded_assets[id];
@@ -90,7 +119,9 @@ namespace Kablunk::asset
 		}
 		// get an asset based on a filepath
 		template <typename T>
-		IntrusiveRef<T> get_asset(const std::filesystem::path& filepath) { return get_asset(find_asset_id_based_on_filepath(filepath)); }
+		IntrusiveRef<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
+		// check whether the asset exists in the asset registry
+		bool asset_exists(const std::filesystem::path& filepath) const;
 		// check whether the asset referenced by the id is a memory only asset
 		bool is_memory_asset(const asset_id_t& id) const { return m_memory_assets.find(id) != m_memory_assets.end(); }
 		// get the map of loaded assets
@@ -99,16 +130,25 @@ namespace Kablunk::asset
 		const std::unordered_map<asset_id_t, IntrusiveRef<IAsset>>& get_memory_assets() const { return m_memory_assets; }
 		// get the underlying asset registry
 		const AssetRegistry& get_asset_registry() const { return m_asset_registry; }
+		// check if the file exists on the filesystem
+		bool file_exists(const AssetMetadata& asset_metadata) const;
 	private:
 		void load_asset_registry();
 		void write_registry_to_file() const;
 		void reload_assets();
 		void process_directory(const std::filesystem::path& directory_path);
 
+		void serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
+		bool try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
+
 		AssetMetadata& get_metadata(const asset_id_t& id);
 
 		void on_asset_renamed(const asset_id_t& id, const std::filesystem::path& new_filepath);
 		void on_asset_deleted(const asset_id_t& id);
+	public:
+		// extension for registry file
+		// #TODO constexpr in c++20?
+		inline static const std::filesystem::path s_asset_registry_path = "asset_registry.kbreg";
 	private:
 		// asset registry that maps ids to metadata
 		AssetRegistry m_asset_registry;
@@ -120,6 +160,8 @@ namespace Kablunk::asset
 
 		// null metadata for functions that return references
 		inline static AssetMetadata s_null_metadata{};
+		// map for serializers of specific asset types
+		std::unordered_map<AssetType, IntrusiveRef<AssetSerializer>> m_asset_serializers;
 	};
 
 }

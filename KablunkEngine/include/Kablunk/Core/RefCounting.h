@@ -15,7 +15,7 @@ namespace Kablunk
 {
 
 	// #TODO deprecate
-	
+	/*
 	template <typename T>
 	using Ref = std::shared_ptr<T>;
 
@@ -24,7 +24,7 @@ namespace Kablunk
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
-
+	*/
 	// ================
 
 	class RefCounted
@@ -112,7 +112,7 @@ namespace Kablunk
 			other.IncRef();
 			DecRef();
 
-			m_ptr = other.m_ptr;
+			m_ptr = static_cast<T*>(other.m_ptr);
 			return *this;
 		}
 

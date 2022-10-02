@@ -18,6 +18,8 @@
 
 #include "Kablunk/Imgui/ImGuiGlobalContext.h"
 
+#include "Kablunk/Asset/AssetManager.h"
+
 
 
 namespace Kablunk

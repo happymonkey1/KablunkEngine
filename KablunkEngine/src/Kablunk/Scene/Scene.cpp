@@ -555,7 +555,7 @@ namespace Kablunk
 		if (scene_renderer->is_multi_threaded())
 			SceneRenderer::wait_for_threads();
 
-		// #TODO SceneRenderer2D
+		// #TODO move to SceneRenderer2D
 		// Renderer2D
 		if (scene_renderer->get_final_render_pass_image())
 		{

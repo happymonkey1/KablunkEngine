@@ -214,6 +214,14 @@ namespace Kablunk
 		return false;
 
 	}
+
+	bool FileSystem::file_exists(const std::filesystem::path& filepath)
+	{
+		// https://stackoverflow.com/questions/3828835/how-can-we-check-if-a-file-exists-or-not-using-win32-program
+		DWORD dw_attribute = GetFileAttributesW(filepath.c_str());
+
+		return dw_attribute != INVALID_FILE_ATTRIBUTES && !(dw_attribute & FILE_ATTRIBUTE_DIRECTORY);
+	}
 }
 
 namespace Kablunk::Utils

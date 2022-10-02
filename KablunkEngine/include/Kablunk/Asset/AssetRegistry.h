@@ -28,7 +28,7 @@ namespace Kablunk::asset
 		// check whether an id is inside the registry
 		bool contains(const asset_id_t& id) const { return m_registry.find(id) != m_registry.end(); }
 		// remove metadata from the registry by id
-		size_t remove(const asset_id_t& id) { m_registry.erase(id); }
+		size_t remove(const asset_id_t& id) { return m_registry.erase(id); }
 		// clear the entire registry
 		void clear() { m_registry.clear(); }
 		// check whether the registry is empty

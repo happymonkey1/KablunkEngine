@@ -35,24 +35,24 @@ namespace Kablunk
 			{
 				instance->Invalidate();
 			});
+
+		m_loaded = true;
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
 		: m_filepath{ path }
 	{
-		bool loaded = LoadImage(m_filepath);
+		m_loaded = LoadImage(m_filepath);
 
-		if (!loaded)
-		{
-			LoadImage("resources/texture/missing_texture.png");
-		}
-
+		if (!m_loaded)
+			m_loaded = LoadImage("resources/texture/missing_texture.png");
+		
 		ImageSpecification spec{};
 		spec.format = m_format;
 		spec.width = m_width;
 		spec.height = m_height;
 		spec.mips = 1; // #TODO mipmaps
-		spec.debug_name = "FIXME";
+		spec.debug_name = "UNKNOWN_DEBUG_IMG_NAME";
 		m_image = Image2D::Create(spec);
 
 

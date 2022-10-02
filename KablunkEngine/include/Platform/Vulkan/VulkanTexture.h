@@ -34,6 +34,8 @@ namespace Kablunk
 
 		virtual Buffer& GetWriteableBuffer() override;
 
+		virtual bool loaded() const override { return m_loaded; }
+
 		virtual void SetData(void* data, uint32_t size) override;
 
 		virtual void Bind(uint32_t slot) const override;
@@ -51,6 +53,8 @@ namespace Kablunk
 		ImageFormat m_format;
 
 		Buffer m_image_data;
+
+		bool m_loaded = false;
 	};
 
 }

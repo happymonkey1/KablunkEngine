@@ -33,6 +33,8 @@ namespace Kablunk
 		// #TODO should probably replace this, but currently exposes working directory so opening projects can set the working dir
 		void SetCurrentDirectory(const std::filesystem::path& path) { m_current_directory = path; Refresh(); }
 
+		void process_directory(const std::filesystem::path& dir_path);
+
 	private:
 		
 
@@ -47,6 +49,7 @@ namespace Kablunk
 		Asset<Texture2D> m_back_button;
 		Asset<Texture2D> m_forward_button;
 		Asset<Texture2D> m_refresh_button;
+		ref<Texture2D> m_asset_icon;
 
 		char m_search_buffer[MAX_SEARCH_BUFFER_LENGTH];
 

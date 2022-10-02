@@ -55,7 +55,7 @@ namespace Kablunk
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}
 	{
 		
 
@@ -210,6 +210,7 @@ namespace Kablunk
 
 		m_scene_hierarchy_panel.OnImGuiRender();
 		m_content_browser_panel.OnImGuiRender();
+		m_asset_registry_panel.on_imgui_render();
 
 		if (Project::GetActive().get() != nullptr)
 			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
@@ -590,6 +591,9 @@ namespace Kablunk
 
 				if (ImGui::MenuItem("Debug Statistics", nullptr, m_show_debug_panel))
 					m_show_debug_panel ^= true;
+
+				if (ImGui::MenuItem("Asset Registry", nullptr, m_asset_registry_panel.get_visible()))
+					m_asset_registry_panel.set_visible(!m_asset_registry_panel.get_visible());
 
 				ImGui::EndMenu();
 			}
