@@ -3,6 +3,8 @@
 
 #include <Kablunk.h>
 
+#include "Panels/AssetEditorPanel.h"
+
 #include <filesystem>
 #include <shared_mutex>
 
@@ -24,7 +26,7 @@ namespace Kablunk
 	class ContentBrowserPanel 
 	{
 	public:
-		ContentBrowserPanel();
+		ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel);
 		~ContentBrowserPanel() = default;
 
 		void OnImGuiRender();
@@ -50,6 +52,8 @@ namespace Kablunk
 		Asset<Texture2D> m_forward_button;
 		Asset<Texture2D> m_refresh_button;
 		ref<Texture2D> m_asset_icon;
+
+		ref<AssetEditorPanel> m_asset_editor_panel;
 
 		char m_search_buffer[MAX_SEARCH_BUFFER_LENGTH];
 

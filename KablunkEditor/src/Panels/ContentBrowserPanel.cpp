@@ -19,8 +19,8 @@ namespace Kablunk
 	//extern const std::filesystem::path g_asset_path = "assets";
 	//extern const std::filesystem::path g_resources_path = "resources";
 
-	ContentBrowserPanel::ContentBrowserPanel()
-		: m_current_directory{ Project::GetActive() ? Project::GetAssetDirectoryPath() : "" }
+	ContentBrowserPanel::ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel)
+		: m_current_directory{ Project::GetActive() ? Project::GetAssetDirectoryPath() : "" }, m_asset_editor_panel{ asset_editor_panel }
 	{
 		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
 		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
@@ -175,11 +175,40 @@ namespace Kablunk
 							m_current_directory /= path.filename();
 							should_refresh = true;
 						}
-						else if (directory_entry.path().extension() == FileExtensions::FBX)
+						else
 						{
-						
-							// #TODO open model in asset viewer
-						
+							ref<asset::IAsset> asset;
+							if (!asset::asset_exists(relative_path))
+							{
+								// #TODO i don't like that the content browser has to handle this...
+								// handle specific assets
+								asset::asset_type_t asset_type = asset::get_asset_type_from_path(relative_path);
+								switch (asset_type)
+								{
+									case asset::AssetType::Texture:
+										// path for asset, and args (which is also path)
+										asset = asset::get_asset<Texture2D>(asset::import_asset(relative_path));
+										break;
+									case asset::AssetType::Mesh:
+									case asset::AssetType::MeshSource:
+									case asset::AssetType::Audio:
+									case asset::AssetType::Prefab:
+									case asset::AssetType::Material:
+									case asset::AssetType::NativeScript:
+									case asset::AssetType::Font:
+									case asset::AssetType::Scene:
+									case asset::AssetType::NONE:
+									default:
+										KB_CORE_ASSERT(
+											false, 
+											"[ContentBrowserPanel] asset type {} is not handled!", 
+											asset::asset_type_to_string(asset::get_asset_type_from_path(relative_path))
+										);
+										break;
+								}
+							}
+
+							m_asset_editor_panel->open_editor(asset);
 						}
 					}
 					ImGui::TextWrapped(filename_string.c_str());

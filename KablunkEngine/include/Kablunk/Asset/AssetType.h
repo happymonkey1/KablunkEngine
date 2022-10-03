@@ -6,7 +6,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/CoreTypes.h"
 
-#include "Kablunk/Asset/AssetTypeDefs.h"
+#include "Kablunk/Utilities/EnumIterator.hpp"
 
 #include <string>
 
@@ -27,6 +27,8 @@ namespace Kablunk::asset
 		Scene,
 		NONE
 	};
+
+	using asset_type_iterator = util::enum_iterator<AssetType, AssetType::Texture, AssetType::NONE>;
 
 	struct AssetTypeStrings
 	{
@@ -62,6 +64,9 @@ namespace Kablunk::asset
 		}
 	}
 
+	// get asset type from an extension
+	AssetType extension_to_asset_type(const std::string& extension);
+
 	inline const char* asset_type_to_string(AssetType asset_type)
 	{
 		switch (asset_type)
@@ -78,7 +83,8 @@ namespace Kablunk::asset
 			case AssetType::NONE:			KB_CORE_ASSERT(false, "Invalid AssetType!"); return AssetTypeStrings::NONE;
 			default:						KB_CORE_ASSERT(false, "Unhandled AssetType"); return AssetTypeStrings::NONE;
 		}
-	}
+	} 
+
 }
 
 #endif

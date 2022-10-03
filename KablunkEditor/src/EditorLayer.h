@@ -8,6 +8,7 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/ProjectPropertiesPanel.h"
 #include "Panels/AssetRegistryPanel.h"
+#include "Panels/AssetEditorPanel.h"
 
 namespace Kablunk
 {
@@ -88,6 +89,7 @@ namespace Kablunk
 
 		// Panels
 		SceneHierarchyPanel m_scene_hierarchy_panel;
+		ref<AssetEditorPanel> m_asset_editor_panel;
 		ContentBrowserPanel m_content_browser_panel;
 		ProjectPropertiesPanel m_project_properties_panel;
 		AssetRegistryPanel m_asset_registry_panel;

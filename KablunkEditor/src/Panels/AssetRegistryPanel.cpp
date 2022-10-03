@@ -20,6 +20,10 @@ namespace Kablunk
 				UI::BeginProperties();
 
 				UI::PropertyReadOnlyUint64("Entry Count", asset_registry.size());
+
+				size_t asset_size_kb = asset_registry.size() * sizeof(asset::AssetMetadata);
+				UI::PropertyReadOnlyUint64("Registry Size (Kb)", asset_size_kb);
+
 				ImGui::Separator();
 
 				int id = 0;
@@ -34,7 +38,10 @@ namespace Kablunk
 					UI::PropertyReadOnlyString("uuid", asset_id_str);
 					UI::PropertyReadOnlyString("filepath", asset_filepath);
 					UI::PropertyReadOnlyString("type", asset_type);
+					UI::PropertyReadOnlyString("loaded", fmt::format("{}", metadata.is_data_loaded));
 					ImGui::Separator();
+
+					ImGui::PopID();
 				}
 
 				UI::EndProperties();

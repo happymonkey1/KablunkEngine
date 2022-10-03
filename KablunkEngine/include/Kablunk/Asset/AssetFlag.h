@@ -16,8 +16,6 @@ namespace Kablunk::asset
 		Missing = 0b10,
 	};
 
-	using asset_flag_t = AssetFlag;
-
 }
 
 #endif

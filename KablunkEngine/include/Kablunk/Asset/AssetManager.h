@@ -27,13 +27,14 @@ namespace Kablunk::asset
 		const AssetMetadata& get_metadata(const std::filesystem::path& filepath) const;
 		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 
-		const std::filesystem::path& get_absolute_path(const AssetMetadata& metadata) const { return Project::GetAssetDirectoryPath() / metadata.filepath; }
-		const std::filesystem::path& get_relative_path(const std::filesystem::path& path) const;
+		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const { return Project::GetAssetDirectoryPath() / metadata.filepath; }
+		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const { return Project::GetAssetDirectoryPath() / path; }
+		std::filesystem::path get_relative_path(const std::filesystem::path& path) const;
 
-		AssetType get_asset_type_by_extension(const std::string& extension) const { return string_to_asset_type(extension); }
+		AssetType get_asset_type_by_extension(const std::string& extension) const { return extension_to_asset_type(extension); }
 		AssetType get_asset_type_from_filepath(const std::filesystem::path& path) const;
 		// import an asset into the registry
-		const asset_id_t& import_asset(const std::filesystem::path& filepath);
+		asset_id_t import_asset(const std::filesystem::path& filepath);
 		// reload a specific asset's data
 		bool reload_asset_data(const asset_id_t& id);
 		// get an asset id based on the filepath. O(N) time complexity
@@ -86,24 +87,25 @@ namespace Kablunk::asset
 			asset->set_id(metadata.id);
 			m_loaded_assets[metadata.id] = asset;
 
-			serialize_asset(metadata, asset);
+			serialize_asset(metadata, asset.As<IAsset>());
 
 			return asset;
 		}
 		// get an asset based off an asset id
 		template <typename T>
-		IntrusiveRef<T> get_asset(const asset_id_t& id)
+		ref<T> get_asset(const asset_id_t& id)
 		{
 			static_assert(std::is_base_of<IAsset, T>::value, "get_asset() only works for types derived from IAsset!");
 
 			if (is_memory_asset(id))
 				return m_memory_assets.at(id).As<T>();
 
-			AssetMetadata& metadata = get_metadata(id);
+			AssetMetadata& metadata = get_metadata_internal(id);
 			if (!metadata.is_valid())
 				return nullptr;
 
-			IntrusiveRef<T> asset = nullptr;
+			// imported assets are not loaded by default, so try to load if we find one that hasn't been loaded
+			ref<T> asset = nullptr;
 			if (!metadata.is_data_loaded)
 			{
 				metadata.is_data_loaded = try_load_asset(metadata, asset.As<IAsset>());
@@ -119,7 +121,7 @@ namespace Kablunk::asset
 		}
 		// get an asset based on a filepath
 		template <typename T>
-		IntrusiveRef<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
+		ref<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
 		// check whether the asset exists in the asset registry
 		bool asset_exists(const std::filesystem::path& filepath) const;
 		// check whether the asset referenced by the id is a memory only asset
@@ -141,7 +143,7 @@ namespace Kablunk::asset
 		void serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
 		bool try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
 
-		AssetMetadata& get_metadata(const asset_id_t& id);
+		AssetMetadata& get_metadata_internal(const asset_id_t& id);
 
 		void on_asset_renamed(const asset_id_t& id, const std::filesystem::path& new_filepath);
 		void on_asset_deleted(const asset_id_t& id);
@@ -163,6 +165,11 @@ namespace Kablunk::asset
 		// map for serializers of specific asset types
 		std::unordered_map<AssetType, IntrusiveRef<AssetSerializer>> m_asset_serializers;
 	};
+
+	inline bool is_asset_registry_file(const std::filesystem::path& filepath)
+	{
+		return filepath.filename() == AssetManager::s_asset_registry_path;
+	}
 
 }
 

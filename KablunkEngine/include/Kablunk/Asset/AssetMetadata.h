@@ -6,6 +6,8 @@
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Asset/AssetType.h"
 
+#include "Kablunk/Asset/AssetTypeDefs.h"
+
 #include <filesystem>
 
 namespace Kablunk::asset
@@ -19,9 +21,9 @@ namespace Kablunk::asset
 		AssetType type = AssetType::NONE;
 		// relative (to asset directory) path
 		std::filesystem::path filepath = "";
-		// #TODO
+		// flag for whether the asset only exists in memory
 		bool is_memory_loaded = false;
-		// #TODO
+		// flag for whether the asset has been loaded from disk
 		bool is_data_loaded = false;
 
 		// check whether the metadata is valid

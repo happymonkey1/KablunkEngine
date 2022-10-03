@@ -55,7 +55,7 @@ namespace Kablunk
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
 		
 
@@ -143,6 +143,7 @@ namespace Kablunk
 			break;
 		}
 
+		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
 		
 		SceneRenderer::wait_for_threads();
@@ -211,6 +212,7 @@ namespace Kablunk
 		m_scene_hierarchy_panel.OnImGuiRender();
 		m_content_browser_panel.OnImGuiRender();
 		m_asset_registry_panel.on_imgui_render();
+		m_asset_editor_panel->on_imgui_render();
 
 		if (Project::GetActive().get() != nullptr)
 			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
@@ -790,6 +792,7 @@ namespace Kablunk
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_editor_camera.OnEvent(e);
+		m_asset_editor_panel->on_event(e);
 
 		if (e.GetEventType() == EventType::WindowMinimized)
 			m_viewport_size = { 0.0f, 0.0f };

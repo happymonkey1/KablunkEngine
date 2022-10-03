@@ -47,19 +47,31 @@ namespace Kablunk::asset
 		return s_null_metadata;
 	}
 
-	const std::filesystem::path& AssetManager::get_relative_path(const std::filesystem::path& path) const
+	std::filesystem::path AssetManager::get_relative_path(const std::filesystem::path& path) const
 	{
-		return std::filesystem::relative(path, Project::GetActive()->GetAssetDirectoryPath());
+		return path.is_relative() ? path : std::filesystem::relative(path, Project::GetActive()->GetAssetDirectoryPath());
 	}
 
 	AssetType AssetManager::get_asset_type_from_filepath(const std::filesystem::path& path) const
 	{
-		return get_metadata(path).type;
+		// try use asset metadata if available
+		return get_metadata(path).is_valid() ? get_metadata(path).type : get_asset_type_by_extension(path.extension().string());
 	}
 
-	const asset_id_t& AssetManager::import_asset(const std::filesystem::path& filepath)
+	asset_id_t AssetManager::import_asset(const std::filesystem::path& filepath)
 	{
 		std::filesystem::path relative_path = get_relative_path(filepath);
+		if (relative_path.empty())
+		{
+			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, Project::GetActive()->GetAssetDirectoryPath());
+			return asset::null_asset_id;
+		}
+
+		if (is_asset_registry_file(relative_path))
+		{
+			KB_CORE_WARN("[AssetManager] Trying to import asset registry file as an asset!");
+			return asset::null_asset_id;
+		}
 
 		const AssetMetadata& check_metadata = get_metadata(relative_path);
 		if (check_metadata.is_valid())
@@ -77,6 +89,8 @@ namespace Kablunk::asset
 			false,  // is_data_loaded
 		};
 
+		// #TODO why do we not try to load data?
+
 		m_asset_registry[metadata.id] = metadata;
 
 		KB_CORE_INFO("[AssetManager] Imported new asset '{}'!", metadata.id);
@@ -85,7 +99,7 @@ namespace Kablunk::asset
 
 	bool AssetManager::reload_asset_data(const asset_id_t& id)
 	{
-		AssetMetadata& metadata = get_metadata(id);
+		AssetMetadata& metadata = get_metadata_internal(id);
 		if (!metadata.is_valid())
 		{
 			KB_CORE_ERROR("[AssetManager] Trying to reload invalid asset '{}'!", id);
@@ -105,7 +119,7 @@ namespace Kablunk::asset
 		return get_metadata(filepath).id;
 	}
 
-	AssetMetadata& AssetManager::get_metadata(const asset_id_t& id)
+	AssetMetadata& AssetManager::get_metadata_internal(const asset_id_t& id)
 	{
 		if (m_asset_registry.contains(id))
 			return m_asset_registry.at(id);
@@ -162,7 +176,7 @@ namespace Kablunk::asset
 			}
 
 			// make sure asset exists in project
-			if (!FileSystem::file_exists(filepath))
+			if (!FileSystem::file_exists(get_absolute_path(filepath)))
 			{
 				KB_CORE_WARN("[AssetManager] asset '{0}' not found in project, attempting to locate!");
 
@@ -183,8 +197,8 @@ namespace Kablunk::asset
 	{
 		struct asset_registry_entry_t
 		{
-			std::string filepath;
-			AssetType type;
+			std::string filepath = "";
+			AssetType type = AssetType::NONE;
 		};
 
 		// sort asset registry by id
@@ -251,7 +265,7 @@ namespace Kablunk::asset
 
 	void AssetManager::on_asset_renamed(const asset_id_t& id, const std::filesystem::path& new_filepath)
 	{
-		AssetMetadata& metadata = get_metadata(id);
+		AssetMetadata& metadata = get_metadata_internal(id);
 		if (!metadata.is_valid())
 			return;
 
@@ -261,7 +275,7 @@ namespace Kablunk::asset
 
 	void AssetManager::on_asset_deleted(const asset_id_t& id)
 	{
-		AssetMetadata& metadata = get_metadata(id);
+		AssetMetadata& metadata = get_metadata_internal(id);
 		if (!metadata.is_valid())
 			return;
 
