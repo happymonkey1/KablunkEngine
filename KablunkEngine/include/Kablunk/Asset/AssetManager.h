@@ -22,16 +22,21 @@ namespace Kablunk::asset
 		void init();
 		// shutdown logic for the asset manager
 		void shutdown();
-
+		// get metadata from asset registry using asset id
 		const AssetMetadata& get_metadata(const asset_id_t& id) const { return m_asset_registry.contains(id) ? m_asset_registry.at(id) : s_null_metadata; }
+		// get metadata from asset registry using filepath
 		const AssetMetadata& get_metadata(const std::filesystem::path& filepath) const;
+		// get metadata from asset registry using asset reference
 		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
-
+		// get the absolute path for an asset using its metadata
 		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const { return Project::GetAssetDirectoryPath() / metadata.filepath; }
+		// get the absolute path for a given path
 		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const { return Project::GetAssetDirectoryPath() / path; }
+		// get the relative path for a given path
 		std::filesystem::path get_relative_path(const std::filesystem::path& path) const;
-
+		// get an asset type by a given extension
 		AssetType get_asset_type_by_extension(const std::string& extension) const { return extension_to_asset_type(extension); }
+		// get an asset type from a given path
 		AssetType get_asset_type_from_filepath(const std::filesystem::path& path) const;
 		// import an asset into the registry
 		asset_id_t import_asset(const std::filesystem::path& filepath);
@@ -102,13 +107,17 @@ namespace Kablunk::asset
 
 			AssetMetadata& metadata = get_metadata_internal(id);
 			if (!metadata.is_valid())
+			{
+				KB_CORE_INFO("[AssetManager] Tried to get asset '{}' but metadata is invalid!", id);
 				return nullptr;
+			}
 
 			// imported assets are not loaded by default, so try to load if we find one that hasn't been loaded
-			ref<T> asset = nullptr;
+			// #TODO async asset loading
+			ref<IAsset> asset = nullptr;
 			if (!metadata.is_data_loaded)
 			{
-				metadata.is_data_loaded = try_load_asset(metadata, asset.As<IAsset>());
+				metadata.is_data_loaded = try_load_asset(metadata, asset);
 				if (!metadata.is_data_loaded)
 					return nullptr;
 
@@ -117,6 +126,9 @@ namespace Kablunk::asset
 			else
 				asset = m_loaded_assets[id];
 
+			KB_CORE_ASSERT(asset, "asset null?!");
+
+			KB_CORE_INFO("[AssetManager] Successfully retrieved asset '{}'", metadata.filepath);
 			return asset.As<T>();
 		}
 		// get an asset based on a filepath
@@ -135,17 +147,24 @@ namespace Kablunk::asset
 		// check if the file exists on the filesystem
 		bool file_exists(const AssetMetadata& asset_metadata) const;
 	private:
+		// load asset registry file from disk
 		void load_asset_registry();
+		// save asset registry file to disk
 		void write_registry_to_file() const;
+		// process directories recursively (starting from asset dir root), import assets, then save registry file
 		void reload_assets();
 		void process_directory(const std::filesystem::path& directory_path);
 
+		// write asset data to disk
 		void serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
+		// try load asset from disk
 		bool try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
 
 		AssetMetadata& get_metadata_internal(const asset_id_t& id);
 
+		// callback for when an asset has been renamed on disk
 		void on_asset_renamed(const asset_id_t& id, const std::filesystem::path& new_filepath);
+		// callback for when an asset has been deleted from disk
 		void on_asset_deleted(const asset_id_t& id);
 	public:
 		// extension for registry file
@@ -166,6 +185,7 @@ namespace Kablunk::asset
 		std::unordered_map<AssetType, IntrusiveRef<AssetSerializer>> m_asset_serializers;
 	};
 
+	// check whether a given filepath refers to the asset registry
 	inline bool is_asset_registry_file(const std::filesystem::path& filepath)
 	{
 		return filepath.filename() == AssetManager::s_asset_registry_path;

@@ -92,6 +92,8 @@ namespace Kablunk
 
 		RenderCommand::WaitAndRender();
 
+		Project::shutdown();
+
 		Renderer::Shutdown();
 
 		NativeScriptEngine::get().shutdown();

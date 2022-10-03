@@ -272,11 +272,11 @@ namespace Kablunk
 			auto metadata = asset::try_get_asset_metadata(relative_path);
 			if (metadata.is_valid())
 			{
-				asset::AssetType asset_type = asset::get_asset_type_from_path(relative_path);
-				if (asset_type == asset::AssetType::NONE)
+				asset::asset_type_t asset_type = asset::get_asset_type_from_path(relative_path);
+				if (asset_type == asset::asset_type_t::NONE)
 					continue;
 
-				KB_CORE_INFO("trying to import asset '{}'!", relative_path);
+				KB_CORE_INFO("[ContentBrowserPanel] Trying to import asset '{}'!", relative_path);
 				asset::import_asset(relative_path);
 			}
 		}

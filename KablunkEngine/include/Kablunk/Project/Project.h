@@ -39,6 +39,7 @@ namespace Kablunk
 
 		static IntrusiveRef<Project> GetActive() { return s_active_project; }
 		static void SetActive(const IntrusiveRef<Project>& project);
+		static void shutdown();
 
 		static const void SetProjectName(const std::string& new_name) { s_active_project->m_config.Name = new_name; }
 		static const std::string& GetProjectName() { return s_active_project->GetConfig().Name; }

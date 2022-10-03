@@ -33,4 +33,13 @@ namespace Kablunk
 			Singleton<asset::AssetManager>::get().init();
 		}
 	}
+
+	void Project::shutdown()
+	{
+		if (s_active_project)
+			Singleton<asset::AssetManager>::get().shutdown();
+
+		s_active_project = nullptr;
+	}
+
 }

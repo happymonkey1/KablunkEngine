@@ -167,18 +167,21 @@ namespace Kablunk::asset
 			};
 
 			if (metadata.type == AssetType::NONE)
+			{
+				KB_CORE_WARN("[AssetManager] AssetType NONE for asset '{}' encountered while loading asset registry file!", metadata.id);
 				continue;
+			}
 
 			if (metadata.type != get_asset_type_from_filepath(filepath))
 			{
-				KB_CORE_WARN("[AssetManager] mismatch between stored type in asset registry and extension type!");
+				KB_CORE_WARN("[AssetManager] Mismatch between stored type in asset registry and extension type!");
 				metadata.type = get_asset_type_from_filepath(filepath);
 			}
 
 			// make sure asset exists in project
 			if (!FileSystem::file_exists(get_absolute_path(filepath)))
 			{
-				KB_CORE_WARN("[AssetManager] asset '{0}' not found in project, attempting to locate!");
+				KB_CORE_WARN("[AssetManager] Asset '{0}' not found in project, attempting to locate on disk!");
 
 				KB_CORE_ASSERT(false, "not implemented!");
 			}
@@ -305,9 +308,10 @@ namespace Kablunk::asset
 
 	bool AssetManager::try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
 	{
-		auto it = m_asset_serializers.find(asset->get_static_type());
+		auto it = m_asset_serializers.find(metadata.type);
 		if (it != m_asset_serializers.end())
 		{
+			KB_CORE_INFO("[AssetManager] Trying to load '{}' from disk using serializer={}", metadata.filepath, asset_type_to_string(metadata.type));
 			// try loading asset using found serializer
 			return it->second->try_load_data(metadata, asset);
 		}
