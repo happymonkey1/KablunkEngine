@@ -82,6 +82,7 @@ namespace Kablunk::ml::tensor
 		const value_t* at(const indices_t& indices) const
 		{
 			KB_CORE_ASSERT(indices.size() == rank, "[TensorBuffer] Passed in indices do not match specified rank!");
+			KB_CORE_ASSERT(indices.size() == m_dimensions.size(), "[TensorBuffer] Passed in indices do not match specified dimensions!");
 
 			size_t out_index = 0;
 			for (size_t i = 0; i < indices.size(); ++i)
@@ -142,7 +143,7 @@ namespace Kablunk::ml::tensor
 			if (m_data)
 				delete[] m_data;
 			else
-				KB_CORE_ERROR("[TensorStorage] tried deleting TensorStorage with null data?");
+				KB_CORE_WARN("[TensorStorage] tried deleting TensorStorage with null data?");
 
 			m_size = 0;
 			m_data = nullptr;

@@ -62,6 +62,19 @@ namespace Kablunk::ml::tensor
 		{
 			KB_CORE_ERROR("[Test #{}] Failed!", total_tests);
 		}
+
+		KB_CORE_TRACE("[Test] destructor test");
+
+		{
+			size_t tensor_count = 1000;
+			size_t elements = 100000;
+			std::vector<Tensor<u64, 1>> tensors;
+			tensors.reserve(tensor_count);
+			for (size_t i = 0; i < tensor_count; ++i)
+				tensors.emplace_back(Tensor<u64, 1>{ elements });
+
+			tensors.clear();
+		}
 		
 		if (tests_passed == total_tests)
 			KB_CORE_INFO("[Test]   {}/{} tests passed!", tests_passed, total_tests);
@@ -181,6 +194,64 @@ namespace Kablunk::ml::tensor
 		passed = (tensor_a == tensor_b) && (tensor_a != tensor_c) && (tensor_b != tensor_c);
 
 		if (passed)
+		{
+			KB_CORE_INFO("[Test #{}] Passed!", total_tests);
+			tests_passed++;
+		}
+		else
+		{
+			KB_CORE_ERROR("[Test #{}] Failed!", total_tests);
+		}
+
+		KB_CORE_TRACE("[Test] tensor * scalar");
+		Tensor<f32, 2> tensor_d{ 2, 2 };
+		tensor_d.fill(1.0f);
+		tensor_d = tensor_d * 5.0f;
+
+		Tensor<f32, 1> tensor_e{ 10 };
+		tensor_e.fill(1.0f);
+		tensor_e = tensor_e * 2.0f;
+
+		KB_CORE_INFO("tensor_d: {}", tensor_d.to_string());
+		KB_CORE_INFO("tensor_e: {}", tensor_e.to_string());
+
+		total_tests++;
+		passed = true;
+		for (size_t i = 0; i < tensor_d.get_size(); ++i)
+			if (tensor_d[i] != 5.0f)
+				passed = false;
+
+		for (size_t i = 0; i < tensor_e.get_size(); ++i)
+			if (tensor_e[i] != 2.0f)
+				passed = false;
+
+		if (passed)
+		{
+			KB_CORE_INFO("[Test #{}] Passed!", total_tests);
+			tests_passed++;
+		}
+		else
+		{
+			KB_CORE_ERROR("[Test #{}] Failed!", total_tests);
+		}
+
+		KB_CORE_TRACE("[Test] tensor iterators");
+
+		Tensor<f32, 1> tensor_f{ 10 };
+		tensor_f.fill(69.0f);
+
+		KB_CORE_INFO("tensor_f: {}", tensor_f.to_string());
+
+		total_tests++;
+		size_t expected_size = 10;
+		size_t actual_size = 0;
+		for (f32 val : tensor_f)
+		{
+			KB_CORE_TRACE("  tensor_e[{}] = {}", actual_size, val);
+			actual_size++;
+		}
+
+		if (actual_size == expected_size)
 		{
 			KB_CORE_INFO("[Test #{}] Passed!", total_tests);
 			tests_passed++;

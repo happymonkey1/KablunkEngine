@@ -19,18 +19,40 @@ namespace Kablunk::ml::tensor
 	public:
 		using value_t = T;
 		using indices_t = std::array<size_t, rank>;
+
+		// iterator class
+		template <typename T>
+		class tensor_iterator_t
+		{
+		public:
+			using iterator_value_t = T;
+		public:
+			explicit tensor_iterator_t(iterator_value_t* ptr) : m_ptr{ ptr } {}
+
+			tensor_iterator_t operator++() { m_ptr++; return *this; }
+
+			iterator_value_t& operator*() { return *m_ptr; }
+			const iterator_value_t& operator*() const { return *m_ptr; }
+
+			bool operator==(const tensor_iterator_t& other) const { return m_ptr == other.m_ptr; }
+			bool operator!=(const tensor_iterator_t& other) const { return !(*this == other); }
+		private:
+			iterator_value_t* m_ptr;
+		};
+
 	public:
-		explicit Tensor() noexcept 
+		/*explicit Tensor() noexcept
 			: m_buffer{}, m_rank{ rank } 
 		{
 		
-		}
+		}*/
+		Tensor() = delete;
 		
 		// variadic template for tensor with multiple dimensions
 		// #TODO c++20 concept to assert other_dimensions_t is numeric value
 		template <typename... other_dimensions_t>
 		explicit Tensor(size_t first_dimension, other_dimensions_t... other_dimensions) noexcept
-			: m_buffer{ first_dimension, std::forward<other_dimensions_t>(other_dimensions)...}, m_rank{rank}
+			: m_buffer{ first_dimension, other_dimensions... }, m_rank{rank}
 		{
 			// ensure passed in dimensions matches specified rank
 			KB_CORE_ASSERT(rank == sizeof...(other_dimensions) + 1, "[Tensor] Passed in dimensions must match specified rank!");
@@ -89,7 +111,7 @@ namespace Kablunk::ml::tensor
 					for (size_t k = 0; k < m; ++k)
 						resultant[{i, j}] += a[{i, k}] * b[{k, j}];
 
-			return resultant;
+			return std::move(resultant);
 		}
 
 		// fill tensor with values
@@ -126,13 +148,35 @@ namespace Kablunk::ml::tensor
 			m_rank = other.m_rank, other.m_rank = 0;
 
 			m_buffer = std::move(other.m_buffer);
-			other.m_buffer = nullptr;
+			//other.m_buffer.release();
 
 			return *this;
 		}
 
 		// dot product when multiplying by other tensor
 		Tensor operator*(const Tensor& other) const { return dot(other); }
+
+		template <typename T>
+		Tensor operator*(T scalar) const 
+		{ 
+			static_assert(std::is_arithmetic<T>::value, "[Tensor] type T is not a scalar!");
+			Tensor resultant{ *this };
+
+			for (size_t i = 0; i < resultant.get_size(); ++i)
+				resultant[i] *= scalar;
+
+			return std::move(resultant);
+		}
+
+		template <typename T>
+		Tensor operator*=(T scalar)
+		{
+			static_assert(std::is_arithmetic<T>::value, "[Tensor] type T is not a scalar!");
+			for (size_t i = 0; i < get_size(); ++i)
+				m_buffer[i] *= scalar;
+
+			return *this;
+		}
 
 		value_t& operator[](size_t index) { return m_buffer[index]; }
 		const value_t& operator[](size_t index) const { return m_buffer[index]; }
@@ -150,9 +194,17 @@ namespace Kablunk::ml::tensor
 			return true;
 		}
 
+		// iterator operators
+		tensor_iterator_t<value_t> begin() { return tensor_iterator_t<value_t>( m_buffer.get() ); }
+		tensor_iterator_t<value_t> end() { return tensor_iterator_t<value_t>( m_buffer.get() + m_buffer.size() ); }
+
+		const tensor_iterator_t<value_t> cbegin() const { return tensor_iterator_t<value_t>( m_buffer.get() ); }
+		const tensor_iterator_t<value_t> cend() const { return tensor_iterator_t<value_t>( m_buffer.get() + m_buffer.size() ); }
+
 		// inequality comparison operator
 		bool operator!=(const Tensor& other) const { return !(*this == other); }
 	private:
+		// rank (dimensionality) of the tensor
 		size_t m_rank;
 		// block of memory
 		TensorBuffer<value_t, rank> m_buffer;
