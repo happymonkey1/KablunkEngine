@@ -66,6 +66,8 @@ namespace Kablunk
 			uint32_t GetTotalIndexCount() { return Quad_count * 6; }
 		};
 
+
+		// #TODO move onto renderer class, this is leftover from old static renderer
 		struct renderer_2d_data_t
 		{
 			static const uint32_t max_quads = 20'000;

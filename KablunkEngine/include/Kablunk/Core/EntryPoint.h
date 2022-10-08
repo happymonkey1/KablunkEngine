@@ -3,6 +3,10 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Application.h"
 
+#ifdef KB_UNIT_TEST
+#	include "Kablunk/ML/Test/test_Tensor.h"
+#endif
+
 #ifdef KB_PLATFORM_WINDOWS
 
 extern Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv);
@@ -22,9 +26,14 @@ int main(int argc, char** argv)
 {
 	Kablunk::InitCore();
 
+#ifdef KB_UNIT_TEST
+	Kablunk::ml::tensor::test_tensor_main();
+#endif
+
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");
 	Kablunk::Application* app = Kablunk::CreateApplication(argc, argv);
 	KB_END_SESSION();
+
 
 	KB_BEGIN_SESSION("Runtime", "KablunkProfile-Runtime.json");
 	app->Run();

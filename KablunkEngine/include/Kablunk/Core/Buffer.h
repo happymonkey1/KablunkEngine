@@ -23,6 +23,13 @@ namespace Kablunk
 					KB_CORE_ASSERT(false, "memcpy C6381 warning");
 			}
 		}
+		Buffer(Buffer&& other) : m_data{ other.m_data }, m_size{ other.m_size }
+		{
+			other.m_size = 0;
+			other.m_data = nullptr;
+		}
+
+
 		~Buffer()
 		{
 			Release();
@@ -103,6 +110,14 @@ namespace Kablunk
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
 			memcpy(m_data + offset, data, size);
+		}
+
+		Buffer& operator=(Buffer&& other)
+		{
+			m_size = other.m_size, other.m_size = 0;
+			m_data = other.m_data, other.m_data = nullptr;
+
+			return *this;
 		}
 
 		operator bool() const { return m_data; }

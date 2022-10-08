@@ -466,7 +466,7 @@ namespace Kablunk
 		float texture_index = 0.0f;
 		for (uint32_t i = 1; i < m_renderer_data->texture_slot_index; ++i)
 		{
-			// Dereference shared_ptrs and compare the textures
+			// Dereference and compare the textures
 			if (*m_renderer_data->texture_slots[i].get() == *texture.get())
 				texture_index = (float)i;
 		}
