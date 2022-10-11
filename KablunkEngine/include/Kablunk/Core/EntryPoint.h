@@ -5,6 +5,7 @@
 
 #ifdef KB_UNIT_TEST
 #	include "Kablunk/ML/Test/test_Tensor.h"
+#	include "Kablunk/ML/Test/test_SimpleNN.h"
 #endif
 
 #ifdef KB_PLATFORM_WINDOWS
@@ -28,6 +29,7 @@ int main(int argc, char** argv)
 
 #ifdef KB_UNIT_TEST
 	Kablunk::ml::tensor::test_tensor_main();
+	Kablunk::ml::test::test_simple_nn_main();
 #endif
 
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");

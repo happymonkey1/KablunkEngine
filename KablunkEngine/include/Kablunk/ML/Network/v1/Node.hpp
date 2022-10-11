@@ -56,7 +56,7 @@ namespace Kablunk::ml::network::v1
 		}
 
 		// computes activation_func(input.dot(weights))
-		value_t activate(const input_array_t& inputs, activation_func_t activation_func) const
+		value_t activate(const input_array_t& inputs, activation_func_t<value_t> activation_func) const
 		{
 			KB_CORE_ASSERT(inputs.size() == m_weights.size(), "input dimension does not match weights dimension!");
 			KB_CORE_ASSERT(m_weights.size() > 0, "weights size == 0?");

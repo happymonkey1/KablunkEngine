@@ -68,40 +68,6 @@
 #	define KB_ASSERT_NO_LOG(x) { }
 #endif
 
-// #TODO fix macros
-#if 0
-#ifdef KB_UNIT_TEST
-#	define KB_BEGIN_UNIT_TEST_GROUP(x)	\
-	{ \
-		int tests_passed = 0; \
-		int total_tests = 0; \
-		const char* test_name = x; \
-		std::cout << "[Test] Starting tests for " << test_name << std::endl;;
-
-#	define KB_UNIT_TEST(x) \
-		{ \ 
-total_tests++; \
-if (!(x)) \
-{ \
-std::cout << "[Test #" << total_tests "] Failed!" << total_tests << std::endl; \
-} \
-else \
-{ \
-std::cout << "[Test #" << total_tests "] Passed!" << std::endl; \
-tests_passed++; \
-}
-		}
-#	define KB_END_UNIT_TEST_GROUP()	\
-		std::cout << "[Test] Finished tests for " test_name); \
-		std::cout << "[Test]  " << tests_passed << "/" << total_tests << " tests passed!" << std::endl; \
-	}
-#else
-#	define KB_BEGIN_UNIT_TEST(x) {}
-#	define KB_UNIT_TEST(x)       {}
-#	define KB_END_UNIT_TEST()    {}
-#endif
-#endif
-
 #define DEFINE_ENUM_TYPE_STRING(T, STR) static constexpr const char* T = STR;
 
 #endif

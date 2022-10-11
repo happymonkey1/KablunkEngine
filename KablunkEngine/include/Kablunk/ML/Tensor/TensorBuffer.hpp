@@ -22,6 +22,7 @@ namespace Kablunk::ml::tensor
 		using indices_t = dimension_t<rank>;
 	public:
 		TensorBuffer() : m_dimensions{}, m_data{ nullptr } { }
+		//TensorBuffer() = delete;
 
 		// variadic template for creating a TensorBuffer from arguments
 		template <typename... dimensions_t>
@@ -55,6 +56,20 @@ namespace Kablunk::ml::tensor
 			// copy data over
 			for (size_t i = 0; i < buf_size; ++i)
 				m_data[i] = other.m_data[i];
+		}
+
+		// construct a buffer from a TensorBuffer of a different underlying type
+		template <typename U>
+		TensorBuffer(const TensorBuffer<U, rank>& other)
+			: m_dimensions{ other.m_dimensions }, m_data{ nullptr }
+		{
+			m_size = std::accumulate(m_dimensions.begin(), m_dimensions.end(), 1ull, std::multiplies<size_t>());
+			size_t buf_size = m_size;
+			m_data = new value_t[buf_size];
+
+			// copy data over
+			for (size_t i = 0; i < buf_size; ++i)
+				m_data[i] = static_cast<value_t>(other.m_data[i]);
 		}
 
 		TensorBuffer(TensorBuffer&& other)

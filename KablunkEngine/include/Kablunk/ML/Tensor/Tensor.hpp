@@ -41,12 +41,12 @@ namespace Kablunk::ml::tensor
 		};
 
 	public:
-		/*explicit Tensor() noexcept
+		explicit Tensor() noexcept
 			: m_buffer{}, m_rank{ rank } 
 		{
 		
-		}*/
-		Tensor() = delete;
+		}
+		//Tensor() = delete;
 		
 		// variadic template for tensor with multiple dimensions
 		// #TODO c++20 concept to assert other_dimensions_t is numeric value
@@ -59,6 +59,14 @@ namespace Kablunk::ml::tensor
 		}
 
 		Tensor(const Tensor& other) 
+			: m_buffer{ other.m_buffer }, m_rank{ other.m_rank }
+		{
+
+		}
+
+		// construct a tensor from a tensor of a different underlying type
+		template <typename U>
+		Tensor(const Tensor<U, rank>& other)
 			: m_buffer{ other.m_buffer }, m_rank{ other.m_rank }
 		{
 
@@ -114,11 +122,31 @@ namespace Kablunk::ml::tensor
 			return std::move(resultant);
 		}
 
+		// return a copy of the tensor that is transposed
+		Tensor get_transpose() const
+		{
+			// #TODO implement https://www.osti.gov/pages/servlets/purl/1185465
+			KB_CORE_ASSERT(rank == 2, "tensor transpose only works on rank=2 tensors!");
+			
+			Tensor transposed{ get_dimension(1), get_dimension(0) };
+			for (size_t i = 0; i < get_dimension(0); ++i)
+				for (size_t j = 0; j < get_dimension(1); ++j)
+					transposed[j][i] = m_buffer[i][j];
+
+			return transposed;
+		}
+
+		// transpose the tensor in-place
+		void transpose()
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
 		// fill tensor with values
 		void fill(value_t fill_value)
 		{
 			for (size_t i = 0; i < m_buffer.size(); ++i)
-				*(m_buffer.get() + i) = fill_value;
+				*get(i) = fill_value;
 		}
 
 		std::string to_string() const
@@ -128,6 +156,31 @@ namespace Kablunk::ml::tensor
 
 			return fmt::format("{}\n{}", repr, values);
 		}
+
+		// meta function to apply a lambda to each value of the tensor
+		// #TODO c++20 require lambda to return value_t and take 1 value_t parameter
+		// lambda = [](value_t value){ ... } -> value_t
+		template <typename FuncT>
+		Tensor& apply(FuncT&& func)
+		{
+			for (value_t& value : *this)
+				value = func(value);
+
+			return *this;
+		}
+
+		template <typename Scalar>
+		Tensor mul(Scalar scalar) const
+		{
+			static_assert(std::is_arithmetic<Scalar>::value, "[Tensor] type T is not a scalar!");
+			Tensor resultant{ *this };
+
+			for (size_t i = 0; i < resultant.get_size(); ++i)
+				resultant[i] *= scalar;
+
+			return std::move(resultant);
+		}
+
 
 		// =========
 		// operators
@@ -156,6 +209,7 @@ namespace Kablunk::ml::tensor
 		// dot product when multiplying by other tensor
 		Tensor operator*(const Tensor& other) const { return dot(other); }
 
+		// #TODO c++20 require T to be numeric
 		template <typename T>
 		Tensor operator*(T scalar) const 
 		{ 
@@ -168,6 +222,21 @@ namespace Kablunk::ml::tensor
 			return std::move(resultant);
 		}
 
+		Tensor operator-(const Tensor& other) const
+		{
+			Tensor resultant{ *this };
+
+			for (size_t i = 0; i < resultant.get_size(); ++i)
+				resultant[i] = m_buffer[i] - other.m_buffer[i];
+
+			return std::move(resultant);
+		}
+
+
+		Tensor* operator->() { return this; }
+		Tensor& operator*() { return *this; }
+
+		// #TODO c++20 require T to be numeric
 		template <typename T>
 		Tensor operator*=(T scalar)
 		{
@@ -214,11 +283,13 @@ namespace Kablunk::ml::tensor
 
 namespace Kablunk::ml
 {
+
 	template <typename T = f32>
 	using tensor_1d_t = Kablunk::ml::tensor::Tensor<T, 1ull>;
 
 	template <typename T = f32>
 	using tensor_2d_t = Kablunk::ml::tensor::Tensor<T, 2ull>;
+
 }
 
 #endif
