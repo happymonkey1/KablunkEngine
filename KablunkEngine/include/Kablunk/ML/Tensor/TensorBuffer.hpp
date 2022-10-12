@@ -158,7 +158,9 @@ namespace Kablunk::ml::tensor
 			if (m_data)
 				delete[] m_data;
 			else
-				KB_CORE_WARN("[TensorStorage] tried deleting TensorStorage with null data?");
+			{
+				//KB_CORE_WARN("[TensorStorage] tried deleting TensorStorage with null data?");
+			}
 
 			m_size = 0;
 			m_data = nullptr;

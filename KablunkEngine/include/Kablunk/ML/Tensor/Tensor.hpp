@@ -131,7 +131,7 @@ namespace Kablunk::ml::tensor
 			Tensor transposed{ get_dimension(1), get_dimension(0) };
 			for (size_t i = 0; i < get_dimension(0); ++i)
 				for (size_t j = 0; j < get_dimension(1); ++j)
-					transposed[j][i] = m_buffer[i][j];
+					transposed.m_buffer[{j, i}] = m_buffer[{ i, j }];
 
 			return transposed;
 		}

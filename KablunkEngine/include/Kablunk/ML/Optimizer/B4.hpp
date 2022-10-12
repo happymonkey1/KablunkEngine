@@ -28,7 +28,8 @@ namespace Kablunk::ml::optimizer
 
 		virtual ~B4() override
 		{
-			delete m_loss_function;
+			if (m_loss_function)
+				delete m_loss_function;
 		}
 		
 		virtual tensor_t loss(const tensor_t& values) override
@@ -55,7 +56,7 @@ namespace Kablunk::ml::optimizer
 			m_cached_layer_outputs[layer_index] = layer_output;
 		}
 
-		virtual void reserve_output_cache(size_t new_size) override { m_cached_layer_outputs.reserve(new_size); }
+		virtual void reserve_output_cache(size_t new_size) override { m_cached_layer_outputs.resize(new_size); }
 	private:
 		// pointer to the gradients
 		tensor_t* m_gradients = nullptr;

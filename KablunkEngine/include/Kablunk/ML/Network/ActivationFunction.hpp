@@ -15,7 +15,7 @@ namespace Kablunk::ml::network
 	inline T relu(T value) { return glm::max(static_cast<T>(0.0f), value); }
 
 	template <typename T = f32>
-	inline T sigmoid(T value) { return glm::exp(value) / (glm::exp(value) + 1); }
+	inline T sigmoid(T value) { return glm::exp(value) / (glm::exp(value) + static_cast<T>(1.0f)); }
 }
 
 #endif

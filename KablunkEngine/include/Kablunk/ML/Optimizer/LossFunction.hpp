@@ -19,6 +19,8 @@ namespace Kablunk::ml::optimizer
 		using value_t = T;
 		using tensor_t = Kablunk::ml::tensor::Tensor<T, 2>;
 	public:
+		virtual ~ILossFunction() = default;
+
 		// compute the loss 
 		virtual tensor_t loss(const tensor_t& values) const = 0;
 
@@ -31,6 +33,8 @@ namespace Kablunk::ml::optimizer
 	class negative_log_loss : public ILossFunction<T>
 	{
 	public:
+		virtual ~negative_log_loss() = default;
+
 		// compute the loss 
 		virtual tensor_t loss(const tensor_t& values) const override
 		{

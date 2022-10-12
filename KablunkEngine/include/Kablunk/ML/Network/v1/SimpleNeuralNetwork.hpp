@@ -11,17 +11,22 @@
 
 namespace Kablunk::ml::network::v1
 {
+	// #TODO layers with different underlying types
+	// for example int16 layer -> int8 layer -> int8 layer, all in one network
+
+
 	template <typename T = f32>
 	class SimpleNeuralNetwork : public INetwork<T>
 	{
 	public:
 		using value_t = T;
-		// #TODO replace with ILayer*
 		using layer_t = Kablunk::ml::network::ILayer<T>;
 		using optimizer_t = Kablunk::ml::network::INetwork<T>::optimizer_t;
 	public:
-		SimpleNeuralNetwork(const std::initializer_list<layer_t*>& layers, 
-			optimizer_t* optimizer = new Kablunk::ml::optimizer::B4<value_t>{ 0.002f, new Kablunk::ml::optimizer::negative_log_loss<T>{} })
+		SimpleNeuralNetwork(
+			const std::initializer_list<layer_t*>& layers, 
+			optimizer_t* optimizer = new Kablunk::ml::optimizer::B4<value_t>{ 0.002f, new Kablunk::ml::optimizer::negative_log_loss<T>{} }
+		)
 			: m_layers{ layers }, m_optimizer{ optimizer }
 		{
 
@@ -30,14 +35,29 @@ namespace Kablunk::ml::network::v1
 
 			// reserve space for optimizer output cache
 			if (optimizer)
-				m_optimizer->reserve_output_cache(layers.size());
+				m_optimizer->reserve_output_cache(m_layers.size());
+		}
+
+
+		SimpleNeuralNetwork(SimpleNeuralNetwork<>&& other) noexcept
+			: m_layers{ std::move(other.m_layers) }, m_optimizer{ other.m_optimizer }, m_data{ std::move(other.m_data) }
+		{
+			other.m_layers.clear();
+			other.m_optimizer = nullptr;
 		}
 
 		virtual ~SimpleNeuralNetwork() override
 		{
-			delete m_optimizer;
+			// #TODO figure out how to stack allocate optimizers so they are not on the heap...
+			if (m_optimizer)
+				delete m_optimizer;
+
+			// #TODO figure out how to stack allocate layers so they are not on the heap...
+			for (layer_t* layer : m_layers)
+				delete layer;
 		}
 
+		// get the amount of layers in the network
 		virtual size_t get_layer_count() const override { return m_layers.size(); }
 
 		// fit the data to the network
@@ -48,7 +68,7 @@ namespace Kablunk::ml::network::v1
 
 		// feed inputs forward through the network
 		virtual network_tensor_t forward(const network_tensor_t& input) override
-		{
+		{ 
 			network_tensor_t output{ input };
 			size_t layer_index = 0;
 			for (layer_t* layer : m_layers)
@@ -72,7 +92,9 @@ namespace Kablunk::ml::network::v1
 		virtual INetwork::optimizer_t& get_optimizer() { return *m_optimizer; };
 		// get the optimizer for the network
 		virtual const INetwork::optimizer_t& get_optimizer() const { return *m_optimizer; };
-
+		// #TODO buffer overflow?
+		// get a layer by index from the network
+		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) { return m_layers[layer_index]; }
 	private:
 		network_tensor_t m_data;
 		// stack allocated array for layers of the network

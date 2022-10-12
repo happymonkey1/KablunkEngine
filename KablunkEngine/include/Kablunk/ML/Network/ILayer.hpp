@@ -3,6 +3,7 @@
 #define KABLUNK_ML_NETWORK_ILAYER_HPP
 
 #include "Kablunk/ML/Tensor/Tensor.hpp"
+#include "Kablunk/ML/Network/ActivationFunction.hpp"
 
 #include "Kablunk/Core/CoreTypes.h"
 
@@ -34,7 +35,12 @@ namespace Kablunk::ml::network
 
 		// get underlying weights for the layer
 		virtual layer_tensor_t& get_weights() = 0;
+
+		// get underlying weights for the layer
 		virtual const layer_tensor_t& get_weights() const = 0;
+
+		// set an activation function for this layer
+		virtual void set_activation_func(activation_func_t<value_t> new_activation_function) = 0;
 	};
 
 }
