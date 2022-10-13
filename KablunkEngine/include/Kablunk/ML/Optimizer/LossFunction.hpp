@@ -22,10 +22,10 @@ namespace Kablunk::ml::optimizer
 		virtual ~ILossFunction() = default;
 
 		// compute the loss 
-		virtual tensor_t loss(const tensor_t& values) const = 0;
+		virtual tensor_t loss(const tensor_t& y_true, const tensor_t& y_pred) const = 0;
 
 		// compute the gradient of the loss
-		virtual tensor_t grad(const tensor_t& values) const = 0;
+		virtual tensor_t grad(const tensor_t& y_true, const tensor_t& y_pred) const = 0;
 	};
 	
 
@@ -36,21 +36,28 @@ namespace Kablunk::ml::optimizer
 		virtual ~negative_log_loss() = default;
 
 		// compute the loss 
-		virtual tensor_t loss(const tensor_t& values) const override
+		virtual tensor_t loss(const tensor_t& y_true, const tensor_t& y_pred) const override
 		{
+			// nll = -(1/n) y log( sig( y_pred ) ) + (1 - y) * log( -sig( y_pred ) )
 			// #TODO cache lambda instead of re-creating each func call
-			auto d_sigmoid = [](value_t v) -> value_t { return -glm::log(static_cast<value_t>(v)); };
-			tensor_t output{ values };
+			/*auto loss_f = [](value_t v) -> value_t {
+				return - y_true * glm::log(static_cast<value_t>(v)); 
+			};*/
+			tensor_t output{ y_pred.get_dimensions() };
 
-			return output.apply(d_sigmoid);
+			// #TODO use vector math
+
+			//output = (-1 * y_true) * glm::log(y_pred) - (1 - y_true) * glm::log((-1 * y_pred));
+
+			return output; /// static_cast<value_t>(output.get_dimension(1));
 		}
 
 		// compute the gradient of the loss
-		virtual tensor_t grad(const tensor_t& values) const
+		virtual tensor_t grad(const tensor_t& y_true, const tensor_t& y_pred) const
 		{
 			// #TODO cache lambda instead of re-creating each func call
 			auto d_sigmoid = [](value_t v) -> value_t { return Kablunk::ml::network::sigmoid(v) * (1 - Kablunk::ml::network::sigmoid(v)); };
-			tensor_t output{ values };
+			tensor_t output{ y_pred };
 
 			return output.apply(d_sigmoid);
 		}

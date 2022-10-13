@@ -51,20 +51,34 @@ namespace Kablunk::ml::tensor
 		// variadic template for tensor with multiple dimensions
 		// #TODO c++20 concept to assert other_dimensions_t is numeric value
 		template <typename... other_dimensions_t>
-		explicit Tensor(size_t first_dimension, other_dimensions_t... other_dimensions) noexcept
+		explicit Tensor(
+			size_t first_dimension,					// first dimension of the tensor, required parameter
+			other_dimensions_t... other_dimensions	// variadic template for other dimensions of the tensor
+		) noexcept
 			: m_buffer{ first_dimension, other_dimensions... }, m_rank{rank}
 		{
 			// ensure passed in dimensions matches specified rank
 			KB_CORE_ASSERT(rank == sizeof...(other_dimensions) + 1, "[Tensor] Passed in dimensions must match specified rank!");
 		}
 
+		explicit Tensor(
+			const std::array<size_t, rank>& dimensions // stack allocated array containing dimensions of the tensor
+		) noexcept
+			: m_buffer{ dimensions }, m_rank{ rank }
+		{
+			// ensure passed in dimensions matches specified rank
+			KB_CORE_ASSERT(rank == dimensions.size(), "[Tensor] Passed in dimensions must match specified rank!");
+		}
+
+		// copy constructor for a tensor of the same rank and underlying type
 		Tensor(const Tensor& other) 
 			: m_buffer{ other.m_buffer }, m_rank{ other.m_rank }
 		{
 
 		}
 
-		// construct a tensor from a tensor of a different underlying type
+		// construct a tensor from a tensor of a different underlying type and the same rank
+		// performs a static cast of the values
 		template <typename U>
 		Tensor(const Tensor<U, rank>& other)
 			: m_buffer{ other.m_buffer }, m_rank{ other.m_rank }
@@ -72,7 +86,15 @@ namespace Kablunk::ml::tensor
 
 		}
 
-		// #TODO constructors for tensors with other value_t types
+		// move constructor for r-value tensor
+		// invalidates other tensor (underlying buffer)
+		Tensor(
+			Tensor&& other
+		) noexcept
+			: m_buffer{ std::move(other.m_buffer) }, m_rank{ other.m_rank }
+		{
+
+		}
 
 		~Tensor() = default;
 
@@ -96,12 +118,36 @@ namespace Kablunk::ml::tensor
 		// #TODO overflow protection
 		value_t* get(size_t index) noexcept { return m_buffer.get() + index; }
 
+		// [DEPRECATED]
+		// return pointer to the raw buffer as the underlying type
 		value_t* as() noexcept { return m_buffer.as(); }
+
+		// get the scalar value of the tensor
+		// asserts that the tensor only contains 1 element
+		value_t get_scalar() const 
+		{
+			KB_CORE_ASSERT(m_buffer.size() == 1, "[Tensor] Tensor is not rank 0");
+			// #TODO assert tensor is rank 0 when api changes
+
+			return *get(0);
+		}
+
+		// get the scalar value of the tensor
+		// asserts that the tensor only contains 1 element
+		value_t& get_scalar()
+		{
+			KB_CORE_ASSERT(m_buffer.size() == 1, "[Tensor] Tensor is not rank 0");
+			// #TODO assert tensor is rank 0 when api changes
+
+			return *get(0);
+		}
 
 		// compute the dot product between two tensors
 		// from https://en.wikipedia.org/wiki/Matrix_multiplication_algorithm
 		Tensor dot(const Tensor& other) const
 		{
+			// #TODO use blas library instead...
+
 			const TensorBuffer<value_t, rank>& a = m_buffer;
 			const TensorBuffer<value_t, rank>& b = other.m_buffer;
 
@@ -125,13 +171,10 @@ namespace Kablunk::ml::tensor
 		// return a copy of the tensor that is transposed
 		Tensor get_transpose() const
 		{
-			// #TODO implement https://www.osti.gov/pages/servlets/purl/1185465
-			KB_CORE_ASSERT(rank == 2, "tensor transpose only works on rank=2 tensors!");
-			
-			Tensor transposed{ get_dimension(1), get_dimension(0) };
-			for (size_t i = 0; i < get_dimension(0); ++i)
-				for (size_t j = 0; j < get_dimension(1); ++j)
-					transposed.m_buffer[{j, i}] = m_buffer[{ i, j }];
+			// re-allocating memory and swapping could be expensive for large tensors
+			// consider changing access when column and row major orders are implemented.
+			Tensor transposed{ *this };
+			transposed.transpose();
 
 			return transposed;
 		}
@@ -139,7 +182,17 @@ namespace Kablunk::ml::tensor
 		// transpose the tensor in-place
 		void transpose()
 		{
-			KB_CORE_ASSERT(false, "not implemented!");
+			// see comment above about swapping row/column major order
+
+			// #TODO implement https://www.osti.gov/pages/servlets/purl/1185465
+			KB_CORE_ASSERT(rank == 2, "tensor transpose only works on rank=2 tensors!");
+			KB_CORE_ASSERT(get_dimension(0) == get_dimension(1), "not implemented!");
+			
+			// in place swap on copy 
+			// from https://en.wikipedia.org/wiki/In-place_matrix_transposition
+			for (size_t i = 0; i < get_dimension(0) - 2; ++i)
+				for (size_t j = i + 1; j < get_dimension(1) - 1; ++j)
+					transposed.m_buffer[{i, j}] = m_buffer[{j, i}];
 		}
 
 		// fill tensor with values
@@ -169,6 +222,7 @@ namespace Kablunk::ml::tensor
 			return *this;
 		}
 
+		// element wise multiplication of the tensor by a scalar
 		template <typename Scalar>
 		Tensor mul(Scalar scalar) const
 		{
@@ -181,6 +235,47 @@ namespace Kablunk::ml::tensor
 			return std::move(resultant);
 		}
 
+		// element wise multiplication of two tensors
+		Tensor mul(const Tensor& other) const
+		{
+			Tensor resultant{ *this };
+
+			KB_CORE_ASSERT(
+				get_dimensions().size() == other.get_dimensions().size(),
+				"cannot multiply shape ({}) with ({})",
+				get_dimensions_as_str(),
+				other.get_dimensions_as_str()
+			);
+
+			// #TODO broadcasting
+			for (size_t i = 0; i < get_dimensions().size(); ++i)
+				if (m_buffer.get_dimension(i) != other.m_buffer.get_dimension(i))
+					KB_CORE_ASSERT(false, "[Tensor] Broadcasting not supported!");
+
+			for (size_t i = 0; i < m_buffer.size(); ++i)
+				resultant[i] = m_buffer[i] * other.m_buffer[i];
+
+			return resultant;
+		}
+
+		// get the dimensions formatted as a string
+		std::string get_dimensions_as_str() const
+		{
+			// #TODO move to shape/dimension class
+			std::string shape_str = "(";
+			size_t index = 0;
+			for (size_t dim : m_buffer.get_dimensions())
+			{
+				shape_str += std::to_string(dim);
+				if (index++ < m_buffer.get_dimensions().size() - 1)
+					shape_str += ", ";
+			}
+
+			shape_str += ")";
+			return shape_str;
+		}
+
+		// #TODO broadcasting
 
 		// =========
 		// operators
@@ -206,8 +301,8 @@ namespace Kablunk::ml::tensor
 			return *this;
 		}
 
-		// dot product when multiplying by other tensor
-		Tensor operator*(const Tensor& other) const { return dot(other); }
+		// element wise multiplication between two 
+		Tensor operator*(const Tensor& other) const { return mul(other); }
 
 		// #TODO c++20 require T to be numeric
 		template <typename T>
@@ -231,10 +326,6 @@ namespace Kablunk::ml::tensor
 
 			return std::move(resultant);
 		}
-
-
-		Tensor* operator->() { return this; }
-		Tensor& operator*() { return *this; }
 
 		// #TODO c++20 require T to be numeric
 		template <typename T>

@@ -35,14 +35,17 @@ namespace Kablunk::ml::optimizer
 		virtual tensor_t loss(const tensor_t& values) override
 		{
 			KB_CORE_ASSERT(m_loss_function, "loss function base class pointer not set!");
-			return m_loss_function->loss(values);
+			// #FIXME 
+			return m_loss_function->loss(values, values);
 		}
 
 		virtual void backward(const tensor_t& values) override
 		{
-			KB_CORE_ASSERT(m_loss_function, "loss function base class pointer not set!");
 			// #TODO replace with adam instead of steepest descent
-			*m_gradients = (*m_gradients) - m_loss_function->grad(values).mul(m_learning_rate);
+			
+			KB_CORE_ASSERT(m_loss_function, "loss function base class pointer not set!");
+			// #FIXME 
+			*m_gradients = (*m_gradients) - m_loss_function->grad(values, values).mul(m_learning_rate);
 		}
 
 		virtual void zero_grad() override { m_gradients->fill(0.0f); }

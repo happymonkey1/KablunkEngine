@@ -29,8 +29,6 @@ namespace Kablunk::ml::network::v1
 		)
 			: m_layers{ layers }, m_optimizer{ optimizer }
 		{
-
-			// #TODO assert that passed in layer args are of base type ILayer
 			KB_CORE_ASSERT(layers.size() >= 1, "no layers?");
 
 			// reserve space for optimizer output cache
@@ -38,8 +36,10 @@ namespace Kablunk::ml::network::v1
 				m_optimizer->reserve_output_cache(m_layers.size());
 		}
 
-
-		SimpleNeuralNetwork(SimpleNeuralNetwork<>&& other) noexcept
+		// move constructor
+		SimpleNeuralNetwork(
+			SimpleNeuralNetwork<>&& other
+		) noexcept
 			: m_layers{ std::move(other.m_layers) }, m_optimizer{ other.m_optimizer }, m_data{ std::move(other.m_data) }
 		{
 			other.m_layers.clear();
@@ -89,18 +89,21 @@ namespace Kablunk::ml::network::v1
 		}
 
 		// get the optimizer for the network
-		virtual INetwork::optimizer_t& get_optimizer() { return *m_optimizer; };
+		// returns nullptr if back-propagation (training) of the network is not required.
+		virtual INetwork::optimizer_t* get_optimizer() { return m_optimizer; }
+
 		// get the optimizer for the network
-		virtual const INetwork::optimizer_t& get_optimizer() const { return *m_optimizer; };
-		// #TODO buffer overflow?
+		// returns nullptr if back-propagation (training) of the network is not required.
+		virtual const INetwork::optimizer_t* get_optimizer() const { return m_optimizer; }
+
 		// get a layer by index from the network
-		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) { return m_layers[layer_index]; }
+		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) { return m_layers[layer_index]; } // #TODO buffer overflow?
 	private:
 		network_tensor_t m_data;
 		// stack allocated array for layers of the network
 		std::vector<layer_t*> m_layers;
 		// optimizer for the network
-		INetwork::optimizer_t* m_optimizer;
+		INetwork::optimizer_t* m_optimizer = nullptr;
 	};
 
 }

@@ -16,6 +16,8 @@ namespace Kablunk::ml::network
 
 	template <typename T = f32>
 	inline T sigmoid(T value) { return glm::exp(value) / (glm::exp(value) + static_cast<T>(1.0f)); }
+
+	// #TODO figure out softmax
 }
 
 #endif

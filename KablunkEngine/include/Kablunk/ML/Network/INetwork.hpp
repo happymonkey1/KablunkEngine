@@ -28,9 +28,11 @@ namespace Kablunk::ml::network
 		// get the number of layers in the network
 		virtual size_t get_layer_count() const = 0;
 		// get the optimizer for the network
-		virtual optimizer_t& get_optimizer() = 0;
+		// returns nullptr if back-propagation (training) of the network is not required.
+		virtual optimizer_t* get_optimizer() = 0;
 		// get the optimizer for the network
-		virtual const optimizer_t& get_optimizer() const = 0;
+		// returns nullptr if back-propagation (training) of the network is not required.
+		virtual const optimizer_t* get_optimizer() const = 0;
 		// get a layer by index from the network
 		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) = 0;
 	};

@@ -64,6 +64,7 @@ namespace Kablunk::ml::network::v1
 		virtual size_t size() const override { return m_weights.get_dimension(1); }
 
 		// feed inputs through layer
+		// output = input dot weights
 		virtual layer_tensor_t forward(const layer_tensor_t& values) const override
 		{
 			// compute input.dot(weights)
