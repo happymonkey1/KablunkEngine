@@ -5,23 +5,18 @@
 #include "Platform/Windows/WindowsWindow.h"
 #include "Kablunk/Core/Application.h"
 
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_internal.h>
-
-// #TODO temporary workaround for imgui context not being set in dll.
-#define CHECK_IMGUI_WINDOW 0
 
 namespace Kablunk::input
 {
 
 	bool is_key_pressed(int keycode)
 	{
-#if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
-#else
-		bool imgui_enabled = false;
-#endif
 		if (!imgui_enabled)
 		{
 			auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
@@ -29,7 +24,7 @@ namespace Kablunk::input
 			return state == GLFW_PRESS || state == GLFW_REPEAT;
 		}
 
-		ImGuiContext* context = ImGui::GetCurrentContext();
+		ImGuiContext* context = ImGuiGlobalContext::get().get_context();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)
 		{
@@ -53,11 +48,7 @@ namespace Kablunk::input
 
 	bool is_mouse_button_pressed(int button)
 	{
-#if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
-#else
-		bool imgui_enabled = false;
-#endif
 		if (!imgui_enabled)
 		{
 			auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
@@ -65,7 +56,7 @@ namespace Kablunk::input
 			return state == GLFW_PRESS;
 		}
 
-		ImGuiContext* context = ImGui::GetCurrentContext();
+		ImGuiContext* context = ImGuiGlobalContext::get().get_context();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)
 		{

@@ -3,6 +3,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Singleton.h"
 
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -11,6 +12,8 @@
 
 namespace Kablunk
 {
+	// #TODO should we forward declare ImGuiContext so we don't have to include headers?
+
 
 	class ImGuiGlobalContext
 	{

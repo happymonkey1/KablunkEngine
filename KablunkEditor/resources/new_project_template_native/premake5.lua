@@ -33,7 +33,7 @@ project "$PROJECT_NAME$"
 
 	files
 	{
-		"src/**.h",
+		"include/**.h",
 		"src/**.cpp"
 	}
 
@@ -75,6 +75,11 @@ project "$PROJECT_NAME$"
 		"%{Library.Box2d}",
 		"%{Library.Glad}",
 		"%{Library.yaml_cpp}"
+	}
+
+	defines
+	{
+		"GLFW_DLL"
 	}
 
 	filter "system:windows"

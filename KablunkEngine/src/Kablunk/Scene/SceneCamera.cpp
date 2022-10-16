@@ -3,6 +3,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Kablunk/Core/Application.h"
+
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
 // #TODO try to remove 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -59,7 +61,8 @@ namespace Kablunk
 
 		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
 		{
-			ImGuiContext* imgui_context = ImGui::GetCurrentContext();
+			ImGuiContext* imgui_context = ImGuiGlobalContext::get().get_context();
+			KB_CORE_ASSERT(imgui_context, "[SceneCamera] imgui global context not found!");
 			bool found = false;
 			for (ImGuiViewport* viewport : imgui_context->Viewports)
 			{
