@@ -12,9 +12,10 @@
 // #TODO temporary workaround for imgui context not being set in dll.
 #define CHECK_IMGUI_WINDOW 0
 
-namespace Kablunk {
+namespace Kablunk::input
+{
 
-	bool Input::IsKeyPressed(int keycode)
+	bool is_key_pressed(int keycode)
 	{
 #if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
@@ -50,7 +51,7 @@ namespace Kablunk {
 		return pressed;
 	}
 
-	bool Input::IsMouseButtonPressed(int button)
+	bool is_mouse_button_pressed(int button)
 	{
 #if CHECK_IMGUI_WINDOW
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
@@ -86,7 +87,7 @@ namespace Kablunk {
 		return pressed;
 	}
 
-	std::pair<float, float> Input::GetMousePosition()
+	std::pair<float, float> get_mouse_position()
 	{
 		//bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
 		//if (!imgui_enabled)
@@ -125,31 +126,31 @@ namespace Kablunk {
 		return std::make_pair(static_cast<float>(mx), static_cast<float>(my));*/
 	}
 
-	float Input::GetMouseX()
+	float get_mouse_x()
 	{
-		auto [x, y] = GetMousePosition();
+		auto [x, y] = get_mouse_position();
 		return x;
 	}
 
-	float Input::GetMouseY()
+	float get_mouse_y()
 	{
-		auto [x, y] = GetMousePosition();
+		auto [x, y] = get_mouse_position();
 		return y;
 	}
 
-	void Input::SetCursorMode(CursorMode mode)
+	void set_cursor_mode(CursorMode mode)
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + static_cast<int>(mode));
 	}
 
-	CursorMode Input::GetCursorMode()
+	CursorMode get_cursor_mode()
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		return static_cast<CursorMode>(glfwGetInputMode(window, GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
 	}
 
-	void Input::SetMouseMotionMode(MouseMotionMode mode)
+	void set_mouse_motion_mode(MouseMotionMode mode)
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		if (glfwRawMouseMotionSupported())
@@ -159,7 +160,7 @@ namespace Kablunk {
 		}
 	}
 	
-	MouseMotionMode Input::GetMouseMotionMode()
+	MouseMotionMode get_mouse_motion_mode()
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		int ret_code = glfwGetInputMode(window, GLFW_RAW_MOUSE_MOTION);

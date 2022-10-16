@@ -326,7 +326,7 @@ namespace Kablunk
 				auto transform = transform_component.GetTransform();
 
 				// Snapping
-				bool snap = Input::IsKeyPressed(Key::LeftControl);
+				bool snap = input::is_key_pressed(Key::LeftControl);
 				float snap_value = (m_gizmo_type == ImGuizmo::ROTATE) ? 45.0f : 0.5f;
 
 				float snap_values[3] = { snap_value, snap_value, snap_value };
@@ -811,8 +811,8 @@ namespace Kablunk
 		if (e.GetRepeatCount() > 0)
 			return false;
 
-		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift)   || Input::IsKeyPressed(Key::RightShift);
+		bool ctrl_pressed = input::is_key_pressed(Key::LeftControl) || input::is_key_pressed(Key::RightControl);
+		bool shift_pressed = input::is_key_pressed(Key::LeftShift) || input::is_key_pressed(Key::RightShift);
 
 		switch (e.GetKeyCode())
 		{
@@ -858,7 +858,7 @@ namespace Kablunk
 		if (GImGui->ActiveId == 0)
 		{
 			// Gizmos
-			if ((m_viewport_hovered || m_viewport_focused) && !Input::IsMouseButtonPressed(Mouse::ButtonRight) && m_scene_state != SceneState::Play)
+			if ((m_viewport_hovered || m_viewport_focused) && !input::is_mouse_button_pressed(Mouse::ButtonRight) && m_scene_state != SceneState::Play)
 			{
 				switch (e.GetKeyCode())
 				{
@@ -888,7 +888,7 @@ namespace Kablunk
 				}
 			}
 
-			if (m_scene_hierarchy_panel.GetSelectedEntity() && Input::IsKeyPressed(Key::F))
+			if (m_scene_hierarchy_panel.GetSelectedEntity() && input::is_key_pressed(Key::F))
 				m_editor_camera.Focus(m_scene_hierarchy_panel.GetSelectedEntity().GetComponent<TransformComponent>().Translation);
 			
 		}
@@ -1035,7 +1035,7 @@ namespace Kablunk
 
 	bool EditorLayer::CanPickFromViewport() const
 	{
-		return m_viewport_hovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
+		return m_viewport_hovered && !ImGuizmo::IsOver() && !input::is_key_pressed(EditorCamera::Camera_control_key);
 	}
 
 	void EditorLayer::CreateProject(std::filesystem::path project_path, bool create_native_script_project)

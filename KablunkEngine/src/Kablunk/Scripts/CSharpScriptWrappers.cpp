@@ -39,12 +39,12 @@ namespace Kablunk::Scripts
 
 	bool Kablunk_Input_IsKeyPressed(KeyCode key)
 	{
-		return Input::IsKeyPressed(key);
+		return input::is_key_pressed(key);
 	}
 
 	bool Kablunk_Input_IsMouseButtonPressed(MouseCode button)
 	{
-		bool pressed = Input::IsMouseButtonPressed(button);
+		bool pressed = input::is_mouse_button_pressed(button);
 
 		// If we are in the editor, we need to make sure mouse pressed only get sent when viewport is hovered
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
@@ -60,7 +60,7 @@ namespace Kablunk::Scripts
 
 	void Kablunk_Input_GetMousePosition(glm::vec2* out)
 	{
-		auto [x, y] = Input::GetMousePosition();
+		auto [x, y] = input::get_mouse_position();
 		*out = { x, y };
 	}
 

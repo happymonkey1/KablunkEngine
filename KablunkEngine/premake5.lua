@@ -34,7 +34,8 @@ project "KablunkEngine"
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE",
 		"NOMINMAX",
-		"KB_BUILD_DLL"
+		"KB_BUILD_DLL",
+		"GLFW_DLL"
 	}
 
 	includedirs
@@ -65,7 +66,7 @@ project "KablunkEngine"
 
 	links
 	{
-		"GLFW",
+		--"GLFW",
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
@@ -78,6 +79,11 @@ project "KablunkEngine"
 		"%{Library.VulkanUtils}",
 
 		"%{Library.mono}"
+	}
+
+	postbuildcommands
+	{
+		'{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"'
 	}
 	
 
