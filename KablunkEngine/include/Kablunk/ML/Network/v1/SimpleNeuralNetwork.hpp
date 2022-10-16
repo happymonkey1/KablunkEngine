@@ -98,6 +98,9 @@ namespace Kablunk::ml::network::v1
 
 		// get a layer by index from the network
 		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) { return m_layers[layer_index]; } // #TODO buffer overflow?
+
+		// get a layer by index from the network
+		virtual const ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) const { return m_layers[layer_index]; } // #TODO buffer overflow?
 	private:
 		network_tensor_t m_data;
 		// stack allocated array for layers of the network

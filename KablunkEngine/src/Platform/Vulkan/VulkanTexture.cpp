@@ -206,11 +206,17 @@ namespace Kablunk
 			vkCmdCopyBufferToImage(copy_cmd, staging_buffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_copy_region_info);
 
 			// #TODO mipmap levels, final image layout
-			Utils::InsertImageMemoryBarrier(copy_cmd, info.image,
-				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image->GetDescriptor().imageLayout,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				subresource_range);
+			Utils::InsertImageMemoryBarrier(
+				copy_cmd, 
+				info.image,
+				VK_ACCESS_TRANSFER_READ_BIT, 
+				VK_ACCESS_SHADER_READ_BIT,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+				image->GetDescriptor().imageLayout,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, 
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				subresource_range
+			);
 
 			device->FlushCommandBuffer(copy_cmd);
 
@@ -232,8 +238,8 @@ namespace Kablunk
 		VkSamplerCreateInfo sampler{};
 		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler.maxAnisotropy = 1.0f;
-		sampler.magFilter = VK_FILTER_NEAREST; // #TODO dynamic based on properties
-		sampler.minFilter = VK_FILTER_NEAREST;
+		sampler.magFilter = VK_FILTER_LINEAR; // #TODO dynamic based on properties
+		sampler.minFilter = VK_FILTER_LINEAR;
 		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // #TODO dynamic based on properties
 		sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;

@@ -75,7 +75,7 @@ namespace Kablunk::ml::tensor
 		TensorBuffer(TensorBuffer&& other)
 			: m_dimensions{ other.m_dimensions }, m_data{ other.m_data }, m_size{ other.m_size }
 		{
-			other.m_dimensions = 0;
+			//other.m_dimensions = 0;
 			other.m_size = 0;
 			other.m_data = nullptr;
 		}

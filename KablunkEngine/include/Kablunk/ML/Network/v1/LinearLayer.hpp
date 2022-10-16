@@ -24,12 +24,21 @@ namespace Kablunk::ml::network::v1
 		LinearLayer() = delete;
 
 		// #TODO figure out if it is possible to keep m_weights uninitialized so we don't spend time constructing it before immediately being replaced
+		
+		/*
+		 * \brief linear layer constructor that takes input and output size, an activation function, and bias node
+		 * \param layer_type enum for the layer type (input, hidden, or output)
+		 * \param input_dimension size of the input for this layer
+		 * \param output_dimension size of the output for this layer
+		 * \param activation_func activation function applied to the output of the layer (pass nullptr for a linear combination of the output)
+		 * \param use_bias_node flag for whether the layer has a bias node, only valid on the input layer
+		 */
 		explicit LinearLayer(
-			layer_type_t				layer_type,							// type of the layer 
-			size_t						input_dimension,					// size of input for the layer
-			size_t						output_dimension,					// size of output for the layer
-			activation_func_t<value_t>	activation_func = &relu<value_t>,	// activation function applied to the output of the layer
-			bool						use_bias_node = false				// flag for whether the layer has a bias node, only valid on input layer
+			layer_type_t				layer_type,
+			size_t						input_dimension,
+			size_t						output_dimension,
+			activation_func_t<value_t>	activation_func = &relu<value_t>,
+			bool						use_bias_node = false
 		)
 			: m_activation_func{ activation_func }, m_use_bias_node{ use_bias_node }
 		{
@@ -51,20 +60,29 @@ namespace Kablunk::ml::network::v1
 
 		virtual ~LinearLayer() override = default;
 
-		// return the number of nodes (potentially including bias node)
+		// \brief return the number of nodes (potentially including bias node)
 		virtual size_t get_node_count() const override { return m_weights.get_dimension(1); }
 
-		// get the layer type
+		// \brief get the number of inputs nodes
+		virtual size_t get_input_node_count() const override { return m_weights.get_dimension(0); }
+
+		// \brief get the number of output nodes
+		virtual size_t get_output_node_count() const override { return m_weights.get_dimension(1); }
+
+		// \brief get the layer type
 		virtual layer_type_t get_layer_type() const override { return m_layer_type; }
 
-		// return whether the layer has a bias node
+		// \brief return whether the layer has a bias node
 		virtual bool has_bias_node() const override { return m_use_bias_node; }
 
-		// get the size of the layer
+		// \brief get the size of the layer
 		virtual size_t size() const override { return m_weights.get_dimension(1); }
 
-		// feed inputs through layer
-		// output = input dot weights
+		/*
+		 * \brief feed inputs through layer
+		 * \param 2x2 tensor of input data
+		 * \return 2x2 tensor where output = input dot weights
+		 */
 		virtual layer_tensor_t forward(const layer_tensor_t& values) const override
 		{
 			// compute input.dot(weights)
@@ -78,13 +96,13 @@ namespace Kablunk::ml::network::v1
 			return output;
 		}
 
-		// get underlying weights for the layer
+		// \brief get underlying weights for the layer
 		virtual layer_tensor_t& get_weights() override { return m_weights; }
 
-		// get underlying weights for the layer
+		// \brief get underlying weights for the layer
 		virtual const layer_tensor_t& get_weights() const override { return m_weights; }
 
-		// set an activation function for this layer
+		// \brief set an activation function for this layer
 		virtual void set_activation_func(activation_func_t<value_t> new_activation_function) override
 		{
 			if (!new_activation_function)
@@ -93,13 +111,13 @@ namespace Kablunk::ml::network::v1
 			m_activation_func = new_activation_function;
 		}
 	private:
-		// activation function for each of the nodes in the layer
+		// \brief activation function for each of the nodes in the layer
 		activation_func_t<value_t> m_activation_func = nullptr;
-		// layer type enum
+		// \brief layer type enum
 		layer_type_t m_layer_type = layer_type_t::NONE;
-		// flag for whether there is a bias node (only applicable for input layer)
+		// \brief flag for whether there is a bias node (only applicable for input layer)
 		bool m_use_bias_node = false;
-		// weights matrix
+		// \brief weights matrix
 		layer_tensor_t m_weights;
 	};
 
