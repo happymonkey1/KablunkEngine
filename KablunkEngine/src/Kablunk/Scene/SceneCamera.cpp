@@ -5,6 +5,9 @@
 #include "Kablunk/Core/Application.h"
 
 #include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
+#include "Kablunk/Renderer/RenderCommand.h"
+
 // #TODO try to remove 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -61,7 +64,7 @@ namespace Kablunk
 
 		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
 		{
-			ImGuiContext* imgui_context = ImGuiGlobalContext::get().get_context();
+			/*ImGuiContext* imgui_context = ImGuiGlobalContext::get().get_context();
 			KB_CORE_ASSERT(imgui_context, "[SceneCamera] imgui global context not found!");
 			bool found = false;
 			for (ImGuiViewport* viewport : imgui_context->Viewports)
@@ -69,7 +72,7 @@ namespace Kablunk
 				if (!viewport->PlatformUserData)
 					continue;
 
-				window_pos = { viewport->Pos.x, viewport->Pos.y };
+				window_pos = { viewport->Pos.x, viewport->Pos.y};
 				window_size = { viewport->Size.x, viewport->Size.y };
 
 				found = true;
@@ -80,10 +83,15 @@ namespace Kablunk
 			{
 				KB_CORE_ERROR("SceneCamera::ScreenToWorldPoint(): ImGui enabled but could not find viewport!");
 				return glm::vec3{ 0.0f };
-			}
+			}*/
 
+			// get imgui mouse pos (in screen coordinates)
 			auto [x, y] = ImGui::GetMousePos();
 			mouse_pos = glm::vec2{ x, y };
+
+			// subtract viewport position (in screen coordinates)
+			mouse_pos -= render::get_viewport_pos();
+			window_size = render::get_viewport_size();
 		}
 		else
 		{
@@ -92,20 +100,22 @@ namespace Kablunk
 		}
 
 		// get viewport mouse position
-		float mx = 0.0f, my = 0.0f;
-		
-		{
-			mouse_pos -= glm::vec2{ window_pos.x, window_pos.y };
-			mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
-			my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f) * -1.0f;
-		}
+		float mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
+		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f) * -1.0f;
+
+		KB_CORE_INFO("[SceneCamera] viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
+		KB_CORE_INFO("[SceneCamera] mouse_pos=({}, {})", mouse_pos.x, mouse_pos.y);
+		KB_CORE_INFO("[SceneCamera] mxy=({}, {})", mx, my);
 
 		glm::vec4 mouse_clip_pos = { mx, my, -1.0f, 1.0f };
 
-		glm::mat4 inverse_projection = glm::inverse(GetProjection());
-		glm::mat4 inverse_view = glm::inverse(glm::mat3(transform));
+		//glm::mat4 inverse_projection = glm::inverse(GetProjection());
+		//glm::mat4 inverse_view = glm::inverse(glm::mat3(transform));
 
-		return inverse_view * (inverse_projection * mouse_clip_pos);
+		glm::mat4 inverse_view_proj = glm::inverse(GetProjection() * transform);
+
+		//return inverse_view * (inverse_projection * mouse_clip_pos);
+		return inverse_view_proj * mouse_clip_pos;
 		/*
 		// account for viewport if running scene in editor
 		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };

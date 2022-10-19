@@ -3,6 +3,7 @@
 #include "Platform/Vulkan/VulkanSwapChain.h"
 
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 
 #include <GLFW/glfw3.h>
 

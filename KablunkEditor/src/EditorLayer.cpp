@@ -272,10 +272,17 @@ namespace Kablunk
 			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
+
+			// present the viewport (image) using imgui
 			UI::Image(
 				m_viewport_renderer->get_final_render_pass_image(),
 				{ m_viewport_size.x, m_viewport_size.y }
 			);
+			
+			// store viewport size and position in renderer
+			ImVec2 viewport_pos = ImGui::GetWindowPos();
+			Singleton<Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
+			Singleton<Renderer>::get().m_viewport_size = m_viewport_size;
 
 			ImDrawList* viewport_draw_list = ImGui::GetWindowDrawList();
 

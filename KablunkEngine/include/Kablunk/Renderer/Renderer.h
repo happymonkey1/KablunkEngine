@@ -1,11 +1,9 @@
 #ifndef KABLUNK_RENDERER_RENDERER_H
 #define KABLUNK_RENDERER_RENDERER_H
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "Kablunk/Core/Singleton.h"
 
 #include "Kablunk/Renderer/RendererTypes.h"
-#include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/OrthographicCamera.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Texture.h"
@@ -15,11 +13,13 @@
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Kablunk/Renderer/Material.h"
+#include "Kablunk/Renderer/RendererAPI.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 //#include FT_FREETYPE_H
 //#include <ft2build.h>
-
 
 namespace Kablunk
 {
@@ -39,7 +39,7 @@ namespace Kablunk
 		RendererPipelineDescriptor pipeline = PHONG_DIFFUSE;
 	};
 	
-
+	// #TODO refactor to use new singleton pattern instead of static functions
 	class Renderer
 	{
 	public:
@@ -65,12 +65,26 @@ namespace Kablunk
 		static void SetRendererPipeline(RendererPipelineDescriptor new_pipeline) { s_options.pipeline = new_pipeline; }
 
 		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
+
+		// \brief get the viewport's os screen position within the application
+		const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }
+		// \brief get the viewport's size
+		const glm::vec2& get_viewport_size() const { return m_viewport_size; }
+
+		SINGLETON_GET_FUNC(Renderer);
 	private:
 		inline static RendererOptions s_options = { };
 		
 		static IntrusiveRef<ShaderLibrary> s_shader_library;
 
-		
+		// store the viewport's os screen position within the application
+		// used for calculating screen to world space in the editor
+		glm::vec2 m_viewport_pos = glm::vec2{ 0.0f };
+		// store the viewport's size
+		// used for calculating screen to world space in the editor
+		glm::vec2 m_viewport_size = glm::vec2{ 0.0f };
+
+		friend class EditorLayer;
 	};
 
 	

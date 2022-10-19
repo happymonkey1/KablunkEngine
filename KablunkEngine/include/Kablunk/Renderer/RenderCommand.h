@@ -11,9 +11,31 @@
 
 #include <mutex>
 
+namespace Kablunk::render
+{
+	// =======
+	// new api
+	// =======
+
+	// \brief get the os screen position of the viewport within the application
+	// used for converting screen to world position when in the editor
+	inline const glm::vec2& get_viewport_pos()
+	{
+		return Singleton<Renderer>::get().get_viewport_pos();
+	}
+
+	// \brief get the size of the viewport
+	// used for converting screen to world position when in the editor
+	inline const glm::vec2& get_viewport_size()
+	{
+		return Singleton<Renderer>::get().get_viewport_size();
+	}
+}
 
 namespace Kablunk 
 {
+	// #TODO refactor to use functions like RenderCommand2D
+
 	class RenderCommand
 	{
 	public:

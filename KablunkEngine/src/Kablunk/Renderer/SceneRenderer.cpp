@@ -2,6 +2,7 @@
 
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Platform/Vulkan/VulkanRendererAPI.h"
