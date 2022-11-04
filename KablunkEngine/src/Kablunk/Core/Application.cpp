@@ -202,7 +202,7 @@ namespace Kablunk
 				RenderCommand::EndFrame();
 
 				// #TODO fix this so API agnostic
-				if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+				if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 				{
 					VulkanContext::Get()->GetSwapchain().BeginFrame();
 					RenderCommand::WaitAndRender();

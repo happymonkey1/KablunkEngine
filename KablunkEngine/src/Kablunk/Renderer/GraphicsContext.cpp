@@ -11,12 +11,12 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:
+		case RendererAPI::render_api_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:
+		case RendererAPI::render_api_t::OpenGL:
 			return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
-		case RendererAPI::RenderAPI_t::Vulkan:
+		case RendererAPI::render_api_t::Vulkan:
 			return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");

@@ -99,7 +99,7 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::Vulkan:	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
+		case RendererAPI::render_api_t::Vulkan:	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return 0;
 		}
 

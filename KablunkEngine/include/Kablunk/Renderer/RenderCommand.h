@@ -30,6 +30,8 @@ namespace Kablunk::render
 	{
 		return Singleton<Renderer>::get().get_viewport_size();
 	}
+
+
 }
 
 namespace Kablunk 

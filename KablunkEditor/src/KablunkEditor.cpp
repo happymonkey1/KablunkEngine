@@ -10,8 +10,8 @@ namespace Kablunk
 	{
 		ApplicationSpecification specification = {
 			"Kablunk Editor",
-			1600,
-			900,
+			1920,
+			1080,
 			false,
 			false,
 			"",

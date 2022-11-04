@@ -11,12 +11,12 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case RendererAPI::RenderAPI_t::OpenGL:  
+			case RendererAPI::render_api_t::OpenGL:
 			{
 				s_renderer_api = new OpenGLRendererAPI{};
 				break;
 			}
-			case RendererAPI::RenderAPI_t::Vulkan:  
+			case RendererAPI::render_api_t::Vulkan:
 			{
 				s_renderer_api = new VulkanRendererAPI{};
 				break;

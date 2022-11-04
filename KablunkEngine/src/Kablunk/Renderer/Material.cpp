@@ -11,9 +11,9 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return nullptr;//return IntrusiveRef<OpenGLMaterial>::Create(shader, name);
-		case RendererAPI::RenderAPI_t::Vulkan:	return IntrusiveRef<VulkanMaterial>::Create(shader, name);
-		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return nullptr;//return IntrusiveRef<OpenGLMaterial>::Create(shader, name);
+		case RendererAPI::render_api_t::Vulkan:	return IntrusiveRef<VulkanMaterial>::Create(shader, name);
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return nullptr;
 		default:								KB_CORE_ASSERT(false, "Unknown rendererAPI set!"); return nullptr;
 		}
 	}
@@ -22,9 +22,9 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::OpenGL:  KB_CORE_ASSERT(false, "Not implemented!") return nullptr;
-		case RendererAPI::RenderAPI_t::Vulkan:  return IntrusiveRef<VulkanMaterial>::Create(material, name);
-		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:  KB_CORE_ASSERT(false, "Not implemented!") return nullptr;
+		case RendererAPI::render_api_t::Vulkan:  return IntrusiveRef<VulkanMaterial>::Create(material, name);
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return nullptr;
 		default:								KB_CORE_ASSERT(false, "Unknown rendererAPI set!"); return nullptr;
 		}
 	}

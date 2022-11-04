@@ -60,7 +60,7 @@ namespace Kablunk {
             KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
 
 			// Hint to glfw that this will be rendered with Vulkan
-			if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+			if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 			{
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 				// #TODO resizing at runtime
@@ -94,7 +94,7 @@ namespace Kablunk {
 		m_context = GraphicsContext::Create(m_window);
 		m_context->Init();
 
-		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 		{
 			// #TODO dynamic_cast bad!
 			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
@@ -212,7 +212,7 @@ namespace Kablunk {
     {
         KB_PROFILE_FUNCTION();
 
-		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 		{
 			// #TODO dynamic_cast bad!
 			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
@@ -243,7 +243,7 @@ namespace Kablunk {
 
     void WindowsWindow::SetVsync(bool enabled)
     {
-		if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::OpenGL)
+		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::OpenGL)
 		{
 			if (enabled)
 				glfwSwapInterval(1);

@@ -18,7 +18,7 @@ namespace Kablunk
 	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
 	{
-		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan, "SceneRenderer only supports Vulkan!");
+		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan, "SceneRenderer only supports Vulkan!");
 
 		init();
 	}
@@ -370,7 +370,19 @@ namespace Kablunk
 		for (const auto& draw_command_data : m_draw_list)
 		{
 			// #TODO update transform buffer and pass through
-			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, m_transform_buffer, transform_offset_ind++, 1ul);
+			RenderCommand::RenderMeshWithMaterial(
+				m_command_buffer, 
+				m_geometry_pipeline, 
+				m_uniform_buffer_set, 
+				m_storage_buffer_set, 
+				draw_command_data.Mesh, 
+				draw_command_data.Submesh_index, 
+				draw_command_data.Material_table, 
+				m_transform_buffer, 
+				transform_offset_ind++, 
+				1ul,
+				Buffer()
+			);
 		}
 
 		RenderCommand::EndRenderPass(m_command_buffer);

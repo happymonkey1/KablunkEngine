@@ -19,7 +19,7 @@ namespace Kablunk
 	class RendererAPI : public RefCounted
 	{
 	public:
-		enum class RenderAPI_t
+		enum class render_api_t
 		{
 			None = 0, OpenGL = 1, Vulkan = 2
 		};
@@ -60,9 +60,9 @@ namespace Kablunk
 
 		virtual void WaitAndRender() = 0;
 
-		static inline RenderAPI_t GetAPI() { return s_API; };
+		static inline render_api_t GetAPI() { return s_API; };
 	private:
-		inline static RenderAPI_t s_API = RenderAPI_t::Vulkan;
+		inline static render_api_t s_API = render_api_t::Vulkan;
 	};
 
 }

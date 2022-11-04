@@ -13,9 +13,9 @@ namespace Kablunk
 		IntrusiveRef<Framebuffer> framebuffer;
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:	framebuffer = IntrusiveRef<OpenGLFramebuffer>::Create(specs); break;
-		case RendererAPI::RenderAPI_t::Vulkan:	framebuffer = IntrusiveRef<VulkanFramebuffer>::Create(specs); break;
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:	framebuffer = IntrusiveRef<OpenGLFramebuffer>::Create(specs); break;
+		case RendererAPI::render_api_t::Vulkan:	framebuffer = IntrusiveRef<VulkanFramebuffer>::Create(specs); break;
 		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 

@@ -126,6 +126,7 @@ namespace Kablunk
 		bool m_needs_resize = false;
 		bool m_resources_created = false;
 
+		// flag for flushing scene data on a separate "job" thread
 		bool m_use_threads = true;
 
 		SceneRendererData m_scene_data;

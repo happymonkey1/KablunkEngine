@@ -11,8 +11,8 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return nullptr;
-		case RendererAPI::RenderAPI_t::Vulkan:	return IntrusiveRef<VulkanStorageBufferSet>::Create(frames);
+		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return nullptr;
+		case RendererAPI::render_api_t::Vulkan:	return IntrusiveRef<VulkanStorageBufferSet>::Create(frames);
 		default:								KB_CORE_ASSERT(false, "Unknown RendererAPI!"); return nullptr;
 		}
 	}

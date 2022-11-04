@@ -64,7 +64,7 @@ namespace Kablunk
 		static const RendererPipelineDescriptor GetRendererPipeline() { return s_options.pipeline; }
 		static void SetRendererPipeline(RendererPipelineDescriptor new_pipeline) { s_options.pipeline = new_pipeline; }
 
-		inline static RendererAPI::RenderAPI_t GetAPI() { return RendererAPI::GetAPI(); };
+		inline static RendererAPI::render_api_t GetAPI() { return RendererAPI::GetAPI(); };
 
 		// \brief get the viewport's os screen position within the application
 		const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }

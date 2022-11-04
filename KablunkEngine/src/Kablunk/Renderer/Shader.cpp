@@ -14,9 +14,9 @@ namespace Kablunk
 		IntrusiveRef<Shader> res = nullptr;
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:		res = IntrusiveRef<OpenGLShader>::Create(file_path); break;
-		case RendererAPI::RenderAPI_t::Vulkan:		res = IntrusiveRef<VulkanShader>::Create(file_path, force_compile); break;
+		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:		res = IntrusiveRef<OpenGLShader>::Create(file_path); break;
+		case RendererAPI::render_api_t::Vulkan:		res = IntrusiveRef<VulkanShader>::Create(file_path, force_compile); break;
 		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
