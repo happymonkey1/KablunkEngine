@@ -54,21 +54,21 @@ namespace Kablunk
 	void VulkanRendererAPI::Init()
 	{
 		//Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_pbr_static.glsl");
-		Renderer::GetShaderLibrary()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+		render::get_shader_library()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
 
-		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Circle.glsl");
-		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Quad.glsl");
-		Renderer::GetShaderLibrary()->Load("resources/shaders/Renderer2D_Line.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Circle.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Quad.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Line.glsl");
 
-		Renderer::GetShaderLibrary()->Load("resources/shaders/scene_composite.glsl");
+		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
 
 		s_renderer_data = new VulkanRendererData{};
 
-		s_renderer_data->descriptor_pools.resize(Renderer::GetConfig().frames_in_flight);
-		s_renderer_data->descriptor_pool_allocation_count.resize(Renderer::GetConfig().frames_in_flight);
+		s_renderer_data->descriptor_pools.resize(render::get_frames_in_flights());
+		s_renderer_data->descriptor_pool_allocation_count.resize(render::get_frames_in_flights());
 
 		// Create descriptor pools
-		RenderCommand::Submit([]() mutable
+		render::submit([]() mutable
 			{
 				// Create Descriptor Pool
 				VkDescriptorPoolSize pool_sizes[] =
@@ -94,7 +94,7 @@ namespace Kablunk
 				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 				pool_info.pPoolSizes = pool_sizes;
 				VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-				uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+				uint32_t frames_in_flight = render::get_frames_in_flights();
 				for (uint32_t i = 0; i < frames_in_flight; i++)
 				{
 					if (vkCreateDescriptorPool(vk_device, &pool_info, nullptr, &s_renderer_data->descriptor_pools[i]) != VK_SUCCESS)
@@ -134,7 +134,7 @@ namespace Kablunk
 		s_renderer_data->quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 
 		// compile shaders that were submitted
-		RenderCommand::WaitAndRender();
+		render::wait_and_render();
 	}
 
 	void VulkanRendererAPI::Shutdown()
@@ -145,9 +145,9 @@ namespace Kablunk
 
 		VulkanShader::ClearUniformBuffers();
 
-		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
+		for (uint32_t i = 0; i < render::get_frames_in_flights(); ++i)
 		{
-			auto& queue = RenderCommand::GetRenderResourceReleaseQueue(i);
+			auto& queue = render::get_render_resource_release_queue(i);
 			queue.Execute();
 		}
 
@@ -159,7 +159,7 @@ namespace Kablunk
 
 	void VulkanRendererAPI::BeginFrame()
 	{
-		RenderCommand::Submit([]()
+		render::submit([]()
 			{
 				VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
 
@@ -198,9 +198,9 @@ namespace Kablunk
 
 	void VulkanRendererAPI::ClearImage(IntrusiveRef<RenderCommandBuffer> command_buffer, IntrusiveRef<Image2D> image)
 	{
-		RenderCommand::Submit([command_buffer, image = image.As<VulkanImage2D>()]
+		render::submit([command_buffer, image = image.As<VulkanImage2D>()]
 			{
-				const auto vk_command_buffer = command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(Renderer::GetCurrentFrameIndex());
+				const auto vk_command_buffer = command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(render::get_current_frame_index());
 				VkImageSubresourceRange subresource_range{};
 				subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				subresource_range.baseMipLevel = 0;
@@ -214,9 +214,9 @@ namespace Kablunk
 
 	void VulkanRendererAPI::RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
 	{
-		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material_table, transform_buffer, transform_offset, instance_count]()
+		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, material_table, transform_buffer, transform_offset, instance_count]()
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
@@ -301,9 +301,9 @@ namespace Kablunk
 		}
 
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
-		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, vulkan_material, transform_buffer, transform_offset, instance_count, push_constant_buffer]()
+		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, mesh, submesh_index, vulkan_material, transform_buffer, transform_offset, instance_count, push_constant_buffer]()
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
@@ -353,9 +353,9 @@ namespace Kablunk
 	void VulkanRendererAPI::SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
 	{
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
-		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
+		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
@@ -376,7 +376,7 @@ namespace Kablunk
 
 				RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(buffer_index);
 				if (descriptor_set)
 					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
@@ -393,9 +393,9 @@ namespace Kablunk
 	void VulkanRendererAPI::RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
 	{
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
-		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
+		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
@@ -436,9 +436,9 @@ namespace Kablunk
 		if (index_count == 0)
 			index_count = index_buffer->GetCount();
 
-		RenderCommand::Submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, vertex_buffer, index_buffer, transform, index_count]() mutable
+		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, vertex_buffer, index_buffer, transform, index_count]() mutable
 			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+				uint32_t frameIndex = render::get_current_frame_index();
 				VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
 				IntrusiveRef<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
@@ -460,7 +460,7 @@ namespace Kablunk
 				const auto& write_descriptors = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
 				vulkan_material->RT_UpdateForRendering(write_descriptors);
 
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(buffer_index);
 				if (descriptor_set)
 					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
@@ -476,9 +476,9 @@ namespace Kablunk
 
 	void VulkanRendererAPI::SetLineWidth(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width)
 	{
-		RenderCommand::Submit([width = line_width, render_cmd_buffer = render_command_buffer]()
+		render::submit([width = line_width, render_cmd_buffer = render_command_buffer]()
 		{
-			uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+			uint32_t frame_index = render::get_current_frame_index();
 			VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 			vkCmdSetLineWidth(vk_cmd_buffer, width);
 		});
@@ -486,7 +486,7 @@ namespace Kablunk
 
 	void VulkanRendererAPI::WaitAndRender()
 	{
-		RenderCommandQueue& command_queue = RenderCommand::GetRenderCommandQueue();
+		RenderCommandQueue& command_queue = render::get_render_command_queue();
 		command_queue.Execute();
 	}
 
@@ -503,7 +503,7 @@ namespace Kablunk
 			}
 		}
 
-		uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		IntrusiveRef<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
@@ -513,8 +513,8 @@ namespace Kablunk
 				for (auto&& [binding, shader_uniform_buffer] : shader_descriptor_sets[0].uniform_buffers)
 				{
 					auto& write_descriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
-					write_descriptors.resize(framesInFlight);
-					for (uint32_t frame = 0; frame < framesInFlight; ++frame)
+					write_descriptors.resize(frames_in_flight);
+					for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
 					{
 						// set = 0 for now
 						IntrusiveRef<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); 
@@ -548,7 +548,7 @@ namespace Kablunk
 			}
 		}
 
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		IntrusiveRef<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
@@ -587,7 +587,7 @@ namespace Kablunk
 			{
 				const auto& storage_buffer_write_descriptors = RT_RetrieveOrCreateStorageBufferWriteDescriptors(storage_buffer_set, vulkan_material);
 
-				const uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+				const uint32_t frames_in_flight = render::get_frames_in_flights();
 				for (uint32_t frame = 0; frame < frames_in_flight; frame++)
 				{
 					write_description[frame].reserve(write_description[frame].size() + storage_buffer_write_descriptors[frame].size());
@@ -603,7 +603,7 @@ namespace Kablunk
 	VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info)
 	{
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-		uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+		uint32_t buffer_index = render::get_current_frame_index();
 		alloc_info.descriptorPool = s_renderer_data->descriptor_pools[buffer_index];
 		
 		VkDescriptorSet descriptor_set;
@@ -616,9 +616,9 @@ namespace Kablunk
 
 	void VulkanRendererAPI::BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear)
 	{
-		RenderCommand::Submit([render_command_buffer, render_pass, explicit_clear]()
+		render::submit([render_command_buffer, render_pass, explicit_clear]()
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				auto framebuffer = render_pass->GetSpecification().target_framebuffer;
@@ -733,9 +733,9 @@ namespace Kablunk
 
 	void VulkanRendererAPI::EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer)
 	{
-		RenderCommand::Submit([render_command_buffer]()
+		render::submit([render_command_buffer]()
 			{
-				uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 				vkCmdEndRenderPass(vk_command_buffer);

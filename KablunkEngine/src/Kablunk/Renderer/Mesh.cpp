@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Scene/Entity.h"
 
 #include <assimp/scene.h>
@@ -58,7 +58,7 @@ namespace Kablunk
 		m_is_animated = m_scene->mAnimations != nullptr;
 		if (m_is_animated)
 			KB_CORE_INFO("ANIMATED MESH!");
-		m_mesh_shader = m_is_animated ? Renderer::GetShader("Kablunk_diffuse_anim")  : Renderer::GetShader("Kablunk_diffuse_static");
+		m_mesh_shader = m_is_animated ? render::get_shader("Kablunk_diffuse_anim")  : render::get_shader("Kablunk_diffuse_static");
 		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		size_t vertex_count = 0;
@@ -180,8 +180,8 @@ namespace Kablunk
 			
 		}
 
-		IntrusiveRef<Texture2D> white_texture = Renderer::GetWhiteTexture();
-		if (scene->HasMaterials() && Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
+		IntrusiveRef<Texture2D> white_texture = render::get_white_texture();
+		if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 		{
 			m_textures.resize(scene->mNumMaterials);
 			m_materials.resize(scene->mNumMaterials);
@@ -355,7 +355,7 @@ namespace Kablunk
 		}
 		else
 		{
-			if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
+			if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 			{
 				auto mat = Material::Create(m_mesh_shader, "Kablunk-Default");
 				// Props
@@ -371,7 +371,7 @@ namespace Kablunk
 				mat->Set("u_RoughnessTexture", white_texture);
 				m_materials.push_back(mat);
 			}
-			else if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+			else if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 			{
 				auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
 				mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
@@ -403,14 +403,14 @@ namespace Kablunk
 		m_sub_meshes.push_back(submesh);
 
 		
-		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
+		m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
 
 		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 		KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
 		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 
-		if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+		if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 		{
 			auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
 			mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);

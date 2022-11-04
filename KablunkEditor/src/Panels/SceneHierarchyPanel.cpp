@@ -401,7 +401,7 @@ namespace Kablunk
 				UI::Property("Name", mesh_material_name);
 				UI::PopItemDisabled();
 
-				if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+				if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 				{
 					// #TODO check if this needs to be set on render thread
 					float& ambient_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.AmbientStrength");

@@ -49,8 +49,8 @@ namespace Kablunk
 			m_window->SetVsync(m_specification.Vsync);
 		}
 
-		Renderer::Init();
-		RenderCommand::WaitAndRender();
+		render::init();
+		render::wait_and_render();
 
 		if (m_specification.Enable_imgui)
 		{
@@ -90,11 +90,11 @@ namespace Kablunk
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
-		RenderCommand::WaitAndRender();
+		render::wait_and_render();
 
 		Project::shutdown();
 
-		Renderer::Shutdown();
+		render::shutdown();
 
 		NativeScriptEngine::get().shutdown();
 		PluginManager::get().shutdown();
@@ -161,7 +161,7 @@ namespace Kablunk
 		}
 
 		m_minimized = false;
-		Renderer::OnWindowResize(width, height);
+		render::on_window_resize(width, height);
 
 		return false;
 	}
@@ -182,7 +182,7 @@ namespace Kablunk
 
 			if (!m_minimized)
 			{
-				RenderCommand::BeginFrame();
+				render::begin_frame();
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
 						for (Layer* layer : m_layer_stack)
@@ -193,19 +193,19 @@ namespace Kablunk
 				{
 					//KB_TIME_FUNCTION_BEGIN()
 					Application* app = this;
-					RenderCommand::Submit([app]() { app->RenderImGui(); });
-					RenderCommand::Submit([=]() { m_imgui_layer->End(); });
+					render::submit([app]() { app->RenderImGui(); });
+					render::submit([=]() { m_imgui_layer->End(); });
 					
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
 
-				RenderCommand::EndFrame();
+				render::end_frame();
 
 				// #TODO fix this so API agnostic
 				if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 				{
 					VulkanContext::Get()->GetSwapchain().BeginFrame();
-					RenderCommand::WaitAndRender();
+					render::wait_and_render();
 				}
 
 				m_window->OnUpdate();

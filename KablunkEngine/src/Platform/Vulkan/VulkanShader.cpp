@@ -138,7 +138,7 @@ namespace Kablunk
 			return;
 
 		IntrusiveRef<VulkanShader> instance = this;
-		RenderCommand::SubmitResourceFree([instance]()
+		render::submit_resource_free([instance]()
 			{
 				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				for (const auto& pipeline_create_info : instance->m_pipeline_shader_stage_create_infos)
@@ -154,7 +154,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanShader> instance = this;
 
 		
-		RenderCommand::Submit([instance, force_compile]() mutable
+		render::submit([instance, force_compile]() mutable
 		{
 			// Clear old shader data
 			instance->m_shader_descriptor_sets.clear();
@@ -178,7 +178,7 @@ namespace Kablunk
 			instance->ReflectAllShaderStages(shader_data);
 			instance->CreateDescriptors();
 
-			Renderer::OnShaderReloaded(instance->GetHash());
+			render::on_shader_reloaded(instance->GetHash());
 		});
 		
 	}
@@ -264,7 +264,7 @@ namespace Kablunk
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &m_descriptor_set_layouts[set];
 
-		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(RenderCommand::GetRenderer());
+		VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(render::get_renderer());
 
 		VkDescriptorSet descriptor_set = vulkan_renderer->RT_AllocateDescriptorSet(alloc_info);
 		KB_CORE_ASSERT(descriptor_set, "Vulkan failed to allocate descriptor set!");

@@ -28,7 +28,7 @@ namespace Kablunk
 		else
 			m_renderer_data->render_command_buffer = RenderCommandBuffer::Create(0, "Renderer2D");
 
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		
 		// =====
 		// Quads
@@ -88,9 +88,9 @@ namespace Kablunk
 		uint32_t white_texture_data = 0xFFFFFFFF;
 		m_renderer_data->white_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &white_texture_data);
 
-		m_renderer_data->quad_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
-		m_renderer_data->circle_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
-		m_renderer_data->line_shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Line");
+		m_renderer_data->quad_shader = render::get_shader("Renderer2D_Quad");
+		m_renderer_data->circle_shader = render::get_shader("Renderer2D_Circle");
+		m_renderer_data->line_shader = render::get_shader("Renderer2D_Line");
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
@@ -124,7 +124,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "QuadPipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Quad");
+			pipeline_spec.shader = render::get_shader("Renderer2D_Quad");
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -143,7 +143,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "CirclePipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Circle");
+			pipeline_spec.shader = render::get_shader("Renderer2D_Circle");
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_WorldPosition" },
@@ -163,7 +163,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "LinePipeline";
-			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get("Renderer2D_Line");
+			pipeline_spec.shader = render::get_shader("Renderer2D_Line");
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -222,9 +222,9 @@ namespace Kablunk
 		m_renderer_data->camera_view_projection = view_proj;
 
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
-		RenderCommand::Submit([uniform_buffer_set, view_proj]() mutable
+		render::submit([uniform_buffer_set, view_proj]() mutable
 			{
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
 			});
 
@@ -253,9 +253,9 @@ namespace Kablunk
 		m_renderer_data->camera_view_projection = view_proj;
 
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
-		RenderCommand::Submit([uniform_buffer_set, view_proj]() mutable
+		render::submit([uniform_buffer_set, view_proj]() mutable
 			{
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(CameraDataUB));
 			});
 
@@ -276,9 +276,9 @@ namespace Kablunk
 		m_renderer_data->render_command_buffer->Begin();
 
 		m_renderer_data->gpu_time_query.renderer_2D_query = m_renderer_data->render_command_buffer->BeginTimestampQuery();
-		RenderCommand::BeginRenderPass(m_renderer_data->render_command_buffer, m_renderer_data->quad_pipeline->GetSpecification().render_pass);
+		render::begin_render_pass(m_renderer_data->render_command_buffer, m_renderer_data->quad_pipeline->GetSpecification().render_pass);
 
-		uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+		uint32_t frame_index = render::get_current_frame_index();
 
 		// Quad
 		// calculate data size in bytes
@@ -297,7 +297,7 @@ namespace Kablunk
 					m_renderer_data->quad_material->Set("u_Textures", m_renderer_data->white_texture, i);
 			}
 
-			RenderCommand::RenderGeometry(m_renderer_data->render_command_buffer, m_renderer_data->quad_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->quad_material, m_renderer_data->quad_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->quad_index_count);
+			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->quad_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->quad_material, m_renderer_data->quad_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->quad_index_count);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 
@@ -307,7 +307,7 @@ namespace Kablunk
 		{
 			m_renderer_data->circle_vertex_buffers[frame_index]->SetData(m_renderer_data->circle_vertex_buffer_base_ptrs[frame_index], data_size);
 
-			RenderCommand::RenderGeometry(m_renderer_data->render_command_buffer, m_renderer_data->circle_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->circle_material, m_renderer_data->circle_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{1.0f}, m_renderer_data->circle_index_count);
+			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->circle_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->circle_material, m_renderer_data->circle_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{1.0f}, m_renderer_data->circle_index_count);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 
@@ -318,13 +318,13 @@ namespace Kablunk
 			KB_CORE_INFO("rendering lines");
 			m_renderer_data->line_vertex_buffers[frame_index]->SetData(m_renderer_data->line_vertex_buffer_base_ptrs[frame_index], data_size);
 
-			RenderCommand::SetLineWidth(m_renderer_data->render_command_buffer, m_renderer_data->line_width);
+			render::set_line_width(m_renderer_data->render_command_buffer, m_renderer_data->line_width);
 
-			RenderCommand::RenderGeometry(m_renderer_data->render_command_buffer, m_renderer_data->line_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->line_material, m_renderer_data->line_vertex_buffers[frame_index], m_renderer_data->line_index_buffer, glm::mat4{1.0f}, m_renderer_data->line_index_count);
+			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->line_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->line_material, m_renderer_data->line_vertex_buffers[frame_index], m_renderer_data->line_index_buffer, glm::mat4{1.0f}, m_renderer_data->line_index_count);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 
-		RenderCommand::EndRenderPass(m_renderer_data->render_command_buffer);
+		render::end_render_pass(m_renderer_data->render_command_buffer);
 		m_renderer_data->render_command_buffer->EndTimestampQuery(m_renderer_data->gpu_time_query.renderer_2D_query);
 
 		m_renderer_data->render_command_buffer->End();
@@ -335,7 +335,7 @@ namespace Kablunk
 
 	void Renderer2D::on_imgui_render()
 	{
-		uint32_t current_frame_index = Renderer::GetCurrentFrameIndex();
+		uint32_t current_frame_index = render::get_current_frame_index();
 		ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data->render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data->gpu_time_query.renderer_2D_query)));
 	}
 
@@ -591,7 +591,7 @@ namespace Kablunk
 
 	void Renderer2D::start_new_batch()
 	{
-		uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+		uint32_t frame_index = render::get_current_frame_index();
 
 		m_renderer_data->quad_count = 0;
 		m_renderer_data->quad_index_count = 0;

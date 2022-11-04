@@ -31,7 +31,7 @@ namespace Kablunk
 		m_image = Image2D::Create(spec);
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -57,7 +57,7 @@ namespace Kablunk
 
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -77,7 +77,7 @@ namespace Kablunk
 		m_height = height;
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});

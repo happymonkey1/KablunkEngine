@@ -80,7 +80,7 @@ namespace Kablunk
 		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
 		VkRenderPass vk_render_pass = m_render_pass;
-		RenderCommand::SubmitResourceFree([vk_framebuffer, vk_render_pass]()
+		render::submit_resource_free([vk_framebuffer, vk_render_pass]()
 			{
 				const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
@@ -165,7 +165,7 @@ namespace Kablunk
 	void VulkanFramebuffer::Invalidate()
 	{
 		IntrusiveRef<VulkanFramebuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -179,7 +179,7 @@ namespace Kablunk
 		if (m_framebuffer)
 		{
 			VkFramebuffer vk_framebuffer = m_framebuffer;
-			RenderCommand::SubmitResourceFree([vk_framebuffer]()
+			render::submit_resource_free([vk_framebuffer]()
 				{
 					const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 					vkDestroyFramebuffer(device, vk_framebuffer, nullptr);

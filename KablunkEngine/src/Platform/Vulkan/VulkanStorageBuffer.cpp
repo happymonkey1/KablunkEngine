@@ -12,7 +12,7 @@ namespace Kablunk
 		: m_size{ size }, m_binding{ binding }
 	{
 		IntrusiveRef<VulkanStorageBuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable { instance->RT_Invalidate(); });
+		render::submit([instance]() mutable { instance->RT_Invalidate(); });
 	}
 
 	VulkanStorageBuffer::~VulkanStorageBuffer()
@@ -24,7 +24,7 @@ namespace Kablunk
 	{
 		memcpy(m_local_storage, data, size);
 		IntrusiveRef<VulkanStorageBuffer> instance = this;
-		RenderCommand::Submit([instance, size, offset]() mutable
+		render::submit([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);
 			});
@@ -46,7 +46,7 @@ namespace Kablunk
 	{
 		m_size = new_size;
 		IntrusiveRef<VulkanStorageBuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable { instance->RT_Invalidate(); });
+		render::submit([instance]() mutable { instance->RT_Invalidate(); });
 	}
 
 	void VulkanStorageBuffer::Release()
@@ -54,7 +54,7 @@ namespace Kablunk
 		if (!m_vk_memory_allocation)
 			return;
 
-		RenderCommand::SubmitResourceFree([vk_buffer = m_vk_buffer, vk_mem_alloc = m_vk_memory_allocation]()
+		render::submit_resource_free([vk_buffer = m_vk_buffer, vk_mem_alloc = m_vk_memory_allocation]()
 			{
 				VulkanAllocator alloc{ "StorageBuffer" };
 				alloc.DestroyBuffer(vk_buffer, vk_mem_alloc);

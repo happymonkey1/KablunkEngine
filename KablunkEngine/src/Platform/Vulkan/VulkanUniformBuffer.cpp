@@ -14,7 +14,7 @@ namespace Kablunk
 		m_local_storage = new uint8_t[size];
 
 		IntrusiveRef<VulkanUniformBuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -30,7 +30,7 @@ namespace Kablunk
 		memcpy(m_local_storage, data, size);
 
 		IntrusiveRef<VulkanUniformBuffer> instance = this;
-		RenderCommand::Submit([instance, data, size, offset]() mutable
+		render::submit([instance, data, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);
 			});
@@ -66,7 +66,7 @@ namespace Kablunk
 		if (!m_vk_allocation)
 			return;
 
-		RenderCommand::SubmitResourceFree([buffer = m_buffer, mem_alloc = m_vk_allocation]()
+		render::submit_resource_free([buffer = m_buffer, mem_alloc = m_vk_allocation]()
 			{
 				VulkanAllocator allocator{ "UniformBuffer" };
 				allocator.DestroyBuffer(buffer, mem_alloc);
