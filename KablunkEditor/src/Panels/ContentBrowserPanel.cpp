@@ -183,6 +183,7 @@ namespace Kablunk
 								// #TODO i don't like that the content browser has to handle this...
 								// handle specific assets
 								asset::asset_type_t asset_type = asset::get_asset_type_from_path(relative_path);
+								bool is_asset_handled = true;
 								switch (asset_type)
 								{
 									case asset::AssetType::Texture:
@@ -199,16 +200,18 @@ namespace Kablunk
 									case asset::AssetType::Scene:
 									case asset::AssetType::NONE:
 									default:
-										KB_CORE_ASSERT(
-											false, 
-											"[ContentBrowserPanel] asset type {} is not handled!", 
+										KB_CORE_ERROR(
+											"[ContentBrowserPanel] Tried opening editor panel, asset type {} is not handled!", 
 											asset::asset_type_to_string(asset::get_asset_type_from_path(relative_path))
 										);
+										is_asset_handled = false;
 										break;
 								}
+
+								if (is_asset_handled)
+									m_asset_editor_panel->open_editor(asset);
 							}
 
-							m_asset_editor_panel->open_editor(asset);
 						}
 					}
 					ImGui::TextWrapped(filename_string.c_str());

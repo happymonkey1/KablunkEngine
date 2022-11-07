@@ -479,7 +479,7 @@ namespace Kablunk
 		{
 			main_camera = editor_cam;
 			main_camera_proj = editor_cam->GetProjection();
-			main_camera_transform = glm::inverse(editor_cam->GetViewMatrix());
+			main_camera_transform = editor_cam->GetViewMatrix();
 		}
 		else
 		{
@@ -494,6 +494,7 @@ namespace Kablunk
 				{
 					main_camera = &camera.Camera;
 					main_camera_proj = main_camera->GetProjection();
+					// why is this inverse?
 					main_camera_transform = glm::inverse(get_world_space_transform_matrix(camera_entity));
 					break;
 				}
@@ -536,7 +537,7 @@ namespace Kablunk
 			}
 		}
 
-		scene_renderer->begin_scene({ *main_camera, glm::inverse(main_camera_transform) });
+		scene_renderer->begin_scene({ *main_camera, main_camera_transform });
 
 		{
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -606,6 +607,23 @@ namespace Kablunk
 			KB_CORE_WARN("Skipping render2d, final render pass image is not ready!");
 	}
 
+	void Scene::OnEventEditor(Event& e)
+	{
+		if (e.GetEventType() == EventType::WindowResize)
+		{
+			auto view = m_registry.view<CameraComponent>();
+			for (auto id : view)
+			{
+				Entity entity = Entity{ id, this };
+				CameraComponent& camera_component = entity.GetComponent<CameraComponent>();
+
+				// #TODO don't use render indirection to set viewport size. should use event data...
+				if (!camera_component.Fixed_aspect_ratio)
+					camera_component.Camera.SetViewportSize(render::get_viewport_size().x, render::get_viewport_size().y);
+			}
+		}
+	}
+
 	void Scene::OnEventRuntime(Event& e)
 	{
 		auto view = m_registry.view<NativeScriptComponent>();
@@ -616,11 +634,25 @@ namespace Kablunk
 			if (nsc.Instance)
 				nsc.Instance->OnEvent(e);
 		}
+
+		if (e.GetEventType() == EventType::WindowResize)
+		{
+			auto view = m_registry.view<CameraComponent>();
+			for (auto id : view)
+			{
+				Entity entity = Entity{ id, this };
+				CameraComponent& camera_component = entity.GetComponent<CameraComponent>();
+
+				// #TODO don't use render indirection to set viewport size. should use event data...
+				if (!camera_component.Fixed_aspect_ratio)
+					camera_component.Camera.SetViewportSize(render::get_viewport_size().x, render::get_viewport_size().y);
+			}
+		}
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts)
 	{
-
+		
 	}
 
 	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
@@ -656,7 +688,7 @@ namespace Kablunk
 			}
 		}
 
-		scene_renderer->begin_scene({ camera, glm::inverse(camera.GetViewMatrix()) });
+		scene_renderer->begin_scene({ camera, camera.GetViewMatrix() });
 
 		{
 			auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -706,6 +738,7 @@ namespace Kablunk
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
+		KB_CORE_INFO("[Scene]: OnViewportResize({}, {})", width, height);
 		m_viewport_width = width; 
 		m_viewport_height = height;
 
@@ -716,7 +749,6 @@ namespace Kablunk
 			auto& camera_component = view.get<CameraComponent>(entity);
 			if (!camera_component.Fixed_aspect_ratio)
 				camera_component.Camera.SetViewportSize(width, height);
-			
 		}
 	}
 
@@ -872,7 +904,7 @@ namespace Kablunk
 
 		auto transform_component = TransformComponent{};
 
-		Math::decompose_transform(transform, transform_component.Translation, transform_component.Rotation, transform_component.Scale);
+		Math::decompose_transform(transform, transform_component.Translation, transform_component.Scale, transform_component.Rotation);
 
 		return transform_component;
 	}

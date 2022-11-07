@@ -44,7 +44,20 @@ namespace Kablunk
 		virtual void RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) override;
 
 		virtual void RenderMeshWithMaterial(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms) override;
+		
 		// #TODO submeshes
+		virtual void render_instanced_submesh(
+			IntrusiveRef<RenderCommandBuffer> render_command_buffer,
+			IntrusiveRef<Pipeline> pipeline,
+			IntrusiveRef<UniformBufferSet> uniform_buffer_set,
+			IntrusiveRef<StorageBufferSet> storage_buffer_set,
+			IntrusiveRef<Mesh> mesh,
+			uint32_t submesh_index,
+			IntrusiveRef<MaterialTable> material_table,
+			IntrusiveRef<VertexBuffer> transform_buffer,
+			uint32_t transform_offset,
+			uint32_t instance_count
+		) override;
 		// #TODO instanced rendering
 
 

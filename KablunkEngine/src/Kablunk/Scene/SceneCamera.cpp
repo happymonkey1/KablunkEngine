@@ -52,6 +52,12 @@ namespace Kablunk
 
 	void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
 	{
+		if (width == 0 || height == 0)
+		{
+			KB_CORE_ERROR("[SceneCamera]: Trying to set aspect ratio with width={}, height={}!", width, height);
+			return;
+		}
+
 		m_aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
 		RecalculateProjection();
 	}
@@ -101,36 +107,16 @@ namespace Kablunk
 
 		// get viewport mouse position
 		float mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
-		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f) * -1.0f;
+		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f);
 
-		KB_CORE_INFO("[SceneCamera] viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
-		KB_CORE_INFO("[SceneCamera] mouse_pos=({}, {})", mouse_pos.x, mouse_pos.y);
-		KB_CORE_INFO("[SceneCamera] mxy=({}, {})", mx, my);
-
+		KB_CORE_INFO("[SceneCamera]: viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
+		KB_CORE_INFO("[SceneCamera]: mouse_pos=({}, {})", mouse_pos.x, mouse_pos.y);
+		KB_CORE_INFO("[SceneCamera]: mx,my=({}, {})", mx, my);
+		// #TODO fix z and w values
 		glm::vec4 mouse_clip_pos = { mx, my, -1.0f, 1.0f };
+		glm::mat4 view_proj = GetProjection() * transform;
 
-		//glm::mat4 inverse_projection = glm::inverse(GetProjection());
-		//glm::mat4 inverse_view = glm::inverse(glm::mat3(transform));
-
-		glm::mat4 inverse_view_proj = glm::inverse(GetProjection() * transform);
-
-		//return inverse_view * (inverse_projection * mouse_clip_pos);
-		return inverse_view_proj * mouse_clip_pos;
-		/*
-		// account for viewport if running scene in editor
-		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };
-
-		// transform position to screen space x: [-1, 1], y: [-1, 1]
-		glm::vec2 screen_space_pos = {
-			(2.0f * (transformed_screen_pos.x / window_size.x)) - 1.0f,
-			1.0f - (2.0f * (transformed_screen_pos.y / window_size.y))
-		};
-		glm::vec4 in = { screen_space_pos.x, screen_space_pos.y, 0.0f, 1.0f };
-
-		glm::vec4 res_out = in * inverse;
-
-		
-		return { res_out.x / res_out.w, res_out.y / res_out.w, res_out.z / res_out.w };*/
+		return view_proj * mouse_clip_pos;
 	}
 
 	void SceneCamera::RecalculateProjection()

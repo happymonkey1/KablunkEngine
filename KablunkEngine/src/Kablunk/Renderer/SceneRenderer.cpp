@@ -192,13 +192,15 @@ namespace Kablunk
 
 		auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
-		const glm::vec3 camera_position = glm::inverse(scene_camera.view_mat)[3];
+		const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
+		const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
+		const glm::vec3 camera_position = view_inverse[3];
 
 		const auto inverse_view_projection = glm::inverse(view_projection);
 		
 		// Set camera uniform buffer
 		CameraDataUB camera_data = { 
-			scene_camera.camera.GetProjection() * scene_camera.view_mat, 
+			view_projection, 
 			scene_camera.camera.GetProjection(), 
 			scene_camera.view_mat, 
 			camera_position
@@ -209,7 +211,8 @@ namespace Kablunk
 			{
 				uint32_t buffer_index = render::get_current_frame_index();
 				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
-			});
+			}
+		);
 
 		// Set Renderer Transform
 		render::submit([instance]() mutable
@@ -217,7 +220,8 @@ namespace Kablunk
 				uint32_t buffer_index = render::get_current_frame_index();
 				glm::mat4 transform = glm::mat4{ 1.0f };
 				instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
-			});
+			}
+		);
 
 		// Submit point lights uniform buffer
 		const auto light_enviornment_copy = m_scene_data.light_environment;
@@ -263,13 +267,13 @@ namespace Kablunk
 		m_transform_vertex_data[m_draw_list.size()].MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
 
 
-		// #TODO instancing
+		// #TODO fix instancing implementation
 		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 	}
 
 	void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	{
-		if (m_viewport_width != width || m_viewport_height!= height)
+		if (m_viewport_width != width || m_viewport_height != height)
 		{
 			m_viewport_width = width;
 			m_viewport_height = height;
@@ -360,17 +364,17 @@ namespace Kablunk
 		render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
 		// submit transform data
-		render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
+		m_transform_buffer->SetData(m_transform_vertex_data, sizeof(TransformVertexData) * m_draw_list.size(), 0);
+		/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 			{
 				transform_buffer->RT_SetData(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
 			}
-		);
+		);*/
 		
 		size_t transform_offset_ind = 0;
 		for (const auto& draw_command_data : m_draw_list)
 		{
-			// #TODO update transform buffer and pass through
-			render::render_mesh(
+			render::render_instanced_submesh(
 				m_command_buffer, 
 				m_geometry_pipeline, 
 				m_uniform_buffer_set, 

@@ -238,8 +238,8 @@ namespace Kablunk
 		VkSamplerCreateInfo sampler{};
 		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler.maxAnisotropy = 1.0f;
-		sampler.magFilter = VK_FILTER_LINEAR; // #TODO dynamic based on properties
-		sampler.minFilter = VK_FILTER_LINEAR;
+		sampler.magFilter = VK_FILTER_NEAREST; // #TODO dynamic based on properties
+		sampler.minFilter = VK_FILTER_NEAREST;
 		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // #TODO dynamic based on properties
 		sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;

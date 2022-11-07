@@ -13,7 +13,7 @@ namespace Kablunk::asset
 		if (it != s_asset_extension_map.end())
 			return it->second;
 
-		KB_CORE_ASSERT(false, "unknown asset extension '{}'", extension);
+		KB_CORE_ERROR("unknown asset extension '{}'", extension);
 		return AssetType::NONE;
 	}
 

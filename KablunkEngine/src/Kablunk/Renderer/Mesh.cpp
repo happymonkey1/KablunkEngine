@@ -58,7 +58,16 @@ namespace Kablunk
 		m_is_animated = m_scene->mAnimations != nullptr;
 		if (m_is_animated)
 			KB_CORE_INFO("ANIMATED MESH!");
-		m_mesh_shader = m_is_animated ? render::get_shader("Kablunk_diffuse_anim")  : render::get_shader("Kablunk_diffuse_static");
+
+		if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+		{
+			m_mesh_shader = m_is_animated ? render::get_shader("Kablunk_diffuse_anim") : render::get_shader("Kablunk_diffuse_static");
+		}
+		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
 		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		size_t vertex_count = 0;
@@ -121,7 +130,7 @@ namespace Kablunk
 					if (mesh->HasTextureCoords(0))
 					{
 						// #FIXME figure out how to deal with multiple textures
-						v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
+						v.TexCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 					}
 
 					m_static_vertices.push_back(v);
@@ -136,7 +145,13 @@ namespace Kablunk
 				m_indices.push_back(index);
 
 				if (!m_is_animated)
-					m_triangle_cache[i].emplace_back(m_static_vertices[index.V1], m_static_vertices[index.V2], m_static_vertices[index.V3]);
+				{
+					m_triangle_cache[m].emplace_back(
+						m_static_vertices[index.V1 + submesh.BaseVertex], 
+						m_static_vertices[index.V2 + submesh.BaseVertex], 
+						m_static_vertices[index.V3 + submesh.BaseVertex]
+					);
+				}
 			}
 		}
 
@@ -402,9 +417,6 @@ namespace Kablunk
 		submesh.Material_index = 0;
 		m_sub_meshes.push_back(submesh);
 
-		
-		m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
-
 		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 		KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
@@ -412,11 +424,16 @@ namespace Kablunk
 
 		if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 		{
+			m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
 			auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
 			mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
 			mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
 			mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
 			m_materials.push_back(mat);
+		}
+		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
 		}
 	}
 

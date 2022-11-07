@@ -76,6 +76,8 @@ namespace Kablunk
 		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
+		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
+
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		NativeScriptEngine::get().set_scene(m_active_scene);
@@ -810,6 +812,8 @@ namespace Kablunk
 
 		if (m_scene_state == SceneState::Play)
 			m_active_scene->OnEventRuntime(e);
+		else
+			m_active_scene->OnEventEditor(e);
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)

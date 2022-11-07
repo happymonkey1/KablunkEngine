@@ -33,6 +33,22 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "not implemented!");
 		}
 
+		virtual void render_instanced_submesh(
+			IntrusiveRef<RenderCommandBuffer> render_command_buffer,
+			IntrusiveRef<Pipeline> pipeline,
+			IntrusiveRef<UniformBufferSet> uniform_buffer_set,
+			IntrusiveRef<StorageBufferSet> storage_buffer_set,
+			IntrusiveRef<Mesh> mesh,
+			uint32_t submesh_index,
+			IntrusiveRef<MaterialTable> material_table,
+			IntrusiveRef<VertexBuffer> transform_buffer,
+			uint32_t transform_offset,
+			uint32_t instance_count
+		) override
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
 		virtual void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
 		{
 			KB_CORE_ASSERT(false, "not implemented!");

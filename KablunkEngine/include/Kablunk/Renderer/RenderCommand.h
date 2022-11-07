@@ -215,6 +215,34 @@ namespace Kablunk::render
 		);
 	}
 
+	// render instanced submesh with a material table
+	inline void render_instanced_submesh(
+		IntrusiveRef<RenderCommandBuffer> render_command_buffer,
+		IntrusiveRef<Pipeline> pipeline,
+		IntrusiveRef<UniformBufferSet> uniform_buffer_set,
+		IntrusiveRef<StorageBufferSet> storage_buffer_set,
+		IntrusiveRef<Mesh> mesh,
+		uint32_t submesh_index,
+		IntrusiveRef<MaterialTable> material_table,
+		IntrusiveRef<VertexBuffer> transform_buffer,
+		uint32_t transform_offset,
+		uint32_t instance_count
+	)
+	{
+		Singleton<Renderer>::get().get_renderer()->render_instanced_submesh(
+			render_command_buffer,
+			pipeline,
+			uniform_buffer_set,
+			storage_buffer_set,
+			mesh,
+			submesh_index,
+			material_table,
+			transform_buffer,
+			transform_offset,
+			instance_count
+		);
+	}
+
 	// =====
 	// Quads
 	// =====
