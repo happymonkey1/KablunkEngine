@@ -105,18 +105,28 @@ namespace Kablunk
 			mouse_pos = glm::vec2{ screen_pos };
 		}
 
-		// get viewport mouse position
+		// translate to normalized device space
 		float mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
 		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f);
 
-		KB_CORE_INFO("[SceneCamera]: viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
+		/*KB_CORE_INFO("[SceneCamera]: viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
 		KB_CORE_INFO("[SceneCamera]: mouse_pos=({}, {})", mouse_pos.x, mouse_pos.y);
-		KB_CORE_INFO("[SceneCamera]: mx,my=({}, {})", mx, my);
-		// #TODO fix z and w values
+		KB_CORE_INFO("[SceneCamera]: mx,my=({}, {})", mx, my);*/
+
+		// store homogeneous space
+		// #TODO fix z
 		glm::vec4 mouse_clip_pos = { mx, my, -1.0f, 1.0f };
+		
+		// compute projection/eye space
 		glm::mat4 view_proj = GetProjection() * transform;
 
-		return view_proj * mouse_clip_pos;
+		// project to world space
+		glm::vec4 res = glm::inverse(view_proj) * mouse_clip_pos;
+		res.x /= res.w;
+		res.y /= res.w;
+		res.z /= res.w;
+
+		return res;
 	}
 
 	void SceneCamera::RecalculateProjection()
@@ -125,6 +135,7 @@ namespace Kablunk
 		{
 			case ProjectionType::Perspective:
 			{
+				// #TODO one of these is wrong...
 				m_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 				m_unreversed_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 				break;
