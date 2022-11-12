@@ -33,6 +33,9 @@ namespace Kablunk::ui
 		// get a relative position for this panel, relative to its parents
 		virtual glm::vec2 get_position_relative() const override;
 
+		// get the underlying panel type
+		virtual panel_type_t get_panel_type() const override { return m_panel_type; };
+
 		// ========
 		// children
 		// ========
@@ -91,10 +94,13 @@ namespace Kablunk::ui
 		virtual void on_left_mouse_down() override;
 		virtual void on_right_mouse_down() override;
 		virtual void on_key_down(KeyCode key) override;
+	protected:
+		// set the panel type
+		virtual void set_panel_type(panel_type_t panel_type) override { m_panel_type = panel_type; };
 	private:
 		// return a vec4 containing the points for the bounding box of this panel
 		glm::vec4 calculate_bounding_box() const;
-	private:
+	protected:
 		// position of the panel
 		glm::vec2 m_position;
 		// size of the panel
@@ -109,6 +115,8 @@ namespace Kablunk::ui
 		bool m_visible = true;
 		// struct that holds panel style
 		panel_style_t m_panel_style;
+		// underlying panel type
+		panel_type_t m_panel_type;
 	};
 
 }

@@ -10,7 +10,7 @@ namespace Kablunk::util
 	
 	/*
 	* To use, specialize the class like so
-	* using foo_iterator = enum_iterator<foo, foo::one, foo::three>;
+	* using foo_iterator = util::enum_iterator<foo, foo::one, foo::three>;
 	* 
 	* Then the specialized function can be iterated in a for loop
 	* for (foo i : foo_iterator{})
@@ -47,6 +47,18 @@ namespace Kablunk::util
 	private:
 		u32 m_value;
 	};
+
+	// #TODO this could probably be done at compile time...
+	// helper function to calculate the number of enum values during runtime
+	template <typename T, T begin_val, T end_val>
+	inline size_t calculate_unique_enum_count(enum_iterator<T, begin_val, end_val> iter)
+	{
+		size_t count = 0;
+		for (T e : iter)
+			count++;
+
+		return count;
+	}
 }
 
 #endif

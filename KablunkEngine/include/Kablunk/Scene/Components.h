@@ -18,8 +18,7 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 
-#include "Kablunk/UI/IPanel.h"
-#include "Kablunk/UI/Panel.h"
+#include "Kablunk/UI/PanelFactory.h"
 
 #include <filesystem>
 
@@ -353,7 +352,8 @@ namespace Kablunk
 
 	struct UIPanelComponent
 	{
-		ui::IPanel* panel = new ui::Panel{ glm::vec2{0.0f}, glm::vec2{ 1.0f } };
+		ui::panel_type_t panel_type = ui::panel_type_t::NONE;
+		ui::IPanel* panel = nullptr;
 
 		UIPanelComponent() = default;
 		UIPanelComponent(const UIPanelComponent&) = default;

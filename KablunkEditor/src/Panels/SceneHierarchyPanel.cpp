@@ -662,20 +662,57 @@ namespace Kablunk
 				ui::IPanel* panel = component.panel;
 
 				UI::BeginProperties();
+				
+				if (!panel)
+				{
+					size_t count = util::calculate_unique_enum_count(ui::panel_type_iterator{});
+					std::vector<const char*> enum_names;
+					enum_names.reserve(count);
 
-				glm::vec2& pos = panel->get_position();
-				glm::vec2& size = panel->get_size();
-				UI::Property("Position", pos);
-				UI::Property("Size", size);
-				UI::PropertyColorEdit4("Background Color", panel->get_panel_style().background_color);
-				//UI::Propert("Render background", panel->get_panel_style().background_color);
+					for (ui::panel_type_t panel_type : ui::panel_type_iterator{})
+						enum_names.push_back(panel_type_to_c_str(panel_type));
 
+					UI::PropertyDropdown("Panel Type", enum_names.data(), count, component.panel_type);
+
+					if (ImGui::Button("Create"))
+						component.panel = ui::PanelFactory::create_panel(component.panel_type, {});
+
+				}
+				else
+				{
+
+					glm::vec2& pos = panel->get_position();
+					glm::vec2& size = panel->get_size();
+					UI::PropertyReadOnlyChars("Panel Type", ui::panel_type_to_c_str(component.panel_type));
+					UI::Property("Position", pos);
+					UI::Property("Size", size);
+					UI::PropertyColorEdit4("Background Color", panel->get_panel_style().background_color);
+					//UI::Propert("Render background", panel->get_panel_style().background_color);
+
+					// panel specific ui elements
+					switch (panel->get_panel_type())
+					{
+
+						case ui::panel_type_t::ImageButton:
+							if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+							{
+								auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
+								if (!filepath.empty())
+								{
+									// #TODO go through asset manager
+									panel->get_panel_style().image = Texture2D::Create(filepath);
+								}
+							}
+							break;
+					}
+
+				}
+				
 				UI::EndProperties();
 			});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
 			{
-
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
@@ -723,7 +760,6 @@ namespace Kablunk
 
 		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& component)
 			{
-
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);

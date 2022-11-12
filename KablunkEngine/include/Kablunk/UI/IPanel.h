@@ -7,6 +7,8 @@
 #include "Kablunk/Core/KeyCodes.h"
 #include "Kablunk/Core/Uuid64.h"
 
+#include "Kablunk/Utilities/EnumIterator.hpp"
+
 #include <glm/glm.hpp>
 
 #include <vector>
@@ -15,15 +17,29 @@
 namespace Kablunk
 {
 	struct SceneRendererCamera;
+	class Texture2D;
 }
 
 namespace Kablunk::ui
 {
 
+	enum class panel_type_t : u32
+	{
+		Blank,
+		ImageButton,
+		NONE
+	};
+
+	using panel_type_iterator = util::enum_iterator<panel_type_t, panel_type_t::Blank, panel_type_t::NONE>;
+
+	// convert panel type to human readable cstr
+	const char* panel_type_to_c_str(panel_type_t panel_type);
+
 	struct panel_style_t
 	{
 		glm::vec4 background_color = glm::vec4{ 1.0f };
 		bool render_background = true;
+		ref<Texture2D> image = nullptr;
 	};
 
 	// abstract base class for a ui panel
@@ -43,6 +59,8 @@ namespace Kablunk::ui
 		virtual uuid::uuid64 get_panel_id() const = 0;
 		// get a relative position for this panel, relative to its parents
 		virtual glm::vec2 get_position_relative() const = 0;
+		// get the underlying panel type
+		virtual panel_type_t get_panel_type() const = 0;
 
 		// ========
 		// children
@@ -97,6 +115,11 @@ namespace Kablunk::ui
 		virtual void on_left_mouse_down() = 0;
 		virtual void on_right_mouse_down() = 0;
 		virtual void on_key_down(KeyCode key) = 0;
+	protected:
+		// set the panel type
+		virtual void set_panel_type(panel_type_t panel_type) = 0;
+	private:
+		friend class PanelFactory;
 	};
 
 }

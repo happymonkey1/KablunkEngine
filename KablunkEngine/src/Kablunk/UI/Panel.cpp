@@ -108,6 +108,9 @@ namespace Kablunk::ui
 		if (m_panel_style.render_background)
 			render2d::draw_quad_ui(pos_relative_to_cam, m_size, white_texture, 1.0f, m_panel_style.background_color);
 
+		if (m_panel_style.image)
+			render2d::draw_quad_ui(pos_relative_to_cam, m_size, m_panel_style.image);
+
 		for (IPanel* child : m_children)
 			child->on_render(scene_camera);
 	}
