@@ -17,7 +17,7 @@ namespace Kablunk::ui
 	struct panel_create_info_t
 	{
 		glm::vec2 position = glm::vec2{ 0.0f };
-		glm::vec2 size = glm::vec2{ 0.25f };
+		glm::vec2 size = glm::vec2{ 0.5f, 0.5f };
 		ref<Texture2D> image = nullptr;
 	};
 

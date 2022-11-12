@@ -39,6 +39,7 @@ namespace Kablunk::ui
 	{
 		glm::vec4 background_color = glm::vec4{ 1.0f };
 		bool render_background = true;
+		glm::vec4 highlight_color = glm::vec4{ 0.9f };
 		ref<Texture2D> image = nullptr;
 	};
 

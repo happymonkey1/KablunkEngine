@@ -63,30 +63,31 @@ namespace Kablunk::ui
 		for (IPanel* panel : m_children)
 			panel->on_update(ts);
 
+		check_if_hovered();
+
 		// mouse event and mouse inside viewport?
 		bool mouse_down = input::is_mouse_button_pressed(Mouse::ButtonLeft) || input::is_mouse_button_pressed(Mouse::ButtonRight);
-		if (mouse_down && input::is_mouse_in_viewport())
+		if (mouse_down && m_is_hovered)
 		{
-			// get mouse pos relative to viewport
-			auto [x, y] = input::get_mouse_position_relative_to_viewport();
-			glm::vec2 mouse_pos = glm::vec2{ x, y };
-
-			glm::vec2 pos = get_position_relative() + glm::vec2{ 0.5f } *render::get_viewport_size();
-			// #TODO figure out how to convert kablunk units to pixel size
-			glm::vec2 size = get_size();
-
-			bool x_true = mouse_pos.x >= pos.x && mouse_pos.x <= pos.x + size.x;
-			bool y_true = mouse_pos.y >= pos.y && mouse_pos.y <= pos.y + size.y;
-
-			if (x_true && y_true)
+			if (m_is_hovered)
 			{
 				if (input::is_mouse_button_pressed(Mouse::ButtonLeft))
+				{
+					// propagate to children first
 					for (IPanel* panel : m_children)
 						panel->on_left_mouse_down();
 
+					on_left_mouse_down();
+				}
+
 				if (input::is_mouse_button_pressed(Mouse::ButtonRight))
+				{
+					// propagate to children first
 					for (IPanel* panel : m_children)
 						panel->on_right_mouse_down();
+
+					on_right_mouse_down();
+				}
 
 				// #TODO figure out better way to send key events, instead of when mouse hovers the panel
 				// #TODO key events
@@ -102,17 +103,17 @@ namespace Kablunk::ui
 		if (!m_visible)
 			return;
 
-		glm::mat4 camera_proj = scene_camera.camera.GetProjection();
-		glm::mat4 camera_transform = scene_camera.view_mat;
-
 		ref<Texture2D> white_texture = render2d::get_white_texture();
 		// #TODO camera_projection should probably not be here. if it is not, then the panel will not render in the editor
-		glm::vec3 pos_relative_to_cam = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f } * camera_proj;
+		glm::vec3 pos_relative_to_cam = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
+		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
+
 		if (m_panel_style.render_background)
 			render2d::draw_quad_ui(pos_relative_to_cam, m_size, white_texture, 1.0f, m_panel_style.background_color);
 
+		glm::vec4 highlight_color = !m_is_hovered ? glm::vec4{ 1.0f } : m_panel_style.highlight_color;
 		if (m_panel_style.image)
-			render2d::draw_quad_ui(pos_relative_to_cam, m_size, m_panel_style.image);
+			render2d::draw_quad_ui(pos_relative_to_cam, m_size, m_panel_style.image, 1.0f, highlight_color);
 
 		for (IPanel* child : m_children)
 			child->on_render(scene_camera);
@@ -167,6 +168,29 @@ namespace Kablunk::ui
 			KB_CORE_WARN("[Panel]: setting panel '{}' parent to null!");
 
 		m_parent = parent;
+	}
+
+	void Panel::check_if_hovered()
+	{
+		if (!input::is_mouse_in_viewport())
+		{
+			m_is_hovered = false;
+			return;
+		}
+
+		// get mouse pos relative to viewport
+		auto [x, y] = input::get_mouse_position_relative_to_viewport();
+		glm::vec2 mouse_pos = glm::vec2{ x, y };
+
+		glm::vec2 relative_pos = get_position_relative() + glm::vec2{ 0.5f };
+		glm::vec2 pos = relative_pos * render::get_viewport_size();
+		// #TODO figure out how to convert kablunk units to pixel size
+		glm::vec2 size = get_size() * glm::vec2{ 0.5f } *render::get_viewport_size();
+
+		bool x_true = mouse_pos.x >= pos.x - (size.x / 2.0f) && mouse_pos.x <= pos.x + (size.x / 2.0f);
+		bool y_true = mouse_pos.y >= pos.y - (size.y / 2.0f) && mouse_pos.y <= pos.y + (size.y / 2.0f);
+
+		m_is_hovered = x_true && y_true;
 	}
 
 }

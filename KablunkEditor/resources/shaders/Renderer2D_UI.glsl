@@ -32,7 +32,7 @@ void main()
 	v_TexCoord = a_TexCoord;
 	v_TexIndex = a_TexIndex;
 	v_TilingFactor = a_TilingFactor;
-	vec4 p = u_Projection * u_Renderer.Transform * vec4(a_Position, 1.0);
+	vec4 p = u_Renderer.Transform * vec4(a_Position, 1.0);
 	p.z = 0.0f;
 	gl_Position = p; 
 }

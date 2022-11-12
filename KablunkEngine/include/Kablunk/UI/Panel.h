@@ -109,6 +109,8 @@ namespace Kablunk::ui
 	private:
 		// return a vec4 containing the points for the bounding box of this panel
 		glm::vec4 calculate_bounding_box() const;
+		// check if the panel is hovered, and potentially set hovered flag
+		void check_if_hovered();
 	protected:
 		// position of the panel
 		glm::vec2 m_position;
@@ -126,6 +128,8 @@ namespace Kablunk::ui
 		panel_style_t m_panel_style;
 		// underlying panel type
 		panel_type_t m_panel_type;
+		// flag for whether the panel is hovered
+		bool m_is_hovered = false;
 	};
 
 }
