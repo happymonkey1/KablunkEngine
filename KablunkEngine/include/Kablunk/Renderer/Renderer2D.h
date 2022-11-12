@@ -31,6 +31,16 @@ namespace Kablunk
 			int32_t EntityID{ -1 };
 		};
 
+		// #TODO remove when entity id is removed from quadvertex
+		struct UIQuadVertex
+		{
+			glm::vec3 Position;
+			glm::vec4 Color;
+			glm::vec2 TexCoord;
+			float TexIndex;
+			float TilingFactor;
+		};
+
 		struct CircleVertex
 		{
 			glm::vec3 WorldPosition;
@@ -87,9 +97,13 @@ namespace Kablunk
 			std::vector<IntrusiveRef<VertexBuffer>> line_vertex_buffers;
 			IntrusiveRef<IndexBuffer> line_index_buffer;
 
+			std::vector<IntrusiveRef<VertexBuffer>> ui_quad_vertex_buffers;
+			IntrusiveRef<IndexBuffer> ui_quad_index_buffer;
+
 			IntrusiveRef<Shader> quad_shader;
 			IntrusiveRef<Shader> circle_shader;
 			IntrusiveRef<Shader> line_shader;
+			IntrusiveRef<Shader> ui_shader;
 
 			IntrusiveRef <Texture2D> white_texture;
 
@@ -112,6 +126,12 @@ namespace Kablunk
 			uint32_t line_index_count = 0;
 			float line_width = 1.0f;
 
+			// UI
+			std::vector<UIQuadVertex*> ui_quad_vertex_buffer_base_ptrs;
+			UIQuadVertex* ui_quad_vertex_buffer_ptr = nullptr;
+			uint32_t ui_quad_count = 0;
+			uint32_t ui_quad_index_count = 0;
+
 			uint32_t texture_slot_index = 1; //0 = white texture
 
 			// TODO: change to asset handle when implemented
@@ -122,11 +142,13 @@ namespace Kablunk
 			IntrusiveRef<Pipeline> quad_pipeline;
 			IntrusiveRef<Pipeline> circle_pipeline;
 			IntrusiveRef<Pipeline> line_pipeline;
+			IntrusiveRef<Pipeline> ui_pipeline;
 
 
 			IntrusiveRef<Material> quad_material;
 			IntrusiveRef<Material> circle_material;
 			IntrusiveRef<Material> line_material;
+			IntrusiveRef<Material> ui_material;
 
 			IntrusiveRef<UniformBufferSet> uniform_buffer_set;
 
@@ -158,8 +180,6 @@ namespace Kablunk
 
 		void begin_scene(const Camera& camera, const glm::mat4& transform);
 		void begin_scene(const EditorCamera& camera);
-		void begin_scene(const OrthographicCamera& camera);
-		void begin_scene(const glm::mat4& view_proj);
 		void end_scene();
 		void flush();
 
@@ -171,7 +191,7 @@ namespace Kablunk
 
 		// Entity
 		void draw_sprite(Entity entity);
-		
+
 		// Texture
 		void draw_quad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
 		void draw_quad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4{ 1.0f });
@@ -191,6 +211,11 @@ namespace Kablunk
 		// Rect
 		void draw_rect(const glm::vec2& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
 		void draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
+
+		// ui
+		void draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_quad_ui(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
 		void reset_stats();
 		render2d::renderer_2d_stats_t get_stats();

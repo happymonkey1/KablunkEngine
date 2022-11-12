@@ -18,11 +18,15 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 
+#include "Kablunk/UI/IPanel.h"
+#include "Kablunk/UI/Panel.h"
+
 #include <filesystem>
 
 
 namespace Kablunk
 {
+
 	struct IdComponent
 	{
 		uuid::uuid64 Id{ uuid::generate() };
@@ -345,6 +349,19 @@ namespace Kablunk
 	struct SceneComponent
 	{
 		uuid::uuid64 Scene_id;
+	};
+
+	struct UIPanelComponent
+	{
+		ui::IPanel* panel = new ui::Panel{ glm::vec2{0.0f}, glm::vec2{ 1.0f } };
+
+		UIPanelComponent() = default;
+		UIPanelComponent(const UIPanelComponent&) = default;
+		UIPanelComponent(ui::IPanel* p) : panel{ p } {}
+		~UIPanelComponent()
+		{
+			delete panel;
+		}
 	};
 }
 

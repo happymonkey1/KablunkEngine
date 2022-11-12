@@ -61,6 +61,18 @@ namespace Kablunk
 		m_renderer_data->quad_index_buffer = IndexBuffer::Create(quad_indices, m_renderer_data->max_indices);
 		delete[] quad_indices;
 
+		// ========
+		// UI Quads
+		// ========
+
+		m_renderer_data->ui_quad_vertex_buffers.resize(frames_in_flight);
+		m_renderer_data->ui_quad_vertex_buffer_base_ptrs.resize(frames_in_flight);
+		for (size_t i = 0; i < frames_in_flight; ++i)
+		{
+			m_renderer_data->ui_quad_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::UIQuadVertex));
+			m_renderer_data->ui_quad_vertex_buffer_base_ptrs[i] = new render2d::UIQuadVertex[m_renderer_data->max_vertices];
+		}
+
 		// =======
 		// Circles
 		// =======
@@ -91,6 +103,7 @@ namespace Kablunk
 		m_renderer_data->quad_shader = render::get_shader("Renderer2D_Quad");
 		m_renderer_data->circle_shader = render::get_shader("Renderer2D_Circle");
 		m_renderer_data->line_shader = render::get_shader("Renderer2D_Line");
+		m_renderer_data->ui_shader = render::get_shader("Renderer2D_UI");
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
@@ -139,6 +152,24 @@ namespace Kablunk
 			m_renderer_data->quad_pipeline = Pipeline::Create(pipeline_spec);
 		}
 
+		// UI
+		{
+			PipelineSpecification pipeline_spec;
+			pipeline_spec.debug_name = "UIPipeline";
+			pipeline_spec.shader = render::get_shader("Renderer2D_UI");
+			pipeline_spec.backface_culling = false;
+			pipeline_spec.layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float4, "a_Color" },
+				{ ShaderDataType::Float2, "a_TextCoord" },
+				{ ShaderDataType::Float, "a_TexIndex" },
+				{ ShaderDataType::Float, "a_TilingFactor" }
+			};
+			pipeline_spec.render_pass = render_pass;
+
+			m_renderer_data->ui_pipeline = Pipeline::Create(pipeline_spec);
+		}
+
 		// Circle
 		{
 			PipelineSpecification pipeline_spec;
@@ -184,6 +215,7 @@ namespace Kablunk
 		m_renderer_data->quad_material = Material::Create(m_renderer_data->quad_shader);
 		m_renderer_data->circle_material = Material::Create(m_renderer_data->circle_shader);
 		m_renderer_data->line_material = Material::Create(m_renderer_data->line_shader);
+		m_renderer_data->ui_material = Material::Create(m_renderer_data->ui_shader);
 
 		m_renderer_data->uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_renderer_data->uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
@@ -221,11 +253,18 @@ namespace Kablunk
 		glm::mat4 view_proj = camera.GetProjection() * transform;
 		m_renderer_data->camera_view_projection = view_proj;
 
+		CameraDataUB camera_data_ub = CameraDataUB{
+			view_proj,
+			camera.GetProjection(),
+			transform,
+			glm::vec3{ 1.0f } // #TODO fix
+		};
+
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
-		render::submit([uniform_buffer_set, view_proj]() mutable
+		render::submit([uniform_buffer_set, camera_data_ub]() mutable
 			{
 				uint32_t buffer_index = render::get_current_frame_index();
-				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
+				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data_ub, sizeof(CameraDataUB));
 			});
 
 		m_renderer_data->Stats = {};
@@ -236,30 +275,6 @@ namespace Kablunk
 	void Renderer2D::begin_scene(const EditorCamera& camera)
 	{
 		Renderer2D::begin_scene(camera, camera.GetViewMatrix());
-
-		start_new_batch();
-	}
-
-	void Renderer2D::begin_scene(const OrthographicCamera& camera)
-	{
-		start_new_batch();
-	}
-
-	void Renderer2D::begin_scene(const glm::mat4& view_proj)
-	{
-		m_renderer_data->camera = {};
-		m_renderer_data->camera_transform = glm::mat4{ 1.0f };
-
-		m_renderer_data->camera_view_projection = view_proj;
-
-		IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
-		render::submit([uniform_buffer_set, view_proj]() mutable
-			{
-				uint32_t buffer_index = render::get_current_frame_index();
-				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(CameraDataUB));
-			});
-
-		m_renderer_data->Stats = {};
 
 		start_new_batch();
 	}
@@ -315,12 +330,32 @@ namespace Kablunk
 		data_size = (uint32_t)((uint8_t*)m_renderer_data->line_vertex_buffer_ptr - (uint8_t*)m_renderer_data->line_vertex_buffer_base_ptrs[frame_index]);
 		if (data_size)
 		{
-			KB_CORE_INFO("rendering lines");
 			m_renderer_data->line_vertex_buffers[frame_index]->SetData(m_renderer_data->line_vertex_buffer_base_ptrs[frame_index], data_size);
 
 			render::set_line_width(m_renderer_data->render_command_buffer, m_renderer_data->line_width);
 
 			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->line_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->line_material, m_renderer_data->line_vertex_buffers[frame_index], m_renderer_data->line_index_buffer, glm::mat4{1.0f}, m_renderer_data->line_index_count);
+			m_renderer_data->Stats.Draw_calls++;
+		}
+
+		// UI
+		// calculate data size in bytes
+		data_size = (uint32_t)((uint8_t*)m_renderer_data->ui_quad_vertex_buffer_ptr - (uint8_t*)m_renderer_data->ui_quad_vertex_buffer_base_ptrs[frame_index]);
+		if (data_size)
+		{
+			m_renderer_data->ui_quad_vertex_buffers[frame_index]->SetData(m_renderer_data->ui_quad_vertex_buffer_base_ptrs[frame_index], data_size);
+
+			// Set Textures
+			auto& textures = m_renderer_data->texture_slots;
+			for (uint32_t i = 0; i < m_renderer_data->max_texture_slots; i++)
+			{
+				if (textures[i])
+					m_renderer_data->ui_material->Set("u_Textures", textures[i], i);
+				else
+					m_renderer_data->ui_material->Set("u_Textures", m_renderer_data->white_texture, i);
+			}
+
+			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->ui_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->ui_material, m_renderer_data->ui_quad_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->ui_quad_index_count);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 
@@ -564,7 +599,7 @@ namespace Kablunk
 
 		for (uint32_t i = 0; i < 4; ++i)
 		{
-			auto& p0 = positions[0];
+			auto& p0 = positions[i];
 			auto& p1 = positions[(i + 1) % 4];
 
 			m_renderer_data->line_vertex_buffer_ptr->Position = p0;
@@ -578,6 +613,58 @@ namespace Kablunk
 			m_renderer_data->line_index_count += 2;
 			m_renderer_data->line_count += 1;
 		}
+	}
+
+	void Renderer2D::draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	{
+		draw_quad_ui({ position.x, position.y, 0.0f }, size, texture, tiling_factor, tint_color);
+	}
+
+	void Renderer2D::draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	{
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		draw_quad_ui(transform, texture, tiling_factor, tint_color);
+	}
+
+	void Renderer2D::draw_quad_ui(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	{
+		if (m_renderer_data->ui_quad_count + 1 > m_renderer_data->max_quads)
+			end_batch();
+
+		//constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float texture_index = 0.0f;
+		for (uint32_t i = 1; i < m_renderer_data->texture_slot_index; ++i)
+		{
+			// Dereference shared_ptrs and compare the textures
+			if (*m_renderer_data->texture_slots[i].get() == *texture.get())
+				texture_index = (float)i;
+		}
+
+		if (texture_index == 0.0f)
+		{
+			texture_index = (float)m_renderer_data->texture_slot_index;
+			m_renderer_data->texture_slots[m_renderer_data->texture_slot_index++] = texture;
+			KB_CORE_ASSERT(m_renderer_data->texture_slot_index < m_renderer_data->max_texture_slots, "texture slot overflow!");
+		}
+
+		constexpr glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+		constexpr size_t quad_vertex_count = 4;
+
+		for (uint32_t i = 0; i < quad_vertex_count; ++i)
+		{
+			m_renderer_data->ui_quad_vertex_buffer_ptr->Position = transform * m_renderer_data->quad_vertex_positions[i];
+			m_renderer_data->ui_quad_vertex_buffer_ptr->Color = tint_color;
+			m_renderer_data->ui_quad_vertex_buffer_ptr->TexCoord = texture_coords[i];
+			m_renderer_data->ui_quad_vertex_buffer_ptr->TexIndex = texture_index;
+			m_renderer_data->ui_quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
+			m_renderer_data->ui_quad_vertex_buffer_ptr++;
+		}
+		m_renderer_data->ui_quad_index_count += 6;
+		m_renderer_data->ui_quad_count++;
+
+		m_renderer_data->Stats.Quad_count += 1;
 	}
 
 	void Renderer2D::reset_stats()
@@ -604,6 +691,10 @@ namespace Kablunk
 		m_renderer_data->line_count = 0;
 		m_renderer_data->line_index_count = 0;
 		m_renderer_data->line_vertex_buffer_ptr = m_renderer_data->line_vertex_buffer_base_ptrs[frame_index];
+
+		m_renderer_data->ui_quad_count = 0;
+		m_renderer_data->ui_quad_index_count = 0;
+		m_renderer_data->ui_quad_vertex_buffer_ptr = m_renderer_data->ui_quad_vertex_buffer_base_ptrs[frame_index];
 
 		m_renderer_data->texture_slot_index = 1;
 

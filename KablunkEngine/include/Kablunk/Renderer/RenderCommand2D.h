@@ -19,9 +19,6 @@ namespace Kablunk::render2d
 	// get 1x1 white texture
 	static IntrusiveRef<Texture2D> get_white_texture() { return Singleton<Renderer2D>::get().get_white_texture(); }
 
-	// begin renderer2d scene with a view projection
-	static void begin_scene(const glm::mat4& view_proj) { Singleton<Renderer2D>::get().begin_scene(view_proj); }
-
 	// begin renderer2d scene with a render camera and transform
 	static void begin_scene(const Camera& camera, const glm::mat4& transform) { Singleton<Renderer2D>::get().begin_scene(camera, transform); }
 
@@ -47,6 +44,18 @@ namespace Kablunk::render2d
 	static void draw_quad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })
 	{
 		Singleton<Renderer2D>::get().draw_quad(position, size, texture, tiling_factor, tint_color);
+	}
+
+	// draw a ui quad (in screen space) with vec2 position
+	static void draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })
+	{
+		Singleton<Renderer2D>::get().draw_quad_ui(position, size, texture, tiling_factor, tint_color);
+	}
+
+	// draw a ui quad (in screen space) with vec2 position
+	static void draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })
+	{
+		Singleton<Renderer2D>::get().draw_quad_ui(position, size, texture, tiling_factor, tint_color);
 	}
 
 	// draw a rect with a 2d position

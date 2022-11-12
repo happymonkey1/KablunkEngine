@@ -61,6 +61,7 @@ namespace Kablunk
 		render::get_shader_library()->Load("resources/shaders/Renderer2D_Line.glsl");
 
 		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_UI.glsl");
 
 		s_renderer_data = new VulkanRendererData{};
 
@@ -544,6 +545,7 @@ namespace Kablunk
 					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
 				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+
 				const Buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer)
 					vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());

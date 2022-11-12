@@ -28,6 +28,10 @@ namespace Kablunk
 		void SetPerspective(float vertical_fov, float near_clip, float far_clip);
 		void SetViewportSize(uint32_t width, uint32_t height);
 
+		// #TODO should be moved elsewhere...
+		bool is_mouse_in_viewport() const;
+
+		// convert screen mouse coordinates to world position. Note: passed in screen pos is currently unused...
 		glm::vec3 ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const;
 
 		// Perspective

@@ -11,6 +11,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include "Kablunk/Renderer/RenderCommand.h"
+
 namespace Kablunk::input
 {
 
@@ -76,6 +78,65 @@ namespace Kablunk::input
 		}
 
 		return pressed;
+	}
+
+	bool is_mouse_in_viewport()
+	{
+		glm::vec2 mouse_pos = glm::vec2{ get_mouse_x_relative_to_viewport(), get_mouse_y_relative_to_viewport() };
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+		}
+		else
+		{
+			window_size = Application::Get().GetWindowDimensions();
+		}
+
+
+		bool x_true = mouse_pos.x >= window_pos.x && mouse_pos.x <= window_pos.x + window_size.x;
+		bool y_true = mouse_pos.y >= window_pos.y && mouse_pos.y <= window_pos.y + window_size.y;
+
+		return x_true && y_true;
+	}
+
+	std::pair<float, float> get_mouse_position_relative_to_viewport()
+	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			// get imgui mouse pos (in screen coordinates)
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
+
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+		}
+		else
+		{
+			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ input::get_mouse_x(), input::get_mouse_y() };
+		}
+
+		return std::make_pair(mouse_pos.x, mouse_pos.y);
+	}
+
+	float get_mouse_x_relative_to_viewport()
+	{
+		auto [x, y] = get_mouse_position_relative_to_viewport();
+		return x;
+	}
+
+	float get_mouse_y_relative_to_viewport()
+	{
+		auto [x, y] = get_mouse_position_relative_to_viewport();
+		return y;
 	}
 
 	std::pair<float, float> get_mouse_position()

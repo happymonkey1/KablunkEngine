@@ -7,6 +7,9 @@ layout(location = 1) in vec4 a_Color;
 layout(std140, binding = 0) uniform Camera
 {
 	mat4 u_ViewProjection;
+	mat4 u_Projection;
+	mat4 u_View;
+	vec3 u_Position;
 };
 
 layout (push_constant) uniform Transform

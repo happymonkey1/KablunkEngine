@@ -18,6 +18,13 @@
 
 namespace Kablunk
 {
+
+	// forward declaration
+	namespace ui
+	{
+		class IPanel;
+	}
+
 	struct SceneRendererSpecification
 	{
 		bool swap_chain_target = false;
@@ -71,14 +78,23 @@ namespace Kablunk
 
 		static void wait_for_threads();
 
+		void submit_ui_panel(ui::IPanel* panel);
+
 	private:
 		void flush_draw_list();
+		void flush_2d_draw_list();
 		void pre_render();
 		void clear_pass();
 		void geometry_pass();
 		void composite_pass();
 
 		void clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear = false);
+		
+		// draw all ui elements presented to the scene renderer
+		void ui_pass();
+
+		// draw all 2d elements presented to the scene renderer
+		void two_dimensional_pass();
 		
 	private:
 		IntrusiveRef<Scene> m_context;
@@ -149,6 +165,24 @@ namespace Kablunk
 
 		// #TODO replace with a map that maps MeshKeys to DrawCommandData
 		std::vector<DrawCommandData> m_draw_list;
+
+		// =========
+		// ui panels
+		// =========
+
+		std::vector<ui::IPanel*> m_ui_panels_list;
+		
+		// =========
+
+		// =================
+		// 2d composite data
+		// =================
+		
+		// list of sprite entities to be drawn in the 2d composite pass
+		// #TODO linear allocator 
+		std::vector<Entity> m_entity_list;
+
+		// =================
 
 		friend class VulkanRenderer2D;
 	};

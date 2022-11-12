@@ -141,6 +141,7 @@ namespace Kablunk
 		CopyComponent<RigidBody2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 		CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+		CopyComponent<UIPanelComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 
 		const auto& entity_instance_map = CSharpScriptEngine::GetEntityInstanceMap();
 		if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
@@ -556,11 +557,10 @@ namespace Kablunk
 		if (scene_renderer->is_multi_threaded())
 			SceneRenderer::wait_for_threads();
 
-		// #TODO move to SceneRenderer2D
-		// Renderer2D
+		// #TODO move to SceneRenderer
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			render2d::begin_scene(main_camera_proj * main_camera_transform);
+			render2d::begin_scene(*main_camera, main_camera_transform);
 			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			// map for checking whether sprites have 'already been rendered by code'
@@ -599,6 +599,20 @@ namespace Kablunk
 				Entity circle_entity = Entity{ entity, this };
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
 				render2d::draw_circle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+			}
+
+			// ui pass
+			{
+				auto panel_view = m_registry.view<TransformComponent, UIPanelComponent>();
+				for (auto entity : panel_view)
+				{
+					Entity panel_entity = Entity{ entity, this };
+					auto& transform_comp = panel_entity.GetComponent<TransformComponent>();
+					auto& panel_comp = panel_entity.GetComponent<UIPanelComponent>();
+
+					if (panel_comp.panel)
+						panel_comp.panel->on_render({ *main_camera, main_camera_transform });
+				}
 			}
 
 			render2d::end_scene();
@@ -711,7 +725,7 @@ namespace Kablunk
 		// #TODO move to scene renderer
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			render2d::begin_scene(camera.GetProjection() * camera.GetViewMatrix());
+			render2d::begin_scene(camera, camera.GetViewMatrix());
 			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
@@ -730,6 +744,20 @@ namespace Kablunk
 				Entity circle_entity = Entity{ entity, this };
 				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
 				render2d::draw_circle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+			}
+
+			// ui pass
+			{
+				auto panel_view = m_registry.view<TransformComponent, UIPanelComponent>();
+				for (auto entity : panel_view)
+				{
+					Entity panel_entity = Entity{ entity, this };
+					auto& transform_comp = panel_entity.GetComponent<TransformComponent>();
+					auto& panel_comp = panel_entity.GetComponent<UIPanelComponent>();
+
+					if (panel_comp.panel)
+						panel_comp.panel->on_render({ camera, camera.GetViewMatrix() });
+				}
 			}
 
 			render2d::end_scene();
@@ -820,6 +848,7 @@ namespace Kablunk
 		CopyComponentIfItExists<RigidBody2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<BoxCollider2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 		CopyComponentIfItExists<CircleCollider2DComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
+		CopyComponentIfItExists<UIPanelComponent>(new_entity.GetHandle(), entity.GetHandle(), m_registry);
 
 		// Need to copy ParentingComponent manually 
 		auto children = entity.GetChildrenCopy();
@@ -1025,5 +1054,7 @@ namespace Kablunk
 	template <>
 	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component) { }
 
+	template <>
+	void Scene::OnComponentAdded<UIPanelComponent>(Entity entity, UIPanelComponent& component) { }
 }
 

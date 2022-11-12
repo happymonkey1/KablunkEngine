@@ -570,6 +570,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<UIPanelComponent>() && ImGui::MenuItem("UI Panel"))
+			{
+				m_selection_context.AddComponent<UIPanelComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -647,6 +653,22 @@ namespace Kablunk
 					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
 						camera.SetOrthographicFarClip(far_clip);
 				}
+
+				UI::EndProperties();
+			});
+
+		DrawComponent<UIPanelComponent>("UI Panel", entity, [this](UIPanelComponent& component)
+			{
+				ui::IPanel* panel = component.panel;
+
+				UI::BeginProperties();
+
+				glm::vec2& pos = panel->get_position();
+				glm::vec2& size = panel->get_size();
+				UI::Property("Position", pos);
+				UI::Property("Size", size);
+				UI::PropertyColorEdit4("Background Color", panel->get_panel_style().background_color);
+				//UI::Propert("Render background", panel->get_panel_style().background_color);
 
 				UI::EndProperties();
 			});

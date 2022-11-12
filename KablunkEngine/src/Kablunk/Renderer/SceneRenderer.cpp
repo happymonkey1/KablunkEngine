@@ -7,6 +7,8 @@
 
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
+#include "Kablunk/UI/IPanel.h"
+
 #include <imgui.h>
 
 namespace Kablunk
@@ -246,11 +248,15 @@ namespace Kablunk
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
 					instance->flush_draw_list();
+					//instance->flush_2d_draw_list();
 				}
 			));
 		}
 		else
+		{
 			flush_draw_list();
+			//flush_2d_draw_list();
+		}
 
 		m_active = false;
 	}
@@ -317,15 +323,23 @@ namespace Kablunk
 		s_thread_pool.clear();
 	}
 
+	void SceneRenderer::submit_ui_panel(ui::IPanel* panel)
+	{
+		m_ui_panels_list.push_back(panel);
+	}
+
 	void SceneRenderer::flush_draw_list()
 	{
 		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
+			// do pre-render tasks
 			pre_render();
 
+			// draw 3d geometry
 			geometry_pass();
 
+			// composite and post processing pass
 			composite_pass();
 		}
 		else
@@ -338,6 +352,40 @@ namespace Kablunk
 
 		m_scene_data = {};
 		m_draw_list = {};
+	}
+
+	void SceneRenderer::flush_2d_draw_list()
+	{
+		// 2d composite and ui pass
+		if (get_final_render_pass_image())
+		{
+			// #TODO assert that the camera is orthographic for screen space panels
+
+			// get camera from scene renderer data
+			const glm::mat4& main_camera_proj = m_scene_data.camera.camera.GetProjection();
+			const glm::mat4& main_camera_transform = m_scene_data.camera.view_mat;
+
+			// start 2d scene rendering
+			render2d::begin_scene(m_scene_data.camera.camera, main_camera_transform);
+			render2d::set_target_render_pass(get_external_composite_render_pass());
+
+			if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
+			{
+				// draw 2d elements
+				two_dimensional_pass();
+
+				// draw ui elements
+				ui_pass();
+			}
+
+			render2d::end_scene();
+		}
+		else
+			KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
+		
+
+		m_entity_list.clear();
+		m_ui_panels_list.clear();
 	}
 
 	void SceneRenderer::pre_render()
@@ -356,6 +404,25 @@ namespace Kablunk
 		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
 		render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
 		render::end_render_pass(m_command_buffer);
+	}
+
+	void SceneRenderer::ui_pass()
+	{
+		if (m_ui_panels_list.empty())
+			return;
+
+		for (ui::IPanel* panel : m_ui_panels_list)
+			panel->on_render(m_scene_data.camera);
+	}
+
+	void SceneRenderer::two_dimensional_pass()
+	{
+
+		for (Entity entity : m_entity_list)
+			render2d::draw_sprite(entity);
+
+		// #TODO circles, lines, rectangles, text
+
 	}
 
 	void SceneRenderer::geometry_pass()

@@ -15,6 +15,22 @@ namespace Kablunk::input
 	// \warning not thread safe because of glfw
 	bool is_mouse_button_pressed(int button);
 
+	// \brief check whether the mouse is inside the viewport
+	// usually used when the editor is running because the viewport is not fullscreen
+	bool is_mouse_in_viewport();
+
+	// \brief get mouse position relative to viewport
+	// usually used when the eidtor is running because the viewport is not fullscreen
+	std::pair<float, float> get_mouse_position_relative_to_viewport();
+
+	// \brief get mouse x relative to viewport
+	// usually used when the eidtor is running because the viewport is not fullscreen
+	float get_mouse_x_relative_to_viewport();
+
+	// \brief get mouse y relative to viewport
+	// usually used when the eidtor is running because the viewport is not fullscreen
+	float get_mouse_y_relative_to_viewport();
+
 	// \brief return mouse position within the application
 	// \warning not thread safe because of glfw
 	std::pair<float, float> get_mouse_position();

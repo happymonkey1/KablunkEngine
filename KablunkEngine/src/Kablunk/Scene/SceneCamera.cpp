@@ -62,6 +62,33 @@ namespace Kablunk
 		RecalculateProjection();
 	}
 
+	bool SceneCamera::is_mouse_in_viewport() const
+	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			// get imgui mouse pos (in screen coordinates)
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
+
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+		}
+		else
+		{
+			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ input::get_mouse_x(), input::get_mouse_y() };
+		}
+
+		bool x_true = mouse_pos.x >= window_pos.x && mouse_pos.x <= window_pos.x + window_size.x;
+		bool y_true = mouse_pos.y >= window_pos.y && mouse_pos.y <= window_pos.y + window_size.y;
+
+		return x_true && y_true;
+	}
+
 	glm::vec3 SceneCamera::ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const
 	{
 		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
@@ -70,27 +97,6 @@ namespace Kablunk
 
 		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
 		{
-			/*ImGuiContext* imgui_context = ImGuiGlobalContext::get().get_context();
-			KB_CORE_ASSERT(imgui_context, "[SceneCamera] imgui global context not found!");
-			bool found = false;
-			for (ImGuiViewport* viewport : imgui_context->Viewports)
-			{
-				if (!viewport->PlatformUserData)
-					continue;
-
-				window_pos = { viewport->Pos.x, viewport->Pos.y};
-				window_size = { viewport->Size.x, viewport->Size.y };
-
-				found = true;
-				break;
-			}
-
-			if (!found)
-			{
-				KB_CORE_ERROR("SceneCamera::ScreenToWorldPoint(): ImGui enabled but could not find viewport!");
-				return glm::vec3{ 0.0f };
-			}*/
-
 			// get imgui mouse pos (in screen coordinates)
 			auto [x, y] = ImGui::GetMousePos();
 			mouse_pos = glm::vec2{ x, y };
@@ -108,10 +114,6 @@ namespace Kablunk
 		// translate to normalized device space
 		float mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
 		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f);
-
-		/*KB_CORE_INFO("[SceneCamera]: viewport_pos=({}, {})", render::get_viewport_pos().x, render::get_viewport_pos().y);
-		KB_CORE_INFO("[SceneCamera]: mouse_pos=({}, {})", mouse_pos.x, mouse_pos.y);
-		KB_CORE_INFO("[SceneCamera]: mx,my=({}, {})", mx, my);*/
 
 		// store homogeneous space
 		// #TODO fix z
