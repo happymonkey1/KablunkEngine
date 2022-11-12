@@ -14,6 +14,11 @@ namespace Kablunk::ui
 	{
 		m_panel_style.image = image;
 	}
-	
+
+	void ImageButtonPanel::on_left_mouse_down()
+	{
+		KB_CORE_INFO("IMAGE BUTTON FCLIKC!");
+	}
+
 
 }

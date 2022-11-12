@@ -82,17 +82,19 @@ namespace Kablunk::input
 
 	bool is_mouse_in_viewport()
 	{
-		glm::vec2 mouse_pos = glm::vec2{ get_mouse_x_relative_to_viewport(), get_mouse_y_relative_to_viewport() };
+		glm::vec2 mouse_pos;
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
 		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
 		{
+			mouse_pos = glm::vec2{ ImGui::GetMousePos().x, ImGui::GetMousePos().y };
 			window_pos = render::get_viewport_pos();
 			window_size = render::get_viewport_size();
 		}
 		else
 		{
+			mouse_pos = glm::vec2{ get_mouse_x(), get_mouse_y() };
 			window_size = Application::Get().GetWindowDimensions();
 		}
 
@@ -117,6 +119,8 @@ namespace Kablunk::input
 
 			window_pos = render::get_viewport_pos();
 			window_size = render::get_viewport_size();
+
+			mouse_pos -= render::get_viewport_pos();
 		}
 		else
 		{

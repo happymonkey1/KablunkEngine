@@ -20,9 +20,9 @@ namespace Kablunk::ui
 
 		// get the size of this panel
 		virtual glm::vec2& get_size() override { return m_size; };
-		
+
 		// get an absolute position for this panel
-		virtual const glm::vec2& get_position() const override  { return m_position; };
+		virtual const glm::vec2& get_position() const override { return m_position; };
 
 		// get the absolute position for this panel
 		virtual glm::vec2& get_position() override { return m_position; };
@@ -53,7 +53,7 @@ namespace Kablunk::ui
 		virtual IPanel* get_parent() const override { return m_parent; }
 		// set the parent for this panel
 		virtual void set_parent(IPanel* parent);
-		
+
 		// =========
 		// rendering
 		// =========
@@ -97,6 +97,15 @@ namespace Kablunk::ui
 	protected:
 		// set the panel type
 		virtual void set_panel_type(panel_type_t panel_type) override { m_panel_type = panel_type; };
+
+		// set panel position
+		virtual void set_position(const glm::vec2& position) override { m_position = position; };
+
+		// set panel size
+		virtual void set_size(const glm::vec2& size) override { m_size = size; };
+
+		// set panel style
+		virtual void set_style(const panel_style_t& panel_style) { m_panel_style = panel_style; };
 	private:
 		// return a vec4 containing the points for the bounding box of this panel
 		glm::vec4 calculate_bounding_box() const;

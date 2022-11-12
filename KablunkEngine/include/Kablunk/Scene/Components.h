@@ -356,11 +356,16 @@ namespace Kablunk
 		ui::IPanel* panel = nullptr;
 
 		UIPanelComponent() = default;
-		UIPanelComponent(const UIPanelComponent&) = default;
+		UIPanelComponent(const UIPanelComponent& other)
+		{
+			panel = ui::PanelFactory::copy_panel(other.panel);
+
+		}
 		UIPanelComponent(ui::IPanel* p) : panel{ p } {}
 		~UIPanelComponent()
 		{
 			delete panel;
+			panel = nullptr;
 		}
 	};
 }

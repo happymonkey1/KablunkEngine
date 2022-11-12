@@ -118,6 +118,12 @@ namespace Kablunk::ui
 	protected:
 		// set the panel type
 		virtual void set_panel_type(panel_type_t panel_type) = 0;
+		// set panel position
+		virtual void set_position(const glm::vec2& position) = 0;
+		// set panel size
+		virtual void set_size(const glm::vec2& size) = 0;
+		// set panel style
+		virtual void set_style(const panel_style_t& panel_style) = 0;
 	private:
 		friend class PanelFactory;
 	};

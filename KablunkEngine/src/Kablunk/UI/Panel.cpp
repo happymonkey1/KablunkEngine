@@ -7,6 +7,8 @@
 
 #include "Kablunk/Renderer/SceneRenderer.h"
 
+#include "Kablunk/Renderer/RenderCommand.h"
+
 namespace Kablunk::ui
 {
 
@@ -53,16 +55,24 @@ namespace Kablunk::ui
 		for (IPanel* panel : m_children)
 			if (event.GetStatus())
 				panel->on_event(event);
-
 		
+	}
+
+	void Panel::on_update(Timestep ts)
+	{
+		for (IPanel* panel : m_children)
+			panel->on_update(ts);
+
 		// mouse event and mouse inside viewport?
-		if (event.GetEventType() == EventType::MouseButtonPressed && input::is_mouse_in_viewport())
+		bool mouse_down = input::is_mouse_button_pressed(Mouse::ButtonLeft) || input::is_mouse_button_pressed(Mouse::ButtonRight);
+		if (mouse_down && input::is_mouse_in_viewport())
 		{
 			// get mouse pos relative to viewport
 			auto [x, y] = input::get_mouse_position_relative_to_viewport();
 			glm::vec2 mouse_pos = glm::vec2{ x, y };
 
-			glm::vec2 pos = get_position_relative();
+			glm::vec2 pos = get_position_relative() + glm::vec2{ 0.5f } *render::get_viewport_size();
+			// #TODO figure out how to convert kablunk units to pixel size
 			glm::vec2 size = get_size();
 
 			bool x_true = mouse_pos.x >= pos.x && mouse_pos.x <= pos.x + size.x;
@@ -72,8 +82,8 @@ namespace Kablunk::ui
 			{
 				if (input::is_mouse_button_pressed(Mouse::ButtonLeft))
 					for (IPanel* panel : m_children)
-							panel->on_left_mouse_down();
-				
+						panel->on_left_mouse_down();
+
 				if (input::is_mouse_button_pressed(Mouse::ButtonRight))
 					for (IPanel* panel : m_children)
 						panel->on_right_mouse_down();
@@ -82,14 +92,6 @@ namespace Kablunk::ui
 				// #TODO key events
 			}
 		}
-
-		
-	}
-
-	void Panel::on_update(Timestep ts)
-	{
-		for (IPanel* panel : m_children)
-			panel->on_update(ts);
 	}
 
 	void Panel::on_render(const SceneRendererCamera& scene_camera)
@@ -104,6 +106,7 @@ namespace Kablunk::ui
 		glm::mat4 camera_transform = scene_camera.view_mat;
 
 		ref<Texture2D> white_texture = render2d::get_white_texture();
+		// #TODO camera_projection should probably not be here. if it is not, then the panel will not render in the editor
 		glm::vec3 pos_relative_to_cam = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f } * camera_proj;
 		if (m_panel_style.render_background)
 			render2d::draw_quad_ui(pos_relative_to_cam, m_size, white_texture, 1.0f, m_panel_style.background_color);

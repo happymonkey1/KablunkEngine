@@ -19,6 +19,8 @@ namespace Kablunk::ui
 		ImageButtonPanel() = default;
 		ImageButtonPanel(const glm::vec2& pos, const glm::vec2& size, ref<Texture2D> image, uuid::uuid64 id = uuid::generate());
 		virtual ~ImageButtonPanel() { destroy(); }
+
+		virtual void on_left_mouse_down() override;
 	};
 
 }

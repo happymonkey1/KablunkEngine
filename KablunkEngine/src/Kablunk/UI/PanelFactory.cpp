@@ -30,6 +30,19 @@ namespace Kablunk::ui
 		return panel;
 	}
 
+	IPanel* PanelFactory::copy_panel(IPanel* panel)
+	{
+		if (!panel)
+			return nullptr;
+
+		IPanel* new_panel = create_panel(panel->get_panel_type(), {});
+		new_panel->set_position(panel->get_position());
+		new_panel->set_size(panel->get_size());
+		new_panel->set_style(panel->get_panel_style());
+
+		return new_panel;
+	}
+
 	const char* panel_type_to_c_str(panel_type_t panel_type)
 	{
 		switch (panel_type)

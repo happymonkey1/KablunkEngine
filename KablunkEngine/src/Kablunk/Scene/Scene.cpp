@@ -205,7 +205,16 @@ namespace Kablunk
 
 	void Scene::OnEvent(Event& e)
 	{
+		auto view = m_registry.view<UIPanelComponent>();
+		for (auto entity : view)
+		{
+			Entity kb_entity = Entity{ entity, this };
+			auto& panel_comp = kb_entity.GetComponent<UIPanelComponent>();
+			ui::IPanel* panel = panel_comp.panel;
 
+			if (panel)
+				panel->on_event(e);
+		}
 	}
 
 	void Scene::OnStartRuntime()
@@ -466,6 +475,21 @@ namespace Kablunk
 				transform.Translation.y = pos.y;
 				transform.Rotation.z = body->GetAngle();
 			}
+		}
+
+		// ======
+		//   UI
+		// ======
+
+		auto view = m_registry.view<UIPanelComponent>();
+		for (auto entity : view)
+		{
+			Entity kb_entity = Entity{ entity, this };
+			auto& panel_comp = kb_entity.GetComponent<UIPanelComponent>();
+			ui::IPanel* panel = panel_comp.panel;
+
+			if (panel)
+				panel->on_update(ts);
 		}
 	}
 

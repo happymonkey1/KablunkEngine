@@ -25,6 +25,7 @@ namespace Kablunk::ui
 	{
 	public:
 		static IPanel* create_panel(panel_type_t panel_type, const panel_create_info_t& panel_create_info);
+		static IPanel* copy_panel(IPanel* panel);
 	};
 
 }
