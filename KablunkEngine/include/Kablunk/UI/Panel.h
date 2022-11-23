@@ -51,6 +51,7 @@ namespace Kablunk::ui
 
 		// get the parent for this panel
 		virtual IPanel* get_parent() const override { return m_parent; }
+
 		// set the parent for this panel
 		virtual void set_parent(IPanel* parent);
 
@@ -94,6 +95,15 @@ namespace Kablunk::ui
 		virtual void on_left_mouse_down() override;
 		virtual void on_right_mouse_down() override;
 		virtual void on_key_down(KeyCode key) override;
+
+		// register a function to trigger on left mouse down event
+		virtual void register_on_left_mouse_down_event(mouse_event_triggered_func_t& func) override { m_lmb_down_event_funcs.push_back(func); }
+
+		// register a function to trigger on right mouse down event
+		virtual void register_on_right_mouse_down_event(mouse_event_triggered_func_t& func) override { m_rmb_down_event_funcs.push_back(func); }
+
+		// register a function to trigger on key down event
+		virtual void register_on_key_down_event(key_event_triggered_func_t& func) override { m_key_down_event_funcs.push_back(func); }
 	protected:
 		// set the panel type
 		virtual void set_panel_type(panel_type_t panel_type) override { m_panel_type = panel_type; };
@@ -130,6 +140,12 @@ namespace Kablunk::ui
 		panel_type_t m_panel_type;
 		// flag for whether the panel is hovered
 		bool m_is_hovered = false;
+		// list of left mouse down on event triggered function
+		std::vector<IPanel::mouse_event_triggered_func_t> m_lmb_down_event_funcs;
+		// list of left mouse down on event triggered function
+		std::vector<IPanel::mouse_event_triggered_func_t> m_rmb_down_event_funcs;
+		// list of left mouse down on event triggered function
+		std::vector<IPanel::key_event_triggered_func_t> m_key_down_event_funcs;
 	};
 
 }

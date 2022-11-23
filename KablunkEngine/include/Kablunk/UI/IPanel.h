@@ -47,6 +47,9 @@ namespace Kablunk::ui
 	class IPanel
 	{
 	public:
+		using mouse_event_triggered_func_t = void*(*)();
+		using key_event_triggered_func_t = void*(*)(KeyCode);
+	public:
 		virtual ~IPanel() = default;
 		// get the size of this panel
 		virtual const glm::vec2& get_size() const = 0;
@@ -112,10 +115,18 @@ namespace Kablunk::ui
 		// ======
 		// events
 		// ======
-
+		
 		virtual void on_left_mouse_down() = 0;
 		virtual void on_right_mouse_down() = 0;
 		virtual void on_key_down(KeyCode key) = 0;
+
+		// #TODO figure out if lambdas should be moved...
+		// register a function to trigger on left mouse down event
+		virtual void register_on_left_mouse_down_event(mouse_event_triggered_func_t& func) = 0;
+		// register a function to trigger on right mouse down event
+		virtual void register_on_right_mouse_down_event(mouse_event_triggered_func_t& func) = 0;
+		// register a function to trigger on key down event
+		virtual void register_on_key_down_event(key_event_triggered_func_t& func) = 0;
 	protected:
 		// set the panel type
 		virtual void set_panel_type(panel_type_t panel_type) = 0;

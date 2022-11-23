@@ -78,6 +78,9 @@ namespace Kablunk::ui
 						panel->on_left_mouse_down();
 
 					on_left_mouse_down();
+
+					for (auto& func : m_lmb_down_event_funcs)
+						func();
 				}
 
 				if (input::is_mouse_button_pressed(Mouse::ButtonRight))
@@ -87,6 +90,9 @@ namespace Kablunk::ui
 						panel->on_right_mouse_down();
 
 					on_right_mouse_down();
+
+					for (auto& func : m_rmb_down_event_funcs)
+						func();
 				}
 
 				// #TODO figure out better way to send key events, instead of when mouse hovers the panel
@@ -184,8 +190,7 @@ namespace Kablunk::ui
 
 		glm::vec2 relative_pos = get_position_relative() + glm::vec2{ 0.5f };
 		glm::vec2 pos = relative_pos * render::get_viewport_size();
-		// #TODO figure out how to convert kablunk units to pixel size
-		glm::vec2 size = get_size() * glm::vec2{ 0.5f } *render::get_viewport_size();
+		glm::vec2 size = get_size() * glm::vec2{ 0.5f } * render::get_viewport_size();
 
 		bool x_true = mouse_pos.x >= pos.x - (size.x / 2.0f) && mouse_pos.x <= pos.x + (size.x / 2.0f);
 		bool y_true = mouse_pos.y >= pos.y - (size.y / 2.0f) && mouse_pos.y <= pos.y + (size.y / 2.0f);
