@@ -12,6 +12,8 @@
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
+#include "Kablunk/Audio/AudioEngine.h"
+
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
 #include <box2d/b2_polygon_shape.h>
@@ -219,9 +221,10 @@ namespace Kablunk
 
 	void Scene::OnStartRuntime()
 	{
-		// #TODO expose gravity in editor panel
+
 		CSharpScriptEngine::SetSceneContext(this);
 
+		// #TODO expose gravity in editor panel
 		m_box2D_world = new b2World{ { 0.0f, -9.8f } };
 
 		auto view = m_registry.view<RigidBody2DComponent>();
