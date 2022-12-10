@@ -20,6 +20,8 @@
 
 #include "Kablunk/Asset/AssetManager.h"
 
+#include "Kablunk/Audio/AudioCommand.h"
+
 
 
 namespace Kablunk
@@ -49,6 +51,7 @@ namespace Kablunk
 			m_window->SetVsync(m_specification.Vsync);
 		}
 
+		audio::init_audio_engine();
 		render::init();
 		render::wait_and_render();
 
@@ -92,12 +95,14 @@ namespace Kablunk
 
 		render::wait_and_render();
 
-		Project::shutdown();
+		ProjectManager::get().shutdown();
 
 		render::shutdown();
 
 		NativeScriptEngine::get().shutdown();
 		PluginManager::get().shutdown();
+
+		audio::shutdown_audio_engine();
 
 		// delete window
 		m_window.reset();

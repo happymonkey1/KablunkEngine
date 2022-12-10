@@ -20,7 +20,7 @@ namespace Kablunk
 	//extern const std::filesystem::path g_resources_path = "resources";
 
 	ContentBrowserPanel::ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel)
-		: m_current_directory{ Project::GetActive() ? Project::GetAssetDirectoryPath() : "" }, m_asset_editor_panel{ asset_editor_panel }
+		: m_current_directory{ ProjectManager::get().get_active() ? ProjectManager::get().get_active()->get_asset_directory_path() : "" }, m_asset_editor_panel{ asset_editor_panel }
 	{
 		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
 		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
@@ -39,7 +39,7 @@ namespace Kablunk
 
 		ImGui::Begin("Content Browser", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 
-		if (!Project::GetActive())
+		if (!ProjectManager::get().get_active())
 		{
 			ImGui::End();
 			return;
@@ -69,7 +69,7 @@ namespace Kablunk
 			ImGui::TableSetColumnIndex(0);
 			ImGui::TableSetColumnWidthAutoAll(imgui_table);
 
-			auto working_dir = Project::GetAssetDirectory();
+			auto working_dir = ProjectManager::get().get_active()->get_asset_directory_path();
 			ImGui::Text(working_dir.string().c_str());
 
 			for (auto& directory_entry : m_directory_entries)
@@ -77,7 +77,7 @@ namespace Kablunk
 				if (directory_entry.is_directory())
 				{
 					const auto& path			= directory_entry.path();
-					auto relative_path			= std::filesystem::relative(path, Project::GetAssetDirectoryPath());
+					auto relative_path			= std::filesystem::relative(path, ProjectManager::get().get_active()->get_asset_directory_path());
 					auto relative_path_string	= relative_path.string();
 
 					ImGuiTreeNodeFlags directory_tree_node_flags = ImGuiTreeNodeFlags_OpenOnArrow;
@@ -113,7 +113,7 @@ namespace Kablunk
 				{
 					const auto& path = directory_entry.path();
 					// #TODO this does not return the correct path.
-					auto relative_path = std::filesystem::relative(path, Project::GetActive()->GetAssetDirectoryPath());
+					auto relative_path = std::filesystem::relative(path, ProjectManager::get().get_active()->get_asset_directory_path());
 					auto filename_string = relative_path.filename().string();
 					auto is_dir = directory_entry.is_directory();
 
@@ -271,7 +271,7 @@ namespace Kablunk
 				continue;
 			}
 			
-			std::filesystem::path relative_path = std::filesystem::relative(entry.path(), Project::GetActive()->GetAssetDirectoryPath());
+			std::filesystem::path relative_path = std::filesystem::relative(entry.path(), ProjectManager::get().get_active()->get_asset_directory_path());
 			auto metadata = asset::try_get_asset_metadata(relative_path);
 			if (metadata.is_valid())
 			{
@@ -291,7 +291,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != Project::GetAssetDirectory())
+		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != ProjectManager::get().get_active()->get_asset_directory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			should_refresh = true;
@@ -332,12 +332,12 @@ namespace Kablunk
 
 
 		// #TODO update to use project's asset directory when projects are implemented
-		auto project_asset_dir = Project::GetProjectDirectory();
+		auto project_asset_dir = ProjectManager::get().get_active()->get_project_directory();
 		auto asset_dir_name = std::filesystem::relative(m_current_directory, project_asset_dir);
 		auto text_size = ImGui::CalcTextSize(asset_dir_name.string().c_str());
 		if (ImGui::Selectable(asset_dir_name.string().c_str(), false, 0, { text_size.x, 22 }))
 		{
-			m_current_directory = Project::GetAssetDirectoryPath();
+			m_current_directory = ProjectManager::get().get_active()->get_asset_directory_path();
 		}
 
 		// #TODO add other directories in current path

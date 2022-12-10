@@ -3,7 +3,7 @@
 #include "Kablunk/Scene/Prefab/Prefab.h"
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Scene/Prefab/PrefabSerializer.h"
-#include "Kablunk/Project/Project.h"
+#include "Kablunk/Project/ProjectManager.h"
 
 namespace Kablunk
 {
@@ -33,8 +33,8 @@ namespace Kablunk
 		if (serialize)
 		{
 			PrefabSerializer serializer{ this };
-			KB_CORE_ASSERT(Project::GetActive(), "No active project!");
-			std::filesystem::path path = Project::GetActive()->GetAssetDirectoryPath() / "prefabs" / m_entity.GetComponent<TagComponent>().Tag;
+			KB_CORE_ASSERT(ProjectManager::get().get_active(), "No active project!");
+			std::filesystem::path path = ProjectManager::get().get_active()->get_asset_directory_path() / "prefabs" / m_entity.GetComponent<TagComponent>().Tag;
 			serializer.Serialize(path.string());
 		}
 	}

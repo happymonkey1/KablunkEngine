@@ -8,8 +8,6 @@
 namespace Kablunk
 {
 
-	IntrusiveRef<Project> Project::s_active_project = nullptr;
-
 	Project::Project()
 	{
 
@@ -18,28 +16,6 @@ namespace Kablunk
 	Project::~Project()
 	{
 
-	}
-
-	void Project::SetActive(const IntrusiveRef<Project>& project)
-	{
-		if (s_active_project)
-		{
-			Singleton<asset::AssetManager>::get().shutdown();
-		}
-
-		s_active_project = project;
-		if (s_active_project)
-		{
-			Singleton<asset::AssetManager>::get().init();
-		}
-	}
-
-	void Project::shutdown()
-	{
-		if (s_active_project)
-			Singleton<asset::AssetManager>::get().shutdown();
-
-		s_active_project = nullptr;
 	}
 
 }

@@ -21,6 +21,7 @@ IncludeDir["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/include"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 IncludeDir["VulkanSDK_LocalInclude"] = "%{wks.location}/KablunkEngine/vendor/VulkanSDK/Include"
 IncludeDir["boost"] = "%{PROGRAM_FILES}/boost"
+IncludeDir["miniaudio"] = "%{wks.location}/KablunkEngine/vendor/miniaudio/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"

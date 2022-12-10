@@ -6,6 +6,7 @@
 #include "Kablunk/Core/Singleton.h"
 
 #include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Audio/AudioAsset.h"
 
 namespace Kablunk::asset
 {
@@ -26,4 +27,24 @@ namespace Kablunk::asset
 	}
 
 	// ======================
+
+	void AudioAssetSerializer::serialize(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+	{
+
+	}
+
+	bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+	{
+		audio::audio_asset_config config{ Singleton<AssetManager>::get().get_absolute_path(metadata).string() };
+
+		asset = audio::AudioAsset::create(config);
+		asset->set_id(metadata.id);
+
+		bool success = asset.As<audio::AudioAsset>()->loaded();
+		if (!success)
+			asset->set_flag(AssetFlag::Invalid, true);
+
+		return success;
+	}
+
 }

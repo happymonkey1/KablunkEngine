@@ -2,6 +2,10 @@
 
 //FOR USE BY CLIENT APPLICATIONS
 
+// ---Audio--------------------------------------
+#include "Kablunk/Audio/AudioCommand.h"
+// ----------------------------------------------
+
 // ---Core---------------------------------------
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Application.h"

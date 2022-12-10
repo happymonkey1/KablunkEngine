@@ -3,7 +3,7 @@
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
 #include "Kablunk/Plugin/PluginManager.h"
-#include "Kablunk/Project/Project.h"
+#include "Kablunk/Project/ProjectManager.h"
 
 namespace Kablunk
 {
@@ -21,10 +21,10 @@ namespace Kablunk
 	std::unique_ptr<INativeScript> NativeScriptEngine::get_script(const std::string& name)
 	{
 		// Try load function pointer from dll module
-		if (!m_get_script_from_registry && Project::GetActive())
+		if (!m_get_script_from_registry && ProjectManager::get().get_active())
 		{
-			const std::string& plugin_name = Project::GetActive()->GetProjectName();
-			std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
+			const std::string& plugin_name = ProjectManager::get().get_active()->get_project_name();
+			std::filesystem::path plugin_path = ProjectManager::get().get_active()->get_native_script_module_file_path();
 			PluginManager::get().try_load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
 		}
 

@@ -214,8 +214,8 @@ namespace Kablunk
 				return;
 			}
 
-			KB_CORE_ASSERT(Project::GetActive(), "no active project!");
-			std::filesystem::path absolute_path = Project::GetActive()->GetProjectDirectory() / filepath;
+			KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
+			std::filesystem::path absolute_path = ProjectManager::get().get_active()->get_asset_directory_path() / filepath;
 
 			auto annotations = Parser::CPP::FindParserTokens(absolute_path.string());
 			for (const auto& annot : annotations)

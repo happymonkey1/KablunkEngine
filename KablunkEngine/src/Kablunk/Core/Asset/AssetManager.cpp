@@ -14,6 +14,7 @@ namespace Kablunk::asset
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
 		m_asset_serializers[AssetType::Texture] = IntrusiveRef<TextureAssetSerializer>::Create();
+		m_asset_serializers[AssetType::Audio] = IntrusiveRef<AudioAssetSerializer>::Create();
 		
 		m_asset_registry.clear();
 		load_asset_registry();
@@ -49,7 +50,7 @@ namespace Kablunk::asset
 
 	std::filesystem::path AssetManager::get_relative_path(const std::filesystem::path& path) const
 	{
-		return path.is_relative() ? path : std::filesystem::relative(path, Project::GetActive()->GetAssetDirectoryPath());
+		return path.is_relative() ? path : std::filesystem::relative(path, ProjectManager::get().get_active()->get_asset_directory_path());
 	}
 
 	AssetType AssetManager::get_asset_type_from_filepath(const std::filesystem::path& path) const
@@ -63,7 +64,7 @@ namespace Kablunk::asset
 		std::filesystem::path relative_path = get_relative_path(filepath);
 		if (relative_path.empty())
 		{
-			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, Project::GetActive()->GetAssetDirectoryPath());
+			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, ProjectManager::get().get_active()->get_asset_directory_path());
 			return asset::null_asset_id;
 		}
 
@@ -132,7 +133,7 @@ namespace Kablunk::asset
 		KB_CORE_INFO("[AssetManager] Loading asset registry!");
 
 		// #TODO store asset registry path on project
-		const std::filesystem::path& asset_registry_path = Project::GetAssetDirectoryPath() / s_asset_registry_path;
+		const std::filesystem::path& asset_registry_path = ProjectManager::get().get_active()->get_asset_directory_path() / s_asset_registry_path;
 		if (!FileSystem::file_exists(asset_registry_path))
 		{
 			KB_CORE_ERROR("[AssetManager] Tried to load asset registry but file does not exist!");
@@ -243,14 +244,14 @@ namespace Kablunk::asset
 
 		// write asset registry data to file
 		// #TODO get asset registry path from project
-		std::filesystem::path asset_registry_path = Project::GetActive()->GetAssetDirectoryPath() / s_asset_registry_path;
+		std::filesystem::path asset_registry_path = ProjectManager::get().get_active()->get_asset_directory_path() / s_asset_registry_path;
 		std::ofstream fout{ asset_registry_path };
 		fout << out.c_str();
 	}
 
 	void AssetManager::reload_assets()
 	{
-		process_directory(Project::GetActive()->GetAssetDirectoryPath());
+		process_directory(ProjectManager::get().get_active()->get_asset_directory_path());
 		write_registry_to_file();
 	}
 
@@ -289,9 +290,9 @@ namespace Kablunk::asset
 
 	bool AssetManager::file_exists(const AssetMetadata& asset_metadata) const
 	{
-		KB_CORE_ASSERT(Project::GetActive(), "no active project!");
+		KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
 		// #TODO check if the path is relative?
-		return FileSystem::file_exists(Project::GetActive()->GetAssetDirectoryPath() / asset_metadata.filepath);
+		return FileSystem::file_exists(ProjectManager::get().get_active()->get_asset_directory_path() / asset_metadata.filepath);
 	}
 
 	void AssetManager::serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const

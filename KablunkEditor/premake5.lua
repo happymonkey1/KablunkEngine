@@ -31,7 +31,8 @@ project "KablunkEditor"
         "%{IncludeDir.FreeType}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.Vulkan}",
-        "%{IncludeDir.boost}"
+        "%{IncludeDir.boost}",
+		"%{IncludeDir.miniaudio}"
     }
 
     links

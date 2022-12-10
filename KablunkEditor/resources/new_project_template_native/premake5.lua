@@ -64,7 +64,8 @@ project "$PROJECT_NAME$"
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}",
-		"%{IncludeDir.boost}"
+		"%{IncludeDir.boost}",
+		"%{IncludeDir.miniaudio}"
 	}
 
 	links

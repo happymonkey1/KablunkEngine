@@ -28,7 +28,7 @@ namespace Kablunk
 		std::string Project_filename;
 		std::string Project_directory;
 	};
-	
+
 	class Project : public RefCounted
 	{
 	public:
@@ -37,50 +37,44 @@ namespace Kablunk
 
 		const ProjectConfig& GetConfig() const { return m_config; }
 
-		static IntrusiveRef<Project> GetActive() { return s_active_project; }
-		static void SetActive(const IntrusiveRef<Project>& project);
-		static void shutdown();
+		const void set_project_name(const std::string& new_name) { m_config.Name = new_name; }
+		const std::string& get_project_name() const { return m_config.Name; }
+		std::filesystem::path get_project_directory() const { return m_config.Project_directory; }
+		std::filesystem::path get_asset_directory() const { return m_config.Asset_directory; }
+		std::filesystem::path get_asset_directory_path() const { return get_project_directory() / get_asset_directory(); }
 
-		static const void SetProjectName(const std::string& new_name) { s_active_project->m_config.Name = new_name; }
-		static const std::string& GetProjectName() { return s_active_project->GetConfig().Name; }
-		static std::filesystem::path GetProjectDirectory() { return s_active_project->GetConfig().Project_directory; }
-		static std::filesystem::path GetAssetDirectory() { return s_active_project->GetConfig().Asset_directory; }
-		static std::filesystem::path GetAssetDirectoryPath() { return GetProjectDirectory() / GetAssetDirectory(); }
+		const std::string& get_start_scene_name() const { return m_config.Start_scene; }
+		const void set_start_scene_name(const std::string& new_name) { m_config.Start_scene = new_name; }
 
-		static std::filesystem::path GetNativeScriptModulePath() 
-		{ 
-			return std::filesystem::path{ s_active_project->GetConfig().Project_directory } 
-			/ std::filesystem::path{ s_active_project->GetConfig().Native_script_modules_path };
-		}
-
-		static std::string GetNativeScriptModuleFileName() { return s_active_project->GetProjectName() + ".dll"; }
-		static std::filesystem::path GetNativeScriptModuleFilePath()
-		{ 
-			return GetNativeScriptModulePath() / GetNativeScriptModuleFileName();
-		}
-
-		static std::filesystem::path GetCSharpScriptModulePath()
+		std::filesystem::path get_native_script_module_path()
 		{
-			return std::filesystem::path{ s_active_project->GetConfig().Project_directory }
-			/ std::filesystem::path{ s_active_project->GetConfig().CSharp_script_modules_path };
+			return std::filesystem::path{ m_config.Project_directory }
+			/ std::filesystem::path{ m_config.Native_script_modules_path };
 		}
 
-		static std::string GetCSharpScriptModuleFileName() { return s_active_project->GetProjectName() + ".dll"; }
-		static std::filesystem::path GetCSharpScriptModuleFilePath()
+		std::string get_native_script_module_file_name() { return get_project_name() + ".dll"; }
+		std::filesystem::path get_native_script_module_file_path()
 		{
-			return GetCSharpScriptModulePath() / GetCSharpScriptModuleFileName();
+			return get_native_script_module_path() / get_native_script_module_file_name();
 		}
 
-		static const std::string& GetStartSceneName() { return s_active_project->GetConfig().Start_scene; }
-		static const void SetStartSceneName(const std::string& new_name) { s_active_project->m_config.Start_scene = new_name; }
+		std::filesystem::path get_csharp_script_module_path()
+		{
+			return std::filesystem::path{ m_config.Project_directory }
+			/ std::filesystem::path{ m_config.CSharp_script_modules_path };
+		}
 
+		std::string get_csharp_script_module_file_name() { return get_project_name() + ".dll"; }
+		std::filesystem::path get_csharp_script_module_file_path()
+		{
+			return get_csharp_script_module_path() / get_csharp_script_module_file_name();
+		}
 	private:
 		ProjectConfig m_config;
 
-		static IntrusiveRef<Project> s_active_project;
-
 		friend class ProjectSerializer;
 		friend class ProjectPropertiesPanel;
+		friend class ProjectManager;
 	};
 
 }

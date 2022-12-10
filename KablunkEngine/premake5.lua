@@ -61,7 +61,8 @@ project "KablunkEngine"
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}",
-		"%{IncludeDir.boost}"
+		"%{IncludeDir.boost}",
+		"%{IncludeDir.miniaudio}"
 	}
 
 	links

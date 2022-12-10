@@ -7,6 +7,8 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Singleton.h"
 
+#include "Kablunk/Core/Logger.h"
+
 namespace Kablunk::asset
 {
 	template <typename T>
@@ -62,6 +64,16 @@ namespace Kablunk::asset
 	ref<IAsset> create_asset(const std::filesystem::path& filepath, Args&&... args)
 	{
 		return Singleton<AssetManager>::get().create_asset<T>(filepath.string(), std::filesystem::path{}, std::forward<Args>(args)...);
+	}
+
+	// return the absolute path for an asset
+	inline std::filesystem::path get_absolute_path(const asset::asset_id_t& asset_id)
+	{
+		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_id);
+		if (!asset_metadata.is_valid())
+			return "";
+
+		return Singleton<AssetManager>::get().get_absolute_path(asset_metadata.filepath);
 	}
 }
 

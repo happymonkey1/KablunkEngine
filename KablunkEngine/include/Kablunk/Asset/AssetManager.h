@@ -8,7 +8,7 @@
 #include "Kablunk/Asset/AssetType.h"
 #include "Kablunk/Asset/AssetSerializer.h"
 
-#include "Kablunk/Project/Project.h"
+#include "Kablunk/Project/ProjectManager.h"
 
 #include <filesystem>
 
@@ -29,9 +29,9 @@ namespace Kablunk::asset
 		// get metadata from asset registry using asset reference
 		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 		// get the absolute path for an asset using its metadata
-		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const { return Project::GetAssetDirectoryPath() / metadata.filepath; }
+		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const { return ProjectManager::get().get_active()->get_asset_directory_path() / metadata.filepath; }
 		// get the absolute path for a given path
-		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const { return Project::GetAssetDirectoryPath() / path; }
+		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const { return ProjectManager::get().get_active()->get_asset_directory_path() / path; }
 		// get the relative path for a given path
 		std::filesystem::path get_relative_path(const std::filesystem::path& path) const;
 		// get an asset type by a given extension

@@ -216,7 +216,7 @@ namespace Kablunk
 		m_asset_registry_panel.on_imgui_render();
 		m_asset_editor_panel->on_imgui_render();
 
-		if (Project::GetActive().get() != nullptr)
+		if (ProjectManager::get().get_active().get() != nullptr)
 			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
 		else
 			m_show_project_properties_panel = false;
@@ -563,7 +563,7 @@ namespace Kablunk
 			if (ImGui::BeginMenu("Edit"))
 			{
 
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 					ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -581,9 +581,9 @@ namespace Kablunk
 
 
 				if (ImGui::MenuItem("Reload C# Assemblies"))
-					CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
+					CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 				
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					ImGui::PopStyleVar();
 					ImGui::PopItemFlag();
@@ -767,9 +767,9 @@ namespace Kablunk
 		m_scene_state = SceneState::Play;
 		//m_active_scene->OnStartRuntime();
 		
-		if (Project::GetActive())
-			if (Project::GetActive()->GetConfig().Reload_csharp_script_assemblies_on_play)
-				CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
+		if (ProjectManager::get().get_active())
+			if (ProjectManager::get().get_active()->GetConfig().Reload_csharp_script_assemblies_on_play)
+				CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 
 		m_runtime_scene = Scene::Copy(m_active_scene);
 		m_active_scene = m_runtime_scene;
@@ -952,13 +952,13 @@ namespace Kablunk
 			m_editor_scene_path = filepath;
 
 			// update default scene for project
-			if (Project::GetActive())
+			if (ProjectManager::get().get_active())
 			{
-				if (Project::GetStartSceneName() == "$SCENE_NAME$")
+				if (ProjectManager::get().get_active()->get_start_scene_name() == "$SCENE_NAME$")
 				{
-					Project::SetStartSceneName(m_editor_scene_path.filename().stem().string());
-					ProjectSerializer project_serializer{ Project::GetActive() };
-					project_serializer.Serialize(Project::GetActive()->GetConfig().Project_directory + "/" + Project::GetActive()->GetConfig().Project_filename);
+					ProjectManager::get().get_active()->set_start_scene_name(m_editor_scene_path.filename().stem().string());
+					ProjectSerializer project_serializer{ ProjectManager::get().get_active() };
+					project_serializer.Serialize(ProjectManager::get().get_active()->GetConfig().Project_directory + "/" + ProjectManager::get().get_active()->GetConfig().Project_filename);
 				}
 			}
 		}
@@ -1004,7 +1004,7 @@ namespace Kablunk
 
 	void EditorLayer::CreateNewNativeScript(const std::string& script_name) const
 	{
-		if (!Project::GetActive())
+		if (!ProjectManager::get().get_active())
 		{
 			KB_CORE_WARN("Trying to create new script without an active project!");
 			return;
@@ -1012,7 +1012,7 @@ namespace Kablunk
 
 		// #TODO check if this project is actually a native script!
 
-		std::filesystem::path project_path = Project::GetActive()->GetProjectDirectory();
+		std::filesystem::path project_path = ProjectManager::get().get_active()->get_project_directory();
 		std::filesystem::path resources_path = std::filesystem::path{ s_kablunk_install_path } / "KablunkEditor" / "resources";
 		std::filesystem::copy(resources_path / "new_script_template/native_script_template.h", project_path / "include/native_script_template.h");
 
@@ -1032,13 +1032,13 @@ namespace Kablunk
 
 	void EditorLayer::LoadNativeScriptModule() const
 	{
-		if (!Project::GetActive())
+		if (!ProjectManager::get().get_active())
 			return;
 
 		// #TODO make sure we are in native script project
 
-		std::string plugin_name = Project::GetActive()->GetProjectName();
-		std::filesystem::path plugin_path = Project::GetActive()->GetNativeScriptModuleFilePath();
+		std::string plugin_name = ProjectManager::get().get_active()->get_project_name();
+		std::filesystem::path plugin_path = ProjectManager::get().get_active()->get_native_script_module_file_path();
 		KB_CORE_INFO("KablunkEditor loading native script module '{}'", plugin_name);
 
 		PluginManager::get().load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
@@ -1156,36 +1156,36 @@ namespace Kablunk
 	{
 		KB_CORE_ASSERT(false, "deprecated!");
 
-		auto project = Project::GetActive();
+		auto project = ProjectManager::get().get_active();
 		if (!project)
 			return;
 		
 		auto copy_option_flags = std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", 
-			project->GetProjectDirectory() / "KablunkEngine" / "bin", copy_option_flags);
+			project->get_project_directory() / "KablunkEngine" / "bin", copy_option_flags);
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", 
-			project->GetProjectDirectory() / "KablunkEngine" / "engine", copy_option_flags);
+			project->get_project_directory() / "KablunkEngine" / "engine", copy_option_flags);
 	}
 
 	void EditorLayer::OpenProject(const std::string& filepath)
 	{
-		if (Project::GetActive())
+		if (ProjectManager::get().get_active())
 			CloseProject();
 
 		IntrusiveRef<Project> project = IntrusiveRef<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
-		Project::SetActive(project);
+		ProjectManager::get().set_active(project);
 
 		// #TODO only load when c# project.
-		CSharpScriptEngine::LoadAppAssembly(Project::GetCSharpScriptModuleFilePath());
+		CSharpScriptEngine::LoadAppAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 
-		m_content_browser_panel.SetCurrentDirectory(Project::GetAssetDirectoryPath());
+		m_content_browser_panel.SetCurrentDirectory(ProjectManager::get().get_active()->get_asset_directory_path());
 		m_project_properties_panel = ProjectPropertiesPanel{ project };
 
-		if (const std::string& scene_name = project->GetStartSceneName(); !scene_name.empty())
-			OpenScene(Project::GetAssetDirectoryPath() / "scenes" / scene_name);
+		if (const std::string& scene_name = project->get_start_scene_name(); !scene_name.empty())
+			OpenScene(project->get_asset_directory_path() / "scenes" / scene_name);
 		else
 			NewScene();
 
@@ -1207,7 +1207,7 @@ namespace Kablunk
 
 	void EditorLayer::SaveProject()
 	{
-		auto& project = Project::GetActive();
+		auto& project = ProjectManager::get().get_active();
 		if (!project)
 		{
 			KB_CORE_ERROR("SaveProject called without active project!");
@@ -1230,7 +1230,7 @@ namespace Kablunk
 		m_active_scene = nullptr;
 
 		if (unload)
-			Project::SetActive(nullptr);
+			ProjectManager::get().set_active(nullptr);
 	}
 
 	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const

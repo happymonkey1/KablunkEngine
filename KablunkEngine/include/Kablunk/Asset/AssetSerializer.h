@@ -27,6 +27,13 @@ namespace Kablunk::asset
 		virtual void serialize(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const override {}
 		virtual bool try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const override;
 	};
+
+	class AudioAssetSerializer : public AssetSerializer
+	{
+	public:
+		virtual void serialize(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const override;
+		virtual bool try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const override;
+	};
 }
 
 #endif

@@ -1,6 +1,6 @@
 #include "Panels/SceneHierarchyPanel.h"
 
-#include <Kablunk/Project/Project.h>
+#include <Kablunk/Project/ProjectManager.h>
 #include <Kablunk/Scripts/CSharpScriptEngine.h>
 #include <Kablunk/Imgui/ImGuiWrappers.h>
 #include <imgui/imgui.h>
@@ -731,7 +731,7 @@ namespace Kablunk
 					if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const auto path_wchar_str = (const wchar_t*)payload->Data;
-						auto path = std::filesystem::path{ Project::GetAssetDirectoryPath() / path_wchar_str };
+						auto path = std::filesystem::path{ ProjectManager::get().get_active()->get_asset_directory_path() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
 							component.Texture = Asset<Texture2D>(path_str);
@@ -776,7 +776,7 @@ namespace Kablunk
 				if (component.Instance)
 				{
 					std::string name = "placeholder";
-					std::vector<std::string> name_vec = Parser::CPP::FindClassAndStructNames( (Project::GetActive()->GetProjectDirectory() / std::filesystem::path{ component.GetFilepath() }).string());
+					std::vector<std::string> name_vec = Parser::CPP::FindClassAndStructNames( (ProjectManager::get().get_active()->get_project_directory() / std::filesystem::path{ component.GetFilepath() }).string());
 					if (!name_vec.empty())
 						name = name_vec[0];
 
@@ -790,10 +790,10 @@ namespace Kablunk
 					if (UI::Button("Add"))
 					{
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
-						KB_CORE_ASSERT(Project::GetActive(), "no active project!");
+						KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
 						if (!filepath.empty())
 						{
-							std::filesystem::path relative_path = std::filesystem::relative(filepath, Project::GetActive()->GetProjectDirectory());
+							std::filesystem::path relative_path = std::filesystem::relative(filepath, ProjectManager::get().get_active()->get_project_directory());
 							component.BindEditor(filepath);
 						}
 					}
@@ -803,7 +803,7 @@ namespace Kablunk
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					UI::BeginProperties();
 					bool active = false;
@@ -815,7 +815,7 @@ namespace Kablunk
 				UI::BeginProperties();
 				
 				bool is_error = !CSharpScriptEngine::ModuleExists(component.Module_name);
-				std::string name = CSharpScriptEngine::StripNamespace(Project::GetActive()->GetConfig().CSharp_script_default_namespace, component.Module_name);
+				std::string name = CSharpScriptEngine::StripNamespace(ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace, component.Module_name);
 
 				bool was_error = is_error;
 				if (was_error)
@@ -831,9 +831,9 @@ namespace Kablunk
 						component.Module_name = name;
 						is_error = false;
 					}
-					else if (CSharpScriptEngine::ModuleExists(Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name))
+					else if (CSharpScriptEngine::ModuleExists(ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace + "." + name))
 					{
-						component.Module_name = Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name;
+						component.Module_name = ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace + "." + name;
 						is_error = false;
 					}
 					else

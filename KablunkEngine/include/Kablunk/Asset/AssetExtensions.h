@@ -21,6 +21,8 @@ namespace Kablunk::asset
 		// audio
 		{ ".wav",			AssetType::Audio },
 		{ ".ogg",			AssetType::Audio },
+		{ ".mp3",			AssetType::Audio },
+		{ ".m4a",			AssetType::Audio },
 
 		// font
 		{ ".ttf",			AssetType::Font },
