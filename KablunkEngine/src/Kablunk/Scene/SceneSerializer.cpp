@@ -5,6 +5,7 @@
 #include "Kablunk/Scene/YamlSpecializedSerialization.h"
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/Components.h"
+#include "Kablunk/Asset/AssetCommand.h"
 
 #include <fstream>
 #include <typeinfo>
@@ -108,7 +109,13 @@ namespace Kablunk
 				out << YAML::BeginMap; // Texture Asset
 
 				out << YAML::Key << "m_uuid"		<< YAML::Value << component.Texture.GetUUID();
-				out << YAML::Key << "m_filepath"	<< YAML::Value << component.Texture.GetFilepath();
+				std::filesystem::path texture_filepath = component.Texture.GetFilepath();
+				if (texture_filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: tried serializing absolute texture path '{}'! Converting!", texture_filepath.string());
+					texture_filepath = asset::get_relative_path(texture_filepath);
+				}
+				out << YAML::Key << "m_filepath"	<< YAML::Value << texture_filepath.string();
 
 				out << YAML::EndMap;
 
@@ -127,6 +134,12 @@ namespace Kablunk
 
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
+				std::filesystem::path filepath = component.Filepath;
+				if (filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: tried serializing absolute native script path '{}'! converting...", filepath.string());
+					filepath = asset::get_relative_path(filepath);
+				}
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
 
@@ -291,9 +304,18 @@ namespace Kablunk
 				if (texture_data)
 				{
 					auto uuid = texture_data["m_uuid"].as<uint64_t>();
-					auto filepath = texture_data["m_filepath"].as<std::string>();
+					auto path = texture_data["m_filepath"].as<std::string>();
+					std::filesystem::path filepath = std::filesystem::path{ path };
+					if (filepath.is_absolute())
+					{
+						KB_CORE_WARN("[SceneSerializer]: deserialized absolute texture path '{}'!", filepath.string());
+						filepath = asset::get_relative_path(filepath);
+					}
+					
+					auto a = ProjectManager::get().get_active()->get_asset_directory_path();
+					auto b = a / filepath;
 
-					auto texture_asset = Asset<Texture2D>(filepath, uuid);
+					auto texture_asset = Asset<Texture2D>(filepath.string(), uuid);
 					component.Texture = texture_asset;
 				}
 
@@ -317,7 +339,14 @@ namespace Kablunk
 
 		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](NativeScriptComponent& component, auto& data)
 			{
-				auto filepath = data["Filepath"].as<std::string>();
+				auto path = data["Filepath"].as<std::string>();
+				auto filepath = std::filesystem::path{ path };
+				if (filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: deserialized absolute native script path '{}'! converting...", path);
+					filepath = asset::get_relative_path(filepath);
+				}
+
 				if (!filepath.empty())
 					component.BindEditor(filepath);
 				else

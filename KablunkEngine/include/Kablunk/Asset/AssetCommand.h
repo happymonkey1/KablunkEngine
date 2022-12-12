@@ -66,7 +66,7 @@ namespace Kablunk::asset
 		return Singleton<AssetManager>::get().create_asset<T>(filepath.string(), std::filesystem::path{}, std::forward<Args>(args)...);
 	}
 
-	// return the absolute path for an asset
+	// return the absolute path for an asset. 
 	inline std::filesystem::path get_absolute_path(const asset::asset_id_t& asset_id)
 	{
 		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_id);
@@ -74,6 +74,27 @@ namespace Kablunk::asset
 			return "";
 
 		return Singleton<AssetManager>::get().get_absolute_path(asset_metadata.filepath);
+	}
+
+	// return the relative path for an asset by asset id.
+	inline std::filesystem::path get_relative_path(const asset::asset_id_t& asset_id)
+	{
+		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_id);
+		if (!asset_metadata.is_valid())
+			return "";
+
+		return Singleton<AssetManager>::get().get_relative_path(asset_metadata.filepath);
+	}
+
+	// return the relative path for an asset by filepath
+	inline std::filesystem::path get_relative_path(const std::filesystem::path& asset_path)
+	{
+		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_path);
+		// #TODO assert that the path must be a valid asset
+		if (!asset_metadata.is_valid())
+			KB_CORE_WARN("[AssetManager]: path '{}' is not a valid asset!", asset_path);
+
+		return Singleton<AssetManager>::get().get_relative_path(asset_path);
 	}
 }
 

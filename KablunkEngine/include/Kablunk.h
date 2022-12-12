@@ -58,6 +58,10 @@
 #include "Kablunk/Asset/AssetCommand.h"
 // ----------------------------------------------
 
+// ---Project------------------------------------
+#include "Kablunk/Project/ProjectManager.h"
+// ----------------------------------------------
+
 // ---Reflection---------------------------------
 #include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 // ----------------------------------------------
