@@ -47,9 +47,12 @@ namespace Kablunk::audio
 
 	void AudioEngine::shutdown()
 	{
+		// shutdown the device(s)
 		ma_device_uninit(&m_device);
-
+		// shutdown the engine
 		ma_engine_uninit(&m_engine);
+		// clear all queued audio assets
+		m_queued_audio.clear();
 
 		KB_CORE_INFO("[AudioEngine]: shut down.");
 	}
@@ -86,6 +89,31 @@ namespace Kablunk::audio
 	void AudioEngine::stop_engine()
 	{
 		ma_engine_stop(&m_engine);
+	}
+
+	void AudioEngine::add_to_queue(ref<AudioAsset>& audio_asset, bool autoplay /*= false*/)
+	{
+		KB_CORE_ASSERT(audio_asset, "trying to queue null audio asset!");
+
+		if (std::find(m_queued_audio.begin(), m_queued_audio.end(), audio_asset) != m_queued_audio.end())
+		{
+			const asset::AssetMetadata& metadata = asset::try_get_asset_metadata(audio_asset->get_id());
+			KB_CORE_WARN("[AudioEngine]: audio '{}' is already in the play queue.", metadata.filepath);
+		}
+
+		m_queued_audio.push_back(audio_asset);
+
+		// #TODO autoplay should be on the audio source
+		if (autoplay)
+			audio_asset->play();
+	}
+
+	void AudioEngine::stop_and_clear_queue()
+	{
+		for (auto& audio : m_queued_audio)
+			audio->stop();
+
+		m_queued_audio.clear();
 	}
 
 }

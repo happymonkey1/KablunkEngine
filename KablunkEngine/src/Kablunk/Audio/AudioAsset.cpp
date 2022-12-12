@@ -25,15 +25,18 @@ namespace Kablunk::audio
 
 	void AudioAsset::play()
 	{
-		ma_sound_start(&m_sound);
+		if (!ma_sound_is_playing(&m_sound))
+			ma_sound_start(&m_sound);
 	}
 
 	void AudioAsset::stop()
 	{
+		if (!ma_sound_is_playing(&m_sound))
+			return;
+
 		ma_result result = ma_sound_stop(&m_sound);
 		if (result != MA_SUCCESS)
 			KB_CORE_ERROR("[AudioAsset]: failed to stop sound! error code '{}'", result);
-		
 	}
 
 }

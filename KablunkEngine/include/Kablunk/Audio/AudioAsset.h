@@ -30,11 +30,20 @@ namespace Kablunk::audio
 		void play();
 		// stop the sound from playing
 		void stop();
-
+		// equality comparison operator
+		bool operator==(const AudioAsset& other) const { return get_id() == other.get_id(); }
+		// inequality comparison operator
+		bool operator!=(const AudioAsset& other) const { return !(*this == other); }
+		// check if the audio is playing
+		bool is_playing() const { return ma_sound_is_playing(&m_sound); }
+		// get a pointer to the underlying ma sound object
+		const ma_sound* get_ma_sound() const { return &m_sound; }
+		// get a pointer to the underlying ma sound object
+		ma_sound* get_ma_sound() { return &m_sound; }
 	private:
 		// flag for whether the audio asset has finished loading
 		bool m_loaded = false;
-		// sound object
+		// ma sound object
 		ma_sound m_sound{};
 	};
 
