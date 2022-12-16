@@ -19,12 +19,16 @@
 #include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Logger.h"
-#include "Kablunk/Events/Event.h"
-#include "Kablunk/Debugging/Instrumentor.h"
-#include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Singleton.h"
+
+#include "Kablunk/Events/Event.h"
+
+#include "Kablunk/Debugging/Instrumentor.h"
+
+#include "Kablunk/Utilities/Reflection/ReflectionCore.h"
+#include "Kablunk/Utilities/Containers/FlatHashMap.hpp"
 
 #ifdef KB_PLATFORM_WINDOWS
 #	include <windows.h>
