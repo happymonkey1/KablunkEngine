@@ -299,7 +299,7 @@ namespace Kablunk
 			vertex_input_attributes[location].binding = 0;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
-			vertex_input_attributes[location].offset = element.Offset;
+			vertex_input_attributes[location].offset = static_cast<uint32_t>(element.Offset);
 			location++;
 		}
 
@@ -308,7 +308,7 @@ namespace Kablunk
 			vertex_input_attributes[location].binding = 1;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
-			vertex_input_attributes[location].offset = element.Offset;
+			vertex_input_attributes[location].offset = static_cast<uint32_t>(element.Offset);
 			location++;
 		}
 

@@ -265,7 +265,7 @@ namespace Kablunk
 						pipeline_layout, 
 						VK_SHADER_STAGE_FRAGMENT_BIT, 
 						0, 
-						uniform_storage_buffer.size(), 
+						static_cast<uint32_t>(uniform_storage_buffer.size()), 
 						uniform_storage_buffer.get()
 					);
 				}
@@ -341,7 +341,16 @@ namespace Kablunk
 				// #TODO submeshes
 
 				if (push_constant_buffer.size() > 0)
-					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, push_constant_buffer.size(), push_constant_buffer.get());
+				{
+					vkCmdPushConstants(
+						vk_command_buffer, 
+						pipeline_layout, 
+						VK_SHADER_STAGE_VERTEX_BIT, 
+						0, 
+						static_cast<uint32_t>(push_constant_buffer.size()), 
+						push_constant_buffer.get()
+					);
+				}
 
 				vkCmdDrawIndexed(vk_command_buffer, mesh_data->GetIndicies().size(), instance_count, 0, 0, 0);
 

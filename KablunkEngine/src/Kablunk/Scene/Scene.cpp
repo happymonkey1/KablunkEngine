@@ -660,7 +660,12 @@ namespace Kablunk
 
 				// #TODO don't use render indirection to set viewport size. should use event data...
 				if (!camera_component.Fixed_aspect_ratio)
-					camera_component.Camera.SetViewportSize(render::get_viewport_size().x, render::get_viewport_size().y);
+				{
+					camera_component.Camera.SetViewportSize(
+						static_cast<uint32_t>(render::get_viewport_size().x), 
+						static_cast<uint32_t>(render::get_viewport_size().y)
+					);
+				}
 			}
 		}
 	}

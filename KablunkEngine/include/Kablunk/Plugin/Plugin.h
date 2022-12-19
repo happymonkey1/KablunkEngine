@@ -39,12 +39,16 @@ namespace Kablunk
 		template <typename FuncT>
 		FuncT get_function(const std::string& func_name) noexcept;
 	private:
+		// helper function to load the entry point of the dll
 		void load_native_script_entry_point();
-
 	private:
+		// handle to the loaded dll
 		HINSTANCE m_handle = nullptr;
+		// name of the dll
 		std::string m_dll_name = "INV_DLL_NAME";
+		// relative? (double check...) path to the dll
 		std::filesystem::path m_path;
+		// type of Kablunk plugin being loaded
 		PluginType m_plugin_type;
 	};
 

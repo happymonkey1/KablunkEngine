@@ -49,8 +49,8 @@ namespace Kablunk
 					ImageSpecification spec;
 					spec.format = attachment_specification.format;
 					spec.usage = ImageUsage::Attachment;
-					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
-					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
+					spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.scale));
+					spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.scale));
 					spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_depth_attachment_image = Image2D::Create(spec);
 				}
@@ -59,8 +59,8 @@ namespace Kablunk
 					ImageSpecification spec;
 					spec.format = attachment_specification.format;
 					spec.usage = ImageUsage::Attachment;
-					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
-					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
+					spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.scale));
+					spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.scale));
 					spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_attachment_images.emplace_back(Image2D::Create(spec));
 				}

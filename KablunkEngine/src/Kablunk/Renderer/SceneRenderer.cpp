@@ -450,7 +450,7 @@ namespace Kablunk
 				draw_command_data.Submesh_index, 
 				draw_command_data.Material_table, 
 				m_transform_buffer, 
-				transform_offset_ind++, 
+				static_cast<uint32_t>(transform_offset_ind++), 
 				1ul
 			);
 		}

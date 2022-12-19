@@ -17,7 +17,7 @@ namespace Kablunk::audio
 	struct audio_engine_config
 	{
 		// master audio for the whole audio engine
-		float master_volume = 0.8;
+		float master_volume = 0.8f;
 
 		// flag for whether we let miniaudio asynchronously load sound files
 		bool async_ma_audio = false;
