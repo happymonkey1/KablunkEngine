@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 #include <string>
+#include <utility>
+#include <type_traits>
 
 #ifdef KB_API
 #	include <Kablunk/Core/Core.h>
@@ -97,6 +99,9 @@ namespace details
 
 		hash_map_pair() = default;
 		~hash_map_pair() = default;
+		hash_map_pair(const key_t& key, const value_t& value)
+			: key{ key }, value{ value }, flags{}
+		{ }
 		hash_map_pair(const hash_map_pair& other)
 			: key{ other.key }, value{ other.value }, flags{ other.flags }
 		{ }
@@ -104,8 +109,54 @@ namespace details
 			: key{ std::move(other.key) }, value{ std::move(other.value) }, flags{ other.flags }
 		{ }
 
+		// copy assign operator
+		hash_map_pair& operator=(const hash_map_pair& other)
+		{
+			// call copy constructor and move rvalue
+			*this = std::move(hash_map_pair{ other });
+			return *this;
+		}
+
+		// move assign operator
+		hash_map_pair& operator=(hash_map_pair&& other) noexcept
+		{
+			std::swap(key, other.key);
+			std::swap(value, other.value);
+			std::swap(flags, other.flags);
+
+			return *this;
+		}
+
 		// check the lowest flag bit to see whether the slot is occupied
-		bool is_slot_occupied() const { return (flags & hash_map_pair_t::occupied_bit_flag); }
+		bool is_slot_occupied() const { return (flags & hash_map_pair::occupied_bit_flag); }
+
+		// overload for structured binding
+		// returns reference
+		template <std::size_t _index>
+		std::tuple_element_t<_index, hash_map_pair>& get()
+		{
+			if constexpr (_index == 0) { return key; }
+			if constexpr (_index == 1) { return value; }
+		}
+
+		// overload for structured binding
+		// returns const reference
+		template <std::size_t _index>
+		const std::tuple_element_t<_index, hash_map_pair>& get() const
+		{
+			if constexpr (_index == 0) { return key; }
+			if constexpr (_index == 1) { return value; }
+		}
+
+		// overload for structured binding
+		// returns rvalue overload
+		template <std::size_t _index>
+		std::tuple_element_t<_index, hash_map_pair>&& get() const
+		{
+			if constexpr (_index == 0) { return std::move(key); }
+			if constexpr (_index == 1) { return std::move(value); }
+		}
+
 	};
 } // end namespace ::details
 
@@ -129,7 +180,10 @@ public:
 		// constructor that takes a hash map pair
 		iterator(hash_map_pair_t* pair_ptr, hash_map_pair_t* end_of_map_ptr)
 			: m_ptr{ pair_ptr }, m_end{ end_of_map_ptr }
-		{ }
+		{ 
+			// make sure we point to a valid pair
+			find_next_valid_pair();
+		}
 		// copy constructor
 		iterator(const iterator&) = default;
 		// move constructor
@@ -168,17 +222,36 @@ public:
 		// prefix increment operator
 		iterator& operator++()
 		{
-			while (m_ptr < m_end && !m_ptr->is_slot_occupied())
-				++m_ptr;
+			if (!m_ptr)
+				return *this;
+
+			find_next_valid_pair();
 
 			return *this;
 		}
 	private:
+		// increment the pointer so it points to a valid pair
+		// sets to nullptr if it exceeds the end of the map or the original pointer is invalid
+		void find_next_valid_pair()
+		{
+			// #TODO this should probably be an assertion
+			if (!m_ptr)
+				return;
+
+			// increment pointer until it finds a valid slot, or is out of bounds
+			while (++m_ptr < m_end && !m_ptr->is_slot_occupied())
+				continue;
+
+			// out of bounds check
+			if (m_ptr >= m_end)
+				m_ptr = nullptr;
+		}
+	private:
 		// pointer to a slot in the hash map
-		const hash_map_pair_t* m_ptr = nullptr;
+		hash_map_pair_t* m_ptr = nullptr;
 		// pointer to the end of the hash map
 		// is there a way we can implement this iterator without an extra 8 bytes?
-		const hash_map_pair_t* m_end = nullptr;
+		hash_map_pair_t* m_end = nullptr;
 	};
 
 
@@ -192,7 +265,10 @@ public:
 		// constructor that takes a hash map pair
 		citerator(const hash_map_pair_t* pair_ptr, const hash_map_pair_t* end_of_map_ptr)
 			: m_ptr{ pair_ptr }, m_end{ end_of_map_ptr }
-		{ }
+		{ 
+			if (m_ptr)
+				find_next_valid_pair();
+		}
 		// copy constructor
 		citerator(const citerator&) = default;
 		// move constructor
@@ -231,10 +307,29 @@ public:
 		// prefix increment operator
 		citerator& operator++()
 		{
-			while (m_ptr < m_end && !m_ptr->is_slot_occupied())
-				++m_ptr;
+			if (!m_ptr)
+				return *this;
+
+			find_next_valid_pair();
 
 			return *this;
+		}
+	private:
+		// increment the pointer so it points to a valid pair
+		// sets to nullptr if it exceeds the end of the map or the original pointer is invalid
+		void find_next_valid_pair()
+		{
+			// #TODO this should probably be an assertion
+			if (!m_ptr)
+				return;
+
+			// increment pointer until it finds a valid slot, or is out of bounds
+			while (++m_ptr < m_end && !m_ptr->is_slot_occupied())
+				continue;
+
+			// out of bounds check
+			if (m_ptr >= m_end)
+				m_ptr = nullptr;
 		}
 	private:
 		// pointer to a slot in the hash map
@@ -264,11 +359,13 @@ public:
 	// ========
 
 	// check whether the map is empty
-	inline bool empty() const { return m_element_count > 0; }
+	inline bool empty() const { return m_element_count == 0; }
 	// returns the number of key-value pairs in the map
 	inline size_t size() const { return m_element_count; };
 	// returns the maximum number of elements that can be in the map before re-allocation of underlying bucket(s)
 	inline size_t max_size() const { return m_max_elements; };
+	// return the default max element count of a map
+	inline constexpr size_t get_default_max_size() { return s_default_max_elements; }
 
 	// =========
 	// modifiers
@@ -282,6 +379,8 @@ public:
 	void clear_entries();
 	// insert element into the map
 	void insert(const hash_map_pair_t& pair);
+	// insert an element into the map via key and pair
+	void insert(const key_t& key, const value_t& value);
 	// insert an element or assign if it already exists
 	void insert_or_assign();
 	// construct element in-place
@@ -295,6 +394,7 @@ public:
 	// swap the contents
 	void swap(flat_unordered_hash_map& other);
 	// extract nodes from the container, removing the pair from the map and copying to a new address
+	// returns an owning pointer
 	hash_map_pair_t* extract(const key_t& key);
 	// splices nodes from another container
 	void merge(const flat_unordered_hash_map& other);
@@ -306,7 +406,7 @@ public:
 	// reserve *more* memory for the map, throws an error if the operation tries to make the map smaller
 	void reserve(size_t new_size);
 	// resize the map to a specified size
-	// can make the map smaller, but does not guarentee which keys will be kept
+	// can make the map smaller, but does not guarantee which keys will be kept
 	void resize(size_t new_size);
 
 	// ======
@@ -367,7 +467,7 @@ private:
 // default constructor
 template <typename K, typename V>
 flat_unordered_hash_map<K, V>::flat_unordered_hash_map()
-	: m_bucket{ new hash_map_pair_t[m_max_elements] }
+	: m_bucket{ new hash_map_pair_t[m_max_elements]{} }
 {
 
 }
@@ -446,8 +546,9 @@ void flat_unordered_hash_map<K, V>::clear()
 		delete[] m_bucket;
 
 	// resize array to default size
-	m_bucket = new hash_map_pair_t[s_default_max_elements];
+	m_bucket = new hash_map_pair_t[s_default_max_elements]{};
 	m_element_count = 0;
+	m_max_elements = s_default_max_elements;
 }
 
 // clear all the entries from the map
@@ -456,7 +557,8 @@ void flat_unordered_hash_map<K, V>::clear_entries()
 {
 	// null out memory and clear entry count
 	if (m_bucket)
-		std::memset(m_bucket, 0, sizeof(hash_map_pair_t) * m_max_elements);
+		for (size_t i = 0; i < m_max_elements; ++i)
+			m_bucket[i] = hash_map_pair_t{};
 
 	m_element_count = 0;
 }
@@ -467,25 +569,44 @@ void flat_unordered_hash_map<K, V>::insert(const hash_map_pair_t& pair)
 {
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
+	// rebuild the map if we are getting too full
+	if (m_element_count + 1 >= static_cast<uint64_t>(static_cast<float>(m_max_elements) * m_load_factor))
+	{
+#ifdef KB_DEBUG
+		KB_CORE_INFO(
+			"[flat_unordered_hash_map]: triggering rebuild, {} >= {}",
+			m_element_count + 1,
+			static_cast<uint64_t>(static_cast<float>(m_max_elements) * m_load_factor)
+		);
+#endif
+		rebuild();
+	}
+
 	hash_map_pair_t& found_pair = m_bucket[find_index_of(pair.key)];
 	if (is_slot_occupied(found_pair))
 	{
 #ifdef KB_DEBUG
-		KB_CORE_WARN("[flat_unordered_hash_map]: tried inserting '{}' but key was already present!", key);
+		KB_CORE_ASSERT(false, "tried inserting but key was already present")
+#else
+		KB_CORE_WARN("[flat_unordered_hash_map]: tried inserting but key was already present!");
 #endif
 		return;
 	}
 	
-	// rebuild the map if we are getting too full
-	if (m_element_count + 1 >= static_cast<uint64_t>(static_cast<float>(m_max_elements) * m_load_factor))
-		rebuild();
-
 	// #TODO should these values be moved? 
 	found_pair.key = pair.key;
 	found_pair.value = pair.value;
-	found_pair.flags |= details::hash_map_pair::occupied_bit_flag;
+	found_pair.flags |= hash_map_pair_t::occupied_bit_flag;
 
 	m_element_count++;
+}
+
+// insert an element into the map via key and pair
+// constructs a hash map pair and calls the other insertion method
+template <typename K, typename V>
+void flat_unordered_hash_map<K, V>::insert(const K& key, const V& value)
+{
+	insert(hash_map_pair_t{ key, value });
 }
 
 template <typename K, typename V>
@@ -498,7 +619,10 @@ V& flat_unordered_hash_map<K, V>::find(const K& key)
 	if (is_slot_occupied(pair))
 		return pair.value;
 	else
-		KB_CORE_ASSERT(false, "iterator not implemented");
+	{
+		KB_CORE_ASSERT(false, "not implemented");
+		return pair.value; 
+	}
 }
 
 // find the index of the bucket where a key lives if present using open addressing. 
@@ -509,7 +633,7 @@ inline size_t flat_unordered_hash_map<K, V>::find_index_of(const K& key) const
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
 	const hash_t hash_value = hash::generate_u64_fnv1a_hash(key);
-	const size_t index = hash_value % m_max_elements;
+	size_t index = hash_value % m_max_elements;
 	// this can be subject to infinite loop if load balance == 1, though we should never get to that point...
 	while (is_slot_occupied(m_bucket[index]) && m_bucket[index].key != key)
 		index = (index + 1) % m_max_elements;
@@ -536,10 +660,10 @@ inline void flat_unordered_hash_map<K, V>::rebuild()
 
 	// double size of new bucket
 	m_max_elements *= 2;
-	m_bucket = new hash_map_pair_t[m_max_elements];
+	m_bucket = new hash_map_pair_t[m_max_elements]{};
 
 	// copy old elements to new map
-	for (size_t i = 0; i < m_max_elements; ++i)
+	for (size_t i = 0; i < old_element_count; ++i)
 		if (is_slot_occupied(old_bucket[i]))
 			m_bucket[find_index_of(old_bucket[i].key)] = std::move(old_bucket[i]);
 		
@@ -595,6 +719,10 @@ void flat_unordered_hash_map<K, V>::erase(const key_t& key)
 {
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 	// should lazy deletion be implemented? this could be done by just setting the "occupied" bit of the pair
+
+#ifdef KB_DEBUG
+	KB_CORE_ASSERT(is_slot_occupied(m_bucket[find_index_of(key)]), "key does not exist in map!");
+#endif
 
 	// set memory at the index to zero, does not care whether the key actually exists in the map or not
 	const size_t index = find_index_of(key);
@@ -661,12 +789,12 @@ void flat_unordered_hash_map<K, V>::reserve(size_t new_size)
 {
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
-	KB_CORE_ASSERT(m_max_elements > new_size, "cannot resize map to be smaller!")
+	KB_CORE_ASSERT(m_max_elements < new_size, "cannot resize map to be smaller!")
 
 	// move old bucket to newly allocated space
 	hash_map_pair_t* old_bucket = m_bucket;
-	m_bucket = new hash_map_pair_t[new_size];
-	std::memmove(m_bucket, old_bucket, m_max_elements);
+	m_bucket = new hash_map_pair_t[new_size]{};
+	std::memmove(m_bucket, old_bucket, sizeof(hash_map_pair_t) * m_max_elements);
 	m_max_elements = new_size;
 
 	if (old_bucket)
@@ -683,7 +811,7 @@ void flat_unordered_hash_map<K, V>::resize(size_t new_size)
 
 	hash_map_pair_t* old_bucket = m_bucket;
 
-	m_bucket = new hash_map_pair_t[new_size];
+	m_bucket = new hash_map_pair_t[new_size]{};
 
 	// insert old elements into new map
 	const size_t min_new_size = std::min(m_max_elements, new_size);
@@ -748,5 +876,30 @@ bool flat_unordered_hash_map<K, V>::contains(const K& key) const
 // ==========================
 
 } // end namespace Kablunk::util::container
+
+// overload for structured binding
+namespace std
+{ // start namespace std
+
+// let the tuple now how many elements it contains
+template<typename K, typename V>
+struct tuple_size<Kablunk::util::container::details::hash_map_pair<K, V>>
+	: integral_constant<size_t, 2> {};
+
+// tuple element 0 specialization
+template<typename K, typename V>
+struct tuple_element<0, Kablunk::util::container::details::hash_map_pair<K, V>>
+{
+	using type = K;
+};
+
+// tuple element 1 specialization
+template<typename K, typename V>
+struct tuple_element<1, Kablunk::util::container::details::hash_map_pair<K, V>>
+{
+	using type = V;
+};
+
+} // end namespace std
 
 #endif

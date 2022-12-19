@@ -6,6 +6,7 @@
 #ifdef KB_UNIT_TEST
 #	include "Kablunk/ML/Test/test_Tensor.h"
 #	include "Kablunk/ML/Test/test_SimpleNN.h"
+#	include "Kablunk/Utilities/Containers/Test/test_FlatHashMap.h"
 #endif
 
 #ifdef KB_PLATFORM_WINDOWS
@@ -28,8 +29,12 @@ int main(int argc, char** argv)
 	Kablunk::InitCore();
 
 #ifdef KB_UNIT_TEST
+	// test tensor
 	Kablunk::ml::tensor::test_tensor_main();
+	// test simple nn 
 	Kablunk::ml::test::test_simple_nn_main();
+	// test flat hash map
+	Kablunk::util::container::test::test_flat_hash_map_main();
 #endif
 
 	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");

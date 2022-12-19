@@ -22,6 +22,7 @@
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Singleton.h"
+#include "Kablunk/Core/ScopedTimer.h"
 
 #include "Kablunk/Events/Event.h"
 

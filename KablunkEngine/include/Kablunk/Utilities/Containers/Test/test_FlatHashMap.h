@@ -13,6 +13,8 @@ void test_flat_hash_map_constructors();
 void test_flat_hash_map_insert_and_erase();
 // test iterators
 void test_flat_hash_map_iterators();
+// test performance compared to std::unordered_map
+void test_flat_hash_map_performance();
 
 }  // end namespace Kablunk::util::container::test
 
