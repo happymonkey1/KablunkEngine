@@ -17,6 +17,7 @@ void test_flat_hash_map_main()
 	test_flat_hash_map_constructors();
 	test_flat_hash_map_insert_and_erase();
 	test_flat_hash_map_iterators();
+	test_flat_hash_map_find();
 	test_flat_hash_map_performance();
 }
 
@@ -203,6 +204,54 @@ void test_flat_hash_map_iterators()
 	}
 }
 
+void test_flat_hash_map_find()
+{
+	// test iterator with four values
+	{
+		KB_CORE_TRACE("[Test] [flat_unordered_hash_map]: find()");
+		flat_unordered_hash_map<std::string, uint64_t> test_map;
+
+		auto key_to_find = std::string{ "hello" };
+		test_map.insert({ key_to_find, 1 });
+		test_map.insert({ "world", 2 });
+		test_map.insert({ "foo", 3 });
+		test_map.insert({ "bar", 4 });
+
+		auto it_a = test_map.find(key_to_find);
+		auto it_b = test_map.find("baz");
+		KB_CORE_ASSERT(test_map.size() == 4, "map size does not contain 4 values, insertion must have failed!");
+		KB_CORE_ASSERT(it_a != test_map.end(), "find() could not find '{}' in the map!", key_to_find);
+		KB_CORE_ASSERT(it_a->key == key_to_find, "find() found '{}', but was supposed to return '{}'", it_a->key, key_to_find);
+		KB_CORE_ASSERT(it_b == test_map.end(), "find() found '{}', but was not supposed to return anything!", it_b->key);
+		KB_CORE_TRACE("[Test] [flat_unordered_hash_map]:   passed");
+	}
+
+	// test const iterator with four values
+
+	// test iterator with 8192 values
+	{
+		KB_CORE_TRACE("[Test] [flat_unordered_hash_map]: forward iterator on 8192 values map");
+
+		flat_unordered_hash_map<size_t, size_t> test_map_b;
+		constexpr const size_t insert_count = 8192ull;
+		for (size_t i = 0; i < insert_count; ++i)
+			test_map_b.emplace({ i, i });
+
+		size_t count = 0;
+		size_t sum = 0;
+		for (auto& [key, value] : test_map_b)
+		{
+			++count;
+			sum += value;
+		}
+
+		KB_CORE_ASSERT(test_map_b.size() == insert_count, "insertion did not work correctly!");
+		KB_CORE_ASSERT(count == insert_count, "iterator did not get every value!");
+		KB_CORE_ASSERT(sum == 33550336, "sum of 0 ... 8191 does not match!");
+		KB_CORE_TRACE("[Test] [flat_unordered_hash_map]:   passed");
+	}
+}
+
 // test performance compared to std::unordered_map
 void test_flat_hash_map_performance()
 {
@@ -291,6 +340,40 @@ void test_flat_hash_map_performance()
 		};
 		std::unordered_map<std::string, uint64_t> test_map;
 		constexpr const size_t insert_count = 1024ull * 128ull;
+		for (size_t i = 0ull; i < insert_count; ++i)
+			test_map.emplace(std::make_pair(std::to_string(i), i));
+	}
+
+	// test inserting 1048576 values into flat_unordered_hash_map
+	{
+		scoped_timer<> timer{
+			[](std::chrono::nanoseconds nanos) -> void
+			{
+				KB_CORE_TRACE(
+					"[Test] [flat_unordered_hash_map]: insert 1048576 values took {} ns",
+					nanos.count()
+				);
+			}
+		};
+		flat_unordered_hash_map<std::string, uint64_t> test_map;
+		constexpr const size_t insert_count = 1024ull * 1024ull;
+		for (size_t i = 0ull; i < insert_count; ++i)
+			test_map.emplace({ std::to_string(i), i });
+	}
+
+	// test inserting 1048576 values into std::unordered_map
+	{
+		scoped_timer<> timer{
+			[](std::chrono::nanoseconds nanos) -> void
+			{
+				KB_CORE_TRACE(
+					"[Test] [std::unordered_map]: insert 1048576 values took {} ns",
+					nanos.count()
+				);
+			}
+		};
+		std::unordered_map<std::string, uint64_t> test_map;
+		constexpr const size_t insert_count = 1024ull * 1024ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 			test_map.emplace(std::make_pair(std::to_string(i), i));
 	}

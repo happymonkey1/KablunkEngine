@@ -7,13 +7,7 @@
 #include <utility>
 #include <type_traits>
 
-#ifdef KB_API
-#	include <Kablunk/Core/Core.h>
-#else
-#	error "flat_unordered_hash_map is only supported with the KablunkEngine right now"
-#endif
-
-#define USE_ROBIN_HOOD_PROBING
+#include <Kablunk/Core/Core.h>
 
 /*
  * documentation for sse2 instructions http://const.me/articles/simd/simd.pdf 
@@ -135,6 +129,9 @@ namespace details
 		hash_map_pair(const key_t& key, const value_t& value)
 			: key{ key }, value{ value }
 		{ }
+		hash_map_pair(key_t&& key, value_t&& value)
+			: key{ std::move(key) }, value{ std::move(value) }
+		{ }
 		hash_map_pair(const hash_map_pair& other)
 			: key{ other.key }, value{ other.value }
 		{ }
@@ -208,7 +205,7 @@ public:
 	using hash_t = uint64_t;
 	using metadata_t = details::swiss_table_metadata;
 	using mask_t = uint16_t;
-	using h2_t = uint8_t; 
+	using h2_t = uint8_t;
 public:
 
 	// iterator class for flat_unordered_hash_map
@@ -395,7 +392,6 @@ public:
 		// pointer to the underlying map, used when finding occupied slots and the end iterator
 		const hash_map_pair_t* m_map_ptr = nullptr;
 	};
-
 public:
 	// default constructor
 	flat_unordered_hash_map();
@@ -483,9 +479,27 @@ public:
 	// return the number of elements matching a certain key
 	size_t count(const key_t& key) const;
 	// finds the element with a certain key
-	value_t& find(const key_t& key);
+	iterator find(const key_t& key)
+	{
+		KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
+
+		const size_t index = find_index_of(key);
+		if (is_slot_occupied(m_metadata_bucket[index]))
+			return iterator{ m_bucket + index, this };
+
+		return end();
+	}
 	// finds the element with a certain key
-	const value_t& find(const key_t& key) const;
+	citerator find(const key_t& key) const
+	{
+		KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
+
+		const size_t index = find_index_of(key);
+		if (is_slot_occupied(m_metadata_bucket[index]))
+			return citerator{ m_bucket + index, this };
+
+		return cend();
+	}
 	// check if a key is contained within the map
 	bool contains(const key_t& key) const;
 
@@ -545,6 +559,8 @@ private:
 private:
 	// default size of map
 	static constexpr const size_t s_default_max_elements = 1024ull;
+	// count of metadata that simd instructions can simultaneously check
+	static constexpr const size_t s_metadata_count_to_check = 16ull;
 	// count of elements in the map
 	size_t m_element_count = 0ull;
 	// maximum size of the bucket before re-allocation
@@ -555,6 +571,8 @@ private:
 	hash_map_pair_t* m_bucket = nullptr;
 	// contiguous array of hash map metadata
 	metadata_t* m_metadata_bucket = nullptr;
+	// 16 byte array to store contiguous metadata when lookup index >= m_max_elements - 15
+	metadata_t* m_temporary_metadata_bucket = nullptr;
 	// friend declarations
 	friend class iterator;
 	friend class citerator;
@@ -569,7 +587,8 @@ private:
 // metadata_t has a default constructor which initializes the metadata to an "empty" state
 template <typename K, typename V>
 flat_unordered_hash_map<K, V>::flat_unordered_hash_map()
-	: m_bucket{ new hash_map_pair_t[m_max_elements]{} }, m_metadata_bucket{ new metadata_t[m_max_elements]{} }
+	: m_bucket{ new hash_map_pair_t[m_max_elements]{} }, m_metadata_bucket{ new metadata_t[m_max_elements]{} }, 
+	m_temporary_metadata_bucket{ new metadata_t[s_metadata_count_to_check] }
 {
 
 }
@@ -577,6 +596,8 @@ flat_unordered_hash_map<K, V>::flat_unordered_hash_map()
 // copy constructor for hash map with the same key and value type
 template <typename K, typename V>
 flat_unordered_hash_map<K, V>::flat_unordered_hash_map(const flat_unordered_hash_map& other)
+	: m_bucket{ new hash_map_pair_t[m_max_elements]{} }, m_metadata_bucket{ new metadata_t[m_max_elements]{} },
+	m_temporary_metadata_bucket{ new metadata_t[s_metadata_count_to_check] }
 {
 	// reserve more space if needed
 	if (other.max_size() > max_size())
@@ -622,6 +643,9 @@ flat_unordered_hash_map<K, V>::~flat_unordered_hash_map()
 	else
 		KB_CORE_ASSERT(false, "tried deleting invalid metadata pointer?");
 #endif
+
+	if (m_temporary_metadata_bucket)
+		delete[] m_temporary_metadata_bucket;
 }
 
 // copy assign operator
@@ -776,7 +800,7 @@ void flat_unordered_hash_map<K, V>::insert(hash_map_pair_t&& pair)
 	// pointer to where the pair will be move constructed
 	hash_map_pair_t* pair_ptr = m_bucket + index;
 	// move construct in bucket memory
-	//new (pair_ptr) hash_map_pair_t{ pair };
+	// new (pair_ptr) hash_map_pair_t{ pair };
 	*pair_ptr = std::move(pair);
 	// set metadata
 	m_metadata_bucket[index] = metadata_t{ static_cast<uint8_t>(metadata_t::occupied_bit_flag | h2_hash) };
@@ -800,23 +824,6 @@ void flat_unordered_hash_map<K, V>::insert(hash_map_pair_t&& pair)
 	new (found_pair_ptr) hash_map_pair_t{ std::move(pair) }; // move construct in memory
 	++m_element_count;
 #endif
-}
-
-template <typename K, typename V>
-V& flat_unordered_hash_map<K, V>::find(const K& key)
-{
-	KB_CORE_ASSERT(false, "invalid implementation!");
-	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
-
-	// #TODO this function should return an iterator so when the key is not present we can *safely* fail
-	hash_map_pair_t& pair = m_bucket[find_index_of(key)];
-	if (is_slot_occupied(pair))
-		return pair.value;
-	else
-	{
-		KB_CORE_ASSERT(false, "not implemented");
-		return pair.value; 
-	}
 }
 
 // helper function to compute an index from a key, when callee does not need to know h1 or h2 hash
@@ -845,8 +852,6 @@ inline size_t flat_unordered_hash_map<K, V>::find_index_of(const hash_t h1_hash,
 {
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
-	static constexpr const size_t metadata_count_to_check = 16ull;
-
 	// normal hash map indexing using the h1 hash
 	size_t index = h1_hash % m_max_elements;
 
@@ -854,33 +859,26 @@ inline size_t flat_unordered_hash_map<K, V>::find_index_of(const hash_t h1_hash,
 	while (true)
 	{
 		const metadata_t* metadata_ptr;
-		bool created_extra_alignment_array = false;
 		
 		// the normal case is when the index <= max_elements - 16
 		// this means we can just pass a pointer to the metadata bucket
-		if (index <= m_max_elements - metadata_count_to_check) // #TODO see if msvc has likely branch attribute
+		if (index <= m_max_elements - s_metadata_count_to_check) // #TODO see if msvc has likely branch attribute
 		{
 			metadata_ptr = m_metadata_bucket + index;
 		}
 		else
 		{
-			// #TODO should we introduce 16 bytes of overhead so this array isn't reallocated every index call (potentially multiple times if probing continues)?
-			
-			// since sse2 needs the memory to be 16 bytes, we need to allocate a temporary, contiguous array
-			// this gets free before returning or continued probing
-			metadata_t* temporary_metadata_bucket = new metadata_t[metadata_count_to_check];
-
-			// copy metadata into temporary bucket
-			for (size_t i = 0; i < metadata_count_to_check; ++i)
+			// since sse2 needs the memory to be 16 bytes, we use a cached, contiguous array
+			// copy metadata into bucket cache
+			for (size_t i = 0; i < s_metadata_count_to_check; ++i)
 			{
 				const size_t metadata_index = (index + i) % m_max_elements;
 				// copy data to temporary bucket
 				// since it's only 16 bytes, copies *should* be fine
-				temporary_metadata_bucket[i] = m_metadata_bucket[metadata_index];
+				m_temporary_metadata_bucket[i] = m_metadata_bucket[metadata_index];
 			}
 
-			metadata_ptr = temporary_metadata_bucket;
-			created_extra_alignment_array = true;
+			metadata_ptr = m_temporary_metadata_bucket;
 		}
 
 		// use sse2 instructions to search for 16 potential candidates at once
@@ -888,17 +886,11 @@ inline size_t flat_unordered_hash_map<K, V>::find_index_of(const hash_t h1_hash,
 
 		// equality check on all candidates
 		// #TODO this could probably be optimized
-		for (size_t i = 0ull; i < metadata_count_to_check; ++i)
+		for (size_t i = 0ull; i < s_metadata_count_to_check; ++i)
 		{
 			if (is_slot_empty(metadata_ptr[i]))
-			{
-				// delete any temporarily allocated memory
-				if (created_extra_alignment_array)
-					delete[] metadata_ptr;
-
 				return (index + i) % m_max_elements;
-			}
-
+			
 			const bool candidate = candidates & (0b1 << i);
 			if (!candidate)
 				continue;
@@ -909,18 +901,11 @@ inline size_t flat_unordered_hash_map<K, V>::find_index_of(const hash_t h1_hash,
 			// check whether the key matches and the slot is occupied
 			const bool is_occupied_and_key_matches = is_slot_occupied(metadata_ptr[i]) && m_bucket[bucket_index].key == key;
 			if (is_occupied_and_key_matches)
-			{
-				// delete any temporarily allocated memory
-				if (created_extra_alignment_array)
-					delete[] metadata_ptr;
 				return (index + i) % m_max_elements;
-			}
 		}
 
 		// otherwise continue probing
-		index = (index + metadata_count_to_check) % m_max_elements;
-		if (created_extra_alignment_array)
-			delete[] metadata_ptr;
+		index = (index + s_metadata_count_to_check) % m_max_elements;
 	}
 #if 0
 	const hash_t hash_value = hash::generate_u64_fnv1a_hash(key);
@@ -964,8 +949,8 @@ inline void flat_unordered_hash_map<K, V>::rebuild()
 
 		hash_map_pair_t* slot_ptr = m_bucket + index;
 		// move construct in bucket memory
-		 new (slot_ptr) hash_map_pair_t{ std::move(old_bucket[i]) };
-		//m_bucket[index] = std::move(old_bucket[i]);
+		//new (slot_ptr) hash_map_pair_t{ std::move(old_bucket[i]) };
+		m_bucket[index] = std::move(old_bucket[i]);
 		m_metadata_bucket[index] = metadata_t{ static_cast<uint8_t>(metadata_t::occupied_bit_flag | h2_hash) };
 	}
 		
@@ -1001,7 +986,8 @@ void flat_unordered_hash_map<K, V>::emplace(hash_map_pair_t&& pair)
 	// pointer to where the pair will be move constructed
 	hash_map_pair_t* pair_ptr = m_bucket + index;
 	// move construct in bucket memory
-	new (pair_ptr) hash_map_pair_t{ std::move(pair) };
+	//new (pair_ptr) hash_map_pair_t{ std::move(pair) };
+	*pair_ptr = std::move(pair);
 	// set metadata
 	m_metadata_bucket[index] = metadata_t{ static_cast<uint8_t>(metadata_t::occupied_bit_flag | h2_hash) };
 	++m_element_count;
@@ -1033,7 +1019,9 @@ void flat_unordered_hash_map<K, V>::emplace(K&& key, V&& value)
 	// pointer to where the pair will be move constructed
 	hash_map_pair_t* pair_ptr = m_bucket + index;
 	// move construct in bucket memory
-	new (pair_ptr) hash_map_pair_t{ std::move(key), std::move(value) };
+	//new (pair_ptr) hash_map_pair_t{ std::move(key), std::move(value) };
+	pair_ptr->key = std::move(key);
+	pair_ptr->value = std::move(value);
 	// set metadata
 	m_metadata_bucket[index] = metadata_t{ static_cast<uint8_t>(metadata_t::occupied_bit_flag | h2_hash) };
 	++m_element_count;
@@ -1074,24 +1062,27 @@ void flat_unordered_hash_map<K, V>::try_emplace(hash_map_pair_t&& pair)
 }
 
 // erase an entry from the map via key
+// uses tombstone deletion, where the metadata flag for "delete" is set
 template <typename K, typename V>
 void flat_unordered_hash_map<K, V>::erase(const key_t& key)
 {
-	KB_CORE_ASSERT(false, "invalid implementation!");
-	// should lazy deletion be implemented? this could be done by just setting the "occupied" bit of the pair
-	
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
+	// make sure we don't try to delete from an empty map
 	if (m_element_count == 0)
 		return;
 
-#ifdef KB_DEBUG
-	KB_CORE_ASSERT(is_slot_occupied(m_bucket[find_index_of(key)]), "key does not exist in map!");
-#endif
-
-	// set memory at the index to zero, does not care whether the key actually exists in the map or not
 	const size_t index = find_index_of(key);
-	m_bucket[index] = hash_map_pair_t{};
+	if (!is_slot_occupied(m_metadata_bucket[index]))
+	{
+#ifdef KB_DEBUG
+		KB_CORE_ASSERT(false, "key does not exist in map!");
+#endif
+		return;
+	}
+
+	// tombstone deletion
+	m_metadata_bucket[index] |= metadata_t::deleted_bit_flag;
 	--m_element_count;
 	// std::memset(m_bucket + index, 0, sizeof(hash_map_pair_t));
 }
@@ -1109,6 +1100,8 @@ void flat_unordered_hash_map<K, V>::swap(flat_unordered_hash_map& other)
 	std::swap(m_load_factor, other.m_load_factor);
 	// swap metadata
 	std::swap(m_metadata_bucket, other.m_metadata_bucket);
+	// swap contiguous metadata cache
+	std::swap(m_temporary_metadata_bucket, other.m_temporary_metadata_bucket);
 }
 
 // extract a pair from the map
@@ -1267,7 +1260,7 @@ bool flat_unordered_hash_map<K, V>::contains(const K& key) const
 
 } // end namespace Kablunk::util::container
 
-// overload for structured binding
+// overloads for structured binding
 namespace std
 { // start namespace std
 

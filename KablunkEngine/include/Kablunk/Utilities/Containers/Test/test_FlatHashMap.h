@@ -13,6 +13,8 @@ void test_flat_hash_map_constructors();
 void test_flat_hash_map_insert_and_erase();
 // test iterators
 void test_flat_hash_map_iterators();
+// test find
+void test_flat_hash_map_find();
 // test performance compared to std::unordered_map
 void test_flat_hash_map_performance();
 
