@@ -77,7 +77,7 @@ namespace Kablunk::audio
 		// clamp volume between 0.0 and 2.0
 		// volume > 1.0 in miniaudio results in amplification
 		glm::clamp(new_volume, 0.0f, 2.0f);
-		m_engine_config.master_volume = new_volume; 
+		m_engine_config.master_volume = new_volume;
 		ma_engine_set_volume(&m_engine, new_volume);
 	}
 
