@@ -6,9 +6,13 @@
 
 #ifndef KB_SINGLETON_INTERNAL_IMPL
 #	ifndef KB_DISTRIBUTION
+#		pragma warning(push, 0)
 #		include <boost/interprocess/detail/intermodule_singleton.hpp>
+#		pragma warning(pop)
 #	else
+#		pragma warning(push, 0)
 #		include <boost/serialization/singleton.hpp>
+#		pragma warning(pop)
 #	endif
 #else
 #	include <typeinfo>

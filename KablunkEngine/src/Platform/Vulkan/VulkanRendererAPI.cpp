@@ -336,7 +336,7 @@ namespace Kablunk
 
 				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 				if (uniform_storage_buffer)
-					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniform_storage_buffer.size(), uniform_storage_buffer.get());
+					vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
 				// #TODO submeshes
 
@@ -352,7 +352,7 @@ namespace Kablunk
 					);
 				}
 
-				vkCmdDrawIndexed(vk_command_buffer, mesh_data->GetIndicies().size(), instance_count, 0, 0, 0);
+				vkCmdDrawIndexed(vk_command_buffer, static_cast<uint32_t>(mesh_data->GetIndicies().size()), instance_count, 0, 0, 0);
 
 				//push_constant_buffer.Release();
 			}
@@ -421,7 +421,7 @@ namespace Kablunk
 						pipeline_layout,
 						VK_SHADER_STAGE_FRAGMENT_BIT,
 						0,
-						uniform_storage_buffer.size(),
+						static_cast<uint32_t>(uniform_storage_buffer.size()),
 						uniform_storage_buffer.get()
 					);
 				}
@@ -513,7 +513,14 @@ namespace Kablunk
 				Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 
 				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
-				vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniform_storage_buffer.size(), uniform_storage_buffer.get());
+				vkCmdPushConstants(
+					vk_cmd_buffer, 
+					vk_pipeline_layout, 
+					VK_SHADER_STAGE_FRAGMENT_BIT, 
+					sizeof(glm::mat4), 
+					static_cast<uint32_t>(uniform_storage_buffer.size()), 
+					uniform_storage_buffer.get()
+				);
 				vkCmdDrawIndexed(vk_cmd_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
 			});
 	}

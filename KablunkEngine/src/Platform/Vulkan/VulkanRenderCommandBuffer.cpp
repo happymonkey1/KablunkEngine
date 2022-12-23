@@ -222,7 +222,7 @@ namespace Kablunk
 			{
 				uint32_t frame_index = render::get_current_frame_index();
 				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
-				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], query_index);
+				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index));
 			});
 
 		return query_index;

@@ -179,8 +179,8 @@ namespace Kablunk
 		
 		// #TODO expose other image specifications
 		ImageSpecification image_spec{};
-		image_spec.width = final_atlas_width;
-		image_spec.height = final_atlas_width;
+		image_spec.width  = static_cast<uint32_t>(final_atlas_width);
+		image_spec.height = static_cast<uint32_t>(final_atlas_width);
 
 		KB_CORE_ASSERT(textures[0]->GetImage()->GetSpecification().layers == 4, "assertion that RGBA has 4 layers")
 		Buffer atlas_image_data_buffer = Buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };

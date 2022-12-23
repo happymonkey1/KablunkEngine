@@ -110,16 +110,15 @@ namespace Kablunk::ui
 			return;
 
 		ref<Texture2D> white_texture = render2d::get_white_texture();
-		// #TODO camera_projection should probably not be here. if it is not, then the panel will not render in the editor
-		glm::vec3 pos_relative_to_cam = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
+		glm::vec3 pos_relative = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
 		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
 
 		if (m_panel_style.render_background)
-			render2d::draw_quad_ui(pos_relative_to_cam, m_size, white_texture, 1.0f, m_panel_style.background_color);
+			render2d::draw_quad_ui(pos_relative, m_size, white_texture, 1.0f, m_panel_style.background_color);
 
 		glm::vec4 highlight_color = !m_is_hovered ? glm::vec4{ 1.0f } : m_panel_style.highlight_color;
 		if (m_panel_style.image)
-			render2d::draw_quad_ui(pos_relative_to_cam, m_size, m_panel_style.image, 1.0f, highlight_color);
+			render2d::draw_quad_ui(pos_relative, m_size, m_panel_style.image, 1.0f, highlight_color);
 
 		for (IPanel* child : m_children)
 			child->on_render(scene_camera);

@@ -273,6 +273,7 @@ namespace Kablunk
 			// #TODO recreating editor camera projection every frame seems unnecessary 
 			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			m_active_scene->OnViewportResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
 
 			// present the viewport (image) using imgui

@@ -431,7 +431,7 @@ namespace Kablunk
 		render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
 		// submit transform data
-		m_transform_buffer->SetData(m_transform_vertex_data, sizeof(TransformVertexData) * m_draw_list.size(), 0);
+		m_transform_buffer->SetData(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
 		/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 			{
 				transform_buffer->RT_SetData(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));

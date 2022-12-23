@@ -286,7 +286,7 @@ namespace Kablunk
 		if (stbi_is_hdr(filepath.c_str()))
 		{
 			data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
-			size_t size = width * height * 4 * sizeof(float);
+			size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull * sizeof(float);
 			m_image_data.Allocate(size);
 
 			m_image_data.Write(data, size, 0);
@@ -295,7 +295,7 @@ namespace Kablunk
 		else
 		{
 			data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
-			size_t size  = width * height * 4;
+			size_t size  = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
 			m_image_data.Allocate(size);
 
 			m_image_data.Write(data, size, 0);

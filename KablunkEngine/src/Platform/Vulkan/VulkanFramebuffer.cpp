@@ -118,8 +118,8 @@ namespace Kablunk
 		if (!force_recreate && (m_width == width && m_height == height))
 			return;
 
-		m_width = std::ceil(static_cast<float>(width) * m_specification.scale);
-		m_height = std::ceil(static_cast<float>(height) * m_specification.scale);
+		m_width  = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * m_specification.scale));
+		m_height = static_cast<uint32_t>(std::ceil(static_cast<float>(height) * m_specification.scale));
 		if (!m_specification.swap_chain_target)
 			Invalidate();
 		else

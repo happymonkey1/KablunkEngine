@@ -608,7 +608,7 @@ namespace Kablunk
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 
-		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
+		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& component)
 			{
 				SceneCamera& camera = component.Camera;
 				UI::BeginProperties();
@@ -653,6 +653,7 @@ namespace Kablunk
 					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
 						camera.SetOrthographicFarClip(far_clip);
 				}
+				UI::Property("Fixed Aspect Ratio", &component.Fixed_aspect_ratio);
 
 				UI::EndProperties();
 			});

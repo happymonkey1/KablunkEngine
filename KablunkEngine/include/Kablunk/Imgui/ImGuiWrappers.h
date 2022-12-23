@@ -387,7 +387,7 @@ namespace Kablunk::UI
 						if (ImGui::Selectable(options[i].c_str(), selected))
 						{
 							current = options[i].c_str();
-							*selected_index = i;
+							*selected_index = static_cast<int32_t>(i);
 							updated = true;
 						}
 

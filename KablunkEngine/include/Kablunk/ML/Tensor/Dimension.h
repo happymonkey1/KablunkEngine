@@ -3,7 +3,9 @@
 #define KABLUNK_ML_TENSOR_DIMENSION_H
 
 // #TODO this is so we can use fmt::format, replace with correct include
+#pragma warning(push, 0)
 #include <spdlog/spdlog.h>
+#pragma warning(pop)
 
 namespace Kablunk::ml::tensor
 {
