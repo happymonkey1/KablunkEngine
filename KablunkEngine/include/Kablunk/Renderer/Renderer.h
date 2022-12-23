@@ -18,9 +18,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//#include FT_FREETYPE_H
-//#include <ft2build.h>
-
 namespace Kablunk
 {
 	// forward declaration

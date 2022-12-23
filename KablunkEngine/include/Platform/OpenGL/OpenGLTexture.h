@@ -35,6 +35,8 @@ namespace Kablunk
 		virtual void Bind(uint32_t slot) const override;
 		virtual bool operator==(const Texture2D& other) const override { return m_RendererID == other.GetRendererID(); }
 	private:
+		virtual void Invalidate() override { KB_CORE_ASSERT(false, "not implemented!"); }
+	private:
 		std::string m_Path;
 		uint32_t m_Width;
 		uint32_t m_Height;

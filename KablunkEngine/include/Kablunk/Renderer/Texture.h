@@ -46,7 +46,8 @@ namespace Kablunk
 
 		static IntrusiveRef<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr);
 		static IntrusiveRef<Texture2D> Create(const std::string& path);
-
+	private:
+		virtual void Invalidate() = 0;
 	};
 }
 

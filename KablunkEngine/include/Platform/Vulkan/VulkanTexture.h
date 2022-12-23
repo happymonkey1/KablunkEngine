@@ -41,7 +41,7 @@ namespace Kablunk
 		virtual void Bind(uint32_t slot) const override;
 		virtual bool operator==(const Texture2D& other) const override;
 	private:
-		void Invalidate();
+		virtual void Invalidate() override;
 		bool LoadImage(const std::string& filepath);
 	private:
 		std::string m_filepath;
