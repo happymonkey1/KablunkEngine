@@ -174,8 +174,6 @@ namespace Kablunk::render
 		m_texture_atlas = Texture2D::Create(ImageFormat::RGBA, tex_width, tex_height, pixel_data);
 
 		delete[] pixel_data;
-
-		return;
 	}
 
 }

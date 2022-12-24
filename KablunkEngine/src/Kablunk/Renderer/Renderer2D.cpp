@@ -667,6 +667,21 @@ namespace Kablunk
 		m_renderer_data->Stats.Quad_count += 1;
 	}
 
+	void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	void Renderer2D::draw_text_string(const std::string& text, const glm::mat4& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
+	{
+		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
 	void Renderer2D::reset_stats()
 	{
 		m_renderer_data->Stats.Draw_calls = 0;

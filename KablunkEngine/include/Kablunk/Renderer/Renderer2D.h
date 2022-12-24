@@ -89,16 +89,24 @@ namespace Kablunk
 			static const uint32_t max_texture_slots = 32;
 			glm::vec4 quad_vertex_positions[4] = {};
 
+			// quads
 			std::vector<IntrusiveRef<VertexBuffer>> quad_vertex_buffers;
 			IntrusiveRef <IndexBuffer> quad_index_buffer;
 
+			// circle
 			std::vector<IntrusiveRef<VertexBuffer>> circle_vertex_buffers;
 
+			// lines
 			std::vector<IntrusiveRef<VertexBuffer>> line_vertex_buffers;
 			IntrusiveRef<IndexBuffer> line_index_buffer;
 
+			// ui quads
 			std::vector<IntrusiveRef<VertexBuffer>> ui_quad_vertex_buffers;
 			IntrusiveRef<IndexBuffer> ui_quad_index_buffer;
+
+			// text
+			std::vector<IntrusiveRef<VertexBuffer>> ui_text_vertex_buffers;
+			IntrusiveRef<IndexBuffer> ui_text_index_buffer;
 
 			IntrusiveRef<Shader> quad_shader;
 			IntrusiveRef<Shader> circle_shader;
@@ -216,6 +224,10 @@ namespace Kablunk
 		void draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 		void draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 		void draw_quad_ui(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+
+		void draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_text_string(const std::string& text, const glm::mat4& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
 		void reset_stats();
 		render2d::renderer_2d_stats_t get_stats();

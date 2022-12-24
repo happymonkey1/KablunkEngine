@@ -32,8 +32,6 @@ namespace Kablunk::render
 		// get the font cache
 		// maps relative font paths to font assets
 		const std::unordered_map<std::string, ref<font_asset_t>> get_font_cache() const { return m_font_cache; }
-
-		SINGLETON_GET_FUNC(font_manager);
 	private:
 		// cache of fonts loaded into memory
 		// maps relative font paths to font assets
