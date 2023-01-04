@@ -88,6 +88,7 @@ namespace Kablunk
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
 
+		// clear the framebuffer pool
 		FramebufferPool::Get()->GetAll().clear();
 
 		// deletes any pushed layers, including imgui layer

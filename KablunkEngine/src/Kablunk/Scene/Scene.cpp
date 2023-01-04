@@ -798,7 +798,6 @@ namespace Kablunk
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
-		KB_CORE_INFO("[Scene]: OnViewportResize({}, {})", width, height);
 		m_viewport_width = width; 
 		m_viewport_height = height;
 

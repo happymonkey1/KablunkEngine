@@ -77,7 +77,7 @@ namespace Kablunk
 		if (!m_framebuffer)
 			return;
 
-		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
+		KB_CORE_INFO("Destroying VulkanFramebuffer '{0}'", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
 		VkRenderPass vk_render_pass = m_render_pass;
 		render::submit_resource_free([vk_framebuffer, vk_render_pass]()

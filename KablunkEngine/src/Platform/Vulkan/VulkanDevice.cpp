@@ -290,7 +290,7 @@ namespace Kablunk
 			return;
 
 		vkDestroyCommandPool(m_device, m_command_pool, nullptr);
-		
+
 		vkDeviceWaitIdle(m_device);
 		vkDestroyDevice(m_device, nullptr);
 

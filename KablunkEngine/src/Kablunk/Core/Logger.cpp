@@ -18,8 +18,8 @@ namespace Kablunk
 		log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
 		log_sinks[1]->set_pattern("[%T] [Thread%5t] [%l] %n: %v");
 
-		s_core_logger = std::make_shared<spdlog::logger>( "KABLUNK", begin(log_sinks), end(log_sinks) );
-		s_client_logger = std::make_shared<spdlog::logger>( "APP", begin(log_sinks), end(log_sinks) );
+		s_core_logger = std::make_shared<spdlog::logger>( "[Engine]", begin(log_sinks), end(log_sinks) );
+		s_client_logger = std::make_shared<spdlog::logger>( "[App]", begin(log_sinks), end(log_sinks) );
 		
 		spdlog::register_logger(std::shared_ptr<spdlog::logger>(s_core_logger));
 		s_core_logger->set_level(spdlog::level::trace);
