@@ -5,7 +5,7 @@
 
 namespace Kablunk::Utilties
 {
-	template <typename T, typename CompareFunc = void>
+	template <typename T, typename CompareFunc = void*>
 	class LinkedList
 	{
 	public:
@@ -58,6 +58,8 @@ namespace Kablunk::Utilties
 		LinkedList(const LinkedList&);
 		LinkedList(LinkedList&&) noexcept;
 		~LinkedList();
+
+		void clear();
 
 		T& Front() { return m_root->data; }
 		const T& Front() const { return m_root->data; }
@@ -133,6 +135,19 @@ namespace Kablunk::Utilties
 		CompareFunc m_compare_func;
 	};
 
+	template <typename T, typename CompareFunc /*= void*/>
+	void LinkedList<T, CompareFunc>::clear()
+	{
+		ListNode<T>* cur = m_root;
+		ListNode<T>* next;
+		while (cur)
+		{
+			next = cur->next;
+			delete cur;
+			cur = next;
+		}
+	}
+
 	template <typename T, typename CompareFunc>
 	LinkedList<T, CompareFunc>::LinkedList(const LinkedList& other)
 	{
@@ -165,14 +180,7 @@ namespace Kablunk::Utilties
 	template <typename T, typename CompareFunc>
 	LinkedList<T, CompareFunc>::~LinkedList()
 	{
-		ListNode<T>* cur = m_root;
-		ListNode<T>* next;
-		while (cur)
-		{
-			next = cur->next;
-			delete cur;
-			cur = next;
-		}
+		clear();
 	}
 
 	template <typename T, typename CompareFunc>

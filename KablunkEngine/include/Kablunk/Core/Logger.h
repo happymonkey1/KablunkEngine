@@ -63,7 +63,7 @@ enum class logger_type_t
 };
 
 // enum for logger "tags", which are prepended to the log message
-// tags are structured as '[CLASS_NAME]:'
+// tags are structured as '[TAG]'
 enum class logger_tag_t
 {
 	// assets
@@ -198,7 +198,7 @@ enum class logger_level_t
 // logger_type specifies which "class" of logger to use (core or client)
 // level specifies what level of message to log (trace, info, warn, etc.)
 // log_tag is an optional tag to prepend to the message
-// the log tag is formatted as '[TAG]:'
+// the log tag is formatted as '[TAG]'
 template <typename... args_t>
 void log_message(logger_type_t logger_type, logger_level_t level, const std::string_view& log_tag, args_t&&... args)
 {
