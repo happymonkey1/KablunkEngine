@@ -5,7 +5,10 @@
 
 namespace Kablunk::Utilties
 {
-	template <typename T, typename CompareFunc = void*>
+	// default function template parameter
+	using void_compare_func_t = void(*)(void*, void*);
+
+	template <typename T, typename CompareFunc = void_compare_func_t>
 	class LinkedList
 	{
 	public:
@@ -68,7 +71,10 @@ namespace Kablunk::Utilties
 		const T& Back() const { return m_end->data; }
 
 		// Unsorted
-		template <typename Q = T, std::enable_if_t<std::is_same<Q, void>::value, bool> = true>
+		template <
+			typename Q = CompareFunc,
+			std::enable_if_t<std::is_same<Q, void_compare_func_t>::value>* = nullptr
+		>
 		void Insert(const T& val)
 		{
 			if (m_root)
@@ -86,7 +92,10 @@ namespace Kablunk::Utilties
 		}
 
 		// Sorted
-		template <typename Q = T, std::enable_if_t<!std::is_same<Q, void>::value, bool> = true>
+		template <
+			typename Q = CompareFunc,
+			std::enable_if_t<!std::is_same<Q, void_compare_func_t>::value>* = nullptr
+		>
 		void Insert(const T& val)
 		{
 			ListNode<T>* cur = m_root;
