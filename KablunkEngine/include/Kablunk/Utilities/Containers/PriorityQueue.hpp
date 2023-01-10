@@ -16,9 +16,15 @@ namespace Kablunk::Utilties
 	{
 	public:
 		PriorityQueue() = default;
-		PriorityQueue(CompareFunc compare_func) : m_list{ compare_func } {}
-		PriorityQueue(const PriorityQueue& other) : m_list{ other.m_list } {}
-		PriorityQueue(PriorityQueue&& other) noexcept : m_list{ std::move(other.m_list) } { other.m_list = {}; }
+		PriorityQueue(CompareFunc compare_func) 
+			: m_list{ compare_func } 
+		{ }
+		PriorityQueue(const PriorityQueue& other) 
+			: m_list{ other.m_list } 
+		{ }
+		PriorityQueue(PriorityQueue&& other) noexcept 
+			: m_list{ std::move(other.m_list) } 
+		{ }
 		~PriorityQueue() = default;
 
 		void Push(const T& val) { m_list.Insert(val); }
@@ -34,6 +40,10 @@ namespace Kablunk::Utilties
 
 		size_t size() const { return m_list.size(); }
 
+		// index operator for priority queue
+		// this is an O(N) operation, and not a normal queue operation, but client app needed
+		// think about exposing underlying datastructure and which *should* allow for indexing
+		// instead of an indexing operator directly on the queue
 		T& operator[](size_t index) { return m_list[index]; }
 		const T& operator[](size_t index) const { return m_list[index]; }
 
@@ -42,6 +52,6 @@ namespace Kablunk::Utilties
 
 		bool contains(const T& val) const { return m_list.contains(val); }
 	private:
-		LinkedList<T, CompareFunc> m_list;
+		LinkedList<T, CompareFunc> m_list{};
 	};
 }

@@ -151,9 +151,15 @@ namespace Kablunk::Utilties
 		T& operator[](size_t index);
 		const T& operator[](size_t index) const;
 	private:
+		// pointer to the front 
 		ListNode<T>* m_root = nullptr;
+		// pointer to the back
+		// linked list is the underlying data structure for our priority queue implementation
+		// so we use an extra 8 bytes to give the queue O(1) back access
 		ListNode<T>* m_end = nullptr;
+		// size of the list
 		size_t m_size = 0;
+		// function used to sort during insertion
 		CompareFunc m_compare_func;
 	};
 
@@ -177,10 +183,12 @@ namespace Kablunk::Utilties
 	template <typename T, typename CompareFunc>
 	LinkedList<T, CompareFunc>::LinkedList(const LinkedList& other)
 	{
+		// #TODO why is this not initialized with normal constructor initialization?
 		ListNode<T>* cur = other.m_root;
-		ListNode<T>* m_root = new ListNode<T>{ *other.m_root };
+		auto m_root = new ListNode<T>{ *other.m_root };
 		ListNode<T>* head_ptr = m_root;
 
+		// copy underlying list
 		while (cur)
 		{
 			m_root->next = new ListNode<T>{ *cur };
