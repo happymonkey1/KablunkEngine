@@ -34,6 +34,9 @@ namespace Kablunk::Utilties
 
 		size_t size() const { return m_list.size(); }
 
+		T& operator[](size_t index) { return m_list[index]; }
+		const T& operator[](size_t index) const { return m_list[index]; }
+
 		auto begin() { return m_list.begin(); }
 		auto end() { return m_list.end(); }
 

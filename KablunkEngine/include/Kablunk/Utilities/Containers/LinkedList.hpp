@@ -62,6 +62,16 @@ namespace Kablunk::Utilties
 		LinkedList(LinkedList&&) noexcept;
 		~LinkedList();
 
+		LinkedList& operator=(LinkedList&& other) noexcept
+		{
+			std::swap(m_root, other.m_root);
+			std::swap(m_end, other.m_end);
+			std::swap(m_size, other.m_size);
+			std::swap(m_compare_func, other.m_compare_func);
+
+			return *this;
+		}
+
 		void clear();
 
 		T& Front() { return m_root->data; }
@@ -114,7 +124,10 @@ namespace Kablunk::Utilties
 					m_end = prev->next;
 			}
 			else
+			{
 				m_root = new ListNode<T>{ val, cur };
+				m_end = m_root;
+			}
 
 			m_size++;
 		}
@@ -155,6 +168,10 @@ namespace Kablunk::Utilties
 			delete cur;
 			cur = next;
 		}
+
+		m_root = nullptr;
+		m_end = nullptr;
+		m_size = 0;
 	}
 
 	template <typename T, typename CompareFunc>
@@ -312,10 +329,15 @@ namespace Kablunk::Utilties
 			if (counter++ == index)
 				break;
 
-			cur = cur->next;
+			if (cur)
+				cur = cur->next;
+			else
+				break;
 		}
 
-		return *cur;
+		KB_CORE_ASSERT(cur, "index out of bounds");
+
+		return cur->data;
 	}
 
 	template <typename T, typename CompareFunc>
@@ -330,10 +352,15 @@ namespace Kablunk::Utilties
 			if (counter++ == index)
 				break;
 
-			cur = cur->next;
+			if (cur)
+				cur = cur->next;
+			else
+				break;
 		}
 
-		return *cur;
+		KB_CORE_ASSERT(cur, "index out of bounds");
+
+		return cur->data;
 	}
 
 }

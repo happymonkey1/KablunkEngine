@@ -14,6 +14,135 @@ namespace Kablunk
 
 	namespace Key
 	{
+
+		inline bool is_valid_key(KeyCode key)
+		{
+			switch (key)
+			{
+				case 32: return true;
+				case 39: return true;
+				case 44: return true;
+				case 45: return true;
+				case 46: return true;
+				case 47: return true;
+				case 48: return true;
+				case 49: return true;
+				case 50: return true;
+				case 51: return true;
+				case 52: return true;
+				case 53: return true;
+				case 54: return true;
+				case 55: return true;
+				case 56: return true;
+				case 57: return true;
+				case 59: return true;
+				case 61: return true;
+				case 65: return true;
+				case 66: return true;
+				case 67: return true;
+				case 68: return true;
+				case 69: return true;
+				case 70: return true;
+				case 71: return true;
+				case 72: return true;
+				case 73: return true;
+				case 74: return true;
+				case 75: return true;
+				case 76: return true;
+				case 77: return true;
+				case 78: return true;
+				case 79: return true;
+				case 80: return true;
+				case 81: return true;
+				case 82: return true;
+				case 83: return true;
+				case 84: return true;
+				case 85: return true;
+				case 86: return true;
+				case 87: return true;
+				case 88: return true;
+				case 89: return true;
+				case 90: return true;
+				case 91: return true;
+				case 93: return true;
+				case 92: return true;
+				case 96: return true;
+				case 161: return true;
+				case 162: return true;
+				case 256: return true;
+				case 257: return true;
+				case 258: return true;
+				case 259: return true;
+				case 280: return true;
+				case 262: return true;
+				case 263: return true;
+				case 264: return true;
+				case 265: return true;
+				case 260: return true;
+				case 261: return true;
+				case 266: return true;
+				case 267: return true;
+				case 268: return true;
+				case 269: return true;
+				case 283: return true;
+				case 281: return true;
+				case 284: return true;
+				case 290: return true;
+				case 291: return true;
+				case 292: return true;
+				case 293: return true;
+				case 294: return true;
+				case 295: return true;
+				case 296: return true;
+				case 297: return true;
+				case 298: return true;
+				case 299: return true;
+				case 300: return true;
+				case 301: return true;
+				case 302: return true;
+				case 303: return true;
+				case 304: return true;
+				case 305: return true;
+				case 306: return true;
+				case 307: return true;
+				case 308: return true;
+				case 309: return true;
+				case 310: return true;
+				case 311: return true;
+				case 312: return true;
+				case 313: return true;
+				case 314: return true;
+				case 282: return true;
+				case 320: return true;
+				case 321: return true;
+				case 322: return true;
+				case 323: return true;
+				case 324: return true;
+				case 325: return true;
+				case 326: return true;
+				case 327: return true;
+				case 328: return true;
+				case 329: return true;
+				case 330: return true;
+				case 331: return true;
+				case 332: return true;
+				case 333: return true;
+				case 334: return true;
+				case 335: return true;
+				case 336: return true;
+				case 340: return true;
+				case 341: return true;
+				case 342: return true;
+				case 343: return true;
+				case 344: return true;
+				case 345: return true;
+				case 346: return true;
+				case 347: return true;
+				case 348: return true;
+				default: return false;
+			}
+		}
+
 		enum : KeyCode
 		{
 			//FROM glfw3.h
