@@ -74,6 +74,9 @@ namespace Kablunk::Utilties
 
 		void clear();
 
+		// check if the list is empty
+		bool empty() const { return m_root == nullptr; }
+
 		T& Front() { return m_root->data; }
 		const T& Front() const { return m_root->data; }
 
@@ -259,7 +262,7 @@ namespace Kablunk::Utilties
 		ListNode<T>* cur = m_root;
 		while (cur)
 		{
-			if (*cur == val)
+			if (cur->data == val)
 				return cur;
 
 			cur = cur->next;
