@@ -4,11 +4,11 @@ Personal project to develop a basic game engine. Currently in development, meani
 
 ## Setup
 
-Run scripts/Setup.py to install required libraries `python scripts/Setup.py`
-Run scripts/Windows-GenProjects.bat to generate project files.
-Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.
+Run scripts/Setup.py to install required libraries `python scripts/Setup.py`  
+Run scripts/Windows-GenProjects.bat to generate project files.  
+Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.  
 
-Compatible with Visual Studio 2022, msvc compiler, and windows 10.
+Compatible with Visual Studio 2022, msvc compiler, and windows 10.  
 
 Required Libraries/Binaries (should be installed by setup.py)
 - Boost
