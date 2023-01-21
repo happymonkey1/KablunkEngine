@@ -18,6 +18,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [x] Project System
 - [x] Extendable event system
 - [x] Datastructures & Algorithms (allocators, map, priority queue, simple c++ parser, etc.)
+- [x] DLL memory sharing / IPC
 
 ## In progress
 
