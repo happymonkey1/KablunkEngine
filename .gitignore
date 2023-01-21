@@ -2,6 +2,7 @@
 bin/
 bin-int/
 KablunkEditor/resources/scripts/*.dll
+JSON/
 **.sln
 **.vcxproj
 **.vcxproj.filters
