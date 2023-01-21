@@ -1,10 +1,19 @@
 # KablunkEngine 
 
-Personal project to develop a basic 2D game engine. Currently still in development, meaning features might be broken or not implemented yet. 
+Personal project to develop a basic game engine. Currently in development, meaning features might be broken or not implemented yet. 
 
 ## Setup
 
-Run scripts/Windows-GenProjects.bat to generate project files
+Run scripts/Setup.py to install required libraries `python scripts/Setup.py`
+Run scripts/Windows-GenProjects.bat to generate project files.
+Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.
+
+Compatible with Visual Studio 2022, msvc compiler, and windows 10.
+
+Required Libraries/Binaries (should be installed by setup.py)
+- Boost
+- Vulkan
+- Premake
 
 ## Features
 
@@ -12,7 +21,7 @@ Run scripts/Windows-GenProjects.bat to generate project files
 - [x] C# scripting
 - [x] C++ scripting and runtime dll loading
 - [x] Editor
-- [x] Vulkan backend and renderer abstraction layer
+- [x] Vulkan backend, hardware accelerated rendering, and renderer abstraction layer
 - [x] Entity Component System
 - [x] Asset Manager
 - [x] Project System
@@ -34,4 +43,4 @@ https://trello.com/b/cYhcr9CG/kablunkengine
 
 ## Credits
 
-Inspiration, help, and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) on YouTube from his game engine development series. 
+Inspiration, help, and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) (YouTube) from watching his game engine development series. 
