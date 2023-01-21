@@ -1,7 +1,5 @@
 # KablunkEngine 
 
-[![Build status](https://ci.appveyor.com/api/projects/status/wmtieejd651lye65?svg=true)](https://ci.appveyor.com/project/happymonkey1/kablunkengine)
-
 Personal project to develop a basic 2D game engine. Currently still in development, meaning features might be broken or not implemented yet. 
 
 ## Setup
@@ -10,17 +8,24 @@ Run scripts/Windows-GenProjects.bat to generate project files
 
 ## Features
 
-- [x] 2D Batch Renderer
-- [x] C# Scripting
+- [x] 2D batch renderer and basic 3D renderer
+- [x] C# scripting
+- [x] C++ scripting and runtime dll loading
 - [x] Editor
-- [x] Basic 3D Renderer
+- [x] Vulkan backend and renderer abstraction layer
 - [x] Entity Component System
+- [x] Asset Manager
+- [x] Project System
+- [x] Extendable event system
+- [x] Datastructures & Algorithms (allocators, map, priority queue, simple c++ parser, etc.)
 
-## In Progress
+## In progress
 
-- Vulkan integration
-- Editor Improvements
-- Hot swappable C++ scripts
+- [ ] Text renderer
+- [ ] In-house UI
+- [ ] Reflection
+- [ ] Audio
+- [ ] Build system
 
 ## Roadmap
 
