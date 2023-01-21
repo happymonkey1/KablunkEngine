@@ -5,7 +5,9 @@
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Utilities/Parser.h"
-#include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
+
+#include "Kablunk/Project/ProjectManager.h"
 
 #include <unordered_map>
 
@@ -81,11 +83,11 @@ namespace Kablunk
 	
 	template<> 
 	Asset<Texture2D>::Asset(const std::string& filepath)
-		: BaseAsset{ filepath }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Renderer::GetWhiteTexture() } { }
+		: BaseAsset{ filepath }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : render::get_white_texture() } { }
 
 	template<>
 	Asset<Texture2D>::Asset(const std::string& filepath, const UUID& id)
-		: BaseAsset{ filepath, id }, m_asset{ !filepath.empty() ? Texture2D::Create(filepath) : Renderer::GetWhiteTexture() } { }
+		: BaseAsset{ filepath, id }, m_asset{ !filepath.empty() ? Texture2D::Create((ProjectManager::get().get_active()->get_asset_directory_path() / std::filesystem::path{filepath}).string()) : render::get_white_texture() } { }
 
 
 	// =================

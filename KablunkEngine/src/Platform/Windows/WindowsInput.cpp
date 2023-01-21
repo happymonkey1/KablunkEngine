@@ -5,13 +5,18 @@
 #include "Platform/Windows/WindowsWindow.h"
 #include "Kablunk/Core/Application.h"
 
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
-namespace Kablunk {
+#include "Kablunk/Renderer/RenderCommand.h"
 
-	bool Input::IsKeyPressed(int keycode)
+namespace Kablunk::input
+{
+
+	bool is_key_pressed(int keycode)
 	{
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
 		if (!imgui_enabled)
@@ -21,7 +26,7 @@ namespace Kablunk {
 			return state == GLFW_PRESS || state == GLFW_REPEAT;
 		}
 
-		ImGuiContext* context = ImGui::GetCurrentContext();
+		ImGuiContext* context = ImGuiGlobalContext::get().get_context();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)
 		{
@@ -43,7 +48,7 @@ namespace Kablunk {
 		return pressed;
 	}
 
-	bool Input::IsMouseButtonPressed(int button)
+	bool is_mouse_button_pressed(int button)
 	{
 		bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
 		if (!imgui_enabled)
@@ -53,7 +58,7 @@ namespace Kablunk {
 			return state == GLFW_PRESS;
 		}
 
-		ImGuiContext* context = ImGui::GetCurrentContext();
+		ImGuiContext* context = ImGuiGlobalContext::get().get_context();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)
 		{
@@ -75,7 +80,70 @@ namespace Kablunk {
 		return pressed;
 	}
 
-	std::pair<float, float> Input::GetMousePosition()
+	bool is_mouse_in_viewport()
+	{
+		glm::vec2 mouse_pos;
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			mouse_pos = glm::vec2{ ImGui::GetMousePos().x, ImGui::GetMousePos().y };
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+		}
+		else
+		{
+			mouse_pos = glm::vec2{ get_mouse_x(), get_mouse_y() };
+			window_size = Application::Get().GetWindowDimensions();
+		}
+
+
+		bool x_true = mouse_pos.x >= window_pos.x && mouse_pos.x <= window_pos.x + window_size.x;
+		bool y_true = mouse_pos.y >= window_pos.y && mouse_pos.y <= window_pos.y + window_size.y;
+
+		return x_true && y_true;
+	}
+
+	std::pair<float, float> get_mouse_position_relative_to_viewport()
+	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
+
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			// get imgui mouse pos (in screen coordinates)
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
+
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+
+			mouse_pos -= render::get_viewport_pos();
+		}
+		else
+		{
+			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ input::get_mouse_x(), input::get_mouse_y() };
+		}
+
+		return std::make_pair(mouse_pos.x, mouse_pos.y);
+	}
+
+	float get_mouse_x_relative_to_viewport()
+	{
+		auto [x, y] = get_mouse_position_relative_to_viewport();
+		return x;
+	}
+
+	float get_mouse_y_relative_to_viewport()
+	{
+		auto [x, y] = get_mouse_position_relative_to_viewport();
+		return y;
+	}
+
+	std::pair<float, float> get_mouse_position()
 	{
 		//bool imgui_enabled = Application::Get().GetSpecification().Enable_imgui;
 		//if (!imgui_enabled)
@@ -114,31 +182,31 @@ namespace Kablunk {
 		return std::make_pair(static_cast<float>(mx), static_cast<float>(my));*/
 	}
 
-	float Input::GetMouseX()
+	float get_mouse_x()
 	{
-		auto [x, y] = GetMousePosition();
+		auto [x, y] = get_mouse_position();
 		return x;
 	}
 
-	float Input::GetMouseY()
+	float get_mouse_y()
 	{
-		auto [x, y] = GetMousePosition();
+		auto [x, y] = get_mouse_position();
 		return y;
 	}
 
-	void Input::SetCursorMode(CursorMode mode)
+	void set_cursor_mode(CursorMode mode)
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + static_cast<int>(mode));
 	}
 
-	CursorMode Input::GetCursorMode()
+	CursorMode get_cursor_mode()
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		return static_cast<CursorMode>(glfwGetInputMode(window, GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
 	}
 
-	void Input::SetMouseMotionMode(MouseMotionMode mode)
+	void set_mouse_motion_mode(MouseMotionMode mode)
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		if (glfwRawMouseMotionSupported())
@@ -148,7 +216,7 @@ namespace Kablunk {
 		}
 	}
 	
-	MouseMotionMode Input::GetMouseMotionMode()
+	MouseMotionMode get_mouse_motion_mode()
 	{
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		int ret_code = glfwGetInputMode(window, GLFW_RAW_MOUSE_MOTION);

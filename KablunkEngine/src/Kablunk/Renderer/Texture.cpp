@@ -12,9 +12,9 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:  return IntrusiveRef<OpenGLTexture2D>::Create(format, width, height);
-		case RendererAPI::RenderAPI_t::Vulkan:  return IntrusiveRef<VulkanTexture2D>::Create(format, width, height, data);
+		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:  return IntrusiveRef<OpenGLTexture2D>::Create(format, width, height);
+		case RendererAPI::render_api_t::Vulkan:  return IntrusiveRef<VulkanTexture2D>::Create(format, width, height, data);
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
 		}
 	}
@@ -24,13 +24,11 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:  return IntrusiveRef<OpenGLTexture2D>::Create(path);
-		case RendererAPI::RenderAPI_t::Vulkan:  return IntrusiveRef<VulkanTexture2D>::Create(path);
+		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:  return IntrusiveRef<OpenGLTexture2D>::Create(path);
+		case RendererAPI::render_api_t::Vulkan:  return IntrusiveRef<VulkanTexture2D>::Create(path);
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
 		}
 	}
-
-	
 
 }

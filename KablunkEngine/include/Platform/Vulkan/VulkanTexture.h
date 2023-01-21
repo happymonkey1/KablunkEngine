@@ -32,14 +32,16 @@ namespace Kablunk
 
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
-		virtual Buffer GetWriteableBuffer() override;
+		virtual Buffer& GetWriteableBuffer() override;
+
+		virtual bool loaded() const override { return m_loaded; }
 
 		virtual void SetData(void* data, uint32_t size) override;
 
 		virtual void Bind(uint32_t slot) const override;
 		virtual bool operator==(const Texture2D& other) const override;
 	private:
-		void Invalidate();
+		virtual void Invalidate() override;
 		bool LoadImage(const std::string& filepath);
 	private:
 		std::string m_filepath;
@@ -51,6 +53,8 @@ namespace Kablunk
 		ImageFormat m_format;
 
 		Buffer m_image_data;
+
+		bool m_loaded = false;
 	};
 
 }

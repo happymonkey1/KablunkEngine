@@ -25,7 +25,8 @@ project "Sandbox"
         "%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.stduuid}",
         "%{IncludeDir.gsl}",
-		"%{IncludeDir.FreeType}"
+		"%{IncludeDir.FreeType}",
+		"%{IncludeDir.boost}"
 	}
 
 	links

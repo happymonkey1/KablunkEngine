@@ -23,7 +23,7 @@ namespace Kablunk
 		m_local_data = Buffer::Copy(data, size);
 		KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
 		IntrusiveRef<VulkanIndexBuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();
 				VulkanAllocator allocator{ "IndexBuffer" };
@@ -68,7 +68,7 @@ namespace Kablunk
 	{
 		VkBuffer buffer = m_vk_buffer;
 		VmaAllocation allocation = m_vk_allocation;
-		RenderCommand::Submit([buffer, allocation]() mutable
+		render::submit([buffer, allocation]() mutable
 			{
 				VulkanAllocator allocator{ "IndexBuffer" };
 				allocator.DestroyBuffer(buffer, allocation);

@@ -8,6 +8,7 @@
 
 namespace Kablunk
 {
+	// #TODO deprecate
 	class OrthographicCameraController
 	{
 	public:

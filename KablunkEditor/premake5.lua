@@ -31,6 +31,8 @@ project "KablunkEditor"
         "%{IncludeDir.FreeType}",
         "%{IncludeDir.mono}",
         "%{IncludeDir.Vulkan}",
+        "%{IncludeDir.boost}",
+		"%{IncludeDir.miniaudio}"
     }
 
     links
@@ -39,12 +41,20 @@ project "KablunkEditor"
         "Sandbox",
         --"Sandbox.dll",
         "FreeType",
-        "%{Library.mono}"
+        "%{Library.mono}",
+        "GLFW"
     }
 
     defines
     {
-        
+        "KB_BUILD_DLL",
+        "GLFW_DLL"
+    }
+
+    postbuildcommands
+    {
+        -- copy glfw dll to bin
+        '{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"'
     }
 
     filter "system:windows"
@@ -58,6 +68,8 @@ project "KablunkEditor"
         {
             "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
         }
+        
+        
 
         postbuildcommands
         {

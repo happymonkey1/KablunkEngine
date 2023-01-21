@@ -1,6 +1,7 @@
 #ifndef KABLUNK_MODULES_MODULE_H
 #define KABLUNK_MODULES_MODULE_H
 
+#include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Scripts/NativeScript.h"
 
 #include <iostream>
@@ -10,7 +11,6 @@
  * A function not defined compilation message means the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS
  * are not used/included. 
 */
-extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str);
 
 namespace Kablunk
 {
@@ -19,21 +19,23 @@ namespace Kablunk
 	class NativeScriptEngine
 	{
 	public:
-		static void Init();
-		static void Open(const char* path);
-		static bool Update();
+		using GetScriptFromRegistryFuncT = std::unique_ptr<INativeScript> (*)(const std::string&);
+	public:
+		// Returns a pointer to the script instance that is instantiated by the game module.
+		std::unique_ptr<INativeScript> get_script(const std::string& name);
 
-		static void Shutdown();
+		WeakRef<Scene> get_scene();
+		void set_scene(WeakRef<Scene> scene);
 
-		static Scope<NativeScriptInterface> GetScript(const std::string& name);
-		static NativeScriptEngine* Get() { KB_CORE_ASSERT(s_instance, "Instance is not set! Make sure Init is called!"); return s_instance; }
+		void set_get_script_from_registry_func(GetScriptFromRegistryFuncT func_ptr) { m_get_script_from_registry = func_ptr; }
 
-		void SetScene(WeakRef<Scene> scene);
-		WeakRef<Scene> GetScene();
+		void init();
+		void shutdown();
+
+		SINGLETON_GET_FUNC(NativeScriptEngine)
 	private:
 		Scene* m_current_scene = nullptr;
-
-		inline static NativeScriptEngine* s_instance;
+		GetScriptFromRegistryFuncT m_get_script_from_registry = nullptr;
 	};
 }
 
@@ -44,21 +46,21 @@ namespace Kablunk
 /* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
 // #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
 #	define IMPLEMENT_NATIVE_SCRIPT(T) \
-		static Kablunk::NativeScriptInterface* Create() \
+		static std::unique_ptr<Kablunk::INativeScript> Create() \
 		{ \
-			return new T(); \
+			return std::make_unique<T>(); \
 		}
 
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" Kablunk::NativeScriptInterface* GetScriptFromRegistry(const std::string& type_str) \
+	extern "C" __declspec(dllexport) std::unique_ptr<Kablunk::INativeScript> get_script_from_registry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
 		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
 			return T::Create();
 #	define END_REGISTER_NATIVE_SCRIPTS() \
-		return nullptr; \
+		return std::unique_ptr<Kablunk::INativeScript>(nullptr); \
 	};
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT
@@ -85,7 +87,7 @@ namespace Kablunk
 	{
 		struct NativeScriptRuntimeObject
 		{
-			NativeScriptInterface* ptr;
+			NativeScript* ptr;
 			ObjectId id;
 		};
 	}
@@ -96,7 +98,7 @@ namespace Kablunk
 	class NativeScriptEngine : public IObjectFactoryListener
 	{
 	public:
-		using CreateMethodFunc = NativeScriptInterface * (*)();
+		using CreateMethodFunc = NativeScript * (*)();
 
 		static NativeScriptEngine* Get()
 		{
@@ -116,12 +118,12 @@ namespace Kablunk
 		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		[[deprecated("Replaced by rccpp")]]
-		Scope<NativeScriptInterface> GetScript(const std::string& script_name);
+		Scope<NativeScript> get_script(const std::string& script_name);
 
 		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
 
-		NativeScriptInterface** AddScript(const std::string& name, const std::filesystem::path& filepath);
+		NativeScript** AddScript(const std::string& name, const std::filesystem::path& filepath);
 		virtual void OnConstructorsAdded() override;
 		void OnUpdate(Timestep ts);
 

@@ -7,15 +7,16 @@
 
 namespace Kablunk
 {
+	std::vector<IntrusiveRef<Shader>> Shader::s_all_shaders;
 
 	IntrusiveRef<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 	{
 		IntrusiveRef<Shader> res = nullptr;
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:		res = IntrusiveRef<OpenGLShader>::Create(file_path); break;
-		case RendererAPI::RenderAPI_t::Vulkan:		res = IntrusiveRef<VulkanShader>::Create(file_path, force_compile); break;
+		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:		res = IntrusiveRef<OpenGLShader>::Create(file_path); break;
+		case RendererAPI::render_api_t::Vulkan:		res = IntrusiveRef<VulkanShader>::Create(file_path, force_compile); break;
 		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
@@ -25,11 +26,16 @@ namespace Kablunk
 
 	ShaderLibrary::~ShaderLibrary()
 	{
-		Destroy();
+
 	}
 
 	void ShaderLibrary::Destroy()
 	{
+		KB_CORE_INFO("Destroying shader library!");
+
+		for (auto& [shader_name, shader] : m_shaders)
+			shader->destroy();
+
 		m_shaders.clear();
 	}
 

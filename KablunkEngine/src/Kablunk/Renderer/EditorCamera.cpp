@@ -15,7 +15,7 @@ namespace Kablunk
 
 	EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
 		: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip }, m_focal_point{ 0.0f },
-		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, far_clip, near_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
+		  Camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
 	{
 		m_focal_point = glm::vec3{ 0.0f };
 
@@ -39,34 +39,36 @@ namespace Kablunk
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		auto mouse = glm::vec2{ Input::GetMouseX(), Input::GetMouseY() };
+		auto mouse = glm::vec2{ input::get_mouse_x(), input::get_mouse_y() };
 		auto delta = (mouse - m_initial_mouse_position) * 0.002f;
 
 		// FlyCam
-		if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && !Input::IsKeyPressed(Camera_control_key))
+		if (input::is_mouse_button_pressed(Mouse::ButtonRight) && !input::is_key_pressed(Camera_control_key))
 		{
 			m_camera_mode = CameraMode::FlyCam;
 			DisableMouse();
 
 			const float yaw_sign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
-			const float speed = 10.0f;
+			const float speed = 2.5f;
 
-			if (Input::IsKeyPressed(Key::Q))
+			if (input::is_key_pressed(Key::Q))
 				m_position_delta -= glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::E))
+			else if (input::is_key_pressed(Key::E))
 				m_position_delta += glm::vec3{ 0.0f, yaw_sign, 0.0f } * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::S))
+
+			if (input::is_key_pressed(Key::S))
 				m_position_delta -= m_direction * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::W))
+			else if (input::is_key_pressed(Key::W))
 				m_position_delta += m_direction * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::A))
+
+			if (input::is_key_pressed(Key::A))
 				m_position_delta -= m_right_direction * speed * (float)ts;
-			else if (Input::IsKeyPressed(Key::D))
+			else if (input::is_key_pressed(Key::D))
 				m_position_delta += m_right_direction * speed * (float)ts;
 
 			constexpr float max_rate = 0.12f;
 			m_yaw_delta += glm::clamp(yaw_sign * delta.x * GetRotationSpeed(), -max_rate, max_rate);
-			m_pitch_delta += glm::clamp(delta.y * GetRotationSpeed(), -max_rate, max_rate);
+			m_pitch_delta += glm::clamp(-delta.y * GetRotationSpeed(), -max_rate, max_rate);
 
 			m_right_direction = glm::cross(m_direction, glm::vec3{ 0.0f, yaw_sign, 0.0f });
 
@@ -85,21 +87,21 @@ namespace Kablunk
 			m_distance = distance;
 		}
 		// ArcBall
-		else if (Input::IsKeyPressed(Camera_control_key))
+		else if (input::is_key_pressed(Camera_control_key))
 		{
 			m_camera_mode = CameraMode::ArcBall;
 
-			if (Input::IsMouseButtonPressed(Mouse::ButtonLeft)) // Left
+			if (input::is_key_pressed(Mouse::ButtonLeft)) // Left
 			{
 				DisableMouse();
 				MousePan(delta);
 			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight)) // Right
+			else if (input::is_key_pressed(Mouse::ButtonRight)) // Right
 			{
 				DisableMouse();
 				MouseZoom(delta.x + delta.y);
 			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle)) // Middle
+			else if (input::is_key_pressed(Mouse::ButtonMiddle)) // Middle
 			{
 				DisableMouse();
 				MouseRotate(delta);
@@ -112,8 +114,6 @@ namespace Kablunk
 			EnableMouse();
 
 		m_initial_mouse_position = mouse;
-
-
 		m_position += m_position_delta;
 		m_yaw += m_yaw_delta;
 		m_pitch += m_pitch_delta;
@@ -132,12 +132,12 @@ namespace Kablunk
 
 	void EditorCamera::EnableMouse() const
 	{
-		Input::SetCursorMode(CursorMode::Normal);
+		input::set_cursor_mode(CursorMode::Normal);
 	}
 
 	void EditorCamera::DisableMouse() const
 	{
-		Input::SetCursorMode(CursorMode::Locked);
+		input::set_cursor_mode(CursorMode::Locked);
 	}
 
 	void EditorCamera::UpdateProjection()

@@ -72,22 +72,8 @@ project "$PROJECT_NAME$-Native"
 
 	includedirs
 	{
-		"KablunkEngine/engine/",
-		"KablunkEngine/vendor/",
-		"KablunkEngine/vendor/assimp/include",
-		"KablunkEgnine/vendor/box2d/include",
-		"KablunkEngine/vendor/cr",
-		"KablunkEngine/vendor/entt/include",
-		"KablunkEngine/vendor/FreeType/include",
-		"KablunkEngine/vendor/Glad/include",
-		"KablunkEngine/vendor/GLFW/include",
-		"KablunkEngine/vendor/glm/",
-		"KablunkEngine/vendor/imgui",
-		"KablunkEngine/vendor/ImGuizmo",
-		"KablunkEngine/vendor/mono/include",
-		"KablunkEngine/vendor/spdlog/include",
-		"KablunkEngine/vendor/stb_image",
-		"KablunkEngine/vendor/yaml-cpp/include"
+		"%{KablunkRootDirectory}/KablunkEngine/include/**.h",
+		"%{KablunkRootDirectory}/KablunkEngine/include/**.hpp"
 	}
 
 	links

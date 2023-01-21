@@ -53,8 +53,9 @@ namespace Kablunk
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
 		// #TODO build font library to load fonts instead of current way
-		io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 18.0f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 18.0f);
+		// #TODO font scaling
+		io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 28.0f);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 28.0f);
 		//io.Fonts->Build();
 
 		//ImGui::StyleColorsDark();
@@ -70,7 +71,7 @@ namespace Kablunk
 		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.15f, style.Colors[ImGuiCol_WindowBg].w);
 
 		VulkanImGuiLayer* instance = this;
-		RenderCommand::Submit([instance]()
+		render::submit([instance]()
 			{
 				Application& app = Application::Get();
 				GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
@@ -135,8 +136,9 @@ namespace Kablunk
 					ImGui_ImplVulkan_DestroyFontUploadObjects();
 				}
 
-				s_imgui_command_buffers.resize(Renderer::GetConfig().frames_in_flight);
-				for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
+				const uint32_t frames_in_flight = render::get_frames_in_flights();
+				s_imgui_command_buffers.resize(frames_in_flight);
+				for (uint32_t i = 0; i < frames_in_flight; ++i)
 					s_imgui_command_buffers[i] = vulkan_context->GetDevice()->CreateSecondaryCommandBuffer();
 			});
 
@@ -144,7 +146,7 @@ namespace Kablunk
 
 	void VulkanImGuiLayer::OnDetach()
 	{
-		RenderCommand::Submit([]()
+		render::submit([]()
 			{
 				auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 

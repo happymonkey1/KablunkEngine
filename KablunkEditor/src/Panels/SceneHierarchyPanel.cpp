@@ -1,6 +1,6 @@
 #include "Panels/SceneHierarchyPanel.h"
 
-#include <Kablunk/Project/Project.h>
+#include <Kablunk/Project/ProjectManager.h>
 #include <Kablunk/Scripts/CSharpScriptEngine.h>
 #include <Kablunk/Imgui/ImGuiWrappers.h>
 #include <imgui/imgui.h>
@@ -401,7 +401,7 @@ namespace Kablunk
 				UI::Property("Name", mesh_material_name);
 				UI::PopItemDisabled();
 
-				if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+				if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 				{
 					// #TODO check if this needs to be set on render thread
 					float& ambient_strength = mesh_material_asset->GetMaterial()->GetFloat("u_MaterialUniforms.AmbientStrength");
@@ -570,6 +570,12 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (!m_selection_context.HasComponent<UIPanelComponent>() && ImGui::MenuItem("UI Panel"))
+			{
+				m_selection_context.AddComponent<UIPanelComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -602,7 +608,7 @@ namespace Kablunk
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 
-		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
+		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& component)
 			{
 				SceneCamera& camera = component.Camera;
 				UI::BeginProperties();
@@ -647,13 +653,67 @@ namespace Kablunk
 					if (UI::Property("Far Clip", far_clip, 0.1f, 0.001f, 10000.0f))
 						camera.SetOrthographicFarClip(far_clip);
 				}
+				UI::Property("Fixed Aspect Ratio", &component.Fixed_aspect_ratio);
 
+				UI::EndProperties();
+			});
+
+		DrawComponent<UIPanelComponent>("UI Panel", entity, [this](UIPanelComponent& component)
+			{
+				ui::IPanel* panel = component.panel;
+
+				UI::BeginProperties();
+				
+				if (!panel)
+				{
+					size_t count = util::calculate_unique_enum_count(ui::panel_type_iterator{});
+					std::vector<const char*> enum_names;
+					enum_names.reserve(count);
+
+					for (ui::panel_type_t panel_type : ui::panel_type_iterator{})
+						enum_names.push_back(panel_type_to_c_str(panel_type));
+
+					UI::PropertyDropdown("Panel Type", enum_names.data(), count, component.panel_type);
+
+					if (ImGui::Button("Create"))
+						component.panel = ui::PanelFactory::create_panel(component.panel_type, {});
+
+				}
+				else
+				{
+
+					glm::vec2& pos = panel->get_position();
+					glm::vec2& size = panel->get_size();
+					UI::PropertyReadOnlyChars("Panel Type", ui::panel_type_to_c_str(component.panel_type));
+					UI::Property("Position", pos);
+					UI::Property("Size", size);
+					UI::PropertyColorEdit4("Background Color", panel->get_panel_style().background_color);
+					//UI::Propert("Render background", panel->get_panel_style().background_color);
+
+					// panel specific ui elements
+					switch (panel->get_panel_type())
+					{
+
+						case ui::panel_type_t::ImageButton:
+							if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+							{
+								auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
+								if (!filepath.empty())
+								{
+									// #TODO go through asset manager
+									panel->get_panel_style().image = Texture2D::Create(filepath);
+								}
+							}
+							break;
+					}
+
+				}
+				
 				UI::EndProperties();
 			});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
 			{
-
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
@@ -672,7 +732,7 @@ namespace Kablunk
 					if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 					{
 						const auto path_wchar_str = (const wchar_t*)payload->Data;
-						auto path = std::filesystem::path{ Project::GetAssetDirectoryPath() / path_wchar_str };
+						auto path = std::filesystem::path{ ProjectManager::get().get_active()->get_asset_directory_path() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
 							component.Texture = Asset<Texture2D>(path_str);
@@ -701,7 +761,6 @@ namespace Kablunk
 
 		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& component)
 			{
-
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
@@ -718,7 +777,7 @@ namespace Kablunk
 				if (component.Instance)
 				{
 					std::string name = "placeholder";
-					std::vector<std::string> name_vec = Parser::CPP::FindStructNames(component.GetFilepath());
+					std::vector<std::string> name_vec = Parser::CPP::FindClassAndStructNames( (ProjectManager::get().get_active()->get_project_directory() / std::filesystem::path{ component.GetFilepath() }).string());
 					if (!name_vec.empty())
 						name = name_vec[0];
 
@@ -732,10 +791,10 @@ namespace Kablunk
 					if (UI::Button("Add"))
 					{
 						auto filepath = FileDialog::OpenFile("Header File (*.h)\0*.h\0Source File (*.cpp)\0*.cpp\0");
+						KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
 						if (!filepath.empty())
 						{
-							// #FIXME relative path when projects are implemented
-							//std::filesystem::path relative_path = std::filesystem::relative(filepath, g_asset_path);
+							std::filesystem::path relative_path = std::filesystem::relative(filepath, ProjectManager::get().get_active()->get_project_directory());
 							component.BindEditor(filepath);
 						}
 					}
@@ -745,7 +804,7 @@ namespace Kablunk
 
 		DrawComponent<CSharpScriptComponent>("C# Script", entity, [&](CSharpScriptComponent& component)
 			{
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					UI::BeginProperties();
 					bool active = false;
@@ -757,7 +816,7 @@ namespace Kablunk
 				UI::BeginProperties();
 				
 				bool is_error = !CSharpScriptEngine::ModuleExists(component.Module_name);
-				std::string name = CSharpScriptEngine::StripNamespace(Project::GetActive()->GetConfig().CSharp_script_default_namespace, component.Module_name);
+				std::string name = CSharpScriptEngine::StripNamespace(ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace, component.Module_name);
 
 				bool was_error = is_error;
 				if (was_error)
@@ -773,9 +832,9 @@ namespace Kablunk
 						component.Module_name = name;
 						is_error = false;
 					}
-					else if (CSharpScriptEngine::ModuleExists(Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name))
+					else if (CSharpScriptEngine::ModuleExists(ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace + "." + name))
 					{
-						component.Module_name = Project::GetActive()->GetConfig().CSharp_script_default_namespace + "." + name;
+						component.Module_name = ProjectManager::get().get_active()->GetConfig().CSharp_script_default_namespace + "." + name;
 						is_error = false;
 					}
 					else

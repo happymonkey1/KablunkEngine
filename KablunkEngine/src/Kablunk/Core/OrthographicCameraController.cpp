@@ -20,24 +20,24 @@ namespace Kablunk
 		if (m_TranslationInputLocked)
 			return;
 
-		float speedMult = (Input::IsKeyPressed(Key::LeftShift)) ? 5.0f : 1.0f;
-		if (Input::IsKeyPressed(Key::A))
+		float speedMult = (input::is_key_pressed(Key::LeftShift)) ? 5.0f : 1.0f;
+		if (input::is_key_pressed(Key::A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
-		else if (Input::IsKeyPressed(Key::D))
+		else if (input::is_key_pressed(Key::D))
 		{
 			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
 
-		if (Input::IsKeyPressed(Key::W))
+		if (input::is_key_pressed(Key::W))
 		{
 			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 			m_CameraPosition.y +=  cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 		}
-		else if (Input::IsKeyPressed(Key::D))
+		else if (input::is_key_pressed(Key::D))
 		{
 			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
 			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraMoveSpeed * ts * speedMult;
@@ -46,9 +46,9 @@ namespace Kablunk
 		
 		if (m_Rotation)
 		{
-			if (Input::IsKeyPressed(Key::Q))
+			if (input::is_key_pressed(Key::Q))
 				m_CameraRotation += m_CameraRotationSpeed * ts * speedMult;
-			else if (Input::IsKeyPressed(Key::E))			  
+			else if (input::is_key_pressed(Key::E))
 				m_CameraRotation -= m_CameraRotationSpeed * ts * speedMult;
 
 			if (m_CameraRotation > 180.0f)
@@ -86,7 +86,7 @@ namespace Kablunk
 			return false;
 
 		KB_PROFILE_FUNCTION();
-		float speedMult = (Input::IsKeyPressed(Key::LeftShift)) ? 5.0f : 1.0f;
+		float speedMult = (input::is_key_pressed(Key::LeftShift)) ? 5.0f : 1.0f;
 		m_ZoomLevel -= e.GetYOffset() * 0.25f * speedMult;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);

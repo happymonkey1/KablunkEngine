@@ -18,11 +18,14 @@
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 
+#include "Kablunk/UI/PanelFactory.h"
+
 #include <filesystem>
 
 
 namespace Kablunk
 {
+
 	struct IdComponent
 	{
 		uuid::uuid64 Id{ uuid::generate() };
@@ -57,6 +60,15 @@ namespace Kablunk
 		ParentingComponent(uuid::uuid64 parent) : Parent{ parent } {}
 	};
 
+	struct PrefabComponent
+	{
+		uuid::uuid64 Prefab_id = uuid::nil_uuid;
+		uuid::uuid64 Entity_id = uuid::nil_uuid;
+
+		PrefabComponent() = default;
+		PrefabComponent(const PrefabComponent&) = default;
+	};
+
 	struct TransformComponent
 	{
 		glm::vec3 Translation	= glm::vec3{ 0.0f };
@@ -81,6 +93,7 @@ namespace Kablunk
 
 	struct SpriteRendererComponent
 	{
+		// #TODO old "asset" class uses absolute path. 
 		Asset<Texture2D> Texture{ Asset<Texture2D>("") };
 		glm::vec4 Color{ 1.0f };
 		float Tiling_factor{ 1.0f };
@@ -129,10 +142,10 @@ namespace Kablunk
 	// #TODO allow for multiple scripts to be attached to the same entity
 	struct NativeScriptComponent
 	{
-		Scope<NativeScriptInterface> Instance = nullptr;
+		std::unique_ptr<INativeScript> Instance = nullptr;
 		std::filesystem::path Filepath = "";
 
-		using InstantiateScriptFunc = Scope<NativeScriptInterface>(*)();
+		using InstantiateScriptFunc = Scope<INativeScript>(*)();
 		// Function pointer instead of std::function bc of potential memory allocations
 		InstantiateScriptFunc InstantiateScript = nullptr;
 
@@ -150,6 +163,12 @@ namespace Kablunk
 
 			other.Instance = nullptr;
 			other.Filepath = "";
+		}
+
+		~NativeScriptComponent() noexcept
+		{
+			if (Instance)
+				destroy_script();
 		}
 		
 		NativeScriptComponent& operator=(const NativeScriptComponent& other)
@@ -178,7 +197,7 @@ namespace Kablunk
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
 		{
-			InstantiateScript	= [args...]() -> Scope<NativeScriptInterface> { return CreateScope<T>(args...) };
+			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
 		}
 
 		void BindEditor()
@@ -190,13 +209,19 @@ namespace Kablunk
 		void BindEditor(const std::filesystem::path& filepath)
 		{
 			if (filepath.empty())
+			{
+				KB_CORE_ERROR("Empty filepath passed to BindEditor()!");
 				return;
+			}
 
-			auto annotations = Parser::CPP::FindParserTokens(filepath.string());
+			KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
+			std::filesystem::path absolute_path = ProjectManager::get().get_active()->get_project_directory() / filepath;
+
+			auto annotations = Parser::CPP::FindParserTokens(absolute_path.string());
 			for (const auto& annot : annotations)
 				KB_CORE_INFO("{}", annot.ToString());
 
-			auto struct_names = Parser::CPP::FindClassAndStructNames(filepath.string(), 1);
+			auto struct_names = Parser::CPP::FindClassAndStructNames(absolute_path.string(), 1);
 			if (struct_names.empty())
 			{
 				KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);
@@ -204,11 +229,11 @@ namespace Kablunk
 			}
 			auto struct_name = struct_names[0];
 
-			Instance = NativeScriptEngine::GetScript(struct_name);
+			Instance = NativeScriptEngine::get().get_script(struct_name);
 
 			if (!Instance)
 			{
-				KB_CORE_ERROR("Script could not be loaded from file '{0}'", filepath);
+				KB_CORE_ERROR("Script could not be loaded from file '{0}'", absolute_path);
 				return;
 			}
 
@@ -216,6 +241,11 @@ namespace Kablunk
 				Filepath = filepath;
 		}
 
+		// Destroy the instance of the script and potentially free memory.
+		void destroy_script(bool free_memory = true)
+		{
+			Instance.reset();
+		}
 
 		friend class Scene;
 	};
@@ -318,6 +348,25 @@ namespace Kablunk
 	struct SceneComponent
 	{
 		uuid::uuid64 Scene_id;
+	};
+
+	struct UIPanelComponent
+	{
+		ui::panel_type_t panel_type = ui::panel_type_t::NONE;
+		ui::IPanel* panel = nullptr;
+
+		UIPanelComponent() = default;
+		UIPanelComponent(const UIPanelComponent& other)
+		{
+			panel = ui::PanelFactory::copy_panel(other.panel);
+
+		}
+		UIPanelComponent(ui::IPanel* p) : panel{ p } {}
+		~UIPanelComponent()
+		{
+			delete panel;
+			panel = nullptr;
+		}
 	};
 }
 

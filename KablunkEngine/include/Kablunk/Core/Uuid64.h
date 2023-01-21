@@ -1,8 +1,6 @@
 #ifndef KABLUNK_CORE_UUID64_H
 #define KABLUNK_CORE_UUID64_H
 
-#include "Kablunk/Core/Log.h"
-
 #include <random>
 #include <limits>
 #include <string>
@@ -43,7 +41,6 @@ namespace Kablunk::uuid
 		uuid64 id = dist(twister);
 		uint64_t mac_address = MacAddress::Get();
 #ifdef KB_TRUE_UUID
-		KB_CORE_WARN("uuid generator currently has 16 bits of entropy!");
 		uint64_t random_mask = 0xFFFF;
 		uint64_t random_bits = id & random_mask;
 #endif

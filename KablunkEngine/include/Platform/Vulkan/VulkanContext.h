@@ -20,6 +20,7 @@ namespace Kablunk
 	class VulkanContext : public GraphicsContext {
 	public:
 		VulkanContext(GLFWwindow* window_handle);
+		~VulkanContext() = default;
 
 		void Init() override;
 		void SwapBuffers() override;

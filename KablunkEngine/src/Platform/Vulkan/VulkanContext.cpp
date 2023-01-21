@@ -168,14 +168,18 @@ namespace Kablunk
 	{
 		KB_CORE_INFO("Shutting down Vulkan instance");
 
-		m_swap_chain.Cleanup();
+		m_swap_chain.Destroy();
 
-		m_device->Destroy();
+		// device needs to reference the vulkan context to be destroyed
+		// device destruction is now destroyed with the window, before this context
+		// is destroyed
+		//m_device->Destroy();
 
 		if (m_enable_validation_layers)
 			DestroyDebugUtilsMessengerEXT(s_instance, m_debug_messenger, nullptr);
 
 		vkDestroyInstance(s_instance, nullptr);
+		s_instance = nullptr;
 	}
 
 }

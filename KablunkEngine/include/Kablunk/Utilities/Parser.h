@@ -1,7 +1,7 @@
 #ifndef KABLUNK_UTILITIES_PARSER_CPP_H
 #define KABLUNK_UTILITIES_PARSER_CPP_H
 
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 
 #include "Kablunk/Utilities/ParserToken.h"
 #include "Kablunk/Utilities/Reflection/KablunkTypes.h"

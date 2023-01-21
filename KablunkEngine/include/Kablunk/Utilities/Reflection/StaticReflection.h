@@ -2,7 +2,7 @@
 #define KABLUNK_UTILITIES_STATIC_REFLECTION_H
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 
 #include <vector>
 #include <string>

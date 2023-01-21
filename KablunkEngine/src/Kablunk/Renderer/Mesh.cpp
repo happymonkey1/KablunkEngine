@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Scene/Entity.h"
 
 #include <assimp/scene.h>
@@ -58,7 +58,16 @@ namespace Kablunk
 		m_is_animated = m_scene->mAnimations != nullptr;
 		if (m_is_animated)
 			KB_CORE_INFO("ANIMATED MESH!");
-		m_mesh_shader = m_is_animated ? Renderer::GetShader("Kablunk_diffuse_anim")  : Renderer::GetShader("Kablunk_diffuse_static");
+
+		if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+		{
+			m_mesh_shader = m_is_animated ? render::get_shader("Kablunk_diffuse_anim") : render::get_shader("Kablunk_diffuse_static");
+		}
+		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
+		}
+
 		m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		size_t vertex_count = 0;
@@ -70,8 +79,8 @@ namespace Kablunk
 			aiMesh* mesh = scene->mMeshes[m];
 
 			Submesh& submesh = m_sub_meshes.emplace_back();
-			submesh.BaseVertex = vertex_count;
-			submesh.BaseIndex = index_count;
+			submesh.BaseVertex = static_cast<uint32_t>(vertex_count);
+			submesh.BaseIndex = static_cast<uint32_t>(index_count);
 			submesh.Material_index = mesh->mMaterialIndex;
 			submesh.VertexCount = mesh->mNumVertices;
 			submesh.IndexCount = mesh->mNumFaces * 3;
@@ -121,7 +130,7 @@ namespace Kablunk
 					if (mesh->HasTextureCoords(0))
 					{
 						// #FIXME figure out how to deal with multiple textures
-						v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
+						v.TexCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 					}
 
 					m_static_vertices.push_back(v);
@@ -136,7 +145,13 @@ namespace Kablunk
 				m_indices.push_back(index);
 
 				if (!m_is_animated)
-					m_triangle_cache[i].emplace_back(m_static_vertices[index.V1], m_static_vertices[index.V2], m_static_vertices[index.V3]);
+				{
+					m_triangle_cache[m].emplace_back(
+						m_static_vertices[index.V1 + submesh.BaseVertex], 
+						m_static_vertices[index.V2 + submesh.BaseVertex], 
+						m_static_vertices[index.V3 + submesh.BaseVertex]
+					);
+				}
 			}
 		}
 
@@ -180,8 +195,8 @@ namespace Kablunk
 			
 		}
 
-		IntrusiveRef<Texture2D> white_texture = Renderer::GetWhiteTexture();
-		if (scene->HasMaterials() && Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
+		IntrusiveRef<Texture2D> white_texture = render::get_white_texture();
+		if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 		{
 			m_textures.resize(scene->mNumMaterials);
 			m_materials.resize(scene->mNumMaterials);
@@ -355,7 +370,7 @@ namespace Kablunk
 		}
 		else
 		{
-			if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR)
+			if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 			{
 				auto mat = Material::Create(m_mesh_shader, "Kablunk-Default");
 				// Props
@@ -371,7 +386,7 @@ namespace Kablunk
 				mat->Set("u_RoughnessTexture", white_texture);
 				m_materials.push_back(mat);
 			}
-			else if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+			else if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 			{
 				auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
 				mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
@@ -402,21 +417,23 @@ namespace Kablunk
 		submesh.Material_index = 0;
 		m_sub_meshes.push_back(submesh);
 
-		
-		m_mesh_shader = Renderer::GetShaderLibrary()->Get("Kablunk_diffuse_static");
-
 		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 		KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
 		m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 
-		if (Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
+		if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 		{
+			m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
 			auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
 			mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
 			mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
 			mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
 			m_materials.push_back(mat);
+		}
+		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
+		{
+			KB_CORE_ASSERT(false, "not implemented!");
 		}
 	}
 
@@ -556,7 +573,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::Mesh(const IntrusiveRef<Mesh>& other)
@@ -567,7 +584,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
@@ -577,7 +594,7 @@ namespace Kablunk
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
 		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(i, IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::~Mesh()

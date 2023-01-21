@@ -1,7 +1,7 @@
 #ifndef KABLUNK_UTILITIES_REFLECTION_INTEGRAL_TYPE_TRAITS_H
 #define KABLUNK_UTILITIES_REFLECTION_INTEGRAL_TYPE_TRAITS_H
 
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 
 namespace Kablunk::Reflect

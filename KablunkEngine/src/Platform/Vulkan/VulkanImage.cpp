@@ -21,7 +21,7 @@ namespace Kablunk
 		if (m_info.image)
 		{
 			const VulkanImageInfo& info = m_info;
-			RenderCommand::SubmitResourceFree([info, layer_views = m_per_layer_image_views]()
+			render::submit_resource_free([info, layer_views = m_per_layer_image_views]()
 				{
 					const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 					vkDestroyImageView(vk_device, info.image_view, nullptr);
@@ -44,7 +44,7 @@ namespace Kablunk
 	void VulkanImage2D::Invalidate()
 	{
 		IntrusiveRef<VulkanImage2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -57,7 +57,7 @@ namespace Kablunk
 			return;
 
 		IntrusiveRef<VulkanImage2D> instance = this;
-		RenderCommand::SubmitResourceFree([info = m_info, layer_views = m_per_layer_image_views]() mutable
+		render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyImageView(vk_device, info.image_view, nullptr);
@@ -193,7 +193,7 @@ namespace Kablunk
 	void VulkanImage2D::CreatePerLayerImageViews()
 	{
 		IntrusiveRef<VulkanImage2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_CreatePerLayerImageViews();
 			});
@@ -271,7 +271,7 @@ namespace Kablunk
 		if (m_mip_image_views.find(mip) == m_mip_image_views.end())
 		{
 			IntrusiveRef<VulkanImage2D> instance = this;
-			RenderCommand::Submit([instance, mip]() mutable
+			render::submit([instance, mip]() mutable
 				{
 					instance->RT_GetMipImageView(mip);
 				});

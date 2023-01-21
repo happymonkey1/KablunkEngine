@@ -45,8 +45,8 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::OpenGL:	return new OpenGLImguiLayer{};
-		case RendererAPI::RenderAPI_t::Vulkan:	return new VulkanImGuiLayer{};
+		case RendererAPI::render_api_t::OpenGL:	return new OpenGLImguiLayer{};
+		case RendererAPI::render_api_t::Vulkan:	return new VulkanImGuiLayer{};
 		default:								KB_CORE_ASSERT(false, "unknown renderAPI!"); return nullptr;
 		}
 	}

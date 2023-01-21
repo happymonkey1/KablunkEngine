@@ -2,9 +2,12 @@
 
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Platform/Vulkan/VulkanRendererAPI.h"
+
+#include "Kablunk/UI/IPanel.h"
 
 #include <imgui.h>
 
@@ -17,9 +20,9 @@ namespace Kablunk
 	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
 	{
-		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan, "SceneRenderer only supports Vulkan!");
+		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan, "SceneRenderer only supports Vulkan!");
 
-		Init();
+		init();
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -27,7 +30,7 @@ namespace Kablunk
 
 	}
 
-	void SceneRenderer::Init()
+	void SceneRenderer::init()
 	{
 		if (m_specification.swap_chain_target)
 			m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
@@ -38,7 +41,7 @@ namespace Kablunk
 		m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
 		m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
 
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
 		m_uniform_buffer_set->Create(sizeof(glm::mat4), 1);
@@ -58,8 +61,8 @@ namespace Kablunk
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "GeometryPipeline";
-			std::string shader_to_use = Renderer::GetRendererPipeline() == RendererPipelineDescriptor::PBR ? "Kablunk_pbr_static" : "Kablunk_diffuse_static";
- 			pipeline_spec.shader = Renderer::GetShaderLibrary()->Get(shader_to_use);
+			std::string shader_to_use = render::get_render_pipeline() == RendererPipelineDescriptor::PBR ? "Kablunk_pbr_static" : "Kablunk_diffuse_static";
+ 			pipeline_spec.shader = render::get_shader(shader_to_use);
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -103,7 +106,7 @@ namespace Kablunk
 			composite_render_pass_spec.target_framebuffer = framebuffer;
 			composite_render_pass_spec.debug_name = "SceneComposite";
 
-			IntrusiveRef<Shader> composite_shader = Renderer::GetShaderLibrary()->Get("scene_composite");
+			IntrusiveRef<Shader> composite_shader = render::get_shader("scene_composite");
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.layout = {
@@ -148,19 +151,19 @@ namespace Kablunk
 		m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
 		IntrusiveRef<SceneRenderer> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->m_resources_created = true;
 			});
 	}
 
-	void SceneRenderer::SetScene(IntrusiveRef<Scene> context)
+	void SceneRenderer::set_scene(IntrusiveRef<Scene> context)
 	{
 		//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 		m_context = context;
 	}
 
-	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
+	void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 	{
 		KB_CORE_ASSERT(m_context, "No scene context set!");
 		KB_CORE_ASSERT(!m_active, "Already active!");
@@ -191,66 +194,74 @@ namespace Kablunk
 
 		auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
-		const glm::vec3 camera_position = glm::inverse(scene_camera.view_mat)[3];
+		const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
+		const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
+		const glm::vec3 camera_position = view_inverse[3];
 
 		const auto inverse_view_projection = glm::inverse(view_projection);
 		
 		// Set camera uniform buffer
 		CameraDataUB camera_data = { 
-			scene_camera.camera.GetProjection() * scene_camera.view_mat, 
+			view_projection, 
 			scene_camera.camera.GetProjection(), 
 			scene_camera.view_mat, 
 			camera_position
 		};
 		
 		IntrusiveRef<SceneRenderer> instance = this;
-		RenderCommand::Submit([instance, camera_data]() mutable
+		render::submit([instance, camera_data]() mutable
 			{
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
-			});
+			}
+		);
 
 		// Set Renderer Transform
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
-				uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				uint32_t buffer_index = render::get_current_frame_index();
 				glm::mat4 transform = glm::mat4{ 1.0f };
 				instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
-			});
+			}
+		);
 
 		// Submit point lights uniform buffer
 		const auto light_enviornment_copy = m_scene_data.light_environment;
 		const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
 		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
 		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
-		RenderCommand::Submit([instance, &point_light_ub_data]() mutable
+		render::submit([instance, &point_light_ub_data]() mutable
 			{
-				const uint32_t buffer_index = Renderer::GetCurrentFrameIndex();
+				const uint32_t buffer_index = render::get_current_frame_index();
 				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
-				buffer_set->RT_SetData(&point_light_ub_data, point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count);
+				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
 			}
 		);
 	}
 
-	void SceneRenderer::EndScene()
+	void SceneRenderer::end_scene()
 	{
 		if (m_use_threads)
 		{
 			IntrusiveRef<SceneRenderer> instance = this;
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
-					instance->FlushDrawList();
+					instance->flush_draw_list();
+					//instance->flush_2d_draw_list();
 				}
 			));
 		}
 		else
-			FlushDrawList();
+		{
+			flush_draw_list();
+			//flush_2d_draw_list();
+		}
 
 		m_active = false;
 	}
 
-	void SceneRenderer::SubmitMesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
+	void SceneRenderer::submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
 	{
 		//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 		//uint32_t material_index = 0; // #TODO fix
@@ -262,13 +273,13 @@ namespace Kablunk
 		m_transform_vertex_data[m_draw_list.size()].MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
 
 
-		// #TODO instancing
+		// #TODO fix instancing implementation
 		m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 	}
 
-	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
+	void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	{
-		if (m_viewport_width != width || m_viewport_height!= height)
+		if (m_viewport_width != width || m_viewport_height != height)
 		{
 			m_viewport_width = width;
 			m_viewport_height = height;
@@ -276,12 +287,12 @@ namespace Kablunk
 		}
 	}
 
-	IntrusiveRef<RenderPass> SceneRenderer::GetFinalRenderPass()
+	IntrusiveRef<RenderPass> SceneRenderer::get_final_render_pass()
 	{
 		return m_composite_pipeline->GetSpecification().render_pass;
 	}
 
-	IntrusiveRef<Image2D> SceneRenderer::GetFinalPassImage()
+	IntrusiveRef<Image2D> SceneRenderer::get_final_render_pass_image()
 	{
 		if (!m_resources_created)
 			return nullptr;
@@ -294,17 +305,17 @@ namespace Kablunk
 	{
 		ImGui::Begin("Render Statistics");
 
-		uint32_t current_frame_index = Renderer::GetCurrentFrameIndex();
+		uint32_t current_frame_index = render::get_current_frame_index();
 		ImGui::Text("GPU time: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index));
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
-		Renderer2D::OnImGuiRender();
+		render2d::on_imgui_render();
 
 		ImGui::End();
 	}
 
-	void SceneRenderer::WaitForThreads()
+	void SceneRenderer::wait_for_threads()
 	{
 		for (auto& thread : s_thread_pool)
 			thread.join();
@@ -312,20 +323,28 @@ namespace Kablunk
 		s_thread_pool.clear();
 	}
 
-	void SceneRenderer::FlushDrawList()
+	void SceneRenderer::submit_ui_panel(ui::IPanel* panel)
+	{
+		m_ui_panels_list.push_back(panel);
+	}
+
+	void SceneRenderer::flush_draw_list()
 	{
 		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
-			PreRender();
+			// do pre-render tasks
+			pre_render();
 
-			GeometryPass();
+			// draw 3d geometry
+			geometry_pass();
 
-			CompositePass();
+			// composite and post processing pass
+			composite_pass();
 		}
 		else
 		{
-			ClearPass();
+			clear_pass();
 		}
 
 		m_command_buffer->End();
@@ -335,51 +354,115 @@ namespace Kablunk
 		m_draw_list = {};
 	}
 
-	void SceneRenderer::PreRender()
+	void SceneRenderer::flush_2d_draw_list()
+	{
+		// 2d composite and ui pass
+		if (get_final_render_pass_image())
+		{
+			// #TODO assert that the camera is orthographic for screen space panels
+
+			// get camera from scene renderer data
+			const glm::mat4& main_camera_proj = m_scene_data.camera.camera.GetProjection();
+			const glm::mat4& main_camera_transform = m_scene_data.camera.view_mat;
+
+			// start 2d scene rendering
+			render2d::begin_scene(m_scene_data.camera.camera, main_camera_transform);
+			render2d::set_target_render_pass(get_external_composite_render_pass());
+
+			if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
+			{
+				// draw 2d elements
+				two_dimensional_pass();
+
+				// draw ui elements
+				ui_pass();
+			}
+
+			render2d::end_scene();
+		}
+		else
+			KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
+		
+
+		m_entity_list.clear();
+		m_ui_panels_list.clear();
+	}
+
+	void SceneRenderer::pre_render()
 	{
 		// #TODO
 	}
 
-	void SceneRenderer::ClearPass()
+	void SceneRenderer::clear_pass()
 	{
-		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
-		RenderCommand::EndRenderPass(m_command_buffer);
+		render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
+		render::end_render_pass(m_command_buffer);
 	}
 
-	void SceneRenderer::ClearPass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
+	void SceneRenderer::clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
 		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
-		RenderCommand::BeginRenderPass(m_command_buffer, render_pass, explicit_clear);
-		RenderCommand::EndRenderPass(m_command_buffer);
+		render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
+		render::end_render_pass(m_command_buffer);
 	}
 
-	void SceneRenderer::GeometryPass()
+	void SceneRenderer::ui_pass()
 	{
-		m_gpu_time_query_indices.geometry_pass_query = m_command_buffer->BeginTimestampQuery();
-		RenderCommand::BeginRenderPass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
+		if (m_ui_panels_list.empty())
+			return;
+
+		for (ui::IPanel* panel : m_ui_panels_list)
+			panel->on_render(m_scene_data.camera);
+	}
+
+	void SceneRenderer::two_dimensional_pass()
+	{
+
+		for (Entity entity : m_entity_list)
+			render2d::draw_sprite(entity);
+
+		// #TODO circles, lines, rectangles, text
+
+	}
+
+	void SceneRenderer::geometry_pass()
+	{
+		m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
+		render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
 		// submit transform data
-		RenderCommand::Submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
+		m_transform_buffer->SetData(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
+		/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 			{
-				transform_buffer->RT_SetData(transform_data, sizeof(TransformVertexData) * transform_count);
+				transform_buffer->RT_SetData(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
 			}
-		);
+		);*/
 		
 		size_t transform_offset_ind = 0;
 		for (const auto& draw_command_data : m_draw_list)
 		{
-			// #TODO update transform buffer and pass through
-			RenderCommand::RenderMesh(m_command_buffer, m_geometry_pipeline, m_uniform_buffer_set, m_storage_buffer_set, draw_command_data.Mesh, draw_command_data.Submesh_index, draw_command_data.Material_table, m_transform_buffer, transform_offset_ind++, 1);
+			render::render_instanced_submesh(
+				m_command_buffer, 
+				m_geometry_pipeline, 
+				m_uniform_buffer_set, 
+				m_storage_buffer_set, 
+				draw_command_data.Mesh, 
+				draw_command_data.Submesh_index, 
+				draw_command_data.Material_table, 
+				m_transform_buffer, 
+				static_cast<uint32_t>(transform_offset_ind++), 
+				1ul
+			);
 		}
 
-		RenderCommand::EndRenderPass(m_command_buffer);
+		render::end_render_pass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.geometry_pass_query);
 	}
 
-	void SceneRenderer::CompositePass()
+	void SceneRenderer::composite_pass()
 	{
-		m_gpu_time_query_indices.composite_pass_query = m_command_buffer->BeginTimestampQuery();
-		RenderCommand::BeginRenderPass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
+		m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
+		render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 
 		constexpr float exposure = 1.0f; // #TODO dynamic based off camera
 		constexpr bool bloom_enabled = false; // #TODO dynamic
@@ -402,9 +485,9 @@ namespace Kablunk
 		m_composite_material->Set("u_BloomTexture", m_bloom_texture);
 		m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
 
-		RenderCommand::SubmitFullscreenQuad(m_command_buffer, m_composite_pipeline, nullptr, m_composite_material);
+		render::submit_fullscreen_quad(m_command_buffer, m_composite_pipeline, nullptr, m_composite_material);
 
-		RenderCommand::EndRenderPass(m_command_buffer);
+		render::end_render_pass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);
 	}
 

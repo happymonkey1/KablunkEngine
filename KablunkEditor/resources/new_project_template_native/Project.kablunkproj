@@ -1,0 +1,10 @@
+Project:
+  Name: $PROJECT_NAME$
+  Asset_directory: assets
+  Native_script_modules_path: bin
+  Native_script_default_namespace: $DEFAULT_NAMESPACE$
+  Reload_native_script_assemblies_on_play: False
+  Reload_csharp_script_assemblies_on_play: True
+  CSharp_script_modules_path: assets/scripts/binaries
+  CSharp_script_default_namespace: $DEFAULT_NAMESPACE$
+  Start_scene: $SCENE_NAME$

@@ -2,7 +2,7 @@
 
 #include "Kablunk/Renderer/MaterialAsset.h"
 
-#include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 
 namespace Kablunk
 {
@@ -21,7 +21,7 @@ namespace Kablunk
 
 	MaterialAsset::MaterialAsset()
 	{
-		m_material = Material::Create(Renderer::GetShaderLibrary()->Get("Kablunk_pbr_static"));
+		m_material = Material::Create(render::get_shader_library()->Get("Kablunk_pbr_static"));
 
 		// Set defaults
 		SetAlbedoColor(glm::vec3(0.8f));
@@ -31,10 +31,10 @@ namespace Kablunk
 		SetRoughness(0.4f);
 
 		// Maps
-		SetAlbedoMap(Renderer::GetWhiteTexture());
-		SetNormalMap(Renderer::GetWhiteTexture());
-		SetMetalnessMap(Renderer::GetWhiteTexture());
-		SetRoughnessMap(Renderer::GetWhiteTexture());
+		SetAlbedoMap(render::get_white_texture());
+		SetNormalMap(render::get_white_texture());
+		SetMetalnessMap(render::get_white_texture());
+		SetRoughnessMap(render::get_white_texture());
 
 	}
 
@@ -100,7 +100,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearAlbedoMap()
 	{
-		m_material->Set(s_albedo_map_uniform_str, Renderer::GetWhiteTexture());
+		m_material->Set(s_albedo_map_uniform_str, render::get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetNormalMap()
@@ -125,7 +125,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearNormalMap()
 	{
-		m_material->Set(s_normal_map_uniform_str, Renderer::GetWhiteTexture());
+		m_material->Set(s_normal_map_uniform_str, render::get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetMetalnessMap()
@@ -140,7 +140,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearMetalnessMap()
 	{
-		m_material->Set(s_metalness_map_uniform_str, Renderer::GetWhiteTexture());
+		m_material->Set(s_metalness_map_uniform_str, render::get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetRoughnessMap()
@@ -155,7 +155,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearRoughnessMap()
 	{
-		m_material->Set(s_roughness_map_uniform_str, Renderer::GetWhiteTexture());
+		m_material->Set(s_roughness_map_uniform_str, render::get_white_texture());
 	}
 
 	MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)

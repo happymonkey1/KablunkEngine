@@ -16,7 +16,13 @@ namespace Kablunk
 
 	RenderCommandQueue::~RenderCommandQueue()
 	{
-		delete[] m_command_buffer;
+		
+	}
+
+	void RenderCommandQueue::shutdown()
+	{
+		if (m_command_buffer)
+			delete[] m_command_buffer;
 	}
 
 	void* RenderCommandQueue::Allocate(RenderCommandFn func, uint32_t size)

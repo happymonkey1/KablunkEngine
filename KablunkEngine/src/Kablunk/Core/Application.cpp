@@ -13,42 +13,63 @@
 #include "Platform/Vulkan/VulkanContext.h"
 
 //#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
+
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
+#include "Kablunk/Asset/AssetManager.h"
+
+#include "Kablunk/Audio/AudioCommand.h"
 
 
 
 namespace Kablunk
 {
-
-	Application* Application::s_Instance = nullptr;
-
 	constexpr uint8_t NUM_JOB_THREADS = 4;
 
 
-	Application::Application(const ApplicationSpecification& specification)
-		: m_specification{ specification }, m_thread_pool{ NUM_JOB_THREADS }
+	Application::Application()
+		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }
 	{
-		KB_PROFILE_FUNCTION();
+		
+	}
 
-		KB_CORE_ASSERT(!s_Instance, "Application already exists!");
-		s_Instance = this;
+	Application::~Application()
+	{
+		shutdown();
+	}
+
+	void Application::init()
+	{
+		KB_CORE_INFO("Application initialized")
+
+		KB_PROFILE_FUNCTION();
 		{
-			m_window = Window::Create({ specification.Name, specification.Width, specification.height });
+			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height });
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
-			m_window->SetVsync(specification.Vsync);
+			m_window->SetVsync(m_specification.Vsync);
 		}
 
-		Renderer::Init();
-		RenderCommand::WaitAndRender();
+		audio::init_audio_engine();
+		render::init();
+		render::wait_and_render();
 
-		if (specification.Enable_imgui)
+		if (m_specification.Enable_imgui)
 		{
 			m_imgui_layer = ImGuiLayer::Create();
 			PushOverlay(m_imgui_layer);
+
+			// #TODO clean up so this is necessary
+			// Get and set global ImGuiContext* for use in dll(s)
+			ImGuiGlobalContext& g_imgui_context = ImGuiGlobalContext::get();
+			g_imgui_context.init();
+			g_imgui_context.set_context(ImGui::GetCurrentContext());
 		}
 
+		PluginManager::get().init();
 		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
-		NativeScriptEngine::Init();
+
 
 		// #TODO should be based on projects later
 #if KB_DEBUG
@@ -59,26 +80,35 @@ namespace Kablunk
 		//NativeScriptEngine::Open(SANDBOX_PATH);
 	}
 
-	Application::~Application()
+	void Application::shutdown()
 	{
+		if (m_has_shutdown)
+			return;
+		
 		m_thread_pool.Shutdown();
 		CSharpScriptEngine::Shutdown();
 
+		// clear the framebuffer pool
 		FramebufferPool::Get()->GetAll().clear();
 
+		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
-		RenderCommand::WaitAndRender();
+		render::wait_and_render();
 
-		for (uint32_t i = 0; i < Renderer::GetConfig().frames_in_flight; ++i)
-		{
-			auto& queue = RenderCommand::GetRenderResourceReleaseQueue(i);
-			queue.Execute();
-		}
+		ProjectManager::get().shutdown();
 
-		Renderer::Shutdown();
+		render::shutdown();
 
-		NativeScriptEngine::Shutdown();
+		NativeScriptEngine::get().shutdown();
+		PluginManager::get().shutdown();
+
+		audio::shutdown_audio_engine();
+
+		// delete window
+		m_window.reset();
+
+		m_has_shutdown = true;
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -137,7 +167,7 @@ namespace Kablunk
 		}
 
 		m_minimized = false;
-		Renderer::OnWindowResize(width, height);
+		render::on_window_resize(width, height);
 
 		return false;
 	}
@@ -145,8 +175,6 @@ namespace Kablunk
 	void Application::Run()
 	{
 		KB_PROFILE_FUNCTION();
-
-		OnStartup();
 
 		while (m_running)
 		{
@@ -160,7 +188,7 @@ namespace Kablunk
 
 			if (!m_minimized)
 			{
-				RenderCommand::BeginFrame();
+				render::begin_frame();
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
 						for (Layer* layer : m_layer_stack)
@@ -171,19 +199,19 @@ namespace Kablunk
 				{
 					//KB_TIME_FUNCTION_BEGIN()
 					Application* app = this;
-					RenderCommand::Submit([app]() { app->RenderImGui(); });
-					RenderCommand::Submit([=]() { m_imgui_layer->End(); });
+					render::submit([app]() { app->RenderImGui(); });
+					render::submit([=]() { m_imgui_layer->End(); });
 					
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
 
-				RenderCommand::EndFrame();
+				render::end_frame();
 
 				// #TODO fix this so API agnostic
-				if (RendererAPI::GetAPI() == RendererAPI::RenderAPI_t::Vulkan)
+				if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 				{
 					VulkanContext::Get()->GetSwapchain().BeginFrame();
-					RenderCommand::WaitAndRender();
+					render::wait_and_render();
 				}
 
 				m_window->OnUpdate();
@@ -194,7 +222,7 @@ namespace Kablunk
 			m_last_frame_time = time;
 		}
 
-		OnShutdown();
+		shutdown();
 	}
 
 	void Application::RenderImGui()
@@ -206,15 +234,5 @@ namespace Kablunk
 				layer->OnImGuiRender(m_timestep);
 		}
 		
-	}
-
-	void Application::OnStartup()
-	{
-
-	}
-
-	void Application::OnShutdown()
-	{
-		//NativeScriptEngine::Shutdown();
 	}
 }

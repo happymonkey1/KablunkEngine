@@ -12,21 +12,21 @@ namespace Kablunk
 {
 
 	VulkanMaterial::VulkanMaterial(const IntrusiveRef<Shader>& shader, const std::string& name /*= ""*/)
-		: m_shader{ shader }, m_name{ name }, m_write_descriptors(Renderer::GetConfig().frames_in_flight), m_dirty_descriptor_sets(Renderer::GetConfig().frames_in_flight)
+		: m_shader{ shader }, m_name{ name }, m_write_descriptors(render::get_frames_in_flights()), m_dirty_descriptor_sets(render::get_frames_in_flights())
 	{
 		Init();
-		Renderer::RegisterShaderDependency(shader, this);
+		render::register_shader_dependency(shader, this);
 	}
 
 	VulkanMaterial::VulkanMaterial(IntrusiveRef<Material> material, const std::string& name /*= ""*/)
 		: m_shader{ material->GetShader() }, m_name{ name }, 
-		m_write_descriptors(Renderer::GetConfig().frames_in_flight), 
-		m_dirty_descriptor_sets(Renderer::GetConfig().frames_in_flight, true)
+		m_write_descriptors(render::get_frames_in_flights()),
+		m_dirty_descriptor_sets(render::get_frames_in_flights(), true)
 	{
 		if (name.empty())
 			m_name = material->GetName();
 
-		Renderer::RegisterShaderDependency(m_shader, this);
+		render::register_shader_dependency(m_shader, this);
 
 		auto vulkan_material = material.As<VulkanMaterial>();
 		m_uniform_storage_buffer = Buffer::Copy(vulkan_material->m_uniform_storage_buffer.get(), vulkan_material->m_uniform_storage_buffer.size());
@@ -54,7 +54,7 @@ namespace Kablunk
 
 
 		IntrusiveRef<VulkanMaterial> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -62,7 +62,7 @@ namespace Kablunk
 
 	void VulkanMaterial::Invalidate()
 	{
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		auto shader = m_shader.As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
@@ -173,7 +173,7 @@ namespace Kablunk
 
 		std::vector<VkDescriptorImageInfo> array_image_infos;
 
-		uint32_t frame_index = Renderer::GetCurrentFrameIndex();
+		uint32_t frame_index = render::get_current_frame_index();
 
 		// currently can't cache resources because the same material could be rendered in multiple viewports, so we can't bind to the same uniform buffer
 		if (m_dirty_descriptor_sets[frame_index] || true)
@@ -245,7 +245,7 @@ namespace Kablunk
 
 	void VulkanMaterial::InvalidateDescriptorSets()
 	{
-		const uint32_t framesInFlight = Renderer::GetConfig().frames_in_flight;
+		const uint32_t framesInFlight = render::get_frames_in_flights();
 		for (uint32_t i = 0; i < framesInFlight; i++)
 			m_dirty_descriptor_sets[i] = true;
 	}

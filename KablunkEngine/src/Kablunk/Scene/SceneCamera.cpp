@@ -3,6 +3,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Kablunk/Core/Application.h"
+
+#include "Kablunk/Imgui/ImGuiGlobalContext.h"
+
+#include "Kablunk/Renderer/RenderCommand.h"
+
 // #TODO try to remove 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -47,57 +52,83 @@ namespace Kablunk
 
 	void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
 	{
+		if (width == 0 || height == 0)
+		{
+			KB_CORE_ERROR("[SceneCamera]: Trying to set aspect ratio with width={}, height={}!", width, height);
+			return;
+		}
+
 		m_aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
 		RecalculateProjection();
 	}
 
-	glm::vec3 SceneCamera::ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const
+	bool SceneCamera::is_mouse_in_viewport() const
 	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
 		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
 		{
-			ImGuiContext* imgui_context = ImGui::GetCurrentContext();
-			bool found = false;
-			for (ImGuiViewport* viewport : imgui_context->Viewports)
-			{
-				if (!viewport->PlatformUserData)
-					continue;
+			// get imgui mouse pos (in screen coordinates)
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
 
-				window_pos = { viewport->Pos.x, viewport->Pos.y };
-				window_size = { viewport->Size.x, viewport->Size.y };
-
-				found = true;
-				break;
-			}
-
-			if (!found)
-			{
-				KB_CORE_ERROR("SceneCamera::ScreenToWorldPoint(): ImGui enabled but could not find viewport!");
-				return glm::vec3{ 0.0f };
-			}
+			window_pos = render::get_viewport_pos();
+			window_size = render::get_viewport_size();
 		}
 		else
+		{
 			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ input::get_mouse_x(), input::get_mouse_y() };
+		}
 
-		glm::mat4 view_proj = GetProjection() * transform;
-		glm::mat4 inverse = glm::inverse(view_proj);
+		bool x_true = mouse_pos.x >= window_pos.x && mouse_pos.x <= window_pos.x + window_size.x;
+		bool y_true = mouse_pos.y >= window_pos.y && mouse_pos.y <= window_pos.y + window_size.y;
 
-		// account for viewport if running scene in editor
-		glm::vec3 transformed_screen_pos = { screen_pos.x - window_pos.x, screen_pos.y - window_pos.y, screen_pos.z };
+		return x_true && y_true;
+	}
 
-		// transform position to screen space x: [-1, 1], y: [-1, 1]
-		glm::vec2 screen_space_pos = {
-			(2.0f * (transformed_screen_pos.x / window_size.x)) - 1.0f,
-			1.0f - (2.0f * (transformed_screen_pos.y / window_size.y))
-		};
-		glm::vec4 in = { screen_space_pos.x, screen_space_pos.y, 0.0f, 1.0f };
+	glm::vec3 SceneCamera::ScreenToWorldPoint(const glm::vec3& screen_pos, const glm::mat4& transform) const
+	{
+		glm::vec2 mouse_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_pos = glm::vec2{ 0.0f };
+		glm::vec2 window_size;
 
-		glm::vec4 res_out = in * inverse;
+		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		{
+			// get imgui mouse pos (in screen coordinates)
+			auto [x, y] = ImGui::GetMousePos();
+			mouse_pos = glm::vec2{ x, y };
 
+			// subtract viewport position (in screen coordinates)
+			mouse_pos -= render::get_viewport_pos();
+			window_size = render::get_viewport_size();
+		}
+		else
+		{
+			window_size = Application::Get().GetWindowDimensions();
+			mouse_pos = glm::vec2{ screen_pos };
+		}
+
+		// translate to normalized device space
+		float mx = (mouse_pos.x / window_size.x) * 2.0f - 1.0f;
+		float my = ((mouse_pos.y / window_size.y) * 2.0f - 1.0f);
+
+		// store homogeneous space
+		// #TODO fix z
+		glm::vec4 mouse_clip_pos = { mx, my, -1.0f, 1.0f };
 		
-		return { res_out.x / res_out.w, res_out.y / res_out.w, res_out.z / res_out.w };
+		// compute projection/eye space
+		glm::mat4 view_proj = GetProjection() * transform;
+
+		// project to world space
+		glm::vec4 res = glm::inverse(view_proj) * mouse_clip_pos;
+		res.x /= res.w;
+		res.y /= res.w;
+		res.z /= res.w;
+
+		return res;
 	}
 
 	void SceneCamera::RecalculateProjection()
@@ -106,6 +137,7 @@ namespace Kablunk
 		{
 			case ProjectionType::Perspective:
 			{
+				// #TODO one of these is wrong...
 				m_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 				m_unreversed_projection = glm::perspective(m_perspective_fov, m_aspect_ratio, m_perspective_near, m_perspective_far);
 				break;

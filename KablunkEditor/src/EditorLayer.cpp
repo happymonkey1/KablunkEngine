@@ -11,7 +11,7 @@
 
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 
-#include <Kablunk/Scene/SceneSerializer.h>
+#include "Kablunk/Scene/SceneSerializer.h"
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -20,13 +20,17 @@
 #include "Kablunk/Project/Project.h"
 #include "Kablunk/Project/ProjectSerializer.h"
 
+#include "Kablunk/Plugin/PluginManager.h"
+
+#include "Kablunk/Renderer/RenderCommand2D.h"
+
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
 
 // #TODO the BEGIN_REGISTER_NATIVE_SCRIPTS and END_REGISTER_NATIVE_SCRIPTS macro must be used somewhere
 //		 to generate a function definition. Currently defined in Sandbox/Core.h and Eclipse/EclipseCore.h.
 //	     Only include one of these files until this issue is resolved.
-#include "Sandbox/Core.h"
+//#include "Sandbox/Core.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -51,7 +55,7 @@ namespace Kablunk
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
 		
 
@@ -72,9 +76,11 @@ namespace Kablunk
 		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
+		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
+
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(m_active_scene);
+		NativeScriptEngine::get().set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
@@ -111,7 +117,7 @@ namespace Kablunk
 		//   Render
 		// ==========
 
-		Renderer2D::ResetStats();
+		render2d::reset_stats();
 
 
 		switch (m_scene_state)
@@ -139,9 +145,10 @@ namespace Kablunk
 			break;
 		}
 
+		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
 		
-		SceneRenderer::WaitForThreads();
+		SceneRenderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -206,8 +213,10 @@ namespace Kablunk
 
 		m_scene_hierarchy_panel.OnImGuiRender();
 		m_content_browser_panel.OnImGuiRender();
+		m_asset_registry_panel.on_imgui_render();
+		m_asset_editor_panel->on_imgui_render();
 
-		if (Project::GetActive().get() != nullptr)
+		if (ProjectManager::get().get_active().get() != nullptr)
 			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
 		else
 			m_show_project_properties_panel = false;
@@ -220,8 +229,9 @@ namespace Kablunk
 
 			UI::PropertyReadOnlyFloat("Frame time", m_imgui_profiler_stats.Delta_time);
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
+			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			Renderer2D::Renderer2DStats stats = Kablunk::Renderer2D::GetStats();
+			render2d::renderer_2d_stats_t stats = render2d::get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -260,13 +270,22 @@ namespace Kablunk
 			auto panel_size = ImGui::GetContentRegionAvail();
 			auto width = panel_size.x, height = panel_size.y;
 			m_viewport_size = { width, height };
+			// #TODO recreating editor camera projection every frame seems unnecessary 
 			m_editor_camera.OnViewportResize(width, height);
-			m_viewport_renderer->SetViewportSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			m_active_scene->OnViewportResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			
+
+			// present the viewport (image) using imgui
 			UI::Image(
-				m_viewport_renderer->GetFinalPassImage(),
+				m_viewport_renderer->get_final_render_pass_image(),
 				{ m_viewport_size.x, m_viewport_size.y }
 			);
+			
+			// store viewport size and position in renderer
+			ImVec2 viewport_pos = ImGui::GetWindowPos();
+			Singleton<Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
+			Singleton<Renderer>::get().m_viewport_size = m_viewport_size;
 
 			ImDrawList* viewport_draw_list = ImGui::GetWindowDrawList();
 
@@ -276,17 +295,23 @@ namespace Kablunk
 				if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM", ImGuiDragDropFlags_SourceAllowNullID))
 				{
 					const auto path_wchar_str = (const wchar_t*)payload->Data;
-					auto path = std::filesystem::path{ Project::GetAssetDirectory() / path_wchar_str };
-					if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
-						OpenScene(path);
-					else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
+					auto path = std::filesystem::path{ path_wchar_str };
+					if (std::filesystem::is_regular_file(path))
 					{
-						auto entity = m_active_scene->CreateEntity("Untitled Model");
-						auto& mesh_comp = entity.AddComponent<MeshComponent>();
-						mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+						if (strcmp(path.extension().string().c_str(), FileExtensions::KABLUNK_SCENE) == 0)
+							OpenScene(path);
+						else if (strcmp(path.extension().string().c_str(), FileExtensions::FBX) == 0)
+						{
+							auto entity = m_active_scene->CreateEntity("Untitled Model");
+							auto& mesh_comp = entity.AddComponent<MeshComponent>();
+							mesh_comp.LoadMeshFromFileEditor(path.string(), entity);
+						}
+						else
+							KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
 					}
 					else
-						KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
+						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path);
+					
 				}
 				ImGui::EndDragDropTarget();
 			}
@@ -311,7 +336,7 @@ namespace Kablunk
 				auto transform = transform_component.GetTransform();
 
 				// Snapping
-				bool snap = Input::IsKeyPressed(Key::LeftControl);
+				bool snap = input::is_key_pressed(Key::LeftControl);
 				float snap_value = (m_gizmo_type == ImGuizmo::ROTATE) ? 45.0f : 0.5f;
 
 				float snap_values[3] = { snap_value, snap_value, snap_value };
@@ -357,8 +382,10 @@ namespace Kablunk
 			ImGui::End();
 		}
 		
-		
-		m_active_scene->OnImGuiRender();
+		// #TODO separate editor and runtime imgui render paths
+		if (m_scene_state != SceneState::Edit)
+			m_active_scene->OnImGuiRender();
+
 
 		CSharpScriptEngine::OnImGuiRender();
 
@@ -405,6 +432,10 @@ namespace Kablunk
 			
 			UI::PropertyReadOnlyChars("Project Location", s_project_filepath_buffer);
 		
+			// #TODO dropdown selector
+			bool create_native_script_project = true;
+			UI::Property("Native Project?", &create_native_script_project);
+
 			auto px = ImGui::GetColumnWidth() - button_size.x / 2.0f - style.FramePadding.x * 2.0f - style.ItemInnerSpacing.x - 1;
 			ImGui::NextColumn();
 			UI::ShiftCursorX(px);
@@ -435,7 +466,7 @@ namespace Kablunk
 			ImGui::PushFont(bold_font);
 			if (ImGui::Button("Create"))
 			{
-				CreateProject(full_project_path);
+				CreateProject(full_project_path, create_native_script_project);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -455,6 +486,40 @@ namespace Kablunk
 			if (strlen(s_project_filepath_buffer) > 0)
 				OpenProject(s_project_filepath_buffer);
 		}
+
+		/* Memory tracking panel */
+
+		if (m_show_memory_statistics_window && ImGui::Begin("Tracked Memory Usage", &m_show_memory_statistics_window))
+		{
+			float total_allocated = static_cast<float>(memory::GeneralAllocator::get().get_total_allocated()) / 1024.0f;
+			float total_freed = static_cast<float>(memory::GeneralAllocator::get().get_total_freed()) / 1024.0f;
+
+			UI::BeginProperties();
+
+			// #TODO downcasting bad!
+			UI::PropertyReadOnlyFloat("total allocations (Kb)", total_allocated);
+			UI::PropertyReadOnlyFloat("total frees (Kb)", total_freed);
+
+			const auto& allocation_stat_map = memory::GeneralAllocator::get().get_allocation_statistics_map();
+			for (const auto& [desc, usage_stats] : allocation_stat_map)
+			{
+				ImGui::Separator();
+				
+				std::filesystem::path filepath = std::filesystem::path{ desc };
+				float allocated_kb = static_cast<float>(usage_stats.total_allocated) / 1024.0f;
+				float freed_kb = static_cast<float>(usage_stats.total_freed) / 1024.0f;
+
+				UI::PropertyReadOnlyString("File", filepath.stem().string());
+				UI::PropertyReadOnlyFloat("total allocations (Kb)", allocated_kb);
+				UI::PropertyReadOnlyFloat("total frees (Kb)", freed_kb);
+			}
+
+			UI::EndProperties();
+
+			ImGui::End();
+		}
+
+		/* End memory tracking panel */
 
 
 		ImGui::PopStyleVar(2);
@@ -499,7 +564,7 @@ namespace Kablunk
 			if (ImGui::BeginMenu("Edit"))
 			{
 
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 					ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -511,15 +576,15 @@ namespace Kablunk
 #if KB_NATIVE_SCRIPTING
 				if (ImGui::MenuItem("Update Project Engine Files"))
 					UpdateProjectEngineFiles();
-
-				if (ImGui::MenuItem("Reload NativeScript DLLs"))
-					NativeScriptEngine::Get()->LoadDLLRuntime(Project::GetNativeScriptModuleFileName(), Project::GetNativeScriptModulePath().string());
 #endif
+				if (ImGui::MenuItem("Reload NativeScript Assembly"))
+					LoadNativeScriptModule();
+
 
 				if (ImGui::MenuItem("Reload C# Assemblies"))
-					CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
+					CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 				
-				if (!Project::GetActive())
+				if (!ProjectManager::get().get_active())
 				{
 					ImGui::PopStyleVar();
 					ImGui::PopItemFlag();
@@ -527,6 +592,20 @@ namespace Kablunk
 
 				if (ImGui::MenuItem("Select KablunkEngine Install"))
 					m_show_replace_kablunk_install_popup = true;
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("View"))
+			{
+				if (ImGui::MenuItem("Memory Statistics", nullptr, m_show_memory_statistics_window))
+					m_show_memory_statistics_window ^= true;
+
+				if (ImGui::MenuItem("Debug Statistics", nullptr, m_show_debug_panel))
+					m_show_debug_panel ^= true;
+
+				if (ImGui::MenuItem("Asset Registry", nullptr, m_asset_registry_panel.get_visible()))
+					m_asset_registry_panel.set_visible(!m_asset_registry_panel.get_visible());
 
 				ImGui::EndMenu();
 			}
@@ -689,17 +768,18 @@ namespace Kablunk
 		m_scene_state = SceneState::Play;
 		//m_active_scene->OnStartRuntime();
 		
-		if (Project::GetActive())
-			if (Project::GetActive()->GetConfig().Reload_csharp_script_assemblies_on_play)
-				CSharpScriptEngine::ReloadAssembly(Project::GetCSharpScriptModuleFilePath());
+		if (ProjectManager::get().get_active())
+			if (ProjectManager::get().get_active()->GetConfig().Reload_csharp_script_assemblies_on_play)
+				CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 
 		m_runtime_scene = Scene::Copy(m_active_scene);
-		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
-		NativeScriptEngine::Get()->SetScene(m_runtime_scene);
-		m_runtime_scene->OnStartRuntime();
-
 		m_active_scene = m_runtime_scene;
-		m_viewport_renderer->SetScene(m_active_scene);
+
+		// need to set script engine context before running scene->OnStartRuntime(), because scripts may depend on scene context.
+		NativeScriptEngine::get().set_scene(m_active_scene);
+		m_active_scene->OnStartRuntime();
+
+		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		m_selected_entity = {};
 	}
@@ -715,13 +795,14 @@ namespace Kablunk
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
-		m_viewport_renderer->SetScene(m_active_scene);
-		NativeScriptEngine::Get()->SetScene(nullptr);
+		m_viewport_renderer->set_scene(m_active_scene);
+		NativeScriptEngine::get().set_scene(nullptr);
 	}
 
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_editor_camera.OnEvent(e);
+		m_asset_editor_panel->on_event(e);
 
 		if (e.GetEventType() == EventType::WindowMinimized)
 			m_viewport_size = { 0.0f, 0.0f };
@@ -732,6 +813,8 @@ namespace Kablunk
 
 		if (m_scene_state == SceneState::Play)
 			m_active_scene->OnEventRuntime(e);
+		else
+			m_active_scene->OnEventEditor(e);
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -740,8 +823,8 @@ namespace Kablunk
 		if (e.GetRepeatCount() > 0)
 			return false;
 
-		bool ctrl_pressed  = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		bool shift_pressed = Input::IsKeyPressed(Key::LeftShift)   || Input::IsKeyPressed(Key::RightShift);
+		bool ctrl_pressed = input::is_key_pressed(Key::LeftControl) || input::is_key_pressed(Key::RightControl);
+		bool shift_pressed = input::is_key_pressed(Key::LeftShift) || input::is_key_pressed(Key::RightShift);
 
 		switch (e.GetKeyCode())
 		{
@@ -787,7 +870,7 @@ namespace Kablunk
 		if (GImGui->ActiveId == 0)
 		{
 			// Gizmos
-			if ((m_viewport_hovered || m_viewport_focused) && !Input::IsMouseButtonPressed(Mouse::ButtonRight) && m_scene_state != SceneState::Play)
+			if ((m_viewport_hovered || m_viewport_focused) && !input::is_mouse_button_pressed(Mouse::ButtonRight) && m_scene_state != SceneState::Play)
 			{
 				switch (e.GetKeyCode())
 				{
@@ -817,7 +900,7 @@ namespace Kablunk
 				}
 			}
 
-			if (m_scene_hierarchy_panel.GetSelectedEntity() && Input::IsKeyPressed(Key::F))
+			if (m_scene_hierarchy_panel.GetSelectedEntity() && input::is_key_pressed(Key::F))
 				m_editor_camera.Focus(m_scene_hierarchy_panel.GetSelectedEntity().GetComponent<TransformComponent>().Translation);
 			
 		}
@@ -843,10 +926,10 @@ namespace Kablunk
 		m_editor_scene = IntrusiveRef<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
-		m_viewport_renderer->SetScene(m_active_scene);
+		m_viewport_renderer->set_scene(m_active_scene);
 		m_scene_hierarchy_panel.SetContext(m_editor_scene);
 		CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-		NativeScriptEngine::Get()->SetScene(m_editor_scene);
+		NativeScriptEngine::get().set_scene(m_editor_scene);
 
 		m_active_scene = m_editor_scene;
 
@@ -870,13 +953,13 @@ namespace Kablunk
 			m_editor_scene_path = filepath;
 
 			// update default scene for project
-			if (Project::GetActive())
+			if (ProjectManager::get().get_active())
 			{
-				if (Project::GetStartSceneName() == "$SCENE_NAME$")
+				if (ProjectManager::get().get_active()->get_start_scene_name() == "$SCENE_NAME$")
 				{
-					Project::SetStartSceneName(m_editor_scene_path.filename().stem().string());
-					ProjectSerializer project_serializer{ Project::GetActive() };
-					project_serializer.Serialize(Project::GetActive()->GetConfig().Project_directory + "/" + Project::GetActive()->GetConfig().Project_filename);
+					ProjectManager::get().get_active()->set_start_scene_name(m_editor_scene_path.filename().stem().string());
+					ProjectSerializer project_serializer{ ProjectManager::get().get_active() };
+					project_serializer.Serialize(ProjectManager::get().get_active()->GetConfig().Project_directory + "/" + ProjectManager::get().get_active()->GetConfig().Project_filename);
 				}
 			}
 		}
@@ -911,22 +994,63 @@ namespace Kablunk
 			
 			m_scene_hierarchy_panel.SetContext(m_editor_scene);
 			CSharpScriptEngine::SetSceneContext(m_editor_scene.get());
-			NativeScriptEngine::Get()->SetScene(m_editor_scene);
+			NativeScriptEngine::get().set_scene(m_editor_scene);
 
 			m_active_scene = m_editor_scene;
-			m_viewport_renderer->SetScene(m_active_scene);
+			m_viewport_renderer->set_scene(m_active_scene);
 
 			m_editor_scene_path = path;
-
 		}
+	}
+
+	void EditorLayer::CreateNewNativeScript(const std::string& script_name) const
+	{
+		if (!ProjectManager::get().get_active())
+		{
+			KB_CORE_WARN("Trying to create new script without an active project!");
+			return;
+		}
+
+		// #TODO check if this project is actually a native script!
+
+		std::filesystem::path project_path = ProjectManager::get().get_active()->get_project_directory();
+		std::filesystem::path resources_path = std::filesystem::path{ s_kablunk_install_path } / "KablunkEditor" / "resources";
+		std::filesystem::copy(resources_path / "new_script_template/native_script_template.h", project_path / "include/native_script_template.h");
+
+		// Parse script template and replace symbols
+		std::ifstream stream{ project_path / "include/native_script_template.h" };
+		std::stringstream ss;
+		ss << stream.rdbuf();
+
+		std::string data = ss.str();
+		ReplaceToken("$SCRIPT_NAME$", data, script_name);
+		std::replace(data.begin(), data.end(), '\\', '/');
+
+		std::ofstream ostream{ project_path / "include/native_script_template.h" };
+		ostream << data;
+		ostream.close();
+	}
+
+	void EditorLayer::LoadNativeScriptModule() const
+	{
+		if (!ProjectManager::get().get_active())
+			return;
+
+		// #TODO make sure we are in native script project
+
+		std::string plugin_name = ProjectManager::get().get_active()->get_project_name();
+		std::filesystem::path plugin_path = ProjectManager::get().get_active()->get_native_script_module_file_path();
+		KB_CORE_INFO("KablunkEditor loading native script module '{}'", plugin_name);
+
+		PluginManager::get().load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
 	}
 
 	bool EditorLayer::CanPickFromViewport() const
 	{
-		return m_viewport_hovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(EditorCamera::Camera_control_key);
+		return m_viewport_hovered && !ImGuizmo::IsOver() && !input::is_key_pressed(EditorCamera::Camera_control_key);
 	}
 
-	void EditorLayer::CreateProject(std::filesystem::path project_path)
+	void EditorLayer::CreateProject(std::filesystem::path project_path, bool create_native_script_project)
 	{
 		if (!FileSystem::HasEnvironmentVariable("KABLUNK_DIR"))
 		{
@@ -943,8 +1067,15 @@ namespace Kablunk
 		if (!std::filesystem::exists(project_path))
 			std::filesystem::create_directories(project_path);
 
+		bool create_csharp_project = !create_native_script_project;
+
 		std::filesystem::path resources_path = std::filesystem::path{ s_kablunk_install_path } / "KablunkEditor" / "resources";
-		std::filesystem::copy(resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
+		// #TODO currently copies both C# and Native project files
+		if (create_csharp_project)
+			std::filesystem::copy(resources_path / "new_project_template", project_path, std::filesystem::copy_options::recursive);
+
+		if (create_native_script_project)
+			std::filesystem::copy(resources_path / "new_project_template_native", project_path, std::filesystem::copy_options::recursive);
 
 		{
 			// Kablunk Project
@@ -963,7 +1094,7 @@ namespace Kablunk
 				ostream.close();
 			}
 
-			// Premake
+			// Parse Premake template and replace symbols
 			{
 				std::ifstream stream{ project_path / "premake5.lua" };
 				std::stringstream ss;
@@ -979,79 +1110,44 @@ namespace Kablunk
 				ostream.close();
 			}
 
-#if KB_NATIVE_SCRIPTING
-			// Generate NativeScript batch
-			{
-				std::ifstream stream{ project_path / "Windows-CreateNativeScriptProject.bat" };
-				std::stringstream ss;
-				ss << stream.rdbuf();
-
-				std::string data = ss.str();
-				std::string project_path_windows = "\'" + project_path.string();
-				std::replace(project_path_windows.begin(), project_path_windows.end(), '/', '\\');
-				project_path_windows += "\'";
-				ReplaceToken("$PROJECT_DIR$", data, project_path_windows);
-
-				std::ofstream ostream{ project_path / "Windows-CreateNativeScriptProject.bat" };
-				ostream << data;
-				ostream.close();
-			}
-#endif
-
-
 			std::string new_project_filename = std::string{ s_project_name_buffer } + ".kablunkproj";
 			std::filesystem::rename(project_path / "Project.kablunkproj", project_path / new_project_filename);
 
 			std::filesystem::create_directories(project_path / "assets" / "scenes");
-			std::filesystem::create_directories(project_path / "assets" / "scripts" / "source");
+			if (create_csharp_project)
+				std::filesystem::create_directories(project_path / "assets" / "scripts" / "source");
 			std::filesystem::create_directories(project_path / "assets" / "textures");
 			std::filesystem::create_directories(project_path / "assets" / "audio"); 
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
+			std::filesystem::create_directories(project_path / "assets" / "prefabs");
 
-#if KB_NATIVE_SCRIPTING
-			// Native scripts
-			std::filesystem::create_directories(project_path / "assets" / "bin");
-			std::filesystem::create_directories(project_path / "include");
-			std::filesystem::create_directories(project_path / "src");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "engine");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "vendor");
-			std::filesystem::create_directories(project_path / "KablunkEngine" / "bin");
+			if (create_native_script_project)
+				std::filesystem::create_directories(project_path / "include");
 
-			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", project_path / "KablunkEngine" / "bin", std::filesystem::copy_options::recursive);
-			std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", project_path / "KablunkEngine" / "engine", std::filesystem::copy_options::recursive);
+			if (create_native_script_project)
+			{
+				std::string gen_proj_batch = "\"" + project_path.string();
+				std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
+				gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
 
-			// #TODO replace with better code
-			std::string get_vendor_includes_path = "\"" + s_kablunk_install_path;
-			std::replace(get_vendor_includes_path.begin(), get_vendor_includes_path.end(), '/', '\\');
-			get_vendor_includes_path += "\\scripts\\CopyVendorIncludes.py\"";
-			std::string run_python_cmd = "python " + get_vendor_includes_path + " "
-				+ "\"" + std::filesystem::path{project_path / "KablunkEngine" / "vendor"}.string() + "\"";
+				//KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
+				system(gen_proj_batch.c_str());
+				/*Threading::JobSystem::AddJob([&gen_proj_batch]()
+					{
+						system(gen_proj_batch.c_str());
+					});*/
+			}
 
-			Threading::JobSystem::AddJob([&run_python_cmd]()
-				{
-					system(run_python_cmd.c_str());
-				});
+			if (create_csharp_project)
+			{
+				std::string gen_proj_batch = "\"" + project_path.string();
+				std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
+				gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
 
-			
-
-			std::string gen_proj_batch = "\"" + project_path.string();
-			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
-			gen_proj_batch += "\\Windows-CreateNativeScriptProject.bat\"";
-			
-			//KB_CORE_WARN("PLEASE RUN 'Windows-CreateNativeScriptProject.bat' YOURSELF!");
-			Threading::JobSystem::AddJob([&gen_proj_batch]()
-				{
-					system(gen_proj_batch.c_str());
-				});
-#endif
-			
-			std::string gen_proj_batch = "\"" + project_path.string();
-			std::replace(gen_proj_batch.begin(), gen_proj_batch.end(), '/', '\\');
-			gen_proj_batch += "\\Windows-CreateCSharpScriptProject.bat\"";
-
-			system(gen_proj_batch.c_str());
-			//Threading::JobSystem::AddJob([&gen_proj_batch]() { system(gen_proj_batch.c_str()); });
+				system(gen_proj_batch.c_str());
+				//Threading::JobSystem::AddJob([&gen_proj_batch]() { system(gen_proj_batch.c_str()); });
+			}
 
 			OpenProject(project_path.string() + "/" + std::string{ s_project_name_buffer } + ".kablunkproj");
 		}
@@ -1059,35 +1155,38 @@ namespace Kablunk
 
 	void EditorLayer::UpdateProjectEngineFiles()
 	{
-		auto project = Project::GetActive();
+		KB_CORE_ASSERT(false, "deprecated!");
+
+		auto project = ProjectManager::get().get_active();
 		if (!project)
 			return;
 		
 		auto copy_option_flags = std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "bin", 
-			project->GetProjectDirectory() / "KablunkEngine" / "bin", copy_option_flags);
+			project->get_project_directory() / "KablunkEngine" / "bin", copy_option_flags);
 		std::filesystem::copy(std::filesystem::path{ s_kablunk_install_path } / "KablunkEngine/include", 
-			project->GetProjectDirectory() / "KablunkEngine" / "engine", copy_option_flags);
+			project->get_project_directory() / "KablunkEngine" / "engine", copy_option_flags);
 	}
 
 	void EditorLayer::OpenProject(const std::string& filepath)
 	{
-		if (Project::GetActive())
+		if (ProjectManager::get().get_active())
 			CloseProject();
 
-		Ref<Project> project = CreateRef<Project>();
+		IntrusiveRef<Project> project = IntrusiveRef<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
-		Project::SetActive(project);
+		ProjectManager::get().set_active(project);
 
-		CSharpScriptEngine::LoadAppAssembly(Project::GetCSharpScriptModuleFilePath());
+		// #TODO only load when c# project.
+		CSharpScriptEngine::LoadAppAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
 
-		m_content_browser_panel.SetCurrentDirectory(Project::GetAssetDirectoryPath());
+		m_content_browser_panel.SetCurrentDirectory(ProjectManager::get().get_active()->get_asset_directory_path());
 		m_project_properties_panel = ProjectPropertiesPanel{ project };
 
-		if (const std::string& scene_name = project->GetStartSceneName(); !scene_name.empty())
-			OpenScene(Project::GetAssetDirectoryPath() / "scenes" / scene_name);
+		if (const std::string& scene_name = project->get_start_scene_name(); !scene_name.empty())
+			OpenScene(project->get_asset_directory_path() / "scenes" / scene_name);
 		else
 			NewScene();
 
@@ -1109,7 +1208,7 @@ namespace Kablunk
 
 	void EditorLayer::SaveProject()
 	{
-		auto& project = Project::GetActive();
+		auto& project = ProjectManager::get().get_active();
 		if (!project)
 		{
 			KB_CORE_ERROR("SaveProject called without active project!");
@@ -1125,17 +1224,17 @@ namespace Kablunk
 		SaveProject();
 
 		CSharpScriptEngine::SetSceneContext(nullptr);
-		NativeScriptEngine::Get()->SetScene(nullptr);
+		NativeScriptEngine::get().set_scene(nullptr);
 
-		m_viewport_renderer->SetScene(nullptr);
+		m_viewport_renderer->set_scene(nullptr);
 		m_scene_hierarchy_panel.SetContext(nullptr);
 		m_active_scene = nullptr;
 
 		if (unload)
-			Project::SetActive(nullptr);
+			ProjectManager::get().set_active(nullptr);
 	}
 
-	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token)
+	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const
 	{
 		size_t p = 0;
 		while ((p = data.find(token, p)) != std::string::npos)
@@ -1180,7 +1279,7 @@ namespace Kablunk
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (!m_viewport_renderer->GetFinalPassImage())
+		if (!m_viewport_renderer->get_final_render_pass_image())
 			return;
 
 		if (m_show_physics_colliders)
@@ -1223,12 +1322,14 @@ namespace Kablunk
 				return;
 			}
 
-			Renderer2D::BeginScene(*camera, transform);
-			Renderer2D::SetTargetRenderPass(m_viewport_renderer->GetExternalCompositeRenderPass());
+			// #TODO move to scene renderer
+
+			render2d::begin_scene(*camera, transform);
+			render2d::set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
-			// Quads
+			// Rectangles (Quads)
 			{
 				auto view = m_active_scene->GetAllEntitiesWith<TransformComponent, BoxCollider2DComponent>();
 				for (auto e : view)
@@ -1239,7 +1340,7 @@ namespace Kablunk
 					auto scale = glm::vec2{ transform.Scale.x, transform.Scale.y } *bc2D_comp.Size;
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					Renderer2D::DrawRect(translate, scale, 0, LIGHT_GREEN_COL);
+					render2d::draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
 
 				}
 			}
@@ -1253,12 +1354,12 @@ namespace Kablunk
 					auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
 
 					auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					Renderer2D::DrawCircle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
+					render2d::draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
 
 
-			Renderer2D::EndScene();
+			render2d::end_scene();
 			
 		}
 	}

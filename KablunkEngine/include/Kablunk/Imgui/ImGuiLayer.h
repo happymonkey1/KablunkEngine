@@ -5,9 +5,9 @@
 #include "Kablunk/Events/KeyEvent.h"
 #include "Kablunk/Events/ApplicationEvent.h"
 
+namespace Kablunk 
+{
 
-
-namespace Kablunk {
 	class ImGuiLayer : public Layer
 	{
 	public:
@@ -23,5 +23,6 @@ namespace Kablunk {
 	private:
 		bool m_allow_event_passing{ false };
 	};
+
 }
 

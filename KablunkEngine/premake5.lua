@@ -13,6 +13,7 @@ project "KablunkEngine"
 	files
 	{
 		"include/**.h",
+		"include/**.hpp",
 		"src/**.cpp",
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
@@ -33,14 +34,14 @@ project "KablunkEngine"
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE",
 		"NOMINMAX",
-		"KB_BUILD_DLL"
+		"KB_BUILD_DLL",
+		"GLFW_DLL"
 	}
 
 	includedirs
 	{
 		"include",
 		"src",
-		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
@@ -59,12 +60,14 @@ project "KablunkEngine"
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
-		"%{IncludeDir.VulkanSDK_LocalInclude}"
+		"%{IncludeDir.VulkanSDK_LocalInclude}",
+		"%{IncludeDir.boost}",
+		"%{IncludeDir.miniaudio}"
 	}
 
 	links
 	{
-		"GLFW",
+		--"GLFW",
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
@@ -77,6 +80,11 @@ project "KablunkEngine"
 		"%{Library.VulkanUtils}",
 
 		"%{Library.mono}"
+	}
+
+	postbuildcommands
+	{
+		'{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"'
 	}
 	
 

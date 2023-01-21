@@ -11,9 +11,9 @@ namespace Kablunk
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "No renderer api set!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:	return IntrusiveRef<OpenGLUniformBuffer>::Create(size, binding);
-		case RendererAPI::RenderAPI_t::Vulkan:	return IntrusiveRef<VulkanUniformBuffer>::Create(size, binding);
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No renderer api set!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:	return IntrusiveRef<OpenGLUniformBuffer>::Create(size, binding);
+		case RendererAPI::render_api_t::Vulkan:	return IntrusiveRef<VulkanUniformBuffer>::Create(size, binding);
 		default:								KB_CORE_ASSERT(false, "Unknown render api set while trying to create uniform buffer!"); return nullptr;
 		}
 	}

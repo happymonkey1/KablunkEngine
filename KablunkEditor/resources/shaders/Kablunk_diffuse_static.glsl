@@ -171,7 +171,7 @@ vec3 GetPointLightAttenuationValues(in float distance)
 
 vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 {
-    vec3 result = vec3(0.33);
+    vec3 result = vec3(0.33); // set default ambience to .33
     for (int i = 0; i < u_PointLights.Count; i++)
     {
         PointLight light = u_PointLights.Lights[i];

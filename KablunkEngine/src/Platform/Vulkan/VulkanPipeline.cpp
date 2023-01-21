@@ -52,14 +52,14 @@ namespace Kablunk
 		KB_CORE_ASSERT(specification.shader, "no shader set!");
 		KB_CORE_ASSERT(specification.render_pass, "no render pass set!");
 
-		Renderer::RegisterShaderDependency(specification.shader, this);
+		render::register_shader_dependency(specification.shader, this);
 
 		Invalidate();
 	}
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		RenderCommand::SubmitResourceFree([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
+		render::submit_resource_free([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyPipeline(vk_device, pipeline, nullptr);
@@ -71,7 +71,7 @@ namespace Kablunk
 	void VulkanPipeline::Invalidate()
 	{
 		IntrusiveRef<VulkanPipeline> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -299,7 +299,7 @@ namespace Kablunk
 			vertex_input_attributes[location].binding = 0;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
-			vertex_input_attributes[location].offset = element.Offset;
+			vertex_input_attributes[location].offset = static_cast<uint32_t>(element.Offset);
 			location++;
 		}
 
@@ -308,7 +308,7 @@ namespace Kablunk
 			vertex_input_attributes[location].binding = 1;
 			vertex_input_attributes[location].location = location;
 			vertex_input_attributes[location].format = Utils::KbShaderDataTypeToVulkanFormat(element.Type);
-			vertex_input_attributes[location].offset = element.Offset;
+			vertex_input_attributes[location].offset = static_cast<uint32_t>(element.Offset);
 			location++;
 		}
 
@@ -352,7 +352,7 @@ namespace Kablunk
 	void VulkanPipeline::SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
 	{
 		IntrusiveRef<VulkanPipeline> instance = this;
-		RenderCommand::Submit([instance, uniform_buffer, binding, set]() mutable
+		render::submit([instance, uniform_buffer, binding, set]() mutable
 			{
 				instance->RT_SetUniformBuffer(uniform_buffer, binding, set);
 			});

@@ -19,7 +19,7 @@ namespace Kablunk
 	class RendererAPI : public RefCounted
 	{
 	public:
-		enum class RenderAPI_t
+		enum class render_api_t
 		{
 			None = 0, OpenGL = 1, Vulkan = 2
 		};
@@ -44,9 +44,23 @@ namespace Kablunk
 		// ======
 		// Meshes
 		// ======
+
 		virtual void RenderMesh(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) = 0;
 
 		virtual void RenderMeshWithMaterial(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms) = 0;
+
+		virtual void render_instanced_submesh(
+			IntrusiveRef<RenderCommandBuffer> render_command_buffer,
+			IntrusiveRef<Pipeline> pipeline,
+			IntrusiveRef<UniformBufferSet> uniform_buffer_set,
+			IntrusiveRef<StorageBufferSet> storage_buffer_set,
+			IntrusiveRef<Mesh> mesh,
+			uint32_t submesh_index,
+			IntrusiveRef<MaterialTable> material_table,
+			IntrusiveRef<VertexBuffer> transform_buffer,
+			uint32_t transform_offset,
+			uint32_t instance_count
+		) = 0;
 
 		virtual void SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material) = 0;
 		
@@ -60,9 +74,9 @@ namespace Kablunk
 
 		virtual void WaitAndRender() = 0;
 
-		static inline RenderAPI_t GetAPI() { return s_API; };
+		static inline render_api_t GetAPI() { return s_API; };
 	private:
-		inline static RenderAPI_t s_API = RenderAPI_t::Vulkan;
+		inline static render_api_t s_API = render_api_t::Vulkan;
 	};
 
 }

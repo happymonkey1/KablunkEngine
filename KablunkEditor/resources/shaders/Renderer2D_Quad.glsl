@@ -11,6 +11,9 @@ layout(location = 5) in int a_EntityID; // TODO remove when ray cast mouse picki
 layout(std140, binding = 0) uniform Camera
 {
 	mat4 u_ViewProjection;
+	mat4 u_Projection;
+	mat4 u_View;
+	vec3 u_Position;
 };
 
 layout (push_constant) uniform Transform
@@ -51,6 +54,10 @@ layout(binding = 1) uniform sampler2D u_Textures[32];
 
 void main()
 {
-	o_Color  = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+	vec4 color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+	// remove when transparency sorting implemented
+	if (color.a < 0.5)
+		discard;
+	o_Color = color;
 	//o_EntityID = v_EntityID; // TODO remove when ray cast mouse picking added to editor
 }

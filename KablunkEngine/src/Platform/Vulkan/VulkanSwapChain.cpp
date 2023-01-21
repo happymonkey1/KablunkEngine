@@ -3,6 +3,7 @@
 #include "Platform/Vulkan/VulkanSwapChain.h"
 
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 
 #include <GLFW/glfw3.h>
 
@@ -49,7 +50,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface present modes!");
 
 		VkExtent2D swapchain_extent{};
-		if (surface_cap.currentExtent.width == (uint32_t)-1)
+		if (surface_cap.currentExtent.width == 0xFFFFFFFF)
 		{
 			swapchain_extent.width  = *width;
 			swapchain_extent.height = *height;
@@ -233,7 +234,7 @@ namespace Kablunk
 		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		
-		m_wait_fences.resize(Renderer::GetConfig().frames_in_flight);
+		m_wait_fences.resize(render::get_frames_in_flights());
 		for (auto& fence : m_wait_fences)
 			if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
@@ -327,13 +328,13 @@ namespace Kablunk
 	void VulkanSwapChain::BeginFrame()
 	{
 		// Make sure the frame we're requesting has finished rendering
-		uint32_t frames_in_flight = Renderer::GetConfig().frames_in_flight;
+		uint32_t frames_in_flight = render::get_frames_in_flights();
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
 
 		// execute resource release queue
 
-		auto& queue = RenderCommand::GetRenderResourceReleaseQueue(m_current_buffer_index);
+		auto& queue = render::get_render_resource_release_queue(m_current_buffer_index);
 		queue.Execute();
 
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
@@ -380,12 +381,12 @@ namespace Kablunk
 			}
 		}
 
-		m_current_buffer_index = (m_current_image_index + 1) % Renderer::GetConfig().frames_in_flight;
+		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
 	}
 
-	void VulkanSwapChain::Cleanup()
+	void VulkanSwapChain::Destroy()
 	{
 		VkDevice device = m_device->GetVkDevice();
 

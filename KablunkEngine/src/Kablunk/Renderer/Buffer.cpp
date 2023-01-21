@@ -13,9 +13,9 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:	return IntrusiveRef<OpenGLVertexBuffer>::Create(size);
-		case RendererAPI::RenderAPI_t::Vulkan:	return IntrusiveRef<VulkanVertexBuffer>::Create(size);
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:	return IntrusiveRef<OpenGLVertexBuffer>::Create(size);
+		case RendererAPI::render_api_t::Vulkan:	return IntrusiveRef<VulkanVertexBuffer>::Create(size);
 		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 	}
@@ -24,9 +24,9 @@ namespace Kablunk
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RenderAPI_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLVertexBuffer>::Create(data, size);
-		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanVertexBuffer>::Create(data, size);
+		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:		return IntrusiveRef<OpenGLVertexBuffer>::Create(data, size);
+		case RendererAPI::render_api_t::Vulkan:		return IntrusiveRef<VulkanVertexBuffer>::Create(data, size);
 		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 	}
@@ -36,9 +36,9 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(count);
-		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(count);
+		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(count);
+		case RendererAPI::render_api_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(count);
 		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
 		}
 	}
@@ -48,9 +48,9 @@ namespace Kablunk
 		switch (Renderer::GetAPI())
 		{
 
-		case RendererAPI::RenderAPI_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
-		case RendererAPI::RenderAPI_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(data, count);
-		case RendererAPI::RenderAPI_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(data, count);
+		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::OpenGL:		return IntrusiveRef<OpenGLIndexBuffer>::Create(data, count);
+		case RendererAPI::render_api_t::Vulkan:		return IntrusiveRef<VulkanIndexBuffer>::Create(data, count);
 		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
 		}
 	}

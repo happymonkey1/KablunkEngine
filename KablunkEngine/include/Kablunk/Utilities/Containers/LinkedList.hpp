@@ -5,7 +5,10 @@
 
 namespace Kablunk::Utilties
 {
-	template <typename T, typename CompareFunc = void>
+	// default function template parameter
+	using void_compare_func_t = void(*)(void*, void*);
+
+	template <typename T, typename CompareFunc = void_compare_func_t>
 	class LinkedList
 	{
 	public:
@@ -59,6 +62,21 @@ namespace Kablunk::Utilties
 		LinkedList(LinkedList&&) noexcept;
 		~LinkedList();
 
+		LinkedList& operator=(LinkedList&& other) noexcept
+		{
+			std::swap(m_root, other.m_root);
+			std::swap(m_end, other.m_end);
+			std::swap(m_size, other.m_size);
+			std::swap(m_compare_func, other.m_compare_func);
+
+			return *this;
+		}
+
+		void clear();
+
+		// check if the list is empty
+		bool empty() const { return m_root == nullptr; }
+
 		T& Front() { return m_root->data; }
 		const T& Front() const { return m_root->data; }
 
@@ -66,7 +84,10 @@ namespace Kablunk::Utilties
 		const T& Back() const { return m_end->data; }
 
 		// Unsorted
-		template <typename Q = T, std::enable_if_t<std::is_same<Q, void>::value, bool> = true>
+		template <
+			typename Q = CompareFunc,
+			std::enable_if_t<std::is_same<Q, void_compare_func_t>::value>* = nullptr
+		>
 		void Insert(const T& val)
 		{
 			if (m_root)
@@ -84,7 +105,10 @@ namespace Kablunk::Utilties
 		}
 
 		// Sorted
-		template <typename Q = T, std::enable_if_t<!std::is_same<Q, void>::value, bool> = true>
+		template <
+			typename Q = CompareFunc,
+			std::enable_if_t<!std::is_same<Q, void_compare_func_t>::value>* = nullptr
+		>
 		void Insert(const T& val)
 		{
 			ListNode<T>* cur = m_root;
@@ -103,7 +127,10 @@ namespace Kablunk::Utilties
 					m_end = prev->next;
 			}
 			else
+			{
 				m_root = new ListNode<T>{ val, cur };
+				m_end = m_root;
+			}
 
 			m_size++;
 		}
@@ -127,19 +154,44 @@ namespace Kablunk::Utilties
 		T& operator[](size_t index);
 		const T& operator[](size_t index) const;
 	private:
+		// pointer to the front 
 		ListNode<T>* m_root = nullptr;
+		// pointer to the back
+		// linked list is the underlying data structure for our priority queue implementation
+		// so we use an extra 8 bytes to give the queue O(1) back access
 		ListNode<T>* m_end = nullptr;
+		// size of the list
 		size_t m_size = 0;
+		// function used to sort during insertion
 		CompareFunc m_compare_func;
 	};
+
+	template <typename T, typename CompareFunc /*= void*/>
+	void LinkedList<T, CompareFunc>::clear()
+	{
+		ListNode<T>* cur = m_root;
+		ListNode<T>* next;
+		while (cur)
+		{
+			next = cur->next;
+			delete cur;
+			cur = next;
+		}
+
+		m_root = nullptr;
+		m_end = nullptr;
+		m_size = 0;
+	}
 
 	template <typename T, typename CompareFunc>
 	LinkedList<T, CompareFunc>::LinkedList(const LinkedList& other)
 	{
+		// #TODO why is this not initialized with normal constructor initialization?
 		ListNode<T>* cur = other.m_root;
-		ListNode<T>* m_root = new ListNode<T>{ *other.m_root };
+		auto m_root = new ListNode<T>{ *other.m_root };
 		ListNode<T>* head_ptr = m_root;
 
+		// copy underlying list
 		while (cur)
 		{
 			m_root->next = new ListNode<T>{ *cur };
@@ -165,14 +217,7 @@ namespace Kablunk::Utilties
 	template <typename T, typename CompareFunc>
 	LinkedList<T, CompareFunc>::~LinkedList()
 	{
-		ListNode<T>* cur = m_root;
-		ListNode<T>* next;
-		while (cur)
-		{
-			next = cur->next;
-			delete cur;
-			cur = next;
-		}
+		clear();
 	}
 
 	template <typename T, typename CompareFunc>
@@ -217,7 +262,7 @@ namespace Kablunk::Utilties
 		ListNode<T>* cur = m_root;
 		while (cur)
 		{
-			if (*cur == val)
+			if (cur->data == val)
 				return cur;
 
 			cur = cur->next;
@@ -295,10 +340,15 @@ namespace Kablunk::Utilties
 			if (counter++ == index)
 				break;
 
-			cur = cur->next;
+			if (cur)
+				cur = cur->next;
+			else
+				break;
 		}
 
-		return *cur;
+		KB_CORE_ASSERT(cur, "index out of bounds");
+
+		return cur->data;
 	}
 
 	template <typename T, typename CompareFunc>
@@ -313,10 +363,15 @@ namespace Kablunk::Utilties
 			if (counter++ == index)
 				break;
 
-			cur = cur->next;
+			if (cur)
+				cur = cur->next;
+			else
+				break;
 		}
 
-		return *cur;
+		KB_CORE_ASSERT(cur, "index out of bounds");
+
+		return cur->data;
 	}
 
 }

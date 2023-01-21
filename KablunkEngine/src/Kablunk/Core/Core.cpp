@@ -1,33 +1,26 @@
 #include "kablunkpch.h"
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Log.h"
-#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Core/Logger.h"
 
 namespace Kablunk
 {
 
 	void InitCore()
 	{
-		Log::Init();
+		Logger::get().init();
 
-#if KB_NATIVE_SCRIPTING
-		NativeScriptEngine::Init();
-#endif
+		KB_CORE_INFO("Logger initilized");
 
-		KB_CORE_INFO("Core initilized");
+		memory::GeneralAllocator::get_mutable().init();
+
+		KB_CORE_INFO("Core initialized");
 	}
 
 	void ShutdownCore()
 	{
 		KB_CORE_INFO("Core shutting down!");
 
-#if KB_NATIVE_SCRIPTING
-		NativeScriptEngine::Shutdown();
-#endif
-
-		Log::Shutdown();
-
-
+		Logger::get().shutdown();
 	}
 }

@@ -49,8 +49,8 @@ namespace Kablunk
 					ImageSpecification spec;
 					spec.format = attachment_specification.format;
 					spec.usage = ImageUsage::Attachment;
-					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
-					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
+					spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.scale));
+					spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.scale));
 					spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_depth_attachment_image = Image2D::Create(spec);
 				}
@@ -59,8 +59,8 @@ namespace Kablunk
 					ImageSpecification spec;
 					spec.format = attachment_specification.format;
 					spec.usage = ImageUsage::Attachment;
-					spec.width = std::ceil(static_cast<float>(m_width) * m_specification.scale);
-					spec.height = std::ceil(static_cast<float>(m_height) * m_specification.scale);
+					spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.scale));
+					spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.scale));
 					spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.debug_name.empty() ? "Unnamed FB" : m_specification.debug_name, attachment_index);
 					m_attachment_images.emplace_back(Image2D::Create(spec));
 				}
@@ -74,16 +74,20 @@ namespace Kablunk
 
 	VulkanFramebuffer::~VulkanFramebuffer()
 	{
-		KB_CORE_INFO("Destroying VulkanFramebuffer {0}", m_specification.debug_name);
+		if (!m_framebuffer)
+			return;
+
+		KB_CORE_INFO("Destroying VulkanFramebuffer '{0}'", m_specification.debug_name);
 		VkFramebuffer vk_framebuffer = m_framebuffer;
 		VkRenderPass vk_render_pass = m_render_pass;
-		RenderCommand::SubmitResourceFree([vk_framebuffer, vk_render_pass]()
+		render::submit_resource_free([vk_framebuffer, vk_render_pass]()
 			{
 				const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyFramebuffer(device, vk_framebuffer, nullptr);
 				vkDestroyRenderPass(device, vk_render_pass, nullptr);
 			});
 
+		// Only destroy images we own
 		if (!m_specification.existing_framebuffer)
 		{
 			uint32_t attachment_index = 0;
@@ -114,8 +118,8 @@ namespace Kablunk
 		if (!force_recreate && (m_width == width && m_height == height))
 			return;
 
-		m_width = std::ceil(static_cast<float>(width) * m_specification.scale);
-		m_height = std::ceil(static_cast<float>(height) * m_specification.scale);
+		m_width  = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * m_specification.scale));
+		m_height = static_cast<uint32_t>(std::ceil(static_cast<float>(height) * m_specification.scale));
 		if (!m_specification.swap_chain_target)
 			Invalidate();
 		else
@@ -161,7 +165,7 @@ namespace Kablunk
 	void VulkanFramebuffer::Invalidate()
 	{
 		IntrusiveRef<VulkanFramebuffer> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -175,7 +179,7 @@ namespace Kablunk
 		if (m_framebuffer)
 		{
 			VkFramebuffer vk_framebuffer = m_framebuffer;
-			RenderCommand::SubmitResourceFree([vk_framebuffer]()
+			render::submit_resource_free([vk_framebuffer]()
 				{
 					const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 					vkDestroyFramebuffer(device, vk_framebuffer, nullptr);

@@ -2,8 +2,12 @@
 
 //FOR USE BY CLIENT APPLICATIONS
 
+// ---Audio--------------------------------------
+#include "Kablunk/Audio/AudioCommand.h"
+// ----------------------------------------------
+
 // ---Core---------------------------------------
-#include "Kablunk/Core/Log.h"
+#include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Layer.h"
 #include "Kablunk/Imgui/ImGuiLayer.h"
@@ -20,8 +24,8 @@
 
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Framebuffer.h"
@@ -49,7 +53,13 @@
 // ----------------------------------------------
 
 // ---Assets-------------------------------------
+// #TODO remove old asset manager
 #include "Kablunk/Core/AssetManager.h"
+#include "Kablunk/Asset/AssetCommand.h"
+// ----------------------------------------------
+
+// ---Project------------------------------------
+#include "Kablunk/Project/ProjectManager.h"
 // ----------------------------------------------
 
 // ---Reflection---------------------------------
@@ -64,6 +74,7 @@
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"
 #include "imgui.h"
+#include "Kablunk/Imgui/ImGuiWrappers.h"
 //#include "imgui_internal.h"
 // ----------------------------------------------
 

@@ -1,16 +1,21 @@
 #ifndef KABLUNK_CORE_REF_COUNTING_H
 #define KABLUNK_CORE_REF_COUNTING_H
 
+#include "Kablunk/Core/KablunkAPI.h"
+#include "Kablunk/Core/CoreTypes.h"
+
 #include <atomic>
 #include <memory>
 #include <cassert>
 #include <iostream>
+#include <mutex>
+#include <unordered_set>
 
 namespace Kablunk
 {
 
 	// #TODO deprecate
-	
+	/*
 	template <typename T>
 	using Ref = std::shared_ptr<T>;
 
@@ -19,7 +24,7 @@ namespace Kablunk
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
-
+	*/
 	// ================
 
 	class RefCounted
@@ -29,7 +34,7 @@ namespace Kablunk
 		void DecRefCount() const { m_ref_count--; }
 		uint32_t GetRefCount() const { return m_ref_count.load(); }
 	private:
-		mutable std::atomic<uint32_t> m_ref_count = 0;
+		mutable std::atomic<u32> m_ref_count = 0;
 	};
 
 	namespace Internal
@@ -107,7 +112,7 @@ namespace Kablunk
 			other.IncRef();
 			DecRef();
 
-			m_ptr = other.m_ptr;
+			m_ptr = static_cast<T*>(other.m_ptr);
 			return *this;
 		}
 
@@ -182,20 +187,24 @@ namespace Kablunk
 
 		void DecRef() const
 		{
-			if (m_ptr)
+			if (!m_ptr)
+				return;
+			
+			m_ptr->DecRefCount();
+			
+			if (!m_ptr->GetRefCount())
 			{
-				m_ptr->DecRefCount();
-				if (m_ptr->GetRefCount() == 0)
-				{
-					delete m_ptr;
-					Internal::RemoveFromLiveReferences((void*)m_ptr);
-					m_ptr = nullptr;
-				}
+				delete m_ptr;
+				Internal::RemoveFromLiveReferences((void*)m_ptr);
+				m_ptr = nullptr;
 			}
 		}
 
 		template <class T2>
 		friend class IntrusiveRef;
+
+		template <class T2>
+		friend class WeakRef;
 
 		mutable T* m_ptr;
 	};
@@ -206,15 +215,18 @@ namespace Kablunk
 	public:
 		WeakRef() = default;
 		//WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
-		WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.get() } { }
+		WeakRef(const IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
+		WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
 		WeakRef(T* ptr) : m_ptr{ ptr } { }
+
+		~WeakRef() = default;
 
 		// #TODO make sure pointer is valid in the live reference map
 		bool Valid() const { return m_ptr ? Internal::IsLive(m_ptr) : false; }
 
 		T* operator->() { return m_ptr; }
 		T& operator*() { return *m_ptr; }
-		operator bool() const { return m_ptr != nullptr; }
+		operator bool() const { return Valid(); }
 
 		T* get() { return m_ptr; }
 	private:

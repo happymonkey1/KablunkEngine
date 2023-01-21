@@ -16,7 +16,11 @@
 #include <chrono>
 #include <thread>
 
-#include <windows.h>
+#ifdef KB_PLATFORM_WINDOWS
+#	include <windows.h>
+#else
+#	error c-sharp script engine only supports windows!
+#endif
 #include <fileapi.h>
 
 #include <box2d/b2_shape.h>
@@ -501,7 +505,7 @@ namespace Kablunk
 	{
 		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
 		if (entity_instance.Script_class->OnMouseDownMethod)
-			if (Internal::CheckOnMouseDown(entity, Input::GetMousePosition()))
+			if (Internal::CheckOnMouseDown(entity, input::get_mouse_position()))
 				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseDownMethod, nullptr);
 	}
 
@@ -509,7 +513,7 @@ namespace Kablunk
 	{
 		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
 		if (entity_instance.Script_class->OnMouseDownMethod)
-			if (Internal::CheckOnMouseOver(entity, Input::GetMousePosition()))
+			if (Internal::CheckOnMouseOver(entity, input::get_mouse_position()))
 				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseOverMethod, nullptr);
 	}
 
@@ -517,7 +521,7 @@ namespace Kablunk
 	{
 		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
 		if (entity_instance.Script_class->OnMouseDownMethod)
-			if (Internal::CheckOnMouseMove(entity, Input::GetMousePosition()))
+			if (Internal::CheckOnMouseMove(entity, input::get_mouse_position()))
 				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseMoveMethod, nullptr);
 	}
 
@@ -525,7 +529,7 @@ namespace Kablunk
 	{
 		auto& entity_instance = GetEntityInstanceData(entity.GetSceneUUID(), entity.GetUUID()).Instance;
 		if (entity_instance.Script_class->OnMouseDownMethod)
-			if (Internal::CheckOnMouseUp(entity, Input::GetMousePosition()))
+			if (Internal::CheckOnMouseUp(entity, input::get_mouse_position()))
 				CallMethod(entity_instance.GetInstance(), entity_instance.Script_class->OnMouseUpMethod, nullptr);
 	}
 

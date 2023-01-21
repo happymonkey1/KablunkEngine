@@ -31,33 +31,33 @@ namespace Kablunk
 		m_image = Image2D::Create(spec);
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
+
+		m_loaded = true;
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
 		: m_filepath{ path }
 	{
-		bool loaded = LoadImage(m_filepath);
+		m_loaded = LoadImage(m_filepath);
 
-		if (!loaded)
-		{
-			LoadImage("resources/texture/missing_texture.png");
-		}
-
+		if (!m_loaded)
+			m_loaded = LoadImage("resources/texture/missing_texture.png");
+		
 		ImageSpecification spec{};
 		spec.format = m_format;
 		spec.width = m_width;
 		spec.height = m_height;
 		spec.mips = 1; // #TODO mipmaps
-		spec.debug_name = "FIXME";
+		spec.debug_name = "UNKNOWN_DEBUG_IMG_NAME";
 		m_image = Image2D::Create(spec);
 
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -77,13 +77,13 @@ namespace Kablunk
 		m_height = height;
 
 		IntrusiveRef<VulkanTexture2D> instance = this;
-		RenderCommand::Submit([instance]() mutable
+		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
 	}
 
-	Buffer VulkanTexture2D::GetWriteableBuffer()
+	Buffer& VulkanTexture2D::GetWriteableBuffer()
 	{
 		return m_image_data;
 	}
@@ -184,9 +184,13 @@ namespace Kablunk
 				VK_PIPELINE_STAGE_HOST_BIT,
 				VK_PIPELINE_STAGE_TRANSFER_BIT,
 				0,
-				0, nullptr,
-				0, nullptr,
-				1, &image_memory_barrier);
+				0, 
+				nullptr,
+				0, 
+				nullptr,
+				1, 
+				&image_memory_barrier
+			);
 
 			VkBufferImageCopy buffer_copy_region_info = {};
 			buffer_copy_region_info.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -202,11 +206,17 @@ namespace Kablunk
 			vkCmdCopyBufferToImage(copy_cmd, staging_buffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_copy_region_info);
 
 			// #TODO mipmap levels, final image layout
-			Utils::InsertImageMemoryBarrier(copy_cmd, info.image,
-				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image->GetDescriptor().imageLayout,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				subresource_range);
+			Utils::InsertImageMemoryBarrier(
+				copy_cmd, 
+				info.image,
+				VK_ACCESS_TRANSFER_READ_BIT, 
+				VK_ACCESS_SHADER_READ_BIT,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+				image->GetDescriptor().imageLayout,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, 
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				subresource_range
+			);
 
 			device->FlushCommandBuffer(copy_cmd);
 
@@ -276,7 +286,7 @@ namespace Kablunk
 		if (stbi_is_hdr(filepath.c_str()))
 		{
 			data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
-			size_t size = width * height * 4 * sizeof(float);
+			size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull * sizeof(float);
 			m_image_data.Allocate(size);
 
 			m_image_data.Write(data, size, 0);
@@ -285,7 +295,7 @@ namespace Kablunk
 		else
 		{
 			data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
-			size_t size  = width * height * 4;
+			size_t size  = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
 			m_image_data.Allocate(size);
 
 			m_image_data.Write(data, size, 0);

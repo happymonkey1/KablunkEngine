@@ -5,6 +5,7 @@
 #include "Kablunk/Scene/YamlSpecializedSerialization.h"
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/Components.h"
+#include "Kablunk/Asset/AssetCommand.h"
 
 #include <fstream>
 #include <typeinfo>
@@ -52,6 +53,30 @@ namespace Kablunk
 				out << YAML::Key << "Scale"			<< YAML::Value << component.Scale;
 			});
 
+		// relationship component has different structure so we can't use WriteComponentData
+		if (entity.HasComponent<ParentingComponent>())
+		{
+			auto& parenting_component = entity.GetComponent<ParentingComponent>();
+			out << YAML::Key << "Parent" << YAML::Value << parenting_component.Parent;
+			out << YAML::Key << "Children";
+			out << YAML::Value << YAML::BeginSeq;
+
+			for (const auto& child_uuid : parenting_component.Children)
+			{
+				out << YAML::BeginMap;
+				out << YAML::Key << "Handle" << YAML::Value << child_uuid;
+				out << YAML::EndMap;
+			}
+
+			out << YAML::EndSeq;
+		}
+
+		WriteComponentData<PrefabComponent>(out, entity, [](auto& out, PrefabComponent& component)
+			{
+				out << YAML::Key << "Prefab_id" << YAML::Value << component.Prefab_id;
+				out << YAML::Key << "Entity_id" << YAML::Value << component.Entity_id;
+			});
+
 		WriteComponentData<CameraComponent>(out, entity, [](auto& out, auto& component)
 			{
 				const auto& camera = component.Camera;
@@ -84,7 +109,13 @@ namespace Kablunk
 				out << YAML::BeginMap; // Texture Asset
 
 				out << YAML::Key << "m_uuid"		<< YAML::Value << component.Texture.GetUUID();
-				out << YAML::Key << "m_filepath"	<< YAML::Value << component.Texture.GetFilepath();
+				std::filesystem::path texture_filepath = component.Texture.GetFilepath();
+				if (texture_filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: tried serializing absolute texture path '{}'! Converting!", texture_filepath.string());
+					texture_filepath = asset::get_relative_path(texture_filepath);
+				}
+				out << YAML::Key << "m_filepath"	<< YAML::Value << texture_filepath.string();
 
 				out << YAML::EndMap;
 
@@ -103,6 +134,12 @@ namespace Kablunk
 
 		WriteComponentData<NativeScriptComponent>(out, entity, [](auto& out, auto& component)
 			{
+				std::filesystem::path filepath = component.Filepath;
+				if (filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: tried serializing absolute native script path '{}'! converting...", filepath.string());
+					filepath = asset::get_relative_path(filepath);
+				}
 				out << YAML::Key << "Filepath" << YAML::Value << component.Filepath.string();
 			});
 
@@ -187,8 +224,6 @@ namespace Kablunk
 	{
 		auto uuid = entity_data["Entity"].as<uuid::uuid64>();
 
-
-
 		std::string name;
 		auto tag_comp = entity_data["TagComponent"];
 		if (tag_comp)
@@ -200,7 +235,29 @@ namespace Kablunk
 
 		Entity entity = m_scene->CreateEntity(name, uuid);
 
-		// #FIXME Beyond this is pretty much boilerplate garbage code just to have a 'usable' deserialization feature
+		// #FIXME Beyond this is pretty much boilerplate garbage code just to have a 'usable' deserialization feature. Once reflection is implemented, this can be much more elegant.
+
+		
+		// ParentingComponent is not serialized like other components, so we read manually.
+		auto& parenting_component = entity.GetOrAddComponent<ParentingComponent>();
+		uuid::uuid64 parent_id = entity_data["Parent"] ? entity_data["Parent"].as<uuid::uuid64>() : 0;
+		parenting_component.Parent = parent_id;
+
+		auto children_data = entity_data["Children"];
+		if (children_data)
+		{
+			for (auto child_data : children_data)
+			{
+				uuid::uuid64 child_id = child_data["Handle"].as<uuid::uuid64>();
+				parenting_component.Children.push_back(child_id);
+			}
+		}
+
+		ReadComponentData<PrefabComponent>(entity_data, entity, [this](PrefabComponent& prefab_component, auto& data)
+			{
+				prefab_component.Prefab_id = data["Prefab_id"].as<uuid::uuid64>();
+				prefab_component.Entity_id = data["Entity_id"].as<uuid::uuid64>();
+			});
 
 		ReadComponentData<TransformComponent>(entity_data, entity, [this](auto& component, auto& data)
 			{
@@ -247,9 +304,18 @@ namespace Kablunk
 				if (texture_data)
 				{
 					auto uuid = texture_data["m_uuid"].as<uint64_t>();
-					auto filepath = texture_data["m_filepath"].as<std::string>();
+					auto path = texture_data["m_filepath"].as<std::string>();
+					std::filesystem::path filepath = std::filesystem::path{ path };
+					if (filepath.is_absolute())
+					{
+						KB_CORE_WARN("[SceneSerializer]: deserialized absolute texture path '{}'!", filepath.string());
+						filepath = asset::get_relative_path(filepath);
+					}
+					
+					auto a = ProjectManager::get().get_active()->get_asset_directory_path();
+					auto b = a / filepath;
 
-					auto texture_asset = Asset<Texture2D>(filepath, uuid);
+					auto texture_asset = Asset<Texture2D>(filepath.string(), uuid);
 					component.Texture = texture_asset;
 				}
 
@@ -271,24 +337,37 @@ namespace Kablunk
 				component.Fade		= data["Fade"].as<float>();
 			});
 
-		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](auto& component, auto& data)
+		ReadComponentData<NativeScriptComponent>(entity_data, entity, [&](NativeScriptComponent& component, auto& data)
 			{
-				auto filepath = data["Filepath"].as<std::string>();
-				component.BindEditor(filepath);
+				auto path = data["Filepath"].as<std::string>();
+				auto filepath = std::filesystem::path{ path };
+				if (filepath.is_absolute())
+				{
+					KB_CORE_WARN("[SceneSerializer]: deserialized absolute native script path '{}'! converting...", path);
+					filepath = asset::get_relative_path(filepath);
+				}
 
-				KB_CORE_ASSERT(!component.Filepath.empty(), "Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
+				if (!filepath.empty())
+					component.BindEditor(filepath);
+				else
+					KB_CORE_WARN("Deserialized Entity '{0}' loaded script component with empty filepath!", uuid);
 			});
 
 		/*ReadComponentData<CSharpScriptComponent>(entity_data, entity, [&](CSharpScriptComponent& component, auto& data)
 			{
 				component.Module_name = data["Module_name"].as<std::string>();
+				if (script_comp)
+				{
+					auto module_name = script_comp["Module_name"].as<std::string>();
+					CSharpScriptComponent& csharp_script_comp = entity.AddComponent<CSharpScriptComponent>(module_name);
+				}
 			});*/
-		auto script_comp = entity_data["CSharpScriptComponent"];
+		/*auto script_comp = entity_data["CSharpScriptComponent"];
 		if (script_comp)
 		{
 			auto module_name = script_comp["Module_name"].as<std::string>();
 			CSharpScriptComponent& csharp_script_comp = entity.AddComponent<CSharpScriptComponent>(module_name);
-		}
+		}*/
 
 		ReadComponentData<MeshComponent>(entity_data, entity, [&](auto& component, auto& data)
 			{

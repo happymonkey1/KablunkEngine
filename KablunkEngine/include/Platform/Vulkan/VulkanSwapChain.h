@@ -50,7 +50,7 @@ namespace Kablunk
 
 		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.render_complete; }
 
-		void Cleanup();
+		void Destroy();
 
 		uint32_t GetWidth() const { return m_width; }
 		uint32_t GetHeight() const { return m_height; }

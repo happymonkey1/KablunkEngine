@@ -2,52 +2,43 @@
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
-//#define CR_HOST // tell cr.h that this is the host application
-//#include <cr.h>
+#include "Kablunk/Plugin/PluginManager.h"
+#include "Kablunk/Project/ProjectManager.h"
 
 namespace Kablunk
 {
-	//static cr_plugin s_ctx;
 
-	void NativeScriptEngine::Init()
+	void NativeScriptEngine::init()
 	{
-		KB_CORE_ASSERT(!s_instance, "Instance is already set! Init might be being called twice?!");
-		s_instance = new NativeScriptEngine{};
+
 	}
 
-	void NativeScriptEngine::Open(const char* path)
+	void NativeScriptEngine::shutdown()
 	{
-		//cr_plugin_open(s_ctx, path);
+
 	}
 
-	bool NativeScriptEngine::Update()
+	std::unique_ptr<INativeScript> NativeScriptEngine::get_script(const std::string& name)
 	{
-		//if (!s_ctx.p)
-		//	return true;
+		// Try load function pointer from dll module
+		if (!m_get_script_from_registry && ProjectManager::get().get_active())
+		{
+			const std::string& plugin_name = ProjectManager::get().get_active()->get_project_name();
+			std::filesystem::path plugin_path = ProjectManager::get().get_active()->get_native_script_module_file_path();
+			PluginManager::get().try_load_plugin(plugin_name, plugin_path, PluginType::NativeScript);
+		}
 
-		//return cr_plugin_update(s_ctx);
+		KB_CORE_ASSERT(m_get_script_from_registry, "GetScriptFromRegistry function ptr not set!");
 
-		return true;
+		return m_get_script_from_registry(name);
 	}
 
-	void NativeScriptEngine::Shutdown()
-	{
-		//cr_plugin_close(s_ctx);
-
-		delete s_instance;
-	}
-
-	Scope<NativeScriptInterface> NativeScriptEngine::GetScript(const std::string& name)
-	{
-		return Scope<NativeScriptInterface>(GetScriptFromRegistry(name));
-	}
-
-	void NativeScriptEngine::SetScene(WeakRef<Scene> scene)
+	void NativeScriptEngine::set_scene(WeakRef<Scene> scene)
 	{
 		m_current_scene = scene.get();
 	}
 
-	WeakRef<Scene> NativeScriptEngine::GetScene()
+	WeakRef<Scene> NativeScriptEngine::get_scene()
 	{
 		KB_CORE_ASSERT(m_current_scene, "scene is not set!");
 		return WeakRef<Scene>(m_current_scene);

@@ -1,6 +1,9 @@
 #include "kablunkpch.h"
 
 #include "Kablunk/Project/Project.h"
+#include "Kablunk/Asset/AssetManager.h"
+
+#include "Kablunk/Core/Singleton.h"
 
 namespace Kablunk
 {
@@ -15,8 +18,4 @@ namespace Kablunk
 
 	}
 
-	void Project::SetActive(const Ref<Project>& project)
-	{
-		s_active_project = project;
-	}
 }

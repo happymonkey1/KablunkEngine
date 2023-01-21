@@ -71,6 +71,9 @@ namespace Kablunk {
 		using ShaderReloadedCallback = std::function<void()>;
 		virtual ~Shader() {}
 
+		// destroy shader and free resources
+		virtual void destroy() = 0;
+
 		virtual void Reload(bool force_compile = false) = 0;
 		virtual size_t GetHash() const = 0;
 
@@ -95,7 +98,7 @@ namespace Kablunk {
 
 		static IntrusiveRef<Shader> Create(const std::string& filePath, bool force_compile = false);
 	private:
-		inline static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
+		static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
 	};
 
 	class ShaderLibrary : public RefCounted
