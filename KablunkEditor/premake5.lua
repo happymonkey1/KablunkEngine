@@ -102,6 +102,7 @@ project "KablunkEditor"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
+        symbols "off"
 
         links
         {

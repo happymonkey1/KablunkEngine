@@ -3,6 +3,8 @@
 
 #include "Kablunk/Core/Singleton.h"
 
+#include <format>
+#include <string>
 
 // ignore warnings raises in external headers
 #pragma warning(push, 0)
@@ -194,6 +196,18 @@ enum class logger_level_t
 	NONE
 };
 
+namespace details
+{ // start namespace ::details
+
+// internal message formatting func for Error C7595
+template <typename T1, typename... args_t>
+std::string create_log_message(T1&& p_format, args_t&&... args)
+{
+	return std::vformat(p_format, std::make_format_args(std::forward<args_t>(args)...));
+}
+
+} // end namespace ::details
+
 // generic logging helper to log a message (potentially with a tag)
 // logger_type specifies which "class" of logger to use (core or client)
 // level specifies what level of message to log (trace, info, warn, etc.)
@@ -206,15 +220,17 @@ void log_message(logger_type_t logger_type, logger_level_t level, const std::str
 	auto logger = logger_type == logger_type_t::core ? Singleton<Logger>::get().get_core_logger() : Singleton<Logger>::get().get_client_logger();
 	// create log formatting string
 	std::string log_message = log_tag.empty() ? "{}{}" : "[{}] {}";
-
+	// #TODO see if we can get compile time formatting working...
 	// #TODO there is probably a more elegant solution without the use of fmt::format before sending to logger...
+	std::string formatted_msg = std::vformat(log_message, std::make_format_args(log_tag, details::create_log_message(std::forward<args_t>(args)...)));
+
 	switch (level)
 	{
-		case logger_level_t::trace:		logger->trace(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::info:		logger->info(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::warn:		logger->warn(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::error:		logger->error(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::critical:	logger->critical(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
+		case logger_level_t::trace:		logger->trace(formatted_msg); break;
+		case logger_level_t::info:		logger->info(formatted_msg); break;
+		case logger_level_t::warn:		logger->warn(formatted_msg); break;
+		case logger_level_t::error:		logger->error(formatted_msg); break;
+		case logger_level_t::critical:	logger->critical(formatted_msg); break;
 		case logger_level_t::NONE:
 			KB_CORE_ASSERT(false, "NONE logger level is not valid!");
 		default:
