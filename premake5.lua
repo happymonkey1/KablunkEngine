@@ -14,7 +14,8 @@ workspace "KablunkEngine"
 
     solution_items
     {
-        ".editorconfig"
+        ".editorconfig",
+        ".clang-tidy"
     }
 
     flags
