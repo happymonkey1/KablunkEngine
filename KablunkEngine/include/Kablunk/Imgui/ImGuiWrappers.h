@@ -32,6 +32,46 @@ namespace Kablunk::UI
 		return &s_id_buffer[0];
 	}
 
+	static void PushItemDisabled()
+	{
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+	}
+
+	static bool IsItemDisabled()
+	{
+		return ImGui::GetItemFlags() & ImGuiItemFlags_Disabled;
+	}
+
+	static void PopItemDisabled()
+	{
+		ImGui::PopItemFlag();
+	}
+
+	static bool IsMouseDownOnDockedWindow(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags hovered_flags = 0)
+	{
+		return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
+	}
+
+	static bool IsMouseDownOnItem(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags flags = 0)
+	{
+		return ImGui::IsMouseDown(mouse) && ImGui::IsItemHovered(flags);
+	}
+
+	static void ShiftCursor(ImVec2 distance)
+	{
+		ImGui::SetCursorPos(ImGui::GetCursorPos() + distance);
+	}
+
+	static void ShiftCursorX(float distance)
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + distance);
+	}
+
+	static void ShiftCursorY(float distance)
+	{
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
+	}
+
 	static const char* GenerateLabelID(std::string_view label)
 	{
 		*fmt::format_to_n(s_id_buffer, std::size(s_id_buffer), "{}##{}", label, s_ui_context_id++).out = 0;
@@ -104,46 +144,6 @@ namespace Kablunk::UI
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 8.0f, 8.0f });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
 		ImGui::Columns(2);
-	}
-
-	static void PushItemDisabled()
-	{
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-	}
-
-	static bool IsItemDisabled()
-	{
-		return ImGui::GetItemFlags() & ImGuiItemFlags_Disabled;
-	}
-
-	static void PopItemDisabled()
-	{
-		ImGui::PopItemFlag();
-	}
-
-	static bool IsMouseDownOnDockedWindow(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags hovered_flags = 0)
-	{
-		return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
-	}
-
-	static bool IsMouseDownOnItem(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags flags = 0)
-	{
-		return ImGui::IsMouseDown(mouse) && ImGui::IsItemHovered(flags);
-	}
-
-	static void ShiftCursor(ImVec2 distance)
-	{
-		ImGui::SetCursorPos(ImGui::GetCursorPos() + distance);
-	}
-
-	static void ShiftCursorX(float distance)
-	{
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + distance);
-	}
-
-	static void ShiftCursorY(float distance)
-	{
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
 	}
 
 	ImTextureID GetTextureID(IntrusiveRef<Texture2D> texture);

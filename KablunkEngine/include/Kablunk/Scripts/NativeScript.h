@@ -57,7 +57,7 @@ namespace Kablunk
 		T& GetComponent() { return m_entity.GetComponent<T>(); }
 
 		template <typename T>
-		T& GetComponent() const { return m_entity.GetComponent<T>() }
+		const T& GetComponent() const { return m_entity.GetComponent<T>(); }
 	private:
 		virtual void bind_entity(Entity entity) override { m_entity = entity; }
 	private:

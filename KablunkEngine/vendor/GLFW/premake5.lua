@@ -4,6 +4,9 @@ project "GLFW"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	compileas "C"
+
+	conformancemode "off"
 
 	files
 	{
@@ -48,6 +51,8 @@ project "GLFW"
 			"_GLFW_X11"
 		}
 
+		compileas "C"
+
 	filter "system:windows"
 		systemversion "latest"
 		staticruntime "off"
@@ -71,6 +76,8 @@ project "GLFW"
 			"_GLFW_BUILD_DLL",
 			"_CRT_SECURE_NO_WARNINGS"
 		}
+
+		compileas "C"
 
 	filter "configurations:Debug"
 		runtime "Debug"

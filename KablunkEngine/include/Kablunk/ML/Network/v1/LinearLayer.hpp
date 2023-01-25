@@ -21,6 +21,9 @@ namespace Kablunk::ml::network::v1
 	class LinearLayer : public ILayer<T, tensor_t>
 	{
 	public:
+		using value_t = T;
+		using layer_tensor_t = tensor_t;
+	public:
 		LinearLayer() = delete;
 
 		// #TODO figure out if it is possible to keep m_weights uninitialized so we don't spend time constructing it before immediately being replaced

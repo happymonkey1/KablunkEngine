@@ -40,7 +40,8 @@ void test_flat_hash_map_constructors()
 		details::hash_map_pair<std::string, uint32_t> p1{ "hello", 1 };
 		details::hash_map_pair<std::string, uint32_t> p2{ "world", 2 };
 
-		auto& p3 = std::move(p1);
+		auto&& p3 = std::move(p1);
+
 	}
 }
 

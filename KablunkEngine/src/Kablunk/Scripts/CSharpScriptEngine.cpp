@@ -435,7 +435,7 @@ namespace Kablunk
 		{
 			WeakRef<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
 			KB_CORE_ASSERT(scene, "[C#-ScriptEngine] No active scene");
-			if (auto& entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
+			if (auto entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
 			{
 				const auto& entity_map = scene->GetEntityMap();
 				for (auto& [entity_id, entity_instance_data] : entity_instance_map->second)
