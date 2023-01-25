@@ -188,6 +188,7 @@ namespace Kablunk::ml::tensor
 			KB_CORE_ASSERT(rank == 2, "tensor transpose only works on rank=2 tensors!");
 			KB_CORE_ASSERT(get_dimension(0) == get_dimension(1), "not implemented!");
 			
+			auto transposed = get_transpose();
 			// in place swap on copy 
 			// from https://en.wikipedia.org/wiki/In-place_matrix_transposition
 			for (size_t i = 0; i < get_dimension(0) - 2; ++i)

@@ -70,7 +70,7 @@ namespace Kablunk::asset
 					new_filepath += (index < 10) ? "(0" + std::to_string(index) + ")" : "(" + std::to_string(index) + ")";
 					new_filepath += metadata.filepath.extension();
 
-					if (!FileSystem::file_exists(Project::GetActive()->GetAssetDirectoryPath() / get_relative_path(new_filepath)))
+					if (!FileSystem::file_exists(Singleton<ProjectManager>::get().get_active()->get_asset_directory_path() / get_relative_path(new_filepath)))
 					{
 						filename_available = true;
 						metadata.filepath = new_filepath;

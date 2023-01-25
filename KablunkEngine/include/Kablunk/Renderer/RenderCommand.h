@@ -349,6 +349,10 @@ namespace Kablunk::render
 		return Singleton<Renderer>::get().GetCurrentFrameIndex();
 	}
 
+	RenderCommandQueue& get_render_resource_release_queue(uint32_t index);
+	// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
+	RenderCommandQueue& get_render_command_queue();
+
 	// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
 	// submit a function to be queued (and run) on the render thread
 	template <typename FuncT>
@@ -386,9 +390,5 @@ namespace Kablunk::render
 				new (storage_buffer) FuncT(std::forward<FuncT>((FuncT&&)func));
 			});
 	}
-
-	RenderCommandQueue& get_render_resource_release_queue(uint32_t index);
-	// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
-	RenderCommandQueue& get_render_command_queue();
 
 }

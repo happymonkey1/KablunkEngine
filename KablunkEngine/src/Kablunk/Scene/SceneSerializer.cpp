@@ -268,7 +268,7 @@ namespace Kablunk
 
 		ReadComponentData<CameraComponent>(entity_data, entity, [this](auto& component, auto& data)
 			{
-				auto& scene_camera_data = data["Camera"];
+				YAML::Node scene_camera_data = data["Camera"];
 				if (scene_camera_data)
 				{
 					auto scene_camera = SceneCamera{};

@@ -43,7 +43,8 @@ namespace Kablunk
 	{
 		Entity new_entity = m_scene_context->CreateEntity();
 
-		new_entity.AddComponent<PrefabComponent>(uuid::generate(), new_entity.GetComponent<IdComponent>().Id);
+		auto& id = new_entity.GetComponent<IdComponent>().Id;
+		new_entity.AddComponent<PrefabComponent>(uuid::generate(), id);
 
 		// copy components
 		new_entity.m_scene->CopyComponentIfItExists<TransformComponent>(entity, new_entity, m_scene_context->m_registry);

@@ -22,6 +22,8 @@ namespace Kablunk::ml::network::v1
 		using value_t = T;
 		using layer_t = Kablunk::ml::network::ILayer<T>;
 		using optimizer_t = Kablunk::ml::network::INetwork<T>::optimizer_t;
+		// #TODO this may not be correct
+		using network_tensor_t = Kablunk::ml::tensor::Tensor<value_t, 2>;
 	public:
 		SimpleNeuralNetwork(
 			const std::initializer_list<layer_t*>& layers, 
@@ -90,11 +92,11 @@ namespace Kablunk::ml::network::v1
 
 		// get the optimizer for the network
 		// returns nullptr if back-propagation (training) of the network is not required.
-		virtual INetwork::optimizer_t* get_optimizer() { return m_optimizer; }
+		virtual INetwork<T>::optimizer_t* get_optimizer() { return m_optimizer; }
 
 		// get the optimizer for the network
 		// returns nullptr if back-propagation (training) of the network is not required.
-		virtual const INetwork::optimizer_t* get_optimizer() const { return m_optimizer; }
+		virtual const INetwork<T>::optimizer_t* get_optimizer() const { return m_optimizer; }
 
 		// get a layer by index from the network
 		virtual ILayer<value_t, network_tensor_t>* get_layer(size_t layer_index) { return m_layers[layer_index]; } // #TODO buffer overflow?
@@ -106,7 +108,7 @@ namespace Kablunk::ml::network::v1
 		// stack allocated array for layers of the network
 		std::vector<layer_t*> m_layers;
 		// optimizer for the network
-		INetwork::optimizer_t* m_optimizer = nullptr;
+		INetwork<T>::optimizer_t* m_optimizer = nullptr;
 	};
 
 }

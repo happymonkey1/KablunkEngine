@@ -49,12 +49,12 @@ namespace Kablunk
 		Asset(const std::string& filepath)
 			: BaseAsset{ filepath } 
 		{ 
-			KB_CORE_ASSERT("Asset template specialization not defined!");
+			KB_CORE_ASSERT(false, "Asset template specialization not defined!");
 		}
 		Asset(const std::string& filepath, const UUID& id)
 			: BaseAsset{ filepath, id } 
 		{ 
-			KB_CORE_ASSERT("Asset template specialization not defined!");
+			KB_CORE_ASSERT(false, "Asset template specialization not defined!");
 		};
 		virtual ~Asset() override = default;
 

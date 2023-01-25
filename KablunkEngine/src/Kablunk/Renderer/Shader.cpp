@@ -54,7 +54,7 @@ namespace Kablunk
 	
 	IntrusiveRef<Shader> ShaderLibrary::Load(const std::string& filepath)
 	{
-		auto& shader = Shader::Create(filepath);
+		auto shader = Shader::Create(filepath);
 		Add(shader);
 		return shader;
 	}

@@ -169,31 +169,36 @@ namespace Kablunk
 	glm::vec2& OpenGLMaterial::GetVec2(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return glm::vec2{0, 0};
+		glm::vec2 a{ 0, 0 };
+		return a;
 	}
 
 	glm::vec3& OpenGLMaterial::GetVec3(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return glm::vec3{0, 0, 0};
+		glm::vec3 a{ 0, 0, 0 };
+		return a;
 	}
 
 	glm::vec4& OpenGLMaterial::GetVec4(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return glm::vec4{0, 0, 0, 0};
+		glm::vec4 a{ 0, 0, 0, 0 };
+		return a;
 	}
 
 	glm::mat3& OpenGLMaterial::GetMat3(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return glm::mat3{1.0f};
+		glm::mat3 a{ 1.0f };
+		return a;
 	}
 
 	glm::mat4& OpenGLMaterial::GetMat4(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return glm::mat4{1.0f};
+		glm::mat4 a{ 1.0f };
+		return a;
 	}
 
 	IntrusiveRef<Texture2D> OpenGLMaterial::GetTexture2D(const std::string& name)

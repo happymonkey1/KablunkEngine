@@ -23,7 +23,8 @@ namespace hash
 	template <typename T> 
 	inline uint64_t generate_u64_fnv1a_hash(const T& value)
 	{
-		static_assert(false, "value_t does not support hashing!");
+		//static_assert(false, "value_t does not support hashing!");
+		KB_CORE_ASSERT(false, "value_t does not support hashing!");
 	}
 
 	// template specialization for uint64_t
@@ -98,6 +99,7 @@ namespace details
 		uint8_t m_data{ empty_bit_flag };
 
 		swiss_table_metadata() = default;
+		swiss_table_metadata(uint8_t p_data) : m_data{ p_data } { }
 		swiss_table_metadata(const swiss_table_metadata&) = default;
 		swiss_table_metadata(swiss_table_metadata&&) = default;
 		~swiss_table_metadata() = default;
@@ -728,6 +730,7 @@ void flat_unordered_hash_map<K, V>::insert(const hash_map_pair_t& pair)
 	check_if_needs_rebuild();
 	
 	// compute general hash, and mask out h1 and h2 hashes
+	const auto& key = pair.key;
 	const hash_t hash_value = hash::generate_u64_fnv1a_hash(key);
 	const hash_t h1_hash = hash_value & metadata_t::h1_hash_mask;
 	const h2_t h2_hash = static_cast<h2_t>((hash_value & metadata_t::h2_hash_mask) >> 0x39);

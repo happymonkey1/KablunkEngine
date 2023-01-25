@@ -624,7 +624,8 @@ namespace Kablunk
 			for (auto entity : circle_view)
 			{
 				Entity circle_entity = Entity{ entity, this };
-				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
+				auto& transform = circle_entity.GetComponent<TransformComponent>();
+				auto& circle_component = circle_entity.GetComponent<CircleRendererComponent>();
 				render2d::draw_circle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 
@@ -774,7 +775,8 @@ namespace Kablunk
 			for (auto entity : circle_view)
 			{
 				Entity circle_entity = Entity{ entity, this };
-				auto& [transform, circle_component] = circle_view.get<TransformComponent, CircleRendererComponent>(entity);
+				auto& transform = circle_entity.GetComponent<TransformComponent>();
+				auto& circle_component = circle_entity.GetComponent<CircleRendererComponent>();
 				render2d::draw_circle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 

@@ -16,6 +16,11 @@
 #include <unordered_set>
 #include <chrono>
 
+// c++20 includes
+#if _MSC_VER >= 1928
+#	include <ranges>
+#endif
+
 #include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Logger.h"

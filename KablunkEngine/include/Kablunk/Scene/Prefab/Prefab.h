@@ -11,7 +11,7 @@ namespace Kablunk
 	class Prefab : public RefCounted
 	{
 	public:
-		explicit Prefab(Entity entity) noexcept;
+		Prefab(Entity entity) noexcept;
 		~Prefab();
 
 		void create(Entity entity, bool serialize = true);

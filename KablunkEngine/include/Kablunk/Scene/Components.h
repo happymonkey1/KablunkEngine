@@ -66,6 +66,9 @@ namespace Kablunk
 		uuid::uuid64 Entity_id = uuid::nil_uuid;
 
 		PrefabComponent() = default;
+		PrefabComponent(uuid::uuid64 p_prefab_id, uuid::uuid64 p_entity_id)
+			: Prefab_id{ p_prefab_id }, Entity_id{ p_entity_id }
+		{ }
 		PrefabComponent(const PrefabComponent&) = default;
 	};
 
@@ -197,7 +200,7 @@ namespace Kablunk
 		template <typename T, typename... Args>
 		void BindRuntime(Args... args)
 		{
-			InstantiateScript	= [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...) };
+			InstantiateScript = [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...); };
 		}
 
 		void BindEditor()

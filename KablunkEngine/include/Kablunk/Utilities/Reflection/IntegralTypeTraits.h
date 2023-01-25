@@ -13,7 +13,8 @@ namespace Kablunk::Reflect
 	template <typename T>
 	static TypeTraits* GetIntegralTypeTraits()
 	{
-		static_assert(false, "Integral type template specialization not defined");
+		//static_assert(false, "Integral type template specialization not defined");
+		KB_CORE_ASSERT(false, "Integral type template specialization not defined!");
 		return nullptr;
 	}
 
