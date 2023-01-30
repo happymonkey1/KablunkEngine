@@ -12,8 +12,11 @@ Compatible with Visual Studio 2022, msvc compiler, and windows 10.
 
 Required Libraries/Binaries (should be installed by setup.py)
 - Boost
+	- Requires installation in Program Files directory (again should be automated)
 - Vulkan
+	- Requires VULKAN_SDK environment variable (again should be automated)
 - Premake
+	- Requires installation in `%KABLUNK_DIR%/vendor/premake/bin/premake5.exe` (again should be automated)
 
 ## Features
 
@@ -26,7 +29,7 @@ Required Libraries/Binaries (should be installed by setup.py)
 - [x] Asset Manager
 - [x] Project System
 - [x] Extendable event system
-- [x] Datastructures & Algorithms (allocators, map, priority queue, simple c++ parser, etc.)
+- [x] Datastructures & Algorithms (allocators, map, priority queue, simple runtime c++ parser, etc.)
 - [x] DLL memory sharing / IPC
 
 ## In progress
@@ -36,6 +39,9 @@ Required Libraries/Binaries (should be installed by setup.py)
 - [ ] Reflection
 - [ ] Audio
 - [ ] Build system
+- [ ] Networking Abstraction
+- [ ] Runtime c++ hot reloading
+- [ ] PBR renderer
 
 ## Roadmap
 
