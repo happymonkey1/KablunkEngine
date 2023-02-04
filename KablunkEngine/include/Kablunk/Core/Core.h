@@ -7,6 +7,7 @@
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Core/Memory/Memory.h"
+#include "Kablunk/Core/Expected.hpp"
 #include <memory>
 
 namespace Kablunk
