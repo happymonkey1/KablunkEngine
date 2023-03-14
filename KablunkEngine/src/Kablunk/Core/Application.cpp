@@ -46,7 +46,7 @@ namespace Kablunk
 
 		KB_PROFILE_FUNCTION();
 		{
-			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height });
+			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height, m_specification.Fullscreen });
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
 			m_window->SetVsync(m_specification.Vsync);
 		}
@@ -127,6 +127,14 @@ namespace Kablunk
 		overlay->OnAttach();
 	}
 
+	bool Application::on_key_released(KeyReleasedEvent& e)
+	{
+		if (e.GetKeyCode() == Key::F11)
+			toggle_fullscreen();
+
+		return false;
+	}
+
 	void Application::Close()
 	{
 		m_running = false;
@@ -139,7 +147,7 @@ namespace Kablunk
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClosed(e); });
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
-
+		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e){ return on_key_released(e); });
 
 		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) 
 		{
@@ -235,4 +243,13 @@ namespace Kablunk
 		}
 		
 	}
+
+	void Application::toggle_fullscreen()
+	{
+		if (m_window->is_fullscreen())
+			m_window->set_window_mode(window_mode_t::windowed);
+		else
+			m_window->set_window_mode(window_mode_t::borderless_fullscreen);
+	}
+
 }

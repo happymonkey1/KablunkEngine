@@ -18,7 +18,7 @@ namespace Kablunk {
 	{
 		std::string Name = "KablunkEngine";
 		uint32_t Width = 1600, height = 900;
-		bool Fullscreen = false;
+		bool Fullscreen = true;
 		bool Vsync = false;
 		// #NOTE use when projects are implemented
 		std::string Working_directory = "";
@@ -47,6 +47,10 @@ namespace Kablunk {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
+		// event function which triggers on a key released event event
+		// #NOTE(Sean) should probably be a "key down" event, but because KeyPressedEvent repeats, this is not useful when toggling fullscreen
+		bool on_key_released(KeyReleasedEvent& e);
+
 		static Application& Get() { return Singleton<Application>::get(); }
 		Window& GetWindow() { return *m_window; }
 		const ApplicationSpecification& GetSpecification() const { return m_specification; }
@@ -63,6 +67,9 @@ namespace Kablunk {
 		// #TODO create better api so this is not exposed to client applications
 		Threading::ThreadPool& GetThreadPool() { return m_thread_pool; }
 		const Threading::ThreadPool& GetThreadPool() const { return m_thread_pool; }
+
+		// toggle between fullscreen and windowed mode
+		void toggle_fullscreen();
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);

@@ -9,12 +9,12 @@ namespace Kablunk
 	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification specification = {
-			"Kablunk Editor",
-			1920,
-			1080,
-			false,
-			false,
-			"",
+			"Kablunk Editor",	// window name
+			1920,				// width
+			1080,				// height
+			true,				// fullscreen
+			false,				// vsync
+			"",					// working directory (unused)
 			true,
 			true
 		};
