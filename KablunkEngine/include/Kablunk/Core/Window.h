@@ -52,6 +52,8 @@ namespace Kablunk {
 		// change the "window" mode (i.e. windowed, fullscreen, borderless fullscreen)
 		virtual void set_window_mode(window_mode_t mode) = 0;
 
+		virtual void swap_buffers() = 0;
+
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	};
 }

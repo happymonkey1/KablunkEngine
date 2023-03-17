@@ -118,18 +118,22 @@ namespace Kablunk
 		if (!force_recreate && (m_width == width && m_height == height))
 			return;
 
-		m_width  = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * m_specification.scale));
-		m_height = static_cast<uint32_t>(std::ceil(static_cast<float>(height) * m_specification.scale));
-		if (!m_specification.swap_chain_target)
-			Invalidate();
-		else
-		{
-			VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
-			m_render_pass = swapChain.GetRenderPass();
+		ref<VulkanFramebuffer> instance = this;
+		render::submit([instance, width, height]() mutable
+			{
+				instance->m_width = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * instance->m_specification.scale));
+				instance->m_height = static_cast<uint32_t>(std::ceil(static_cast<float>(height) * instance->m_specification.scale));
+				if (!instance->m_specification.swap_chain_target)
+					instance->RT_Invalidate();
+				else
+				{
+					VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
+					instance->m_render_pass = swapChain.GetRenderPass();
 
-			m_clear_values.clear();
-			m_clear_values.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		}
+					instance->m_clear_values.clear();
+					instance->m_clear_values.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
+				}
+			});
 
 		for (auto& callback : m_resize_callbacks)
 			callback(this);

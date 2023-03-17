@@ -69,6 +69,8 @@ namespace Kablunk
 
 	void EditorLayer::OnAttach()
 	{
+		KB_CORE_INFO("EditorLayer::OnAttach()");
+
 		//m_missing_texture		= Texture2D::Create("assets/textures/missing_texture.png");
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
@@ -83,6 +85,9 @@ namespace Kablunk
 		NativeScriptEngine::get().set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
+		// pump a frame from the render thread to *hopefully* initialize stuff?
+		//Application::Get().get_render_thread().pump();
+
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
 	}
 

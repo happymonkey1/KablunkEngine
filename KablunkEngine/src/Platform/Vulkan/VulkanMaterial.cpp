@@ -173,7 +173,7 @@ namespace Kablunk
 
 		std::vector<VkDescriptorImageInfo> array_image_infos;
 
-		uint32_t frame_index = render::get_current_frame_index();
+		uint32_t frame_index = render::rt_get_current_frame_index();
 
 		// currently can't cache resources because the same material could be rendered in multiple viewports, so we can't bind to the same uniform buffer
 		if (m_dirty_descriptor_sets[frame_index] || true)

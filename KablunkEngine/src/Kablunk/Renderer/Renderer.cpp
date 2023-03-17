@@ -12,6 +12,8 @@
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
+#include "Kablunk/Core/Application.h"
+
 namespace Kablunk
 {
 
@@ -19,7 +21,23 @@ namespace Kablunk
 	{
 		KB_PROFILE_FUNCTION();
 
+		// initialize render command queues
+		for (size_t i = 0; i < s_render_command_queue_size; ++i)
+			m_command_queues[i] = new RenderCommandQueue{};
+
 		m_shader_library = IntrusiveRef<ShaderLibrary>::Create();
+
+		render::get_shader_library()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Circle.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Quad.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Line.glsl");
+
+		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_UI.glsl");
+
+		// compile shaders that were submitted
+		Application::Get().get_render_thread().pump();
 
 		// initialize underlying renderer api
 		switch (RendererAPI::GetAPI())
@@ -38,8 +56,8 @@ namespace Kablunk
 		//m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
 		//m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
 		//m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
-		
-		render2d::init();
+
+		//render2d::init();
 	}
 
 	void Renderer::shutdown()
@@ -51,6 +69,9 @@ namespace Kablunk
 		render2d::shutdown();
 
 		m_renderer_api->Shutdown();
+
+		for (size_t i = 0; i < s_render_command_queue_size; ++i)
+			delete[] m_command_queues[i];
 
 		delete m_renderer_api;
 	}
@@ -100,6 +121,31 @@ namespace Kablunk
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return 0;
 		}
 
+	}
+
+	void Renderer::wait_and_render(render_thread* rendering_thread)
+	{
+		KB_CORE_ASSERT(rendering_thread, "render thread is null?");
+
+		{
+			// #TODO add profiling
+			rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
+		}
+		// execute command queue
+		m_command_queues[get_render_command_queue_index()]->Execute();
+		rendering_thread->set(thread_state_t::idle);
+	}
+
+	// main render function which runs on render thread
+	void Renderer::render_thread_func(render_thread* rendering_thread)
+	{
+		while (rendering_thread->is_running())
+			wait_and_render(rendering_thread);
+	}
+
+	void Renderer::swap_queues()
+	{
+		m_render_command_queue_submission_index = (m_render_command_queue_submission_index + 1) % s_render_command_queue_size;
 	}
 
 }

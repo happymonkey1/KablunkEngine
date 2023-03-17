@@ -9,6 +9,7 @@
 #include "Kablunk/Imgui/ImGuiLayer.h"
 #include "Kablunk/Core/ThreadPool.h"
 
+#include "Kablunk/Core/RenderThread.h"
 
 int main(int argc, char** argv);
 
@@ -18,12 +19,14 @@ namespace Kablunk {
 	{
 		std::string Name = "KablunkEngine";
 		uint32_t Width = 1600, height = 900;
-		bool Fullscreen = true;
+		bool Fullscreen = false;
 		bool Vsync = false;
 		// #NOTE use when projects are implemented
 		std::string Working_directory = "";
 		bool Resizable = true;
 		bool Enable_imgui = true;
+		// threading policy for the core engine
+		threading_policy_t m_engine_threading_policy = threading_policy_t::multi_threaded;
 	};
 
 	class Application
@@ -68,8 +71,12 @@ namespace Kablunk {
 		Threading::ThreadPool& GetThreadPool() { return m_thread_pool; }
 		const Threading::ThreadPool& GetThreadPool() const { return m_thread_pool; }
 
+		render_thread& get_render_thread() { return m_render_thread; }
+		
 		// toggle between fullscreen and windowed mode
 		void toggle_fullscreen();
+
+		u32 get_current_frame_index() const { return m_current_frame_index; }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -81,12 +88,17 @@ namespace Kablunk {
 		bool m_minimized = false;
 		LayerStack m_layer_stack;
 		
+		// thread pool where tasks run
 		Threading::ThreadPool m_thread_pool;
+		// render thread
+		render_thread m_render_thread;
 
 		Timestep m_timestep;
 		float m_last_frame_time = 0.0f;
 		
 		bool m_has_shutdown = false;
+
+		u32 m_current_frame_index = 0;
 
 		friend int ::main(int argc, char** argv);
 	};

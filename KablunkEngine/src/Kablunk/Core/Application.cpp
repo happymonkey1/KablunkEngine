@@ -6,6 +6,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
@@ -30,7 +31,7 @@ namespace Kablunk
 
 
 	Application::Application()
-		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }
+		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ m_specification.m_engine_threading_policy }
 	{
 		
 	}
@@ -42,7 +43,9 @@ namespace Kablunk
 
 	void Application::init()
 	{
-		KB_CORE_INFO("Application initialized")
+		KB_CORE_INFO("Application initialized");
+
+		m_render_thread.run();
 
 		KB_PROFILE_FUNCTION();
 		{
@@ -51,9 +54,16 @@ namespace Kablunk
 			m_window->SetVsync(m_specification.Vsync);
 		}
 
+
 		audio::init_audio_engine();
 		render::init();
-		render::wait_and_render();
+		KB_CORE_INFO("Finished initializing renderer!");
+		// start rendering render one frame
+		m_render_thread.pump();
+		render2d::init();
+		m_render_thread.pump();
+		
+		//m_render_thread.pump();
 
 		if (m_specification.Enable_imgui)
 		{
@@ -94,7 +104,7 @@ namespace Kablunk
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
-		render::wait_and_render();
+		m_render_thread.terminate();
 
 		ProjectManager::get().shutdown();
 
@@ -175,8 +185,7 @@ namespace Kablunk
 		}
 
 		m_minimized = false;
-		render::on_window_resize(width, height);
-
+		render::submit([&](){ render::on_window_resize(width, height); });
 		return false;
 	}
 
@@ -192,10 +201,26 @@ namespace Kablunk
 			//if (NativeScriptEngine::Update())
 			//	continue;
 
+			{
+				// #TODO profilers
+
+				// synchronize threads
+				m_render_thread.block_until_rendering_complete();
+			}
+
+			// poll events on main thread
 			m_window->PollEvents();
+
+			m_render_thread.next_frame();
+
+			m_render_thread.kick();
 
 			if (!m_minimized)
 			{
+				// #TODO(Sean) not renderer agnostic
+				// start swapchain presentation on render thread
+				render::submit([&]() { VulkanContext::Get()->GetSwapchain().BeginFrame(); });
+
 				render::begin_frame();
 				{
 					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
@@ -215,14 +240,18 @@ namespace Kablunk
 
 				render::end_frame();
 
+				render::submit([&](){ m_window->swap_buffers(); });
+
 				// #TODO fix this so API agnostic
-				if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+				/*if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 				{
 					VulkanContext::Get()->GetSwapchain().BeginFrame();
 					render::wait_and_render();
-				}
+				}*/
 
-				m_window->OnUpdate();
+				//m_window->OnUpdate();
+
+				m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
 			}
 
 			float time = PlatformAPI::GetTime(); // Platform::GetTime

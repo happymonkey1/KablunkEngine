@@ -263,7 +263,7 @@ namespace Kablunk
 		IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
 		render::submit([uniform_buffer_set, camera_data_ub]() mutable
 			{
-				uint32_t buffer_index = render::get_current_frame_index();
+				uint32_t buffer_index = render::rt_get_current_frame_index();
 				uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data_ub, sizeof(CameraDataUB));
 			});
 
@@ -684,6 +684,9 @@ namespace Kablunk
 
 	void Renderer2D::reset_stats()
 	{
+		if (!m_renderer_data)
+			return;
+
 		m_renderer_data->Stats.Draw_calls = 0;
 		m_renderer_data->Stats.Quad_count = 0;
 		m_renderer_data->Stats.Circle_count = 0;

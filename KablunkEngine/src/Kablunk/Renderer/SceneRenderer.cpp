@@ -211,7 +211,7 @@ namespace Kablunk
 		IntrusiveRef<SceneRenderer> instance = this;
 		render::submit([instance, camera_data]() mutable
 			{
-				uint32_t buffer_index = render::get_current_frame_index();
+				uint32_t buffer_index = render::rt_get_current_frame_index();
 				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
 			}
 		);
@@ -219,7 +219,7 @@ namespace Kablunk
 		// Set Renderer Transform
 		render::submit([instance]() mutable
 			{
-				uint32_t buffer_index = render::get_current_frame_index();
+				uint32_t buffer_index = render::rt_get_current_frame_index();
 				glm::mat4 transform = glm::mat4{ 1.0f };
 				instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
 			}
@@ -232,7 +232,7 @@ namespace Kablunk
 		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
 		render::submit([instance, &point_light_ub_data]() mutable
 			{
-				const uint32_t buffer_index = render::get_current_frame_index();
+				const uint32_t buffer_index = render::rt_get_current_frame_index();
 				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
 				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
@@ -305,7 +305,7 @@ namespace Kablunk
 	{
 		ImGui::Begin("Render Statistics");
 
-		uint32_t current_frame_index = render::get_current_frame_index();
+		uint32_t current_frame_index = render::rt_get_current_frame_index();
 		ImGui::Text("GPU time: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index));
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));

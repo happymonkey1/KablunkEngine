@@ -124,7 +124,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 
 				VkCommandBufferBeginInfo cmd_buf_info = {};
 				cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -157,7 +157,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]()
 			{
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
 
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 1);
@@ -179,7 +179,7 @@ namespace Kablunk
 				auto device = VulkanContext::Get()->GetDevice();
 				VkDevice vk_device = device->GetVkDevice();
 
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 
 				VkSubmitInfo submit_info{};
 				submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -220,7 +220,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index));
 			});
@@ -233,7 +233,7 @@ namespace Kablunk
 		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index + 1));
 			});

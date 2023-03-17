@@ -101,11 +101,12 @@ namespace Kablunk {
 		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 		{
 			// #TODO dynamic_cast bad!
-			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
-			vk_context->GetSwapchain().InitSurface(m_window);
+			ref<VulkanContext> context = m_context.As<VulkanContext>();
+			//vk_context->GetSwapchain().Init(vk_context->GetInstance(), vk_context->GetDevice());
+			context->GetSwapchain().InitSurface(m_window);
 
 			uint32_t width = m_data.Width, height = m_data.Height;
-			vk_context->GetSwapchain().Create(&width, &height, m_data.VSync);
+			context->GetSwapchain().Create(&width, &height, m_data.VSync);
 		}
 
 		KB_CORE_INFO("Context created!");
@@ -344,6 +345,12 @@ namespace Kablunk {
 		glfwSetWindowAttrib(m_window, GLFW_DECORATED, decoration_value);
 
 		glfwSetWindowMonitor(m_window, m_data.Fullscreen ? monitor : nullptr, x_pos, y_pos, m_data.Width, m_data.Height, refresh_rate);
+	}
+
+	void WindowsWindow::swap_buffers()
+	{
+		// #TODO this is not renderer agnostic
+		VulkanContext::Get()->GetSwapchain().Present();
 	}
 
 }

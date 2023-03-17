@@ -13,7 +13,7 @@ namespace Kablunk
 		virtual void SwapBuffers() = 0;
 		virtual void Shutdown() = 0;
 
-		static Scope<GraphicsContext> Create(void* window);
+		static ref<GraphicsContext> Create(void* window);
 	};
 }
 

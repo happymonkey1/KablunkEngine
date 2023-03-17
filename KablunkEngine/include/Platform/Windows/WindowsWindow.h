@@ -34,12 +34,14 @@ namespace Kablunk {
 
 		// change the "window" mode (i.e. windowed, fullscreen, borderless fullscreen)
 		virtual void set_window_mode(window_mode_t mode) override;
+
+		virtual void swap_buffers() override;
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_window;
-		Scope<GraphicsContext> m_context;
+		ref<GraphicsContext> m_context;
 
 		struct WindowData {
 			std::string Title;

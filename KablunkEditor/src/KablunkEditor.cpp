@@ -9,14 +9,15 @@ namespace Kablunk
 	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification specification = {
-			"Kablunk Editor",	// window name
-			1920,				// width
-			1080,				// height
-			true,				// fullscreen
-			false,				// vsync
-			"",					// working directory (unused)
+			"Kablunk Editor",					// window name
+			1920,								// width
+			1080,								// height
+			false,								// fullscreen
+			false,								// vsync
+			"",									// working directory (unused)
 			true,
-			true
+			true,
+			threading_policy_t::single_threaded // threading policy for engine
 		};
 
 		Application& app = Singleton<Application>::get();

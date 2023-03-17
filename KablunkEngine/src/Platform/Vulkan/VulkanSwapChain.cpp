@@ -30,6 +30,7 @@ namespace Kablunk
 
 	void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	{
+		KB_CORE_INFO("Creating VulkanSwapChain!");
 		m_vsync = vsync;
 
 		VkDevice device = m_device->GetVkDevice();
@@ -402,6 +403,24 @@ namespace Kablunk
 			vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 		}
 
+		if (m_command_pool)
+			vkDestroyCommandPool(device, m_command_pool, nullptr);
+
+		if (m_render_pass)
+			vkDestroyRenderPass(device, m_render_pass, nullptr);
+
+		for (auto& framebuffer : m_framebuffers)
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+		if (m_semaphores.present_complete)
+			vkDestroySemaphore(device, m_semaphores.present_complete, nullptr);
+
+		if (m_semaphores.render_complete)
+			vkDestroySemaphore(device, m_semaphores.render_complete, nullptr);
+
+		for (auto& fence : m_wait_fences)
+			vkDestroyFence(device, fence, nullptr);
+
 		m_swapchain = nullptr;
 		m_surface = nullptr;
 	}
@@ -471,6 +490,9 @@ namespace Kablunk
 
 	void VulkanSwapChain::CreateFramebuffer()
 	{
+		for (auto& framebuffer : m_framebuffers)
+			vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
+
 		VkImageView image_view_attachments[2];
 
 		// Depth stencil not needed?
