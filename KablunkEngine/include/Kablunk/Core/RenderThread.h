@@ -43,6 +43,8 @@ public:
 	void block_until_rendering_complete();
 	void kick();
 	void pump();
+
+	render_thread& operator=(render_thread&& other) noexcept;
 private:
 	// pointer to data used by the render thread
 	render_thread_data_t* m_data = nullptr;
@@ -54,6 +56,8 @@ private:
 	bool m_running = false;
 	// atomic frame counter
 	std::atomic<size_t> m_app_thread_frame = 0;
+
+	friend class Application;
 };
 
 } // end namespace Kablunk

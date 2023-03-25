@@ -39,6 +39,12 @@ namespace Kablunk
 		
 	}
 
+	Application::Application(const ApplicationSpecification& spec)
+		: m_specification{ spec }, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ spec.m_engine_threading_policy }
+	{
+
+	}
+
 	Application::~Application()
 	{
 		shutdown();
@@ -47,6 +53,9 @@ namespace Kablunk
 	void Application::init()
 	{
 		KB_CORE_INFO("Application initialized");
+		
+		const char* thread_policy_cstr = m_render_thread.m_threading_policy == threading_policy_t::multi_threaded ? "multi-threaded" : "single-threaded";
+		KB_CORE_INFO("engine threading policy {}", thread_policy_cstr);
 
 		m_render_thread.run();
 

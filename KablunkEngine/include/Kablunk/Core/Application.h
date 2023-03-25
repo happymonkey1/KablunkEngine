@@ -41,6 +41,7 @@ namespace Kablunk {
 		};
 	public:
 		Application();
+		Application(const ApplicationSpecification& spec);
 		virtual ~Application();
 
 		// initialize application based off application specification. Called by run function before main loop.
@@ -50,7 +51,7 @@ namespace Kablunk {
 		void shutdown();
 
 		// Set application specification for the application. Does not inherently modify application parameters.
-		void set_application_specification(const ApplicationSpecification& specification) { m_specification = specification; }
+		void set_application_specification(const ApplicationSpecification& specification) { m_specification = specification; m_render_thread = std::move(render_thread{ specification.m_engine_threading_policy }); }
 
 		void Run();
 		void OnEvent(Event& e);

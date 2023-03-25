@@ -126,7 +126,7 @@ namespace Kablunk
 	void Renderer::wait_and_render(render_thread* rendering_thread)
 	{
 		KB_CORE_ASSERT(rendering_thread, "render thread is null?");
-
+		
 		{
 			// #TODO add profiling
 			rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
