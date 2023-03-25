@@ -32,6 +32,14 @@ namespace Kablunk {
 	class Application
 	{
 	public:
+		struct performance_timings_t
+		{
+			f32 main_thread_work_time = 0.0f;
+			f32 main_thread_wait_time = 0.0f;
+			f32 render_thread_work_time = 0.0f;
+			f32 render_thread_wait_time = 0.0f;
+		};
+	public:
 		Application();
 		virtual ~Application();
 
@@ -77,6 +85,8 @@ namespace Kablunk {
 		void toggle_fullscreen();
 
 		u32 get_current_frame_index() const { return m_current_frame_index; }
+
+		performance_timings_t get_thread_performance_timings() const { return m_thread_performance_timings; }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -92,7 +102,8 @@ namespace Kablunk {
 		Threading::ThreadPool m_thread_pool;
 		// render thread
 		render_thread m_render_thread;
-
+		// records work and wait timings for threads
+		performance_timings_t m_thread_performance_timings{};
 		Timestep m_timestep;
 		float m_last_frame_time = 0.0f;
 		

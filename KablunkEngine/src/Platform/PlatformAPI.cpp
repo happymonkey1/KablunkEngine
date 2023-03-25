@@ -1,9 +1,6 @@
 #include "kablunkpch.h"
 #include "Platform/PlatformAPI.h"
 
-#include "Platform/OpenGL/OpenGLTimer.h"
-#include "Platform/Windows/WindowsTimer.h"
-
 namespace Kablunk
 {
 
@@ -11,7 +8,7 @@ namespace Kablunk
 	{
 		switch (PlatformAPI::GetPlatform())
 		{
-		case PlatformAPI::PLATFORM::Windows:    return OpenGLTimer().GetTime();
+		case PlatformAPI::PLATFORM::Windows:    KB_CORE_ASSERT(false, "PlatformAPI::Windows is not currently supported!"); break;
 		case PlatformAPI::PLATFORM::Mac:        KB_CORE_ASSERT(false, "PlatformAPI::Mac is not currently supported!"); break;
 		case PlatformAPI::PLATFORM::Linux:      KB_CORE_ASSERT(false, "PlatformAPI::Linux is not currently supported!"); break;
 		case PlatformAPI::PLATFORM::Android:    KB_CORE_ASSERT(false, "PlatformAPI::Android is not currently supported!"); break;

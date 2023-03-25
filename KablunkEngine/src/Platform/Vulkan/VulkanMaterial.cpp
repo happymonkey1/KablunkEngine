@@ -42,7 +42,7 @@ namespace Kablunk
 
 	VulkanMaterial::~VulkanMaterial()
 	{
-
+		m_uniform_storage_buffer.Release();
 	}
 
 	void VulkanMaterial::Init()
@@ -276,8 +276,10 @@ namespace Kablunk
 		KB_CORE_ASSERT(resource, "resource is nullptr!");
 
 		uint32_t binding = resource->GetRegister();
+
 		// Texture already bound!
-		if (binding < m_textures.size() && m_textures[binding] && texture->GetHash() == m_textures[binding]->GetHash())
+		if (binding < m_textures.size() && m_textures[binding] && texture->GetHash() == m_textures[binding]->GetHash()
+			&& m_resident_descriptors.contains(binding))
 			return;
 
 		if (binding >= m_textures.size())

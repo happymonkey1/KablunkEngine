@@ -16,6 +16,18 @@ namespace Kablunk
 	void ShutdownCore();
 }
 
+#if defined(KB_PLATFORM_WINDOWS)
+#	define KB_FORCE_INLINE __forceinline
+#elif defined(KB_PLATFORM_LINUX)
+#	if defined(GCC_VERSION)  // check if compiling with gcc
+#		define KB_FORCE_INLINE __attribute__((always_inline))
+#	endif
+#else
+	// #TODO(Sean) force inline on other platforms
+#	define KB_FORCE_INLINE inline
+#	warning "force inlined not defined for platform!"
+#endif
+
 #define BIT(x) (1 << x)
 
 #define KABLUNK_BIND_EVENT_FN(x) [this](auto&&... args) -> decltype(auto) { return this->x(std::forward<decltype(args)>(args)...); }

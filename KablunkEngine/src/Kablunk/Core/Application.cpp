@@ -14,6 +14,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 
 //#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Core/Timers.h"
 #include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -22,6 +23,8 @@
 #include "Kablunk/Asset/AssetManager.h"
 
 #include "Kablunk/Audio/AudioCommand.h"
+
+#include <GLFW/glfw3.h>
 
 
 
@@ -202,10 +205,11 @@ namespace Kablunk
 			//	continue;
 
 			{
-				// #TODO profilers
+				timer main_thread_wait_timer{};
 
 				// synchronize threads
 				m_render_thread.block_until_rendering_complete();
+				m_thread_performance_timings.main_thread_wait_time = main_thread_wait_timer.get_elapsed_ms();
 			}
 
 			// poll events on main thread
@@ -217,6 +221,8 @@ namespace Kablunk
 
 			if (!m_minimized)
 			{
+				timer main_thread_cpu_timer{};
+
 				// #TODO(Sean) not renderer agnostic
 				// start swapchain presentation on render thread
 				render::submit([&]() { VulkanContext::Get()->GetSwapchain().BeginFrame(); });
@@ -252,9 +258,10 @@ namespace Kablunk
 				//m_window->OnUpdate();
 
 				m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
+				m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 			}
 
-			float time = PlatformAPI::GetTime(); // Platform::GetTime
+			float time = glfwGetTime(); // Platform::GetTime
 			m_timestep = time - m_last_frame_time;
 			m_last_frame_time = time;
 		}
