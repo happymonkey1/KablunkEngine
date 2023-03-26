@@ -113,14 +113,17 @@ namespace Kablunk
 		// clear the framebuffer pool
 		FramebufferPool::Get()->GetAll().clear();
 
+
+		m_render_thread.terminate();
+		
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
-		m_render_thread.terminate();
+		render::shutdown();
+
 
 		ProjectManager::get().shutdown();
 
-		render::shutdown();
 
 		NativeScriptEngine::get().shutdown();
 		PluginManager::get().shutdown();

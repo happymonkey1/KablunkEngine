@@ -70,8 +70,18 @@ namespace Kablunk
 
 		m_renderer_api->Shutdown();
 
-		for (size_t i = 0; i < s_render_command_queue_size; ++i)
-			delete[] m_command_queues[i];
+		// shutdown vulkan context
+		VulkanContext::Get()->Shutdown();
+
+		if (m_command_queues)
+		{
+			for (size_t i = 0; i < s_render_command_queue_size; ++i)
+			{
+				KB_CORE_ASSERT(m_command_queues[i], "command queue null?");
+				delete m_command_queues[i];
+			}
+			//delete[] m_command_queues;
+		}
 
 		delete m_renderer_api;
 	}

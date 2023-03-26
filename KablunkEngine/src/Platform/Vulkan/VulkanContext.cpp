@@ -166,6 +166,9 @@ namespace Kablunk
 
 	void VulkanContext::Shutdown()
 	{
+		if (!s_instance)
+			return;
+
 		KB_CORE_INFO("Shutting down Vulkan instance");
 
 		m_swap_chain.Destroy();

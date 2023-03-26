@@ -229,7 +229,7 @@ namespace Kablunk {
 			vk_context->GetDevice()->Destroy();
 		}
 
-		m_context->Shutdown();
+		//m_context->Shutdown();
 
         glfwDestroyWindow(m_window);
 		--s_glfw_window_count;

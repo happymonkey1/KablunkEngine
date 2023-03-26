@@ -318,8 +318,8 @@ namespace Kablunk
 
 		Create(&width, &height, m_vsync);
 
-		for (auto& framebuffer : m_framebuffers)
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
+		//for (auto& framebuffer : m_framebuffers)
+		//	vkDestroyFramebuffer(device, framebuffer, nullptr);
 
 		CreateFramebuffer();
 
@@ -491,7 +491,8 @@ namespace Kablunk
 	void VulkanSwapChain::CreateFramebuffer()
 	{
 		for (auto& framebuffer : m_framebuffers)
-			vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
+			if (framebuffer)
+				vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
 
 		VkImageView image_view_attachments[2];
 
