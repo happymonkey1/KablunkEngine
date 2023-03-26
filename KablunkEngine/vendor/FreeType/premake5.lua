@@ -35,6 +35,12 @@ project "FreeType"
         "src/type42/type42.c",     -- Type 42 font driver
         "src/base/ftwinfnt.c",     -- optional, see <ftwinfnt.h>
 
+        "src/cff/cff.c",
+        "src/pfr/pfr.c",
+        "src/pcf/pcf.c",
+        "src/bdf/bdf.c",
+        "src/cid/type1cid.c",
+
         "src/truetype/truetype.c",
         "src/winfonts/winfnt.c",
 

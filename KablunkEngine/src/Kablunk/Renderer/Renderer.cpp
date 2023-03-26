@@ -27,14 +27,22 @@ namespace Kablunk
 
 		m_shader_library = IntrusiveRef<ShaderLibrary>::Create();
 
+		// ==========
+		// 3d shaders
+		// ==========
 		render::get_shader_library()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
 
+		// ==========
+		// 2d shaders
+		// ==========
 		render::get_shader_library()->Load("resources/shaders/Renderer2D_Circle.glsl");
 		render::get_shader_library()->Load("resources/shaders/Renderer2D_Quad.glsl");
 		render::get_shader_library()->Load("resources/shaders/Renderer2D_Line.glsl");
-
-		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
 		render::get_shader_library()->Load("resources/shaders/Renderer2D_UI.glsl");
+		render::get_shader_library()->Load("resources/shaders/Renderer2D_Text.glsl");
+		// ==========
+
 
 		// compile shaders that were submitted
 		Application::Get().get_render_thread().pump();

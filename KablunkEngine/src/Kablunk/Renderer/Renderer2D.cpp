@@ -97,13 +97,28 @@ namespace Kablunk
 			m_renderer_data->line_vertex_buffer_base_ptrs[i] = new render2d::LineVertex[m_renderer_data->max_vertices];
 		}
 
+		// ====
+		// text
+		// ====
+
+		m_renderer_data->text_vertex_buffers.resize(frames_in_flight);
+		m_renderer_data->text_vertex_buffer_base_ptrs.resize(frames_in_flight);
+		for (size_t i = 0; i < frames_in_flight; ++i)
+		{
+			// #TODO(Sean) this should probably be a separate max vertex count: `max_text_vertices`
+			m_renderer_data->text_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::text_vertex_t));
+			m_renderer_data->text_vertex_buffer_base_ptrs[i] = new render2d::text_vertex_t[m_renderer_data->max_vertices];
+		}
+
 		uint32_t white_texture_data = 0xFFFFFFFF;
 		m_renderer_data->white_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &white_texture_data);
 
+		// get references to pre-loaded shaders
 		m_renderer_data->quad_shader = render::get_shader("Renderer2D_Quad");
 		m_renderer_data->circle_shader = render::get_shader("Renderer2D_Circle");
 		m_renderer_data->line_shader = render::get_shader("Renderer2D_Line");
 		m_renderer_data->ui_shader = render::get_shader("Renderer2D_UI");
+		m_renderer_data->text_shader = render::get_shader("Renderer2D_Text");
 
 		// Set all the texture slots to zero
 		//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
@@ -137,7 +152,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "QuadPipeline";
-			pipeline_spec.shader = render::get_shader("Renderer2D_Quad");
+			pipeline_spec.shader = m_renderer_data->quad_shader;
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -156,7 +171,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "UIPipeline";
-			pipeline_spec.shader = render::get_shader("Renderer2D_UI");
+			pipeline_spec.shader = m_renderer_data->ui_shader;
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -174,7 +189,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "CirclePipeline";
-			pipeline_spec.shader = render::get_shader("Renderer2D_Circle");
+			pipeline_spec.shader = m_renderer_data->circle_shader;
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_WorldPosition" },
@@ -194,7 +209,7 @@ namespace Kablunk
 		{
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "LinePipeline";
-			pipeline_spec.shader = render::get_shader("Renderer2D_Line");
+			pipeline_spec.shader = m_renderer_data->line_shader;
 			pipeline_spec.backface_culling = false;
 			pipeline_spec.layout = {
 				{ ShaderDataType::Float3, "a_Position" },
@@ -212,13 +227,35 @@ namespace Kablunk
 			delete[] line_indices;
 		}
 
+		// create text pipeline
+		{
+			PipelineSpecification pipeline_spec;
+			pipeline_spec.debug_name = "TextPipeline";
+			pipeline_spec.shader = m_renderer_data->text_shader;
+			pipeline_spec.backface_culling = false;
+			pipeline_spec.layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float4, "a_Color" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
+				{ ShaderDataType::Float, "a_TexIndex" },
+			};
+			pipeline_spec.render_pass = render_pass;
+
+			m_renderer_data->text_pipeline = Pipeline::Create(pipeline_spec);
+		}
+
+		// create materials
 		m_renderer_data->quad_material = Material::Create(m_renderer_data->quad_shader);
 		m_renderer_data->circle_material = Material::Create(m_renderer_data->circle_shader);
 		m_renderer_data->line_material = Material::Create(m_renderer_data->line_shader);
 		m_renderer_data->ui_material = Material::Create(m_renderer_data->ui_shader);
+		m_renderer_data->text_material = Material::Create(m_renderer_data->text_shader);
 
 		m_renderer_data->uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
 		m_renderer_data->uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
+
+		// initialize font manager
+		m_renderer_data->m_font_manager.init();
 	}
 
 	void Renderer2D::shutdown()
@@ -227,14 +264,20 @@ namespace Kablunk
 
 		KB_CORE_INFO("Shutting down Renderer2D!");
 
-		// Cleanup memory
+		// free quad vertex buffers
 		for (auto buffer : m_renderer_data->quad_vertex_buffer_base_ptrs)
 			delete[] buffer;
 
+		// free circle vertex buffers
 		for (auto buffer : m_renderer_data->circle_vertex_buffer_base_ptrs)
 			delete[] buffer;
 
+		// free line vertex buffers
 		for (auto buffer : m_renderer_data->line_vertex_buffer_base_ptrs)
+			delete[] buffer;
+
+		// free text vertex buffers
+		for (auto buffer : m_renderer_data->text_vertex_buffer_base_ptrs)
 			delete[] buffer;
 
 		delete m_renderer_data;
@@ -291,7 +334,8 @@ namespace Kablunk
 		m_renderer_data->render_command_buffer->Begin();
 
 		m_renderer_data->gpu_time_query.renderer_2D_query = m_renderer_data->render_command_buffer->BeginTimestampQuery();
-		render::begin_render_pass(m_renderer_data->render_command_buffer, m_renderer_data->quad_pipeline->GetSpecification().render_pass);
+		const auto& render_pass = m_renderer_data->quad_pipeline->GetSpecification().render_pass;
+		render::begin_render_pass(m_renderer_data->render_command_buffer, render_pass);
 
 		uint32_t frame_index = render::get_current_frame_index();
 
@@ -356,6 +400,26 @@ namespace Kablunk
 			}
 
 			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->ui_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->ui_material, m_renderer_data->ui_quad_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->ui_quad_index_count);
+			m_renderer_data->Stats.Draw_calls++;
+		}
+
+		// render text geometry
+		u32 text_data_buffer_size = (u32)((uint8_t*)m_renderer_data->text_vertex_buffer_ptr - (uint8_t*)m_renderer_data->text_vertex_buffer_base_ptrs[frame_index]);
+		if (text_data_buffer_size)
+		{
+			m_renderer_data->text_vertex_buffers[frame_index]->SetData(m_renderer_data->text_vertex_buffer_base_ptrs[frame_index], data_size);
+
+			// Set Textures
+			auto& textures = m_renderer_data->text_texture_atlas_slots;
+			for (uint32_t i = 0; i < m_renderer_data->max_texture_slots; i++)
+			{
+				if (textures[i])
+					m_renderer_data->text_material->Set("u_FontAtlases", textures[i], i);
+				else
+					m_renderer_data->text_material->Set("u_FontAtlases", m_renderer_data->white_texture, i);
+			}
+
+			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->text_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->text_material, m_renderer_data->text_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->text_index_count);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 
@@ -667,19 +731,80 @@ namespace Kablunk
 		m_renderer_data->Stats.Quad_count += 1;
 	}
 
-	void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
+	void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		draw_text_string(text, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
 	}
 
-	void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
+	void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
 	{
-		KB_CORE_ASSERT(false, "not implemented!");
-	}
+		if (m_renderer_data->text_count + 1 > m_renderer_data->max_quads)
+			end_batch();
 
-	void Renderer2D::draw_text_string(const std::string& text, const glm::mat4& position, const glm::vec2& size, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
-	{
-		KB_CORE_ASSERT(false, "not implemented!");
+		// check for programmer error
+		KB_CORE_ASSERT(!font_asset, "invalid font asset ref?");
+		KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
+
+		if (!m_renderer_data->m_font_manager.has_font_cached(font_asset))
+		{
+			KB_CORE_WARN("[renderer2d]: font asset was not cached in the font manager when draw command issue!");
+			m_renderer_data->m_font_manager.add_font_file_to_library(font_asset);
+		}
+
+		ref<Texture2D> font_texture_atlas = font_asset->get_texture_atlas();
+
+		float texture_index = -1.0f;
+		for (u32 i = 0; i < m_renderer_data->text_texture_atlas_slot_index; ++i)
+		{
+			if (*m_renderer_data->text_texture_atlas_slots[i].get() == *font_texture_atlas.get())
+				texture_index = (float)i;
+		}
+
+		// insert into renderer texture atlas cache if not found
+		if (texture_index == -1.0f)
+		{
+			texture_index = (float)m_renderer_data->text_texture_atlas_slot_index;
+			m_renderer_data->text_texture_atlas_slots[m_renderer_data->text_texture_atlas_slot_index++] = font_texture_atlas;
+			KB_CORE_ASSERT(m_renderer_data->text_texture_atlas_slot_index < m_renderer_data->max_texture_slots, "font texture atlas slot overflow!");
+		}
+
+		const auto& glyph_info_map = font_asset->get_glyph_rendering_map();
+
+		// iterate over characters and select the correct glyph bitmap
+		glm::vec3 char_position = position;
+		for (char text_char : text)
+		{
+			const auto& glyph_data = glyph_info_map.at(text_char);
+			// #NOTE(Sean) this is in clockwise order, since vulkan renders with +y facing down
+			const glm::vec2 texture_coords[] = {
+				glm::vec2{ glyph_data.m_x0, glyph_data.m_y0 },
+				glm::vec2{ glyph_data.m_x1, glyph_data.m_y0 },
+				glm::vec2{ glyph_data.m_x1, glyph_data.m_y1 },
+				glm::vec2{ glyph_data.m_x0, glyph_data.m_y1 },
+			};
+
+
+			// compute position of char by offsetting the base position with the char advance offset
+			char_position.x += glyph_data.m_advance;
+
+			// #TODO(Sean) do we actually *need* to compute a transform?
+			glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, char_position)
+				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+
+			constexpr const size_t quad_vertex_count = 4;
+			for (u32 i = 0; i < quad_vertex_count; ++i)
+			{
+				m_renderer_data->text_vertex_buffer_ptr->m_position = transform * m_renderer_data->quad_vertex_positions[i];
+				m_renderer_data->text_vertex_buffer_ptr->m_tex_coord = texture_coords[i];
+				m_renderer_data->text_vertex_buffer_ptr->m_tex_index = texture_index;
+				m_renderer_data->text_vertex_buffer_ptr->m_tint_color = tint_color;
+				m_renderer_data->text_vertex_buffer_ptr++;
+			}
+
+			m_renderer_data->text_count++;
+			m_renderer_data->text_index_count += 6;
+			m_renderer_data->Stats.Quad_count++;
+		}
 	}
 
 	void Renderer2D::reset_stats()
@@ -714,11 +839,19 @@ namespace Kablunk
 		m_renderer_data->ui_quad_index_count = 0;
 		m_renderer_data->ui_quad_vertex_buffer_ptr = m_renderer_data->ui_quad_vertex_buffer_base_ptrs[frame_index];
 
+		m_renderer_data->text_count = 0;
+		m_renderer_data->text_index_count = 0;
+		m_renderer_data->text_vertex_buffer_ptr = m_renderer_data->text_vertex_buffer_base_ptrs[frame_index];
+
 		m_renderer_data->texture_slot_index = 1;
+		m_renderer_data->text_texture_atlas_slot_index = 0;
 
 		for (size_t i = 0; i < m_renderer_data->max_texture_slots; ++i)
 			if (i != 0)
 				m_renderer_data->texture_slots[i] = nullptr;
+
+		for (size_t i = 0; i < m_renderer_data->max_texture_slots; ++i)
+			m_renderer_data->text_texture_atlas_slots[i] = nullptr;
 	}
 
 	void Renderer2D::end_batch()

@@ -73,4 +73,14 @@ namespace Kablunk::render
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
 
+	bool font_manager::has_font_cached(ref<font_asset_t> font_asset)
+	{
+		KB_CORE_ASSERT(font_asset, "null font asset?");
+
+		std::filesystem::path abs_font_path = asset::get_absolute_path(font_asset->get_id());
+		std::filesystem::path rel_font_path = asset::get_relative_path(abs_font_path);
+
+		return m_font_cache.contains(rel_font_path.string());
+	}
+
 }

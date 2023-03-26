@@ -23,6 +23,8 @@ namespace Kablunk::render
 		void shutdown();
 		// try to add a font to the font cache
 		void add_font_file_to_library(ref<font_asset_t> font_asset);
+		// check if a reference to the given font asset is in the cache
+		bool has_font_cached(ref<font_asset_t> font_asset);
 		// try to remove a font from the font cache
 		void remove_font_file_from_library(ref<font_asset_t> font_asset);
 		// get a reference to the font engine

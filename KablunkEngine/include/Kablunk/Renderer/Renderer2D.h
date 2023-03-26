@@ -16,6 +16,8 @@
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Buffer.h"
 
+#include "Kablunk/Renderer/Font/FontManager.h"
+
 namespace Kablunk
 {
 	namespace render2d
@@ -58,6 +60,14 @@ namespace Kablunk
 		{
 			glm::vec3 Position;
 			glm::vec4 Color;
+		};
+
+		struct text_vertex_t
+		{
+			glm::vec3 m_position;
+			glm::vec4 m_tint_color;
+			glm::vec2 m_tex_coord;
+			float m_tex_index;
 		};
 
 		struct renderer_2d_specification_t
@@ -105,13 +115,20 @@ namespace Kablunk
 			IntrusiveRef<IndexBuffer> ui_quad_index_buffer;
 
 			// text
-			std::vector<IntrusiveRef<VertexBuffer>> ui_text_vertex_buffers;
-			IntrusiveRef<IndexBuffer> ui_text_index_buffer;
+			std::vector<IntrusiveRef<VertexBuffer>> text_vertex_buffers;
+			IntrusiveRef<IndexBuffer> utext_index_buffer;
+
+			// =======
+			// shaders
+			// =======
 
 			IntrusiveRef<Shader> quad_shader;
 			IntrusiveRef<Shader> circle_shader;
 			IntrusiveRef<Shader> line_shader;
 			IntrusiveRef<Shader> ui_shader;
+			ref<Shader> text_shader;
+
+			// =======
 
 			IntrusiveRef <Texture2D> white_texture;
 
@@ -140,23 +157,34 @@ namespace Kablunk
 			uint32_t ui_quad_count = 0;
 			uint32_t ui_quad_index_count = 0;
 
+			// text
+			std::vector<text_vertex_t*> text_vertex_buffer_base_ptrs;
+			text_vertex_t* text_vertex_buffer_ptr = nullptr;
+			uint32_t text_count = 0;
+			uint32_t text_index_count = 0;
+
 			uint32_t texture_slot_index = 1; //0 = white texture
+			u32 text_texture_atlas_slot_index = 0;
 
 			// TODO: change to asset handle when implemented
 			std::array<IntrusiveRef<Texture2D>, max_texture_slots> texture_slots;
+			std::array<ref<Texture2D>, max_texture_slots> text_texture_atlas_slots;
 
 			IntrusiveRef<RenderCommandBuffer> render_command_buffer;
+
+			render::font_manager m_font_manager;
 
 			IntrusiveRef<Pipeline> quad_pipeline;
 			IntrusiveRef<Pipeline> circle_pipeline;
 			IntrusiveRef<Pipeline> line_pipeline;
 			IntrusiveRef<Pipeline> ui_pipeline;
-
+			ref<Pipeline> text_pipeline;
 
 			IntrusiveRef<Material> quad_material;
 			IntrusiveRef<Material> circle_material;
 			IntrusiveRef<Material> line_material;
 			IntrusiveRef<Material> ui_material;
+			ref<Material> text_material;
 
 			IntrusiveRef<UniformBufferSet> uniform_buffer_set;
 
@@ -225,9 +253,8 @@ namespace Kablunk
 		void draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 		void draw_quad_ui(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
-		void draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
-		void draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
-		void draw_text_string(const std::string& text, const glm::mat4& position, const glm::vec2& size, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color = glm::vec4{ 1.0f });
+		void draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color = glm::vec4{ 1.0f });
 
 		void reset_stats();
 		render2d::renderer_2d_stats_t get_stats();
