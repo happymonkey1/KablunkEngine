@@ -27,16 +27,18 @@ namespace Kablunk::render
 		bool has_font_cached(ref<font_asset_t> font_asset);
 		// try to remove a font from the font cache
 		void remove_font_file_from_library(ref<font_asset_t> font_asset);
+		// try get a font by filename
+		ref<font_asset_t> get_font_asset(const std::string& filename);
 		// get a reference to the font engine
 		FT_Library& get_ft_engine() { return m_ft_library; }
 		// get a reference to the font engine
 		const FT_Library& get_ft_engine() const { return m_ft_library; }
 		// get the font cache
 		// maps relative font paths to font assets
-		const std::unordered_map<std::string, ref<font_asset_t>> get_font_cache() const { return m_font_cache; }
+		const std::unordered_map<std::string, ref<font_asset_t>>& get_font_cache() const { return m_font_cache; }
 	private:
 		// cache of fonts loaded into memory
-		// maps relative font paths to font assets
+		// maps font filename to font assets
 		std::unordered_map<std::string, ref<font_asset_t>> m_font_cache;
 		// underlying font rendering engine (freetype)
 		FT_Library m_ft_library = nullptr;

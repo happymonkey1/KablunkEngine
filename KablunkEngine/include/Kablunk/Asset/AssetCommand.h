@@ -11,39 +11,46 @@
 
 namespace Kablunk::asset
 {
+	// try find an asset by filepath
 	template <typename T>
 	IntrusiveRef<T> get_asset(const std::filesystem::path& filepath)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(filepath);
 	}
 
+	// try find an asset by filepath
 	template <typename T>
 	IntrusiveRef<T> get_asset(const char* filepath_cstr)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(std::filesystem::path{ filepath_cstr });
 	}
 
+	// try find an asset by id
 	template <typename T>
 	IntrusiveRef<T> get_asset(const asset_id_t& id)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(id);
 	}
 
+	// check whether an asset exists (by filepath)
 	inline bool asset_exists(const std::filesystem::path& filepath)
 	{
 		return Singleton<AssetManager>::get().asset_exists(filepath);
 	}
 
+	// try get the metadata for an asset associated with the passed in filepath
 	inline const AssetMetadata& try_get_asset_metadata(const std::filesystem::path& filepath)
 	{
 		return Singleton<AssetManager>::get().get_metadata(filepath);
 	}
 
+	// try get the metadata for an asset associated with the passed in id
 	inline const AssetMetadata& try_get_asset_metadata(const asset_id_t& id)
 	{
 		return Singleton<AssetManager>::get().get_metadata(id);
 	}
 
+	// try get the asset type by filepath
 	inline const AssetType get_asset_type_from_path(const std::filesystem::path& filepath)
 	{
 		return Singleton<AssetManager>::get().get_asset_type_from_filepath(filepath);

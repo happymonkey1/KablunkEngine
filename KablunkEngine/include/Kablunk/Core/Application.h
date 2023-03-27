@@ -84,6 +84,8 @@ namespace Kablunk {
 		
 		// toggle between fullscreen and windowed mode
 		void toggle_fullscreen();
+		// toggle debug statistics
+		void draw_debug_statistics();
 
 		u32 get_current_frame_index() const { return m_current_frame_index; }
 
@@ -109,6 +111,8 @@ namespace Kablunk {
 		float m_last_frame_time = 0.0f;
 		
 		bool m_has_shutdown = false;
+		// flag for whether we should draw debug statistics to the screen
+		bool m_show_debug_statistics = false;
 
 		u32 m_current_frame_index = 0;
 

@@ -256,6 +256,26 @@ namespace Kablunk
 
 		// initialize font manager
 		m_renderer_data->m_font_manager.init();
+
+		// =====================
+		// pre-load engine fonts
+		// =====================
+
+		// roboto-medium.ttf
+		render::font_asset_create_info_t font_create_info{
+			"resources/fonts/roboto/Roboto-Medium.ttf",			// relative path to font file
+			16,													// font point
+			m_renderer_data->m_font_manager.get_ft_engine(),	// freetype engine
+			0ull,												// font face index
+			128,												// number of glyphs to load
+			true												// flag for whether font should be loaded into memory
+		};
+		ref<render::font_asset_t> font_asset = render::font_asset_t::create(font_create_info);
+
+		// add fonts to font manager
+		m_renderer_data->m_font_manager.add_font_file_to_library(font_asset);
+
+		// =====================
 	}
 
 	void Renderer2D::shutdown()
@@ -419,7 +439,17 @@ namespace Kablunk
 					m_renderer_data->text_material->Set("u_FontAtlases", m_renderer_data->white_texture, i);
 			}
 
-			render::render_geometry(m_renderer_data->render_command_buffer, m_renderer_data->text_pipeline, m_renderer_data->uniform_buffer_set, nullptr, m_renderer_data->text_material, m_renderer_data->text_vertex_buffers[frame_index], m_renderer_data->quad_index_buffer, glm::mat4{ 1.0f }, m_renderer_data->text_index_count);
+			render::render_geometry(
+				m_renderer_data->render_command_buffer, 
+				m_renderer_data->text_pipeline, 
+				m_renderer_data->uniform_buffer_set, 
+				nullptr, 
+				m_renderer_data->text_material, 
+				m_renderer_data->text_vertex_buffers[frame_index], 
+				m_renderer_data->quad_index_buffer, 
+				glm::mat4{ 1.0f }, 
+				m_renderer_data->text_index_count
+			);
 			m_renderer_data->Stats.Draw_calls++;
 		}
 

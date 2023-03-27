@@ -225,6 +225,11 @@ namespace Kablunk
 		void set_target_render_pass(IntrusiveRef<RenderPass> render_pass);
 		void on_recreate_swapchain();
 
+		// return a mutable reference to the font manager
+		render::font_manager& get_font_manager() { return m_renderer_data->m_font_manager; }
+		// return an immutable reference to the font mangager
+		const render::font_manager& get_font_manager() const { return m_renderer_data->m_font_manager; }
+
 		// Entity
 		void draw_sprite(Entity entity);
 

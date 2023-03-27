@@ -157,6 +157,9 @@ namespace Kablunk
 		if (e.GetKeyCode() == Key::F11)
 			toggle_fullscreen();
 
+		if (e.GetKeyCode() == Key::F3)
+			m_show_debug_statistics = !m_show_debug_statistics;
+
 		return false;
 	}
 
@@ -256,6 +259,12 @@ namespace Kablunk
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
 
+				// draw debug statistics for engine
+				{
+					if (m_show_debug_statistics)
+						draw_debug_statistics();
+				}
+
 				render::end_frame();
 
 				render::submit([&](){ m_window->swap_buffers(); });
@@ -298,6 +307,21 @@ namespace Kablunk
 			m_window->set_window_mode(window_mode_t::windowed);
 		else
 			m_window->set_window_mode(window_mode_t::borderless_fullscreen);
+	}
+
+	void Application::draw_debug_statistics()
+	{
+
+		auto& font_manager_ = render2d::get_font_manager();
+		ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
+		if (!font_asset)
+		{
+			KB_CORE_WARN("trying to draw debug statistics with an null font asset!");
+			return;
+		}
+
+		Singleton<Renderer2D>::get().draw_text_string("test", glm::vec3{ 0.f, 0.f, 0.f }, glm::vec2{ 1.0f, 1.0f }, font_asset, glm::vec4{ 1.0f });
+
 	}
 
 }

@@ -15,6 +15,12 @@
  *
  */
 
+// for some reason freetype was having a read access violation internally. 
+// according to this issue: https://gitlab.freedesktop.org/freetype/freetype/-/issues/1075
+// it is fixed by wrapping the preprocessor code below and disabling it.
+// the issue also appears to be fixed, so it seems like the freetype source is not fully up to date.
+#if 0
+#endif
 
 #ifndef AFWRTSYS_H_
 #define AFWRTSYS_H_
@@ -27,9 +33,8 @@
 #include "afcjk.h"
 #include "afindic.h"
 
+// see comment above
 #endif /* AFWRTSYS_H_ */
-
-
   /* The following part can be included multiple times. */
   /* Define `WRITING_SYSTEM' as needed.                 */
 

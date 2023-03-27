@@ -53,9 +53,9 @@ namespace Kablunk::render
 			load_memory					// whether to load the font into memory
 		};
 
-		// try to load font asset into memory
+		// try to load font asset into memory if not already loaded
 		// set invalid bit on fail
-		if (!font_asset->load_ft_face_from_file(create_info))
+		if (!font_asset->is_valid() && !font_asset->load_ft_face_from_file(create_info))
 		{
 			font_asset->set_flag(asset::asset_flag_t::Invalid);
 			return;
@@ -65,12 +65,17 @@ namespace Kablunk::render
 		KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid) && font_asset->m_ft_face, "Invalid bit not set and face not loaded???");
 
 		// add font to cache
-		m_font_cache.emplace(rel_font_path.string(), font_asset);
+		m_font_cache.emplace(rel_font_path.filename().string(), font_asset);
 	}
 
 	void font_manager::remove_font_file_from_library(ref<font_asset_t> font_asset)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
+	}
+
+	ref<Kablunk::render::font_asset_t> font_manager::get_font_asset(const std::string& filename)
+	{
+		return m_font_cache.contains(filename) ? m_font_cache.at(filename) : nullptr;
 	}
 
 	bool font_manager::has_font_cached(ref<font_asset_t> font_asset)
@@ -80,7 +85,9 @@ namespace Kablunk::render
 		std::filesystem::path abs_font_path = asset::get_absolute_path(font_asset->get_id());
 		std::filesystem::path rel_font_path = asset::get_relative_path(abs_font_path);
 
-		return m_font_cache.contains(rel_font_path.string());
+		return m_font_cache.contains(rel_font_path.filename().string());
 	}
+
+	
 
 }

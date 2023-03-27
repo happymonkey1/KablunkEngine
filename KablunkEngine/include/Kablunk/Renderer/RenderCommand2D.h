@@ -94,6 +94,9 @@ namespace Kablunk::render2d
 
 	// render imgui 
 	static void on_imgui_render() { Singleton<Renderer2D>::get().on_imgui_render(); }
+
+	// get the 2D font manager
+	static render::font_manager& get_font_manager() { return Singleton<Renderer2D>::get().get_font_manager(); }
 }
 
 #endif
