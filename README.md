@@ -4,7 +4,7 @@ Personal project to develop a basic game engine. Currently in development, meani
 
 ## Setup
 
-Note: requires python to run setup scripts.
+Note: requires python to run setup scripts.  
 Run scripts/Setup.py to install required libraries `python scripts/Setup.py`  
 Run scripts/Windows-GenProjects.bat to generate project files.  
 Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.  
