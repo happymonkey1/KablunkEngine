@@ -42,6 +42,7 @@ namespace Kablunk
 		
 
 		m_queue_family_indices = FindQueueFamilies(m_device);
+        CreateQueueInfos();
 
 		auto supported_extensions = FindSupportedExtensions(m_device);
 		std::vector<const char*> supported_extensions_named;
@@ -120,8 +121,12 @@ namespace Kablunk
 		{
 			if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 				queue_family_indices.Graphics_family = i;
+            else if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)
+                queue_family_indices.m_compute_family = i;
+            else if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)
+                queue_family_indices.m_transfer_family = i;
 
-			if (queue_family_indices.HasGraphics())
+			if (queue_family_indices.HasGraphics() && queue_family_indices.has_compute() && queue_family_indices.has_trasfer())
 				break;
 
 			i++;
@@ -191,7 +196,55 @@ namespace Kablunk
 		return VK_FORMAT_UNDEFINED;
 	}
 
-	bool VulkanPhysicalDevice::CheckDeviseExtensionSupport(VkPhysicalDevice device)
+    void VulkanPhysicalDevice::CreateQueueInfos()
+    {
+        constexpr const float k_default_queue_priority = 0.0f;
+        int32_t requested_queue_type = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+
+        // graphics queue
+        if (requested_queue_type & VK_QUEUE_GRAPHICS_BIT)
+        {
+            VkDeviceQueueCreateInfo queueInfo{};
+            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueInfo.queueFamilyIndex = m_queue_family_indices.Graphics_family.value();
+            queueInfo.queueCount = 1;
+            queueInfo.pQueuePriorities = &k_default_queue_priority;
+            m_queue_create_infos.push_back(queueInfo);
+        }
+
+        // dedicated compute queue
+        if (requested_queue_type & VK_QUEUE_COMPUTE_BIT)
+        {
+            if (m_queue_family_indices.m_compute_family != m_queue_family_indices.Graphics_family)
+            {
+                // If compute family index differs, we need an additional queue create info for the compute queue
+                VkDeviceQueueCreateInfo queueInfo{};
+                queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queueInfo.queueFamilyIndex = m_queue_family_indices.m_compute_family.value();
+                queueInfo.queueCount = 1;
+                queueInfo.pQueuePriorities = &k_default_queue_priority;
+                m_queue_create_infos.push_back(queueInfo);
+            }
+        }
+
+        // dedicated transfer queue
+        if (requested_queue_type & VK_QUEUE_TRANSFER_BIT)
+        {
+            if ((m_queue_family_indices.m_transfer_family != m_queue_family_indices.Graphics_family) 
+                && (m_queue_family_indices.m_transfer_family != m_queue_family_indices.m_compute_family))
+            {
+                // If compute family index differs, we need an additional queue create info for the compute queue
+                VkDeviceQueueCreateInfo queueInfo{};
+                queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queueInfo.queueFamilyIndex = m_queue_family_indices.m_transfer_family.value();
+                queueInfo.queueCount = 1;
+                queueInfo.pQueuePriorities = &k_default_queue_priority;
+                m_queue_create_infos.push_back(queueInfo);
+            }
+        }
+    }
+
+    bool VulkanPhysicalDevice::CheckDeviseExtensionSupport(VkPhysicalDevice device)
 	{
 		auto supported_extensions = FindSupportedExtensions(device);
 		std::vector<const char*> supported_extensions_named;
@@ -224,25 +277,31 @@ namespace Kablunk
 
 	}
 
+    // ================
+    //   VulkanDevice
+    // ================
+
 	VulkanDevice::VulkanDevice(const IntrusiveRef<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features)
-		: m_physical_device{ physical_device }, m_enabled_features{ enabled_features }
+        : m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_compute_queue{ nullptr }, m_vk_graphics_queue{ nullptr }
 	{
 		auto context = VulkanContext::Get();
 		float queue_priority = 1.0f;
 		const auto& device_extensions = m_physical_device->GetRequiredExtensions();
 
+#if 0
 		// #TODO move to VulkanPhysicalDevice
 		VkDeviceQueueCreateInfo queue_create_info{};
 		queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queue_create_info.queueFamilyIndex = m_physical_device->GetQueueFamilyIndices().Graphics_family.value();
 		queue_create_info.queueCount = 1;
 		queue_create_info.pQueuePriorities = &queue_priority;
+#endif
 
 		// setup logical device
 		VkDeviceCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		create_info.pQueueCreateInfos = &queue_create_info;
-		create_info.queueCreateInfoCount = 1;
+		create_info.pQueueCreateInfos = physical_device->m_queue_create_infos.data();
+		create_info.queueCreateInfoCount = static_cast<uint32_t>(physical_device->m_queue_create_infos.size());
 		create_info.pEnabledFeatures = &m_enabled_features;
 
 
@@ -263,19 +322,24 @@ namespace Kablunk
 			create_info.enabledExtensionCount = 0;
 
 		// create logical device
-		if (vkCreateDevice(m_physical_device->GetVkDevice(), &create_info, nullptr, &m_device) != VK_SUCCESS)
+		if (vkCreateDevice(m_physical_device->GetVkDevice(), &create_info, nullptr, &m_vk_device) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Failed to create logical device!");
 
+#if 0
 		VkCommandPoolCreateInfo cmd_pool_info{};
 		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		KB_CORE_ASSERT(m_physical_device->GetQueueFamilyIndices().HasGraphics(), "no complete queue family!");
 		cmd_pool_info.queueFamilyIndex = m_physical_device->GetQueueFamilyIndices().Graphics_family.value();
-		cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		
-		if (vkCreateCommandPool(m_device, &cmd_pool_info, nullptr, &m_command_pool) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
+        cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-		vkGetDeviceQueue(m_device, m_physical_device->GetQueueFamilyIndices().Graphics_family.value(), 0, &m_graphics_queue);
+        if (vkCreateCommandPool(m_vk_device, &cmd_pool_info, nullptr, &m_command_pool) != VK_SUCCESS)
+            KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
+#endif
+
+        // call vulkan api to get a graphics queue
+		vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().Graphics_family.value(), 0, &m_vk_graphics_queue);
+        // call vulkan api to get a compute queue
+        vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().m_compute_family.value(), 0, &m_vk_compute_queue);
 	}
 
 	VulkanDevice::~VulkanDevice()
@@ -289,16 +353,18 @@ namespace Kablunk
 		if (m_destroyed)
 			return;
 
-		vkDestroyCommandPool(m_device, m_command_pool, nullptr);
+		m_command_pools.clear();
 
-		vkDeviceWaitIdle(m_device);
-		vkDestroyDevice(m_device, nullptr);
+		vkDeviceWaitIdle(m_vk_device);
+		vkDestroyDevice(m_vk_device, nullptr);
 
 		m_destroyed = true;
 	}
 
-	VkCommandBuffer VulkanDevice::GetCommandBuffer(bool begin)
+	VkCommandBuffer VulkanDevice::GetCommandBuffer(bool begin, bool p_compute /*= false*/)
 	{
+        return get_or_create_thread_local_command_pool()->allocate_command_buffer(begin, p_compute);
+#if 0
 		VkCommandBuffer cmd_buf;
 
 		VkCommandBufferAllocateInfo cmd_buf_allocate_info{};
@@ -319,15 +385,21 @@ namespace Kablunk
 		}
 
 		return cmd_buf;
+#endif
 	}
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer command_buffer)
 	{
+        get_thread_local_command_pool()->flush_command_buffer(command_buffer);
+#if 0 
 		FlushCommandBuffer(command_buffer, m_graphics_queue);
+#endif
 	}
 
-	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue)
+	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, kb::vk::command_buffer_type_t p_command_buffer_type)
 	{
+        get_thread_local_command_pool()->flush_command_buffer(command_buffer, queue, p_command_buffer_type);
+#if 0
 		constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
 
 		KB_CORE_ASSERT(command_buffer != VK_NULL_HANDLE, "command buffer is null!");
@@ -361,6 +433,7 @@ namespace Kablunk
 
 		vkDestroyFence(m_device, fence, nullptr);
 		vkFreeCommandBuffers(m_device, m_command_pool, 1, &command_buffer);
+#endif
 	}
 
 	VkCommandBuffer VulkanDevice::CreateSecondaryCommandBuffer()
@@ -369,13 +442,34 @@ namespace Kablunk
 
 		VkCommandBufferAllocateInfo cmd_buffer_alloc_info{};
 		cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmd_buffer_alloc_info.commandPool = m_command_pool;
+		cmd_buffer_alloc_info.commandPool = get_or_create_thread_local_command_pool()->get_vk_graphics_command_pool();
 		cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 		cmd_buffer_alloc_info.commandBufferCount = 1;
 
-		if (vkAllocateCommandBuffers(m_device, &cmd_buffer_alloc_info, &cmd_buffer) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to allocate secondary buffer!");
+		if (vkAllocateCommandBuffers(m_vk_device, &cmd_buffer_alloc_info, &cmd_buffer) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "[VulkanDevice]: failed to allocate secondary buffer!");
 		return cmd_buffer;
 
 	}
+
+    ref<kb::vk::command_pool> VulkanDevice::get_thread_local_command_pool()
+    {
+        auto thread_id = std::this_thread::get_id();
+        KB_CORE_ASSERT(m_command_pools.contains(thread_id), "[VulkanDevice]: could not find a local thread pool!");
+        return m_command_pools.at(thread_id);
+    }
+
+    ref<kb::vk::command_pool> VulkanDevice::get_or_create_thread_local_command_pool()
+    {
+        auto thread_id = std::this_thread::get_id();
+        auto it = m_command_pools.find(thread_id);
+        if (it != m_command_pools.end())
+            return it->second;
+
+        ref<kb::vk::command_pool> command_pool = ref<kb::vk::command_pool>::Create();
+        m_command_pools[thread_id] = command_pool;
+
+        return command_pool;
+    }
+
 }

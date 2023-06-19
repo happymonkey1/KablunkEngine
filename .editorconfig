@@ -1,7 +1,4 @@
-# top-most EditorConfig file
-root = true
-
 # Windows-style newlines with a newline ending every file
 [*]
 insert_final_newline = true
-indent_style = tab
+indent_style = space

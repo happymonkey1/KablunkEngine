@@ -8,6 +8,7 @@
 #include "Kablunk/Renderer/StorageBufferSet.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/compute_pipeline.h"
 
 #include <mutex>
 
@@ -101,14 +102,19 @@ inline void register_shader_dependency(IntrusiveRef<Shader> shader, IntrusiveRef
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, material);
 }
 
-inline void on_shader_reloaded(uint64_t hash)
-{
-	Singleton<Renderer>::get().OnShaderReloaded(hash);
-}
-
 inline void register_shader_dependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline)
 {
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, pipeline);
+}
+
+inline void register_shader_dependency(ref<Shader> p_shader, ref<kb::render::compute_pipeline> p_compute_pipeline)
+{
+    Singleton<Renderer>::get().register_shader_dependency(p_shader, p_compute_pipeline);
+}
+
+inline void on_shader_reloaded(uint64_t hash)
+{
+	Singleton<Renderer>::get().OnShaderReloaded(hash);
 }
 
 // run submitted commands

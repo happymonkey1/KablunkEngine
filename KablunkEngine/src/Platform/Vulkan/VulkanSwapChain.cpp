@@ -509,12 +509,16 @@ namespace Kablunk
 		frame_buffer_create_info.height = m_height;
 		frame_buffer_create_info.layers = 1;
 
+        if (m_width == 0 || m_height == 0)
+            KB_CORE_ERROR("[VulkanSwapChain]: creating framebuffer ({}, {}) which is not to spec!", m_width, m_height);
+
 		m_framebuffers.resize(m_image_count);
 		for (uint32_t i = 0; i < m_image_count; ++i)
 		{
 			image_view_attachments[0] = m_buffers[i].view;
+
 			if (vkCreateFramebuffer(m_device->GetVkDevice(), &frame_buffer_create_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
-				KB_CORE_ASSERT(false, "Vulkan failed to create framebuffer!");
+				KB_CORE_ASSERT(false, "[VulkanSwapChain]: Vulkan failed to create framebuffer!");
 		}
 	}
 

@@ -119,7 +119,12 @@ namespace Kablunk
 		m_shader_dependencies[shader->GetHash()].materials.push_back(material);
 	}
 
-	void Renderer::OnShaderReloaded(uint64_t hash)
+    void Renderer::register_shader_dependency(IntrusiveRef<Shader> p_shader, IntrusiveRef<kb::render::compute_pipeline> p_compute_pipeline)
+    {
+        m_shader_dependencies[p_shader->GetHash()].compute_pipelines.push_back(p_compute_pipeline);
+    }
+
+    void Renderer::OnShaderReloaded(uint64_t hash)
 	{
 		if (m_shader_dependencies.find(hash) != m_shader_dependencies.end())
 		{

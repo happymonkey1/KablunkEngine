@@ -16,6 +16,7 @@
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Core/RenderThread.h"
 #include "Kablunk/Renderer/RenderCommandQueue.h"
+#include "Kablunk/Renderer/compute_pipeline.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -52,6 +53,7 @@ namespace Kablunk
 		void shutdown();
 
 		void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline);
+		void register_shader_dependency(IntrusiveRef<Shader> p_shader, IntrusiveRef<kb::render::compute_pipeline> p_compute_pipeline);
 		void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material);
 		void OnShaderReloaded(uint64_t hash);
 
@@ -103,6 +105,7 @@ namespace Kablunk
 		{
 			std::vector<IntrusiveRef<Pipeline>> pipelines;
 			std::vector<IntrusiveRef<Material>> materials;
+            std::vector<ref<kb::render::compute_pipeline>> compute_pipelines;
 		};
 
 		std::unordered_map<uint64_t, ShaderDependencies> m_shader_dependencies;
