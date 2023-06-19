@@ -186,6 +186,8 @@ namespace Kablunk
 
 			if (vkCreateImageView(device, &color_attachment_view_create_info, nullptr, &m_buffers[i].view) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
+
+            KB_CORE_TRACE("[VulkanSwapChain]: created image view {}", i);
 		}
 
 		// create command buffers
@@ -393,8 +395,12 @@ namespace Kablunk
 
 		if (m_swapchain)
 		{
+            // #TODO need to figure out why we crash here...
+            KB_CORE_WARN("[VulkanSwapChain]: not destroying image views!");
+#if 0
 			for (uint32_t i = 0; i < m_image_count; ++i)
 				vkDestroyImageView(device, m_buffers[i].view, nullptr);
+#endif
 		}
 
 		if (m_surface)
@@ -405,9 +411,13 @@ namespace Kablunk
 
 		if (m_command_pool)
 			vkDestroyCommandPool(device, m_command_pool, nullptr);
-
+        
+        // #TODO need to figure out why we crash here
+        KB_CORE_WARN("[VulkanSwapChain]: not destroying render pass!");
+#if 0
 		if (m_render_pass)
 			vkDestroyRenderPass(device, m_render_pass, nullptr);
+#endif
 
 		for (auto& framebuffer : m_framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, nullptr);

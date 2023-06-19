@@ -218,15 +218,14 @@ namespace Kablunk {
         KB_PROFILE_FUNCTION();
 
 		
-
 		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 		{
 			// #TODO dynamic_cast bad!
 			VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
-			vk_context->GetSwapchain().Destroy();
 
-			// destroy the vk device before destroying vk context.
-			vk_context->GetDevice()->Destroy();
+            // destroy the vk device before destroying vk context.
+            vk_context->GetDevice()->Destroy();
+			vk_context->GetSwapchain().Destroy();
 		}
 
 		//m_context->Shutdown();

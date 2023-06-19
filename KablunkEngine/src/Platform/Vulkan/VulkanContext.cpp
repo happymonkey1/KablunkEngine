@@ -171,7 +171,7 @@ namespace Kablunk
 
 		KB_CORE_INFO("Shutting down Vulkan instance");
 
-		m_swap_chain.Destroy();
+		//m_swap_chain.Destroy();
 
 		// device needs to reference the vulkan context to be destroyed
 		// device destruction is now destroyed with the window, before this context

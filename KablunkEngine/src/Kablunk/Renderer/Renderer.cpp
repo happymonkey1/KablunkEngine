@@ -79,7 +79,7 @@ namespace Kablunk
 		m_renderer_api->Shutdown();
 
 		// shutdown vulkan context
-		VulkanContext::Get()->Shutdown();
+		//VulkanContext::Get()->Shutdown();
 
 		if (m_command_queues)
 		{
