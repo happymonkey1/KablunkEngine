@@ -30,6 +30,9 @@ namespace Kablunk
 	class RefCounted
 	{
 	public:
+		// #NOTE guarantee that RefCounted has a vtable, so that memory does not become misaligned (by 8 bytes) when downcasting
+		virtual ~RefCounted() = default;
+
 		void IncRefCount() const { m_ref_count++; }
 		void DecRefCount() const { m_ref_count--; }
 		uint32_t GetRefCount() const { return m_ref_count.load(); }

@@ -520,12 +520,12 @@ namespace Kablunk
 	//   Draw Quad with Texture
 	// ==========================
 
-	void Renderer2D::draw_quad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad(const glm::vec2& position, const glm::vec2& size, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 	{
 		draw_quad({ position.x, position.y, 0.0f }, size, texture, tiling_factor, tint_color);
 	}
 
-	void Renderer2D::draw_quad(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad(const glm::vec3& position, const glm::vec2& size, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -533,7 +533,7 @@ namespace Kablunk
 		draw_quad(transform, texture, tiling_factor, tint_color);
 	}
 
-	void Renderer2D::draw_quad(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id)
+	void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id)
 	{
 		if (m_renderer_data->quad_count + 1 > m_renderer_data->max_quads)
 			end_batch();
@@ -574,11 +574,11 @@ namespace Kablunk
 	}
 
 	// DrawQuadTextureAtlas
-	void Renderer2D::draw_quad_from_texture_atlas(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_from_texture_atlas(const glm::vec2& position, const glm::vec2& size, const ref<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
 	{
 		draw_quad_from_texture_atlas(glm::vec3{ position.x, position.y, 0.0f }, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
 	}
-	void Renderer2D::draw_quad_from_texture_atlas(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_from_texture_atlas(const glm::vec3& position, const glm::vec2& size, const ref<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
 			* glm::rotate(glm::mat4{ 1.0f }, 0.0f, { 0.0f, 0.0f, 1.0f })
@@ -586,7 +586,7 @@ namespace Kablunk
 
 		draw_quad_from_texture_atlas(transform, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
 	}
-	void Renderer2D::draw_quad_from_texture_atlas(const glm::mat4& transform, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_from_texture_atlas(const glm::mat4& transform, const glm::vec2& size, const ref<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
 	{
 		if (m_renderer_data->quad_count + 1 > m_renderer_data->max_quads)
 			end_batch();
@@ -709,12 +709,12 @@ namespace Kablunk
 		}
 	}
 
-	void Renderer2D::draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_ui(const glm::vec2& position, const glm::vec2& size, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 	{
 		draw_quad_ui({ position.x, position.y, 0.0f }, size, texture, tiling_factor, tint_color);
 	}
 
-	void Renderer2D::draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_ui(const glm::vec3& position, const glm::vec2& size, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -722,7 +722,7 @@ namespace Kablunk
 		draw_quad_ui(transform, texture, tiling_factor, tint_color);
 	}
 
-	void Renderer2D::draw_quad_ui(const glm::mat4& transform, const IntrusiveRef<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
+	void Renderer2D::draw_quad_ui(const glm::mat4& transform, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 	{
 		if (m_renderer_data->ui_quad_count + 1 > m_renderer_data->max_quads)
 			end_batch();
