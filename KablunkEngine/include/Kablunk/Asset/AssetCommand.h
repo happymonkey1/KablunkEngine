@@ -88,19 +88,18 @@ namespace Kablunk::asset
 	{
 		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_id);
 		if (!asset_metadata.is_valid())
+        {
+            KB_CORE_ERROR("[asset command]: get_relative_path(asset_id={}) does not return valid metadata!", asset_id);
 			return "";
+        }
 
 		return Singleton<AssetManager>::get().get_relative_path(asset_metadata.filepath);
 	}
 
 	// return the relative path for an asset by filepath
+    // #TODO this function should not be exposed to the public api, all relative paths should be retrieved via an asset id
 	inline std::filesystem::path get_relative_path(const std::filesystem::path& asset_path)
 	{
-		const asset::AssetMetadata& asset_metadata = asset::try_get_asset_metadata(asset_path);
-		// #TODO assert that the path must be a valid asset
-		if (!asset_metadata.is_valid())
-			KB_CORE_WARN("[AssetManager]: path '{}' is not a valid asset!", asset_path);
-
 		return Singleton<AssetManager>::get().get_relative_path(asset_path);
 	}
 }

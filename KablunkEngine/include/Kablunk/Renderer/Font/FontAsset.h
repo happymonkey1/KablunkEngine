@@ -38,7 +38,7 @@ namespace Kablunk::render
 	struct glyph_info
 	{
 		// start and end positions in the texture atlas
-		size_t m_x0, m_y0, m_x1, m_y1;
+		float m_x0, m_y0, m_x1, m_y1;
 		// left & top bearing when rendering
 		size_t m_x_off, m_y_off;
 		// x advance when rendering

@@ -41,8 +41,8 @@
 #	endif	
 #	define KB_ENABLE_ASSERTS
 #	define KB_PROFILE 0
-#	define KB_TRACK_MEMORY
-#	define KB_UNIT_TEST
+// #	define KB_TRACK_MEMORY
+//#	define KB_UNIT_TEST
 #endif
 
 #ifdef KB_RELEASE

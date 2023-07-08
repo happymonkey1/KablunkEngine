@@ -261,6 +261,10 @@ namespace Kablunk
 		// pre-load engine fonts
 		// =====================
 
+        // #NOTE(Sean B) renderer is initialized during engine startup, while asset manager is (currently) initialized when a project is loaded,
+        //               this means we CANNOT load an asset now. 
+        //               initialization of default font asset(s) have moved to asset init function
+#if 0
 		// roboto-medium.ttf
 		render::font_asset_create_info_t font_create_info{
 			"resources/fonts/roboto/Roboto-Medium.ttf",			// relative path to font file
@@ -274,6 +278,7 @@ namespace Kablunk
 
 		// add fonts to font manager
 		m_renderer_data->m_font_manager.add_font_file_to_library(font_asset);
+#endif
 
 		// =====================
 	}
@@ -772,12 +777,13 @@ namespace Kablunk
 			end_batch();
 
 		// check for programmer error
-		KB_CORE_ASSERT(!font_asset, "invalid font asset ref?");
+		KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
 		KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
 
 		if (!m_renderer_data->m_font_manager.has_font_cached(font_asset))
 		{
 			KB_CORE_WARN("[renderer2d]: font asset was not cached in the font manager when draw command issue!");
+            KB_CORE_INFO("[renderer2d]:   font asset being added to cache during render draw_text_string command!");
 			m_renderer_data->m_font_manager.add_font_file_to_library(font_asset);
 		}
 
@@ -804,7 +810,8 @@ namespace Kablunk
 		glm::vec3 char_position = position;
 		for (char text_char : text)
 		{
-			const auto& glyph_data = glyph_info_map.at(text_char);
+			const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
+
 			// #NOTE(Sean) this is in clockwise order, since vulkan renders with +y facing down
 			const glm::vec2 texture_coords[] = {
 				glm::vec2{ glyph_data.m_x0, glyph_data.m_y0 },
@@ -812,7 +819,6 @@ namespace Kablunk
 				glm::vec2{ glyph_data.m_x1, glyph_data.m_y1 },
 				glm::vec2{ glyph_data.m_x0, glyph_data.m_y1 },
 			};
-
 
 			// compute position of char by offsetting the base position with the char advance offset
 			char_position.x += glyph_data.m_advance;
@@ -824,6 +830,8 @@ namespace Kablunk
 			constexpr const size_t quad_vertex_count = 4;
 			for (u32 i = 0; i < quad_vertex_count; ++i)
 			{
+                KB_CORE_ASSERT(texture_coords[i].x <= 1.0f && texture_coords[i].y <= 1.0f, "tex coord for font atlas out of bounds?");
+
 				m_renderer_data->text_vertex_buffer_ptr->m_position = transform * m_renderer_data->quad_vertex_positions[i];
 				m_renderer_data->text_vertex_buffer_ptr->m_tex_coord = texture_coords[i];
 				m_renderer_data->text_vertex_buffer_ptr->m_tex_index = texture_index;

@@ -1,6 +1,8 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
 
+#include "Kablunk/Asset/AssetCommand.h"
+
 namespace Kablunk::render
 {
 
@@ -17,7 +19,7 @@ namespace Kablunk::render
 
 	ref<font_asset> font_asset::create(const font_asset_create_info_t& create_info)
 	{
-		ref<font_asset_t> font_asset = ref<font_asset_t>::Create(create_info);
+        auto font_asset = ref<font_asset_t>::Create(create_info);
 
 		// try load font into memory
 		if (create_info.m_load_memory && font_asset->load_ft_face_from_file(create_info))
@@ -61,6 +63,7 @@ namespace Kablunk::render
 
 	bool font_asset::load_ft_face_from_file(const font_asset_create_info_t& create_info)
 	{
+
 		if (m_ft_face)
 		{
 			KB_CORE_WARN("[font_asset]: font asset '{}' already has a font face loaded!", get_id());
@@ -95,6 +98,20 @@ namespace Kablunk::render
 			return false;
 		}
 
+        error = FT_Set_Char_Size(
+            m_ft_face,			/* handle to face object         */
+            0,					/* char_width in 1/64 of points  */
+            m_font_point * 64,	/* char_height in 1/64 of points */
+            96,					/* horizontal device resolution  */
+            0					/* vertical device resolution    */
+        );
+
+        if (error)
+        {
+            KB_CORE_ERROR("[font_asset]: error={} while trying to set font char size!", error);
+            return false;
+        }
+
 		if (!m_texture_atlas)
 			create_texture_atlas();
 
@@ -127,7 +144,8 @@ namespace Kablunk::render
 
 		// create "texture atlas" in memory
 		// #TODO use kablunk texture atlas
-		u8* pixel_data = new u8[tex_width * tex_height]{ 1 };
+        const size_t pixel_buffer_size = tex_width * tex_height;
+		u8* pixel_data = new u8[pixel_buffer_size]{ 0 };
 		size_t pen_x = 0;
 		size_t pen_y = 0;
 
@@ -141,6 +159,8 @@ namespace Kablunk::render
 				pen_y += ((m_ft_face->size->metrics.height >> 6) + 1);
 			}
 
+            
+
 			for (size_t row = 0; row < bmp->rows; ++row) {
 				for (size_t col = 0; col < bmp->width; ++col) {
 					const size_t x = pen_x + col;
@@ -148,18 +168,18 @@ namespace Kablunk::render
 
 					const size_t pixel_index = y * tex_width + x;
 					const size_t buffer_index = row * bmp->pitch + col;
-					KB_CORE_ASSERT(pixel_index <= tex_width * tex_height, "pixel buffer overflow");
-					KB_CORE_ASSERT(buffer_index <= bmp->width * bmp->rows, "bmp buffer overflow");
+					KB_CORE_ASSERT(pixel_index < pixel_buffer_size, "pixel buffer overflow");
+					KB_CORE_ASSERT(buffer_index < bmp->width * bmp->rows, "bmp buffer overflow");
 					pixel_data[pixel_index] = bmp->buffer[buffer_index];
 				}
 			}
 
 			// freetype glyph rendering data
 			glyph_info_t glyph_data{
-				pen_x,
-				pen_y,
-				pen_x + bmp->width,
-				pen_y + bmp->rows,
+				static_cast<f32>(pen_x) / static_cast<f32>(tex_width),
+				static_cast<f32>(pen_y) / static_cast<f32>(tex_height),
+				static_cast<f32>(pen_x + bmp->width) / static_cast<f32>(tex_width),
+				static_cast<f32>(pen_y + bmp->rows) / static_cast<f32>(tex_height),
 				m_ft_face->glyph->bitmap_left,
 				m_ft_face->glyph->bitmap_top,
 				m_ft_face->glyph->advance.x >> 6
@@ -170,10 +190,20 @@ namespace Kablunk::render
 			pen_x += bmp->width + 1;
 		}
 
+        char* rgba_array = new char[tex_width * tex_height * 4]{ 1 };
+        for (int i = 0; i < (tex_width * tex_height); ++i)
+        {
+            rgba_array[i * 4 + 0] |= pixel_data[i];
+            rgba_array[i * 4 + 1] |= pixel_data[i];
+            rgba_array[i * 4 + 2] |= pixel_data[i];
+            rgba_array[i * 4 + 3] = 0xff;
+        }
+
 		// store pixel data in texture
-		m_texture_atlas = Texture2D::Create(ImageFormat::RGBA, tex_width, tex_height, pixel_data);
+		m_texture_atlas = Texture2D::Create(ImageFormat::RGBA, tex_width, tex_height, rgba_array);
 
 		delete[] pixel_data;
+        delete[] rgba_array;
 	}
 
 }

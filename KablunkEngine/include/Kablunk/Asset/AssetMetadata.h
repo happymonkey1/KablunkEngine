@@ -25,6 +25,8 @@ namespace Kablunk::asset
 		bool is_memory_loaded = false;
 		// flag for whether the asset has been loaded from disk
 		bool is_data_loaded = false;
+        // flag for whether the asset is an internal engine asset
+        bool is_internal_asset = false;
 
 		// check whether the metadata is valid
 		bool is_valid() const { return id != uuid::nil_uuid && type != AssetType::NONE; }

@@ -42,10 +42,10 @@ namespace Kablunk
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
 		: m_filepath{ path }
 	{
-		m_loaded = LoadImage(m_filepath);
+		m_loaded = this->LoadImage(m_filepath);
 
 		if (!m_loaded)
-			m_loaded = LoadImage("resources/texture/missing_texture.png");
+			m_loaded = this->LoadImage("resources/texture/missing_texture.png");
 		
 		ImageSpecification spec{};
 		spec.format = m_format;

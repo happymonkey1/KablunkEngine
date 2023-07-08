@@ -1126,6 +1126,15 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
 			std::filesystem::create_directories(project_path / "assets" / "prefabs");
+			std::filesystem::create_directories(project_path / "resources");
+
+            // copy engine resources over
+            {
+                // copy fonts
+                std::filesystem::copy(resources_path / "fonts", project_path / "resources" / "fonts");
+                // copy shaders
+                std::filesystem::copy(resources_path / "shaders", project_path / "resources" / "shaders");
+            }
 
 			if (create_native_script_project)
 				std::filesystem::create_directories(project_path / "include");

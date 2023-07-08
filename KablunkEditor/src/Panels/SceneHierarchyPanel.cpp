@@ -576,6 +576,13 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+            // text 2d component
+            if (!m_selection_context.HasComponent<Text2DComponent>() && ImGui::MenuItem("Text 2D"))
+            {
+                m_selection_context.AddComponent<Text2DComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+
 			ImGui::EndPopup();
 		}
 
@@ -954,6 +961,15 @@ namespace Kablunk
 
 				UI::EndProperties();
 			});
+
+        DrawComponent<Text2DComponent>("Text 2D", entity, [&](Text2DComponent& component)
+            {
+                UI::BeginProperties();
+
+                UI::Property("Text String", component.m_text_str);
+
+                UI::EndProperties();
+            });
 
 		// Debug Panels
 		if (m_display_debug_properties)

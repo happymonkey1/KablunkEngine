@@ -26,6 +26,8 @@ namespace Kablunk
 		DEPTH32F,
 		DEPTH24STENCIL8,
 
+        RED8I,
+
 		// Defaults
 		Depth = DEPTH24STENCIL8,
 	};
@@ -121,13 +123,14 @@ namespace Kablunk
 		{
 			switch (format)
 			{
-			case ImageFormat::RED32I:  return 4;
-			case ImageFormat::RED32F:  return 4;
+			case ImageFormat::RED32I:   return 4;
+			case ImageFormat::RED32F:   return 4;
 			case ImageFormat::RGB:
-			case ImageFormat::SRGB:    return 3;
-			case ImageFormat::RGBA:    return 4;
-			case ImageFormat::RGBA16F: return 2 * 4;
-			case ImageFormat::RGBA32F: return 4 * 4;
+			case ImageFormat::SRGB:     return 3;
+			case ImageFormat::RGBA:     return 4;
+			case ImageFormat::RGBA16F:  return 2 * 4;
+			case ImageFormat::RGBA32F:  return 4 * 4;
+            case ImageFormat::RED8I:    return 1;
 			}
 			KB_CORE_ASSERT(false, "Unknown ImageFormat!");
 			return 0;

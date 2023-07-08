@@ -63,6 +63,9 @@ namespace Kablunk
 		{
 			Buffer buffer;
 			buffer.Allocate(size);
+
+            KB_CORE_ASSERT(buffer.m_data, "[Buffer] Copy(): destination buffer is null?");
+
 			memcpy(buffer.m_data, data, size);
 			return buffer;
 		}
@@ -77,7 +80,10 @@ namespace Kablunk
 			}
 
 			if (size == 0)
+            {
+                KB_CORE_WARN("[Buffer]: allocating a buffer of size 0!");
 				return;
+            }
 
 			//m_data = new uint8_t[size];
 			m_data = kb_new_array(u8, size);

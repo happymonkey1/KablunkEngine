@@ -4,6 +4,9 @@
 
 #include "Kablunk/Asset/AssetSerializer.h"
 
+#include "Kablunk/Renderer/Font/FontManager.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
+
 #include <yaml-cpp/yaml.h>
 
 namespace Kablunk::asset
@@ -11,19 +14,34 @@ namespace Kablunk::asset
 
 	void AssetManager::init()
 	{
+        KB_CORE_INFO("[asset_manager]: starting initialization");
+
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
-		m_asset_serializers[AssetType::Texture] = IntrusiveRef<TextureAssetSerializer>::Create();
-		m_asset_serializers[AssetType::Audio] = IntrusiveRef<AudioAssetSerializer>::Create();
+		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create();
+		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create();
+		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create();
 		
 		m_asset_registry.clear();
 		load_asset_registry();
 
 		// #TODO filesystem watcher
 
+        // load engine default assets
+        {
+            // import default font asset metadata
+            auto default_font_asset_id = import_engine_asset_metadata("fonts/roboto/Roboto-Regular.ttf");
+            KB_CORE_ASSERT(default_font_asset_id != asset::null_asset_id, "[asset_manager]: tried loading default font, but asset_import returned null id?");
+
+            ref<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
+
+            // load into font registry
+            render2d::get_font_manager().add_font_file_to_library(default_font_asset);
+        }
+
 		reload_assets();
 
-		KB_CORE_INFO("[AssetManager] Initialized!");
+		KB_CORE_INFO("[asset_manager] finished initialization!");
 	}
 
 	void AssetManager::shutdown()
@@ -48,10 +66,26 @@ namespace Kablunk::asset
 		return s_null_metadata;
 	}
 
+    // get a relative path for a given path stored on some asset metadata
+    std::filesystem::path AssetManager::get_relative_path(const AssetMetadata& p_metadata) const
+    {
+        const bool is_internal_asset = p_metadata.is_internal_asset;
+
+        if (p_metadata.filepath.is_relative())
+            return p_metadata.filepath;
+
+        auto relative_to_path = is_internal_asset ? Singleton<ProjectManager>::get().get_active()->get_project_directory() : 
+            Singleton<ProjectManager>::get().get_active()->get_project_directory();
+
+        return std::filesystem::relative(p_metadata.filepath, relative_to_path);
+    }
+
 	std::filesystem::path AssetManager::get_relative_path(const std::filesystem::path& path) const
 	{
 		return path.is_relative() ? path : std::filesystem::relative(path, ProjectManager::get().get_active()->get_asset_directory_path());
 	}
+
+    
 
 	AssetType AssetManager::get_asset_type_from_filepath(const std::filesystem::path& path) const
 	{
@@ -88,6 +122,7 @@ namespace Kablunk::asset
 			relative_path,
 			false, // is_memory_loaded
 			false,  // is_data_loaded
+            false,  // internal engine asset
 		};
 
 		// #TODO why do we not try to load data?
@@ -159,12 +194,15 @@ namespace Kablunk::asset
 		{
 			std::string filepath = entry["filepath"].as<std::string>();
 
+            const bool is_internal_asset = entry["is_internal_asset"] ? entry["is_internal_asset"].as<bool>() : false;
+
 			AssetMetadata metadata{
 				entry["id"].as<uint64_t>(),
 				static_cast<AssetType>(string_to_asset_type(entry["type"].as<std::string>())),
 				filepath,
 				false, // is_memory_loaded
 				false,  // is_data_loaded
+                is_internal_asset
 			};
 
 			if (metadata.type == AssetType::NONE)
@@ -180,9 +218,9 @@ namespace Kablunk::asset
 			}
 
 			// make sure asset exists in project
-			if (!FileSystem::file_exists(get_absolute_path(filepath)))
+			if (!FileSystem::file_exists(get_absolute_path(metadata)))
 			{
-				KB_CORE_WARN("[AssetManager] Asset '{0}' not found in project, attempting to locate on disk!");
+				KB_CORE_WARN("[AssetManager] Asset '{0}' not found in project, attempting to locate on disk!", get_absolute_path(metadata));
 
 				KB_CORE_ASSERT(false, "not implemented!");
 			}
@@ -201,8 +239,9 @@ namespace Kablunk::asset
 	{
 		struct asset_registry_entry_t
 		{
-			std::string filepath = "";
-			AssetType type = AssetType::NONE;
+			std::string m_filepath = "";
+			AssetType m_type = AssetType::NONE;
+            bool m_is_internal_asset = false;
 		};
 
 		// sort asset registry by id
@@ -218,7 +257,7 @@ namespace Kablunk::asset
 
 			std::string serialize_path = metadata.filepath.string();
 			std::replace(serialize_path.begin(), serialize_path.end(), '\\', '/');
-			sorted_entries[metadata.id] = asset_registry_entry_t{ serialize_path, metadata.type };
+			sorted_entries[metadata.id] = asset_registry_entry_t{ serialize_path, metadata.type, metadata.is_internal_asset };
 		}
 
 		KB_CORE_INFO("[AssetManager] Saving '{}' assets to registry file!", sorted_entries.size());
@@ -232,8 +271,9 @@ namespace Kablunk::asset
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << "id" << YAML::Value << id;
-			out << YAML::Key << "filepath" << YAML::Value << entry.filepath;
-			out << YAML::Key << "type" << YAML::Value << asset_type_to_string(entry.type);
+			out << YAML::Key << "filepath" << YAML::Value << entry.m_filepath;
+			out << YAML::Key << "type" << YAML::Value << asset_type_to_string(entry.m_type);
+            out << YAML::Key << "is_internal_asset" << YAML::Value << entry.m_is_internal_asset;
 			out << YAML::EndMap;
 		}
 
@@ -330,5 +370,42 @@ namespace Kablunk::asset
 
 		return metadata.is_data_loaded;
 	}
+
+    asset::asset_id_t AssetManager::import_engine_asset_metadata(const std::filesystem::path& filepath)
+    {
+        auto absolute_path = Singleton<ProjectManager>::get().get_active()->get_project_directory() / "resources" / filepath;
+
+        KB_CORE_ASSERT(std::filesystem::exists(absolute_path), "[asset_manager]: trying to load internal engine asset that does not exist?");
+
+        if (is_asset_registry_file(absolute_path))
+        {
+            KB_CORE_WARN("[AssetManager] Trying to import asset registry file as an asset!");
+            return asset::null_asset_id;
+        }
+
+        const AssetMetadata& check_metadata = get_metadata(absolute_path);
+        if (check_metadata.is_valid())
+            return check_metadata.id;
+
+        AssetType type = get_asset_type_from_filepath(absolute_path);
+        if (type == AssetType::NONE)
+            return uuid::nil_uuid;
+
+        AssetMetadata metadata{
+            uuid::generate(),
+            type,
+            filepath,
+            false, // is_memory_loaded
+            false,  // is_data_loaded
+            true        // internal engine asset
+        };
+
+        // #TODO why do we not try to load data?
+
+        m_asset_registry[metadata.id] = metadata;
+
+        KB_CORE_INFO("[AssetManager] Imported new asset '{}'!", metadata.id);
+        return metadata.id;
+    }
 
 }

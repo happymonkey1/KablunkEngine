@@ -21,7 +21,6 @@ namespace Kablunk::render
 
 		if (m_ft_library)
 			FT_Done_FreeType(m_ft_library);
-
 	}
 
 	void font_manager::add_font_file_to_library(ref<font_asset_t> font_asset)
@@ -30,7 +29,7 @@ namespace Kablunk::render
 
 		// #TODO this could probably be optimized (don't do two asset commands)
 		std::filesystem::path abs_font_path = asset::get_absolute_path(font_asset->get_id());
-		std::filesystem::path rel_font_path = asset::get_relative_path(abs_font_path);
+		std::filesystem::path rel_font_path = asset::get_relative_path(font_asset->get_id());
 
 		// check whether the font cache is already in the map
 		auto it = m_font_cache.find(rel_font_path.string());
@@ -66,6 +65,8 @@ namespace Kablunk::render
 
 		// add font to cache
 		m_font_cache.emplace(rel_font_path.filename().string(), font_asset);
+
+        KB_CORE_INFO("[font_manager]: added '{}' to the font asset registry", rel_font_path.filename().string());
 	}
 
 	void font_manager::remove_font_file_from_library(ref<font_asset_t> font_asset)
@@ -83,7 +84,7 @@ namespace Kablunk::render
 		KB_CORE_ASSERT(font_asset, "null font asset?");
 
 		std::filesystem::path abs_font_path = asset::get_absolute_path(font_asset->get_id());
-		std::filesystem::path rel_font_path = asset::get_relative_path(abs_font_path);
+		std::filesystem::path rel_font_path = asset::get_relative_path(font_asset->get_id());
 
 		return m_font_cache.contains(rel_font_path.filename().string());
 	}

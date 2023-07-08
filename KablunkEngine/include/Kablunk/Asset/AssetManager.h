@@ -29,9 +29,22 @@ namespace Kablunk::asset
 		// get metadata from asset registry using asset reference
 		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 		// get the absolute path for an asset using its metadata
-		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const { return ProjectManager::get().get_active()->get_asset_directory_path() / metadata.filepath; }
+		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const 
+        { 
+            if (metadata.filepath.is_absolute())
+                return metadata.filepath;
+
+            // #TODO internal engine path should not be hardcoded here...
+            return metadata.is_internal_asset ? ProjectManager::get().get_active()->get_project_directory() / "resources" / metadata.filepath 
+                : ProjectManager::get().get_active()->get_asset_directory_path() / metadata.filepath;
+        }
 		// get the absolute path for a given path
-		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const { return ProjectManager::get().get_active()->get_asset_directory_path() / path; }
+		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const 
+        { 
+            return path.is_absolute() ? path : ProjectManager::get().get_active()->get_asset_directory_path() / path; 
+        }
+        // get the relative path for a given path stored in some asset metadata
+        std::filesystem::path get_relative_path(const AssetMetadata& p_metadata) const;
 		// get the relative path for a given path
 		std::filesystem::path get_relative_path(const std::filesystem::path& path) const;
 		// get an asset type by a given extension
@@ -121,6 +134,8 @@ namespace Kablunk::asset
 				if (!metadata.is_data_loaded)
 					return nullptr;
 
+                KB_CORE_ASSERT(asset, "[asset_manager]: trying to emplace null asset into loaded asset registry?");
+
 				m_loaded_assets[id] = asset;
 			}
 			else
@@ -166,6 +181,9 @@ namespace Kablunk::asset
 		void on_asset_renamed(const asset_id_t& id, const std::filesystem::path& new_filepath);
 		// callback for when an asset has been deleted from disk
 		void on_asset_deleted(const asset_id_t& id);
+
+        // import an engine asset's metadata into the asset registry
+        asset_id_t import_engine_asset_metadata(const std::filesystem::path& filepath);
 	public:
 		// extension for registry file
 		// #TODO constexpr in c++20?

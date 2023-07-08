@@ -7,12 +7,15 @@
 #include "Kablunk/Renderer/RenderCommand2D.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/Font/FontAsset.h"
 
 #include "Kablunk/Math/Math.h"
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
 #include "Kablunk/Audio/AudioEngine.h"
+
+#include "Kablunk/Asset/AssetCommand.h"
 
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
@@ -584,7 +587,7 @@ namespace Kablunk
 		if (scene_renderer->is_multi_threaded())
 			SceneRenderer::wait_for_threads();
 
-		// #TODO move to SceneRenderer
+		// #TODO move to SceneRenderer2D
 		if (scene_renderer->get_final_render_pass_image())
 		{
 			render2d::begin_scene(*main_camera, main_camera_transform);
@@ -631,6 +634,7 @@ namespace Kablunk
 
 			// ui pass
 			{
+                // ui panels
 				auto panel_view = m_registry.view<TransformComponent, UIPanelComponent>();
 				for (auto entity : panel_view)
 				{
@@ -641,6 +645,21 @@ namespace Kablunk
 					if (panel_comp.panel)
 						panel_comp.panel->on_render({ *main_camera, main_camera_transform });
 				}
+
+                // text
+                auto text_2d_view = m_registry.view<TransformComponent, Text2DComponent>();
+                for (auto entity : text_2d_view)
+                {
+                    Entity text_2d_entity = Entity{ entity, this };
+                    auto& transform_comp = text_2d_entity.GetComponent<TransformComponent>();
+                    auto& text_2d_comp = text_2d_entity.GetComponent<Text2DComponent>();
+
+
+                    ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_2d_comp.m_font_filename);
+
+                    if (font_asset)
+                        render2d::draw_text_string(text_2d_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset);
+                }
 			}
 
 			render2d::end_scene();
@@ -793,6 +812,21 @@ namespace Kablunk
 						panel_comp.panel->on_render({ camera, camera.GetViewMatrix() });
 				}
 			}
+
+            // text
+            auto text_2d_view = m_registry.view<TransformComponent, Text2DComponent>();
+            for (auto entity : text_2d_view)
+            {
+                Entity text_2d_entity = Entity{ entity, this };
+                auto& transform_comp = text_2d_entity.GetComponent<TransformComponent>();
+                auto& text_2d_comp = text_2d_entity.GetComponent<Text2DComponent>();
+
+
+                ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_2d_comp.m_font_filename);
+
+                if (font_asset)
+                    render2d::draw_text_string(text_2d_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset);
+            }
 
 			render2d::end_scene();
 		}
@@ -1037,6 +1071,9 @@ namespace Kablunk
 		}
 	}
 
+    // unnecessary boiler plate originally used to have an "oncomponentadded" function for the camera
+    // #TODO remove and use Entt method...
+
 	template <>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component) { }
 
@@ -1089,5 +1126,8 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<UIPanelComponent>(Entity entity, UIPanelComponent& component) { }
+
+    template <>
+    void Scene::OnComponentAdded<Text2DComponent>(Entity entity, Text2DComponent& component) {}
 }
 
