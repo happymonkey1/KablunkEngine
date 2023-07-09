@@ -43,6 +43,8 @@ namespace Kablunk::render
 		size_t m_x_off, m_y_off;
 		// x advance when rendering
 		size_t m_advance;
+        // size of the glyph
+        glm::vec2 m_size;
 	};
 
 	using glyph_info_t = glyph_info;
@@ -59,6 +61,10 @@ namespace Kablunk::render
 		// get the font point 
 		// font points are a physical distance, representing 1/72th of an inch
 		size_t get_font_point() const { return m_font_point; }
+        // get the horizontal dpi used to render bitmaps
+        size_t get_dpi_x() const { return m_dpi_x; }
+        // get the vertical dpi used to render bitmaps
+        size_t get_dpi_y() const { return m_dpi_y; }
 		// set the font point
 		// font points are a physical distance, representing 1/72th of an inch
 		void set_font_point(size_t new_font_point);
@@ -84,6 +90,10 @@ namespace Kablunk::render
 		size_t m_font_face_index = 0ull;
 		// number of glyphs loaded
 		size_t m_num_glyphs = 0ull;
+        // horizontal dpi used for rendering the glyph bitmaps
+        size_t m_dpi_x = 300ull;
+        // vertical dpi used for rendering the glyph bitmaps
+        size_t m_dpi_y = 300ull;
 		// reference to the texture atlas
 		// for now, the font asset "owns" the texture atlas, should this be stored in a cache on the font manager instead?
 		ref<Texture2D> m_texture_atlas;

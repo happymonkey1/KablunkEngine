@@ -67,8 +67,8 @@ float screen_pixel_range()
 
 void main()
 {
-    vec4 bg_color = vec4(v_Input.Color.rgb, 0.0);
-    vec4 fg_color = v_Input.Color;
+    //vec4 bg_color = vec4(v_Input.Color.rgb, 0.0);
+    //vec4 fg_color = v_Input.Color;
 
     //vec3 msd = texture(u_FontAtlases[int(v_TexIndex)], v_Input.TexCoord).rgb;
     //float sd = median(msd.r, msd.g, msd.b);

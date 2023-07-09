@@ -37,7 +37,7 @@ namespace Kablunk::render
 			m_ft_face,			/* handle to face object         */
 			0,					/* char_width in 1/64 of points  */
 			m_font_point * 64,	/* char_height in 1/64 of points */
-			0,					/* horizontal device resolution  */
+            m_dpi_x,			/* horizontal device resolution  */
 			0					/* vertical device resolution    */
 		);   
 
@@ -51,7 +51,6 @@ namespace Kablunk::render
 		if (m_texture_atlas)
 			m_texture_atlas = nullptr;
 
-		// #TODO release ft font face
 		if (m_ft_face)
 		{
 			FT_Done_Face(m_ft_face);
@@ -102,7 +101,7 @@ namespace Kablunk::render
             m_ft_face,			/* handle to face object         */
             0,					/* char_width in 1/64 of points  */
             m_font_point * 64,	/* char_height in 1/64 of points */
-            96,					/* horizontal device resolution  */
+            m_dpi_x,			/* horizontal device resolution  */
             0					/* vertical device resolution    */
         );
 
@@ -136,30 +135,28 @@ namespace Kablunk::render
 		m_glyph_info_map.reserve(m_num_glyphs);
 
 		// quick and dirty max texture size estimate
+        // #NOTE right shift by 6 is to get value in pixels, instead of 26.6 fractional units
 		const u32 max_dim = (1 + (m_ft_face->size->metrics.height >> 6)) * std::ceilf(std::sqrtf(static_cast<f32>(m_num_glyphs)));
 		u32 tex_width = 1;
 		while (tex_width < max_dim) 
 			tex_width <<= 1;
 		const u32 tex_height = tex_width;
 
-		// create "texture atlas" in memory
-		// #TODO use kablunk texture atlas
+		// create 1d pixel buffer to store bmp data for each glyph in memory
         const size_t pixel_buffer_size = tex_width * tex_height;
-		u8* pixel_data = new u8[pixel_buffer_size]{ 0 };
+		u8* pixel_data = new u8[pixel_buffer_size]{ 1 };
 		size_t pen_x = 0;
 		size_t pen_y = 0;
 
 		// load glyph data and store info in map
 		for (size_t i = 0; i < m_num_glyphs; ++i) {
-			FT_Load_Char(m_ft_face, i, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_LIGHT);
+			FT_Load_Char(m_ft_face, i, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL);
 			FT_Bitmap* bmp = &m_ft_face->glyph->bitmap;
 
 			if (pen_x + bmp->width >= tex_width) {
 				pen_x = 0;
 				pen_y += ((m_ft_face->size->metrics.height >> 6) + 1);
 			}
-
-            
 
 			for (size_t row = 0; row < bmp->rows; ++row) {
 				for (size_t col = 0; col < bmp->width; ++col) {
@@ -174,29 +171,34 @@ namespace Kablunk::render
 				}
 			}
 
-			// freetype glyph rendering data
+			// store freetype glyph rendering data for use when rendering text in renderer2d
 			glyph_info_t glyph_data{
 				static_cast<f32>(pen_x) / static_cast<f32>(tex_width),
 				static_cast<f32>(pen_y) / static_cast<f32>(tex_height),
 				static_cast<f32>(pen_x + bmp->width) / static_cast<f32>(tex_width),
 				static_cast<f32>(pen_y + bmp->rows) / static_cast<f32>(tex_height),
-				m_ft_face->glyph->bitmap_left,
-				m_ft_face->glyph->bitmap_top,
-				m_ft_face->glyph->advance.x >> 6
+				m_ft_face->glyph->bitmap_left >> 6,
+				m_ft_face->glyph->bitmap_top >> 6,
+				m_ft_face->glyph->advance.x >> 6,
+                glm::vec2{ m_ft_face->glyph->metrics.width >> 6, m_ft_face->glyph->metrics.height >> 6 }
 			};
 
 			m_glyph_info_map.emplace(static_cast<char>(i), glyph_data);
 
 			pen_x += bmp->width + 1;
+
+            // #NOTE do we need to free the loaded char?
 		}
 
-        char* rgba_array = new char[tex_width * tex_height * 4]{ 1 };
-        for (int i = 0; i < (tex_width * tex_height); ++i)
+        // convert bmp pixel data to png (main format that the renderer uses)
+        constexpr const size_t k_channels = 4;
+        char* rgba_array = new char[tex_width * tex_height * k_channels]{ 1 };
+        for (size_t i = 0; i < (tex_width * tex_height); ++i)
         {
-            rgba_array[i * 4 + 0] |= pixel_data[i];
-            rgba_array[i * 4 + 1] |= pixel_data[i];
-            rgba_array[i * 4 + 2] |= pixel_data[i];
-            rgba_array[i * 4 + 3] = 0xff;
+            rgba_array[i * k_channels + 0] |= pixel_data[i];
+            rgba_array[i * k_channels + 1] |= pixel_data[i];
+            rgba_array[i * k_channels + 2] |= pixel_data[i];
+            rgba_array[i * k_channels + 3] |= pixel_data[i];
         }
 
 		// store pixel data in texture

@@ -194,7 +194,7 @@ namespace Kablunk
 					KB_CORE_ASSERT(false, "Vulkan failed to reset fences!");
 
 				if(vkQueueSubmit(device->GetGraphicsQueue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan fialed to submit queue")
+					KB_CORE_ASSERT(false, "Vulkan failed to submit queue")
 
 				// Retrieve timestamp query results
 				vkGetQueryPoolResults(vk_device, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_next_available_query,

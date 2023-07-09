@@ -432,7 +432,7 @@ namespace Kablunk
 		u32 text_data_buffer_size = (u32)((uint8_t*)m_renderer_data->text_vertex_buffer_ptr - (uint8_t*)m_renderer_data->text_vertex_buffer_base_ptrs[frame_index]);
 		if (text_data_buffer_size)
 		{
-			m_renderer_data->text_vertex_buffers[frame_index]->SetData(m_renderer_data->text_vertex_buffer_base_ptrs[frame_index], data_size);
+			m_renderer_data->text_vertex_buffers[frame_index]->SetData(m_renderer_data->text_vertex_buffer_base_ptrs[frame_index], text_data_buffer_size);
 
 			// Set Textures
 			auto& textures = m_renderer_data->text_texture_atlas_slots;
@@ -480,22 +480,30 @@ namespace Kablunk
 
 	void Renderer2D::set_target_render_pass(IntrusiveRef<RenderPass> render_pass)
 	{
+		// Quad pipeline
 		if (m_renderer_data->quad_pipeline->GetSpecification().render_pass != render_pass)
 		{
-			// Quad pipeline
-			{
-				PipelineSpecification pipeline_spec = m_renderer_data->quad_pipeline->GetSpecification();
-				pipeline_spec.render_pass = render_pass;
-				m_renderer_data->quad_pipeline = Pipeline::Create(pipeline_spec);
-			}
+            PipelineSpecification pipeline_spec = m_renderer_data->quad_pipeline->GetSpecification();
+            pipeline_spec.render_pass = render_pass;
+            m_renderer_data->quad_pipeline = Pipeline::Create(pipeline_spec);
+        }
 
-			// Circle pipeline
-			{
-				PipelineSpecification pipeline_spec = m_renderer_data->circle_pipeline->GetSpecification();
-				pipeline_spec.render_pass = render_pass;
-				m_renderer_data->circle_pipeline = Pipeline::Create(pipeline_spec);
-			}
-		}
+		// Circle pipeline
+        if (m_renderer_data->circle_pipeline->GetSpecification().render_pass != render_pass)
+        {
+            PipelineSpecification pipeline_spec = m_renderer_data->circle_pipeline->GetSpecification();
+            pipeline_spec.render_pass = render_pass;
+            m_renderer_data->circle_pipeline = Pipeline::Create(pipeline_spec);
+        }
+
+        // Text Pipeline
+        if (m_renderer_data->text_pipeline->GetSpecification().render_pass != render_pass)
+        {
+            PipelineSpecification pipeline_spec = m_renderer_data->text_pipeline->GetSpecification();
+            pipeline_spec.render_pass = render_pass;
+            m_renderer_data->text_pipeline = Pipeline::Create(pipeline_spec);
+        }
+		
 	}
 
 	void Renderer2D::on_recreate_swapchain()
@@ -806,11 +814,31 @@ namespace Kablunk
 
 		const auto& glyph_info_map = font_asset->get_glyph_rendering_map();
 
+        glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+            * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
+
 		// iterate over characters and select the correct glyph bitmap
-		glm::vec3 char_position = position;
+        glm::vec2 char_position = glm::vec2{ position.x, position.y };
+        f32 pixel_x_scale = (static_cast<f32>(font_asset->get_font_point()) * static_cast<f32>(font_asset->get_dpi_x()) / 72.0f);
 		for (char text_char : text)
 		{
 			const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
+
+            const glm::vec2 render_char_position = glm::vec2{ 
+                char_position.x + glyph_data.m_x_off,
+                // #NOTE adding the difference between size and bearing here, since vulkan renders with -y facing up
+                char_position.y - (glyph_data.m_size.y - glyph_data.m_y_off)
+            };
+
+            const f32 char_width = glyph_data.m_size.x;
+            const f32 char_height = glyph_data.m_size.y;
+
+            const glm::vec4 text_quad_coords[4] = {
+                { render_char_position.x, render_char_position.y, 0.0f, 1.0f },
+                { render_char_position.x + char_width, render_char_position.y, 0.0f, 1.0f },
+                { render_char_position.x + char_width, render_char_position.y + char_height, 0.0f, 1.0f },
+                { render_char_position.x, render_char_position.y + char_height, 0.0f, 1.0f },
+            };
 
 			// #NOTE(Sean) this is in clockwise order, since vulkan renders with +y facing down
 			const glm::vec2 texture_coords[] = {
@@ -819,20 +847,13 @@ namespace Kablunk
 				glm::vec2{ glyph_data.m_x1, glyph_data.m_y1 },
 				glm::vec2{ glyph_data.m_x0, glyph_data.m_y1 },
 			};
-
-			// compute position of char by offsetting the base position with the char advance offset
-			char_position.x += glyph_data.m_advance;
-
-			// #TODO(Sean) do we actually *need* to compute a transform?
-			glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, char_position)
-				* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
-
+			
 			constexpr const size_t quad_vertex_count = 4;
 			for (u32 i = 0; i < quad_vertex_count; ++i)
 			{
                 KB_CORE_ASSERT(texture_coords[i].x <= 1.0f && texture_coords[i].y <= 1.0f, "tex coord for font atlas out of bounds?");
 
-				m_renderer_data->text_vertex_buffer_ptr->m_position = transform * m_renderer_data->quad_vertex_positions[i];
+				m_renderer_data->text_vertex_buffer_ptr->m_position = transform * text_quad_coords[i];
 				m_renderer_data->text_vertex_buffer_ptr->m_tex_coord = texture_coords[i];
 				m_renderer_data->text_vertex_buffer_ptr->m_tex_index = texture_index;
 				m_renderer_data->text_vertex_buffer_ptr->m_tint_color = tint_color;
@@ -842,6 +863,9 @@ namespace Kablunk
 			m_renderer_data->text_count++;
 			m_renderer_data->text_index_count += 6;
 			m_renderer_data->Stats.Quad_count++;
+
+            // compute position of char by offsetting the base position with the char advance offset
+            char_position.x += glyph_data.m_advance;
 		}
 	}
 

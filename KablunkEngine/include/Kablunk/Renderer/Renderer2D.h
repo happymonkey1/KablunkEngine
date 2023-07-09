@@ -344,7 +344,7 @@ public:
 		const ref<render::font_asset_t>& font_asset, 
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
-	// draw text string
+	// draw text string 
 	void draw_text_string(
 		const std::string& text, 
 		const glm::vec3& position, 
