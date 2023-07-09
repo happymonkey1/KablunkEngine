@@ -647,18 +647,18 @@ namespace Kablunk
 				}
 
                 // text
-                auto text_2d_view = m_registry.view<TransformComponent, Text2DComponent>();
-                for (auto entity : text_2d_view)
+                auto text_view = m_registry.view<TransformComponent, TextComponent>();
+                for (auto entity : text_view)
                 {
-                    Entity text_2d_entity = Entity{ entity, this };
-                    auto& transform_comp = text_2d_entity.GetComponent<TransformComponent>();
-                    auto& text_2d_comp = text_2d_entity.GetComponent<Text2DComponent>();
+                    Entity text_entity = Entity{ entity, this };
+                    auto& transform_comp = text_entity.GetComponent<TransformComponent>();
+                    auto& text_comp = text_entity.GetComponent<TextComponent>();
 
 
-                    ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_2d_comp.m_font_filename);
+                    ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                     if (font_asset)
-                        render2d::draw_text_string(text_2d_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset);
+                        render2d::draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);
                 }
 			}
 
@@ -814,18 +814,18 @@ namespace Kablunk
 			}
 
             // text
-            auto text_2d_view = m_registry.view<TransformComponent, Text2DComponent>();
-            for (auto entity : text_2d_view)
+            auto text_view = m_registry.view<TransformComponent, TextComponent>();
+            for (auto entity : text_view)
             {
-                Entity text_2d_entity = Entity{ entity, this };
-                auto& transform_comp = text_2d_entity.GetComponent<TransformComponent>();
-                auto& text_2d_comp = text_2d_entity.GetComponent<Text2DComponent>();
+                Entity text_entity = Entity{ entity, this };
+                auto& transform_comp = text_entity.GetComponent<TransformComponent>();
+                auto& text_comp = text_entity.GetComponent<TextComponent>();
 
 
-                ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_2d_comp.m_font_filename);
+                ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 if (font_asset)
-                    render2d::draw_text_string(text_2d_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset);
+                    render2d::draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);
             }
 
 			render2d::end_scene();
@@ -1128,6 +1128,6 @@ namespace Kablunk
 	void Scene::OnComponentAdded<UIPanelComponent>(Entity entity, UIPanelComponent& component) { }
 
     template <>
-    void Scene::OnComponentAdded<Text2DComponent>(Entity entity, Text2DComponent& component) {}
+    void Scene::OnComponentAdded<TextComponent>(Entity entity, TextComponent& component) {}
 }
 

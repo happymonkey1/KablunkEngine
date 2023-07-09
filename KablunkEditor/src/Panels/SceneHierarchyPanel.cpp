@@ -577,9 +577,9 @@ namespace Kablunk
 			}
 
             // text 2d component
-            if (!m_selection_context.HasComponent<Text2DComponent>() && ImGui::MenuItem("Text 2D"))
+            if (!m_selection_context.HasComponent<TextComponent>() && ImGui::MenuItem("Text"))
             {
-                m_selection_context.AddComponent<Text2DComponent>();
+                m_selection_context.AddComponent<TextComponent>();
                 ImGui::CloseCurrentPopup();
             }
 
@@ -962,11 +962,12 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-        DrawComponent<Text2DComponent>("Text 2D", entity, [&](Text2DComponent& component)
+        DrawComponent<TextComponent>("Text", entity, [&](TextComponent& component)
             {
                 UI::BeginProperties();
 
                 UI::Property("Text String", component.m_text_str);
+                UI::PropertyColorEdit4("Color", component.m_tint_color);
 
                 UI::EndProperties();
             });

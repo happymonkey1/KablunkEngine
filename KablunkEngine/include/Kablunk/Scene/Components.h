@@ -372,23 +372,25 @@ struct UIPanelComponent
 	}
 };
 
-struct Text2DComponent
+struct TextComponent
 {
     // text string that will be rendered to the screen
     std::string m_text_str = "";
     // asset id for the font to use to render text
     std::string m_font_filename = "Roboto-Regular.ttf";
+    // tinting color
+    glm::vec4 m_tint_color = glm::vec4{ 1.0f };
 
     // default constructor
-    Text2DComponent() = default;
+    TextComponent() = default;
 
     // copy constructor
-    Text2DComponent(const Text2DComponent& other)
+    TextComponent(const TextComponent& other)
         : m_text_str{ other.m_text_str }
     { }
 
     // default destructor
-    ~Text2DComponent() = default;
+    ~TextComponent() = default;
 };
 
 } // end namespace Kablunk
