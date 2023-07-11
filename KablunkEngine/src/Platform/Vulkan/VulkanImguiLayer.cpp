@@ -54,8 +54,12 @@ namespace Kablunk
 
 		// #TODO build font library to load fonts instead of current way
 		// #TODO font scaling
-		io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 28.0f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 28.0f);
+		//io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Bold.ttf", 28.0f);
+        //io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/poppins/Poppins-Medium.ttf", 28.0f);
+        //io.Fonts->AddFontFromFileTTF("resources/fonts/inter/Inter-Bold.ttf", 28.0f);
+        //io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/inter/Inter-Light.ttf", 28.0f);
+        io.Fonts->AddFontFromFileTTF("resources/fonts/spiegel/Spiegel_TT_Bold.ttf", 28.0f);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/spiegel/Spiegel_TT_Regular.ttf", 28.0f);
 		//io.Fonts->Build();
 
 		//ImGui::StyleColorsDark();

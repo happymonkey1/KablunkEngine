@@ -43,8 +43,8 @@ namespace Kablunk
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
 
 		// Timestamp queries
-		constexpr uint32_t MAX_USER_QUERIES = 10;
-		m_timestamp_query_count = 2 + 2 * MAX_USER_QUERIES;
+		constexpr const uint32_t k_max_user_queries = 10;
+		m_timestamp_query_count = 2 + 2 * k_max_user_queries;
 
 		VkQueryPoolCreateInfo query_pool_create_info = {};
 		query_pool_create_info.pNext = nullptr;
@@ -83,8 +83,8 @@ namespace Kablunk
 		query_pool_create_info.pNext = nullptr;
 
 		// Timestamp queries
-		const uint32_t maxUserQueries = 10;
-		m_timestamp_query_count = 2 + 2 * maxUserQueries;
+        constexpr const uint32_t k_max_user_queries = 10;
+		m_timestamp_query_count = 2 + 2 * k_max_user_queries;
 
 		query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
 		query_pool_create_info.queryCount = m_timestamp_query_count;
@@ -196,7 +196,7 @@ namespace Kablunk
 				if(vkQueueSubmit(device->GetGraphicsQueue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to submit queue")
 
-				// Retrieve timestamp query results
+				// retrieve timestamp query results
 				vkGetQueryPoolResults(vk_device, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_next_available_query,
 					instance->m_timestamp_next_available_query * sizeof(uint64_t), instance->m_timestamp_query_results[frame_index].data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
 
@@ -205,7 +205,7 @@ namespace Kablunk
 					uint64_t startTime = instance->m_timestamp_query_results[frame_index][i];
 					uint64_t endTime = instance->m_timestamp_query_results[frame_index][i + 1];
 					float ns_time = endTime > startTime ? (endTime - startTime) * device->GetPhysicalDevice()->GetLimits().timestampPeriod : 0.0f;
-					instance->m_execution_gpu_times[frame_index][i / 2] = ns_time * 0.000001f; // Time in ms
+					instance->m_execution_gpu_times[frame_index][i / 2] = ns_time * 0.000001f; // time in ms
 				}
 
 				// #TODO pipeline stats results

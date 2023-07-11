@@ -147,16 +147,18 @@ namespace Kablunk
 	};
 }
 
+#if 0
 #if KB_PROFILE
 	#define KB_BEGIN_SESSION(name, filepath) ::Kablunk::Instrumentor::Get().BeginSession(name, filepath)
 	#define KB_END_SESSION()				 ::Kablunk::Instrumentor::Get().EndSession();
-	#define KB_PROFILE_SCOPE(name)			 ::Kablunk::InstrumentationTimer timer##__LINE__(name);	
-	#define KB_PROFILE_FUNCTION()			 KB_PROFILE_SCOPE(__FUNCSIG__)  
+	#define KB_PROFILE_SCOPE_OLD(name)			 ::Kablunk::InstrumentationTimer timer##__LINE__(name);	
+	#define KB_PROFILE_FUNCTION_OLD()			 KB_PROFILE_SCOPE_OLD(__FUNCSIG__)  
 #else
 	#define KB_BEGIN_SESSION(name, filepath)
 	#define KB_END_SESSION()
 	#define KB_PROFILE_FUNCTION()
 	#define KB_PROFILE_SCOPE(name)
+#endif
 #endif
 
 #endif

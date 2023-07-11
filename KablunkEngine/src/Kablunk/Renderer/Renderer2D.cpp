@@ -18,7 +18,7 @@ namespace Kablunk
 {
 	void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_renderer_data = new render2d::renderer_2d_data_t{};
 		m_renderer_data->specification = spec;
@@ -285,7 +285,7 @@ namespace Kablunk
 
 	void Renderer2D::shutdown()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		KB_CORE_INFO("Shutting down Renderer2D!");
 

@@ -15,7 +15,7 @@ namespace Kablunk
 
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
-		KB_PROFILE_FUNCTION();
+		KB_PROFILE_FUNC();
 		
 		if (m_TranslationInputLocked)
 			return;
@@ -66,7 +66,7 @@ namespace Kablunk
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		EventDispatcher dispatcher{ e };
 		dispatcher.Dispatch<MouseScrolledEvent>(KABLUNK_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
@@ -85,7 +85,7 @@ namespace Kablunk
 		if (m_ScalingInputLocked)
 			return false;
 
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 		float speedMult = (input::is_key_pressed(Key::LeftShift)) ? 5.0f : 1.0f;
 		m_ZoomLevel -= e.GetYOffset() * 0.25f * speedMult;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
@@ -98,7 +98,7 @@ namespace Kablunk
 
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		OnResize((float)e.GetWidth(), (float)e.GetHeight());
 		return false;

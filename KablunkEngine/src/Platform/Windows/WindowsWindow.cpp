@@ -30,14 +30,14 @@ namespace Kablunk {
 
     WindowsWindow::WindowsWindow(const WindowProps& props)
     {
-        KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
         Init(props);
     }
 
     WindowsWindow::~WindowsWindow()
     {
-        KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
         Shutdown();
     }
@@ -54,7 +54,7 @@ namespace Kablunk {
 
         if (s_glfw_window_count == 0) 
 		{
-			KB_PROFILE_SCOPE("glfwInit");
+            KB_PROFILE_SCOPE_DYNAMIC("glfwInit");
 
 			int success = glfwInit();
             KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
@@ -71,7 +71,7 @@ namespace Kablunk {
         }
 
 		{
-			KB_PROFILE_SCOPE("glfwCreateWindow fullscreen");
+            KB_PROFILE_SCOPE_DYNAMIC("glfwCreateWindow fullscreen");
 
 			GLFWmonitor* primary_monitor = nullptr;
 			if (m_data.Fullscreen)
@@ -215,7 +215,7 @@ namespace Kablunk {
 
     void WindowsWindow::Shutdown()
     {
-        KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		
 		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
@@ -244,7 +244,7 @@ namespace Kablunk {
 
     void WindowsWindow::OnUpdate()
     {
-        KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
         m_context->SwapBuffers();
     }

@@ -98,7 +98,7 @@ namespace Kablunk
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		// ==========
 		//   Update
@@ -163,7 +163,7 @@ namespace Kablunk
 
 	void EditorLayer::OnImGuiRender(Timestep ts)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		static bool opt_fullscreen	= true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;

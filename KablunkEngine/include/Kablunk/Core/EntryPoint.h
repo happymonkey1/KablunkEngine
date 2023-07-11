@@ -37,18 +37,11 @@ int main(int argc, char** argv)
 	Kablunk::util::container::test::test_flat_hash_map_main();
 #endif
 
-	KB_BEGIN_SESSION("Startup", "KablunkProfile-Startup.json");
 	Kablunk::Application* app = Kablunk::CreateApplication(argc, argv);
-	KB_END_SESSION();
 
-
-	KB_BEGIN_SESSION("Runtime", "KablunkProfile-Runtime.json");
 	app->Run();
-	KB_END_SESSION();
 
-	KB_BEGIN_SESSION("Shutdown", "KablunkProfile-Shutdown.json");
 	app->shutdown();
-	KB_END_SESSION();
 	
 
 	Kablunk::ShutdownCore();

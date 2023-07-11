@@ -821,7 +821,6 @@ namespace Kablunk
                 auto& transform_comp = text_entity.GetComponent<TransformComponent>();
                 auto& text_comp = text_entity.GetComponent<TextComponent>();
 
-
                 ref<render::font_asset_t> font_asset = render2d::get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 if (font_asset)

@@ -63,7 +63,8 @@ project "KablunkEngine"
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}",
 		"%{IncludeDir.boost}",
-		"%{IncludeDir.miniaudio}"
+		"%{IncludeDir.miniaudio}",
+		"%{IncludeDir.optick}"
 	}
 
 	links
@@ -76,6 +77,7 @@ project "KablunkEngine"
 		"FreeType",
 		"Box2d",
 		"opengl32.lib",
+		"optick",
 
 		"%{Library.Vulkan}",
 		"%{Library.VulkanUtils}",

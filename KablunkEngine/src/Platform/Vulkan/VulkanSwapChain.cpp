@@ -375,13 +375,10 @@ namespace Kablunk
 		// present buffer to the swap chain
 		VkResult result = QueuePresent(m_device->GetGraphicsQueue(), m_current_image_index, m_semaphores.render_complete);
 
-		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
+		if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			if (result == VK_ERROR_OUT_OF_DATE_KHR)
-			{
-				OnResize(m_width, m_height);
-				return;
-			}
+            OnResize(m_width, m_height);
+            return;
 		}
 
 		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();

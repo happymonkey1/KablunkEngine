@@ -195,9 +195,9 @@ namespace Kablunk::render
         char* rgba_array = new char[tex_width * tex_height * k_channels]{ 1 };
         for (size_t i = 0; i < (tex_width * tex_height); ++i)
         {
-            rgba_array[i * k_channels + 0] |= pixel_data[i];
-            rgba_array[i * k_channels + 1] |= pixel_data[i];
-            rgba_array[i * k_channels + 2] |= pixel_data[i];
+            rgba_array[i * k_channels + 0] |= 255;
+            rgba_array[i * k_channels + 1] |= 255;
+            rgba_array[i * k_channels + 2] |= 255;
             rgba_array[i * k_channels + 3] |= pixel_data[i];
         }
 

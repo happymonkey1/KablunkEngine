@@ -19,7 +19,7 @@ namespace Kablunk
 
 	void Renderer::init()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		// initialize render command queues
 		for (size_t i = 0; i < s_render_command_queue_size; ++i)

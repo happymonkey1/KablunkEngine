@@ -10,7 +10,7 @@ namespace Kablunk
 	OpenGLTexture2D::OpenGLTexture2D(ImageFormat format, uint32_t width, uint32_t height)
 		: m_Width{width}, m_Height{height}, m_format{ format }
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_InternalFormat = GL_RGBA8;
 		m_DataFormat = GL_RGBA;
@@ -31,13 +31,13 @@ namespace Kablunk
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path{path}
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
 		stbi_uc* data = nullptr;
 		{
-			KB_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string& path)")
+            KB_PROFILE_SCOPE_DYNAMIC("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string& path)")
 
 			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 			
@@ -84,14 +84,14 @@ namespace Kablunk
 
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glDeleteTextures(1, &m_RendererID);
 	}
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		uint32_t bytesPerPixel = (m_DataFormat == GL_RGBA) ? 4 : 3;
 		KB_CORE_ASSERT(size == m_Width * m_Height * bytesPerPixel, "Data must be the entire texture!");
@@ -100,7 +100,7 @@ namespace Kablunk
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glBindSampler(slot, m_RendererID);
 		glBindTextureUnit(slot, m_RendererID);

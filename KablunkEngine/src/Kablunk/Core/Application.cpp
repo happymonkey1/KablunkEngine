@@ -52,6 +52,7 @@ namespace Kablunk
 
 	void Application::init()
 	{
+        KB_PROFILE_FUNC();
 		KB_CORE_INFO("Application initialized");
 		
 		const char* thread_policy_cstr = m_render_thread.m_threading_policy == threading_policy_t::multi_threaded ? "multi-threaded" : "single-threaded";
@@ -59,7 +60,6 @@ namespace Kablunk
 
 		m_render_thread.run();
 
-		KB_PROFILE_FUNCTION();
 		{
 			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height, m_specification.Fullscreen });
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
@@ -138,7 +138,7 @@ namespace Kablunk
 
 	void Application::PushLayer(Layer* layer)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_layer_stack.PushLayer(layer);
 		layer->OnAttach();
@@ -146,7 +146,7 @@ namespace Kablunk
 
 	void Application::PushOverlay(Layer* overlay)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_layer_stack.PushOverlay(overlay);
 		overlay->OnAttach();
@@ -170,7 +170,7 @@ namespace Kablunk
 
 	void Application::OnEvent(Event& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC()
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClosed(e); });
@@ -193,7 +193,7 @@ namespace Kablunk
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		const uint32_t width = e.GetWidth(), height = e.GetHeight();
 		if (width == 0 || height == 0)
@@ -209,11 +209,9 @@ namespace Kablunk
 
 	void Application::Run()
 	{
-		KB_PROFILE_FUNCTION();
-
 		while (m_running)
 		{
-			KB_PROFILE_SCOPE("RunLoop - Application::Run");
+            OPTICK_FRAME("main thread");
 
 			//KB_CORE_TRACE("Vsync: {0}", GetWindow().IsVsync());
 			//if (NativeScriptEngine::Update())
@@ -244,7 +242,7 @@ namespace Kablunk
 
 				render::begin_frame();
 				{
-					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
+                    KB_PROFILE_SCOPE_DYNAMIC("Application::Run() -- layer->OnUpdate()")
 						for (Layer* layer : m_layer_stack)
 							layer->OnUpdate(m_timestep);
 				}
@@ -294,7 +292,7 @@ namespace Kablunk
 	{
 		m_imgui_layer->Begin();
 		{
-			KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run");
+            KB_PROFILE_SCOPE_DYNAMIC("Layer OnImGuiRender - Application::Run");
 			for (Layer* layer : m_layer_stack)
 				layer->OnImGuiRender(m_timestep);
 		}

@@ -261,7 +261,7 @@ namespace Kablunk
 
 	static uint32_t Instantiate(EntityScriptClass& script_class)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		// allocate memory
 		MonoObject* instance = mono_object_new(s_current_mono_domain, script_class.Class);

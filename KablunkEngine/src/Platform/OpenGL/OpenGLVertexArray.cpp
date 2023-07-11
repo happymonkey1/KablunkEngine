@@ -37,7 +37,7 @@ namespace Kablunk
 
 	void OpenGLVertexArray::Bind() const
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glBindVertexArray(m_RendererID);
 	}
@@ -49,7 +49,7 @@ namespace Kablunk
 
 	void OpenGLVertexArray::AddVertexBuffer(const IntrusiveRef<VertexBuffer>& vertexBuffer)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		//make sure buffer is bound before adding vertex buffer
 		KB_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
@@ -127,7 +127,7 @@ namespace Kablunk
 
 	void OpenGLVertexArray::SetIndexBuffer(const IntrusiveRef<IndexBuffer>& indexBuffer)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();
