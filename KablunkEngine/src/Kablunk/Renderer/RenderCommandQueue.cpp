@@ -42,6 +42,8 @@ namespace Kablunk
 
 	void RenderCommandQueue::Execute()
 	{
+        KB_PROFILE_FUNC()
+
 		uint8_t* buffer = m_command_buffer;
 
 		for (uint32_t i = 0; i < m_command_count; ++i)

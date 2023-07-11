@@ -313,6 +313,8 @@ namespace Kablunk
 
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
+        KB_PROFILE_FUNC();
+
 		auto device = m_device->GetVkDevice();
 
 		// wait to synchronize
@@ -352,6 +354,8 @@ namespace Kablunk
 
 	void VulkanSwapChain::Present()
 	{
+        KB_PROFILE_FUNC();
+
 		constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
 
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -369,8 +373,12 @@ namespace Kablunk
 		if (vkResetFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to reset fence!");
 
-		if (vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submit_info, m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to submit!");
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanSwapChain::Present(): vkQueueSubmit()");
+
+		    if (vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submit_info, m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
+			    KB_CORE_ASSERT(false, "Vulkan failed to submit!");
+        }
 
 		// present buffer to the swap chain
 		VkResult result = QueuePresent(m_device->GetGraphicsQueue(), m_current_image_index, m_semaphores.render_complete);
@@ -381,9 +389,13 @@ namespace Kablunk
             return;
 		}
 
-		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();
-		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanSwapChain::Present(): vkWaitForFences()");
+
+		    m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();
+		    if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+			    KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
+        }
 	}
 
 	void VulkanSwapChain::Destroy()
@@ -440,6 +452,8 @@ namespace Kablunk
 
 	VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem /*= VK_NULL_HANDLE*/)
 	{
+        KB_PROFILE_FUNC();
+
 		VkPresentInfoKHR present_info{};
 		present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		present_info.pNext = nullptr;

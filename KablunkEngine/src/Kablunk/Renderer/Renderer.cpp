@@ -148,6 +148,7 @@ namespace Kablunk
 
 	void Renderer::wait_and_render(render_thread* rendering_thread)
 	{
+        KB_PROFILE_FUNC()
 		KB_CORE_ASSERT(rendering_thread, "render thread is null?");
 		
 		{

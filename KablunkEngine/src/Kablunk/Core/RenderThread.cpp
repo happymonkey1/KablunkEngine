@@ -43,6 +43,8 @@ render_thread::~render_thread()
 
 void render_thread::run()
 {
+    KB_PROFILE_FUNC();
+
 	m_running = true;
 	if (m_threading_policy != threading_policy_t::multi_threaded)
 		return;
@@ -52,6 +54,8 @@ void render_thread::run()
 
 void render_thread::terminate()
 {
+    KB_PROFILE_FUNC();
+
 	m_running = false;
 	// make sure we finish processing any submitted functions before termination
 	pump(); 
@@ -62,6 +66,8 @@ void render_thread::terminate()
 
 void render_thread::wait(thread_state_t p_wait_state)
 {
+    KB_PROFILE_FUNC();
+
 	if (m_threading_policy == threading_policy_t::single_threaded)
 		return;
 
@@ -76,6 +82,8 @@ void render_thread::wait(thread_state_t p_wait_state)
 
 void render_thread::wait_and_set(thread_state_t p_wait_state, thread_state_t p_post_wait_state)
 {
+    KB_PROFILE_FUNC();
+
 	if (m_threading_policy == threading_policy_t::single_threaded)
 		return;
 
@@ -92,6 +100,8 @@ void render_thread::wait_and_set(thread_state_t p_wait_state, thread_state_t p_p
 
 void render_thread::set(thread_state_t p_state)
 {
+    KB_PROFILE_FUNC();
+
 	if (m_threading_policy == threading_policy_t::single_threaded)
 		return;
 
@@ -103,12 +113,16 @@ void render_thread::set(thread_state_t p_state)
 
 void render_thread::next_frame()
 {
+    KB_PROFILE_FUNC();
+
 	m_app_thread_frame++;
 	render::swap_queues();
 }
 
 void render_thread::block_until_rendering_complete()
 {
+    KB_PROFILE_FUNC();
+
 	if (m_threading_policy == threading_policy_t::single_threaded)
 		return;
 
@@ -117,6 +131,8 @@ void render_thread::block_until_rendering_complete()
 
 void render_thread::kick()
 {
+    KB_PROFILE_FUNC();
+
 	if (m_threading_policy == threading_policy_t::multi_threaded)
 		set(thread_state_t::kick);
 	else
@@ -125,6 +141,8 @@ void render_thread::kick()
 
 void render_thread::pump()
 {
+    KB_PROFILE_FUNC();
+
 	next_frame();
 	kick();
 	block_until_rendering_complete();

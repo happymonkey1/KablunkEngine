@@ -315,6 +315,8 @@ namespace Kablunk
 
 	void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform)
 	{
+        KB_PROFILE_FUNC();
+
 		m_renderer_data->camera = camera;
 		m_renderer_data->camera_transform = transform;
 
@@ -354,6 +356,8 @@ namespace Kablunk
 
 	void Renderer2D::flush()
 	{
+        KB_PROFILE_FUNC();
+
 		KB_CORE_ASSERT(m_renderer_data->Stats.batch_count < 1, "Multiple batches per frame not supported!");
 
 		m_renderer_data->render_command_buffer->Begin();

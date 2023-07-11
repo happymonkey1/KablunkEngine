@@ -143,7 +143,7 @@ namespace Kablunk
 		bool m_resources_created = false;
 
 		// flag for flushing scene data on a separate "job" thread
-		bool m_use_threads = true;
+		bool m_use_threads = false;
 
 		SceneRendererData m_scene_data;
 

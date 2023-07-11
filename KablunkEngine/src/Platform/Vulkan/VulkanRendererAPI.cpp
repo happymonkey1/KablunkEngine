@@ -433,6 +433,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::SubmitFullscreenQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material)
 	{
+        KB_PROFILE_FUNC()
+
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
 			{
@@ -473,6 +475,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::RenderQuad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBuffer> storage_buffer_set, IntrusiveRef<Material> material, const glm::mat4& transform)
 	{
+        KB_PROFILE_FUNC()
+
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 		render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
 			{
@@ -520,6 +524,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::RenderGeometry(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<Material> material, IntrusiveRef<VertexBuffer> vertex_buffer, IntrusiveRef<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count /*= 0*/)
 	{
+        KB_PROFILE_FUNC()
+
 		IntrusiveRef<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 		if (index_count == 0)
 			index_count = index_buffer->GetCount();
@@ -582,6 +588,8 @@ namespace Kablunk
 
 	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateUniformBufferWriteDescriptors(IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<VulkanMaterial> material)
 	{
+        KB_PROFILE_FUNC()
+
 		size_t shader_hash = material->GetShader()->GetHash();
 		if (s_renderer_data->uniform_buffer_write_descriptor_cache.find(uniform_buffer_set.get()) != s_renderer_data->uniform_buffer_write_descriptor_cache.end())
 		{
@@ -627,6 +635,8 @@ namespace Kablunk
 
 	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateStorageBufferWriteDescriptors(IntrusiveRef<StorageBufferSet> storage_buffer_set, IntrusiveRef<VulkanMaterial> material)
 	{
+        KB_PROFILE_FUNC()
+
 		size_t shader_hash = material->GetShader()->GetHash();
 		if (s_renderer_data->storage_buffer_write_descriptor_cache.find(storage_buffer_set.get()) != s_renderer_data->storage_buffer_write_descriptor_cache.end())
 		{
@@ -670,6 +680,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::RT_UpdateMaterialForRendering(IntrusiveRef<VulkanMaterial> vulkan_material, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<StorageBufferSet> storage_buffer_set)
 	{
+        KB_PROFILE_FUNC()
+
 		if (uniform_buffer_set)
 		{
 			auto write_description = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
@@ -692,6 +704,8 @@ namespace Kablunk
 
 	VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info)
 	{
+        KB_PROFILE_FUNC()
+
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 		uint32_t buffer_index = render::rt_get_current_frame_index();
 		alloc_info.descriptorPool = s_renderer_data->descriptor_pools[buffer_index];
@@ -706,6 +720,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::BeginRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear)
 	{
+        KB_PROFILE_FUNC()
+
 		render::submit([render_command_buffer, render_pass, explicit_clear]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
@@ -823,6 +839,8 @@ namespace Kablunk
 
 	void VulkanRendererAPI::EndRenderPass(IntrusiveRef<RenderCommandBuffer> render_command_buffer)
 	{
+        KB_PROFILE_FUNC()
+
 		render::submit([render_command_buffer]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();

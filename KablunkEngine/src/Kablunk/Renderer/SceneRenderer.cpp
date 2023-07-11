@@ -165,6 +165,8 @@ namespace Kablunk
 
 	void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 	{
+        KB_PROFILE_FUNC()
+
 		KB_CORE_ASSERT(m_context, "No scene context set!");
 		KB_CORE_ASSERT(!m_active, "Already active!");
 		m_active = true;
@@ -242,6 +244,8 @@ namespace Kablunk
 
 	void SceneRenderer::end_scene()
 	{
+        KB_PROFILE_FUNC()
+
 		if (m_use_threads)
 		{
 			IntrusiveRef<SceneRenderer> instance = this;
@@ -294,6 +298,8 @@ namespace Kablunk
 
 	IntrusiveRef<Image2D> SceneRenderer::get_final_render_pass_image()
 	{
+        KB_PROFILE_FUNC()
+
 		if (!m_resources_created)
 			return nullptr;
 
@@ -303,6 +309,8 @@ namespace Kablunk
 
 	void SceneRenderer::OnImGuiRender()
 	{
+        KB_PROFILE_FUNC()
+
 		ImGui::Begin("Render Statistics");
 
 		uint32_t current_frame_index = render::rt_get_current_frame_index();
@@ -317,6 +325,8 @@ namespace Kablunk
 
 	void SceneRenderer::wait_for_threads()
 	{
+        KB_PROFILE_FUNC()
+
 		for (auto& thread : s_thread_pool)
 			thread.join();
 
@@ -330,6 +340,8 @@ namespace Kablunk
 
 	void SceneRenderer::flush_draw_list()
 	{
+        KB_PROFILE_FUNC()
+
 		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
@@ -427,6 +439,8 @@ namespace Kablunk
 
 	void SceneRenderer::geometry_pass()
 	{
+        KB_PROFILE_FUNC()
+
 		m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
@@ -461,6 +475,8 @@ namespace Kablunk
 
 	void SceneRenderer::composite_pass()
 	{
+        KB_PROFILE_FUNC()
+
 		m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 

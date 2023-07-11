@@ -228,9 +228,8 @@ namespace Kablunk
 			// poll events on main thread
 			m_window->PollEvents();
 
-			m_render_thread.next_frame();
-
-			m_render_thread.kick();
+            m_render_thread.next_frame();
+            m_render_thread.kick();
 
 			if (!m_minimized)
 			{
@@ -242,9 +241,9 @@ namespace Kablunk
 
 				render::begin_frame();
 				{
-                    KB_PROFILE_SCOPE_DYNAMIC("Application::Run() -- layer->OnUpdate()")
-						for (Layer* layer : m_layer_stack)
-							layer->OnUpdate(m_timestep);
+                    KB_PROFILE_SCOPE_DYNAMIC("Application::Run() layer stack OnUpdate()")
+					for (Layer* layer : m_layer_stack)
+						layer->OnUpdate(m_timestep);
 				}
 
 				if (m_specification.Enable_imgui)

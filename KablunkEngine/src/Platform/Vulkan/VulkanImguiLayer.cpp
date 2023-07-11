@@ -182,15 +182,33 @@ namespace Kablunk
 
 	void VulkanImGuiLayer::Begin()
 	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+        KB_PROFILE_FUNC();
 
-		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanImguiLayer::Begin(): ImGui_ImplVulkanNewFrame()");
+		    ImGui_ImplVulkan_NewFrame();
+        }
+
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanImguiLayer::Begin(): ImGui_ImplGlfw_NewFrame()");
+		    ImGui_ImplGlfw_NewFrame();
+        }
+
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanImguiLayer::Begin(): ImGui::NewFrame()");
+		    ImGui::NewFrame();
+        }
+
+        {
+            KB_PROFILE_SCOPE_DYNAMIC("VulkanImguiLayer::Begin(): ImGuizmo::NewFrame()");
+		    ImGuizmo::BeginFrame();
+        }
 	}
 
 	void VulkanImGuiLayer::End()
 	{
+        KB_PROFILE_FUNC();
+
 		ImGui::Render();
 
 		VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();

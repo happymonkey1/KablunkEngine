@@ -239,6 +239,8 @@ namespace Kablunk {
 
 	void WindowsWindow::PollEvents()
 	{
+        KB_PROFILE_FUNC();
+
 		glfwPollEvents();
 	}
 
