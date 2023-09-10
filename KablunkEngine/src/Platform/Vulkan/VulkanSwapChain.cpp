@@ -343,7 +343,7 @@ void VulkanSwapChain::BeginFrame()
 	// execute resource release queue
 
 	auto& queue = render::get_render_resource_release_queue(m_current_buffer_index);
-	queue.Execute();
+	queue.execute();
 
 	if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");

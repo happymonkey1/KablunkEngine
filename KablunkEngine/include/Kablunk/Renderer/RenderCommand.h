@@ -1,6 +1,6 @@
 #pragma once
 #include "Kablunk/Renderer/RendererAPI.h"
-#include "Kablunk/Renderer/RenderCommandQueue.h"
+#include "Kablunk/Renderer/render_command_queue.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/Material.h"
 #include "Kablunk/Renderer/Pipeline.h"
@@ -54,9 +54,6 @@ inline void shutdown()
 {
 	KB_CORE_INFO("Renderer shutdown called!");
 	Singleton<Renderer>::get().shutdown();
-
-	KB_CORE_INFO("Shutting down render command queue!");
-	Singleton<RenderCommandQueue>::get().shutdown();
 }
 
 inline RendererAPI* get_renderer() {
@@ -372,12 +369,12 @@ uint32_t get_current_frame_index();
 // get current index into the frame being rendered by the swapchain (which owns the render thread)
 u32 rt_get_current_frame_index();
 
-inline RenderCommandQueue& get_render_resource_release_queue(uint32_t index)
+inline kb::render_command_queue& get_render_resource_release_queue(uint32_t index)
 {
 	return Singleton<Renderer>::get().get_resource_free_queue(index);
 }
 // #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
-inline RenderCommandQueue& get_render_command_queue()
+inline kb::render_command_queue& get_render_command_queue()
 {
 	return Singleton<Renderer>::get().get_render_command_queue();
 }
@@ -397,7 +394,7 @@ inline void submit(FuncT&& func)
 		p_func->~FuncT();
 	};
 
-	auto storage_buffer = get_render_command_queue().Allocate(render_cmd, sizeof(func));
+	auto storage_buffer = get_render_command_queue().allocate(render_cmd, sizeof(func));
 	new (storage_buffer) FuncT(std::forward<FuncT>(func));
 }
 
@@ -415,7 +412,7 @@ inline void submit_resource_free(FuncT&& func)
 	render::submit([render_cmd, func]()
 		{
 			const uint32_t index = rt_get_current_frame_index();
-			auto storage_buffer = get_render_resource_release_queue(index).Allocate(render_cmd, sizeof(func));
+			auto storage_buffer = get_render_resource_release_queue(index).allocate(render_cmd, sizeof(func));
 			new (storage_buffer) FuncT(std::forward<FuncT>((FuncT&&)func));
 		});
 }

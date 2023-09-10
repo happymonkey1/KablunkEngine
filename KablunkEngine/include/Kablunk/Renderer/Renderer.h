@@ -15,7 +15,7 @@
 #include "Kablunk/Renderer/Material.h"
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Core/RenderThread.h"
-#include "Kablunk/Renderer/RenderCommandQueue.h"
+#include "Kablunk/Renderer/render_command_queue.h"
 #include "Kablunk/Renderer/compute_pipeline.h"
 
 #include <glm/glm.hpp>
@@ -94,10 +94,9 @@ namespace Kablunk
 		// get the current render queue submission index
 		u32 get_render_command_queue_submission_index() const { return m_render_command_queue_submission_index; }
 		// get a mutable reference to a render command queue
-		RenderCommandQueue& get_render_command_queue() { return *m_command_queues[m_render_command_queue_submission_index]; }
+		kb::render_command_queue& get_render_command_queue() { return m_command_queues[m_render_command_queue_submission_index]; }
 		// get a mutable reference to a resource release queue
-		RenderCommandQueue& get_resource_free_queue(size_t index) { KB_CORE_ASSERT(index < s_resource_free_queue_size, "index out of bounds!"); return m_resource_free_queue[index]; }
-
+		kb::render_command_queue& get_resource_free_queue(size_t index) { KB_CORE_ASSERT(index < s_resource_free_queue_size, "index out of bounds!"); return m_resource_free_queue[index]; }
 
 		SINGLETON_GET_FUNC(Renderer);
 	private:
@@ -126,9 +125,9 @@ namespace Kablunk
 		constexpr static const u32 s_resource_free_queue_size = 3;
 
 		// resource freeing queues
-		RenderCommandQueue m_resource_free_queue[s_resource_free_queue_size]{};
+		kb::render_command_queue m_resource_free_queue[s_resource_free_queue_size]{};
 		// render command queues
-		RenderCommandQueue* m_command_queues[s_render_command_queue_size];
+		kb::render_command_queue m_command_queues[s_render_command_queue_size];
 
 		friend class EditorLayer;
 	};

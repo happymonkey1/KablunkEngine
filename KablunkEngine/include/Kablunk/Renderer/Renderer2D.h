@@ -135,18 +135,21 @@ struct renderer_2d_data_t
 	IntrusiveRef <Texture2D> white_texture;
 
 	// Quads
+    // base pointers act as a rudimentary, manually controlled ring buffer
 	std::vector<QuadVertex*> quad_vertex_buffer_base_ptrs;
 	QuadVertex* quad_vertex_buffer_ptr = nullptr;
 	uint32_t quad_count = 0;
 	uint32_t quad_index_count = 0;
 
 	// Circles
+    // base pointers act as a rudimentary, manually controlled ring buffer
 	std::vector<CircleVertex*> circle_vertex_buffer_base_ptrs;
 	CircleVertex* circle_vertex_buffer_ptr = nullptr;
 	uint32_t circle_count = 0;
 	uint32_t circle_index_count = 0;
 
 	// Lines
+    // base pointers act as a rudimentary, manually controlled ring buffer
 	std::vector<LineVertex*> line_vertex_buffer_base_ptrs;
 	LineVertex* line_vertex_buffer_ptr = nullptr;
 	uint32_t line_count = 0;
@@ -154,12 +157,14 @@ struct renderer_2d_data_t
 	float line_width = 1.0f;
 
 	// UI
+    // base pointers act as a rudimentary, manually controlled ring buffer
 	std::vector<UIQuadVertex*> ui_quad_vertex_buffer_base_ptrs;
 	UIQuadVertex* ui_quad_vertex_buffer_ptr = nullptr;
 	uint32_t ui_quad_count = 0;
 	uint32_t ui_quad_index_count = 0;
 
 	// text
+    // base pointers act as a rudimentary, manually controlled ring buffer
 	std::vector<text_vertex_t*> text_vertex_buffer_base_ptrs;
 	text_vertex_t* text_vertex_buffer_ptr = nullptr;
 	uint32_t text_count = 0;

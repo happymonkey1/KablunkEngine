@@ -142,7 +142,7 @@ namespace Kablunk
 		for (uint32_t i = 0; i < render::get_frames_in_flights(); ++i)
 		{
 			auto& queue = render::get_render_resource_release_queue(i);
-			queue.Execute();
+			queue.execute();
 		}
 
 		if (s_renderer_data)
@@ -582,8 +582,7 @@ namespace Kablunk
 	void VulkanRendererAPI::WaitAndRender()
 	{
 		KB_CORE_ASSERT(false, "deprecated")
-		RenderCommandQueue& command_queue = render::get_render_command_queue();
-		command_queue.Execute();
+		render::get_render_command_queue().execute();
 	}
 
 	const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateUniformBufferWriteDescriptors(IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<VulkanMaterial> material)

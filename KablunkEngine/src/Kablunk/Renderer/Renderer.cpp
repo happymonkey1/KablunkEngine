@@ -23,26 +23,25 @@ namespace Kablunk
 
 		// initialize render command queues
 		for (size_t i = 0; i < s_render_command_queue_size; ++i)
-			m_command_queues[i] = new RenderCommandQueue{};
+			m_command_queues[i] = kb::render_command_queue{};
 
 		m_shader_library = IntrusiveRef<ShaderLibrary>::Create();
 
 		// ==========
 		// 3d shaders
 		// ==========
-		render::get_shader_library()->Load("resources/shaders/Kablunk_diffuse_static.glsl");
-		render::get_shader_library()->Load("resources/shaders/scene_composite.glsl");
+        m_shader_library->Load("resources/shaders/Kablunk_diffuse_static.glsl");
+		m_shader_library->Load("resources/shaders/scene_composite.glsl");
 
 		// ==========
 		// 2d shaders
 		// ==========
-		render::get_shader_library()->Load("resources/shaders/Renderer2D_Circle.glsl");
-		render::get_shader_library()->Load("resources/shaders/Renderer2D_Quad.glsl");
-		render::get_shader_library()->Load("resources/shaders/Renderer2D_Line.glsl");
-		render::get_shader_library()->Load("resources/shaders/Renderer2D_UI.glsl");
-		render::get_shader_library()->Load("resources/shaders/Renderer2D_Text.glsl");
+        m_shader_library->Load("resources/shaders/Renderer2D_Circle.glsl");
+        m_shader_library->Load("resources/shaders/Renderer2D_Quad.glsl");
+        m_shader_library->Load("resources/shaders/Renderer2D_Line.glsl");
+        m_shader_library->Load("resources/shaders/Renderer2D_UI.glsl");
+        m_shader_library->Load("resources/shaders/Renderer2D_Text.glsl");
 		// ==========
-
 
 		// compile shaders that were submitted
 		Application::Get().get_render_thread().pump();
@@ -81,14 +80,11 @@ namespace Kablunk
 		// shutdown vulkan context
 		//VulkanContext::Get()->Shutdown();
 
+        
 		if (m_command_queues)
 		{
 			for (size_t i = 0; i < s_render_command_queue_size; ++i)
-			{
-				KB_CORE_ASSERT(m_command_queues[i], "command queue null?");
-				delete m_command_queues[i];
-			}
-			//delete[] m_command_queues;
+			    KB_CORE_ASSERT(m_command_queues[i].is_empty(), "[renderer]: renderer shutting down but command_queue[{}] is not empty?", i)
 		}
 
 		delete m_renderer_api;
@@ -156,7 +152,7 @@ namespace Kablunk
 			rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
 		}
 		// execute command queue
-		m_command_queues[get_render_command_queue_index()]->Execute();
+		m_command_queues[get_render_command_queue_index()].execute();
 		rendering_thread->set(thread_state_t::idle);
 	}
 
