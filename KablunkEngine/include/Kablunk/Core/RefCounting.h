@@ -227,6 +227,7 @@ public:
 	T& operator*() { return *m_ptr; }
 	operator bool() const { return Valid(); }
 
+    // get the raw pointer
 	T* get() { return m_ptr; }
 private:
 	T* m_ptr = nullptr;
@@ -239,6 +240,10 @@ private:
 // intrusive ref counted pointer
 template <typename T>
 using ref = IntrusiveRef<T>;
+
+// view for a intrusive ref counted pointer
+template <typename T>
+using weak_ref = WeakRef<T>;
 
 // ==============
 }

@@ -7,6 +7,8 @@
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Renderer/EditorCamera.h"
+
+
 //#include "Kablunk/Renderer/SceneRenderer.h"
 
 class b2World;
@@ -16,6 +18,8 @@ namespace Kablunk
 	class Entity;
 	class SceneRenderer;
 	struct TransformComponent;
+
+    class Renderer2D;
 	
 	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
 	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
@@ -59,10 +63,10 @@ namespace Kablunk
 		void OnStopRuntime();
 
 		void OnUpdateRuntime(Timestep ts);
-		void OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* camera = nullptr);
+		void OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* camera = nullptr);
 		void OnEventRuntime(Event& e);
 		void OnUpdateEditor(Timestep ts);
-		void OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera);
+		void OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera);
 		void OnEventEditor(Event& e);
 		void OnViewportResize(uint32_t x, uint32_t y);
 

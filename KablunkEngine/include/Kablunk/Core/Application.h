@@ -84,6 +84,11 @@ namespace Kablunk {
 
 		render_thread& get_render_thread() { return m_render_thread; }
 		
+        // get a mutable reference to the primary renderer2d
+        ref<Renderer2D> get_renderer_2d() { return m_renderer_2d; }
+        // get an immutable reference to the primary renderer2d
+        const ref<Renderer2D>& get_renderer_2d() const { return m_renderer_2d; }
+
 		// toggle between fullscreen and windowed mode
 		void toggle_fullscreen();
 		// toggle debug statistics

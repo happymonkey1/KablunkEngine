@@ -59,8 +59,6 @@ namespace Kablunk
 
 		uint32_t GetCurrentFrameIndex();
 
-		IntrusiveRef<Texture2D> GetWhiteTexture();
-
 		IntrusiveRef<ShaderLibrary> GetShaderLibrary();
 		IntrusiveRef<Shader> GetShader(const std::string& name);
 

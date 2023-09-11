@@ -7,6 +7,8 @@
 #include "Kablunk/Renderer/Font/FontManager.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
+#include "Kablunk/Core/Application.h"
+
 #include <yaml-cpp/yaml.h>
 
 namespace Kablunk::asset
@@ -37,7 +39,8 @@ namespace Kablunk::asset
             ref<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
 
             // load into font registry
-            render2d::get_font_manager().add_font_file_to_library(default_font_asset);
+            Application::Get().get_renderer_2d()->get_font_manager().add_font_file_to_library(default_font_asset);
+            //render2d::get_font_manager().add_font_file_to_library(default_font_asset);
         }
 
 		reload_assets();

@@ -12,6 +12,9 @@
 
 namespace Kablunk
 {
+    // forward declaration
+    class Renderer2D;
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -66,6 +69,7 @@ namespace Kablunk
 		IntrusiveRef<Scene> m_runtime_scene;
 
 		IntrusiveRef<SceneRenderer> m_viewport_renderer;
+        ref<Renderer2D> m_renderer_2d;
 		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;

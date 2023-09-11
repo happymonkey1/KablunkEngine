@@ -13,6 +13,9 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+// #TODO refactor Application singleton reference and remove
+#include "Kablunk/Core/Application.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -195,7 +198,7 @@ namespace Kablunk
 			
 		}
 
-		IntrusiveRef<Texture2D> white_texture = render::get_white_texture();
+		IntrusiveRef<Texture2D> white_texture = Application::Get().get_renderer_2d()->get_white_texture();
 		if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 		{
 			m_textures.resize(scene->mNumMaterials);

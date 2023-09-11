@@ -352,11 +352,6 @@ inline void set_line_width(IntrusiveRef<RenderCommandBuffer> render_command_buff
 	Singleton<Renderer>::get().get_renderer()->SetLineWidth(render_command_buffer, line_width);
 }
 
-inline IntrusiveRef<Texture2D> get_white_texture()
-{
-	return Singleton<Renderer>::get().GetWhiteTexture();
-}
-
 // get the number of frames in flight that will be rendered
 inline uint32_t get_frames_in_flights()
 {

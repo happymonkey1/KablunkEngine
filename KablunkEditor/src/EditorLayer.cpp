@@ -22,7 +22,7 @@
 
 #include "Kablunk/Plugin/PluginManager.h"
 
-#include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
@@ -39,6 +39,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
+// #TODO refactor application singleton reference and remove
+#include "Kablunk/Core/Application.h"
 
 
 #define DISABLE_NATIVE_SCRIPTING 0
@@ -57,8 +59,6 @@ namespace Kablunk
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		
-
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
 		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
@@ -81,6 +81,8 @@ namespace Kablunk
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
 		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
+        m_renderer_2d = Application::Get().get_renderer_2d();
+
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		NativeScriptEngine::get().set_scene(m_active_scene);
 
@@ -93,7 +95,7 @@ namespace Kablunk
 
 	void EditorLayer::OnDetach()
 	{
-
+        KB_CLIENT_INFO("detaching EditorLayer!");
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
@@ -122,7 +124,7 @@ namespace Kablunk
 		//   Render
 		// ==========
 
-		render2d::reset_stats();
+		m_renderer_2d->reset_stats();
 
 
 		switch (m_scene_state)
@@ -132,20 +134,20 @@ namespace Kablunk
 			m_editor_camera.OnUpdate(ts);
 
 			m_active_scene->OnUpdateEditor(ts);
-			m_active_scene->OnRenderEditor(m_viewport_renderer, m_editor_camera);
+			m_active_scene->OnRenderEditor(m_viewport_renderer, m_renderer_2d, m_editor_camera);
 
 			//ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
 			m_active_scene->OnUpdateRuntime(ts);
-			m_active_scene->OnRenderRuntime(m_viewport_renderer);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, m_renderer_2d);
 
 			break;
 		case SceneState::Pause:
 
 			m_editor_camera.OnUpdate(ts);
-			m_active_scene->OnRenderRuntime(m_viewport_renderer, &m_editor_camera);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, m_renderer_2d, &m_editor_camera);
 
 			break;
 		}
@@ -236,7 +238,7 @@ namespace Kablunk
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			render2d::renderer_2d_stats_t stats = render2d::get_stats();
+			render2d::renderer_2d_stats_t stats = m_renderer_2d->get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -1338,8 +1340,8 @@ namespace Kablunk
 
 			// #TODO move to scene renderer
 
-			render2d::begin_scene(*camera, transform);
-			render2d::set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
+			m_renderer_2d->begin_scene(*camera, transform);
+			m_renderer_2d->set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
@@ -1354,7 +1356,7 @@ namespace Kablunk
 					auto scale = glm::vec2{ transform.Scale.x, transform.Scale.y } *bc2D_comp.Size;
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					render2d::draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
+					m_renderer_2d->draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
 
 				}
 			}
@@ -1368,12 +1370,12 @@ namespace Kablunk
 					auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
 
 					auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					render2d::draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
+					m_renderer_2d->draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
 
 
-			render2d::end_scene();
+			m_renderer_2d->end_scene();
 			
 		}
 	}

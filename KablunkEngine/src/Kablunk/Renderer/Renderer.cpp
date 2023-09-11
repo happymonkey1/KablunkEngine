@@ -73,7 +73,7 @@ namespace Kablunk
 		
 		m_shader_library.reset();
 
-		render2d::shutdown();
+		// render2d::shutdown();
 
 		m_renderer_api->Shutdown();
 
@@ -89,11 +89,6 @@ namespace Kablunk
 		}
 
 		delete m_renderer_api;
-	}
-
-	IntrusiveRef<Texture2D> Renderer::GetWhiteTexture()
-	{
-		return render2d::get_white_texture();
 	}
 
 	IntrusiveRef<ShaderLibrary> Renderer::GetShaderLibrary()

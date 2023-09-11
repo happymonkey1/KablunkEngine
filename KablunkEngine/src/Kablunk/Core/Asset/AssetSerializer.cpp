@@ -4,6 +4,7 @@
 #include "Kablunk/Asset/AssetManager.h"
 
 #include "Kablunk/Core/Singleton.h"
+#include "Kablunk/Core/Application.h"
 
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
@@ -70,12 +71,13 @@ void font_asset_serializer::serialize(const AssetMetadata& metadata, IntrusiveRe
 bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
 {
     render::font_asset_create_info font_create_info{
-        Singleton<AssetManager>::get().get_absolute_path(metadata).string(),    // path to font asset
-        16ull,                                                                  // font point
-        render2d::get_font_manager().get_ft_engine(),                           // underlying font engine
-        0ull,                                                                   // font face index to load
-        128ull,                                                                 // number of glyphs to load from the font
-        true                                                                    // load font into memory
+        Singleton<AssetManager>::get().get_absolute_path(metadata).string(),        // path to font asset
+        16ull,                                                                      // font point
+        // #TODO get rid of singleton reference
+        Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),   // underlying font engine
+        0ull,                                                                       // font face index to load
+        128ull,                                                                     // number of glyphs to load from the font
+        true                                                                        // load font into memory
     };
 
     asset = render::font_asset_t::create(font_create_info);

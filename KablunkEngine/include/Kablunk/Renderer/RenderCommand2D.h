@@ -2,6 +2,10 @@
 #ifndef KABLUNK_RENDERER_RENDER_COMMAND_2D_H
 #define KABLUNK_RENDERER_RENDER_COMMAND_2D_H
 
+
+// singleton renderer2d "render commands" deprecated, and moved to a dependency injection model
+#if 0
+
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Scene/Entity.h"
@@ -122,5 +126,7 @@ namespace Kablunk::render2d
 	// get the 2D font manager
 	static inline render::font_manager& get_font_manager() { return Singleton<Renderer2D>::get().get_font_manager(); }
 }
+
+#endif
 
 #endif

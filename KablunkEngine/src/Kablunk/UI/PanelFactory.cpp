@@ -3,9 +3,11 @@
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
-
 #include "Kablunk/UI/Panel.h"
 #include "Kablunk/UI/ImageButtonPanel.h"
+
+// #TODO remove when singleton reference to application is refactored
+#include "Kablunk/Core/Application.h"
 
 namespace Kablunk::ui
 {
@@ -18,7 +20,10 @@ namespace Kablunk::ui
 			case panel_type_t::Blank:		panel = new Panel{ panel_create_info.position, panel_create_info.size }; break;
 			case panel_type_t::ImageButton:	
 			{
-				ref<Texture2D> image = panel_create_info.image ? panel_create_info.image : render2d::get_white_texture();
+				ref<Texture2D> image = panel_create_info.image ? 
+                    panel_create_info.image : 
+                    Application::Get().get_renderer_2d()->get_white_texture();
+
 				panel = new ImageButtonPanel{ panel_create_info.position, panel_create_info.size, image };
 				break;
 			}

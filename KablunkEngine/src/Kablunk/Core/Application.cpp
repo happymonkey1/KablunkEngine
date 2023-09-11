@@ -73,10 +73,8 @@ namespace Kablunk
 		// start rendering render one frame
 		m_render_thread.pump();
 
-        // #TODO deprecate
-		render2d::init();
-
         m_renderer_2d = ref<Renderer2D>::Create();
+        m_renderer_2d->init();
 
 		m_render_thread.pump();
 		
@@ -124,6 +122,7 @@ namespace Kablunk
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
+        m_renderer_2d.reset();
 		render::shutdown();
 
 

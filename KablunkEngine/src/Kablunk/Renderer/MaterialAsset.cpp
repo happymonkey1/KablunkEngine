@@ -4,6 +4,9 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
+// #TODO remove when Application singleton is refactored
+#include "Kablunk/Core/Application.h"
+
 namespace Kablunk
 {
 
@@ -31,10 +34,12 @@ namespace Kablunk
 		SetRoughness(0.4f);
 
 		// Maps
-		SetAlbedoMap(render::get_white_texture());
-		SetNormalMap(render::get_white_texture());
-		SetMetalnessMap(render::get_white_texture());
-		SetRoughnessMap(render::get_white_texture());
+        // #TODO refactor application singleton reference and remove
+        auto texture = Application::Get().get_renderer_2d()->get_white_texture();
+		SetAlbedoMap(texture);
+		SetNormalMap(texture);
+		SetMetalnessMap(texture);
+		SetRoughnessMap(texture);
 
 	}
 
@@ -100,7 +105,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearAlbedoMap()
 	{
-		m_material->Set(s_albedo_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetNormalMap()
@@ -125,7 +130,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearNormalMap()
 	{
-		m_material->Set(s_normal_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetMetalnessMap()
@@ -140,7 +145,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearMetalnessMap()
 	{
-		m_material->Set(s_metalness_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
 	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetRoughnessMap()
@@ -155,7 +160,7 @@ namespace Kablunk
 
 	void MaterialAsset::ClearRoughnessMap()
 	{
-		m_material->Set(s_roughness_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_roughness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
 	MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)

@@ -5,6 +5,8 @@
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
+#include "Kablunk/Scene/Entity.h"
+
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include "Kablunk/UI/IPanel.h"
@@ -318,7 +320,8 @@ namespace Kablunk
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
-		render2d::on_imgui_render();
+        // #TODO re-enable
+		// render2d::on_imgui_render();
 
 		ImGui::End();
 	}
@@ -368,6 +371,9 @@ namespace Kablunk
 
 	void SceneRenderer::flush_2d_draw_list()
 	{
+        // disabled when refactoring renderer2d singleton
+        // #TODO refactor
+#if 0
 		// 2d composite and ui pass
 		if (get_final_render_pass_image())
 		{
@@ -394,7 +400,7 @@ namespace Kablunk
 		}
 		else
 			KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
-		
+#endif
 
 		m_entity_list.clear();
 		m_ui_panels_list.clear();
@@ -429,9 +435,12 @@ namespace Kablunk
 
 	void SceneRenderer::two_dimensional_pass()
 	{
-
+        // disabled when refactoring renderer2d singleton
+        // #TODO refactor
+#if 0
 		for (Entity entity : m_entity_list)
 			render2d::draw_sprite(entity);
+#endif
 
 		// #TODO circles, lines, rectangles, text
 

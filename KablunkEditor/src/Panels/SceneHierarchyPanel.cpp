@@ -8,6 +8,9 @@
 
 #include "imgui/imgui_internal.h"
 
+// #TODO refactor application singleton and remove
+#include "Kablunk/Core/Application.h"
+
 #include <filesystem>
 
 #define DISABLE_NATIVE_SCRIPT 0
@@ -725,8 +728,9 @@ namespace Kablunk
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
+                const ref<Texture>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
                 ref<Texture> texture_asset = component.Texture != asset::null_asset_id ?
-                    asset::get_asset<Texture2D>(component.Texture) : render::get_white_texture();
+                    asset::get_asset<Texture2D>(component.Texture) : white_texture;
                 if (!texture_asset)
                 {
                     KB_CORE_ERROR(
@@ -734,7 +738,7 @@ namespace Kablunk
                         component.Texture
                     );
                     
-                    texture_asset = render::get_white_texture();
+                    texture_asset = white_texture;
                 }
 
 				if (UI::PropertyImageButton("Texture", texture_asset, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
