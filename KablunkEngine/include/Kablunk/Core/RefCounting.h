@@ -248,4 +248,20 @@ using weak_ref = WeakRef<T>;
 // ==============
 }
 
+// #TODO remove when "Kablunk" namespace usage above is deprecated
+namespace kb
+{ // start namespace kb
+// ==============
+//   type alias
+// ==============
+
+// intrusive ref counted pointer
+template <typename T>
+using ref = Kablunk::IntrusiveRef<T>;
+
+// view for a intrusive ref counted pointer
+template <typename T>
+using weak_ref = Kablunk::WeakRef<T>;
+} // end namespace kb
+
 #endif

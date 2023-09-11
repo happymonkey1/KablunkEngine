@@ -18,6 +18,7 @@
 
 namespace Kablunk
 {
+    class Renderer2D;
 
 	// forward declaration
 	namespace ui
@@ -74,7 +75,7 @@ namespace Kablunk
 		IntrusiveRef<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
 		IntrusiveRef<Image2D> get_final_render_pass_image();
 
-		void OnImGuiRender();
+		void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
 
 		static void wait_for_threads();
 

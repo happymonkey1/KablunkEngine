@@ -415,14 +415,11 @@ void VulkanSwapChain::Destroy()
 #endif
 	}
 
-	if (m_surface)
-	{
-		vkDestroySwapchainKHR(device, m_swapchain, nullptr);
-		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-	}
-
-	if (m_command_pool)
-		vkDestroyCommandPool(device, m_command_pool, nullptr);
+    if (m_command_pool)
+    {
+        vkDestroyCommandPool(device, m_command_pool, nullptr);
+        KB_CORE_INFO("[VulkanSwapChain]: destroyed command pool");
+    }
         
     // #TODO need to figure out why we crash here
     KB_CORE_WARN("[VulkanSwapChain]: not destroying render pass!");
@@ -443,8 +440,15 @@ void VulkanSwapChain::Destroy()
 	for (auto& fence : m_wait_fences)
 		vkDestroyFence(device, fence, nullptr);
 
+    if (m_surface)
+    {
+        vkDestroySwapchainKHR(device, m_swapchain, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+    }
+
 	m_swapchain = nullptr;
 	m_surface = nullptr;
+    m_instance = nullptr;
 }
 
 VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index)

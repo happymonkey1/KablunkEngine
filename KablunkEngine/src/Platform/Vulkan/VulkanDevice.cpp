@@ -355,8 +355,10 @@ namespace Kablunk
 
 		m_command_pools.clear();
 
+        
 		vkDeviceWaitIdle(m_vk_device);
 		vkDestroyDevice(m_vk_device, nullptr);
+        KB_CORE_INFO("[VulkanDevice]: destroyed vk device!");
 
 		m_destroyed = true;
 	}

@@ -227,7 +227,7 @@ public:
 	void end_scene();
 	void flush();
 
-	void on_imgui_render();
+	void on_imgui_render() const;
 
 	IntrusiveRef<RenderPass> get_target_render_pass();
 	void set_target_render_pass(IntrusiveRef<RenderPass> render_pass);

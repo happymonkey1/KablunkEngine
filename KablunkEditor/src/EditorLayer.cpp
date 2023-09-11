@@ -399,7 +399,7 @@ namespace Kablunk
 		UI_Toolbar();
 		UI_KablunkInstallPopup();
 
-		m_viewport_renderer->OnImGuiRender();
+		m_viewport_renderer->on_imgui_render(m_renderer_2d);
 
 		if (m_show_create_new_project_popup)
 		{

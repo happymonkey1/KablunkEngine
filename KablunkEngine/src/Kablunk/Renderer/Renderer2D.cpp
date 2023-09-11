@@ -500,7 +500,7 @@ void Renderer2D::flush()
 	m_renderer_data->Stats.batch_count++;
 }
 
-void Renderer2D::on_imgui_render()
+void Renderer2D::on_imgui_render() const
 {
 	uint32_t current_frame_index = render::get_current_frame_index();
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data->render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data->gpu_time_query.renderer_2D_query)));

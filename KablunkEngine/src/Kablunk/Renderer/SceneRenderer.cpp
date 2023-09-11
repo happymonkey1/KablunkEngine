@@ -3,7 +3,7 @@
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 
 #include "Kablunk/Scene/Entity.h"
 
@@ -309,7 +309,7 @@ namespace Kablunk
 		return image;
 	}
 
-	void SceneRenderer::OnImGuiRender()
+	void SceneRenderer::on_imgui_render(const ref<Renderer2D>& p_renderer_2d)
 	{
         KB_PROFILE_FUNC()
 
@@ -320,8 +320,7 @@ namespace Kablunk
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
-        // #TODO re-enable
-		// render2d::on_imgui_render();
+        p_renderer_2d->on_imgui_render();
 
 		ImGui::End();
 	}
