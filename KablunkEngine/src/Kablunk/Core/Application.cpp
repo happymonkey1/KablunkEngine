@@ -93,7 +93,7 @@ namespace kb
 		}
 
 		PluginManager::get().init();
-		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
+		//CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
 
 
 		// #TODO should be based on projects later
@@ -111,7 +111,7 @@ namespace kb
 			return;
 		
 		m_thread_pool.Shutdown();
-		CSharpScriptEngine::Shutdown();
+		//CSharpScriptEngine::Shutdown();
 
 		// clear the framebuffer pool
 		FramebufferPool::Get()->GetAll().clear();
