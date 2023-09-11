@@ -51,6 +51,13 @@ namespace kb
 		LightEnvironmentData light_environment;
 	};
 
+    struct PointLightUB
+    {
+        static constexpr const size_t k_point_light_buffer_size = 1024ull;
+        uint32_t count{ 0 };
+        glm::vec3 padding{};
+        PointLight point_lights[1024]{};
+    };
 
 	class SceneRenderer : public RefCounted
 	{
@@ -129,12 +136,7 @@ namespace kb
 		ref<UniformBufferSet> m_uniform_buffer_set;
 		ref<StorageBufferSet> m_storage_buffer_set;
 
-		struct PointLightUB
-		{
-			uint32_t count{ 0 };
-			glm::vec3 padding{};
-			PointLight point_lights[1024]{};
-		} m_point_lights_ub;
+        PointLightUB* m_point_lights_ub = new PointLightUB{};
 
 		GPUTimeQueryIndices m_gpu_time_query_indices;
 

@@ -29,7 +29,8 @@ namespace kb
 
 	SceneRenderer::~SceneRenderer()
 	{
-
+        if (m_point_lights_ub)
+            delete m_point_lights_ub;
 	}
 
 	void SceneRenderer::init()
@@ -193,8 +194,7 @@ namespace kb
 				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
-		// Update uniform buffers
-		PointLightUB& point_light_ub_data = m_point_lights_ub;
+		
 
 		auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
@@ -232,14 +232,16 @@ namespace kb
 		// Submit point lights uniform buffer
 		const auto light_enviornment_copy = m_scene_data.light_environment;
 		const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
-		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
-		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
-		render::submit([instance, &point_light_ub_data]() mutable
+
+		m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
+		std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
+
+		render::submit([instance, point_lights = m_point_lights_ub]() mutable
 			{
 				const uint32_t buffer_index = render::rt_get_current_frame_index();
 				ref<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
-				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
+				buffer_set->RT_SetData(point_lights, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count));
 			}
 		);
 	}
