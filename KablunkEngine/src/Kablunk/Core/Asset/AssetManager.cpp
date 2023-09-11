@@ -28,6 +28,7 @@ namespace Kablunk::asset
 		// #TODO filesystem watcher
 
         // load engine default assets
+        // #TODO bug: roboto font is always loaded, filling asset registry with duplicates since it is not located in "asset" folder
         {
             // import default font asset metadata
             auto default_font_asset_id = import_engine_asset_metadata("fonts/roboto/Roboto-Regular.ttf");
@@ -56,9 +57,11 @@ namespace Kablunk::asset
 	}
 
 	const AssetMetadata& AssetManager::get_metadata(const std::filesystem::path& filepath) const
-	{
+    {
+        auto relative_path = get_relative_path(filepath);
+
 		for (const auto& [id, metadata] : m_asset_registry)
-			if (metadata.filepath == filepath)
+			if (metadata.filepath == relative_path)
 				return metadata;
 #ifdef KB_EXCEPTION
 		throw std::out_of_range{ "filepath not in registry" };
@@ -230,6 +233,8 @@ namespace Kablunk::asset
 				KB_CORE_WARN("[AssetManager] Asset '{}' has null asset id!", filepath);
 				continue;
 			}
+
+            m_asset_registry[metadata.id] = metadata;
 
 			KB_CORE_INFO("[AssetManager] Loaded {} assets!", m_asset_registry.size());
 		}

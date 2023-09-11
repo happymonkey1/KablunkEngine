@@ -15,7 +15,7 @@ namespace Kablunk
 		m_handle = LoadLibraryA(dll_path_as_str.c_str());
 
 		if (!is_loaded())
-			KB_CORE_ASSERT("failed to load dll '{}'", dll_name);
+			KB_CORE_ASSERT(false, "failed to load dll '{}'", dll_name);
 
 		KB_CORE_INFO("Loaded dll '{}'", dll_name);
 	}

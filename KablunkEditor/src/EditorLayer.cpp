@@ -1131,7 +1131,7 @@ namespace Kablunk
             // copy engine resources over
             {
                 // copy fonts
-                std::filesystem::copy(resources_path / "fonts", project_path / "resources" / "fonts");
+                std::filesystem::copy(resources_path / "fonts", project_path / "resources" / "fonts", std::filesystem::copy_options::recursive);
                 // copy shaders
                 std::filesystem::copy(resources_path / "shaders", project_path / "resources" / "shaders");
             }

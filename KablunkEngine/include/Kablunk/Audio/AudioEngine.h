@@ -2,10 +2,10 @@
 #ifndef KABLUNK_AUDIO_AUDIO_ENGINE_H
 #define KABLUNK_AUDIO_AUDIO_ENGINE_H
 
-#include "Kablunk/Audio/AudioCore.h"
 #include "Kablunk/Core/Singleton.h"
-
 #include "Kablunk/Asset/Asset.h"
+#include "Kablunk/Audio/AudioAsset.h"
+
 
 #pragma warning(push, 0)
 #include <miniaudio.h>

@@ -725,16 +725,15 @@ namespace Kablunk
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-                ref<Texture> texture_asset = asset::get_asset<Texture2D>(component.Texture);
+                ref<Texture> texture_asset = component.Texture != asset::null_asset_id ?
+                    asset::get_asset<Texture2D>(component.Texture) : render::get_white_texture();
                 if (!texture_asset)
                 {
-                    if (component.Texture != asset::null_asset_id)
-                    {
-                        KB_CORE_ERROR(
-                            "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
-                            component.Texture
-                        );
-                    }
+                    KB_CORE_ERROR(
+                        "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
+                        component.Texture
+                    );
+                    
                     texture_asset = render::get_white_texture();
                 }
 
