@@ -198,7 +198,7 @@ namespace Kablunk
 			
 		}
 
-		IntrusiveRef<Texture2D> white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+		ref<Texture2D> white_texture = Application::Get().get_renderer_2d()->get_white_texture();
 		if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 		{
 			m_textures.resize(scene->mNumMaterials);
@@ -568,36 +568,36 @@ namespace Kablunk
 			TraverseNodes(root->mChildren[i], transform, level + 1);
 	}
 
-	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data)
+	Mesh::Mesh(ref<MeshData> mesh_data)
 		: m_mesh_data{ mesh_data }
 	{
 		SetSubmeshes({});
 
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
-		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		m_material_table = ref<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), ref<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
-	Mesh::Mesh(const IntrusiveRef<Mesh>& other)
+	Mesh::Mesh(const ref<Mesh>& other)
 		: m_mesh_data{ other->m_mesh_data }
 	{
 		SetSubmeshes({});
 
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
-		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		m_material_table = ref<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), ref<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
-	Mesh::Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
+	Mesh::Mesh(ref<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
 	{
 		SetSubmeshes(submeshes);
 
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
-		m_material_table = IntrusiveRef<MaterialTable>::Create(mesh_materials.size());
+		m_material_table = ref<MaterialTable>::Create(mesh_materials.size());
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
-			m_material_table->SetMaterial(static_cast<uint32_t>(i), IntrusiveRef<MaterialAsset>::Create(mesh_materials[i]));
+			m_material_table->SetMaterial(static_cast<uint32_t>(i), ref<MaterialAsset>::Create(mesh_materials[i]));
 	}
 
 	Mesh::~Mesh()
@@ -623,7 +623,7 @@ namespace Kablunk
 		}
 	}
 
-	IntrusiveRef<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
+	ref<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	{
 		std::vector<Vertex> verts;
 		verts.resize(8);
@@ -702,6 +702,6 @@ namespace Kablunk
 		indices[10] = { 3, 2, 6 };
 		indices[11] = { 6, 7, 3 };
 
-		return IntrusiveRef<Mesh>::Create(IntrusiveRef<MeshData>::Create(verts, indices, glm::mat4{ 1.0f }));
+		return ref<Mesh>::Create(ref<MeshData>::Create(verts, indices, glm::mat4{ 1.0f }));
 	}
 }

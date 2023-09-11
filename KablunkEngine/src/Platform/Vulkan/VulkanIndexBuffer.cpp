@@ -22,7 +22,7 @@ namespace Kablunk
 	{
 		m_local_data = Buffer::Copy(data, size);
 		KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
-		IntrusiveRef<VulkanIndexBuffer> instance = this;
+		ref<VulkanIndexBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();

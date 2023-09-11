@@ -75,7 +75,7 @@ namespace Kablunk
 	class VulkanDevice : public RefCounted 
 	{
 	public:
-		VulkanDevice(const IntrusiveRef<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
+		VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
 		~VulkanDevice();
 
 		void Destroy();
@@ -89,7 +89,7 @@ namespace Kablunk
 
 		VkCommandBuffer CreateSecondaryCommandBuffer();
 
-		IntrusiveRef<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
+		ref<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 		VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
 		VkDevice GetVkDevice() { return m_vk_device; }
     private:
@@ -97,7 +97,7 @@ namespace Kablunk
         ref<kb::vk::command_pool> get_or_create_thread_local_command_pool();
 	private:
 		VkDevice m_vk_device;
-		IntrusiveRef<VulkanPhysicalDevice> m_physical_device;
+		ref<VulkanPhysicalDevice> m_physical_device;
 		VkPhysicalDeviceFeatures m_enabled_features;
 
 		VkQueue m_vk_graphics_queue;

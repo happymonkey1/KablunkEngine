@@ -24,10 +24,10 @@ namespace Kablunk
 
 	struct PipelineSpecification
 	{
-		IntrusiveRef<Shader> shader;
+		ref<Shader> shader;
 		BufferLayout layout;
 		BufferLayout instance_layout;
-		IntrusiveRef<RenderPass> render_pass;
+		ref<RenderPass> render_pass;
 		PrimitiveTopology topology = PrimitiveTopology::Triangles;
 		bool backface_culling = true;
 		bool depth_test = true;
@@ -46,9 +46,9 @@ namespace Kablunk
 		virtual const PipelineSpecification& GetSpecification() const = 0;
 
 		virtual void Invalidate() = 0;
-		virtual void SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) = 0;
+		virtual void SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) = 0;
 
-		static IntrusiveRef<Pipeline> Create(const PipelineSpecification& specification);
+		static ref<Pipeline> Create(const PipelineSpecification& specification);
 	};
 }
 

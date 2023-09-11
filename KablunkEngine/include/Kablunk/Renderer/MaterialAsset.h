@@ -15,7 +15,7 @@ namespace Kablunk
 	{
 	public:
 		MaterialAsset();
-		MaterialAsset(IntrusiveRef<Material> material);
+		MaterialAsset(ref<Material> material);
 		~MaterialAsset();
 
 		glm::vec3& GetAlbedoColor();
@@ -30,55 +30,55 @@ namespace Kablunk
 		float GetEmission();
 		void SetEmission(float emission);
 
-		IntrusiveRef<Texture2D> GetAlbedoMap();
-		void SetAlbedoMap(IntrusiveRef<Texture2D> texture);
+		ref<Texture2D> GetAlbedoMap();
+		void SetAlbedoMap(ref<Texture2D> texture);
 		void ClearAlbedoMap();
 
-		IntrusiveRef<Texture2D> GetNormalMap();
-		void SetNormalMap(IntrusiveRef<Texture2D> texture);
+		ref<Texture2D> GetNormalMap();
+		void SetNormalMap(ref<Texture2D> texture);
 		bool IsUsingNormalMap();
 		void SetUseNormalMap(bool use_normal);
 		void ClearNormalMap();
 
-		IntrusiveRef<Texture2D> GetMetalnessMap();
-		void SetMetalnessMap(IntrusiveRef<Texture2D> texture);
+		ref<Texture2D> GetMetalnessMap();
+		void SetMetalnessMap(ref<Texture2D> texture);
 		void ClearMetalnessMap();
 
-		IntrusiveRef<Texture2D> GetRoughnessMap();
-		void SetRoughnessMap(IntrusiveRef<Texture2D> texture);
+		ref<Texture2D> GetRoughnessMap();
+		void SetRoughnessMap(ref<Texture2D> texture);
 		void ClearRoughnessMap();
 
-		IntrusiveRef<Material> GetMaterial() const { return m_material; }
+		ref<Material> GetMaterial() const { return m_material; }
 	private:
-		IntrusiveRef<Material> m_material;
+		ref<Material> m_material;
 	};
 
 	class MaterialTable : public RefCounted
 	{
 	public:
 		MaterialTable(uint32_t material_count = 1);
-		MaterialTable(IntrusiveRef<MaterialTable> other);
+		MaterialTable(ref<MaterialTable> other);
 		~MaterialTable() = default;
 
 		bool HasMaterial(uint32_t material_index) const { return m_materials.find(material_index) != m_materials.end(); }
-		void SetMaterial(uint32_t index, IntrusiveRef<MaterialAsset> material);
+		void SetMaterial(uint32_t index, ref<MaterialAsset> material);
 		void ClearMaterial(uint32_t index);
 
-		IntrusiveRef<MaterialAsset> GetMaterial(uint32_t index) const
+		ref<MaterialAsset> GetMaterial(uint32_t index) const
 		{
 			KB_CORE_ASSERT(HasMaterial(index), "Material not found in map!");
 			return m_materials.at(index);
 		}
 
-		std::map<uint32_t, IntrusiveRef<MaterialAsset>>& GetMaterials() { return m_materials; }
-		const std::map<uint32_t, IntrusiveRef<MaterialAsset>>& GetMaterials() const { return m_materials; }
+		std::map<uint32_t, ref<MaterialAsset>>& GetMaterials() { return m_materials; }
+		const std::map<uint32_t, ref<MaterialAsset>>& GetMaterials() const { return m_materials; }
 
 		uint32_t GetMaterialCount() const { return m_material_count; }
 		void SetMaterialCount(uint32_t new_count) { m_material_count = new_count; }
 
 		void Clear();
 	private:
-		std::map<uint32_t, IntrusiveRef<MaterialAsset>> m_materials;
+		std::map<uint32_t, ref<MaterialAsset>> m_materials;
 		uint32_t m_material_count;
 	};
 }

@@ -44,12 +44,12 @@ concept is_ref_counted = std::is_base_of<RefCounted, T>::value || std::is_same<T
 } // end namespace ::concepts
 
 template <typename T>
-class IntrusiveRef
+class ref
 {
 public:
-	IntrusiveRef() : m_ptr{ nullptr } {}
-	IntrusiveRef(std::nullptr_t n) : m_ptr { nullptr } {}
-	IntrusiveRef(T* ptr) : m_ptr{ ptr }
+	ref() : m_ptr{ nullptr } {}
+	ref(std::nullptr_t n) : m_ptr { nullptr } {}
+	ref(T* ptr) : m_ptr{ ptr }
 	{
 		static_assert(std::is_base_of<RefCounted, T>::value, "Class is not RefCounted!");
 
@@ -57,7 +57,7 @@ public:
 	}
 
 	template <typename T2>
-	IntrusiveRef(const IntrusiveRef<T2>& other)
+	ref(const ref<T2>& other)
 	{
 		m_ptr = (T*)other.m_ptr;
 
@@ -65,38 +65,38 @@ public:
 	}
 
 	template <typename T2>
-	IntrusiveRef(IntrusiveRef<T2>&& other)
+	ref(ref<T2>&& other)
 	{
 		m_ptr = (T*)other.m_ptr;
 		other.m_ptr = nullptr;
 	}
 
-	static IntrusiveRef<T> CopyWithoutIncrement(const IntrusiveRef<T>& other)
+	static ref<T> CopyWithoutIncrement(const ref<T>& other)
 	{
-		IntrusiveRef<T> new_ref = nullptr;
+		ref<T> new_ref = nullptr;
 		new_ref->m_ptr = other->m_ptr;
 
 		return new_ref;
 	}
 
-	~IntrusiveRef()
+	~ref()
 	{
 		DecRef();
 	}
 
-	IntrusiveRef(const IntrusiveRef<T>& other) : m_ptr{ other.m_ptr }
+	ref(const ref<T>& other) : m_ptr{ other.m_ptr }
 	{
 		IncRef();
 	}
 
-	IntrusiveRef& operator=(std::nullptr_t)
+	ref& operator=(std::nullptr_t)
 	{
 		DecRef();
 		m_ptr = nullptr;
 		return *this;
 	}
 
-	IntrusiveRef& operator=(const IntrusiveRef<T>& other)
+	ref& operator=(const ref<T>& other)
 	{
 		other.IncRef();
 		DecRef();
@@ -106,7 +106,7 @@ public:
 	}
 
 	template <typename T2>
-	IntrusiveRef& operator=(const IntrusiveRef<T2>& other)
+	ref& operator=(const ref<T2>& other)
 	{
 		other.IncRef();
 		DecRef();
@@ -116,7 +116,7 @@ public:
 	}
 
 	template <typename T2>
-	IntrusiveRef& operator=(IntrusiveRef<T2>&& other)
+	ref& operator=(ref<T2>&& other)
 	{
 		DecRef();
 
@@ -144,29 +144,29 @@ public:
 	}
 
 	template <typename T2>
-	IntrusiveRef<T2> As() const
+	ref<T2> As() const
 	{
-		return IntrusiveRef<T2>(*this);
+		return ref<T2>(*this);
 	}
 
 	template <typename... Args>
-	static IntrusiveRef<T> Create(Args&&... args)
+	static ref<T> Create(Args&&... args)
 	{
-		return IntrusiveRef<T>(new T(std::forward<Args>(args)...));
+		return ref<T>(new T(std::forward<Args>(args)...));
 	}
 
 	// ptr comparison, not value
-	bool operator==(const IntrusiveRef<T> other) const
+	bool operator==(const ref<T> other) const
 	{
 		return m_ptr == other.m_ptr;
 	}
 
-	bool operator!=(const IntrusiveRef<T> other) const
+	bool operator!=(const ref<T> other) const
 	{
 		return !(*this == other);
 	}
 
-	bool Equals(const IntrusiveRef<T>& other) const
+	bool Equals(const ref<T>& other) const
 	{
 		if (!m_ptr || !other.m_ptr)
 			return false;
@@ -200,7 +200,7 @@ private:
 	}
 
 	template <typename T2>
-	friend class IntrusiveRef;
+	friend class ref;
 
 	template <typename T2>
 	friend class WeakRef;
@@ -214,8 +214,8 @@ class WeakRef
 public:
 	WeakRef() = default;
 	//WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
-	WeakRef(const IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
-	WeakRef(IntrusiveRef<T>& ref) : m_ptr{ ref.m_ptr } { }
+	WeakRef(const ref<T>& ref) : m_ptr{ ref.m_ptr } { }
+	WeakRef(ref<T>& ref) : m_ptr{ ref.m_ptr } { }
 	WeakRef(T* ptr) : m_ptr{ ptr } { }
 
 	~WeakRef() = default;
@@ -237,10 +237,6 @@ private:
 //   type alias
 // ==============
 
-// intrusive ref counted pointer
-template <typename T>
-using ref = IntrusiveRef<T>;
-
 // view for a intrusive ref counted pointer
 template <typename T>
 using weak_ref = WeakRef<T>;
@@ -257,7 +253,7 @@ namespace kb
 
 // intrusive ref counted pointer
 template <typename T>
-using ref = Kablunk::IntrusiveRef<T>;
+using ref = Kablunk::ref<T>;
 
 // view for a intrusive ref counted pointer
 template <typename T>

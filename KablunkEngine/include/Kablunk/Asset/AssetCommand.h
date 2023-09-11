@@ -13,21 +13,21 @@ namespace Kablunk::asset
 {
 	// try find an asset by filepath
 	template <typename T>
-	IntrusiveRef<T> get_asset(const std::filesystem::path& filepath)
+	ref<T> get_asset(const std::filesystem::path& filepath)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(filepath);
 	}
 
 	// try find an asset by filepath
 	template <typename T>
-	IntrusiveRef<T> get_asset(const char* filepath_cstr)
+	ref<T> get_asset(const char* filepath_cstr)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(std::filesystem::path{ filepath_cstr });
 	}
 
 	// try find an asset by id
 	template <typename T>
-	IntrusiveRef<T> get_asset(const asset_id_t& id)
+	ref<T> get_asset(const asset_id_t& id)
 	{
 		return Singleton<AssetManager>::get().get_asset<T>(id);
 	}

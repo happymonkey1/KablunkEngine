@@ -43,7 +43,7 @@ namespace Kablunk
 
 	void VulkanImage2D::Invalidate()
 	{
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -56,7 +56,7 @@ namespace Kablunk
 		if (m_info.image == nullptr)
 			return;
 
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -192,7 +192,7 @@ namespace Kablunk
 
 	void VulkanImage2D::CreatePerLayerImageViews()
 	{
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_CreatePerLayerImageViews();
@@ -270,7 +270,7 @@ namespace Kablunk
 	{
 		if (m_mip_image_views.find(mip) == m_mip_image_views.end())
 		{
-			IntrusiveRef<VulkanImage2D> instance = this;
+			ref<VulkanImage2D> instance = this;
 			render::submit([instance, mip]() mutable
 				{
 					instance->RT_GetMipImageView(mip);

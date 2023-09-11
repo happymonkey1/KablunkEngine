@@ -124,8 +124,8 @@ namespace Kablunk
 		virtual const BufferLayout& GetLayout() const = 0;
 
 
-		static IntrusiveRef<VertexBuffer> Create(uint32_t size);
-		static IntrusiveRef<VertexBuffer> Create(const void* data, uint32_t size);
+		static ref<VertexBuffer> Create(uint32_t size);
+		static ref<VertexBuffer> Create(const void* data, uint32_t size);
 
 		virtual RendererID GetRendererID() const = 0;
 	};
@@ -145,8 +145,8 @@ namespace Kablunk
 
 		virtual RendererID GetRendererID() const = 0;
 
-		static IntrusiveRef<IndexBuffer> Create(uint32_t count);
-		static IntrusiveRef<IndexBuffer> Create(const void* data, uint32_t count);
+		static ref<IndexBuffer> Create(uint32_t count);
+		static ref<IndexBuffer> Create(const void* data, uint32_t count);
 	};
 }
 

@@ -10,7 +10,7 @@
 namespace Kablunk
 { // start namespace Kablunk
 
-void VulkanSwapChain::Init(VkInstance instance, const IntrusiveRef<VulkanDevice>& device)
+void VulkanSwapChain::Init(VkInstance instance, const ref<VulkanDevice>& device)
 {
 	m_instance = instance;
 	m_device = device;

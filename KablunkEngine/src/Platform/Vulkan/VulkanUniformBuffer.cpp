@@ -13,7 +13,7 @@ namespace Kablunk
 	{
 		m_local_storage = new uint8_t[size];
 
-		IntrusiveRef<VulkanUniformBuffer> instance = this;
+		ref<VulkanUniformBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -29,7 +29,7 @@ namespace Kablunk
 	{
 		memcpy(m_local_storage, data, size);
 
-		IntrusiveRef<VulkanUniformBuffer> instance = this;
+		ref<VulkanUniformBuffer> instance = this;
 		render::submit([instance, data, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);

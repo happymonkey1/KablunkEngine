@@ -146,10 +146,10 @@ namespace Kablunk::UI
 		ImGui::Columns(2);
 	}
 
-	ImTextureID GetTextureID(IntrusiveRef<Texture2D> texture);
-	void Image(const IntrusiveRef<Image2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	void Image(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const IntrusiveRef<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+	ImTextureID GetTextureID(ref<Texture2D> texture);
+	void Image(const ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	void Image(const ref<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	bool ImageButton(const ref<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
@@ -402,7 +402,7 @@ namespace Kablunk::UI
 			});
 	}
 
-	static bool PropertyImageButton(const char* label, IntrusiveRef<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
+	static bool PropertyImageButton(const char* label, ref<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
 	{
 		ShiftCursorY(size.y / 4.0f);
 		return Internal::CreateProperty(label, [&](const char* id_buffer)
@@ -487,7 +487,7 @@ namespace Kablunk::UI
 
 	
 	// Button Images
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+	static void DrawButtonImage(const ref<Texture2D>& imageNormal, const ref<Texture2D>& imageHovered, const ref<Texture2D>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImVec2 rectMin, ImVec2 rectMax)
 	{
@@ -500,21 +500,21 @@ namespace Kablunk::UI
 			drawList->AddImage(GetTextureID(imageNormal), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintNormal);
 	};
 
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+	static void DrawButtonImage(const ref<Texture2D>& imageNormal, const ref<Texture2D>& imageHovered, const ref<Texture2D>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImRect rectangle)
 	{
 		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
 	};
 
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+	static void DrawButtonImage(const ref<Texture2D>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImVec2 rectMin, ImVec2 rectMax)
 	{
 		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectMin, rectMax);
 	};
 
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+	static void DrawButtonImage(const ref<Texture2D>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImRect rectangle)
 	{
@@ -522,13 +522,13 @@ namespace Kablunk::UI
 	};
 
 
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& imageNormal, const IntrusiveRef<Texture2D>& imageHovered, const IntrusiveRef<Texture2D>& imagePressed,
+	static void DrawButtonImage(const ref<Texture2D>& imageNormal, const ref<Texture2D>& imageHovered, const ref<Texture2D>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
 	{
 		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 	};
 
-	static void DrawButtonImage(const IntrusiveRef<Texture2D>& image,
+	static void DrawButtonImage(const ref<Texture2D>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
 	{
 		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());

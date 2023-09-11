@@ -59,12 +59,12 @@ namespace Kablunk
 
 		bool swap_chain_target = false; 
 
-		IntrusiveRef<Image2D> existing_image;
+		ref<Image2D> existing_image;
 		std::vector<uint32_t> existing_image_layers;
 
-		std::map<uint32_t, IntrusiveRef<Image2D>> existing_images;
+		std::map<uint32_t, ref<Image2D>> existing_images;
 
-		IntrusiveRef<Framebuffer> existing_framebuffer;
+		ref<Framebuffer> existing_framebuffer;
 
 		std::string debug_name;
 	};
@@ -75,7 +75,7 @@ namespace Kablunk
 		virtual ~Framebuffer() = default;
 
 		virtual void Resize(uint32_t width, uint32_t height, bool force_recreate = false) = 0;
-		virtual void AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func) = 0;
+		virtual void AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func) = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
@@ -86,8 +86,8 @@ namespace Kablunk
 		virtual uint32_t GetHeight() const = 0;
 		virtual RendererID GetRendererID() const = 0;
 
-		virtual IntrusiveRef<Image2D> GetImage(uint32_t attachment_index = 0) const = 0;
-		virtual IntrusiveRef<Image2D> GetDepthImage() const = 0;
+		virtual ref<Image2D> GetImage(uint32_t attachment_index = 0) const = 0;
+		virtual ref<Image2D> GetDepthImage() const = 0;
 		// #TODO clean up api because this is currently hard coded for reading an int from the buffer
 		virtual int ReadPixel(uint32_t attachment_index, int x, int y) = 0;
 
@@ -95,7 +95,7 @@ namespace Kablunk
 
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 
-		static IntrusiveRef<Framebuffer> Create(const FramebufferSpecification& specs);
+		static ref<Framebuffer> Create(const FramebufferSpecification& specs);
 	};
 
 	class FramebufferPool final
@@ -105,14 +105,14 @@ namespace Kablunk
 		~FramebufferPool();
 
 		std::weak_ptr<Framebuffer> AllocateBuffer();
-		void Add(const IntrusiveRef<Framebuffer>& framebuffer);
+		void Add(const ref<Framebuffer>& framebuffer);
 
-		std::vector<IntrusiveRef<Framebuffer>>& GetAll() { return m_pool; }
-		const std::vector<IntrusiveRef<Framebuffer>> &GetAll() const { return m_pool; }
+		std::vector<ref<Framebuffer>>& GetAll() { return m_pool; }
+		const std::vector<ref<Framebuffer>> &GetAll() const { return m_pool; }
 
 		inline static FramebufferPool* Get() { return s_instance; }
 	private:
-		std::vector<IntrusiveRef<Framebuffer>> m_pool;
+		std::vector<ref<Framebuffer>> m_pool;
 
 		static FramebufferPool* s_instance;
 	};

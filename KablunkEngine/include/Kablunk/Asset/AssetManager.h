@@ -27,7 +27,7 @@ namespace Kablunk::asset
 		// get metadata from asset registry using filepath
 		const AssetMetadata& get_metadata(const std::filesystem::path& filepath) const;
 		// get metadata from asset registry using asset reference
-		const AssetMetadata& get_metadata(const IntrusiveRef<IAsset>& asset) const { return get_metadata(asset->get_id()); }
+		const AssetMetadata& get_metadata(const ref<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 		// get the absolute path for an asset using its metadata
 		std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const 
         { 
@@ -59,7 +59,7 @@ namespace Kablunk::asset
 		const asset_id_t& find_asset_id_based_on_filepath(const std::filesystem::path& filepath) const;
 		// create a new asset
 		template <typename T, typename... Args>
-		IntrusiveRef<T> create_asset(const std::string& filename, const std::filesystem::path& directory_path, Args&&... args)
+		ref<T> create_asset(const std::string& filename, const std::filesystem::path& directory_path, Args&&... args)
 		{
 			static_assert(std::is_base_of<IAsset, T>::value, "create_asset() only works for types derived from IAsset!");
 
@@ -101,7 +101,7 @@ namespace Kablunk::asset
 			// #TODO should we write registry to file every time?
 			write_registry_to_file();
 
-			IntrusiveRef<T> asset = IntrusiveRef<T>::Create(std::forward<Args>(args)...);
+			ref<T> asset = ref<T>::Create(std::forward<Args>(args)...);
 			asset->set_id(metadata.id);
 			m_loaded_assets[metadata.id] = asset;
 
@@ -154,9 +154,9 @@ namespace Kablunk::asset
 		// check whether the asset referenced by the id is a memory only asset
 		bool is_memory_asset(const asset_id_t& id) const { return m_memory_assets.find(id) != m_memory_assets.end(); }
 		// get the map of loaded assets
-		const std::unordered_map<asset_id_t, IntrusiveRef<IAsset>>& get_loaded_assets() const { return m_loaded_assets; }
+		const std::unordered_map<asset_id_t, ref<IAsset>>& get_loaded_assets() const { return m_loaded_assets; }
 		// get the map of memory only assets
-		const std::unordered_map<asset_id_t, IntrusiveRef<IAsset>>& get_memory_assets() const { return m_memory_assets; }
+		const std::unordered_map<asset_id_t, ref<IAsset>>& get_memory_assets() const { return m_memory_assets; }
 		// get the underlying asset registry
 		const AssetRegistry& get_asset_registry() const { return m_asset_registry; }
 		// check if the file exists on the filesystem
@@ -171,9 +171,9 @@ namespace Kablunk::asset
 		void process_directory(const std::filesystem::path& directory_path);
 
 		// write asset data to disk
-		void serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
+		void serialize_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const;
 		// try load asset from disk
-		bool try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const;
+		bool try_load_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const;
 
 		AssetMetadata& get_metadata_internal(const asset_id_t& id);
 
@@ -192,15 +192,15 @@ namespace Kablunk::asset
 		// asset registry that maps ids to metadata
 		AssetRegistry m_asset_registry;
 		// map of assets that are fully loaded
-		std::unordered_map<asset_id_t, IntrusiveRef<IAsset>> m_loaded_assets;
+		std::unordered_map<asset_id_t, ref<IAsset>> m_loaded_assets;
 		// map of assets loaded in memory
-		std::unordered_map<asset_id_t, IntrusiveRef<IAsset>> m_memory_assets;
+		std::unordered_map<asset_id_t, ref<IAsset>> m_memory_assets;
 		// #TODO filesystem changed callback
 
 		// null metadata for functions that return references
 		inline static AssetMetadata s_null_metadata{};
 		// map for serializers of specific asset types
-		std::unordered_map<AssetType, IntrusiveRef<AssetSerializer>> m_asset_serializers;
+		std::unordered_map<AssetType, ref<AssetSerializer>> m_asset_serializers;
 	};
 
 	// check whether a given filepath refers to the asset registry

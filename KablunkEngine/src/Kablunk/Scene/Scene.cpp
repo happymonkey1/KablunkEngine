@@ -68,9 +68,9 @@ namespace Kablunk
 			delete m_primary_camera_entity;
 	}
 
-	IntrusiveRef<Scene> Scene::Create()
+	ref<Scene> Scene::Create()
 	{
-		return IntrusiveRef<Scene>::Create(DEFAULT_SCENE_NAME);
+		return ref<Scene>::Create(DEFAULT_SCENE_NAME);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -112,9 +112,9 @@ namespace Kablunk
 			return false;
 	}
 
-	IntrusiveRef<Scene> Scene::Copy(IntrusiveRef<Scene> src_scene)
+	ref<Scene> Scene::Copy(ref<Scene> src_scene)
 	{
-		IntrusiveRef<Scene> dest_scene = IntrusiveRef<Scene>::Create();
+		ref<Scene> dest_scene = ref<Scene>::Create();
 		KB_CORE_INFO("copying source scene '{0}' into '{1}'", src_scene->m_scene_id, dest_scene->m_scene_id);
 		dest_scene->m_name = src_scene->m_name;
 
@@ -500,7 +500,7 @@ namespace Kablunk
 		}
 	}
 
-	void Scene::OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
+	void Scene::OnRenderRuntime(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
 	{
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
@@ -722,7 +722,7 @@ namespace Kablunk
 		
 	}
 
-	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera)
+	void Scene::OnRenderEditor(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera)
 	{
 
 		// Lights

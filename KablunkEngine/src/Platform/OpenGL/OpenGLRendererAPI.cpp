@@ -36,7 +36,7 @@ namespace Kablunk
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const IntrusiveRef<VertexArray>& vertexArray, uint32_t indexCount)
+	void OpenGLRendererAPI::DrawIndexed(const ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		// turn wireframe on
 		if (m_draw_wireframe)

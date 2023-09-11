@@ -137,7 +137,7 @@ namespace Kablunk
 		if (m_has_destroyed)
 			return;
 
-		IntrusiveRef<VulkanShader> instance = this;
+		ref<VulkanShader> instance = this;
 		render::submit_resource_free([instance]()
 			{
 				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -153,7 +153,7 @@ namespace Kablunk
 	{
         KB_PROFILE_FUNC()
 
-		IntrusiveRef<VulkanShader> instance = this;
+		ref<VulkanShader> instance = this;
 
 		
 		render::submit([instance, force_compile]() mutable

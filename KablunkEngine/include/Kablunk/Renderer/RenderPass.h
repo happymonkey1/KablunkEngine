@@ -11,7 +11,7 @@ namespace Kablunk
 
 	struct RenderPassSpecification
 	{
-		IntrusiveRef<Framebuffer> target_framebuffer;
+		ref<Framebuffer> target_framebuffer;
 		std::string debug_name;
 	};
 
@@ -23,7 +23,7 @@ namespace Kablunk
 		virtual RenderPassSpecification& GetSpecification() = 0;
 		virtual const RenderPassSpecification& GetSpecification() const = 0;
 
-		static IntrusiveRef<RenderPass> Create(const RenderPassSpecification& specification);
+		static ref<RenderPass> Create(const RenderPassSpecification& specification);
 	};
 
 }

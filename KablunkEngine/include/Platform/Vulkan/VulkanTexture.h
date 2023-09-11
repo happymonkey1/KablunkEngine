@@ -21,7 +21,7 @@ namespace Kablunk
 		virtual ~VulkanTexture2D();
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
-		virtual IntrusiveRef<Image2D> GetImage() const override { return m_image; }
+		virtual ref<Image2D> GetImage() const override { return m_image; }
 
 		virtual ImageFormat GetFormat() const { return m_format; }
 
@@ -48,7 +48,7 @@ namespace Kablunk
 		uint32_t m_width;
 		uint32_t m_height;
 
-		IntrusiveRef<Image2D> m_image;
+		ref<Image2D> m_image;
 
 		ImageFormat m_format;
 

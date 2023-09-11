@@ -67,12 +67,12 @@ inline void begin_frame() { Singleton<Renderer>::get().get_renderer()->BeginFram
 inline void end_frame() { Singleton<Renderer>::get().get_renderer()->EndFrame(); }
 
 // begin render pass
-inline void begin_render_pass(IntrusiveRef<RenderCommandBuffer> render_command_buffer, const IntrusiveRef<RenderPass>& render_pass, bool explicit_clear = false)
+inline void begin_render_pass(ref<RenderCommandBuffer> render_command_buffer, const ref<RenderPass>& render_pass, bool explicit_clear = false)
 {
 	Singleton<Renderer>::get().get_renderer()->BeginRenderPass(render_command_buffer, render_pass, explicit_clear);
 }
 
-inline void end_render_pass(IntrusiveRef<RenderCommandBuffer> render_command_buffer)
+inline void end_render_pass(ref<RenderCommandBuffer> render_command_buffer)
 {
 	Singleton<Renderer>::get().get_renderer()->EndRenderPass(render_command_buffer);
 }
@@ -83,23 +83,23 @@ inline RendererPipelineDescriptor get_render_pipeline()
 }
 
 // return a reference to the shader library
-inline IntrusiveRef<ShaderLibrary> get_shader_library()
+inline ref<ShaderLibrary> get_shader_library()
 {
 	return Singleton<Renderer>::get().GetShaderLibrary();
 }
 
 // get a specific shader by name
-inline IntrusiveRef<Shader> get_shader(const std::string& name)
+inline ref<Shader> get_shader(const std::string& name)
 {
 	return Singleton<Renderer>::get().GetShader(name);
 }
 
-inline void register_shader_dependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material)
+inline void register_shader_dependency(ref<Shader> shader, ref<Material> material)
 {
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, material);
 }
 
-inline void register_shader_dependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline)
+inline void register_shader_dependency(ref<Shader> shader, ref<Pipeline> pipeline)
 {
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, pipeline);
 }
@@ -154,14 +154,14 @@ inline void clear()
 };
 
 // clear image
-inline void clear_image(IntrusiveRef<RenderCommandBuffer> command_buffer, IntrusiveRef<Image2D> image)
+inline void clear_image(ref<RenderCommandBuffer> command_buffer, ref<Image2D> image)
 {
 	Singleton<Renderer>::get().get_renderer()->ClearImage(command_buffer, image);
 }
 
 // draw indexed vertex array
 // DEPRECATED!
-inline void draw_indexed(const IntrusiveRef<VertexArray> vertexArray, uint32_t indexCount = 0)
+inline void draw_indexed(const ref<VertexArray> vertexArray, uint32_t indexCount = 0)
 {
 	KB_CORE_ASSERT(false, "deprecated");
 	Singleton<Renderer>::get().get_renderer()->DrawIndexed(vertexArray, indexCount);
@@ -180,14 +180,14 @@ inline void set_wireframe_mode(bool draw_wireframe)
 
 // render mesh with a material table
 inline void render_mesh(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer, 
-	IntrusiveRef<Pipeline> pipeline, 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set, 
-	IntrusiveRef<StorageBufferSet> storage_buffer_set, 
-	IntrusiveRef<Mesh> mesh, 
+	ref<RenderCommandBuffer> render_command_buffer, 
+	ref<Pipeline> pipeline, 
+	ref<UniformBufferSet> uniform_buffer_set, 
+	ref<StorageBufferSet> storage_buffer_set, 
+	ref<Mesh> mesh, 
 	uint32_t submesh_index, 
-	IntrusiveRef<MaterialTable> material_table, 
-	IntrusiveRef<VertexBuffer> transform_buffer, 
+	ref<MaterialTable> material_table, 
+	ref<VertexBuffer> transform_buffer, 
 	uint32_t transform_offset, 
 	uint32_t instance_count
 )
@@ -208,14 +208,14 @@ inline void render_mesh(
 
 // render mesh using a specific material
 inline void render_mesh_with_material(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer, 
-	IntrusiveRef<Pipeline> pipeline, 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set, 
-	IntrusiveRef<StorageBufferSet> storage_buffer_set, 
-	IntrusiveRef<Mesh> mesh, 
+	ref<RenderCommandBuffer> render_command_buffer, 
+	ref<Pipeline> pipeline, 
+	ref<UniformBufferSet> uniform_buffer_set, 
+	ref<StorageBufferSet> storage_buffer_set, 
+	ref<Mesh> mesh, 
 	uint32_t submesh_index, 
-	IntrusiveRef<Material> material, 
-	IntrusiveRef<VertexBuffer> transform_buffer, 
+	ref<Material> material, 
+	ref<VertexBuffer> transform_buffer, 
 	uint32_t transform_offset, 
 	uint32_t instance_count, 
 	Buffer additional_uniforms = Buffer() // default (nullptr) buffer
@@ -237,14 +237,14 @@ inline void render_mesh_with_material(
 
 // render instanced submesh with a material table
 inline void render_instanced_submesh(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer,
-	IntrusiveRef<Pipeline> pipeline,
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set,
-	IntrusiveRef<StorageBufferSet> storage_buffer_set,
-	IntrusiveRef<Mesh> mesh,
+	ref<RenderCommandBuffer> render_command_buffer,
+	ref<Pipeline> pipeline,
+	ref<UniformBufferSet> uniform_buffer_set,
+	ref<StorageBufferSet> storage_buffer_set,
+	ref<Mesh> mesh,
 	uint32_t submesh_index,
-	IntrusiveRef<MaterialTable> material_table,
-	IntrusiveRef<VertexBuffer> transform_buffer,
+	ref<MaterialTable> material_table,
+	ref<VertexBuffer> transform_buffer,
 	uint32_t transform_offset,
 	uint32_t instance_count
 )
@@ -268,7 +268,7 @@ inline void render_instanced_submesh(
 // =====
 
 // submit a full screen quad to be rendererd with a material
-inline void submit_fullscreen_quad(IntrusiveRef<RenderCommandBuffer> render_command_buffer, IntrusiveRef<Pipeline> pipeline, IntrusiveRef<UniformBufferSet> uniform_buffer_set, IntrusiveRef<Material> material)
+inline void submit_fullscreen_quad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<Material> material)
 {
 	Singleton<Renderer>::get().get_renderer()->SubmitFullscreenQuad(
 		render_command_buffer, 
@@ -281,11 +281,11 @@ inline void submit_fullscreen_quad(IntrusiveRef<RenderCommandBuffer> render_comm
 
 // submit a fullscreen quad to be rendered with a material (includes storage buffer set)
 inline void SubmitFullscreenQuad(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer, 
-	IntrusiveRef<Pipeline> pipeline, 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set, 
-	IntrusiveRef<StorageBufferSet> storage_buffer_set, 
-	IntrusiveRef<Material> material
+	ref<RenderCommandBuffer> render_command_buffer, 
+	ref<Pipeline> pipeline, 
+	ref<UniformBufferSet> uniform_buffer_set, 
+	ref<StorageBufferSet> storage_buffer_set, 
+	ref<Material> material
 )
 {
 	Singleton<Renderer>::get().get_renderer()->SubmitFullscreenQuad(
@@ -299,11 +299,11 @@ inline void SubmitFullscreenQuad(
 
 // render a quad using a specific material and transform
 inline void render_quad(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer, 
-	IntrusiveRef<Pipeline> pipeline, 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set, 
-	IntrusiveRef<StorageBuffer> storage_buffer_set, 
-	IntrusiveRef<Material> material, 
+	ref<RenderCommandBuffer> render_command_buffer, 
+	ref<Pipeline> pipeline, 
+	ref<UniformBufferSet> uniform_buffer_set, 
+	ref<StorageBuffer> storage_buffer_set, 
+	ref<Material> material, 
 	const glm::mat4& transform
 )
 {
@@ -319,13 +319,13 @@ inline void render_quad(
 
 // render raw geometry
 inline void render_geometry(
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer,
-	IntrusiveRef<Pipeline> pipeline,
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set,
-	IntrusiveRef<StorageBufferSet> storage_buffer_set,
-	IntrusiveRef<Material> material,
-	IntrusiveRef<VertexBuffer> vertex_buffer,
-	IntrusiveRef<IndexBuffer> index_buffer,
+	ref<RenderCommandBuffer> render_command_buffer,
+	ref<Pipeline> pipeline,
+	ref<UniformBufferSet> uniform_buffer_set,
+	ref<StorageBufferSet> storage_buffer_set,
+	ref<Material> material,
+	ref<VertexBuffer> vertex_buffer,
+	ref<IndexBuffer> index_buffer,
 	const glm::mat4& transform,
 	uint32_t index_count = 0
 )
@@ -347,7 +347,7 @@ inline void render_geometry(
 // utility
 // =======
 
-inline void set_line_width(IntrusiveRef<RenderCommandBuffer> render_command_buffer, float line_width)
+inline void set_line_width(ref<RenderCommandBuffer> render_command_buffer, float line_width)
 {
 	Singleton<Renderer>::get().get_renderer()->SetLineWidth(render_command_buffer, line_width);
 }

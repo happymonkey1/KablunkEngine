@@ -15,15 +15,15 @@ namespace Kablunk
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void AddVertexBuffer(const IntrusiveRef<VertexBuffer>& vertexBuffer) override;
-		virtual void SetIndexBuffer(const IntrusiveRef<IndexBuffer>& indexBuffer) override;
+		virtual void AddVertexBuffer(const ref<VertexBuffer>& vertexBuffer) override;
+		virtual void SetIndexBuffer(const ref<IndexBuffer>& indexBuffer) override;
 
-		virtual const std::vector<IntrusiveRef<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; };
-		virtual const IntrusiveRef<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; };
+		virtual const std::vector<ref<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; };
+		virtual const ref<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; };
 
 	private:
-		std::vector<IntrusiveRef<VertexBuffer>> m_VertexBuffers;
-		IntrusiveRef<IndexBuffer> m_IndexBuffer;
+		std::vector<ref<VertexBuffer>> m_VertexBuffers;
+		ref<IndexBuffer> m_IndexBuffer;
 		RendererID m_RendererID;
 		uint32_t m_VertexBufferIndex = 0;
 	};

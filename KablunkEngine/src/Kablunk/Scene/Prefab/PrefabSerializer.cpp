@@ -6,7 +6,7 @@
 namespace Kablunk
 {
 
-	PrefabSerializer::PrefabSerializer(const IntrusiveRef<Prefab>& prefab)
+	PrefabSerializer::PrefabSerializer(const ref<Prefab>& prefab)
 		: m_prefab{ prefab }
 	{
 

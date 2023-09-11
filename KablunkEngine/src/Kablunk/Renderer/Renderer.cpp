@@ -25,7 +25,7 @@ namespace Kablunk
 		for (size_t i = 0; i < s_render_command_queue_size; ++i)
 			m_command_queues[i] = kb::render_command_queue{};
 
-		m_shader_library = IntrusiveRef<ShaderLibrary>::Create();
+		m_shader_library = ref<ShaderLibrary>::Create();
 
 		// ==========
 		// 3d shaders
@@ -91,27 +91,27 @@ namespace Kablunk
 		delete m_renderer_api;
 	}
 
-	IntrusiveRef<ShaderLibrary> Renderer::GetShaderLibrary()
+	ref<ShaderLibrary> Renderer::GetShaderLibrary()
 	{
 		return m_shader_library;
 	}
 
-	IntrusiveRef<Shader> Renderer::GetShader(const std::string& shader_name)
+	ref<Shader> Renderer::GetShader(const std::string& shader_name)
 	{
 		return m_shader_library->Get(shader_name);
 	}
 
-	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline)
+	void Renderer::RegisterShaderDependency(ref<Shader> shader, ref<Pipeline> pipeline)
 	{
 		m_shader_dependencies[shader->GetHash()].pipelines.push_back(pipeline);
 	}
 
-	void Renderer::RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material)
+	void Renderer::RegisterShaderDependency(ref<Shader> shader, ref<Material> material)
 	{
 		m_shader_dependencies[shader->GetHash()].materials.push_back(material);
 	}
 
-    void Renderer::register_shader_dependency(IntrusiveRef<Shader> p_shader, IntrusiveRef<kb::render::compute_pipeline> p_compute_pipeline)
+    void Renderer::register_shader_dependency(ref<Shader> p_shader, ref<kb::render::compute_pipeline> p_compute_pipeline)
     {
         m_shader_dependencies[p_shader->GetHash()].compute_pipelines.push_back(p_compute_pipeline);
     }

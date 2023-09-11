@@ -18,7 +18,7 @@ namespace Kablunk
 
 		virtual uint32_t GetBinding() = 0;
 
-		static IntrusiveRef<StorageBuffer> Create(size_t size, uint32_t binding);
+		static ref<StorageBuffer> Create(size_t size, uint32_t binding);
 	};
 
 }

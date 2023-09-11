@@ -11,14 +11,14 @@
 namespace Kablunk
 {
 
-	VulkanMaterial::VulkanMaterial(const IntrusiveRef<Shader>& shader, const std::string& name /*= ""*/)
+	VulkanMaterial::VulkanMaterial(const ref<Shader>& shader, const std::string& name /*= ""*/)
 		: m_shader{ shader }, m_name{ name }, m_write_descriptors(render::get_frames_in_flights()), m_dirty_descriptor_sets(render::get_frames_in_flights())
 	{
 		Init();
 		render::register_shader_dependency(shader, this);
 	}
 
-	VulkanMaterial::VulkanMaterial(IntrusiveRef<Material> material, const std::string& name /*= ""*/)
+	VulkanMaterial::VulkanMaterial(ref<Material> material, const std::string& name /*= ""*/)
 		: m_shader{ material->GetShader() }, m_name{ name }, 
 		m_write_descriptors(render::get_frames_in_flights()),
 		m_dirty_descriptor_sets(render::get_frames_in_flights(), true)
@@ -53,7 +53,7 @@ namespace Kablunk
 		m_material_flags |= static_cast<uint32_t>(MaterialFlag::Blend);
 
 
-		IntrusiveRef<VulkanMaterial> instance = this;
+		ref<VulkanMaterial> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -138,17 +138,17 @@ namespace Kablunk
 		Set<glm::mat4>(name, value);
 	}
 
-	void VulkanMaterial::Set(const std::string& name, const IntrusiveRef<Texture2D>& texture)
+	void VulkanMaterial::Set(const std::string& name, const ref<Texture2D>& texture)
 	{
 		SetVulkanDescriptor(name, texture);
 	}
 
-	void VulkanMaterial::Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index)
+	void VulkanMaterial::Set(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index)
 	{
 		SetVulkanDescriptor(name, texture, array_index);
 	}
 
-	void VulkanMaterial::Set(const std::string& name, const IntrusiveRef<Image2D>& image)
+	void VulkanMaterial::Set(const std::string& name, const ref<Image2D>& image)
 	{
 		SetVulkanDescriptor(name, image);
 	}
@@ -160,7 +160,7 @@ namespace Kablunk
 		{
 			if (descriptor->type == PendingDescriptorType::Image2D)
 			{
-				IntrusiveRef<VulkanImage2D> image = descriptor->image.As<VulkanImage2D>();
+				ref<VulkanImage2D> image = descriptor->image.As<VulkanImage2D>();
 				KB_CORE_ASSERT(image->GetImageInfo().image_view, "image view is nullptr!");
 				KB_CORE_ASSERT(image->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout is undefined!");
 				if (descriptor->write_descriptor_set.pImageInfo && image->GetImageInfo().image_view != descriptor->write_descriptor_set.pImageInfo->imageView)
@@ -191,13 +191,13 @@ namespace Kablunk
 			{
 				if (pending_descriptor->type == PendingDescriptorType::Texture2D)
 				{
-					IntrusiveRef<VulkanTexture2D> texture = pending_descriptor->texture.As<VulkanTexture2D>();
+					ref<VulkanTexture2D> texture = pending_descriptor->texture.As<VulkanTexture2D>();
 					pending_descriptor->image_info = texture->GetVulkanDescriptorInfo();
 					pending_descriptor->write_descriptor_set.pImageInfo = &pending_descriptor->image_info;
 				}
 				else if (pending_descriptor->type == PendingDescriptorType::Image2D)
 				{
-					IntrusiveRef<VulkanImage2D> image = pending_descriptor->image.As<VulkanImage2D>();
+					ref<VulkanImage2D> image = pending_descriptor->image.As<VulkanImage2D>();
 					pending_descriptor->image_info = image->GetDescriptor();
 					pending_descriptor->write_descriptor_set.pImageInfo = &pending_descriptor->image_info;
 				}
@@ -213,9 +213,9 @@ namespace Kablunk
 				{
 					for (size_t i = 0; i < pending_descriptor->textures.size(); ++i)
 					{
-						IntrusiveRef<Texture2D> texture = pending_descriptor->textures[i];
+						ref<Texture2D> texture = pending_descriptor->textures[i];
 						KB_CORE_ASSERT(texture, "texture is uninitialized!");
-						IntrusiveRef<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+						ref<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 						array_image_infos.emplace_back(vulkan_texture->GetVulkanDescriptorInfo());
 					}
 				}
@@ -270,7 +270,7 @@ namespace Kablunk
 		// #TODO implement
 	}
 
-	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Texture2D>& texture)
+	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture)
 	{
 		const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
 		KB_CORE_ASSERT(resource, "resource is nullptr!");
@@ -305,7 +305,7 @@ namespace Kablunk
 		InvalidateDescriptorSets();
 	}
 
-	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index)
+	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index)
 	{
 		const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
 		KB_CORE_ASSERT(resource, "resource is nullptr!");
@@ -349,7 +349,7 @@ namespace Kablunk
 		InvalidateDescriptorSets();
 	}
 
-	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Image2D>& image)
+	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Image2D>& image)
 	{
 		KB_CORE_ASSERT(image, "image is nullptr!");
 		KB_CORE_ASSERT(image.As<VulkanImage2D>()->GetImageInfo().image_view, "ImageView is nullptr!");
@@ -459,12 +459,12 @@ namespace Kablunk
 		return Get<glm::mat4>(name);
 	}
 
-	IntrusiveRef<Texture2D> VulkanMaterial::GetTexture2D(const std::string& name)
+	ref<Texture2D> VulkanMaterial::GetTexture2D(const std::string& name)
 	{
 		return GetResource<Texture2D>(name);
 	}
 
-	IntrusiveRef<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
+	ref<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
 	{
 		return TryGetResource<Texture2D>(name);
 	}

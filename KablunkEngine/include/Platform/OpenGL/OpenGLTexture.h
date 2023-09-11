@@ -18,7 +18,7 @@ namespace Kablunk
 
 		virtual void Resize(uint32_t width, uint32_t height) override { KB_CORE_ASSERT(false, "not implemented!"); };
 
-		virtual IntrusiveRef<Image2D> GetImage() const override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
+		virtual ref<Image2D> GetImage() const override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
 		virtual ImageFormat GetFormat() const override { return m_format; }
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }

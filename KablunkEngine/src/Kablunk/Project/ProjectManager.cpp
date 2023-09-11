@@ -18,7 +18,7 @@ namespace Kablunk
 		m_active_project = nullptr;
 	}
 
-	void ProjectManager::set_active(const IntrusiveRef<Project>& project)
+	void ProjectManager::set_active(const ref<Project>& project)
 	{
 		if (m_active_project)
 		{

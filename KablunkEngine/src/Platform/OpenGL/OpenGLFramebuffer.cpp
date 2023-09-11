@@ -116,7 +116,7 @@ namespace Kablunk
 		DeleteBuffer();
 	}
 
-	void OpenGLFramebuffer::AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func)
+	void OpenGLFramebuffer::AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
@@ -253,13 +253,13 @@ namespace Kablunk
 			Utilities::KablunkTextureFormatToGLenum(spec.format), GL_INT, &value);
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
+	Kablunk::ref<Kablunk::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Image2D> OpenGLFramebuffer::GetDepthImage() const
+	Kablunk::ref<Kablunk::Image2D> OpenGLFramebuffer::GetDepthImage() const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;

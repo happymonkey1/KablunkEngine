@@ -281,7 +281,7 @@ namespace Kablunk
     //   VulkanDevice
     // ================
 
-	VulkanDevice::VulkanDevice(const IntrusiveRef<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features)
+	VulkanDevice::VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features)
         : m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_compute_queue{ nullptr }, m_vk_graphics_queue{ nullptr }
 	{
 		auto context = VulkanContext::Get();

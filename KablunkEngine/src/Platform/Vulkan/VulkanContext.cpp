@@ -12,7 +12,7 @@ namespace Kablunk
 	VulkanContext::VulkanContext(GLFWwindow* window_handle)
 		: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }, m_pipeline_cache{ nullptr }
 	{
-		s_context = IntrusiveRef<VulkanContext>(this);
+		s_context = ref<VulkanContext>(this);
 	}
 
 	void VulkanContext::Init()
@@ -22,7 +22,7 @@ namespace Kablunk
 		SetupDebugMessageCallback();
 		
 		
-		m_physical_device = IntrusiveRef<VulkanPhysicalDevice>::Create();
+		m_physical_device = ref<VulkanPhysicalDevice>::Create();
 
 		VkPhysicalDeviceFeatures enabled_features{};
 		enabled_features.samplerAnisotropy = true;
@@ -31,7 +31,7 @@ namespace Kablunk
 		enabled_features.pipelineStatisticsQuery = true;
 		enabled_features.independentBlend = VK_TRUE;
 
-		m_device = IntrusiveRef<VulkanDevice>::Create(m_physical_device, enabled_features);
+		m_device = ref<VulkanDevice>::Create(m_physical_device, enabled_features);
 		VulkanAllocator::Init(VulkanContext::Get()->GetDevice());
 
 		m_swap_chain = VulkanSwapChain{};

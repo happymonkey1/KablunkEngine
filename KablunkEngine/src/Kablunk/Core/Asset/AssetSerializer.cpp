@@ -18,7 +18,7 @@ namespace Kablunk::asset
 // TextureAssetSerializer
 // ======================
 
-bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
 	asset = Texture2D::Create(Singleton<AssetManager>::get().get_absolute_path(metadata).string());
 	asset->set_id(metadata.id);
@@ -38,12 +38,12 @@ bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, Intrus
 // ====================
 
 
-void AudioAssetSerializer::serialize(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+void AudioAssetSerializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
     KB_CORE_WARN("[AudioAssetSerializer]: serialize() not implemented!");
 }
 
-bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
 	audio::audio_asset_config config{ Singleton<AssetManager>::get().get_absolute_path(metadata).string() };
 
@@ -63,12 +63,12 @@ bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, Intrusiv
 // font_asset_serializer
 // =====================
 
-void font_asset_serializer::serialize(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+void font_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
     KB_CORE_WARN("[font_asset_serializer]: serialize() not implemented!");
 }
 
-bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
     render::font_asset_create_info font_create_info{
         Singleton<AssetManager>::get().get_absolute_path(metadata).string(),        // path to font asset

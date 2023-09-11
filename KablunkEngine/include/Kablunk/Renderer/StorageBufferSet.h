@@ -16,11 +16,11 @@ namespace Kablunk
 
 		virtual void Create(uint32_t size, uint32_t binding) = 0;
 
-		virtual IntrusiveRef<StorageBuffer> Get(uint32_t binding, uint32_t set, uint32_t frame) = 0;
-		virtual void Set(IntrusiveRef<StorageBuffer> storage_buffer, uint32_t set = 0, uint32_t frame = 0) = 0;
+		virtual ref<StorageBuffer> Get(uint32_t binding, uint32_t set, uint32_t frame) = 0;
+		virtual void Set(ref<StorageBuffer> storage_buffer, uint32_t set = 0, uint32_t frame = 0) = 0;
 		virtual void Resize(uint32_t binding, uint32_t set, uint32_t new_size) = 0;
 
-		static IntrusiveRef<StorageBufferSet> Create(uint32_t frames);
+		static ref<StorageBufferSet> Create(uint32_t frames);
 	};
 
 }

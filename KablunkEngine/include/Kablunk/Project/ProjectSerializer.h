@@ -9,13 +9,13 @@ namespace Kablunk
 	class ProjectSerializer
 	{
 	public:
-		ProjectSerializer(const IntrusiveRef<Project>& project);
+		ProjectSerializer(const ref<Project>& project);
 
 		void Serialize(const std::string& filepath);
 		bool Deserialize(const std::string& filepath);
 
 	private:
-		IntrusiveRef<Project> m_project;
+		ref<Project> m_project;
 	};
 }
 

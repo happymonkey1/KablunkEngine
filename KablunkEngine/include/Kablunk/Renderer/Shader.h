@@ -96,9 +96,9 @@ namespace Kablunk {
 		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const = 0;
 		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
-		static IntrusiveRef<Shader> Create(const std::string& filePath, bool force_compile = false);
+		static ref<Shader> Create(const std::string& filePath, bool force_compile = false);
 	private:
-		static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
+		static std::vector<ref<Shader>> s_all_shaders; // Temporary while we don't have an asset system
 	};
 
 	class ShaderLibrary : public RefCounted
@@ -109,15 +109,15 @@ namespace Kablunk {
 
 		void Destroy();
 
-		void Add(const IntrusiveRef<Shader>& shader);
-		void Add(const std::string& name, const IntrusiveRef<Shader>& shader);
-		IntrusiveRef<Shader> Load(const std::string& filepath);
-		IntrusiveRef<Shader> Load(const std::string& name, const std::string& filepath);
+		void Add(const ref<Shader>& shader);
+		void Add(const std::string& name, const ref<Shader>& shader);
+		ref<Shader> Load(const std::string& filepath);
+		ref<Shader> Load(const std::string& name, const std::string& filepath);
 
-		IntrusiveRef<Shader> Get(const std::string& name);
+		ref<Shader> Get(const std::string& name);
 
 		bool Exists(const std::string& name);
 	private:
-		std::unordered_map<std::string, IntrusiveRef<Shader>> m_shaders;
+		std::unordered_map<std::string, ref<Shader>> m_shaders;
 	};
 }

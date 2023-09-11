@@ -59,8 +59,8 @@ namespace Kablunk::Scripts
 
 	// Texture2D
 	void*			Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height);
-	void			Kablunk_Texture2D_Destructor(IntrusiveRef<Texture2D>* _this);
-	void			Kablunk_Texture2D_SetData(IntrusiveRef<Texture2D>* _this, MonoArray* in_data, int32_t count);
+	void			Kablunk_Texture2D_Destructor(ref<Texture2D>* _this);
+	void			Kablunk_Texture2D_SetData(ref<Texture2D>* _this, MonoArray* in_data, int32_t count);
 
 	enum class LogLevel : int32_t
 	{

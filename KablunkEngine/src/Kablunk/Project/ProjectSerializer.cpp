@@ -11,7 +11,7 @@
 namespace Kablunk
 {
 	
-	ProjectSerializer::ProjectSerializer(const IntrusiveRef<Project>& project)
+	ProjectSerializer::ProjectSerializer(const ref<Project>& project)
 		: m_project{ project }
 	{
 

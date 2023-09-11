@@ -91,7 +91,7 @@ namespace Kablunk
 		if (!m_specification.existing_framebuffer)
 		{
 			uint32_t attachment_index = 0;
-			for (IntrusiveRef<VulkanImage2D> image : m_attachment_images)
+			for (ref<VulkanImage2D> image : m_attachment_images)
 			{
 				if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 					continue;
@@ -139,7 +139,7 @@ namespace Kablunk
 			callback(this);
 	}
 
-	void VulkanFramebuffer::AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func)
+	void VulkanFramebuffer::AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func)
 	{
 		m_resize_callbacks.push_back(func);
 	}
@@ -168,7 +168,7 @@ namespace Kablunk
 
 	void VulkanFramebuffer::Invalidate()
 	{
-		IntrusiveRef<VulkanFramebuffer> instance = this;
+		ref<VulkanFramebuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -193,7 +193,7 @@ namespace Kablunk
 			if (!m_specification.existing_framebuffer)
 			{
 				uint32_t attachment_index = 0;
-				for (IntrusiveRef<VulkanImage2D> image : m_attachment_images)
+				for (ref<VulkanImage2D> image : m_attachment_images)
 				{
 					if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 						continue;
@@ -238,18 +238,18 @@ namespace Kablunk
 					m_depth_attachment_image = m_specification.existing_image;
 				else if (m_specification.existing_framebuffer)
 				{
-					IntrusiveRef<VulkanFramebuffer> existing_framebuffer = m_specification.existing_framebuffer.As<VulkanFramebuffer>();
+					ref<VulkanFramebuffer> existing_framebuffer = m_specification.existing_framebuffer.As<VulkanFramebuffer>();
 					m_depth_attachment_image = existing_framebuffer->GetDepthImage();
 				}
 				else if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 				{
-					IntrusiveRef<Image2D> existing_image = m_specification.existing_images.at(attachment_index);
+					ref<Image2D> existing_image = m_specification.existing_images.at(attachment_index);
 					KB_CORE_ASSERT(Utils::IsDepthFormat(existing_image->GetSpecification().format), "Trying to attach non-depth image as depth attachment");
 					m_depth_attachment_image = existing_image;
 				}
 				else
 				{
-					IntrusiveRef<VulkanImage2D> depth_attachment_image = m_depth_attachment_image.As<VulkanImage2D>();
+					ref<VulkanImage2D> depth_attachment_image = m_depth_attachment_image.As<VulkanImage2D>();
 					auto& spec = depth_attachment_image->GetSpecification();
 					spec.width = m_width;
 					spec.height = m_height;
@@ -283,16 +283,16 @@ namespace Kablunk
 			{
 				//HZ_CORE_ASSERT(!m_Specification.ExistingImage, "Not supported for color attachments");
 
-				IntrusiveRef<VulkanImage2D> color_attachment;
+				ref<VulkanImage2D> color_attachment;
 				if (m_specification.existing_framebuffer)
 				{
-					IntrusiveRef<VulkanFramebuffer> existing_framebuffer = m_specification.existing_framebuffer.As<VulkanFramebuffer>();
-					IntrusiveRef<Image2D> existingImage = existing_framebuffer->GetImage(attachment_index);
+					ref<VulkanFramebuffer> existing_framebuffer = m_specification.existing_framebuffer.As<VulkanFramebuffer>();
+					ref<Image2D> existingImage = existing_framebuffer->GetImage(attachment_index);
 					color_attachment = m_attachment_images.emplace_back(existingImage).As<VulkanImage2D>();
 				}
 				else if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 				{
-					IntrusiveRef<Image2D> existing_image = m_specification.existing_images[attachment_index];
+					ref<Image2D> existing_image = m_specification.existing_images[attachment_index];
 					KB_CORE_ASSERT(!Utils::IsDepthFormat(existing_image->GetSpecification().format), "Trying to attach depth image as color attachment");
 					color_attachment = existing_image.As<VulkanImage2D>();
 					m_attachment_images[attachment_index] = existing_image;
@@ -310,7 +310,7 @@ namespace Kablunk
 					}
 					else
 					{
-						IntrusiveRef<Image2D> image = m_attachment_images[attachment_index];
+						ref<Image2D> image = m_attachment_images[attachment_index];
 						ImageSpecification& spec = image->GetSpecification();
 						spec.width = m_width;
 						spec.height = m_height;
@@ -428,7 +428,7 @@ namespace Kablunk
 		std::vector<VkImageView> attachments(m_attachment_images.size());
 		for (uint32_t i = 0; i < m_attachment_images.size(); i++)
 		{
-			IntrusiveRef<VulkanImage2D> image = m_attachment_images[i].As<VulkanImage2D>();
+			ref<VulkanImage2D> image = m_attachment_images[i].As<VulkanImage2D>();
 			if (image->GetSpecification().deinterleaved)
 			{
 				attachments[i] = image->GetLayerImageView(m_specification.existing_image_layers[i]);
@@ -443,7 +443,7 @@ namespace Kablunk
 
 		if (m_depth_attachment_image)
 		{
-			IntrusiveRef<VulkanImage2D> image = m_depth_attachment_image.As<VulkanImage2D>();
+			ref<VulkanImage2D> image = m_depth_attachment_image.As<VulkanImage2D>();
 			if (m_specification.existing_image)
 			{
 				KB_CORE_ASSERT(m_specification.existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");

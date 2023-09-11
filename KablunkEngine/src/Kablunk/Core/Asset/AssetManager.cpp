@@ -148,7 +148,7 @@ namespace Kablunk::asset
 			return false;
 		}
 
-		IntrusiveRef<IAsset> asset;
+		ref<IAsset> asset;
 		metadata.is_data_loaded = try_load_asset(metadata, asset);
 		if (metadata.is_data_loaded)
 			m_loaded_assets[metadata.id] = asset;
@@ -343,7 +343,7 @@ namespace Kablunk::asset
 		return FileSystem::file_exists(ProjectManager::get().get_active()->get_asset_directory_path() / asset_metadata.filepath);
 	}
 
-	void AssetManager::serialize_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+	void AssetManager::serialize_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const
 	{
 		auto it = m_asset_serializers.find(asset->get_static_type());
 		if (it != m_asset_serializers.end())
@@ -355,7 +355,7 @@ namespace Kablunk::asset
 			KB_CORE_ASSERT(false, "asset serializer for type asset '{}', '{}' not found!", metadata.id, asset_type_to_string(metadata.type));
 	}
 
-	bool AssetManager::try_load_asset(const AssetMetadata& metadata, IntrusiveRef<IAsset>& asset) const
+	bool AssetManager::try_load_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const
 	{
 		auto it = m_asset_serializers.find(metadata.type);
 		if (it != m_asset_serializers.end())

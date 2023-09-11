@@ -15,7 +15,7 @@ namespace Kablunk
 
 		virtual RendererID GetBinding() const = 0;
 
-		static IntrusiveRef<UniformBuffer> Create(uint32_t size, uint32_t binding);
+		static ref<UniformBuffer> Create(uint32_t size, uint32_t binding);
 	};
 }
 #endif

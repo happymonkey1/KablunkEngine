@@ -7,16 +7,16 @@
 
 namespace Kablunk
 {
-	std::vector<IntrusiveRef<Shader>> Shader::s_all_shaders;
+	std::vector<ref<Shader>> Shader::s_all_shaders;
 
-	IntrusiveRef<Shader> Shader::Create(const std::string& file_path, bool force_compile)
+	ref<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 	{
-		IntrusiveRef<Shader> res = nullptr;
+		ref<Shader> res = nullptr;
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:		res = IntrusiveRef<OpenGLShader>::Create(file_path); break;
-		case RendererAPI::render_api_t::Vulkan:		res = IntrusiveRef<VulkanShader>::Create(file_path, force_compile); break;
+		case RendererAPI::render_api_t::OpenGL:		res = ref<OpenGLShader>::Create(file_path); break;
+		case RendererAPI::render_api_t::Vulkan:		res = ref<VulkanShader>::Create(file_path, force_compile); break;
 		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
@@ -39,34 +39,34 @@ namespace Kablunk
 		m_shaders.clear();
 	}
 
-	void ShaderLibrary::Add(const std::string& name, const IntrusiveRef<Shader>& shader)
+	void ShaderLibrary::Add(const std::string& name, const ref<Shader>& shader)
 	{
 		KB_CORE_ASSERT(!Exists(name), "Shader already exists!");
 		m_shaders[name] = shader;
 	}
 
-	void ShaderLibrary::Add(const IntrusiveRef<Shader>& shader)
+	void ShaderLibrary::Add(const ref<Shader>& shader)
 	{
 		auto& name = shader->GetName();
 		Add(name, shader);
 	}
 
 	
-	IntrusiveRef<Shader> ShaderLibrary::Load(const std::string& filepath)
+	ref<Shader> ShaderLibrary::Load(const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(shader);
 		return shader;
 	}
 
-	IntrusiveRef<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+	ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(name, shader);
 		return shader;
 	}
 
-	IntrusiveRef<Kablunk::Shader> ShaderLibrary::Get(const std::string& name)
+	ref<Kablunk::Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		KB_CORE_ASSERT(Exists(name), "Shader does not exist!");
 		return m_shaders[name];

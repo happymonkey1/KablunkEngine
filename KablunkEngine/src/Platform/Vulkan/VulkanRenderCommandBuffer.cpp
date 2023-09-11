@@ -121,7 +121,7 @@ namespace Kablunk
 	{
 		m_timestamp_next_available_query = 2;
 
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
@@ -154,7 +154,7 @@ namespace Kablunk
 
 	void VulkanRenderCommandBuffer::End()
 	{
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
@@ -173,7 +173,7 @@ namespace Kablunk
 		if (m_owned_by_swapchain)
 			return;
 
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();
@@ -217,7 +217,7 @@ namespace Kablunk
 	{
 		uint64_t query_index = m_timestamp_next_available_query;
 		m_timestamp_next_available_query += 2;
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
@@ -230,7 +230,7 @@ namespace Kablunk
 
 	void VulkanRenderCommandBuffer::EndTimestampQuery(uint64_t query_index)
 	{
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();

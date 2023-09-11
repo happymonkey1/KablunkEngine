@@ -75,12 +75,12 @@ namespace Kablunk
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		m_editor_scene = IntrusiveRef<Scene>::Create();
+		m_editor_scene = ref<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
+		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene);
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
@@ -930,7 +930,7 @@ namespace Kablunk
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = IntrusiveRef<Scene>::Create();
+		m_editor_scene = ref<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
 		m_viewport_renderer->set_scene(m_active_scene);
@@ -972,7 +972,7 @@ namespace Kablunk
 		}
 	}
 
-	void EditorLayer::SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(ref<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -992,7 +992,7 @@ namespace Kablunk
 	{
 		NewScene();
 
-		IntrusiveRef<Scene> new_scene = IntrusiveRef<Scene>::Create();
+		auto new_scene = ref<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -1189,7 +1189,7 @@ namespace Kablunk
 		if (ProjectManager::get().get_active())
 			CloseProject();
 
-		IntrusiveRef<Project> project = IntrusiveRef<Project>::Create();
+		auto project = ref<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);

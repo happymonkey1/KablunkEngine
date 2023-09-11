@@ -111,8 +111,8 @@ namespace Kablunk
 	class Image2D : public Image
 	{
 	public:
-		static IntrusiveRef<Image2D> Create(ImageSpecification specification, Buffer buffer);
-		static IntrusiveRef<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
+		static ref<Image2D> Create(ImageSpecification specification, Buffer buffer);
+		static ref<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
 	};
 
 	namespace Utils {

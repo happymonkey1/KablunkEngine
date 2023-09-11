@@ -23,7 +23,7 @@ namespace Kablunk
 		virtual void Begin() override;
 		virtual void End() override;
 	private:
-		IntrusiveRef<RenderCommandBuffer> m_render_command_buffer;
+		ref<RenderCommandBuffer> m_render_command_buffer;
 	};
 }
 

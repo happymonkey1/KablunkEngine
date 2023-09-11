@@ -46,13 +46,13 @@ namespace Kablunk
 		}
 	}
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const IntrusiveRef<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const ref<Scene>& context)
 	{
 		SetContext(context);
 
 	}
 
-	void SceneHierarchyPanel::SetContext(const IntrusiveRef<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const ref<Scene>& context)
 	{
 		m_context = context;
 		m_selection_context = {};
@@ -377,7 +377,7 @@ namespace Kablunk
 	}
 
 	template <typename ComponentT>
-	void DrawMaterialTable(IntrusiveRef<MaterialTable> mesh_material_table)
+	void DrawMaterialTable(ref<MaterialTable> mesh_material_table)
 	{
 		if (UI::BeginTreeNode("Materials"))
 		{
@@ -395,7 +395,7 @@ namespace Kablunk
 				std::string id = fmt::format("{0}-{1}", label, i);
 				ImGui::PushID(id.c_str());
 
-				IntrusiveRef<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+				ref<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
 				std::string mesh_material_name = mesh_material_asset->GetMaterial()->GetName();
 				if (mesh_material_name.empty())
 					mesh_material_name = "Unnamed Material";
@@ -920,7 +920,7 @@ namespace Kablunk
 				UI::Property("Filename:", component.Filepath.c_str());
 				UI::PopItemDisabled();
 
-				IntrusiveRef<Mesh> mesh = component.Mesh;
+				ref<Mesh> mesh = component.Mesh;
 				if (mesh)
 				{
 					for (uint32_t submesh_index : mesh->GetSubmeshes())

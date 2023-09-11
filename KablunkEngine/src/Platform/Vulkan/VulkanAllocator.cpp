@@ -101,7 +101,7 @@ namespace Kablunk
 		return { 0, 0 };
 	}
 
-	void VulkanAllocator::Init(IntrusiveRef<VulkanDevice> device)
+	void VulkanAllocator::Init(ref<VulkanDevice> device)
 	{
 		KB_CORE_INFO("Initializing VulkanAllocator!");
 		s_data = new VulkanAllocatorData{};

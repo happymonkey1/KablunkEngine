@@ -30,7 +30,7 @@ namespace Kablunk
 		//	spec.usage = ImageUsage::Storage;
 		m_image = Image2D::Create(spec);
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -56,7 +56,7 @@ namespace Kablunk
 		m_image = Image2D::Create(spec);
 
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -76,7 +76,7 @@ namespace Kablunk
 		m_width = width;
 		m_height = height;
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -120,7 +120,7 @@ namespace Kablunk
 		if (!m_image_data)
 			image_spec.usage = ImageUsage::Storage;
 
-		IntrusiveRef<VulkanImage2D> image = m_image.As<VulkanImage2D>();
+		ref<VulkanImage2D> image = m_image.As<VulkanImage2D>();
 		image->RT_Invalidate();
 
 		auto& info = image->GetImageInfo();

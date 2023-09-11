@@ -12,7 +12,7 @@ namespace Kablunk
 	class PrefabSerializer
 	{
 	public:
-		PrefabSerializer(const IntrusiveRef<Prefab>& prefab);
+		PrefabSerializer(const ref<Prefab>& prefab);
 		~PrefabSerializer() = default;
 
 		void Serialize(const std::string& filepath);
@@ -23,7 +23,7 @@ namespace Kablunk
 	private:
 		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
-		IntrusiveRef<Prefab> m_prefab;
+		ref<Prefab> m_prefab;
 	};
 
 }

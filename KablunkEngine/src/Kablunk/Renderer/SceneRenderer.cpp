@@ -19,7 +19,7 @@ namespace Kablunk
 
 	
 
-	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
+	SceneRenderer::SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
 	{
 		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan, "SceneRenderer only supports Vulkan!");
@@ -59,7 +59,7 @@ namespace Kablunk
 			geometry_framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
 			geometry_framebuffer_spec.debug_name = "Geometry";
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "GeometryPipeline";
@@ -102,13 +102,13 @@ namespace Kablunk
 			else
 				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
 			RenderPassSpecification composite_render_pass_spec;
 			composite_render_pass_spec.target_framebuffer = framebuffer;
 			composite_render_pass_spec.debug_name = "SceneComposite";
 
-			IntrusiveRef<Shader> composite_shader = render::get_shader("scene_composite");
+			ref<Shader> composite_shader = render::get_shader("scene_composite");
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.layout = {
@@ -140,7 +140,7 @@ namespace Kablunk
 			external_composite_framebuffer_spec.existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
 			external_composite_framebuffer_spec.existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
 			
 			RenderPassSpecification render_pass_spec;
 			render_pass_spec.target_framebuffer = framebuffer;
@@ -152,14 +152,14 @@ namespace Kablunk
 		m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 		m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
-		IntrusiveRef<SceneRenderer> instance = this;
+		ref<SceneRenderer> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->m_resources_created = true;
 			});
 	}
 
-	void SceneRenderer::set_scene(IntrusiveRef<Scene> context)
+	void SceneRenderer::set_scene(ref<Scene> context)
 	{
 		//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 		m_context = context;
@@ -212,7 +212,7 @@ namespace Kablunk
 			camera_position
 		};
 		
-		IntrusiveRef<SceneRenderer> instance = this;
+		ref<SceneRenderer> instance = this;
 		render::submit([instance, camera_data]() mutable
 			{
 				uint32_t buffer_index = render::rt_get_current_frame_index();
@@ -237,7 +237,7 @@ namespace Kablunk
 		render::submit([instance, &point_light_ub_data]() mutable
 			{
 				const uint32_t buffer_index = render::rt_get_current_frame_index();
-				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
+				ref<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
 				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
 			}
@@ -250,7 +250,7 @@ namespace Kablunk
 
 		if (m_use_threads)
 		{
-			IntrusiveRef<SceneRenderer> instance = this;
+			ref<SceneRenderer> instance = this;
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
 					instance->flush_draw_list();
@@ -267,7 +267,7 @@ namespace Kablunk
 		m_active = false;
 	}
 
-	void SceneRenderer::submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
+	void SceneRenderer::submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, ref<Material> override_material/* = nullptr */)
 	{
 		//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 		//uint32_t material_index = 0; // #TODO fix
@@ -293,12 +293,12 @@ namespace Kablunk
 		}
 	}
 
-	IntrusiveRef<RenderPass> SceneRenderer::get_final_render_pass()
+	ref<RenderPass> SceneRenderer::get_final_render_pass()
 	{
 		return m_composite_pipeline->GetSpecification().render_pass;
 	}
 
-	IntrusiveRef<Image2D> SceneRenderer::get_final_render_pass_image()
+	ref<Image2D> SceneRenderer::get_final_render_pass_image()
 	{
         KB_PROFILE_FUNC()
 
@@ -416,7 +416,7 @@ namespace Kablunk
 		render::end_render_pass(m_command_buffer);
 	}
 
-	void SceneRenderer::clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
+	void SceneRenderer::clear_pass(ref<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
 		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
 		render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);

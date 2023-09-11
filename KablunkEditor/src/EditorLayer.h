@@ -43,7 +43,7 @@ namespace Kablunk
 		void NewScene();
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path);
+		void SerializeScene(ref<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 
@@ -64,11 +64,11 @@ namespace Kablunk
 		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
-		IntrusiveRef<Scene> m_active_scene;
-		IntrusiveRef<Scene> m_editor_scene;
-		IntrusiveRef<Scene> m_runtime_scene;
+		ref<Scene> m_active_scene;
+		ref<Scene> m_editor_scene;
+		ref<Scene> m_runtime_scene;
 
-		IntrusiveRef<SceneRenderer> m_viewport_renderer;
+		ref<SceneRenderer> m_viewport_renderer;
         ref<Renderer2D> m_renderer_2d;
 		std::filesystem::path m_editor_scene_path;
 
@@ -101,7 +101,7 @@ namespace Kablunk
 		bool m_show_memory_statistics_window = false;
 
 		// Resources
-		IntrusiveRef<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
+		ref<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
 
 		enum class SceneState
 		{

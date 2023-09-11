@@ -19,8 +19,8 @@ namespace Kablunk
 		virtual uint64_t BeginTimestampQuery() = 0;
 		virtual void EndTimestampQuery(uint64_t query_index) = 0;
 
-		static IntrusiveRef<RenderCommandBuffer> Create(uint32_t count = 0, const std::string& debug_name = "");
-		static IntrusiveRef<RenderCommandBuffer> CreateFromSwapChain(const std::string& debug_name = "");
+		static ref<RenderCommandBuffer> Create(uint32_t count = 0, const std::string& debug_name = "");
+		static ref<RenderCommandBuffer> CreateFromSwapChain(const std::string& debug_name = "");
 	};
 }
 

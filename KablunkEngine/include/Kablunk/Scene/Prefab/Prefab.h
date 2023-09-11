@@ -22,7 +22,7 @@ namespace Kablunk
 		void on_native_script_component_destroy(entt::registry& registry, entt::entity entity);
 
 	private:
-		IntrusiveRef<Scene> m_scene_context;
+		ref<Scene> m_scene_context;
 		Entity m_entity;
 
 		friend class Scene;

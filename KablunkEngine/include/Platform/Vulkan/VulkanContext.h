@@ -27,10 +27,10 @@ namespace Kablunk
 		void Shutdown() override;
 
 
-		static IntrusiveRef<VulkanContext> Get() { return s_context; }
+		static ref<VulkanContext> Get() { return s_context; }
 		static VkInstance GetInstance() { return s_instance; }
 
-		IntrusiveRef<VulkanDevice> GetDevice() { return m_device; }
+		ref<VulkanDevice> GetDevice() { return m_device; }
 		VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
 	private:
 		void CreateInstance();
@@ -82,13 +82,13 @@ namespace Kablunk
 		void SetupDebugMessageCallback();
 	private:
 		// #TODO move
-		inline static IntrusiveRef<VulkanContext> s_context;
+		inline static ref<VulkanContext> s_context;
 		inline static VkInstance s_instance;
 
 		GLFWwindow* m_window_handle;
 
-		IntrusiveRef<VulkanPhysicalDevice> m_physical_device = nullptr;
-		IntrusiveRef<VulkanDevice> m_device = nullptr;
+		ref<VulkanPhysicalDevice> m_physical_device = nullptr;
+		ref<VulkanDevice> m_device = nullptr;
 
 		VulkanSwapChain m_swap_chain;
 

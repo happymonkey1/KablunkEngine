@@ -20,7 +20,7 @@ namespace Kablunk::audio
 
 	ref<AudioAsset> AudioAsset::create(const audio_asset_config& config)
 	{
-		return IntrusiveRef<AudioAsset>::Create(config);
+		return ref<AudioAsset>::Create(config);
 	}
 
 	void AudioAsset::play()

@@ -264,23 +264,23 @@ struct NativeScriptComponent
 
 struct MeshComponent
 {
-	IntrusiveRef<Kablunk::Mesh> Mesh;
-	IntrusiveRef<Kablunk::MaterialTable> Material_table = IntrusiveRef<Kablunk::MaterialTable>::Create();
+	ref<Kablunk::Mesh> Mesh;
+	ref<Kablunk::MaterialTable> Material_table = ref<Kablunk::MaterialTable>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
-	MeshComponent(const IntrusiveRef<Kablunk::Mesh>& mesh)
+	MeshComponent(const ref<Kablunk::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ IntrusiveRef<Kablunk::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ ref<Kablunk::MaterialTable>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{
 		if (!Filepath.empty())
 			Mesh.reset();
 
-		auto mesh_data = IntrusiveRef<MeshData>::Create(filepath, entity);
-		Mesh = IntrusiveRef<Kablunk::Mesh>::Create(mesh_data);
+		auto mesh_data = ref<MeshData>::Create(filepath, entity);
+		Mesh = ref<Kablunk::Mesh>::Create(mesh_data);
 
 		Filepath = filepath;
 	}

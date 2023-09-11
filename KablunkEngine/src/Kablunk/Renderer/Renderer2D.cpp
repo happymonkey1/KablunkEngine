@@ -146,13 +146,13 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	framebuffer_spec.blend_mode = FramebufferBlendMode::Additive;
 	framebuffer_spec.blend = true;
 
-	IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(framebuffer_spec);
+	ref<Framebuffer> framebuffer = Framebuffer::Create(framebuffer_spec);
 
 	RenderPassSpecification render_pass_spec{};
 	render_pass_spec.target_framebuffer = framebuffer;
 	render_pass_spec.debug_name = "Renderer2D";
 
-	IntrusiveRef<RenderPass> render_pass = RenderPass::Create(render_pass_spec);
+	ref<RenderPass> render_pass = RenderPass::Create(render_pass_spec);
 
 	// Create quad pipeline
 	{
@@ -327,7 +327,7 @@ void Renderer2D::shutdown()
     }
 }
 
-IntrusiveRef<Texture2D> Renderer2D::get_white_texture()
+ref<Texture2D> Renderer2D::get_white_texture()
 {
 	return m_renderer_data->white_texture;
 }
@@ -349,7 +349,7 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform)
 		glm::vec3{ 1.0f } // #TODO fix
 	};
 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
+	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
 	render::submit([uniform_buffer_set, camera_data_ub]() mutable
 		{
 			uint32_t buffer_index = render::rt_get_current_frame_index();
@@ -506,12 +506,12 @@ void Renderer2D::on_imgui_render() const
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data->render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data->gpu_time_query.renderer_2D_query)));
 }
 
-IntrusiveRef<RenderPass> Renderer2D::get_target_render_pass()
+ref<RenderPass> Renderer2D::get_target_render_pass()
 {
 	return m_renderer_data->quad_pipeline->GetSpecification().render_pass;
 }
 
-void Renderer2D::set_target_render_pass(IntrusiveRef<RenderPass> render_pass)
+void Renderer2D::set_target_render_pass(ref<RenderPass> render_pass)
 {
 	// Quad pipeline
 	if (m_renderer_data->quad_pipeline->GetSpecification().render_pass != render_pass)
