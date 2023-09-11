@@ -129,9 +129,9 @@ namespace kb
 
 		operator bool() const { return m_data; }
 
-		u8& operator[](int index) { return m_data[index]; }
+		u8& operator[](size_t index) { return m_data[index]; }
 
-		u8 operator[](int index) const { return m_data[index]; }
+		u8 operator[](size_t index) const { return m_data[index]; }
 
 		template <typename T>
 		T* As() const { return (T*)m_data; }

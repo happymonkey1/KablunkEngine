@@ -283,7 +283,7 @@ namespace kb
 				m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 			}
 
-			float time = glfwGetTime(); // Platform::GetTime
+			float time = static_cast<float>(glfwGetTime()); // Platform::GetTime
 			m_timestep = time - m_last_frame_time;
 			m_last_frame_time = time;
 		}

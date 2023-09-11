@@ -149,7 +149,7 @@ namespace kb
 
 				if (!m_is_animated)
 				{
-					m_triangle_cache[m].emplace_back(
+					m_triangle_cache[static_cast<u32>(m)].emplace_back(
 						m_static_vertices[index.V1 + submesh.BaseVertex], 
 						m_static_vertices[index.V2 + submesh.BaseVertex], 
 						m_static_vertices[index.V3 + submesh.BaseVertex]

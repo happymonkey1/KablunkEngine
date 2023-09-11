@@ -60,7 +60,7 @@ void texture_atlas::splice_texture_atlas()
 	KB_CORE_ASSERT(m_padding == 0ul, "only padding == 0 is supported!");
 
 	u32 width = m_texture_atlas->GetWidth(), height = m_texture_atlas->GetHeight();
-	size_t columns = width / m_texture_width;
+	u32 columns = width / m_texture_width;
 	size_t rows = height / m_texture_height;
 
 	size_t max_sprite_count = rows * columns;
@@ -70,15 +70,15 @@ void texture_atlas::splice_texture_atlas()
 	constexpr float border_uv_offset_y = 0.05f;
 
 	float texture_uv_width = static_cast<float>(m_texture_width) / static_cast<float>(width);
-	float texture_uv_height = static_cast<float>(texture_uv_height) / static_cast<float>(height);
+	float texture_uv_height = static_cast<float>(m_texture_width) / static_cast<float>(height);
 
 
 	for (size_t i = 0; i < max_sprite_count; ++i)
 	{
 		TextureAtlasSprite& sprite = m_sprite_map.emplace(kb::uuid::generate(), TextureAtlasSprite{}).first->second;
 			
-		float y = i / columns;
-		float x = i % columns;
+		u32 y = static_cast<u32>(i) / columns;
+		u32 x = static_cast<u32>(i) % columns;
 			
 		// calculate uv values
 		sprite.texture_coords[0] = glm::vec2{
@@ -213,7 +213,12 @@ void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<kb::T
 		}
 	}
 
-	m_texture_atlas = kb::Texture2D::Create(textures[0]->GetFormat(), final_atlas_width, final_atlas_width, atlas_image_data_buffer.get());
+	m_texture_atlas = kb::Texture2D::Create(
+        textures[0]->GetFormat(), 
+        static_cast<u32>(final_atlas_width), 
+        static_cast<u32>(final_atlas_width), 
+        atlas_image_data_buffer.get()
+    );
 
 	// #TODO save atlas texture to disk so processing is only done once
 

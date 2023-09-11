@@ -34,11 +34,11 @@ namespace kb::render
 	{
 		m_font_point = new_font_point;
 		auto error = FT_Set_Char_Size(
-			m_ft_face,			/* handle to face object         */
-			0,					/* char_width in 1/64 of points  */
-			m_font_point * 64,	/* char_height in 1/64 of points */
-            m_dpi_x,			/* horizontal device resolution  */
-			0					/* vertical device resolution    */
+			m_ft_face,			            /* handle to face object         */
+			0,					            /* char_width in 1/64 of points  */
+			static_cast<FT_F26Dot6>(m_font_point * 64),	            /* char_height in 1/64 of points */
+            static_cast<FT_UInt>(m_dpi_x),	/* horizontal device resolution  */
+			0					            /* vertical device resolution    */
 		);   
 
 		if (error)
@@ -74,7 +74,7 @@ namespace kb::render
 		auto error = FT_New_Face(
 			create_info.m_ft_engine,
 			create_info.m_absolute_filepath.c_str(),
-			create_info.m_font_face_index,
+			static_cast<FT_Long>(create_info.m_font_face_index),
 			&m_ft_face
 		);
 
@@ -98,11 +98,11 @@ namespace kb::render
 		}
 
         error = FT_Set_Char_Size(
-            m_ft_face,			/* handle to face object         */
-            0,					/* char_width in 1/64 of points  */
-            m_font_point * 64,	/* char_height in 1/64 of points */
-            m_dpi_x,			/* horizontal device resolution  */
-            0					/* vertical device resolution    */
+            m_ft_face,			                        /* handle to face object         */
+            0,					                        /* char_width in 1/64 of points  */
+            static_cast<FT_F26Dot6>(m_font_point * 64),	/* char_height in 1/64 of points */
+            static_cast<FT_UInt>(m_dpi_x),	            /* horizontal device resolution  */
+            0					                        /* vertical device resolution    */
         );
 
         if (error)
@@ -136,7 +136,8 @@ namespace kb::render
 
 		// quick and dirty max texture size estimate
         // #NOTE right shift by 6 is to get value in pixels, instead of 26.6 fractional units
-		const u32 max_dim = (1 + (m_ft_face->size->metrics.height >> 6)) * std::ceilf(std::sqrtf(static_cast<f32>(m_num_glyphs)));
+		const u32 max_dim = (1 + (m_ft_face->size->metrics.height >> 6)) * 
+            static_cast<u32>(std::ceilf(std::sqrtf(static_cast<f32>(m_num_glyphs))));
 		u32 tex_width = 1;
 		while (tex_width < max_dim) 
 			tex_width <<= 1;
@@ -150,7 +151,7 @@ namespace kb::render
 
 		// load glyph data and store info in map
 		for (size_t i = 0; i < m_num_glyphs; ++i) {
-			FT_Load_Char(m_ft_face, i, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL);
+			FT_Load_Char(m_ft_face, static_cast<FT_ULong>(i), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL);
 			FT_Bitmap* bmp = &m_ft_face->glyph->bitmap;
 
 			if (pen_x + bmp->width >= tex_width) {
@@ -175,11 +176,11 @@ namespace kb::render
 			glyph_info_t glyph_data{
 				static_cast<f32>(pen_x) / static_cast<f32>(tex_width),
 				static_cast<f32>(pen_y) / static_cast<f32>(tex_height),
-				static_cast<f32>(pen_x + bmp->width) / static_cast<f32>(tex_width),
-				static_cast<f32>(pen_y + bmp->rows) / static_cast<f32>(tex_height),
-				m_ft_face->glyph->bitmap_left >> 6,
-				m_ft_face->glyph->bitmap_top >> 6,
-				m_ft_face->glyph->advance.x >> 6,
+				static_cast<f32>(pen_x + static_cast<f32>(bmp->width)) / static_cast<f32>(tex_width),
+				static_cast<f32>(pen_y + static_cast<f32>(bmp->rows)) / static_cast<f32>(tex_height),
+				static_cast<size_t>(m_ft_face->glyph->bitmap_left) >> 6,
+				static_cast<size_t>(m_ft_face->glyph->bitmap_top) >> 6,
+				static_cast<size_t>(m_ft_face->glyph->advance.x) >> 6,
                 glm::vec2{ m_ft_face->glyph->metrics.width >> 6, m_ft_face->glyph->metrics.height >> 6 }
 			};
 
