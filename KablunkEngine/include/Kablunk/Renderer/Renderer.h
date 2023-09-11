@@ -52,15 +52,15 @@ namespace Kablunk
 		void init();
 		void shutdown();
 
-		void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Pipeline> pipeline);
-		void register_shader_dependency(IntrusiveRef<Shader> p_shader, IntrusiveRef<kb::render::compute_pipeline> p_compute_pipeline);
-		void RegisterShaderDependency(IntrusiveRef<Shader> shader, IntrusiveRef<Material> material);
+		void RegisterShaderDependency(ref<Shader> shader, ref<Pipeline> pipeline);
+		void register_shader_dependency(ref<Shader> p_shader, ref<kb::render::compute_pipeline> p_compute_pipeline);
+		void RegisterShaderDependency(ref<Shader> shader, ref<Material> material);
 		void OnShaderReloaded(uint64_t hash);
 
 		uint32_t GetCurrentFrameIndex();
 
-		IntrusiveRef<ShaderLibrary> GetShaderLibrary();
-		IntrusiveRef<Shader> GetShader(const std::string& name);
+		ref<ShaderLibrary> GetShaderLibrary();
+		ref<Shader> GetShader(const std::string& name);
 
 		const RendererOptions& GetConfig() { return m_options; }
 
@@ -100,14 +100,14 @@ namespace Kablunk
 	private:
 		struct ShaderDependencies
 		{
-			std::vector<IntrusiveRef<Pipeline>> pipelines;
-			std::vector<IntrusiveRef<Material>> materials;
+			std::vector<ref<Pipeline>> pipelines;
+			std::vector<ref<Material>> materials;
             std::vector<ref<kb::render::compute_pipeline>> compute_pipelines;
 		};
 
 		std::unordered_map<uint64_t, ShaderDependencies> m_shader_dependencies;
 		RendererOptions m_options = { };
-		IntrusiveRef<ShaderLibrary> m_shader_library;
+		ref<ShaderLibrary> m_shader_library;
 		RendererAPI* m_renderer_api = nullptr;
 
 		// store the viewport's os screen position within the application

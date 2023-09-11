@@ -19,10 +19,7 @@
 #include "Kablunk/Renderer/Font/FontManager.h"
 
 namespace Kablunk
-{ // start namespace Kablunk
-
-namespace render2d
-{ // start namespace ::render2d
+{ // start namespace kb::render
 
 struct QuadVertex
 {
@@ -102,37 +99,37 @@ struct renderer_2d_data_t
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
-	std::vector<IntrusiveRef<VertexBuffer>> quad_vertex_buffers;
-	IntrusiveRef <IndexBuffer> quad_index_buffer;
+	std::vector<ref<VertexBuffer>> quad_vertex_buffers;
+    ref <IndexBuffer> quad_index_buffer;
 
 	// circle
-	std::vector<IntrusiveRef<VertexBuffer>> circle_vertex_buffers;
+	std::vector<ref<VertexBuffer>> circle_vertex_buffers;
 
 	// lines
-	std::vector<IntrusiveRef<VertexBuffer>> line_vertex_buffers;
-	IntrusiveRef<IndexBuffer> line_index_buffer;
+	std::vector<ref<VertexBuffer>> line_vertex_buffers;
+    ref<IndexBuffer> line_index_buffer;
 
 	// ui quads
-	std::vector<IntrusiveRef<VertexBuffer>> ui_quad_vertex_buffers;
-	IntrusiveRef<IndexBuffer> ui_quad_index_buffer;
+	std::vector<ref<VertexBuffer>> ui_quad_vertex_buffers;
+    ref<IndexBuffer> ui_quad_index_buffer;
 
 	// text
-	std::vector<IntrusiveRef<VertexBuffer>> text_vertex_buffers;
-	IntrusiveRef<IndexBuffer> utext_index_buffer;
+	std::vector<ref<VertexBuffer>> text_vertex_buffers;
+    ref<IndexBuffer> utext_index_buffer;
 
 	// =======
 	// shaders
 	// =======
 
-	IntrusiveRef<Shader> quad_shader;
-	IntrusiveRef<Shader> circle_shader;
-	IntrusiveRef<Shader> line_shader;
-	IntrusiveRef<Shader> ui_shader;
+    ref<Shader> quad_shader;
+    ref<Shader> circle_shader;
+    ref<Shader> line_shader;
+    ref<Shader> ui_shader;
 	ref<Shader> text_shader;
 
 	// =======
 
-	IntrusiveRef <Texture2D> white_texture;
+    ref<Texture2D> white_texture;
 
 	// Quads
     // base pointers act as a rudimentary, manually controlled ring buffer
@@ -174,26 +171,26 @@ struct renderer_2d_data_t
 	u32 text_texture_atlas_slot_index = 0;
 
 	// TODO: change to asset handle when implemented
-	std::array<IntrusiveRef<Texture2D>, max_texture_slots> texture_slots;
+	std::array<ref<Texture2D>, max_texture_slots> texture_slots;
 	std::array<ref<Texture2D>, max_texture_slots> text_texture_atlas_slots;
 
-	IntrusiveRef<RenderCommandBuffer> render_command_buffer;
+	ref<RenderCommandBuffer> render_command_buffer;
 
 	render::font_manager m_font_manager;
 
-	IntrusiveRef<Pipeline> quad_pipeline;
-	IntrusiveRef<Pipeline> circle_pipeline;
-	IntrusiveRef<Pipeline> line_pipeline;
-	IntrusiveRef<Pipeline> ui_pipeline;
+	ref<Pipeline> quad_pipeline;
+	ref<Pipeline> circle_pipeline;
+    ref<Pipeline> line_pipeline;
+    ref<Pipeline> ui_pipeline;
 	ref<Pipeline> text_pipeline;
 
-	IntrusiveRef<Material> quad_material;
-	IntrusiveRef<Material> circle_material;
-	IntrusiveRef<Material> line_material;
-	IntrusiveRef<Material> ui_material;
+    ref<Material> quad_material;
+    ref<Material> circle_material;
+    ref<Material> line_material;
+    ref<Material> ui_material;
 	ref<Material> text_material;
 
-	IntrusiveRef<UniformBufferSet> uniform_buffer_set;
+    ref<UniformBufferSet> uniform_buffer_set;
 
 	Camera camera;
 	glm::mat4 camera_transform;
@@ -209,18 +206,16 @@ struct renderer_2d_data_t
 	} gpu_time_query;
 };
 
-} // end namespace ::render2d
-
 class Renderer2D : public RefCounted
 {
 public:
 	Renderer2D() = default;
 	~Renderer2D();
 		
-	void init(render2d::renderer_2d_specification_t spec = {});
+	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
 
-	IntrusiveRef<Texture2D> get_white_texture();
+    ref<Texture2D> get_white_texture();
 
 	void begin_scene(const Camera& camera, const glm::mat4& transform);
 	void begin_scene(const EditorCamera& camera);
@@ -229,8 +224,8 @@ public:
 
 	void on_imgui_render() const;
 
-	IntrusiveRef<RenderPass> get_target_render_pass();
-	void set_target_render_pass(IntrusiveRef<RenderPass> render_pass);
+    ref<RenderPass> get_target_render_pass();
+	void set_target_render_pass(ref<RenderPass> render_pass);
 	void on_recreate_swapchain();
 
 	// return a mutable reference to the font manager
@@ -361,12 +356,12 @@ public:
 	// reset renderer2d stats
 	void reset_stats();
 	// get renderer2d stats
-	render2d::renderer_2d_stats_t get_stats();
+	renderer_2d_stats_t get_stats();
 private:
 	void start_new_batch();
 	void end_batch();
 private:
-	render2d::renderer_2d_data_t* m_renderer_data = nullptr;
+	renderer_2d_data_t* m_renderer_data = nullptr;
 };
 
 } // end namespace Kablunk

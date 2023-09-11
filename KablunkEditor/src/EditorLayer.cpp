@@ -238,7 +238,7 @@ namespace Kablunk
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			render2d::renderer_2d_stats_t stats = m_renderer_2d->get_stats();
+			renderer_2d_stats_t stats = m_renderer_2d->get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());

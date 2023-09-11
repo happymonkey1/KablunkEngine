@@ -22,11 +22,11 @@ Renderer2D::~Renderer2D()
     shutdown();
 }
 
-void Renderer2D::init(render2d::renderer_2d_specification_t spec)
+void Renderer2D::init(renderer_2d_specification_t spec)
 {
     KB_PROFILE_FUNC();
 
-	m_renderer_data = new render2d::renderer_2d_data_t{};
+	m_renderer_data = new renderer_2d_data_t{};
 	m_renderer_data->specification = spec;
 
 	if (m_renderer_data->specification.swap_chain_target)
@@ -44,8 +44,8 @@ void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	m_renderer_data->quad_vertex_buffer_base_ptrs.resize(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data->quad_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::QuadVertex));
-		m_renderer_data->quad_vertex_buffer_base_ptrs[i] = new render2d::QuadVertex[m_renderer_data->max_vertices];
+		m_renderer_data->quad_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(QuadVertex));
+		m_renderer_data->quad_vertex_buffer_base_ptrs[i] = new QuadVertex[m_renderer_data->max_vertices];
 	}
 
 	uint32_t* quad_indices = new uint32_t[m_renderer_data->max_indices];
@@ -75,8 +75,8 @@ void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	m_renderer_data->ui_quad_vertex_buffer_base_ptrs.resize(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data->ui_quad_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::UIQuadVertex));
-		m_renderer_data->ui_quad_vertex_buffer_base_ptrs[i] = new render2d::UIQuadVertex[m_renderer_data->max_vertices];
+		m_renderer_data->ui_quad_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(UIQuadVertex));
+		m_renderer_data->ui_quad_vertex_buffer_base_ptrs[i] = new UIQuadVertex[m_renderer_data->max_vertices];
 	}
 
 	// =======
@@ -87,8 +87,8 @@ void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	m_renderer_data->circle_vertex_buffer_base_ptrs.resize(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data->circle_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::CircleVertex));
-		m_renderer_data->circle_vertex_buffer_base_ptrs[i] = new render2d::CircleVertex[m_renderer_data->max_vertices];
+		m_renderer_data->circle_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(CircleVertex));
+		m_renderer_data->circle_vertex_buffer_base_ptrs[i] = new CircleVertex[m_renderer_data->max_vertices];
 	}
 
 	// =====
@@ -99,8 +99,8 @@ void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	m_renderer_data->line_vertex_buffer_base_ptrs.resize(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data->line_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::LineVertex));
-		m_renderer_data->line_vertex_buffer_base_ptrs[i] = new render2d::LineVertex[m_renderer_data->max_vertices];
+		m_renderer_data->line_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(LineVertex));
+		m_renderer_data->line_vertex_buffer_base_ptrs[i] = new LineVertex[m_renderer_data->max_vertices];
 	}
 
 	// ====
@@ -112,8 +112,8 @@ void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
 		// #TODO(Sean) this should probably be a separate max vertex count: `max_text_vertices`
-		m_renderer_data->text_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(render2d::text_vertex_t));
-		m_renderer_data->text_vertex_buffer_base_ptrs[i] = new render2d::text_vertex_t[m_renderer_data->max_vertices];
+		m_renderer_data->text_vertex_buffers[i] = VertexBuffer::Create(m_renderer_data->max_vertices * sizeof(text_vertex_t));
+		m_renderer_data->text_vertex_buffer_base_ptrs[i] = new text_vertex_t[m_renderer_data->max_vertices];
 	}
 
 	uint32_t white_texture_data = 0xFFFFFFFF;
@@ -920,7 +920,7 @@ void Renderer2D::reset_stats()
 	m_renderer_data->Stats.Circle_count = 0;
 }
 
-render2d::renderer_2d_stats_t Renderer2D::get_stats() { return m_renderer_data->Stats; }
+renderer_2d_stats_t Renderer2D::get_stats() { return m_renderer_data->Stats; }
 
 void Renderer2D::start_new_batch()
 {
