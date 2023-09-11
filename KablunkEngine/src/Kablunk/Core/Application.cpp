@@ -72,7 +72,12 @@ namespace Kablunk
 		KB_CORE_INFO("Finished initializing renderer!");
 		// start rendering render one frame
 		m_render_thread.pump();
+
+        // #TODO deprecate
 		render2d::init();
+
+        m_renderer_2d = ref<Renderer2D>::Create();
+
 		m_render_thread.pump();
 		
 		//m_render_thread.pump();
@@ -308,8 +313,8 @@ namespace Kablunk
 
 	void Application::draw_debug_statistics()
 	{
-
-		auto& font_manager_ = render2d::get_font_manager();
+        // #TODO this should use "screen renderer" rather than world space renderer
+		const auto& font_manager_ = m_renderer_2d->get_font_manager();
 		ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
 		if (!font_asset)
 		{

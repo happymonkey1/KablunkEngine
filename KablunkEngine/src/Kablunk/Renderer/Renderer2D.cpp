@@ -16,6 +16,12 @@
 
 namespace Kablunk
 {
+
+Renderer2D::~Renderer2D()
+{
+    shutdown();
+}
+
 void Renderer2D::init(render2d::renderer_2d_specification_t spec)
 {
     KB_PROFILE_FUNC();
@@ -289,23 +295,36 @@ void Renderer2D::shutdown()
 
 	KB_CORE_INFO("Shutting down Renderer2D!");
 
-	// free quad vertex buffers
-	for (auto buffer : m_renderer_data->quad_vertex_buffer_base_ptrs)
-		delete[] buffer;
+    if (m_renderer_data)
+    {
+	    // free quad vertex buffers
+	    for (auto buffer : m_renderer_data->quad_vertex_buffer_base_ptrs)
+		    delete[] buffer;
 
-	// free circle vertex buffers
-	for (auto buffer : m_renderer_data->circle_vertex_buffer_base_ptrs)
-		delete[] buffer;
+        m_renderer_data->quad_vertex_buffer_base_ptrs.clear();
+	    
+        // free circle vertex buffers
+	    for (auto buffer : m_renderer_data->circle_vertex_buffer_base_ptrs)
+		    delete[] buffer;
 
-	// free line vertex buffers
-	for (auto buffer : m_renderer_data->line_vertex_buffer_base_ptrs)
-		delete[] buffer;
+        m_renderer_data->circle_vertex_buffer_base_ptrs.clear();
 
-	// free text vertex buffers
-	for (auto buffer : m_renderer_data->text_vertex_buffer_base_ptrs)
-		delete[] buffer;
+	    // free line vertex buffers
+	    for (auto buffer : m_renderer_data->line_vertex_buffer_base_ptrs)
+		    delete[] buffer;
 
-	delete m_renderer_data;
+        m_renderer_data->line_vertex_buffer_base_ptrs.clear();
+
+	    // free text vertex buffers
+	    for (auto buffer : m_renderer_data->text_vertex_buffer_base_ptrs)
+		    delete[] buffer;
+
+        m_renderer_data->text_vertex_buffer_base_ptrs.clear();
+
+        delete m_renderer_data;
+
+        m_renderer_data = nullptr;
+    }
 }
 
 IntrusiveRef<Texture2D> Renderer2D::get_white_texture()

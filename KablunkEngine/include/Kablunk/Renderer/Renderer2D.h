@@ -215,7 +215,7 @@ class Renderer2D : public RefCounted
 {
 public:
 	Renderer2D() = default;
-	~Renderer2D() = default;
+	~Renderer2D();
 		
 	void init(render2d::renderer_2d_specification_t spec = {});
 	void shutdown();

@@ -84,7 +84,8 @@ namespace Kablunk
 		if (m_command_queues)
 		{
 			for (size_t i = 0; i < s_render_command_queue_size; ++i)
-			    KB_CORE_ASSERT(m_command_queues[i].is_empty(), "[renderer]: renderer shutting down but command_queue[{}] is not empty?", i)
+                if (!m_command_queues[i].is_empty())
+			        KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
 		}
 
 		delete m_renderer_api;

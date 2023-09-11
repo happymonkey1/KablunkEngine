@@ -28,7 +28,7 @@ namespace Kablunk::render
 		// try to remove a font from the font cache
 		void remove_font_file_from_library(ref<font_asset_t> font_asset);
 		// try get a font by filename
-		ref<font_asset_t> get_font_asset(const std::string& filename);
+		ref<font_asset_t> get_font_asset(const std::string& filename) const;
 		// get a reference to the font engine
 		FT_Library& get_ft_engine() { return m_ft_library; }
 		// get a reference to the font engine
