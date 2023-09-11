@@ -5,7 +5,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage /*= VertexBufferUsage::Static*/)

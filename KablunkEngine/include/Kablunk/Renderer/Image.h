@@ -7,7 +7,7 @@
 #include "Kablunk/Core/Buffer.h"
 #include <glm/glm.hpp>
 
-namespace Kablunk
+namespace kb
 {
 	enum class ImageFormat
 	{

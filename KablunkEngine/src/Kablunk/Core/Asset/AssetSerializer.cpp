@@ -12,7 +12,7 @@
 #include "Kablunk/Audio/AudioAsset.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 // ======================
 // TextureAssetSerializer

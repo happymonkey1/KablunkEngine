@@ -6,7 +6,7 @@
 
 #include "Platform/Vulkan/VulkanRenderPass.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<RenderPass> RenderPass::Create(const RenderPassSpecification& specification)
 	{

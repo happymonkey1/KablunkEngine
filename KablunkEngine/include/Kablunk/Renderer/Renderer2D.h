@@ -18,7 +18,7 @@
 
 #include "Kablunk/Renderer/Font/FontManager.h"
 
-namespace Kablunk
+namespace kb
 { // start namespace kb::render
 
 struct QuadVertex

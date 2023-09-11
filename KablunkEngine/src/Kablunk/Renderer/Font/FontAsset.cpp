@@ -3,7 +3,7 @@
 
 #include "Kablunk/Asset/AssetCommand.h"
 
-namespace Kablunk::render
+namespace kb::render
 {
 
 	font_asset::font_asset(const font_asset_create_info_t& create_info)

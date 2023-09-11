@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 
 	struct audio_engine_config

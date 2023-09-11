@@ -4,7 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
-namespace Kablunk::Math
+namespace kb::Math
 {
 	bool decompose_transform(const glm::mat4& transform, glm::vec3& out_translation, glm::vec3& out_scale, glm::vec3& out_rotation)
 	{

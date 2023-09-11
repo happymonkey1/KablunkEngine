@@ -15,7 +15,7 @@
 
 int main(int argc, char** argv);
 
-namespace Kablunk {
+namespace kb {
 
 	struct ApplicationSpecification
 	{

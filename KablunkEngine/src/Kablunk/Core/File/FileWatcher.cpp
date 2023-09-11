@@ -2,7 +2,7 @@
 
 #include "Kablunk/Core/File/FileWatcher.h"
 
-namespace Kablunk
+namespace kb
 {
 
 }

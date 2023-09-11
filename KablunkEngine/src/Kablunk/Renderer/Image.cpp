@@ -5,7 +5,7 @@
 #include "Platform/Vulkan/VulkanImage.h"
 #include "Kablunk/Renderer/RendererAPI.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	ref<Image2D> Image2D::Create(ImageSpecification specification, Buffer buffer)

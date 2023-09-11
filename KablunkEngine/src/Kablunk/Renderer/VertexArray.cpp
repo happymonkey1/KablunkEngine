@@ -4,7 +4,7 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<VertexArray> VertexArray::Create()
 	{

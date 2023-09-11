@@ -12,7 +12,7 @@
 
 #include <filesystem>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	class AssetManager

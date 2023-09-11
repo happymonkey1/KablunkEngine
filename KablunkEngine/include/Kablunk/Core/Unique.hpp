@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <concepts>
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // #TODO should probably be moved to concepts.hpp

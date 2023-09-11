@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 	// documentation for miniaudio https://miniaud.io/docs/manual/index.html
 

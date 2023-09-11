@@ -5,7 +5,7 @@
 #include <chrono>
 #include <functional>
 
-namespace Kablunk
+namespace kb
 {
 
 // adapted from https://gist.github.com/justgord/4482447

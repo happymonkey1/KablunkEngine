@@ -2,7 +2,7 @@
 
 #include "Panels/Asset/DefaultAssetViewerPanels.h"
 
-namespace Kablunk
+namespace kb
 {
 	// ===========
 	// AssetEditor

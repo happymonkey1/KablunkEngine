@@ -27,12 +27,12 @@ namespace Assimp
 	class Importer;
 }
 
-namespace Kablunk
+namespace kb
 {
 	class Entity;
 }
 
-namespace Kablunk
+namespace kb
 {
 	struct Vertex
 	{
@@ -137,7 +137,7 @@ namespace Kablunk
 	class MeshData : public RefCounted
 	{
 	public:
-		MeshData(const std::string& filename, Kablunk::Entity entity);
+		MeshData(const std::string& filename, kb::Entity entity);
 		MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform);
 		virtual ~MeshData();
 

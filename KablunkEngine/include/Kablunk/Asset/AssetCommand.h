@@ -9,7 +9,7 @@
 
 #include "Kablunk/Core/Logger.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 	// try find an asset by filepath
 	template <typename T>

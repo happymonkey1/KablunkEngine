@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace Kablunk
+namespace kb
 {
 	enum class FieldType
 	{

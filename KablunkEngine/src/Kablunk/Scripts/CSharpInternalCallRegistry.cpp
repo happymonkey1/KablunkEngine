@@ -10,7 +10,7 @@
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scripts/CSharpScriptWrappers.h"
 
-namespace Kablunk
+namespace kb
 {
 	std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
 	std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;

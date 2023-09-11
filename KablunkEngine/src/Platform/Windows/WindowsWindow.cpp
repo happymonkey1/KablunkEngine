@@ -14,7 +14,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace Kablunk {
+namespace kb {
 
     static uint8_t s_glfw_window_count = 0;
 

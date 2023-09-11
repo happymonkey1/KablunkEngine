@@ -4,7 +4,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanPhysicalDevice::VulkanPhysicalDevice()

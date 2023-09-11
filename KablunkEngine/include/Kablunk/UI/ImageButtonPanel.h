@@ -5,12 +5,12 @@
 #include "Kablunk/UI/Panel.h"
 
 // forward declaration
-namespace Kablunk
+namespace kb
 {
 	class Texture2D;
 }
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	class ImageButtonPanel : public Panel

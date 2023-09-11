@@ -8,7 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanPipeline : public Pipeline
 	{

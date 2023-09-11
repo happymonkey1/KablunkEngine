@@ -9,7 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace Kablunk::Threading
+namespace kb::Threading
 {
 	
 

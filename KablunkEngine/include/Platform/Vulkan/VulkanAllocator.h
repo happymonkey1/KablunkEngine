@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace Kablunk
+namespace kb
 {
 	struct GPUMemoryStats
 	{

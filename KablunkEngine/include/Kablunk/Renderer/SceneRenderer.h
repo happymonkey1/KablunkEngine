@@ -16,7 +16,7 @@
 #include "Kablunk/Renderer/MaterialAsset.h"
 #include "Kablunk/Renderer/Mesh.h"
 
-namespace Kablunk
+namespace kb
 {
     class Renderer2D;
 

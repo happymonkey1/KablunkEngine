@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	inline static const std::unordered_map<std::string, AssetType> s_asset_extension_map = {

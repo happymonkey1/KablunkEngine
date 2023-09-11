@@ -6,7 +6,7 @@
 #include <imgui/imgui.h>
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 	constexpr size_t MAX_PATH_BUFFER_SIZE = 256;
 	static char s_scene_path_buffer[MAX_PATH_BUFFER_SIZE];

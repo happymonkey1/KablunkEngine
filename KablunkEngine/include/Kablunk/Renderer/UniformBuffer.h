@@ -4,7 +4,7 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Renderer/Buffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	class UniformBuffer : public RefCounted
 	{

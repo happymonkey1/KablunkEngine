@@ -10,7 +10,7 @@ namespace kb::vk
 
 command_pool::command_pool()
 {
-    auto device = Kablunk::VulkanContext::Get()->GetDevice();
+    auto device = kb::VulkanContext::Get()->GetDevice();
     VkDevice vk_device = device->GetVkDevice();
 
     VkCommandPoolCreateInfo vk_command_pool_create_info = {};
@@ -27,7 +27,7 @@ command_pool::command_pool()
 
 command_pool::~command_pool()
 {
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
     // destroy graphics
     vkDestroyCommandPool(vk_device, m_vk_graphics_command_pool, nullptr);
@@ -37,7 +37,7 @@ command_pool::~command_pool()
 
 VkCommandBuffer command_pool::allocate_command_buffer(bool p_begin, bool p_compute /*= false*/)
 {
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
     VkCommandBuffer vk_command_buffer;
 
@@ -63,13 +63,13 @@ VkCommandBuffer command_pool::allocate_command_buffer(bool p_begin, bool p_compu
 
 void command_pool::flush_command_buffer(VkCommandBuffer p_vk_command_buffer)
 {
-    auto device = Kablunk::VulkanContext::Get()->GetDevice();
+    auto device = kb::VulkanContext::Get()->GetDevice();
     flush_command_buffer(p_vk_command_buffer, device->GetGraphicsQueue(), command_buffer_type_t::graphics);
 }
 
 void command_pool::flush_command_buffer(VkCommandBuffer p_vk_command_buffer, VkQueue p_vk_queue, command_buffer_type_t p_command_buffer_type)
 {
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
     const uint64_t k_default_fence_timeout = 100'000'000'000;
 

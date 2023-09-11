@@ -10,7 +10,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk::UI
+namespace kb::UI
 {
 	ImTextureID GetTextureID(ref<Texture2D> texture)
 	{

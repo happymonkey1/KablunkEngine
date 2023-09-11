@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Kablunk
+namespace kb
 {
 	using MouseCode = uint16_t;
 

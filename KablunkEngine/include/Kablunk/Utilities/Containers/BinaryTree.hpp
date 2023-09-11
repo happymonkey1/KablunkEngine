@@ -2,7 +2,7 @@
 
 #include <Kablunk/Utilities/Containers/Node.hpp>
 
-namespace Kablunk::Utilties
+namespace kb::Utilties
 {
 	template <typename T>
 	class BinaryTree

@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	static std::map<VkImage, WeakRef<VulkanImage2D>> s_image_refs;
 

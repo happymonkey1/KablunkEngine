@@ -3,7 +3,7 @@
 
 #include "Kablunk/Scene/Components.h"
 
-namespace Kablunk
+namespace kb
 {
 	Entity::Entity(EntityHandle handle, Scene* scene)
 		: m_entity_handle{ handle }, m_scene{ scene }

@@ -6,7 +6,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Kablunk
+namespace kb
 {
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{

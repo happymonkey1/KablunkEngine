@@ -4,7 +4,7 @@
 #include "spdlog/fmt/bundled/ostream.h"
 
 
-namespace Kablunk {
+namespace kb {
 	enum class EventType {
 		None = 0,
 		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved, WindowMinimized,

@@ -5,7 +5,7 @@
 
 #include "Platform/Vulkan/VulkanUniformBufferSet.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<UniformBufferSet> UniformBufferSet::Create(uint32_t frames)
 	{

@@ -13,7 +13,7 @@
 #	error "Plugins are not supported on platforms other than windows!"
 #endif
 
-namespace Kablunk
+namespace kb
 {
 	enum class PluginType : u8
 	{

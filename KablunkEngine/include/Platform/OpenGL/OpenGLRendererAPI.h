@@ -5,7 +5,7 @@
 
 #include "Kablunk/Renderer/MaterialAsset.h"
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLRendererAPI : public RendererAPI
 	{

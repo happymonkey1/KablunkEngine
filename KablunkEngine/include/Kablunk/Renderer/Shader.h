@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace Kablunk {
+namespace kb {
 
 	enum class ShaderUniformType
 	{

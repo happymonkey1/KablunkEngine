@@ -4,7 +4,7 @@
 
 #include "Kablunk/Imgui/ImGuiLayer.h"
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLImguiLayer : public ImGuiLayer
 	{

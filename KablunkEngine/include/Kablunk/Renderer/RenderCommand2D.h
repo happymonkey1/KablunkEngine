@@ -10,7 +10,7 @@
 #include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Scene/Entity.h"
 
-namespace Kablunk::render2d
+namespace kb::render2d
 {
 	// #TODO refactor public api
 	
@@ -36,7 +36,7 @@ namespace Kablunk::render2d
 	static inline void set_target_render_pass(IntrusiveRef<RenderPass> render_pass) { Singleton<Renderer2D>::get().set_target_render_pass(render_pass); }
 
 	// draw a sprite
-	static inline void draw_sprite(Kablunk::Entity entity) { Singleton<Renderer2D>::get().draw_sprite(entity); }
+	static inline void draw_sprite(kb::Entity entity) { Singleton<Renderer2D>::get().draw_sprite(entity); }
 
 	// draw a quad with vec2 position
 	static inline void draw_quad(const glm::vec2& position, const glm::vec2& size, const IntrusiveRef<Texture2D>& texture, float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4{ 1.0f })

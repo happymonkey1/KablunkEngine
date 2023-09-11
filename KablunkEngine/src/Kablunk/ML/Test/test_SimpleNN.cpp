@@ -4,9 +4,9 @@
 
 #include "Kablunk/ML/Network/v1/SimpleNeuralNetwork.hpp"
 
-using namespace Kablunk::ml::network;
+using namespace kb::ml::network;
 
-namespace Kablunk::ml::test
+namespace kb::ml::test
 {
 	// forward declarations
 	void test_nn_constructor();
@@ -34,7 +34,7 @@ namespace Kablunk::ml::test
 		KB_CORE_TRACE("[Test] Network layer count = {}", nn.get_layer_count());
 		KB_CORE_TRACE("[Test] Network with weights = 0");
 
-		Kablunk::ml::tensor::Tensor<f32, 2> tensor{ 1, input_size };
+		kb::ml::tensor::Tensor<f32, 2> tensor{ 1, input_size };
 		tensor.fill(1.0f);
 		auto output = nn.forward(tensor);
 

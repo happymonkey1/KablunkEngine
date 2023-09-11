@@ -5,7 +5,7 @@
 #include "Kablunk/Imgui/ImGuiLayer.h"
 #include "Kablunk/Renderer/RenderCommandBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanImGuiLayer : public ImGuiLayer
 	{

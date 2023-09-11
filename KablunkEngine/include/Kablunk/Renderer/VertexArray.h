@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace Kablunk
+namespace kb
 {
 	class VertexArray : public RefCounted
 	{

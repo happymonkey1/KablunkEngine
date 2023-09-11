@@ -31,7 +31,7 @@
 
 // https://www.mono-project.com/docs/advanced/embedding/
 
-namespace Kablunk
+namespace kb
 {
 	namespace Internal
 	{
@@ -42,7 +42,7 @@ namespace Kablunk
 			
 			//#TODO figure out better way than using the exposed c# api
 			glm::vec3 screen_pos{ 0.0f };
-			Kablunk::Scripts::Kablunk_CameraComponent_ScreenToWorldPosition(&glm::vec2{ point.first, point.second }, &screen_pos);
+			kb::Scripts::Kablunk_CameraComponent_ScreenToWorldPosition(&glm::vec2{ point.first, point.second }, &screen_pos);
 
 			b2Vec2 point_b2D{ screen_pos.x, screen_pos.y };
 			
@@ -672,7 +672,7 @@ namespace Kablunk
 	void CSharpScriptEngine::InstantiateEntityClass(Entity entity)
 	{
 		Scene* context = entity.m_scene;
-		Kablunk::uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
+		kb::uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 		KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, static_cast<uint64_t>(entity.m_entity_handle));
 		auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
 		auto& module_name = script_comp.Module_name;

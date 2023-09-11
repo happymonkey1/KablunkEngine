@@ -6,7 +6,7 @@
 
 #include <map>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanUniformBufferSet : public UniformBufferSet
 	{

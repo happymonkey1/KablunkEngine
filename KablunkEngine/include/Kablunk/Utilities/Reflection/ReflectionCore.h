@@ -7,13 +7,13 @@
 
 // Use to declare reflection for a user defined struct
 #define KB_REFLECT() \
-	friend class Kablunk::Reflect::BaseResolver; \
-	static Kablunk::Reflect::struct_TypeTraits Reflection; \
-	static void InitReflection(Kablunk::Reflect::struct_TypeTraits*);
+	friend class kb::Reflect::BaseResolver; \
+	static kb::Reflect::struct_TypeTraits Reflection; \
+	static void InitReflection(kb::Reflect::struct_TypeTraits*);
 
 #define KB_REFLECT_STRUCT_BEGIN(type) \
-	Kablunk::Reflect::struct_TypeTraits type::Reflection{ type::InitReflection }; \
-	void type::InitReflection(Kablunk::Reflect::struct_TypeTraits* reflection) \
+	kb::Reflect::struct_TypeTraits type::Reflection{ type::InitReflection }; \
+	void type::InitReflection(kb::Reflect::struct_TypeTraits* reflection) \
 	{ \
 		using T = type; \
 		reflection->Name = #type; \
@@ -21,7 +21,7 @@
 		reflection->Members = { 
 
 #define KB_REFLECT_STRUCT_DEFINE_MEMBER(name) \
-		{ #name, offsetof(T, name), Kablunk::Reflect::TypeResolver<decltype(T::name)>::Get() },
+		{ #name, offsetof(T, name), kb::Reflect::TypeResolver<decltype(T::name)>::Get() },
 
 #define KB_REFLECT_STRUCT_END() \
 		}; \

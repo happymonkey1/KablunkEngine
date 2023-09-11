@@ -2,7 +2,7 @@
 #ifndef KABLUNK_CORE_FILE_FILE_WATCHER_H
 #define KABLUNK_CORE_FILE_FILE_WATCHER_H
 
-namespace Kablunk
+namespace kb
 {
 	class FileWatcher;
 

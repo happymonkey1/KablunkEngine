@@ -6,12 +6,12 @@
 #include "Kablunk/Utilities/EnumIterator.hpp"
 
 // forward declarations
-namespace Kablunk
+namespace kb
 {
 	class Texture2D;
 }
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	struct panel_create_info_t

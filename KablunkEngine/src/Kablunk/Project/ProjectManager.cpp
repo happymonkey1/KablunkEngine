@@ -3,7 +3,7 @@
 
 #include "Kablunk/Asset/AssetManager.h"
 
-namespace Kablunk
+namespace kb
 {
 	void ProjectManager::init()
 	{

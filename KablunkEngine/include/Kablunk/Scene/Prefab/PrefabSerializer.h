@@ -4,7 +4,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class Prefab;

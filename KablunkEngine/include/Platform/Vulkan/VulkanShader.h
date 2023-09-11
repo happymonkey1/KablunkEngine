@@ -7,7 +7,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanShader : public Shader
 	{

@@ -5,7 +5,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Project/Project.h"
 
-namespace Kablunk
+namespace kb
 {
 	class ProjectManager
 	{

@@ -5,7 +5,7 @@
 #include "Platform/OpenGL/OpenGLContext.h"
 #include "Platform/Vulkan/VulkanContext.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<GraphicsContext> GraphicsContext::Create(void* window)
 	{

@@ -5,7 +5,7 @@
 #include "Kablunk/Core/ScopedTimer.h"
 #include <chrono>
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // default timer used in engine (sacrifices *some* precision for performance). Use nano_timer for more exact timings

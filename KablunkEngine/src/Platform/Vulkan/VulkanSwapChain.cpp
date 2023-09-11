@@ -7,7 +7,7 @@
 
 #include <GLFW/glfw3.h>
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 void VulkanSwapChain::Init(VkInstance instance, const ref<VulkanDevice>& device)

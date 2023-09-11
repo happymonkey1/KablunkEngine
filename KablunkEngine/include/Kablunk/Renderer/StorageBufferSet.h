@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/StorageBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	
 	class StorageBufferSet : public RefCounted

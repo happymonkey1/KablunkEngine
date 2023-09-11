@@ -5,7 +5,7 @@
 #include "Platform/Vulkan/VulkanUniformBuffer.h"
 
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, uint32_t binding)

@@ -14,7 +14,7 @@
 
 #include <glm/glm.hpp>
 
-namespace Kablunk 
+namespace kb 
 {
 	class RendererAPI : public RefCounted
 	{

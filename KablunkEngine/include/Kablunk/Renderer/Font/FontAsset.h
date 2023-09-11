@@ -12,7 +12,7 @@
 
 #include <unordered_map>
 
-namespace Kablunk::render
+namespace kb::render
 {
 
 	struct font_asset_create_info

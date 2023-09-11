@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Core/Layer.h"
 
-namespace Kablunk {
+namespace kb {
 	Layer::Layer(const std::string& debugName) : m_DebugName(debugName) { }
 
 	Layer::~Layer() {}

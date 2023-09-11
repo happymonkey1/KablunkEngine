@@ -11,7 +11,7 @@
 
 #include "Kablunk/Renderer/Image.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec)

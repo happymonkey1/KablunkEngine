@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	// #TODO: only 255 different asset types supports

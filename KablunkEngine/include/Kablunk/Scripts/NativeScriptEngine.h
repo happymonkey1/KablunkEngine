@@ -12,7 +12,7 @@
  * are not used/included. 
 */
 
-namespace Kablunk
+namespace kb
 {
 	class Scene;
 
@@ -46,7 +46,7 @@ namespace Kablunk
 /* Macro to declare a script as a native script, must be used in conjunction with REGISTER_NATIVE_SCRIPT macro. */
 // #TODO For some reason visual studio thinks this macro is undefined when using in other projects, look into potential bug.
 #	define IMPLEMENT_NATIVE_SCRIPT(T) \
-		static std::unique_ptr<Kablunk::INativeScript> Create() \
+		static std::unique_ptr<kb::INativeScript> Create() \
 		{ \
 			return std::make_unique<T>(); \
 		}
@@ -54,13 +54,13 @@ namespace Kablunk
 /* Register a macro with NativeScriptModule to allow for script loading and use during editor runtime. */
 /* WARNING, currently need to manually add '__declspec(dllexport)' if project being built is a dll */
 #	define BEGIN_REGISTER_NATIVE_SCRIPTS() \
-	extern "C" __declspec(dllexport) std::unique_ptr<Kablunk::INativeScript> get_script_from_registry(const std::string& type_str) \
+	extern "C" __declspec(dllexport) std::unique_ptr<kb::INativeScript> get_script_from_registry(const std::string& type_str) \
 	{ 
 #	define REGISTER_NATIVE_SCRIPT(T) \
-		if (Kablunk::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
+		if (kb::Parser::CPP::strip_namespace(std::string{ #T }) == type_str) \
 			return T::Create();
 #	define END_REGISTER_NATIVE_SCRIPTS() \
-		return std::unique_ptr<Kablunk::INativeScript>(nullptr); \
+		return std::unique_ptr<kb::INativeScript>(nullptr); \
 	};
 #else
 #	define IMPLEMENT_NATIVE_SCRIPT
@@ -81,7 +81,7 @@ namespace Kablunk
 
 struct IRuntimeObjectSystem;
 
-namespace Kablunk
+namespace kb
 {
 	namespace Internal
 	{

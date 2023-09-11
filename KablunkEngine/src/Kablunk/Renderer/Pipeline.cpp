@@ -6,7 +6,7 @@
 
 #include "Platform/Vulkan/VulkanPipeline.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<Pipeline> Pipeline::Create(const PipelineSpecification& specification)
 	{

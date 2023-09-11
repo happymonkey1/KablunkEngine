@@ -5,7 +5,7 @@
 
 #include "Platform/Vulkan/VulkanStorageBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<StorageBuffer> StorageBuffer::Create(size_t size, uint32_t binding)
 	{

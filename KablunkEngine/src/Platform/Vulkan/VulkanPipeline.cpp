@@ -8,7 +8,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	namespace Utils

@@ -7,7 +7,7 @@
 
 #include "Kablunk/Asset/AssetCommand.h"
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 	// \brief initialize the audio engine
 	inline void init_audio_engine() { Singleton<AudioEngine>::get().init(); }

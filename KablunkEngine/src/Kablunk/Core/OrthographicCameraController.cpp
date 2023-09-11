@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Input.h"
 
 
-namespace Kablunk
+namespace kb
 {
 
 	OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)

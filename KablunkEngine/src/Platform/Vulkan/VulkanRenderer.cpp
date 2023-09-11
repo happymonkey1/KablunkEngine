@@ -2,7 +2,7 @@
 
 #include "Platform/Vulkan/VulkanRenderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	namespace Utils
 	{

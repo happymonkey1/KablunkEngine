@@ -10,7 +10,7 @@
 
 #include <filesystem>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	struct AssetMetadata

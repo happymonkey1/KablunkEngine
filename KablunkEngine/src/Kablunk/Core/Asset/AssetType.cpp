@@ -4,7 +4,7 @@
 
 #include "Kablunk/Asset/AssetExtensions.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	AssetType extension_to_asset_type(const std::string& extension)

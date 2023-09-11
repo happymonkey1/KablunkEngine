@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace Kablunk::Utils
+namespace kb::Utils
 {
 	template <typename T>
 	static void WaitForSecondsCallback(float delay, T callback);

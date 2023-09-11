@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/UniformBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class UniformBufferSet : public RefCounted

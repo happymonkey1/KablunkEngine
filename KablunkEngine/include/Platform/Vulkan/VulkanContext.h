@@ -15,7 +15,7 @@
 
 struct GLFWwindow;
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanContext : public GraphicsContext {
 	public:

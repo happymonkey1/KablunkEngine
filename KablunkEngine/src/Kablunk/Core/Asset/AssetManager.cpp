@@ -11,7 +11,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	void AssetManager::init()

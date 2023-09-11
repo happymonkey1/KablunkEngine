@@ -1,7 +1,7 @@
 #ifndef KABLUNK_CORE_TIMESTEP_H
 #define KABLUNK_CORE_TIMESTEP_H
 
-namespace Kablunk
+namespace kb
 {
 	class Timestep
 	{

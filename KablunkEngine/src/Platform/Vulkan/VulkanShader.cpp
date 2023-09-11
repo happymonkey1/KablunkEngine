@@ -16,7 +16,7 @@
 
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 
 	namespace Internal
@@ -253,7 +253,7 @@ namespace Kablunk
 		return result;
 	}
 
-	Kablunk::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
+	kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
 	{
         KB_PROFILE_FUNC()
 

@@ -4,7 +4,7 @@
 #include "Kablunk/Scripts/NativeScript.h"
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	// ===========================

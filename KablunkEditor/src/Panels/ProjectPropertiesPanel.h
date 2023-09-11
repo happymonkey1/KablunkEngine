@@ -4,7 +4,7 @@
 #include <Kablunk.h> 
 #include <Kablunk/Project/Project.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class ProjectPropertiesPanel

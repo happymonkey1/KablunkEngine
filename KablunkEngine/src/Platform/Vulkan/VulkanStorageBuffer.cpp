@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Core/Logger.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanStorageBuffer::VulkanStorageBuffer(size_t size, uint32_t binding)

@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 // #TODO deprecate "Kablunk" namespace
-namespace Kablunk
+namespace kb
 {
 	
 	using i8  = int8_t;

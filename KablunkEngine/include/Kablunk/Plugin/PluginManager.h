@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Kablunk
+namespace kb
 {
 
 	class PluginManager

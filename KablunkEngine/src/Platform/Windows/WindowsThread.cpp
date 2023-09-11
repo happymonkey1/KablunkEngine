@@ -8,7 +8,7 @@
 #	error "trying to include windows specific platform on non-windows platform?"
 #endif
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // =====================

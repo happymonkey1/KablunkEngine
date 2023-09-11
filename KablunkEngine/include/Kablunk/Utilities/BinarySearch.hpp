@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdint.h>
 
-namespace Kablunk::Utilties
+namespace kb::Utilties
 {
 
 	template <typename T, typename CompareFunc, typename iterator = std::vector<T>::const_iterator>

@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	static const uint32_t s_max_frame_buffer_size{ 8192 }; // Should be determined by gpu capabilities during runtime 
@@ -253,13 +253,13 @@ namespace Kablunk
 			Utilities::KablunkTextureFormatToGLenum(spec.format), GL_INT, &value);
 	}
 
-	Kablunk::ref<Kablunk::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
+	kb::ref<kb::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;
 	}
 
-	Kablunk::ref<Kablunk::Image2D> OpenGLFramebuffer::GetDepthImage() const
+	kb::ref<kb::Image2D> OpenGLFramebuffer::GetDepthImage() const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return nullptr;

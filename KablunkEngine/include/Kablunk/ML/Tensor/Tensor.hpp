@@ -10,7 +10,7 @@
 #include <array>
 #include <string>
 
-namespace Kablunk::ml::tensor
+namespace kb::ml::tensor
 {
 
 	template <typename T, size_t rank>
@@ -373,14 +373,14 @@ namespace Kablunk::ml::tensor
 
 }
 
-namespace Kablunk::ml
+namespace kb::ml
 {
 
 	template <typename T = f32>
-	using tensor_1d_t = Kablunk::ml::tensor::Tensor<T, 1ull>;
+	using tensor_1d_t = kb::ml::tensor::Tensor<T, 1ull>;
 
 	template <typename T = f32>
-	using tensor_2d_t = Kablunk::ml::tensor::Tensor<T, 2ull>;
+	using tensor_2d_t = kb::ml::tensor::Tensor<T, 2ull>;
 
 }
 

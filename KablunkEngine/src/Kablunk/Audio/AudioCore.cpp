@@ -4,7 +4,7 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 
 }

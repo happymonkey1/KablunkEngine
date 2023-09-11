@@ -6,7 +6,7 @@
 
 #include "Kablunk/Core/CoreTypes.h"
 
-namespace Kablunk::ml::optimizer
+namespace kb::ml::optimizer
 {
 
 	// abstract base class for an optimizer
@@ -15,7 +15,7 @@ namespace Kablunk::ml::optimizer
 	{
 	public:
 		using value_t = T;
-		using tensor_t = Kablunk::ml::tensor::Tensor<value_t, 2ull>;
+		using tensor_t = kb::ml::tensor::Tensor<value_t, 2ull>;
 	public:
 		virtual ~IOptimizer() = default;
 

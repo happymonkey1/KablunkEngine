@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-namespace Kablunk
+namespace kb
 {
 	class FileDialog
 	{
@@ -32,7 +32,7 @@ namespace Kablunk
 	};
 }
 
-namespace Kablunk::Utils
+namespace kb::Utils
 {
 	std::wstring StringToWideString(const std::string& str);
 }

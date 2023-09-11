@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <type_traits>
 
-namespace Kablunk
+namespace kb
 {
 
 class RefCounted
@@ -243,21 +243,5 @@ using weak_ref = WeakRef<T>;
 
 // ==============
 }
-
-// #TODO remove when "Kablunk" namespace usage above is deprecated
-namespace kb
-{ // start namespace kb
-// ==============
-//   type alias
-// ==============
-
-// intrusive ref counted pointer
-template <typename T>
-using ref = Kablunk::ref<T>;
-
-// view for a intrusive ref counted pointer
-template <typename T>
-using weak_ref = Kablunk::WeakRef<T>;
-} // end namespace kb
 
 #endif

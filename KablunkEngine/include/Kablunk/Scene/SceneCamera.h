@@ -3,7 +3,7 @@
 
 #include "Kablunk/Renderer/Camera.h"
 
-namespace Kablunk
+namespace kb
 {
 	class SceneCamera : public Camera
 	{

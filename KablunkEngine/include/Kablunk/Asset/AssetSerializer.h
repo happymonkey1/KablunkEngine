@@ -8,8 +8,8 @@
 
 #include <unordered_map>
 
-namespace Kablunk::asset
-{ // start namespace Kablunk::asset
+namespace kb::asset
+{ // start namespace kb::asset
 
 // abstract asset serializer base class
 class AssetSerializer : public RefCounted
@@ -46,6 +46,6 @@ public:
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
 };
 
-} // end namespace Kablunk::asset
+} // end namespace kb::asset
 
 #endif

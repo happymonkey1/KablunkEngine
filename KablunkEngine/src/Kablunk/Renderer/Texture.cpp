@@ -5,7 +5,7 @@
 #include "Platform/OpenGL/OpenGLTexture.h"
 #include "Platform/Vulkan/VulkanTexture.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<Texture2D> Texture2D::Create(ImageFormat format, uint32_t width, uint32_t height, const void* data)
 	{

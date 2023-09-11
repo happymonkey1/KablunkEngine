@@ -5,8 +5,8 @@
 #include "Kablunk/Core/KeyCodes.h"
 #include "Kablunk/Core/MouseCodes.h"
 
-namespace Kablunk::input
-{ // start namespace Kablunk::input
+namespace kb::input
+{ // start namespace kb::input
 
 
 // \brief return whether the passed in key code is pressed
@@ -61,6 +61,6 @@ void set_mouse_motion_mode(MouseMotionMode mode);
 // \warning not thread safe because of glfw
 MouseMotionMode get_mouse_motion_mode();
 
-} // end namespace Kablunk::input
+} // end namespace kb::input
 
 #endif

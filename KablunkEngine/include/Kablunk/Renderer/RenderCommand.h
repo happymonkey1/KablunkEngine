@@ -12,7 +12,7 @@
 
 #include <mutex>
 
-namespace Kablunk::render
+namespace kb::render
 {
 // =======
 // new api

@@ -5,7 +5,7 @@
 #include "Kablunk/ML/Tensor/Tensor.hpp"
 #include <glm/glm.hpp>
 
-namespace Kablunk::ml::network
+namespace kb::ml::network
 {
 	// #TODO add constraints after transition to c++20 
 

@@ -6,7 +6,7 @@
 #include <mutex>
 #include <unordered_set>
 
-namespace Kablunk
+namespace kb
 {
 	static std::unordered_set<void*> s_live_references;
 	static std::mutex s_live_references_mutex;

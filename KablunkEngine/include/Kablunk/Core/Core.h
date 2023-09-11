@@ -11,7 +11,7 @@
 #include "Kablunk/Debugging/profiling.h"
 #include <memory>
 
-namespace Kablunk
+namespace kb
 {
 	void InitCore();
 	void ShutdownCore();
@@ -37,7 +37,7 @@ namespace Kablunk
 #	define ENTT_ID_TYPE uint64_t
 #endif
 
-namespace Kablunk
+namespace kb
 {
 	template <typename T>
 	using Scope = std::unique_ptr<T>;

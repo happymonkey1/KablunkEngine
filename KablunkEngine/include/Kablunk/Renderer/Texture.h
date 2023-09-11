@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <string>
 
-namespace Kablunk 
+namespace kb 
 {
 	class Texture : public asset::Asset
 	{

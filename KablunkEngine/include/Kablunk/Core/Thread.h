@@ -3,7 +3,7 @@
 #include <string>
 #include <thread>
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // class that is implemented on a platform specific basis to avoid user thread library overhead

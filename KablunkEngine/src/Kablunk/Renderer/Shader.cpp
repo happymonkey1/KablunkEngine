@@ -5,7 +5,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
 
-namespace Kablunk
+namespace kb
 {
 	std::vector<ref<Shader>> Shader::s_all_shaders;
 
@@ -66,7 +66,7 @@ namespace Kablunk
 		return shader;
 	}
 
-	ref<Kablunk::Shader> ShaderLibrary::Get(const std::string& name)
+	ref<kb::Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		KB_CORE_ASSERT(Exists(name), "Shader does not exist!");
 		return m_shaders[name];

@@ -13,7 +13,7 @@
 
 #include <imgui.h>
 
-namespace Kablunk
+namespace kb
 {
 	static std::vector<std::thread> s_thread_pool;
 

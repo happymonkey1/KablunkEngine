@@ -10,7 +10,7 @@
 
 struct GLFWwindow;
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanSwapChain
 	{

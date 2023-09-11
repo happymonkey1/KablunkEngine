@@ -5,7 +5,7 @@
 #include "Platform/OpenGL/OpenGLUniformBuffer.h"
 #include "Platform/Vulkan/VulkanUniformBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<UniformBuffer> UniformBuffer::Create(uint32_t size, uint32_t binding)
 	{

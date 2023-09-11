@@ -6,7 +6,7 @@
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
 #include "Platform/Vulkan/VulkanFramebuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
 	{
@@ -35,7 +35,7 @@ namespace Kablunk
 
 	}
 
-	std::weak_ptr<Kablunk::Framebuffer> FramebufferPool::AllocateBuffer()
+	std::weak_ptr<kb::Framebuffer> FramebufferPool::AllocateBuffer()
 	{
 		return std::weak_ptr<Framebuffer>();
 	}

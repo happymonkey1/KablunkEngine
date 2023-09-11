@@ -4,7 +4,7 @@
 #include "stb_image.h"
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	OpenGLTexture2D::OpenGLTexture2D(ImageFormat format, uint32_t width, uint32_t height)

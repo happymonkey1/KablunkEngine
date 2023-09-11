@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Texture.h"
 
-namespace Kablunk
+namespace kb
 {
 	enum class MaterialFlag
 	{

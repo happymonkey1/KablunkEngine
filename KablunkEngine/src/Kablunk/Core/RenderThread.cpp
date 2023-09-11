@@ -10,7 +10,7 @@
 #endif
 
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 struct render_thread_data_t

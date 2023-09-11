@@ -5,7 +5,7 @@
 
 #include "Platform/Vulkan/VulkanRenderCommandBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	ref<RenderCommandBuffer> RenderCommandBuffer::Create(uint32_t count /*= 0*/, const std::string& debug_name /*= ""*/)

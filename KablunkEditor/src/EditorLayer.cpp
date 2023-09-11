@@ -45,7 +45,7 @@
 
 #define DISABLE_NATIVE_SCRIPTING 0
 
-namespace Kablunk
+namespace kb
 {
 
 	constexpr uint32_t MAX_PROJECT_NAME_LENGTH = 255;

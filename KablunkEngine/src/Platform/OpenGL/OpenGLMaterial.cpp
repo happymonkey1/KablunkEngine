@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	OpenGLMaterial::OpenGLMaterial(const ref<Shader>& shader, const std::string& name /*= ""*/)

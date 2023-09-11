@@ -21,7 +21,7 @@
 #	include <mutex>
 #endif
 
-namespace Kablunk
+namespace kb
 {
 #ifndef KB_SINGLETON_INTERNAL_IMPL
 #	ifndef KB_DISTRIBUTION

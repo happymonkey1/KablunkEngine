@@ -13,7 +13,7 @@
 #include <map>
 #include <thread>
 
-namespace Kablunk
+namespace kb
 {
 	struct QueueFamilyIndices
 	{

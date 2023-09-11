@@ -10,7 +10,7 @@
 #ifndef KABLUNK_IMGUI_IMGUI_GLOBAL_CONTEXT
 #define KABLUNK_IMGUI_IMGUI_GLOBAL_CONTEXT
 
-namespace Kablunk
+namespace kb
 {
 	// #TODO should we forward declare ImGuiContext so we don't have to include headers?
 

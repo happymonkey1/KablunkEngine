@@ -9,7 +9,7 @@
 
 #include <stb_image.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data)

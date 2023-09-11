@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/Framebuffer.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLFramebuffer : public Framebuffer
 	{

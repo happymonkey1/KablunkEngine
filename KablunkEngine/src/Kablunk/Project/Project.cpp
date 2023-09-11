@@ -5,7 +5,7 @@
 
 #include "Kablunk/Core/Singleton.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	Project::Project()

@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-namespace Kablunk::util
+namespace kb::util
 {
 	// https://stackoverflow.com/a/31836401
 	

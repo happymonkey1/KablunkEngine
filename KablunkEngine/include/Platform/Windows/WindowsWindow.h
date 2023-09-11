@@ -8,7 +8,7 @@
 
 struct GLFWwindow;
 
-namespace Kablunk {
+namespace kb {
 	class WindowsWindow : public Window
 	{
 	public:

@@ -3,7 +3,7 @@
 #include "Kablunk/Events/Event.h"
 #include "Kablunk/Core/Timestep.h"
 
-namespace Kablunk {
+namespace kb {
 	class Layer
 	{
 	public:

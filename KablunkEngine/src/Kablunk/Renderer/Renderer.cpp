@@ -14,7 +14,7 @@
 
 #include "Kablunk/Core/Application.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	void Renderer::init()

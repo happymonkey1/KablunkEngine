@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <cstdint>
 
-namespace Kablunk
+namespace kb
 {
 	using RendererID = uint32_t;
 

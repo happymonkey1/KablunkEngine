@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanRenderCommandBuffer : public RenderCommandBuffer
 	{

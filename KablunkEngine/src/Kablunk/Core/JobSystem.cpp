@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Application.h"
 
-namespace Kablunk::Threading
+namespace kb::Threading
 {
 	void JobSystem::AddJob(ThreadPool::JobFunc job)
 	{

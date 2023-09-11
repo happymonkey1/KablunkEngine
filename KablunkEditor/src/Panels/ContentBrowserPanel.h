@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <shared_mutex>
 
-namespace Kablunk
+namespace kb
 {
 	constexpr const int MAX_SEARCH_BUFFER_LENGTH = 128;
 

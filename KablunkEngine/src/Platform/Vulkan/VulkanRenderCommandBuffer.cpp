@@ -5,7 +5,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count /*= 0*/, const std::string& debug_name /*= ""*/)

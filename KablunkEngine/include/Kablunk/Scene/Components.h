@@ -31,7 +31,7 @@
 #include <filesystem>
 
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 struct IdComponent
@@ -264,15 +264,15 @@ struct NativeScriptComponent
 
 struct MeshComponent
 {
-	ref<Kablunk::Mesh> Mesh;
-	ref<Kablunk::MaterialTable> Material_table = ref<Kablunk::MaterialTable>::Create();
+	ref<kb::Mesh> Mesh;
+	ref<kb::MaterialTable> Material_table = ref<kb::MaterialTable>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
-	MeshComponent(const ref<Kablunk::Mesh>& mesh)
+	MeshComponent(const ref<kb::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ ref<Kablunk::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ ref<kb::MaterialTable>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{
@@ -280,7 +280,7 @@ struct MeshComponent
 			Mesh.reset();
 
 		auto mesh_data = ref<MeshData>::Create(filepath, entity);
-		Mesh = ref<Kablunk::Mesh>::Create(mesh_data);
+		Mesh = ref<kb::Mesh>::Create(mesh_data);
 
 		Filepath = filepath;
 	}

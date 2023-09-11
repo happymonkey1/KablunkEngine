@@ -3,7 +3,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace Kablunk
+namespace kb
 {
 
 	OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)

@@ -9,7 +9,7 @@
 
 #include "Kablunk/Renderer/RenderPass.h"
 
-namespace Kablunk
+namespace kb
 {
 	enum class PrimitiveTopology
 	{

@@ -10,7 +10,7 @@
 #include <fstream>
 #include <typeinfo>
 
-namespace Kablunk
+namespace kb
 {
 
 	// #FIXME almost all of the serialization code is garbage, just there for an MVP

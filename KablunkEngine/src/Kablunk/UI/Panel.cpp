@@ -11,7 +11,7 @@
 #include "Kablunk/Events/MouseEvent.h"
 
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	Panel::Panel(const glm::vec2& position, const glm::vec2& size, uuid::uuid64 id)

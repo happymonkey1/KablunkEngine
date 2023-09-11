@@ -14,7 +14,7 @@
 #include <imgui.h>
 
 
-namespace Kablunk
+namespace kb
 {
 
 Renderer2D::~Renderer2D()

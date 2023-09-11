@@ -9,7 +9,7 @@
 // referenced implementation https://github.com/RishabhRD/expected/blob/master/include/rd/expected.hpp
 // expected is based off the rust result<T, E> concept, which allows for error handling without c++'s runtime exception overhead
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // #TODO should probably be moved to concepts.hpp

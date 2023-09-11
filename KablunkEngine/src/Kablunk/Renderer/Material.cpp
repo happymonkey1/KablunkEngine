@@ -5,7 +5,7 @@
 #include "Platform/OpenGL/OpenGLMaterial.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<Material> Material::Create(const ref<Shader>& shader, const std::string& name /* = "" */)
 	{

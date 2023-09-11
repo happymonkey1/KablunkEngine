@@ -3,7 +3,7 @@
 #include "Kablunk/Events/Event.h"
 #include <sstream>
 
-namespace Kablunk {
+namespace kb {
 
 	class KeyEvent : public Event
 	{

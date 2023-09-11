@@ -4,7 +4,7 @@
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 
-namespace Kablunk::Reflect
+namespace kb::Reflect
 {
 	// Integral type traits must have specialized templates to compile. While this is generally not good practice,
 	// because each type must be defined to work in the reflection system as of right now, this is

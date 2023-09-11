@@ -5,7 +5,7 @@
 
 #include "RCCPP/RuntimeObjectSystem/IObject.h"
 
-namespace Kablunk
+namespace kb
 {
 	enum InterfaceIDs
 	{

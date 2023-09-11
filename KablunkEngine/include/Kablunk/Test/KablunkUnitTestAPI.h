@@ -4,7 +4,7 @@
 
 #include "Kablunk/Core/Core.h"
 
-namespace Kablunk::test
+namespace kb::test
 {
 
 }

@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include "Kablunk/Core/Uuid64.h"
 
-namespace Kablunk
+namespace kb
 {
 	inline YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& member)
 	{

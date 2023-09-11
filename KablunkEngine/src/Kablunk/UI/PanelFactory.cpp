@@ -9,7 +9,7 @@
 // #TODO remove when singleton reference to application is refactored
 #include "Kablunk/Core/Application.h"
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	IPanel* PanelFactory::create_panel(panel_type_t panel_type, const panel_create_info_t& panel_create_info)

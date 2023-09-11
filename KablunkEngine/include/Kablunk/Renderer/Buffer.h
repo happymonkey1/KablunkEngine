@@ -4,7 +4,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/RendererTypes.h"
 
-namespace Kablunk 
+namespace kb 
 {
 
 	enum class VertexBufferUsage

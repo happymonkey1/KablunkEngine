@@ -5,7 +5,7 @@
 
 #include "Platform/Vulkan/VulkanStorageBufferSet.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<StorageBufferSet> StorageBufferSet::Create(uint32_t frames)
 	{

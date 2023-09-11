@@ -2,8 +2,8 @@
 #ifndef KABLUNK_UTILITIES_TEST_TEST_FLAT_HASH_MAP_H
 #define KABLUNK_UTILITIES_TEST_TEST_FLAT_HASH_MAP_H
 
-namespace Kablunk::util::container::test
-{  // start namespace Kablunk::util::container::test
+namespace kb::util::container::test
+{  // start namespace kb::util::container::test
 
 // main test function that runs unit tests
 void test_flat_hash_map_main();
@@ -18,6 +18,6 @@ void test_flat_hash_map_find();
 // test performance compared to std::unordered_map
 void test_flat_hash_map_performance();
 
-}  // end namespace Kablunk::util::container::test
+}  // end namespace kb::util::container::test
 
 #endif

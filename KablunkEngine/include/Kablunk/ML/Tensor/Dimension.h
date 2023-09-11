@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 #pragma warning(pop)
 
-namespace Kablunk::ml::tensor
+namespace kb::ml::tensor
 {
 
 	// #TODO replace with stack allocated dimension class

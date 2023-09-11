@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace Kablunk
+namespace kb
 {
 	VulkanContext::VulkanContext(GLFWwindow* window_handle)
 		: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }, m_pipeline_cache{ nullptr }

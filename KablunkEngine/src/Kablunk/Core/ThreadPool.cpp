@@ -4,7 +4,7 @@
 #include <mutex>
 
 
-namespace Kablunk::Threading
+namespace kb::Threading
 {
 
 	ThreadPool::ThreadPool(uint8_t num_threads)

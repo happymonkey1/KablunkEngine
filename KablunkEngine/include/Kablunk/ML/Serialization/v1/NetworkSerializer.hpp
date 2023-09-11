@@ -10,7 +10,7 @@
 
 #include <filesystem>
 
-namespace Kablunk::ml::serialize::v1
+namespace kb::ml::serialize::v1
 {
 
 	template <typename T = f32>

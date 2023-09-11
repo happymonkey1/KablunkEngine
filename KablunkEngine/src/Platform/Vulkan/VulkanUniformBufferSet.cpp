@@ -2,7 +2,7 @@
 
 #include "Platform/Vulkan/VulkanUniformBufferSet.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanUniformBufferSet::VulkanUniformBufferSet(uint32_t frames)

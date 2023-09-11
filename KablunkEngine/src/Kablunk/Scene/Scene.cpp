@@ -27,7 +27,7 @@
 #include <exception>
 
 
-namespace Kablunk
+namespace kb
 {
 
 	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;

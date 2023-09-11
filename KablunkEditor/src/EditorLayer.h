@@ -10,7 +10,7 @@
 #include "Panels/AssetRegistryPanel.h"
 #include "Panels/AssetEditorPanel.h"
 
-namespace Kablunk
+namespace kb
 {
     // forward declaration
     class Renderer2D;

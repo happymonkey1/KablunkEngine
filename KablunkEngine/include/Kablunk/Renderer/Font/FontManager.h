@@ -10,7 +10,7 @@
 
 #include <unordered_map>
 
-namespace Kablunk::render
+namespace kb::render
 {
 
 	class font_manager

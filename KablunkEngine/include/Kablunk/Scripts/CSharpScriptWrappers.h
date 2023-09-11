@@ -18,7 +18,7 @@ extern "C"
 	typedef struct _MonoArray MonoArray;
 }
 
-namespace Kablunk::Scripts
+namespace kb::Scripts
 {
 	// input
 	bool			Kablunk_Input_IsKeyPressed(KeyCode key);

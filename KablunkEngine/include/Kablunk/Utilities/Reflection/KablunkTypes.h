@@ -3,7 +3,7 @@
 
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 
-namespace Kablunk::Reflect
+namespace kb::Reflect
 {
 	using SerializeFunc = void(*)();
 

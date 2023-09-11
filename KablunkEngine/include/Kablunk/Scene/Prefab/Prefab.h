@@ -5,7 +5,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Scene/Entity.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class Prefab : public RefCounted

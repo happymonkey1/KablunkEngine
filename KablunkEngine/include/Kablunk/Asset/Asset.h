@@ -8,7 +8,7 @@
 #include "Kablunk/Asset/AssetMetadata.h"
 #include "Kablunk/Asset/AssetTypeDefs.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	// Asset interface

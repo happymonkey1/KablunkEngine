@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 
-namespace Kablunk::Reflect
+namespace kb::Reflect
 {
 	struct_TypeTraits::struct_TypeTraits(IntantiateReflectionFunc init)
 		: TypeTraits{ nullptr, 0 }

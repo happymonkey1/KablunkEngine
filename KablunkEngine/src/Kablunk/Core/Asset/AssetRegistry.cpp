@@ -2,7 +2,7 @@
 
 #include "Kablunk/Asset/AssetRegistry.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	void AssetRegistry::serialize(const std::filesystem::path& filepath) const

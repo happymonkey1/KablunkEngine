@@ -5,7 +5,7 @@
 
 #include <string>
 #include <vector>
-namespace Kablunk
+namespace kb
 {
 	// #TODO move
 	struct SharedMemoryBufferLayoutElement

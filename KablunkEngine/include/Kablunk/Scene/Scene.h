@@ -13,7 +13,7 @@
 
 class b2World;
 
-namespace Kablunk
+namespace kb
 {
 	class Entity;
 	class SceneRenderer;

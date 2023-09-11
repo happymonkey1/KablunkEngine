@@ -15,7 +15,7 @@
 
 #define DISABLE_NATIVE_SCRIPT 0
 
-namespace Kablunk
+namespace kb
 {
 
 	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)

@@ -28,7 +28,7 @@
 
 
 
-namespace Kablunk
+namespace kb
 {
 	constexpr uint8_t NUM_JOB_THREADS = 4;
 

@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/ThreadPool.h"
 
-namespace Kablunk::Threading
+namespace kb::Threading
 {
 	class JobSystem
 	{

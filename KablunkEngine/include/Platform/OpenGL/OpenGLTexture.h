@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLTexture2D : public Texture2D
 	{

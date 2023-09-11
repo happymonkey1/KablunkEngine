@@ -17,7 +17,7 @@
 
 #include <ImGuizmo.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	static std::vector<VkCommandBuffer> s_imgui_command_buffers;

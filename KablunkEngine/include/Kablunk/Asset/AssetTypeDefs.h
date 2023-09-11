@@ -7,7 +7,7 @@
 
 #include "Kablunk/Asset/AssetFlag.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 	using asset_id_t = uuid::uuid64;
 	static constexpr const asset_id_t null_asset_id = uuid::nil_uuid;

@@ -4,7 +4,7 @@
 #include "Platform/OpenGL/OpenGLUniformBuffer.h"
 
 
-namespace Kablunk
+namespace kb
 {
 	OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding)
 		: m_size{ size }, m_binding{ binding }

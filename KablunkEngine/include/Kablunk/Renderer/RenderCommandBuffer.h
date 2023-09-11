@@ -2,7 +2,7 @@
 #ifndef KABLUNK_RENDERER_RENDER_COMMAND_BUFFER_H
 #define KABLUNK_RENDERER_RENDER_COMMAND_BUFFER_H
 
-namespace Kablunk
+namespace kb
 {
 	class RenderCommandBuffer : public RefCounted
 	{

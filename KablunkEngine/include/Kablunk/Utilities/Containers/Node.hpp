@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace Kablunk::Utilties
+namespace kb::Utilties
 {
 	template <typename T>
 	struct ListNode

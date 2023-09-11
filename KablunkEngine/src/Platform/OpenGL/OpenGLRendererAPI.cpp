@@ -3,7 +3,7 @@
 
 #include "glad/glad.h"
 
-namespace Kablunk
+namespace kb
 {
 	void OpenGLRendererAPI::Init()
 	{

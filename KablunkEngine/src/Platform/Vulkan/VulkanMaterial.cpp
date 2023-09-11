@@ -8,7 +8,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanMaterial::VulkanMaterial(const ref<Shader>& shader, const std::string& name /*= ""*/)

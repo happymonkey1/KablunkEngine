@@ -7,7 +7,7 @@
 #include "Kablunk/Renderer/Texture.h"
 #include <map>
 
-namespace Kablunk
+namespace kb
 {
 	class Framebuffer;
 

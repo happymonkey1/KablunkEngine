@@ -3,7 +3,7 @@
 #include "Kablunk/Scene/Prefab/PrefabSerializer.h"
 #include "Kablunk/Scene/Prefab/Prefab.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	PrefabSerializer::PrefabSerializer(const ref<Prefab>& prefab)

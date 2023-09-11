@@ -5,7 +5,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-namespace Kablunk {
+namespace kb {
 
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
 		: m_WindowHandle{windowHandle}

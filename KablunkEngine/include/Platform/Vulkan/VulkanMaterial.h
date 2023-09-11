@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class VulkanMaterial : public Material

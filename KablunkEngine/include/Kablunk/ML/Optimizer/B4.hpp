@@ -8,7 +8,7 @@
 #include "Kablunk/ML/Optimizer/LossFunction.hpp"
 #include "Kablunk/ML/Tensor/Tensor.hpp"
 
-namespace Kablunk::ml::optimizer
+namespace kb::ml::optimizer
 {
 	// the b4 optimizer
 	template <typename T = f32>

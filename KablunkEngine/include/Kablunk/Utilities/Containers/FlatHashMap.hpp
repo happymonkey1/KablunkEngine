@@ -13,8 +13,8 @@
  * documentation for sse2 instructions http://const.me/articles/simd/simd.pdf 
  */
 
-namespace Kablunk::util::container
-{ // start namespace Kablunk::util::container
+namespace kb::util::container
+{ // start namespace kb::util::container
 
 namespace hash
 { // start namespace ::hash
@@ -1261,7 +1261,7 @@ bool flat_unordered_hash_map<K, V>::contains(const K& key) const
 // end implementation details
 // ==========================
 
-} // end namespace Kablunk::util::container
+} // end namespace kb::util::container
 
 // overloads for structured binding
 namespace std
@@ -1269,19 +1269,19 @@ namespace std
 
 // let the tuple now how many elements it contains
 template<typename K, typename V>
-struct tuple_size<Kablunk::util::container::details::hash_map_pair<K, V>>
+struct tuple_size<kb::util::container::details::hash_map_pair<K, V>>
 	: integral_constant<size_t, 2> {};
 
 // tuple element 0 specialization
 template<typename K, typename V>
-struct tuple_element<0, Kablunk::util::container::details::hash_map_pair<K, V>>
+struct tuple_element<0, kb::util::container::details::hash_map_pair<K, V>>
 {
 	using type = K;
 };
 
 // tuple element 1 specialization
 template<typename K, typename V>
-struct tuple_element<1, Kablunk::util::container::details::hash_map_pair<K, V>>
+struct tuple_element<1, kb::util::container::details::hash_map_pair<K, V>>
 {
 	using type = V;
 };

@@ -15,7 +15,7 @@ enum class command_buffer_type_t : uint8_t
     compute
 };
 
-class command_pool : public Kablunk::RefCounted
+class command_pool : public kb::RefCounted
 {
 public:
     command_pool();

@@ -3,10 +3,10 @@
 
 #include "EditorLayer.h"
 
-namespace Kablunk
+namespace kb
 {
 
-	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
+	kb::Application* kb::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification specification = {
 			"Kablunk Editor",					// window name

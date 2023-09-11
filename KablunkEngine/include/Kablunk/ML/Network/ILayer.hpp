@@ -7,9 +7,9 @@
 
 #include "Kablunk/Core/CoreTypes.h"
 
-namespace Kablunk::ml::network
+namespace kb::ml::network
 {
-	template <typename T = f32, typename tensor_t = Kablunk::ml::tensor::Tensor<T, 2ull>>
+	template <typename T = f32, typename tensor_t = kb::ml::tensor::Tensor<T, 2ull>>
 	class ILayer
 	{
 	public:

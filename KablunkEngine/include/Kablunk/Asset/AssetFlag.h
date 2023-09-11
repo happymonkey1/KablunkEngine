@@ -6,7 +6,7 @@
 #include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/CoreTypes.h"
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 
 	enum class AssetFlag : u8

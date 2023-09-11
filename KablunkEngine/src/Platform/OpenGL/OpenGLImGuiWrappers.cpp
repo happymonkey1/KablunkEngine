@@ -3,7 +3,7 @@
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 
 #if 0
-namespace Kablunk::UI
+namespace kb::UI
 {
 	void Image(const IntrusiveRef<Texture2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{

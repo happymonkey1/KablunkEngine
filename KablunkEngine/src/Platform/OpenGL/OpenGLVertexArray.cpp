@@ -3,23 +3,23 @@
 
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 	{
 		switch (type)
 		{
-		case Kablunk::ShaderDataType::Float:    return GL_FLOAT;
-		case Kablunk::ShaderDataType::Float2:   return GL_FLOAT;
-		case Kablunk::ShaderDataType::Float3:   return GL_FLOAT;
-		case Kablunk::ShaderDataType::Float4:   return GL_FLOAT;
-		case Kablunk::ShaderDataType::Mat3:     return GL_FLOAT;
-		case Kablunk::ShaderDataType::Mat4:     return GL_FLOAT;
-		case Kablunk::ShaderDataType::Int:      return GL_INT;
-		case Kablunk::ShaderDataType::Int2:     return GL_INT;
-		case Kablunk::ShaderDataType::Int3:     return GL_INT;
-		case Kablunk::ShaderDataType::Int4:     return GL_INT;
-		case Kablunk::ShaderDataType::Bool:     return GL_BOOL;
+		case kb::ShaderDataType::Float:    return GL_FLOAT;
+		case kb::ShaderDataType::Float2:   return GL_FLOAT;
+		case kb::ShaderDataType::Float3:   return GL_FLOAT;
+		case kb::ShaderDataType::Float4:   return GL_FLOAT;
+		case kb::ShaderDataType::Mat3:     return GL_FLOAT;
+		case kb::ShaderDataType::Mat4:     return GL_FLOAT;
+		case kb::ShaderDataType::Int:      return GL_INT;
+		case kb::ShaderDataType::Int2:     return GL_INT;
+		case kb::ShaderDataType::Int3:     return GL_INT;
+		case kb::ShaderDataType::Int4:     return GL_INT;
+		case kb::ShaderDataType::Bool:     return GL_BOOL;
 		default:	                            KB_CORE_FATAL("Unkown ShaderDataType!"); return 0;
 		}
 	}

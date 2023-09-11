@@ -8,7 +8,7 @@
 #include <filesystem>
 
 
-namespace Kablunk
+namespace kb
 {
 	
 	ProjectSerializer::ProjectSerializer(const ref<Project>& project)

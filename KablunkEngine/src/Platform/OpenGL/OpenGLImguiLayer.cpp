@@ -16,7 +16,7 @@
 
 #include <ImGuizmo.h>
 
-namespace Kablunk
+namespace kb
 {
 	OpenGLImguiLayer::OpenGLImguiLayer()
 		: ImGuiLayer{}

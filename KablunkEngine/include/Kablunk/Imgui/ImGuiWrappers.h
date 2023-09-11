@@ -16,7 +16,7 @@
 #include <string>
 #include <string_view>
 
-namespace Kablunk::UI
+namespace kb::UI
 {
 	constexpr uint32_t MAX_CHARS = 256;
 	static char s_id_buffer[MAX_CHARS];

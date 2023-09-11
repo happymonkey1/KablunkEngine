@@ -3,7 +3,7 @@
 
 #include "Kablunk/ML/Tensor/Tensor.hpp"
 
-namespace Kablunk::ml::tensor
+namespace kb::ml::tensor
 {
 	// #NOTE this whole file is temporary and badly coded. 
 	// #TODO refine code

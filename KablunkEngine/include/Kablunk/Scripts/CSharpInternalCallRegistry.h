@@ -1,7 +1,7 @@
 #ifndef KABLUNK_SCRIPTS_CSHARP_INTERNAL_CALL_REGISTRY_H
 #define KABLUNK_SCRIPTS_CSHARP_INTERNAL_CALL_REGISTRY_H
 
-namespace Kablunk
+namespace kb
 {
 	class CSharpInternalCallRegistry
 	{

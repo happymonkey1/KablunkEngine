@@ -7,7 +7,7 @@
 // #TODO remove when Application singleton is refactored
 #include "Kablunk/Core/Application.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	static const std::string s_albedo_color_uniform_str = "u_MaterialUniforms.AlbedoColor";
@@ -93,7 +93,7 @@ namespace Kablunk
 		m_material->Set(s_emission_uniform_str, emission);
 	}
 
-	Kablunk::ref<Kablunk::Texture2D> MaterialAsset::GetAlbedoMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetAlbedoMap()
 	{
 		return m_material->TryGetTexture2D(s_albedo_map_uniform_str);
 	}
@@ -108,7 +108,7 @@ namespace Kablunk
 		m_material->Set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::ref<Kablunk::Texture2D> MaterialAsset::GetNormalMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetNormalMap()
 	{
 		return m_material->TryGetTexture2D(s_normal_map_uniform_str);
 	}
@@ -133,7 +133,7 @@ namespace Kablunk
 		m_material->Set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::ref<Kablunk::Texture2D> MaterialAsset::GetMetalnessMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetMetalnessMap()
 	{
 		return m_material->TryGetTexture2D(s_metalness_map_uniform_str);
 	}
@@ -148,7 +148,7 @@ namespace Kablunk
 		m_material->Set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::ref<Kablunk::Texture2D> MaterialAsset::GetRoughnessMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetRoughnessMap()
 	{
 		return m_material->TryGetTexture2D(s_roughness_map_uniform_str);
 	}

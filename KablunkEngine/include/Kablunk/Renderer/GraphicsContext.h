@@ -2,7 +2,7 @@
 #define KABLUNK_RENDERER_GRAPHICS_CONTEXT_H
 
 
-namespace Kablunk 
+namespace kb 
 {
 	class GraphicsContext : public RefCounted
 	{

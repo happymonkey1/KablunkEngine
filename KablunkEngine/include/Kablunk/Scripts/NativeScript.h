@@ -8,7 +8,7 @@
 
 #include <any>
 
-namespace Kablunk 
+namespace kb 
 {
 	// Forward declaration
 	struct SpriteRendererComponent;

@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Platform/PlatformAPI.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	float PlatformAPI::GetTime()

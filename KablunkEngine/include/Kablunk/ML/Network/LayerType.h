@@ -2,7 +2,7 @@
 #ifndef KABLUNK_ML_NETWORK_LAYER_TYPE_H
 #define KABLUNK_ML_NETWORK_LAYER_TYPE_H
 
-namespace Kablunk::ml::network
+namespace kb::ml::network
 {
 
 	enum class LayerType

@@ -22,7 +22,7 @@
 
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 	static constexpr const uint32_t s_mesh_import_flags =
 		aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;

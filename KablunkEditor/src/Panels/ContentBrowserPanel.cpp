@@ -14,7 +14,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
-namespace Kablunk
+namespace kb
 {
 	//extern const std::filesystem::path g_asset_path = "assets";
 	//extern const std::filesystem::path g_resources_path = "resources";

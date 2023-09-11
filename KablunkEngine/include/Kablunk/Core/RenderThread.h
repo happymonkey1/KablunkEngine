@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Thread.h"
 
-namespace Kablunk
+namespace kb
 { // start namespace Kablunk
 
 // forward declaration

@@ -3,7 +3,7 @@
 
 #include "Kablunk/Audio/AudioEngine.h"
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 	AudioAsset::AudioAsset(const audio_asset_config& config)
 	{

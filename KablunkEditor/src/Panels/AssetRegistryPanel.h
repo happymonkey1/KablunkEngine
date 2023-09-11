@@ -4,7 +4,7 @@
 
 #include <Kablunk.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class AssetRegistryPanel : public RefCounted

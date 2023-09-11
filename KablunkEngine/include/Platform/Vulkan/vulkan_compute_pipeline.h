@@ -17,7 +17,7 @@ class compute_pipeline : public render::compute_pipeline
 {
 public:
     // overloaded constructor to construct a compute pipeline from a (compute) shader
-    compute_pipeline(Kablunk::ref<Kablunk::Shader> compute_shader);
+    compute_pipeline(kb::ref<kb::Shader> compute_shader);
 
     // execute the compute pipeline
     void execute(
@@ -32,10 +32,10 @@ public:
     // render::compute_pipeline interface
     // ==================================
 
-    virtual void begin(Kablunk::ref<Kablunk::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
-    virtual void rt_begin(Kablunk::ref<Kablunk::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
+    virtual void begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
+    virtual void rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
     virtual void end() override;
-    virtual Kablunk::ref<Kablunk::Shader> get_shader() const override { return m_shader; }
+    virtual kb::ref<kb::Shader> get_shader() const override { return m_shader; }
 
     // ==================================
 
@@ -48,13 +48,13 @@ public:
     VkPipelineLayout get_layout() const { return m_vk_compute_pipeline_layout; }
     
     // set push constants
-    void set_push_constants(Kablunk::Buffer p_constants);
+    void set_push_constants(kb::Buffer p_constants);
     void create_pipeline();
 private:
     void rt_create_pipeline();
 private:
     // ref to the underlying shader
-    Kablunk::ref<Kablunk::VulkanShader> m_shader;
+    kb::ref<kb::VulkanShader> m_shader;
     // pipeline layout
     VkPipelineLayout m_vk_compute_pipeline_layout = nullptr;
     // pipeline cache

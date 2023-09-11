@@ -9,26 +9,26 @@ namespace kb::vk
 
 static VkFence s_vk_compute_fence = nullptr;
 
-compute_pipeline::compute_pipeline(Kablunk::ref<Kablunk::Shader> compute_shader)
-    : m_shader{ compute_shader.As<Kablunk::VulkanShader>() }
+compute_pipeline::compute_pipeline(kb::ref<kb::Shader> compute_shader)
+    : m_shader{ compute_shader.As<kb::VulkanShader>() }
 {
-    Kablunk::render::submit(
-        [instance = Kablunk::ref{ this }]() mutable
+    kb::render::submit(
+        [instance = kb::ref{ this }]() mutable
         {
             instance->rt_create_pipeline();
         }
     );
 
-    Kablunk::render::register_shader_dependency(compute_shader, this);
+    kb::render::register_shader_dependency(compute_shader, this);
 }
 
 void compute_pipeline::execute(VkDescriptorSet* p_descriptor_sets, uint32_t p_descriptor_set_count, uint32_t p_group_count_x, uint32_t p_group_count_y, uint32_t p_group_count_z)
 {
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
-    VkQueue vk_compute_queue = Kablunk::VulkanContext::Get()->GetDevice()->get_vk_compute_queue();
+    VkQueue vk_compute_queue = kb::VulkanContext::Get()->GetDevice()->get_vk_compute_queue();
 
-    VkCommandBuffer vk_compute_command_buffer = Kablunk::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
+    VkCommandBuffer vk_compute_command_buffer = kb::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
 
     // #TODO set vulkan checkpoint
 
@@ -83,19 +83,19 @@ void compute_pipeline::execute(VkDescriptorSet* p_descriptor_sets, uint32_t p_de
     vkWaitForFences(vk_device, 1, &s_vk_compute_fence, VK_TRUE, UINT64_MAX);
 }
 
-void compute_pipeline::begin(Kablunk::ref<Kablunk::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
+void compute_pipeline::begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
 {
     KB_CORE_ASSERT(!m_vk_active_command_buffer, "[vk::compute_pipeline]: trying to start a new pipeline while there is already an active one?");
 
     if (p_render_command_buffer)
     {
-        uint32_t frameIndex = Kablunk::render::get_current_frame_index();
-        m_vk_active_command_buffer = p_render_command_buffer.As<Kablunk::VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+        uint32_t frameIndex = kb::render::get_current_frame_index();
+        m_vk_active_command_buffer = p_render_command_buffer.As<kb::VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
         m_using_graphics_queue = true;
     }
     else
     {
-        m_vk_active_command_buffer = Kablunk::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
+        m_vk_active_command_buffer = kb::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
         m_using_graphics_queue = false;
     }
     
@@ -103,19 +103,19 @@ void compute_pipeline::begin(Kablunk::ref<Kablunk::RenderCommandBuffer> p_render
     vkCmdBindPipeline(m_vk_active_command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_vk_compute_pipeline);
 }
 
-void compute_pipeline::rt_begin(Kablunk::ref<Kablunk::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
+void compute_pipeline::rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
 {
     KB_CORE_ASSERT(!m_vk_active_command_buffer, "[vk::compute_pipeline]: trying to begin a new pipeline while there is already an active one?");
 
     if (p_render_command_buffer)
     {
-        uint32_t frameIndex = Kablunk::render::rt_get_current_frame_index();
-        m_vk_active_command_buffer = p_render_command_buffer.As<Kablunk::VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+        uint32_t frameIndex = kb::render::rt_get_current_frame_index();
+        m_vk_active_command_buffer = p_render_command_buffer.As<kb::VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
         m_using_graphics_queue = true;
     }
     else
     {
-        m_vk_active_command_buffer = Kablunk::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
+        m_vk_active_command_buffer = kb::VulkanContext::Get()->GetDevice()->GetCommandBuffer(true, true);
         m_using_graphics_queue = false;
     }
 
@@ -127,10 +127,10 @@ void compute_pipeline::end()
 {
     KB_CORE_ASSERT(m_vk_active_command_buffer, "[vk::compute_queue]: trying to end a compute pipeline without an active command buffer?");
 
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
     if (!m_using_graphics_queue)
     {
-        VkQueue vk_compute_queue = Kablunk::VulkanContext::Get()->GetDevice()->get_vk_compute_queue();
+        VkQueue vk_compute_queue = kb::VulkanContext::Get()->GetDevice()->get_vk_compute_queue();
 
         vkEndCommandBuffer(m_vk_active_command_buffer);
 
@@ -169,7 +169,7 @@ void compute_pipeline::dispatch(const glm::uvec3& p_work_group_count) const
     vkCmdDispatch(m_vk_active_command_buffer, p_work_group_count.x, p_work_group_count.y, p_work_group_count.z);
 }
 
-void compute_pipeline::set_push_constants(Kablunk::Buffer p_constants)
+void compute_pipeline::set_push_constants(kb::Buffer p_constants)
 {
     // call vulkan api to add push constants
     vkCmdPushConstants(
@@ -184,8 +184,8 @@ void compute_pipeline::set_push_constants(Kablunk::Buffer p_constants)
 
 void compute_pipeline::create_pipeline()
 {
-    Kablunk::render::submit(
-        [instance = Kablunk::ref{ this }]() mutable
+    kb::render::submit(
+        [instance = kb::ref{ this }]() mutable
         {
             instance->rt_create_pipeline();
         }
@@ -194,7 +194,7 @@ void compute_pipeline::create_pipeline()
 
 void compute_pipeline::rt_create_pipeline()
 {
-    VkDevice vk_device = Kablunk::VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
     auto descriptor_set_layouts = m_shader->GetAllDescriptorSetLayouts();
 

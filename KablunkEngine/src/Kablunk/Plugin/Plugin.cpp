@@ -3,7 +3,7 @@
 
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	Plugin::Plugin(const std::string& dll_name, const std::filesystem::path& dll_path, PluginType plugin_type) noexcept

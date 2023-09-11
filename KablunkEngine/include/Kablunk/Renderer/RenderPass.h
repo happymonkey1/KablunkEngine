@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/Framebuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	struct RenderPassSpecification

@@ -12,7 +12,7 @@
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 
-namespace Kablunk 
+namespace kb 
 {
 	enum class LoggerType : uint8_t
 	{
@@ -41,20 +41,20 @@ namespace Kablunk
 	
 }
 
-#define KB_CORE_TRACE(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->trace(__VA_ARGS__)
-#define KB_CORE_INFO(...)    ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->info(__VA_ARGS__)
-#define KB_CORE_WARN(...)    ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->warn(__VA_ARGS__)
-#define KB_CORE_ERROR(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->error(__VA_ARGS__)
-#define KB_CORE_FATAL(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->critical(__VA_ARGS__)
+#define KB_CORE_TRACE(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->trace(__VA_ARGS__)
+#define KB_CORE_INFO(...)    ::kb::Singleton<kb::Logger>::get().get_core_logger()->info(__VA_ARGS__)
+#define KB_CORE_WARN(...)    ::kb::Singleton<kb::Logger>::get().get_core_logger()->warn(__VA_ARGS__)
+#define KB_CORE_ERROR(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->error(__VA_ARGS__)
+#define KB_CORE_FATAL(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->critical(__VA_ARGS__)
 												  
-#define KB_CLIENT_TRACE(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->trace(__VA_ARGS__)
-#define KB_CLIENT_INFO(...)  ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->info(__VA_ARGS__)
-#define KB_CLIENT_WARN(...)  ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->warn(__VA_ARGS__)
-#define KB_CLIENT_ERROR(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->error(__VA_ARGS__)
-#define KB_CLIENT_FATAL(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->critical(__VA_ARGS__)
+#define KB_CLIENT_TRACE(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->trace(__VA_ARGS__)
+#define KB_CLIENT_INFO(...)  ::kb::Singleton<kb::Logger>::get().get_client_logger()->info(__VA_ARGS__)
+#define KB_CLIENT_WARN(...)  ::kb::Singleton<kb::Logger>::get().get_client_logger()->warn(__VA_ARGS__)
+#define KB_CLIENT_ERROR(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->error(__VA_ARGS__)
+#define KB_CLIENT_FATAL(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->critical(__VA_ARGS__)
 
-namespace Kablunk::log
-{  // start namespace Kablunk::log
+namespace kb::log
+{  // start namespace kb::log
 
 
 // enum for logger type
@@ -273,7 +273,7 @@ void log_message_critical(logger_type_t logger_type, logger_tag_t logger_tag, ar
 	log_message(logger_type, logger_level_t::critical, logger_tag_to_cstr(logger_tag), std::forward<args_t>(args)...);
 }
 
-}  // end namespace Kablunk::log
+}  // end namespace kb::log
 
 #ifdef KB_DEBUG
 #	define KB_TIME_FUNCTION_BEGIN()	float delta##__FUNCSIG__ = PlatformAPI::GetTime();

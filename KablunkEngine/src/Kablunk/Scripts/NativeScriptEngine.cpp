@@ -5,7 +5,7 @@
 #include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Project/ProjectManager.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	void NativeScriptEngine::init()

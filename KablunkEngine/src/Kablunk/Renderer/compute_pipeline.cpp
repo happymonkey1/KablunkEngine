@@ -9,18 +9,18 @@ namespace kb::render
 
 
 
-Kablunk::ref<kb::render::compute_pipeline> compute_pipeline::create(Kablunk::ref<Kablunk::Shader> p_compute_shader)
+kb::ref<kb::render::compute_pipeline> compute_pipeline::create(kb::ref<kb::Shader> p_compute_shader)
 {
-    switch (Kablunk::RendererAPI::GetAPI())
+    switch (kb::RendererAPI::GetAPI())
     {
-        case Kablunk::RendererAPI::render_api_t::OpenGL:
+        case kb::RendererAPI::render_api_t::OpenGL:
         {
             KB_ASSERT(false, "[compute_pipeline]: compute pipelines are not supported on OpenGL!");
             return nullptr;
         }
-        case Kablunk::RendererAPI::render_api_t::Vulkan:
+        case kb::RendererAPI::render_api_t::Vulkan:
         {
-            return Kablunk::ref<kb::vk::compute_pipeline>::Create(p_compute_shader);
+            return kb::ref<kb::vk::compute_pipeline>::Create(p_compute_shader);
         }
         default:
         {

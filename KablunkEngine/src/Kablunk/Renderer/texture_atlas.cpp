@@ -9,9 +9,9 @@ namespace kb::render
 texture_atlas::texture_atlas(const std::string& filepath, u32 width /*= 128ul*/, u32 height /*= 128ul*/)
 	: m_atlas_filepath{ filepath }, m_texture_width{ width }, m_texture_height{ height }
 {
-	m_texture_atlas = Kablunk::Texture2D::Create(m_atlas_filepath);
+	m_texture_atlas = kb::Texture2D::Create(m_atlas_filepath);
 
-	KB_CORE_ASSERT(m_texture_atlas->GetFormat() == Kablunk::ImageFormat::RGBA, "only RGBA image format is supported!");
+	KB_CORE_ASSERT(m_texture_atlas->GetFormat() == kb::ImageFormat::RGBA, "only RGBA image format is supported!");
 
 	splice_texture_atlas();
 }
@@ -22,11 +22,11 @@ texture_atlas::texture_atlas(u32 width, u32 height)
 	KB_CORE_ASSERT(false, "not implemented!");
 }
 
-texture_atlas::texture_atlas(const std::vector<ref<Kablunk::Texture2D>> textures, u32 width /*= 128ul*/, u32 height /*= 128ul*/)
+texture_atlas::texture_atlas(const std::vector<ref<kb::Texture2D>> textures, u32 width /*= 128ul*/, u32 height /*= 128ul*/)
 	: m_texture_width{ width }, m_texture_height{ height }
 {
 	KB_CORE_ASSERT(textures.size() > 0, "there are no textures in the input textures list");
-	KB_CORE_ASSERT(textures[0]->GetFormat() == Kablunk::ImageFormat::RGBA, "only RGBA image format is supported!");
+	KB_CORE_ASSERT(textures[0]->GetFormat() == kb::ImageFormat::RGBA, "only RGBA image format is supported!");
 		
 	create_texture_atlas_from_images(textures);
 	splice_texture_atlas();
@@ -37,7 +37,7 @@ texture_atlas::~texture_atlas()
 	invalidate();
 }
 
-TextureAtlasSprite texture_atlas::get_texture_by_uuid(Kablunk::uuid::uuid64 uuid) const
+TextureAtlasSprite texture_atlas::get_texture_by_uuid(kb::uuid::uuid64 uuid) const
 {
 	KB_CORE_ASSERT(m_sprite_map.find(uuid) != m_sprite_map.end(), "uuid not found in sprite map!");
 
@@ -75,7 +75,7 @@ void texture_atlas::splice_texture_atlas()
 
 	for (size_t i = 0; i < max_sprite_count; ++i)
 	{
-		TextureAtlasSprite& sprite = m_sprite_map.emplace(Kablunk::uuid::generate(), TextureAtlasSprite{}).first->second;
+		TextureAtlasSprite& sprite = m_sprite_map.emplace(kb::uuid::generate(), TextureAtlasSprite{}).first->second;
 			
 		float y = i / columns;
 		float x = i % columns;
@@ -152,7 +152,7 @@ void texture_atlas::splice_texture_atlas()
 #endif
 }
 
-void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<Kablunk::Texture2D>> textures)
+void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<kb::Texture2D>> textures)
 {
 	size_t sprite_count = textures.size();
 
@@ -178,12 +178,12 @@ void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<Kablu
 	const size_t final_atlas_width = atlas_sizes[std::min_element(unused_sprite_counts.begin(), unused_sprite_counts.end()) - unused_sprite_counts.begin()];
 		
 	// #TODO expose other image specifications
-    Kablunk::ImageSpecification image_spec{};
+    kb::ImageSpecification image_spec{};
 	image_spec.width  = static_cast<uint32_t>(final_atlas_width);
 	image_spec.height = static_cast<uint32_t>(final_atlas_width);
 
 	KB_CORE_ASSERT(textures[0]->GetImage()->GetSpecification().layers == 4, "assertion that RGBA has 4 layers");
-    Kablunk::Buffer atlas_image_data_buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };
+    kb::Buffer atlas_image_data_buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };
 
 	size_t x = 0, y = 0;
 	// #TODO out of bounds checks
@@ -213,7 +213,7 @@ void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<Kablu
 		}
 	}
 
-	m_texture_atlas = Kablunk::Texture2D::Create(textures[0]->GetFormat(), final_atlas_width, final_atlas_width, atlas_image_data_buffer.get());
+	m_texture_atlas = kb::Texture2D::Create(textures[0]->GetFormat(), final_atlas_width, final_atlas_width, atlas_image_data_buffer.get());
 
 	// #TODO save atlas texture to disk so processing is only done once
 

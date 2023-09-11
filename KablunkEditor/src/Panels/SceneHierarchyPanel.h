@@ -6,7 +6,7 @@
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Scene/Entity.h"
 
-namespace Kablunk
+namespace kb
 {
 	// #TODO think about moving into runtime (KablunkEngine) because scene hierarchy and entity browsing could be useful for debugging runtime 
 

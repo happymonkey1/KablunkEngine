@@ -9,7 +9,7 @@
 
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 	// #TODO should this be separated into a FileWatcher and DirectoryWatcher?
 	class FileWatcher

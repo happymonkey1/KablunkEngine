@@ -5,7 +5,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace Kablunk
+namespace kb
 {
 	static const char* s_shader_registry_path = "resources/cache/shader/shader_registry.cache";
 

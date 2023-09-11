@@ -6,7 +6,7 @@
 
 #include "glm/glm.hpp"
 
-namespace Kablunk {
+namespace kb {
 
 	struct WindowProps {
 		std::string Title;

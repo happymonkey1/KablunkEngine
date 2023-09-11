@@ -17,13 +17,13 @@
 #include <box2d/b2_circle_shape.h>
 #include <box2d/b2_fixture.h>
 
-namespace Kablunk {
+namespace kb {
 	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
 	extern std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
 }
 
 
-namespace Kablunk::Scripts
+namespace kb::Scripts
 {
 
 	static inline auto GetEntity(uint64_t entity_id)
@@ -66,7 +66,7 @@ namespace Kablunk::Scripts
 
 	MonoArray* Kablunk_Scene_GetEntities()
 	{
-		Kablunk::WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		kb::WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "no scene set!");
 		const auto& entity_map = context->GetEntityMap();
 

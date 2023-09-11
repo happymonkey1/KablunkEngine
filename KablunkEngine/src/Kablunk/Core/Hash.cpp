@@ -2,7 +2,7 @@
 
 #include "Kablunk/Core/Hash.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	

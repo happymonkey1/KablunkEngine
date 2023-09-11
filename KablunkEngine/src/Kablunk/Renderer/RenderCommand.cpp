@@ -9,8 +9,8 @@
 
 #include "Kablunk/Core/Application.h"
 
-namespace Kablunk::render
-{ // start namespace Kablunk::render
+namespace kb::render
+{ // start namespace kb::render
 
 u32 rt_get_current_frame_index()
 {
@@ -22,4 +22,4 @@ uint32_t get_current_frame_index()
 	return Application::Get().get_current_frame_index();
 }
 
-} // end namespace Kablunk::render
+} // end namespace kb::render

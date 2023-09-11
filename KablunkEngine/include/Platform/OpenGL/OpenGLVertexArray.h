@@ -4,7 +4,7 @@
 #include "Kablunk/Renderer/Renderer.h"
 
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLVertexArray : public VertexArray
 	{

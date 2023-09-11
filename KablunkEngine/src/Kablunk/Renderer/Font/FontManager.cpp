@@ -3,7 +3,7 @@
 
 #include "Kablunk/Asset/AssetCommand.h"
 
-namespace Kablunk::render
+namespace kb::render
 {
 
 	void font_manager::init()
@@ -74,7 +74,7 @@ namespace Kablunk::render
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
 
-	ref<Kablunk::render::font_asset_t> font_manager::get_font_asset(const std::string& filename) const
+	ref<kb::render::font_asset_t> font_manager::get_font_asset(const std::string& filename) const
 	{
 		return m_font_cache.contains(filename) ? m_font_cache.at(filename) : nullptr;
 	}

@@ -7,7 +7,7 @@
 #include "Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Platform/Vulkan/VulkanIndexBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 	ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{

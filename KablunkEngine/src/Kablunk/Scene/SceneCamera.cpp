@@ -12,7 +12,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-namespace Kablunk
+namespace kb
 {
 	SceneCamera::SceneCamera()
 	{
@@ -68,7 +68,7 @@ namespace Kablunk
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
-		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		if (kb::Application::Get().GetSpecification().Enable_imgui)
 		{
 			// get imgui mouse pos (in screen coordinates)
 			auto [x, y] = ImGui::GetMousePos();
@@ -95,7 +95,7 @@ namespace Kablunk
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
-		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		if (kb::Application::Get().GetSpecification().Enable_imgui)
 		{
 			// get imgui mouse pos (in screen coordinates)
 			auto [x, y] = ImGui::GetMousePos();

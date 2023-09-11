@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk
+namespace kb
 {
 	
 	// #TODO size aligned with device memory allocation chunks, see imgui for help
