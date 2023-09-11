@@ -672,7 +672,7 @@ namespace Kablunk
 	void CSharpScriptEngine::InstantiateEntityClass(Entity entity)
 	{
 		Scene* context = entity.m_scene;
-		UUID id = entity.GetComponent<IdComponent>().Id;
+		Kablunk::uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 		KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, static_cast<uint64_t>(entity.m_entity_handle));
 		auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
 		auto& module_name = script_comp.Module_name;

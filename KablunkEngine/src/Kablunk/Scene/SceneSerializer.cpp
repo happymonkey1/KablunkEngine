@@ -104,8 +104,9 @@ namespace Kablunk
 
 		WriteComponentData<SpriteRendererComponent>(out, entity, [](auto& out, auto& component)
 			{
-				out << YAML::Key << "Texture" << YAML::Value;
+				out << YAML::Key << "Texture" << YAML::Value << component.Texture;
 
+#if 0
 				out << YAML::BeginMap; // Texture Asset
 
 				out << YAML::Key << "m_uuid"		<< YAML::Value << component.Texture.GetUUID();
@@ -118,6 +119,7 @@ namespace Kablunk
 				out << YAML::Key << "m_filepath"	<< YAML::Value << texture_filepath.string();
 
 				out << YAML::EndMap;
+#endif
 
 				out << YAML::Key << "Color"			<< YAML::Value << component.Color;
 				out << YAML::Key << "Tiling_factor" << YAML::Value << component.Tiling_factor;
@@ -300,6 +302,7 @@ namespace Kablunk
 
 		ReadComponentData<SpriteRendererComponent>(entity_data, entity, [this](auto& component, auto& data) 
 			{
+#if 0
 				auto texture_data = data["Texture"];
 				if (texture_data)
 				{
@@ -318,6 +321,8 @@ namespace Kablunk
 					auto texture_asset = Asset<Texture2D>(filepath.string(), uuid);
 					component.Texture = texture_asset;
 				}
+#endif
+                component.Texture = data["Texture"].as<asset::asset_id_t>();
 
 				component.Color = data["Color"].as<glm::vec4>();
 				component.Tiling_factor = data["Tiling_factor"].as<float>();

@@ -53,8 +53,6 @@
 // ----------------------------------------------
 
 // ---Assets-------------------------------------
-// #TODO remove old asset manager
-#include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Asset/AssetCommand.h"
 // ----------------------------------------------
 

@@ -22,11 +22,11 @@ namespace Kablunk
 	ContentBrowserPanel::ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel)
 		: m_current_directory{ ProjectManager::get().get_active() ? ProjectManager::get().get_active()->get_asset_directory_path() : "" }, m_asset_editor_panel{ asset_editor_panel }
 	{
-		m_directory_icon = Asset<Texture2D>("resources/content_browser/icons/directoryicon.png");
-		m_file_icon = Asset<Texture2D>("resources/content_browser/icons/textfileicon.png");
-		m_back_button = Asset<Texture2D>("resources/content_browser/icons/back_button.png");
-		m_forward_button = Asset<Texture2D>("resources/content_browser/icons/forward_button.png");
-		m_refresh_button = Asset<Texture2D>("resources/content_browser/icons/refresh_button.png");
+		m_directory_icon = Texture2D::Create("resources/content_browser/icons/directoryicon.png");
+		m_file_icon = Texture2D::Create("resources/content_browser/icons/textfileicon.png");
+		m_back_button = Texture2D::Create("resources/content_browser/icons/back_button.png");
+		m_forward_button = Texture2D::Create("resources/content_browser/icons/forward_button.png");
+		m_refresh_button = Texture2D::Create("resources/content_browser/icons/refresh_button.png");
 		m_asset_icon = Texture2D::Create("resources/content_browser/icons/asset_icon.png");
 
 		memset(m_search_buffer, 0, sizeof(char) * MAX_SEARCH_BUFFER_LENGTH);
@@ -127,7 +127,7 @@ namespace Kablunk
 
 					// #TODO include more file icons and adjust icon texture accordingly
 					
-					auto icon = is_dir ? m_directory_icon.Get() : m_file_icon.Get();
+					auto icon = is_dir ? m_directory_icon : m_file_icon;
 					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
 
 					ImVec2 min = { ImGui::GetCursorPosX(), ImGui::GetCursorPosY() };
@@ -291,7 +291,7 @@ namespace Kablunk
 		ImGui::BeginChild("##top_bar", { 0, 30 });
 		
 
-		if (UI::ImageButton(m_back_button.Get(), {22, 22}) && m_current_directory != ProjectManager::get().get_active()->get_asset_directory())
+		if (UI::ImageButton(m_back_button, {22, 22}) && m_current_directory != ProjectManager::get().get_active()->get_asset_directory())
 		{
 			m_current_directory = m_current_directory.parent_path();
 			should_refresh = true;
@@ -299,7 +299,7 @@ namespace Kablunk
 		
 		ImGui::SameLine();
 
-		if (UI::ImageButton(m_forward_button.Get(), { 22, 22 }))
+		if (UI::ImageButton(m_forward_button, { 22, 22 }))
 		{
 			// #TODO go to next directory
 			KB_CORE_WARN("Forward directory not implemented!");
@@ -307,7 +307,7 @@ namespace Kablunk
 
 		ImGui::SameLine();
 
-		if (UI::ImageButton(m_refresh_button.Get(), { 22, 22 }))
+		if (UI::ImageButton(m_refresh_button, { 22, 22 }))
 			should_refresh = true;
 
 		ImGui::SameLine();

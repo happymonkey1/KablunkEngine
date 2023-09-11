@@ -13,7 +13,7 @@ render_command_queue::render_command_queue()
 	m_command_buffer_ptr = m_command_buffer;
 	memset(m_command_buffer, 0, TEN_MB);
 
-    KB_CORE_INFO("[RenderCommandQueue]: initialized command buffer of {} bytes", TEN_MB);
+    KB_CORE_INFO("[render_command_queue]: initialized command buffer of {} bytes", TEN_MB);
 }
 
 render_command_queue::render_command_queue(render_command_queue&& p_other) noexcept

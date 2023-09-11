@@ -7,9 +7,6 @@
 
 namespace Kablunk
 {
-	// forward declaration
-	template <typename T>
-	class IntrusiveRef;
 	
 	using i8  = int8_t;
 	using i16 = int16_t;
@@ -27,10 +24,6 @@ namespace Kablunk
 	// unordered map
 	template <typename K, typename V>
 	using map = std::unordered_map<K, V>;
-
-	// intrusive ref counted pointer
-	template <typename T>
-	using ref = IntrusiveRef<T>;
 }
 
 #endif

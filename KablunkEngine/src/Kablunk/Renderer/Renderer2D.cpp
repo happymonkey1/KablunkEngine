@@ -536,7 +536,13 @@ void Renderer2D::draw_sprite(Entity entity)
 
 	auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
-	const auto& texture = sprite_renderer_comp.Texture.Get();
+	ref<Texture2D> texture = asset::get_asset<Texture2D>(sprite_renderer_comp.Texture);
+    if (!texture)
+    {
+        KB_CORE_ERROR("[Renderer2D]: Failed to load texture from asset id '{}'. Defaulting to white texture.", sprite_renderer_comp.Texture);
+        texture = m_renderer_data->white_texture;
+    }
+
 	auto tint_color = sprite_renderer_comp.Color;
 	auto tiling_factor = sprite_renderer_comp.Tiling_factor;
 

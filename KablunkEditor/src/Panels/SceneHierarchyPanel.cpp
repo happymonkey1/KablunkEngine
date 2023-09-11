@@ -719,18 +719,32 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](SpriteRendererComponent& component)
 			{
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-				if (UI::PropertyImageButton("Texture", component.Texture, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
+                ref<Texture> texture_asset = asset::get_asset<Texture2D>(component.Texture);
+                if (!texture_asset)
+                {
+                    if (component.Texture != asset::null_asset_id)
+                    {
+                        KB_CORE_ERROR(
+                            "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
+                            component.Texture
+                        );
+                    }
+                    texture_asset = render::get_white_texture();
+                }
+
+				if (UI::PropertyImageButton("Texture", texture_asset, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
 				{
 					auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
 					if (!filepath.empty())
 					{
-						component.Texture = Asset<Texture2D>(filepath);
+                        const auto& texture_asset = asset::get_asset<Texture2D>(filepath);
+						component.Texture = texture_asset->get_id();
 					}
 				}
 
@@ -742,7 +756,19 @@ namespace Kablunk
 						auto path = std::filesystem::path{ ProjectManager::get().get_active()->get_asset_directory_path() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
-							component.Texture = Asset<Texture2D>(path_str);
+                        {
+                            const auto& texture_asset = asset::get_asset<Texture2D>(path);
+                            if (texture_asset)
+                                component.Texture = texture_asset->get_id();
+                            else
+                            {
+                                KB_CORE_ERROR(
+                                    "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id", 
+                                    path_str
+                                );
+                                component.Texture = asset::null_asset_id;
+                            }
+                        }
 						else
 							KB_CORE_ERROR("Tried to load non image file as a texture, {0}", path_str);
 					}

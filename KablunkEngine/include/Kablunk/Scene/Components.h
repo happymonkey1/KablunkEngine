@@ -7,18 +7,26 @@
 #define GLM_ENABLE_EXPERIMENTAL // needed for some reason LOL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Kablunk/Core/Uuid64.h"
+
 #include "Kablunk/Scripts/NativeScriptEngine.h"
 #include "Kablunk/Scripts/NativeScript.h"
 
 #include "Kablunk/Scene/Entity.h"
-#include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Scene/SceneCamera.h"
-#include "Kablunk/Core/AssetManager.h"
-#include "Kablunk/Core/Uuid64.h"
+
+#include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/RenderCommand.h"
+
+#include "Kablunk/Project/ProjectManager.h"
+
+#include "Kablunk/Asset/AssetCommand.h"
 
 #include "Kablunk/UI/PanelFactory.h"
+
+#include "Kablunk/Utilities/Parser.h"
 
 #include <filesystem>
 
@@ -97,7 +105,7 @@ struct TransformComponent
 struct SpriteRendererComponent
 {
 	// #TODO old "asset" class uses absolute path. 
-	Asset<Texture2D> Texture{ Asset<Texture2D>("") };
+	asset::asset_id_t Texture{ asset::null_asset_id };
 	glm::vec4 Color{ 1.0f };
 	float Tiling_factor{ 1.0f };
 	// #TODO should this be entity wide, instead of just on SpriteRenderers?
@@ -105,7 +113,8 @@ struct SpriteRendererComponent
 
 	glm::vec2 GetTextureDimensions() const 
 	{ 
-		return { Texture.Get()->GetWidth(), Texture.Get()->GetHeight() }; 
+        const auto& texture_asset = asset::get_asset<Texture2D>(Texture);
+        return glm::vec2{ texture_asset->GetWidth(), texture_asset->GetHeight() }; 
 	}
 
 	void SetVisible(bool v) { Visible = v; }
@@ -115,7 +124,7 @@ struct SpriteRendererComponent
 	SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	SpriteRendererComponent(glm::vec4 color) 
 		: Color{ color } { }
-	SpriteRendererComponent(const Asset<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
+	SpriteRendererComponent(const ref<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
 		: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
 };
 
