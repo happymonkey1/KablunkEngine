@@ -47,7 +47,7 @@ namespace kb
 	{
 		KB_CORE_TRACE("Loading mesh: '{0}'", filepath.c_str());
 
-		m_importer = CreateScope<Assimp::Importer>();
+		m_importer = create_box<Assimp::Importer>();
 		
 		const aiScene* scene = m_importer->ReadFile(m_filepath, s_mesh_import_flags);
 		if (!scene || !scene->HasMeshes())
@@ -574,7 +574,7 @@ namespace kb
 		SetSubmeshes({});
 
 		const auto& mesh_materials = m_mesh_data->GetMaterials();
-		m_material_table = ref<MaterialTable>::Create(mesh_materials.size());
+		m_material_table = ref<MaterialTable>::Create(static_cast<u32>(mesh_materials.size()));
 		for (size_t i = 0; i < mesh_materials.size(); ++i)
 			m_material_table->SetMaterial(static_cast<uint32_t>(i), ref<MaterialAsset>::Create(mesh_materials[i]));
 	}

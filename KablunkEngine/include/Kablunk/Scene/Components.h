@@ -157,7 +157,7 @@ struct NativeScriptComponent
 	std::unique_ptr<INativeScript> Instance = nullptr;
 	std::filesystem::path Filepath = "";
 
-	using InstantiateScriptFunc = Scope<INativeScript>(*)();
+	using InstantiateScriptFunc = box<INativeScript>(*)();
 	// Function pointer instead of std::function bc of potential memory allocations
 	InstantiateScriptFunc InstantiateScript = nullptr;
 
@@ -209,7 +209,7 @@ struct NativeScriptComponent
 	template <typename T, typename... Args>
 	void BindRuntime(Args... args)
 	{
-		InstantiateScript = [args...]() -> Scope<NativeScript> { return CreateScope<T>(args...); };
+		InstantiateScript = [args...]() -> box<NativeScript> { return CreateScope<T>(args...); };
 	}
 
 	void BindEditor()

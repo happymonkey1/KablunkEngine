@@ -30,6 +30,17 @@
 #	error "Unknown platform"
 #endif
 
+// compiler detection
+#if defined(_MSC_VER) // MSVC
+#   define KB_NOT_NULL _Notnull_
+#elif defined(__clang__) // CLANG
+#   define KB_NOT_NULL _Nonnull
+#elif defined(__GNUC__) // GCC
+#   define KB_NOT_NULL __attribute__((nonnull))
+#else
+#   error "Failed to detect compiler!"
+#endif
+
 
 #ifdef KB_DEBUG
 #	if defined(KB_PLATFORM_WINDOWS)

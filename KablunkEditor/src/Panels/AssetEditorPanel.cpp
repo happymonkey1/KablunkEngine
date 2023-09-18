@@ -128,7 +128,7 @@ namespace kb
 		if (it == m_registered_editors.end())
 			return;
 
-		Scope<AssetEditor>& editor = it->second;
+		box<AssetEditor>& editor = it->second;
 		if (editor->get_open())
 			editor->set_open(false);
 

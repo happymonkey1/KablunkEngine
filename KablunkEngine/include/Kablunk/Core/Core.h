@@ -45,10 +45,10 @@ namespace kb
 namespace kb
 {
 	template <typename T>
-	using Scope = std::unique_ptr<T>;
+	using box = std::unique_ptr<T>;
 
 	template <typename T, typename ... Args>
-	constexpr Scope<T> CreateScope(Args&& ... args)
+	constexpr box<T> create_box(Args&& ... args)
 	{
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}

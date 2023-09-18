@@ -54,7 +54,7 @@ namespace kb {
 
 		virtual void swap_buffers() = 0;
 
-		static Scope<Window> Create(const WindowProps& props = WindowProps());
+		static box<Window> Create(const WindowProps& props = WindowProps());
 	};
 }
 

@@ -128,7 +128,7 @@ namespace kb
 	const BufferLayout& VulkanVertexBuffer::GetLayout() const
 	{
 		KB_CORE_WARN("VulkanVertexBuffer does not implement layouts");
-		KB_CORE_ASSERT(false, "");
+		KB_CORE_ASSERT(false, "[VulkanVertexBuffer]: does not implement layouts");
 		return {};
 	}
 

@@ -172,7 +172,7 @@ namespace kb
 	private:
 		void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, uint32_t level = 0);
 	private:
-		Scope<Assimp::Importer> m_importer;
+		box<Assimp::Importer> m_importer;
 
 		ref<VertexBuffer> m_vertex_buffer;
 		ref<IndexBuffer> m_index_buffer;

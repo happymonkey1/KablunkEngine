@@ -102,7 +102,7 @@ namespace kb {
 		bool OnWindowResize(WindowResizeEvent& e);
 
 		ApplicationSpecification m_specification;
-		Scope<Window> m_window;
+		box<Window> m_window;
 		ImGuiLayer* m_imgui_layer;
 		bool m_running = true;
 		bool m_minimized = false;

@@ -49,7 +49,7 @@ struct map_allocator_t
 			return p;
 
 		throw std::bad_alloc();
-		return (T*)0xDEADBEEF;
+		return (T*)static_cast<u64>(0xDEADBEEF);
 	}
 
 	void deallocate(T* p, std::size_t n) noexcept {

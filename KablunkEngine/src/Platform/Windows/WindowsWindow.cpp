@@ -23,9 +23,9 @@ namespace kb {
         KB_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
     }
 
-    Scope<Window> Window::Create(const WindowProps& props) 
+    box<Window> Window::Create(const WindowProps& props) 
     {
-        return CreateScope<WindowsWindow>(props);
+        return create_box<WindowsWindow>(props);
     }
 
     WindowsWindow::WindowsWindow(const WindowProps& props)

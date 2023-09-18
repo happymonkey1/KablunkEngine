@@ -118,7 +118,7 @@ namespace kb
 		[[deprecated("Replaced by rccpp")]]
 		bool RegisterScript(const std::string& script_name, CreateMethodFunc create_script);
 		[[deprecated("Replaced by rccpp")]]
-		Scope<NativeScript> get_script(const std::string& script_name);
+		box<NativeScript> get_script(const std::string& script_name);
 
 		[[deprecated("Replaced by rccpp")]]
 		bool LoadDLLRuntime(const std::string& dll_name, const std::string& dll_dir);
