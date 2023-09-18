@@ -4,6 +4,7 @@
 #include "Kablunk/Core/Buffer.h"
 
 #include "Kablunk/serialize/file/stream_reader.h"
+#include "Kablunk/serialize/file/stream_writer.h"
 
 #include <filesystem>
 #include <fstream>
@@ -19,29 +20,37 @@ public:
     file_stream_reader(const file_stream_reader&) = delete;
     virtual ~file_stream_reader();
 
+    // check if the underlying stream is valid
     virtual bool is_good() const noexcept override { return m_stream.good(); };
+    // get the current cursor position in the underlying stream
     virtual u64 get_stream_cursor() noexcept { return m_stream.tellg(); }
+    // set the current cursor position in the underlying stream
     virtual void set_stream_cursor(u64 p_new_cursor) noexcept { m_stream.seekg(p_new_cursor); }
-    virtual bool read_data_unsafe(char* p_destination_buffer, size_t p_size) noexcept override;
-
+    // read `p_size` bytes of data from the underlying stream into a raw byte buffer
+    virtual bool read_data_unsafe(char* p_destination, size_t p_size) noexcept override;
 private:
-    std::filesystem::path m_path{};
+    // underlying input stream
     std::ifstream m_stream{};
 };
 
-class file_stream_writer
+class file_stream_writer : public stream_writer
 {
+public:
     file_stream_writer() = default;
     file_stream_writer(const std::filesystem::path& p_path);
     file_stream_writer(const file_stream_writer&) = delete;
     virtual ~file_stream_writer();
 
-    virtual void is_good() const noexcept override { return m_stream.good(); };
+    // check if the underlying stream is valid
+    virtual bool is_good() const noexcept override { return m_stream.good(); };
+    // get the current cursor position in the underlying stream
     virtual u64 get_stream_cursor() noexcept override { return m_stream.tellp(); }
+    // set the current cursor position in the underlying stream
     virtual void set_stream_cursor(u64 p_new_cursor) noexcept override { m_stream.seekp(p_new_cursor); }
-    virtual bool write_data(const Buffer& p_source_buffer) noexcept override;
+    // write `p_size` bytes of data into the underlying stream from a raw byte buffer
+    virtual bool write_data(const char* p_source, size_t p_size) noexcept override;
 private:
-    std::filesystem::path m_path{};
+    // underlying output stream
     std::ofstream m_stream{};
 };
 

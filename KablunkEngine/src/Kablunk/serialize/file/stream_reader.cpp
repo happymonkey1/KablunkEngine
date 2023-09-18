@@ -5,8 +5,6 @@
 namespace kb::serialize::file
 { // start namespace kb::serialize::file
 
-
-
 auto stream_reader::read_buffer(size_t p_size /*= 0*/) noexcept -> Buffer
 {
     if (!p_size)

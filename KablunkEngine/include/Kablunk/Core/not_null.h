@@ -8,13 +8,14 @@
 namespace kb
 { // start namespace kb
 
-// based on https://github.com/carbon-language/carbon-lang/blob/trunk/explorer/base/nonnull.h
-
-
+// wrapper for a non-nullable pointer
+// usage: not_null<T>{}
 template <typename T>
 class not_null
 {
 public:
+    // based on https://github.com/carbon-language/carbon-lang/blob/trunk/explorer/base/nonnull.h
+    
     // alias for a non-nullable pointer ex: not_null<T*> instead of T*
     // sanitizers enforce this on assignment, return, and when passed as an argument
     template <typename T, typename std::enable_if_t<std::is_pointer_v<T>>* = nullptr>
