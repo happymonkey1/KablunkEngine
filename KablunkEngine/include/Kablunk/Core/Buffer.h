@@ -11,8 +11,13 @@ namespace kb
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
 		Buffer(void* data, size_t size) : m_data{ (u8*)data }, m_size{ size } {}
-		Buffer(size_t size) : m_data{ nullptr }, m_size{ size } { Allocate(size); }
-		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
+		Buffer(size_t size) 
+            : m_data{ nullptr }, m_size{ size } 
+        { 
+            Allocate(size); 
+        }
+		Buffer(const Buffer& other) 
+            : m_data{ nullptr }, m_size{ other.m_size }
 		{
 			if (other.m_data)
 			{

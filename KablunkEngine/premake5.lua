@@ -26,8 +26,9 @@ project "KablunkEngine"
 
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.h",
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp",
-		"vendor/cr/cr.h"
+		"vendor/cr/cr.h",
 
+		"vendor/expected/include/**.hpp"
 	}
 
 	defines
@@ -64,7 +65,8 @@ project "KablunkEngine"
 		"%{IncludeDir.VulkanSDK_LocalInclude}",
 		"%{IncludeDir.boost}",
 		"%{IncludeDir.miniaudio}",
-		"%{IncludeDir.optick}"
+		"%{IncludeDir.optick}",
+		"%{IncludeDir.tl_expected}"
 	}
 
 	links

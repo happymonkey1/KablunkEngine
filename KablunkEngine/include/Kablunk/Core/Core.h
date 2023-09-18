@@ -9,6 +9,11 @@
 #include "Kablunk/Core/Memory/Memory.h"
 #include "Kablunk/Core/Expected.hpp"
 #include "Kablunk/Debugging/profiling.h"
+
+// #NOTE c++17+ implementation of std::expected
+//       this can be removed when the project switches to c++23
+#include <tl/expected.hpp>
+
 #include <memory>
 
 namespace kb
