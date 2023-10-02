@@ -115,7 +115,7 @@ struct renderer_2d_data_t
 
 	// text
 	std::vector<ref<VertexBuffer>> text_vertex_buffers;
-    ref<IndexBuffer> utext_index_buffer;
+    ref<IndexBuffer> text_index_buffer;
 
 	// =======
 	// shaders

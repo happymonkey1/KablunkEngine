@@ -12,7 +12,7 @@
 
 // #NOTE c++17+ implementation of std::expected
 //       this can be removed when the project switches to c++23
-#include <tl/expected.hpp>
+#include "tl/expected.hpp"
 
 #include <memory>
 
@@ -22,6 +22,7 @@ namespace kb
 	void ShutdownCore();
 }
 
+#if 0
 #if defined(KB_PLATFORM_WINDOWS)
 #	define KB_FORCE_INLINE __forceinline
 #elif defined(KB_PLATFORM_LINUX)
@@ -32,6 +33,7 @@ namespace kb
 	// #TODO(Sean) force inline on other platforms
 #	define KB_FORCE_INLINE inline
 #	warning "force inlined not defined for platform!"
+#endif
 #endif
 
 #define BIT(x) (1 << x)

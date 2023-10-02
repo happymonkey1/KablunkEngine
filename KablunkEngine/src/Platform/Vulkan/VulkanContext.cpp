@@ -19,8 +19,8 @@ namespace kb
 	{
 		KB_CORE_INFO("Initializing Vulkan Context!");
 		CreateInstance();
+
 		SetupDebugMessageCallback();
-		
 		
 		m_physical_device = ref<VulkanPhysicalDevice>::Create();
 

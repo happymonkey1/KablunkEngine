@@ -123,6 +123,8 @@ namespace kb {
 
         // primary 2d renderer which uses world space camera
         ref<Renderer2D> m_renderer_2d = nullptr;
+        // secondary 2d renderer which uses screen space camera
+        ref<Renderer2D> m_screen_renderer_2d = nullptr;
 
 		u32 m_current_frame_index = 0;
 
