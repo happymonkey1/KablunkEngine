@@ -24,6 +24,7 @@
 
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
@@ -33,6 +34,7 @@
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/SceneRenderer.h"
+
 
 #include "Kablunk/Renderer/Camera.h"
 // ----------------------------------------------

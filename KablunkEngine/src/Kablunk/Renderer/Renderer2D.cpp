@@ -1,6 +1,8 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 
+#include "Kablunk/Asset/AssetManager.h"
+
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/RenderCommand.h"
@@ -327,6 +329,11 @@ void Renderer2D::shutdown()
     }
 }
 
+auto Renderer2D::set_asset_manager(ref<asset::AssetManager> p_asset_manager) -> void
+{
+    m_asset_manager = p_asset_manager;
+}
+
 ref<Texture2D> Renderer2D::get_white_texture()
 {
 	return m_renderer_data->white_texture;
@@ -556,7 +563,7 @@ void Renderer2D::draw_sprite(Entity entity)
 	auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
 	ref<Texture2D> texture = sprite_renderer_comp.Texture != asset::null_asset_id ? 
-        asset::get_asset<Texture2D>(sprite_renderer_comp.Texture) : m_renderer_data->white_texture;
+        m_asset_manager->get_asset<Texture2D>(sprite_renderer_comp.Texture) : m_renderer_data->white_texture;
    
     if (!texture)
     {
@@ -832,8 +839,6 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	if (!m_renderer_data->m_font_manager.has_font_cached(font_asset))
 	{
 		KB_CORE_WARN("[renderer2d]: font asset was not cached in the font manager when draw command issue!");
-        KB_CORE_INFO("[renderer2d]:   font asset being added to cache during render draw_text_string command!");
-		m_renderer_data->m_font_manager.add_font_file_to_library(font_asset);
 	}
 
 	ref<Texture2D> font_texture_atlas = font_asset->get_texture_atlas();

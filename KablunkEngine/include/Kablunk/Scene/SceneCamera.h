@@ -49,7 +49,6 @@ namespace kb
 		void SetPerspectiveFarClip(float far_clip) { m_perspective_far = far_clip; RecalculateProjection(); }
 
 		// Orthographic
-
 		float GetOrthographicSize() const { return m_orthographic_size; }
 		float& GetOrthographicSize() { return m_orthographic_size; }
 		void SetOrthographicSize(float size) { m_orthographic_size = size; RecalculateProjection(); }

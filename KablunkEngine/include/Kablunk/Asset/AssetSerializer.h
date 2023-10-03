@@ -11,21 +11,30 @@
 namespace kb::asset
 { // start namespace kb::asset
 
+// forward declaration
+class AssetManager;
+
 // abstract asset serializer base class
 class AssetSerializer : public RefCounted
 {
 public:
     AssetSerializer() = default;
+    AssetSerializer(ref<AssetManager> p_asset_manager) : m_asset_manager{ p_asset_manager } { }
     virtual ~AssetSerializer() = default;
 
     virtual void serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const = 0;
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const = 0;
+
+protected:
+    ref<AssetManager> m_asset_manager;
 };
 
 // text asset
 class TextureAssetSerializer : public AssetSerializer
 {
 public:
+    TextureAssetSerializer(ref<AssetManager> p_asset_manager) : AssetSerializer{ p_asset_manager } {}
+
     virtual void serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const override {}
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
 };
@@ -34,6 +43,8 @@ public:
 class AudioAssetSerializer : public AssetSerializer
 {
 public:
+    AudioAssetSerializer(ref<AssetManager> p_asset_manager) : AssetSerializer{ p_asset_manager } {}
+
     virtual void serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
 };
@@ -42,6 +53,8 @@ public:
 class font_asset_serializer : public AssetSerializer
 {
 public:
+    font_asset_serializer(ref<AssetManager> p_asset_manager) : AssetSerializer{ p_asset_manager } {}
+
     virtual void serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
 };

@@ -22,9 +22,9 @@ namespace kb::asset
 
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
-		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create();
-		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create();
-		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create();
+		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create(this);
+		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create(this);
+		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create(this);
 		
 		m_asset_registry.clear();
 		load_asset_registry();
@@ -36,13 +36,15 @@ namespace kb::asset
         if (p_load_internal_engine_assets)
         {
             // import default font asset metadata
-            auto default_font_asset_id = import_engine_asset_metadata("fonts/roboto/Roboto-Regular.ttf");
+            std::filesystem::path relative_path = "fonts/roboto/Roboto-Regular.ttf";;
+            auto default_font_asset_id = import_engine_asset_metadata(relative_path);
             KB_CORE_ASSERT(default_font_asset_id != asset::null_asset_id, "[asset_manager]: tried loading default font, but asset_import returned null id?");
 
             ref<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
 
             // load into font registry
-            Application::Get().get_renderer_2d()->get_font_manager().add_font_file_to_library(default_font_asset);
+            std::filesystem::path absolute_path = m_active_project->get_asset_directory_path() / relative_path;
+            Application::Get().get_renderer_2d()->get_font_manager().add_font_file_to_library(default_font_asset, absolute_path);
             //render2d::get_font_manager().add_font_file_to_library(default_font_asset);
         }
 

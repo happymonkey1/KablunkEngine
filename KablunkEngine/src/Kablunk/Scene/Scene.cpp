@@ -655,8 +655,9 @@ namespace kb
                     auto& transform_comp = text_entity.GetComponent<TransformComponent>();
                     auto& text_comp = text_entity.GetComponent<TextComponent>();
 
-
-                    ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+                    KB_CORE_ASSERT(false, "need to re-implement!");
+                    ref<render::font_asset_t> font_asset = nullptr;
+                    //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                     if (font_asset)
                         p_renderer_2d->draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);
@@ -822,7 +823,9 @@ namespace kb
                 auto& transform_comp = text_entity.GetComponent<TransformComponent>();
                 auto& text_comp = text_entity.GetComponent<TextComponent>();
 
-                ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+                KB_CORE_ASSERT(false, "need to re-implement");
+                ref<render::font_asset_t> font_asset = nullptr;
+                //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 if (font_asset)
                     p_renderer_2d->draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);

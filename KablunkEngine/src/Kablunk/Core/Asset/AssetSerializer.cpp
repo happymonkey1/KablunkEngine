@@ -12,6 +12,8 @@
 #include "Kablunk/Audio/AudioAsset.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
 
+#include "Kablunk/Asset/AssetManager.h"
+
 namespace kb::asset
 {
 // ======================
@@ -20,7 +22,7 @@ namespace kb::asset
 
 bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
-	asset = Texture2D::Create(Singleton<AssetManager>::get().get_absolute_path(metadata).string());
+	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string());
 	asset->set_id(metadata.id);
 
 	bool success = asset.As<Texture2D>()->loaded();
@@ -45,7 +47,7 @@ void AudioAssetSerializer::serialize(const AssetMetadata& metadata, ref<IAsset>&
 
 bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
-	audio::audio_asset_config config{ Singleton<AssetManager>::get().get_absolute_path(metadata).string() };
+	audio::audio_asset_config config{ m_asset_manager->get_absolute_path(metadata).string() };
 
 	asset = audio::AudioAsset::create(config);
 	asset->set_id(metadata.id);
@@ -71,7 +73,7 @@ void font_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>
 bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
     render::font_asset_create_info font_create_info{
-        Singleton<AssetManager>::get().get_absolute_path(metadata).string(),        // path to font asset
+        m_asset_manager->get_absolute_path(metadata).string(),        // path to font asset
         16ull,                                                                      // font point
         // #TODO get rid of singleton reference
         Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),   // underlying font engine

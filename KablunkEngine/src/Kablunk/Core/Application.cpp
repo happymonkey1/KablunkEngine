@@ -312,6 +312,7 @@ namespace kb
 
 	void Application::draw_debug_statistics()
 	{
+#if 0
         // #TODO this should use "screen renderer" rather than world space renderer
 		const auto& font_manager_ = m_renderer_2d->get_font_manager();
 		ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
@@ -322,6 +323,7 @@ namespace kb
 		}
 
 		Singleton<Renderer2D>::get().draw_text_string("test", glm::vec3{ 0.f, 0.f, 0.f }, glm::vec2{ 1.0f, 1.0f }, font_asset, glm::vec4{ 1.0f });
+#endif
 
 	}
 

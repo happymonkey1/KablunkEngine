@@ -19,7 +19,15 @@
 #include "Kablunk/Renderer/Font/FontManager.h"
 
 namespace kb
-{ // start namespace kb::render
+{ // start namespace kb
+
+// forward declaration
+namespace asset
+{ // start namespace ::asset
+
+class AssetManager;
+
+} // end namespace ::asset 
 
 struct QuadVertex
 {
@@ -215,6 +223,8 @@ public:
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
 
+    auto set_asset_manager(ref<asset::AssetManager> p_asset_manager) -> void;
+
     ref<Texture2D> get_white_texture();
 
 	void begin_scene(const Camera& camera, const glm::mat4& transform);
@@ -362,6 +372,7 @@ private:
 	void end_batch();
 private:
 	renderer_2d_data_t* m_renderer_data = nullptr;
+    ref<asset::AssetManager> m_asset_manager = nullptr;
 };
 
 } // end namespace Kablunk
