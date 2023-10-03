@@ -14,9 +14,11 @@
 namespace kb::asset
 {
 
-	void AssetManager::init()
+	void AssetManager::init(ref<Project> p_active_project, bool p_load_internal_engine_assets /* = true */)
 	{
         KB_CORE_INFO("[asset_manager]: starting initialization");
+
+        m_active_project = p_active_project;
 
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
@@ -31,6 +33,7 @@ namespace kb::asset
 
         // load engine default assets
         // #TODO bug: roboto font is always loaded, filling asset registry with duplicates since it is not located in "asset" folder
+        if (p_load_internal_engine_assets)
         {
             // import default font asset metadata
             auto default_font_asset_id = import_engine_asset_metadata("fonts/roboto/Roboto-Regular.ttf");
@@ -80,15 +83,15 @@ namespace kb::asset
         if (p_metadata.filepath.is_relative())
             return p_metadata.filepath;
 
-        auto relative_to_path = is_internal_asset ? Singleton<ProjectManager>::get().get_active()->get_project_directory() : 
-            Singleton<ProjectManager>::get().get_active()->get_project_directory();
+        auto relative_to_path = is_internal_asset ? m_active_project->get_project_directory() : 
+            m_active_project->get_project_directory();
 
         return std::filesystem::relative(p_metadata.filepath, relative_to_path);
     }
 
 	std::filesystem::path AssetManager::get_relative_path(const std::filesystem::path& path) const
 	{
-		return path.is_relative() ? path : std::filesystem::relative(path, ProjectManager::get().get_active()->get_asset_directory_path());
+		return path.is_relative() ? path : std::filesystem::relative(path, m_active_project->get_asset_directory_path());
 	}
 
     
@@ -104,7 +107,7 @@ namespace kb::asset
 		std::filesystem::path relative_path = get_relative_path(filepath);
 		if (relative_path.empty())
 		{
-			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, ProjectManager::get().get_active()->get_asset_directory_path());
+			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, m_active_project->get_asset_directory_path());
 			return asset::null_asset_id;
 		}
 
@@ -174,7 +177,7 @@ namespace kb::asset
 		KB_CORE_INFO("[AssetManager] Loading asset registry!");
 
 		// #TODO store asset registry path on project
-		const std::filesystem::path& asset_registry_path = ProjectManager::get().get_active()->get_asset_directory_path() / s_asset_registry_path;
+		const std::filesystem::path& asset_registry_path = m_active_project->get_asset_directory_path() / s_asset_registry_path;
 		if (!FileSystem::file_exists(asset_registry_path))
 		{
 			KB_CORE_ERROR("[AssetManager] Tried to load asset registry but file does not exist!");
@@ -292,14 +295,14 @@ namespace kb::asset
 
 		// write asset registry data to file
 		// #TODO get asset registry path from project
-		std::filesystem::path asset_registry_path = ProjectManager::get().get_active()->get_asset_directory_path() / s_asset_registry_path;
+		std::filesystem::path asset_registry_path = m_active_project->get_asset_directory_path() / s_asset_registry_path;
 		std::ofstream fout{ asset_registry_path };
 		fout << out.c_str();
 	}
 
 	void AssetManager::reload_assets()
 	{
-		process_directory(ProjectManager::get().get_active()->get_asset_directory_path());
+		process_directory(m_active_project->get_asset_directory_path());
 		write_registry_to_file();
 	}
 
@@ -338,9 +341,9 @@ namespace kb::asset
 
 	bool AssetManager::file_exists(const AssetMetadata& asset_metadata) const
 	{
-		KB_CORE_ASSERT(ProjectManager::get().get_active(), "no active project!");
+		KB_CORE_ASSERT(m_active_project, "no active project!");
 		// #TODO check if the path is relative?
-		return FileSystem::file_exists(ProjectManager::get().get_active()->get_asset_directory_path() / asset_metadata.filepath);
+		return FileSystem::file_exists(m_active_project->get_asset_directory_path() / asset_metadata.filepath);
 	}
 
 	void AssetManager::serialize_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const
@@ -381,7 +384,7 @@ namespace kb::asset
 
     asset::asset_id_t AssetManager::import_engine_asset_metadata(const std::filesystem::path& filepath)
     {
-        auto absolute_path = Singleton<ProjectManager>::get().get_active()->get_project_directory() / "resources" / filepath;
+        auto absolute_path = m_active_project->get_project_directory() / "resources" / filepath;
 
         KB_CORE_ASSERT(std::filesystem::exists(absolute_path), "[asset_manager]: trying to load internal engine asset that does not exist?");
 

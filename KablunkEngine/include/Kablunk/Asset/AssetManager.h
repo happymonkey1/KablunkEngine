@@ -8,18 +8,18 @@
 #include "Kablunk/Asset/AssetType.h"
 #include "Kablunk/Asset/AssetSerializer.h"
 
-#include "Kablunk/Project/ProjectManager.h"
+#include "Kablunk/Project/Project.h"
 
 #include <filesystem>
 
 namespace kb::asset
 {
 
-	class AssetManager
+	class AssetManager : public RefCounted
 	{
 	public:
 		// initialization logic for the asset manager
-		void init();
+		void init(ref<Project> p_active_project, bool p_load_internal_engine_assets = true);
 		// shutdown logic for the asset manager
 		void shutdown();
 		// get metadata from asset registry using asset id
@@ -35,13 +35,13 @@ namespace kb::asset
                 return metadata.filepath;
 
             // #TODO internal engine path should not be hardcoded here...
-            return metadata.is_internal_asset ? ProjectManager::get().get_active()->get_project_directory() / "resources" / metadata.filepath 
-                : ProjectManager::get().get_active()->get_asset_directory_path() / metadata.filepath;
+            return metadata.is_internal_asset ? m_active_project->get_project_directory() / "resources" / metadata.filepath 
+                : m_active_project->get_asset_directory_path() / metadata.filepath;
         }
 		// get the absolute path for a given path
 		std::filesystem::path get_absolute_path(const std::filesystem::path& path) const 
         { 
-            return path.is_absolute() ? path : ProjectManager::get().get_active()->get_asset_directory_path() / path; 
+            return path.is_absolute() ? path : m_active_project->get_asset_directory_path() / path; 
         }
         // get the relative path for a given path stored in some asset metadata
         std::filesystem::path get_relative_path(const AssetMetadata& p_metadata) const;
@@ -189,6 +189,7 @@ namespace kb::asset
 		// #TODO constexpr in c++20?
 		inline static const std::filesystem::path s_asset_registry_path = "asset_registry.kbreg";
 	private:
+        ref<Project> m_active_project = nullptr;
 		// asset registry that maps ids to metadata
 		AssetRegistry m_asset_registry;
 		// map of assets that are fully loaded

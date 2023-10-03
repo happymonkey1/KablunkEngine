@@ -28,7 +28,7 @@ namespace kb
 		m_active_project = project;
 		if (m_active_project)
 		{
-			Singleton<asset::AssetManager>::get().init();
+			Singleton<asset::AssetManager>::get().init(m_active_project);
 		}
 	}
 }
