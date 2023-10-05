@@ -131,7 +131,8 @@ namespace kb
 					instance->m_render_pass = swapChain.GetRenderPass();
 
 					instance->m_clear_values.clear();
-					instance->m_clear_values.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
+                    const auto& clear_color = instance->m_specification.clear_color;
+					instance->m_clear_values.emplace_back().color = { clear_color.r, clear_color.g, clear_color.b, clear_color.a };
 				}
 			});
 
@@ -173,7 +174,6 @@ namespace kb
 			{
 				instance->RT_Invalidate();
 			});
-
 	}
 
 	void VulkanFramebuffer::RT_Invalidate()

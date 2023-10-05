@@ -194,24 +194,35 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	}
 
 	// create command buffers
-	KB_CORE_ASSERT(m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.has_value(), "graphics family queue has no index set!");
-	VkCommandPoolCreateInfo cmd_pool_info{};
-	cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmd_pool_info.queueFamilyIndex = m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.value(); // #TODO could be wrong value
-	cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(device, &cmd_pool_info, nullptr, &m_command_pool) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
+    {
+        for (auto& swapchain_command_buffer : m_command_buffers)
+            vkDestroyCommandPool(device, swapchain_command_buffer.m_command_pool, nullptr);
 
-	VkCommandBufferAllocateInfo cmd_buf_allocate_info{};
-	cmd_buf_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmd_buf_allocate_info.commandPool = m_command_pool;
-	cmd_buf_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	uint32_t count = m_image_count;
-	cmd_buf_allocate_info.commandBufferCount = count;
+	    KB_CORE_ASSERT(m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.has_value(), "graphics family queue has no index set!");
 
-	m_command_buffers.resize(count);
-	if (vkAllocateCommandBuffers(device, &cmd_buf_allocate_info, m_command_buffers.data()) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffers");
+	    VkCommandPoolCreateInfo cmd_pool_info{};
+	    cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	    cmd_pool_info.queueFamilyIndex = m_device->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics_family.value(); // #TODO could be wrong value
+	    cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+	    VkCommandBufferAllocateInfo cmd_buf_allocate_info{};
+	    cmd_buf_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	    cmd_buf_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	    cmd_buf_allocate_info.commandBufferCount = 1;
+
+	    uint32_t count = m_image_count;
+        m_command_buffers.resize(count);
+        for (auto& swapchain_command_buffer : m_command_buffers)
+        {
+            if (vkCreateCommandPool(device, &cmd_pool_info, nullptr, &swapchain_command_buffer.m_command_pool) != VK_SUCCESS)
+                KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
+
+            cmd_buf_allocate_info.commandPool = swapchain_command_buffer.m_command_pool;
+
+            if (vkAllocateCommandBuffers(device, &cmd_buf_allocate_info, &swapchain_command_buffer.m_command_buffer) != VK_SUCCESS)
+                KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffers");
+        }
+    }
 
 	// Create semaphores
 	VkSemaphoreCreateInfo semaphore_create_info{};
@@ -311,7 +322,6 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 		KB_CORE_ASSERT(false, "Vulkan failed to create render pass!");
 
 	CreateFramebuffer();
-
 }
 
 void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
@@ -348,7 +358,8 @@ void VulkanSwapChain::BeginFrame()
 	if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
 
-	if (vkResetCommandPool(m_device->GetVkDevice(), m_command_pool, 0))
+    
+	if (vkResetCommandPool(m_device->GetVkDevice(), m_command_buffers[m_current_buffer_index].m_command_pool, 0))
 		KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 
 	if (AcquireNextImage(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
@@ -370,7 +381,7 @@ void VulkanSwapChain::Present()
 	submit_info.pWaitSemaphores = &m_semaphores.present_complete;
 	submit_info.signalSemaphoreCount = 1;
 	submit_info.pSignalSemaphores = &m_semaphores.render_complete;
-	submit_info.pCommandBuffers = &m_command_buffers[m_current_buffer_index];
+	submit_info.pCommandBuffers = &m_command_buffers[m_current_buffer_index].m_command_buffer;
 	submit_info.commandBufferCount = 1;
 
 	if (vkResetFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
@@ -415,9 +426,12 @@ void VulkanSwapChain::Destroy()
 #endif
 	}
 
-    if (m_command_pool)
+    for (auto& swapchain_command_buffer : m_command_buffers)
     {
-        vkDestroyCommandPool(device, m_command_pool, nullptr);
+        if (!swapchain_command_buffer.m_command_pool)
+            continue;
+
+        vkDestroyCommandPool(device, swapchain_command_buffer.m_command_pool, nullptr);
         KB_CORE_INFO("[VulkanSwapChain]: destroyed command pool");
     }
         

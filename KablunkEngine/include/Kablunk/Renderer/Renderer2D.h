@@ -227,8 +227,9 @@ public:
 
     ref<Texture2D> get_white_texture();
 
-	void begin_scene(const Camera& camera, const glm::mat4& transform);
-	void begin_scene(const EditorCamera& camera);
+	void begin_scene(const Camera& camera, const glm::mat4& transform, bool p_explicit_clear = false);
+	void begin_scene(const EditorCamera& camera, bool p_explicit_clear = false);
+    void begin_scene(const glm::mat4& p_projection, const glm::mat4& p_transform, bool p_explicit_clear = false);
 	void end_scene();
 	void flush();
 
@@ -237,6 +238,8 @@ public:
     ref<RenderPass> get_target_render_pass();
 	void set_target_render_pass(ref<RenderPass> render_pass);
 	void on_recreate_swapchain();
+
+    void set_swap_chain_target(bool p_swap_chain_target = true);
 
 	// return a mutable reference to the font manager
 	render::font_manager& get_font_manager() { return m_renderer_data->m_font_manager; }
@@ -373,6 +376,7 @@ private:
 private:
 	renderer_2d_data_t* m_renderer_data = nullptr;
     ref<asset::AssetManager> m_asset_manager = nullptr;
+    bool m_explicit_render_pass_clear = false;
 };
 
 } // end namespace Kablunk

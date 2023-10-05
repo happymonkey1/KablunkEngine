@@ -35,16 +35,19 @@ namespace kb
 		virtual uint64_t BeginTimestampQuery() override;
 		virtual void EndTimestampQuery(uint64_t query_index) override;
 
-		VkCommandBuffer GetCommandBuffer(uint32_t frame_index) const
+		inline VkCommandBuffer GetCommandBuffer(uint32_t frame_index) const
 		{
 			KB_CORE_ASSERT(frame_index < m_command_buffers.size(), "index out of range!");
 			return m_command_buffers[frame_index];
 		}
+
+        inline VkCommandBuffer get_active_command_buffer() const { return m_active_command_buffer; }
 	private:
 		std::string m_debug_name;
-		VkCommandPool m_command_pool = nullptr;
 
+		VkCommandPool m_command_pool = nullptr;
 		std::vector<VkCommandBuffer> m_command_buffers;
+        VkCommandBuffer m_active_command_buffer = nullptr;
 		std::vector<VkFence> m_wait_fences;
 
 		bool m_owned_by_swapchain = false;

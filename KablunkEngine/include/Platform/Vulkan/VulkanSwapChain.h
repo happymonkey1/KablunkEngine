@@ -45,7 +45,7 @@ namespace kb
 		VkCommandBuffer GetDrawCommandBuffer(uint32_t index)
 		{
 			KB_CORE_ASSERT(index < m_command_buffers.size(), "index out of bounds");
-			return m_command_buffers[index];
+			return m_command_buffers[index].m_command_buffer;
 		}
 
 		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.render_complete; }
@@ -90,8 +90,13 @@ namespace kb
 		DepthStencilData m_depth_stencil{};
 
 		std::vector<VkFramebuffer> m_framebuffers;
-		VkCommandPool m_command_pool = nullptr;
-		std::vector<VkCommandBuffer> m_command_buffers;
+
+        struct swapchain_command_buffer_t
+        {
+            VkCommandPool m_command_pool = nullptr;
+            VkCommandBuffer m_command_buffer = nullptr;
+        };
+		std::vector<swapchain_command_buffer_t> m_command_buffers;
 
 		struct Semaphores
 		{

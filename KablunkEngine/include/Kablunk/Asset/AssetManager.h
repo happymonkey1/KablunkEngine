@@ -143,7 +143,7 @@ namespace kb::asset
 
 			KB_CORE_ASSERT(asset, "asset null?!");
 
-			KB_CORE_INFO("[AssetManager] Successfully retrieved asset '{}'", metadata.filepath);
+			//KB_CORE_INFO("[AssetManager] Successfully retrieved asset '{}'", metadata.filepath);
 			return asset.As<T>();
 		}
 		// get an asset based on a filepath

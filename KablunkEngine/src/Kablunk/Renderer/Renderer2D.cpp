@@ -31,10 +31,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	m_renderer_data = new renderer_2d_data_t{};
 	m_renderer_data->specification = spec;
 
-	if (m_renderer_data->specification.swap_chain_target)
-		m_renderer_data->render_command_buffer = RenderCommandBuffer::CreateFromSwapChain("Renderer2D");
-	else
-		m_renderer_data->render_command_buffer = RenderCommandBuffer::Create(0, "Renderer2D");
+    set_swap_chain_target(m_renderer_data->specification.swap_chain_target);
 
 	uint32_t frames_in_flight = render::get_frames_in_flights();
 		
@@ -140,11 +137,11 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 	// Create framebuffer
 	FramebufferSpecification framebuffer_spec{};
-	framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+	framebuffer_spec.Attachments = { ImageFormat::RGBA };
 	framebuffer_spec.samples = 1;
 	framebuffer_spec.clear_on_load = false;
-	framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
-	framebuffer_spec.debug_name = "Renderer2D Framebuffer";
+	framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+	framebuffer_spec.debug_name = "framebuffer::Renderer2D";
 	framebuffer_spec.blend_mode = FramebufferBlendMode::Additive;
 	framebuffer_spec.blend = true;
 
@@ -152,14 +149,14 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 	RenderPassSpecification render_pass_spec{};
 	render_pass_spec.target_framebuffer = framebuffer;
-	render_pass_spec.debug_name = "Renderer2D";
+	render_pass_spec.debug_name = "render_pass::Renderer2D";
 
 	ref<RenderPass> render_pass = RenderPass::Create(render_pass_spec);
 
 	// Create quad pipeline
 	{
 		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "QuadPipeline";
+		pipeline_spec.debug_name = "pipeline::quad::render2d";
 		pipeline_spec.shader = m_renderer_data->quad_shader;
 		pipeline_spec.backface_culling = false;
 		pipeline_spec.layout = {
@@ -178,7 +175,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	// UI
 	{
 		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "UIPipeline";
+		pipeline_spec.debug_name = "pipeline::ui::render2d";
 		pipeline_spec.shader = m_renderer_data->ui_shader;
 		pipeline_spec.backface_culling = false;
 		pipeline_spec.layout = {
@@ -196,7 +193,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	// Circle
 	{
 		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "CirclePipeline";
+		pipeline_spec.debug_name = "pipeline::circle::render2d";
 		pipeline_spec.shader = m_renderer_data->circle_shader;
 		pipeline_spec.backface_culling = false;
 		pipeline_spec.layout = {
@@ -216,7 +213,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	// Line
 	{
 		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "LinePipeline";
+		pipeline_spec.debug_name = "pipeline::line::render2d";
 		pipeline_spec.shader = m_renderer_data->line_shader;
 		pipeline_spec.backface_culling = false;
 		pipeline_spec.layout = {
@@ -238,7 +235,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	// create text pipeline
 	{
 		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "TextPipeline";
+		pipeline_spec.debug_name = "pipeline::text::render2d";
 		pipeline_spec.shader = m_renderer_data->text_shader;
 		pipeline_spec.backface_culling = false;
 		pipeline_spec.layout = {
@@ -339,8 +336,9 @@ ref<Texture2D> Renderer2D::get_white_texture()
 	return m_renderer_data->white_texture;
 }
 
-void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform)
+void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, bool p_explicit_clear /* = false */)
 {
+    m_explicit_render_pass_clear = p_explicit_clear;
     KB_PROFILE_FUNC();
 
 	m_renderer_data->camera = camera;
@@ -368,11 +366,36 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform)
 	start_new_batch();
 }
 
-void Renderer2D::begin_scene(const EditorCamera& camera)
+void Renderer2D::begin_scene(const EditorCamera& camera, bool p_explicit_clear /* = false */)
 {
+    m_explicit_render_pass_clear = p_explicit_clear;
 	Renderer2D::begin_scene(camera, camera.GetViewMatrix());
 
 	start_new_batch();
+}
+
+void Renderer2D::begin_scene(const glm::mat4& p_projection, const glm::mat4& p_transform, bool p_explicit_clear /* = false */)
+{
+    m_explicit_render_pass_clear = p_explicit_clear;
+    glm::mat4 view_proj = p_projection * p_transform;
+
+    CameraDataUB camera_data_ub = CameraDataUB{
+        view_proj,
+        p_projection,
+        p_transform,
+        glm::vec3{ 1.0f } // #TODO fix
+    };
+
+    ref<UniformBufferSet> uniform_buffer_set = m_renderer_data->uniform_buffer_set;
+    render::submit([uniform_buffer_set, camera_data_ub]() mutable
+        {
+            uint32_t buffer_index = render::rt_get_current_frame_index();
+            uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data_ub, sizeof(CameraDataUB));
+        });
+
+    m_renderer_data->Stats = {};
+
+    start_new_batch();
 }
 
 void Renderer2D::end_scene()
@@ -390,7 +413,8 @@ void Renderer2D::flush()
 
 	m_renderer_data->gpu_time_query.renderer_2D_query = m_renderer_data->render_command_buffer->BeginTimestampQuery();
 	const auto& render_pass = m_renderer_data->quad_pipeline->GetSpecification().render_pass;
-	render::begin_render_pass(m_renderer_data->render_command_buffer, render_pass);
+
+	render::begin_render_pass(m_renderer_data->render_command_buffer, render_pass, m_explicit_render_pass_clear);
 
 	uint32_t frame_index = render::get_current_frame_index();
 
@@ -543,13 +567,21 @@ void Renderer2D::set_target_render_pass(ref<RenderPass> render_pass)
         pipeline_spec.render_pass = render_pass;
         m_renderer_data->text_pipeline = Pipeline::Create(pipeline_spec);
     }
-		
 }
 
 void Renderer2D::on_recreate_swapchain()
 {
 	if (m_renderer_data->specification.swap_chain_target)
-		m_renderer_data->render_command_buffer = RenderCommandBuffer::CreateFromSwapChain("Renderer2D");
+		m_renderer_data->render_command_buffer = RenderCommandBuffer::CreateFromSwapChain("render_command_buffer::Renderer2D");
+}
+
+void Renderer2D::set_swap_chain_target(bool p_swap_chain_target /* = true */)
+{
+    m_renderer_data->specification.swap_chain_target = p_swap_chain_target;
+    if (m_renderer_data->specification.swap_chain_target)
+        m_renderer_data->render_command_buffer = RenderCommandBuffer::CreateFromSwapChain("render_command_buffer::Renderer2D");
+    else
+        m_renderer_data->render_command_buffer = RenderCommandBuffer::Create(0, "Renderer2D");
 }
 
 // =========================

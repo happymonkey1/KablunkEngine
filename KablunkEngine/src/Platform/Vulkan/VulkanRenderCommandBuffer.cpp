@@ -74,9 +74,11 @@ namespace kb
 		uint32_t frames_in_flight = render::get_frames_in_flights();
 
 		m_command_buffers.resize(frames_in_flight);
-		VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
-		for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
-			m_command_buffers[frame] = swapChain.GetDrawCommandBuffer(frame);
+        for (size_t i = 0; i < frames_in_flight; ++i)
+        {
+            auto& command_buffer = m_command_buffers.at(i);
+            command_buffer = VulkanContext::Get()->GetSwapchain().GetDrawCommandBuffer(i);
+        }
 
 		VkQueryPoolCreateInfo query_pool_create_info = {};
 		query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
@@ -136,9 +138,13 @@ namespace kb
 				{
 					VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
 					vk_command_buffer = swap_chain.GetDrawCommandBuffer(frame_index);
+                    instance->m_command_buffers[frame_index] = vk_command_buffer;
 				}
 				else
 					vk_command_buffer = instance->m_command_buffers[frame_index];
+
+                KB_CORE_ASSERT(vk_command_buffer, "[VulkanRenderCommandBuffer]: vk_command_buffer is null!");
+                instance->m_active_command_buffer = vk_command_buffer;
 				
 				if (vkBeginCommandBuffer(vk_command_buffer, &cmd_buf_info) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to begin command buffer");
@@ -149,21 +155,23 @@ namespace kb
 
 				// #TODO Pipeline stats query
 			});
-
 	}
 
 	void VulkanRenderCommandBuffer::End()
 	{
 		ref<VulkanRenderCommandBuffer> instance = this;
-		render::submit([instance]()
+		render::submit([instance]() mutable
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: active command buffer is null!");
 
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 1);
 
 				if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to end command buffer");
+
+                instance->m_active_command_buffer = nullptr;
 			});
 
 	}
@@ -221,7 +229,8 @@ namespace kb
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: command buffer in BeginTimestampQuery() is null!");
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index));
 			});
 
@@ -234,7 +243,8 @@ namespace kb
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: command buffer in EndTimestampQuery() is null!");
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index + 1));
 			});
 	}

@@ -819,8 +819,13 @@ namespace kb
 						clear_rects[color_attachment_count].layerCount = 1;
 					}
 
-					vkCmdClearAttachments(cmd_buffer, total_attachment_count, attachments.data(), total_attachment_count, clear_rects.data());
-
+					vkCmdClearAttachments(
+                        cmd_buffer,
+                        total_attachment_count,
+                        attachments.data(),
+                        total_attachment_count,
+                        clear_rects.data()
+                    );
 				}
 
 				// Update dynamic viewport state
@@ -842,8 +847,7 @@ namespace kb
 
 		render::submit([render_command_buffer]()
 			{
-				uint32_t frame_index = render::rt_get_current_frame_index();
-				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+				VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 				vkCmdEndRenderPass(vk_command_buffer);
 			});
