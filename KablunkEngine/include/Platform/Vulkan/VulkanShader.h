@@ -134,6 +134,7 @@ namespace kb
 		std::unordered_map<VkShaderStageFlagBits, std::string> m_shader_source;
 		std::string m_file_path;
 		std::string m_name;
+        size_t m_hash;
 
 		std::vector<ShaderDescriptorSet> m_shader_descriptor_sets;
 		

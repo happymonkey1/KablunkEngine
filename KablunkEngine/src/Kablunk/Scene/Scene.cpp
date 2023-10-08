@@ -1003,7 +1003,7 @@ namespace kb
 
 		auto transform_component = TransformComponent{};
 
-		Math::decompose_transform(transform, transform_component.Translation, transform_component.Scale, transform_component.Rotation);
+		math::decompose_transform(transform, transform_component.Translation, transform_component.Scale, transform_component.Rotation);
 
 		return transform_component;
 	}

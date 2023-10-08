@@ -53,7 +53,7 @@ namespace kb
 
 	void VulkanImage2D::Release()
 	{
-		if (m_info.image == nullptr)
+		if (!m_info.image)
 			return;
 
 		ref<VulkanImage2D> instance = this;
@@ -323,9 +323,6 @@ namespace kb
 			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
 			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		if (m_specification.usage == ImageUsage::Storage)
-			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 		m_descriptor_image_info.imageView = m_info.image_view;
 		m_descriptor_image_info.sampler = m_info.sampler;

@@ -195,8 +195,9 @@ private:
 		{
 			delete m_ptr;
 			Internal::RemoveFromLiveReferences((void*)m_ptr);
-			m_ptr = nullptr;
 		}
+
+        m_ptr = nullptr;
 	}
 
 	template <typename T2>

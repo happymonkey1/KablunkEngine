@@ -554,8 +554,7 @@ namespace kb
 				const auto& write_descriptors = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
 				vulkan_material->RT_UpdateForRendering(write_descriptors);
 
-				uint32_t buffer_index = render::rt_get_current_frame_index();
-				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(buffer_index);
+				VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frameIndex);
 				if (descriptor_set)
 					vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
@@ -625,7 +624,6 @@ namespace kb
 						write_descriptors[frame].push_back(write_descriptor_set);
 					}
 				}
-
 			}
 		}
 

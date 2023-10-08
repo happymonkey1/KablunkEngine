@@ -36,8 +36,6 @@ struct QuadVertex
 	glm::vec2 TexCoord;
 	float TexIndex;
 	float TilingFactor;
-	// #TODO figure out how to pass 64 bit integers to OpenGL
-	int32_t EntityID{ -1 };
 };
 
 // #TODO remove when entity id is removed from quadvertex
@@ -200,10 +198,6 @@ struct renderer_2d_data_t
 
     ref<UniformBufferSet> uniform_buffer_set;
 
-	Camera camera;
-	glm::mat4 camera_transform;
-	glm::mat4 camera_view_projection;
-
 	renderer_2d_specification_t specification;
 
 	renderer_2d_stats_t Stats = {};
@@ -238,13 +232,14 @@ public:
     ref<RenderPass> get_target_render_pass();
 	void set_target_render_pass(ref<RenderPass> render_pass);
 	void on_recreate_swapchain();
+    void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
     void set_swap_chain_target(bool p_swap_chain_target = true);
 
 	// return a mutable reference to the font manager
-	render::font_manager& get_font_manager() { return m_renderer_data->m_font_manager; }
+	render::font_manager& get_font_manager() { return m_renderer_data.m_font_manager; }
 	// return an immutable reference to the font manager
-	const render::font_manager& get_font_manager() const { return m_renderer_data->m_font_manager; }
+	const render::font_manager& get_font_manager() const { return m_renderer_data.m_font_manager; }
 
 	// Entity
 	void draw_sprite(Entity entity);
@@ -374,7 +369,7 @@ private:
 	void start_new_batch();
 	void end_batch();
 private:
-	renderer_2d_data_t* m_renderer_data = nullptr;
+    renderer_2d_data_t m_renderer_data{};
     ref<asset::AssetManager> m_asset_manager = nullptr;
     bool m_explicit_render_pass_clear = false;
 };

@@ -230,7 +230,7 @@ namespace kb
 			m_attachment_images.clear();
 
 		uint32_t attachment_index = 0;
-		for (auto attachment_spec : m_specification.Attachments.Attachments)
+		for (const auto& attachment_spec : m_specification.Attachments.Attachments)
 		{
 			if (Utils::IsDepthFormat(attachment_spec.format))
 			{

@@ -65,6 +65,7 @@ namespace kb
 		SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
 		~SceneRenderer();
 
+        // #TODO this should be private, if construct is only place that calls this
 		void init();
 		void set_scene(ref<Scene> context);
 

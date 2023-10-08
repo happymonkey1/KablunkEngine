@@ -114,8 +114,10 @@ namespace kb
 
 
 	VulkanShader::VulkanShader(const std::string& path, bool force_compile)
-		: m_file_path{ path }
+		: m_file_path{ path }, m_hash{ 0 }
 	{
+        m_hash = std::hash<std::string>{}(m_file_path);
+
 		// Get name from filepath
 		size_t found = path.find_last_of("/\\");
 		m_name = found != std::string::npos ? path.substr(found + 1) : path;
@@ -187,7 +189,7 @@ namespace kb
 
 	size_t VulkanShader::GetHash() const
 	{
-		return std::hash<std::string>{}(m_file_path);
+		return m_hash;
 	}
 
 	void VulkanShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)

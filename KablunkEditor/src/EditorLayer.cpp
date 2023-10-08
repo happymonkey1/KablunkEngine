@@ -362,7 +362,7 @@ namespace kb
 				{
 					auto original_rotation = transform_component.Rotation;
 					glm::vec3 translation, scale, rotation;
-					if (Math::decompose_transform(transform, translation, scale, rotation))
+					if (math::decompose_transform(transform, translation, scale, rotation))
 					{
 						// Translation
 						transform_component.Translation = translation;
