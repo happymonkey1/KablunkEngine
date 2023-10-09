@@ -100,7 +100,7 @@ namespace kb::render
         error = FT_Set_Char_Size(
             m_ft_face,			                        /* handle to face object         */
             0,					                        /* char_width in 1/64 of points  */
-            static_cast<FT_F26Dot6>(m_font_point * 64),	/* char_height in 1/64 of points */
+            static_cast<FT_F26Dot6>(m_font_point << 6),	    /* char_height in 1/64 of points */
             static_cast<FT_UInt>(m_dpi_x),	            /* horizontal device resolution  */
             0					                        /* vertical device resolution    */
         );
@@ -178,8 +178,8 @@ namespace kb::render
 				static_cast<f32>(pen_y) / static_cast<f32>(tex_height),
 				static_cast<f32>(pen_x + static_cast<f32>(bmp->width)) / static_cast<f32>(tex_width),
 				static_cast<f32>(pen_y + static_cast<f32>(bmp->rows)) / static_cast<f32>(tex_height),
-				static_cast<size_t>(m_ft_face->glyph->bitmap_left) >> 6,
-				static_cast<size_t>(m_ft_face->glyph->bitmap_top) >> 6,
+				static_cast<size_t>(m_ft_face->glyph->metrics.horiBearingX) >> 6,
+				static_cast<size_t>(m_ft_face->glyph->metrics.horiBearingY) >> 6,
 				static_cast<size_t>(m_ft_face->glyph->advance.x) >> 6,
                 glm::vec2{ m_ft_face->glyph->metrics.width >> 6, m_ft_face->glyph->metrics.height >> 6 }
 			};

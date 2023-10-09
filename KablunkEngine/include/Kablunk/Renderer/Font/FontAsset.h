@@ -91,9 +91,9 @@ namespace kb::render
 		// number of glyphs loaded
 		size_t m_num_glyphs = 0ull;
         // horizontal dpi used for rendering the glyph bitmaps
-        size_t m_dpi_x = 300ull;
+        size_t m_dpi_x = 96ull;
         // vertical dpi used for rendering the glyph bitmaps
-        size_t m_dpi_y = 300ull;
+        size_t m_dpi_y = 96ull;
 		// reference to the texture atlas
 		// for now, the font asset "owns" the texture atlas, should this be stored in a cache on the font manager instead?
 		ref<Texture2D> m_texture_atlas;

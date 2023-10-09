@@ -90,7 +90,13 @@ namespace kb
 
 	void VulkanTexture2D::SetData(void* data, uint32_t size)
 	{
+        m_image_data = Buffer::Copy(data, size);
 
+        ref<VulkanTexture2D> instance = this;
+        render::submit([instance]() mutable
+            {
+                instance->Invalidate();
+            });
 	}
 
 	void VulkanTexture2D::Bind(uint32_t slot) const

@@ -41,6 +41,9 @@ layout(push_constant) uniform Uniforms
 	float Exposure;
 	float BloomIntensity;
 	float BloomDirtIntensity;
+	float Saturation;
+	float Contrast;
+	float Brightness;
 } u_Uniforms;
 
 vec3 UpsampleTent9(sampler2D tex, float lod, vec2 uv, vec2 texelSize, float radius)
@@ -77,6 +80,7 @@ vec3 ACESTonemap(vec3 color)
 		-0.53108, 1.10813, -0.07276,
 		-0.07367, -0.00605, 1.07602
 	);
+
 	vec3 v = m1 * color;
 	vec3 a = v * (v + 0.0245786) - 0.000090537;
 	vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
@@ -85,7 +89,20 @@ vec3 ACESTonemap(vec3 color)
 
 vec3 GammaCorrect(vec3 color, float gamma)
 {
-	return pow(color, vec3(1.0f / gamma));
+	return clamp(pow(color, vec3(1.0f / gamma)), 0.0, 1.0);
+}
+
+// from https://docs.unity3d.com/Packages/com.unity.shadergraph@6.9/manual/Saturation-Node.html
+vec3 saturate(vec3 color, float saturation)
+{
+	float luma = dot(color, vec3(0.2126729, 0.7151522, 0.0721750));
+	return clamp(luma + saturation * (color - luma), 0.0, 1.0);
+}
+
+vec3 contrastAndBrightness(vec3 color, float contrast, float brightness)
+{
+	vec3 postColor = contrast * (color - vec3(0.5)) + vec3(0.5) + brightness;
+	return clamp(postColor, 0.0, 1.0);
 }
 
 void main()
@@ -104,6 +121,8 @@ void main()
 	color += bloom * bloomDirt;
 	color *= u_Uniforms.Exposure;
 
+	color = contrastAndBrightness(color, u_Uniforms.Contrast, u_Uniforms.Brightness);
+	color = saturate(color, u_Uniforms.Saturation);
 	color = ACESTonemap(color);
 	color = GammaCorrect(color.rgb, gamma);
 	o_Color = vec4(color, 1.0);

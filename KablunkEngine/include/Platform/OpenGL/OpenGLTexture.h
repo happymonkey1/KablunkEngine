@@ -31,6 +31,7 @@ namespace kb
 		virtual uint64_t GetHash() const { KB_CORE_ASSERT(false, "not implemented!"); return 0; };
 
 		virtual Buffer& GetWriteableBuffer() override { KB_CORE_ASSERT(false, "not implemented!"); return m_unused; };
+		virtual const Buffer& get_buffer() const override { KB_CORE_ASSERT(false, "not implemented!"); return m_unused; };
 
 		virtual void Bind(uint32_t slot) const override;
 		virtual bool operator==(const Texture2D& other) const override { return m_RendererID == other.GetRendererID(); }

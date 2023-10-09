@@ -361,6 +361,13 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 
+    // add a texture which can be rendered during the current scene
+    // returns texture index (float) of slot occupied
+    auto add_texture(const ref<Texture2D>& p_texture) -> f32;
+
+    // submit batched quad data
+    auto submit_quad_data(const Buffer& p_quad_buffer) -> void;
+
 	// reset renderer2d stats
 	void reset_stats();
 	// get renderer2d stats

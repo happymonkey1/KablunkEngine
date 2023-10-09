@@ -39,6 +39,11 @@ namespace kb::math
           1.0f
         };
     }
+
+    KB_FORCE_INLINE glm::vec3 lerp(const glm::vec3& p_x, const glm::vec3& p_y, float p_time)
+    {
+        return p_x + (p_y - p_x) * p_time;
+    }
 }
 
 #endif

@@ -510,19 +510,31 @@ void VulkanSwapChain::FindImageFormatAndColorSpace()
 	}
 	else
 	{
-		bool found = false;
+        std::optional<VkSurfaceFormatKHR> found_8bit_normalized = std::nullopt;
+        // hdr capable display format
+        std::optional<VkSurfaceFormatKHR> found_16bit_extended = std::nullopt;
 		for (auto&& format : formats)
 		{
-			if (format.format == VK_FORMAT_B8G8R8_UNORM)
-			{
-				m_color_format = VK_FORMAT_B8G8R8_UNORM;
-				m_color_space = format.colorSpace;
-				found = true;
-				break;
-			}
+			if (format.format == VK_FORMAT_B8G8R8A8_UNORM)
+                found_8bit_normalized = format;
+            else if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT)
+                found_16bit_extended = format;
 		}
 
-		if (!found)
+        // #TODO expose
+        constexpr const bool k_enable_hdr = false;
+
+        if (found_16bit_extended.has_value() && k_enable_hdr)
+        {
+            m_color_format = (*found_16bit_extended).format;
+            m_color_space = (*found_16bit_extended).colorSpace;
+        }
+        else if (found_8bit_normalized.has_value())
+        {
+            m_color_format = (*found_8bit_normalized).format;
+            m_color_space = (*found_8bit_normalized).colorSpace;
+        }
+        else
 		{
 			m_color_format = formats[0].format;
 			m_color_space = formats[0].colorSpace;
@@ -536,7 +548,6 @@ void VulkanSwapChain::CreateFramebuffer()
 		if (framebuffer)
 			vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
 
-	VkImageView image_view_attachments[2];
 
 	// Depth stencil not needed?
 	//image_view_attachments[1] = m_depth_stencil.image_view;
@@ -546,7 +557,6 @@ void VulkanSwapChain::CreateFramebuffer()
 	frame_buffer_create_info.pNext = nullptr;
 	frame_buffer_create_info.renderPass = m_render_pass;
 	frame_buffer_create_info.attachmentCount = 1;
-	frame_buffer_create_info.pAttachments = image_view_attachments;
 	frame_buffer_create_info.width = m_width;
 	frame_buffer_create_info.height = m_height;
 	frame_buffer_create_info.layers = 1;
@@ -557,7 +567,7 @@ void VulkanSwapChain::CreateFramebuffer()
 	m_framebuffers.resize(m_image_count);
 	for (uint32_t i = 0; i < m_image_count; ++i)
 	{
-		image_view_attachments[0] = m_buffers[i].view;
+        frame_buffer_create_info.pAttachments = &m_buffers[i].view;
 
 		if (vkCreateFramebuffer(m_device->GetVkDevice(), &frame_buffer_create_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "[VulkanSwapChain]: Vulkan failed to create framebuffer!");

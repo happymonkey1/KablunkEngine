@@ -507,6 +507,13 @@ namespace kb
 			m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 0.0f);
 		}
 
+        const float saturation = 1.0f;
+        const float contrast = 1.0f;
+        const float brightness = 0.0f;
+        m_composite_material->Set("u_Uniforms.Saturation", saturation);
+        m_composite_material->Set("u_Uniforms.Contrast", contrast);
+        m_composite_material->Set("u_Uniforms.Brightness", brightness);
+
 		m_composite_material->Set("u_Texture", framebuffer->GetImage());
 		m_composite_material->Set("u_BloomTexture", m_bloom_texture);
 		m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);

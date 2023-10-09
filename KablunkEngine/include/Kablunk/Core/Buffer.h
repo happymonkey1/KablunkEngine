@@ -6,7 +6,7 @@
 
 namespace kb
 {
-	class Buffer : public RefCounted
+	class Buffer
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
@@ -143,6 +143,7 @@ namespace kb
 
 		inline size_t size() const { return m_size; }
 		inline void* get() { return (void*)m_data; }
+        inline void* data() { return (void*)m_data; }
 		inline const void* get() const { return (void*)m_data; }
 	private:
 		// capacity of the buffer

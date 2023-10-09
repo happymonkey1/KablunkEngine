@@ -33,6 +33,7 @@ namespace kb
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
 		virtual Buffer& GetWriteableBuffer() override;
+        virtual const Buffer& get_buffer() const override { return m_image_data; }
 
 		virtual bool loaded() const override { return m_loaded; }
 
@@ -52,6 +53,7 @@ namespace kb
 
 		ImageFormat m_format;
 
+        // buffer of image data stored on cpu
 		Buffer m_image_data;
 
 		bool m_loaded = false;

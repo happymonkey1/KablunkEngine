@@ -136,7 +136,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 	// Create framebuffer
 	FramebufferSpecification framebuffer_spec{};
-	framebuffer_spec.Attachments = { ImageFormat::RGBA };
+	framebuffer_spec.Attachments = { ImageFormat::RGBA32F };
 	framebuffer_spec.samples = 1;
 	framebuffer_spec.clear_on_load = false;
 	framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
@@ -927,10 +927,11 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	{
 		const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
 
+
         const glm::vec2 render_char_position = glm::vec2{ 
             char_position.x + glyph_data.m_x_off,
             // #NOTE adding the difference between size and bearing here, since vulkan renders with -y facing up
-            char_position.y - (glyph_data.m_size.y - glyph_data.m_y_off)
+            char_position.y - (glyph_data.m_y_off)
         };
 
         const f32 char_width = glyph_data.m_size.x;
@@ -970,6 +971,44 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
         // compute position of char by offsetting the base position with the char advance offset
         char_position.x += glyph_data.m_advance;
 	}
+}
+
+auto Renderer2D::add_texture(const ref<Texture2D>& p_texture) -> kb::f32
+{
+    kb::f32 texture_index = 0.0f;
+    for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
+    {
+        // Dereference and compare the textures
+        if (*m_renderer_data.texture_slots[i].get() == *p_texture.get())
+            texture_index = (f32)i;
+    }
+
+    if (texture_index == 0.0f)
+    {
+        texture_index = (f32)m_renderer_data.texture_slot_index;
+        m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
+        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+    }
+
+    return texture_index;
+}
+
+auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) -> void
+{
+    size_t quad_count = p_quad_buffer.size() / (4 * sizeof(kb::QuadVertex));
+    KB_CORE_ASSERT(
+        m_renderer_data.quad_count + quad_count <= m_renderer_data.max_quads,
+        "[Renderer2D]: quad buffer overflow!"
+    );
+
+    memcpy(m_renderer_data.quad_vertex_buffer_ptr, p_quad_buffer.get(), p_quad_buffer.size());
+
+    const size_t quad_vertex_count = quad_count * 4;
+    m_renderer_data.quad_vertex_buffer_ptr += quad_vertex_count;
+
+    m_renderer_data.quad_count += quad_count;
+    m_renderer_data.quad_index_count += 6 * quad_count;
+    m_renderer_data.Stats.Quad_count += quad_count;
 }
 
 void Renderer2D::reset_stats()
