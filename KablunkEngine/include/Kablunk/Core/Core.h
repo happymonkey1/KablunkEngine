@@ -44,6 +44,9 @@ namespace kb
 #	define ENTT_ID_TYPE uint64_t
 #endif
 
+// force glm mats to use vulkan z range
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 namespace kb
 {
 	template <typename T>

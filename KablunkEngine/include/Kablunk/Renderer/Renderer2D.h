@@ -2,6 +2,8 @@
 #ifndef KABLUNK_RENDERER_RENDERER_2D
 #define KABLUNK_RENDERER_RENDERER_2D
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 #include "Kablunk/Core/RefCounting.h"
 
 #include "Kablunk/Renderer/Texture.h"
