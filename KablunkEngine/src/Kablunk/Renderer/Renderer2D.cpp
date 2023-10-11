@@ -388,7 +388,8 @@ void Renderer2D::flush()
 
     m_renderer_data.gpu_time_query.renderer_2D_query = m_renderer_data.render_command_buffer->BeginTimestampQuery();
 
-    
+    bool clear_pass = m_explicit_render_pass_clear;
+
 	uint32_t frame_index = render::get_current_frame_index();
 
 	// Quad
@@ -399,8 +400,8 @@ void Renderer2D::flush()
 		m_renderer_data.quad_vertex_buffers[frame_index]->SetData(m_renderer_data.quad_vertex_buffer_base_ptrs[frame_index], data_size);
 
         const auto& quad_pass = m_renderer_data.quad_pipeline->GetSpecification().render_pass;
-        render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, m_explicit_render_pass_clear);
-
+        render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, clear_pass);
+        
         // Set Textures
         auto& textures = m_renderer_data.texture_slots;
         for (uint32_t i = 0; i < m_renderer_data.max_texture_slots; i++)
@@ -424,6 +425,8 @@ void Renderer2D::flush()
         );
         render::end_render_pass(m_renderer_data.render_command_buffer);
 		m_renderer_data.Stats.Draw_calls++;
+
+        clear_pass = clear_pass && false;
 	}
 
 	// Circle
@@ -433,7 +436,7 @@ void Renderer2D::flush()
 		m_renderer_data.circle_vertex_buffers[frame_index]->SetData(m_renderer_data.circle_vertex_buffer_base_ptrs[frame_index], data_size);
 
         const auto& circle_pass = m_renderer_data.circle_pipeline->GetSpecification().render_pass;
-        render::begin_render_pass(m_renderer_data.render_command_buffer, circle_pass, m_explicit_render_pass_clear);
+        render::begin_render_pass(m_renderer_data.render_command_buffer, circle_pass, clear_pass);
 		render::render_geometry(
             m_renderer_data.render_command_buffer,
             m_renderer_data.circle_pipeline,
@@ -447,6 +450,8 @@ void Renderer2D::flush()
         );
 		m_renderer_data.Stats.Draw_calls++;
         render::end_render_pass(m_renderer_data.render_command_buffer);
+
+        clear_pass = clear_pass && false;
 	}
 
 	// Line
@@ -456,13 +461,14 @@ void Renderer2D::flush()
 		m_renderer_data.line_vertex_buffers[frame_index]->SetData(m_renderer_data.line_vertex_buffer_base_ptrs[frame_index], data_size);
 
         const auto& line_pass = m_renderer_data.line_pipeline->GetSpecification().render_pass;
-        render::begin_render_pass(m_renderer_data.render_command_buffer, line_pass, m_explicit_render_pass_clear);
+        render::begin_render_pass(m_renderer_data.render_command_buffer, line_pass, clear_pass);
 		render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.line_width);
 		render::render_geometry(
             m_renderer_data.render_command_buffer,
             m_renderer_data.line_pipeline,
             m_renderer_data.uniform_buffer_set,
-            nullptr, m_renderer_data.line_material,
+            nullptr,
+            m_renderer_data.line_material,
             m_renderer_data.line_vertex_buffers[frame_index],
             m_renderer_data.line_index_buffer,
             glm::mat4{1.0f},
@@ -470,6 +476,8 @@ void Renderer2D::flush()
         );
         render::end_render_pass(m_renderer_data.render_command_buffer);
 		m_renderer_data.Stats.Draw_calls++;
+
+        clear_pass = clear_pass && false;
 	}
 
 	// UI
@@ -490,7 +498,7 @@ void Renderer2D::flush()
 		}
 
         const auto& ui_pass = m_renderer_data.ui_pipeline->GetSpecification().render_pass;
-        render::begin_render_pass(m_renderer_data.render_command_buffer, ui_pass, m_explicit_render_pass_clear);
+        render::begin_render_pass(m_renderer_data.render_command_buffer, ui_pass, clear_pass);
 		render::render_geometry(
             m_renderer_data.render_command_buffer, 
             m_renderer_data.ui_pipeline, 
@@ -504,6 +512,8 @@ void Renderer2D::flush()
         );
         render::end_render_pass(m_renderer_data.render_command_buffer);
 		m_renderer_data.Stats.Draw_calls++;
+
+        clear_pass = clear_pass && false;
 	}
 
 	// render text geometry
@@ -523,7 +533,7 @@ void Renderer2D::flush()
 		}
 
         const auto& text_pass = m_renderer_data.text_pipeline->GetSpecification().render_pass;
-        render::begin_render_pass(m_renderer_data.render_command_buffer, text_pass, m_explicit_render_pass_clear);
+        render::begin_render_pass(m_renderer_data.render_command_buffer, text_pass, clear_pass);
 		render::render_geometry(
 			m_renderer_data.render_command_buffer, 
 			m_renderer_data.text_pipeline, 
@@ -537,6 +547,8 @@ void Renderer2D::flush()
 		);
         render::end_render_pass(m_renderer_data.render_command_buffer);
 		m_renderer_data.Stats.Draw_calls++;
+
+        clear_pass = clear_pass && false;
 	}
 
 	m_renderer_data.render_command_buffer->EndTimestampQuery(m_renderer_data.gpu_time_query.renderer_2D_query);
@@ -921,12 +933,11 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
         * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
 
 	// iterate over characters and select the correct glyph bitmap
-    glm::vec2 char_position = glm::vec2{ position.x, position.y };
+    glm::vec2 char_position = glm::vec2{ 0, 0 };
     f32 pixel_x_scale = (static_cast<f32>(font_asset->get_font_point()) * static_cast<f32>(font_asset->get_dpi_x()) / 72.0f);
 	for (char text_char : text)
 	{
 		const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
-
 
         const glm::vec2 render_char_position = glm::vec2{ 
             char_position.x + glyph_data.m_x_off,
