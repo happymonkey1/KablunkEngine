@@ -13,7 +13,7 @@ class timer
 {
 public:
 	// typedef for underlying timer resolution
-	using timer_resolution_t = std::chrono::milliseconds;
+	using timer_resolution_t = std::chrono::microseconds;
 public:
 	// default constructor
 	KB_FORCE_INLINE timer() { reset(); }
@@ -21,19 +21,23 @@ public:
 	~timer() = default;
 	// reset the timer's start point to the current point in time
 	KB_FORCE_INLINE void reset() { m_start_time = std::chrono::high_resolution_clock::now(); }
-	// get the elapsed time between the recorded start point and current point in time
+	// get the elapsed time (in seconds) between the recorded start point and current point in time 
 	KB_FORCE_INLINE f32 get_elapsed()
 	{
-		return std::chrono::duration_cast<timer_resolution_t>(
-			std::chrono::high_resolution_clock::now() - m_start_time
-		).count() * 0.001f * 0.001f;
+        return static_cast<f32>(
+            std::chrono::duration_cast<timer_resolution_t>(
+                std::chrono::high_resolution_clock::now() - m_start_time
+            ).count()
+        ) / (1000.f * 1000.f);
 	}
 	// get the elapsed time (in milliseconds) between the recorded start point and current point in time
 	KB_FORCE_INLINE f32 get_elapsed_ms()
 	{
-		return std::chrono::duration_cast<timer_resolution_t>(
-			std::chrono::high_resolution_clock::now() - m_start_time
-		).count() * 0.001f;
+		return static_cast<f32>(
+            std::chrono::duration_cast<timer_resolution_t>(
+                std::chrono::high_resolution_clock::now() - m_start_time
+            ).count()
+        ) / 1000.f;
 	}
 private:
 	std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;

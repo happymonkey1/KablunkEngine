@@ -73,7 +73,7 @@ namespace kb::render
 		// release resources owned by the asset
 		void release();
 		// get the glpyh rendering info map
-		const std::unordered_map<char, glyph_info_t> get_glyph_rendering_map() const { return m_glyph_info_map; }
+		const std::unordered_map<char, glyph_info_t>& get_glyph_rendering_map() const { return m_glyph_info_map; }
 	private:
 		// load an ft face to the asset
 		bool load_ft_face_from_file(const font_asset_create_info_t& create_info);
