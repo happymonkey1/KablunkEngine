@@ -64,7 +64,7 @@ namespace kb
 		void SetMaterial(uint32_t index, ref<MaterialAsset> material);
 		void ClearMaterial(uint32_t index);
 
-		ref<MaterialAsset> GetMaterial(uint32_t index) const
+		const ref<MaterialAsset>& GetMaterial(uint32_t index) const
 		{
 			KB_CORE_ASSERT(HasMaterial(index), "Material not found in map!");
 			return m_materials.at(index);

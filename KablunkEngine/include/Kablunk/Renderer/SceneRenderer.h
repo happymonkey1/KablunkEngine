@@ -153,7 +153,7 @@ namespace kb
 
 		struct DrawCommandData
 		{
-			ref<MeshData> Mesh;
+			ref<Mesh> Mesh;
 			uint32_t Submesh_index;
 			ref<MaterialTable> Material_table;
 			ref<Material> Override_material;

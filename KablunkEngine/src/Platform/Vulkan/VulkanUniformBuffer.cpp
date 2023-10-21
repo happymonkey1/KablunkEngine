@@ -40,6 +40,7 @@ namespace kb
 	{
 		VulkanAllocator allocator{ "UniformBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
+        // can this be memmove?
 		memcpy(data_ptr, (const uint8_t*)data + offset, size);
 		allocator.UnmapMemory(m_vk_allocation);
 	}

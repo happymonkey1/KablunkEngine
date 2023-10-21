@@ -461,12 +461,18 @@ namespace kb
 
 	ref<Texture2D> VulkanMaterial::GetTexture2D(const std::string& name)
 	{
-		return GetResource<Texture2D>(name);
+        KB_CORE_ASSERT(false, "disabled!");
+
+		//return GetResource<Texture2D>(name);
+        return nullptr;
 	}
 
 	ref<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
 	{
-		return TryGetResource<Texture2D>(name);
+        KB_CORE_ASSERT(false, "disabled!");
+
+        //return GetResource<Texture2D>(name);
+        return nullptr;
 	}
 
 }

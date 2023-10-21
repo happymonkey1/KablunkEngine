@@ -15,15 +15,20 @@
 namespace kb
 {
 
+// #TODO 1. refactor into CRTP interface (will cause a MAJOR refactor throughout the whole engine) for better performance
+//       less indirection, less cache misses,
+//       2. disable weak ptrs by default since they introduce overhead of maintaining global pointer cache
+//       3. compile time option / multiple types for single vs multi-threaded to remove un-necessary atomic operations
+//       example / reference implementation for refactor https://github.com/gershnik/intrusive_shared_ptr/
+
 class RefCounted
 {
 public:
 	// #NOTE guarantee that RefCounted has a vtable, so that memory does not become misaligned (by 8 bytes) when downcasting
 	virtual ~RefCounted() = default;
 
-	void IncRefCount() const { m_ref_count++; }
-	void DecRefCount() const { m_ref_count--; }
-	uint32_t GetRefCount() const { return m_ref_count.load(); }
+	KB_FORCE_INLINE auto inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
+	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release); }
 private:
 	mutable std::atomic<u32> m_ref_count = 0;
 };
@@ -47,9 +52,9 @@ template <typename T>
 class ref
 {
 public:
-	ref() : m_ptr{ nullptr } {}
-	ref(std::nullptr_t n) : m_ptr { nullptr } {}
-	ref(T* ptr) : m_ptr{ ptr }
+	constexpr ref() : m_ptr{ nullptr } {}
+	constexpr ref(std::nullptr_t n) : m_ptr { nullptr } {}
+    constexpr ref(T* ptr) : m_ptr{ ptr }
 	{
 		static_assert(std::is_base_of<RefCounted, T>::value, "Class is not RefCounted!");
 
@@ -57,21 +62,21 @@ public:
 	}
 
 	template <typename T2>
-	ref(const ref<T2>& other)
+    constexpr ref(const ref<T2>& other)
 	{
-		m_ptr = (T*)other.m_ptr;
+		m_ptr = static_cast<T*>(other.m_ptr);
 
 		IncRef();
 	}
 
 	template <typename T2>
-	ref(ref<T2>&& other)
+    constexpr ref(ref<T2>&& other)
 	{
-		m_ptr = (T*)other.m_ptr;
+		m_ptr = static_cast<T*>(other.m_ptr);
 		other.m_ptr = nullptr;
 	}
 
-	static ref<T> CopyWithoutIncrement(const ref<T>& other)
+    constexpr static ref<T> CopyWithoutIncrement(const ref<T>& other)
 	{
 		ref<T> new_ref = nullptr;
 		new_ref->m_ptr = other->m_ptr;
@@ -79,24 +84,24 @@ public:
 		return new_ref;
 	}
 
-	~ref()
+    constexpr ~ref()
 	{
 		DecRef();
 	}
 
-	ref(const ref<T>& other) : m_ptr{ other.m_ptr }
+    constexpr ref(const ref<T>& other) : m_ptr{ other.m_ptr }
 	{
 		IncRef();
 	}
 
-	ref& operator=(std::nullptr_t)
+    constexpr ref& operator=(std::nullptr_t)
 	{
 		DecRef();
 		m_ptr = nullptr;
 		return *this;
 	}
 
-	ref& operator=(const ref<T>& other)
+    constexpr ref& operator=(const ref<T>& other)
 	{
 		other.IncRef();
 		DecRef();
@@ -106,7 +111,7 @@ public:
 	}
 
 	template <typename T2>
-	ref& operator=(const ref<T2>& other)
+    constexpr ref& operator=(const ref<T2>& other)
 	{
 		other.IncRef();
 		DecRef();
@@ -116,57 +121,57 @@ public:
 	}
 
 	template <typename T2>
-	ref& operator=(ref<T2>&& other)
+    constexpr ref& operator=(ref<T2>&& other)
 	{
 		DecRef();
 
-		m_ptr = other.m_ptr;
+		m_ptr = static_cast<T*>(other.m_ptr);
 		other.m_ptr = nullptr;
 		return *this;
 	}
 
-	operator bool() { return m_ptr != nullptr; }
-	operator bool() const { return m_ptr != nullptr; }
+	constexpr operator bool() { return m_ptr != nullptr; }
+	constexpr operator bool() const { return m_ptr != nullptr; }
 
 	T* operator->() { return m_ptr; }
-	const T* operator->() const { return m_ptr; }
+    constexpr const T* operator->() const { return m_ptr; }
 
 	T& operator*() { return *m_ptr; }
-	const T& operator*() const { return *m_ptr; }
+    constexpr const T& operator*() const { return *m_ptr; }
 
 	T* get() { return m_ptr; }
-	const T* get() const { return m_ptr; }
+    constexpr const T* get() const { return m_ptr; }
 
-	void reset(T* ptr = nullptr)
+    constexpr void reset(T* ptr = nullptr)
 	{
 		DecRef();
 		m_ptr = ptr;
 	}
 
 	template <typename T2>
-	ref<T2> As() const
+    constexpr ref<T2> As() const
 	{
 		return ref<T2>(*this);
 	}
 
 	template <typename... Args>
-	static ref<T> Create(Args&&... args)
+    constexpr static ref<T> Create(Args&&... args)
 	{
 		return ref<T>(new T(std::forward<Args>(args)...));
 	}
 
 	// ptr comparison, not value
-	bool operator==(const ref<T> other) const
+    constexpr bool operator==(const ref<T> other) const
 	{
 		return m_ptr == other.m_ptr;
 	}
 
-	bool operator!=(const ref<T> other) const
+    constexpr bool operator!=(const ref<T> other) const
 	{
 		return !(*this == other);
 	}
 
-	bool Equals(const ref<T>& other) const
+    constexpr bool Equals(const ref<T>& other) const
 	{
 		if (!m_ptr || !other.m_ptr)
 			return false;
@@ -175,24 +180,24 @@ public:
 	}
 
 private:
-	void IncRef() const
+    constexpr KB_FORCE_INLINE auto IncRef() const -> void
 	{
 		if (m_ptr)
 		{
-			m_ptr->IncRefCount();
+			m_ptr->inc_ref();
 			Internal::AddToLiveReferences((void*)m_ptr);
 		}
 	}
 
-	void DecRef() const
+    constexpr KB_FORCE_INLINE auto DecRef() const -> void
 	{
 		if (!m_ptr)
 			return;
 			
-		m_ptr->DecRefCount();
 			
-		if (!m_ptr->GetRefCount())
+		if (!m_ptr->dec_ref())
 		{
+            std::atomic_thread_fence(std::memory_order_acquire);
 			delete m_ptr;
 			Internal::RemoveFromLiveReferences((void*)m_ptr);
 		}

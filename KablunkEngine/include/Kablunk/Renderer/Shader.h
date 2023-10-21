@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
+#include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Renderer/RendererTypes.h"
 #include "Kablunk/Renderer/ShaderUniform.h"
 
@@ -67,7 +68,6 @@ namespace kb {
 	class Shader : public RefCounted
 	{
 	public:
-		
 		using ShaderReloadedCallback = std::function<void()>;
 		virtual ~Shader() {}
 
@@ -97,8 +97,6 @@ namespace kb {
 		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
 		static ref<Shader> Create(const std::string& filePath, bool force_compile = false);
-	private:
-		static std::vector<ref<Shader>> s_all_shaders; // Temporary while we don't have an asset system
 	};
 
 	class ShaderLibrary : public RefCounted

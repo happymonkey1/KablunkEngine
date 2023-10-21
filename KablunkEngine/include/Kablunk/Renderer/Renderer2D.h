@@ -6,6 +6,8 @@
 
 #include "Kablunk/Core/RefCounting.h"
 
+#include "Kablunk/Asset/AssetManager.h"
+
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/OrthographicCamera.h"
 #include "Kablunk/Renderer/EditorCamera.h"
@@ -26,8 +28,6 @@ namespace kb
 // forward declaration
 namespace asset
 { // start namespace ::asset
-
-class AssetManager;
 
 } // end namespace ::asset 
 

@@ -473,7 +473,7 @@ namespace kb
 
 	}
 
-	void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBuffer> storage_buffer_set, ref<Material> material, const glm::mat4& transform)
+	void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform)
 	{
         KB_PROFILE_FUNC()
 

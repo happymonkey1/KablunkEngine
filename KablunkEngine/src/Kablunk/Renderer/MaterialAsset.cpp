@@ -166,7 +166,7 @@ namespace kb
 	MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)
 		: m_material_count{ material_count }
 	{
-		
+
 	}
 
 	MaterialTable::MaterialTable(ref<MaterialTable> other)

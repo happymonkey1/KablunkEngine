@@ -7,7 +7,6 @@
 
 namespace kb
 {
-	std::vector<ref<Shader>> Shader::s_all_shaders;
 
 	ref<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 	{
@@ -20,7 +19,6 @@ namespace kb
 		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
-		s_all_shaders.push_back(res);
 		return res;
 	}
 

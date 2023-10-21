@@ -76,9 +76,11 @@ namespace kb
 		{
 			auto decl = FindResourceDeclaration(name);
 			KB_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+            if (!decl)
+                return nullptr;
 			uint32_t slot = decl->GetRegister();
 			KB_CORE_ASSERT(slot < m_textures.size(), "Texture slot is invalid!");
-			return m_textures[slot];
+			return m_texture_array[slot];
 		}
 
 		template<typename T>
@@ -92,7 +94,7 @@ namespace kb
 			if (slot >= m_textures.size())
 				return nullptr;
 
-			return m_textures[slot];
+			return m_texture_array[slot];
 		}
 
 		virtual uint32_t GetFlags() const override { return m_material_flags; }
