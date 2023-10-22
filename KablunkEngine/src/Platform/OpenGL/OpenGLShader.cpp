@@ -42,7 +42,7 @@ namespace kb
 	{
         KB_PROFILE_FUNC();
 
-		std::unordered_map<GLenum, std::string> sources;
+		kb::unordered_flat_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
 
@@ -79,11 +79,11 @@ namespace kb
 		}
 	}
 
-	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
+	kb::unordered_flat_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
         KB_PROFILE_FUNC();
 
-		std::unordered_map<GLenum, std::string> shaderSources;
+		kb::unordered_flat_map<GLenum, std::string> shaderSources;
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
 		size_t pos = source.find(typeToken, 0);
@@ -103,7 +103,7 @@ namespace kb
 		return shaderSources;
 	}
 
-	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	void OpenGLShader::Compile(const kb::unordered_flat_map<GLenum, std::string>& shaderSources)
 	{
 		/*
 		* FROM https://www.khronos.org/opengl/wiki/Shader_Compilation
@@ -214,13 +214,13 @@ namespace kb
 		KB_CORE_ASSERT(false, "not implemented!");
 	}
 
-	const std::unordered_map<std::string, ShaderBuffer>& OpenGLShader::GetShaderBuffers() const
+	const kb::unordered_flat_map<std::string, ShaderBuffer>& OpenGLShader::GetShaderBuffers() const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return {};
 	}
 
-	const std::unordered_map<std::string, ShaderResourceDeclaration>& OpenGLShader::GetResources() const
+	const kb::unordered_flat_map<std::string, ShaderResourceDeclaration>& OpenGLShader::GetResources() const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
 		return {};
