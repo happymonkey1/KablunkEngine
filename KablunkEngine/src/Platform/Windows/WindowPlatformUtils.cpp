@@ -21,7 +21,7 @@
 #include <Assert.h>
 #pragma comment(lib, "iphlpapi.lib")
 
-namespace Kablunk
+namespace kb
 {
 	std::string FileDialog::OpenFile(const char* filter)
 	{
@@ -224,7 +224,7 @@ namespace Kablunk
 	}
 }
 
-namespace Kablunk::Utils
+namespace kb::Utils
 {
 	std::wstring StringToWideString(const std::string& str)
 	{

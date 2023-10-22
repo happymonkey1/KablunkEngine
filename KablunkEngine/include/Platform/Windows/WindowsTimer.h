@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Timing.h"
 
-namespace Kablunk
+namespace kb
 {
 	class WindowsTimer : public Timer
 	{

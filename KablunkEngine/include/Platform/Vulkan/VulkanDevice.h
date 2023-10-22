@@ -3,20 +3,29 @@
 #define KABLUNK_PLATFORM_VULKAN_DEVICE_H
 
 #include "Kablunk/Core/Core.h"
+
+#include "Platform/Vulkan/vulkan_command_pool.h"
+
 #include <vulkan/vulkan.h>
 
 #include <optional>
 #include <vector>
+#include <map>
+#include <thread>
 
-namespace Kablunk
+namespace kb
 {
 	struct QueueFamilyIndices
 	{
 		std::optional<uint32_t> Graphics_family;
 		std::optional<uint32_t> Present_family;
+        std::optional<uint32_t> m_compute_family;
+        std::optional<uint32_t> m_transfer_family;
 
 		bool HasGraphics() const { return Graphics_family.has_value(); }
-		bool IsComplete() const { return Graphics_family.has_value() && Present_family.has_value(); }
+		bool IsComplete() const { return Graphics_family.has_value() && Present_family.has_value() && m_compute_family.has_value() && m_transfer_family.has_value(); }
+        bool has_compute() const { return m_compute_family.has_value(); }
+        bool has_trasfer() const { return m_transfer_family.has_value(); }
 	};
 
 	// Physical Device
@@ -41,6 +50,7 @@ namespace Kablunk
 		bool CheckDeviseExtensionSupport(VkPhysicalDevice device);
 		std::vector<VkExtensionProperties> FindSupportedExtensions(VkPhysicalDevice device);
 		VkFormat FindDepthFormat();
+        void CreateQueueInfos();
 	private:
 		VkPhysicalDevice m_device = nullptr;
 
@@ -58,35 +68,42 @@ namespace Kablunk
 		QueueFamilyIndices m_queue_family_indices;
 
 		friend class VulkanSwapChain;
+        friend class VulkanDevice;
 	};
 
 	// Logical Device
 	class VulkanDevice : public RefCounted 
 	{
 	public:
-		VulkanDevice(const IntrusiveRef<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
+		VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
 		~VulkanDevice();
 
 		void Destroy();
 
-		VkQueue GetGraphicsQueue() { return m_graphics_queue; }
+		VkQueue GetGraphicsQueue() { return m_vk_graphics_queue; }
+        VkQueue get_vk_compute_queue() { return m_vk_compute_queue; }
 		
-		VkCommandBuffer GetCommandBuffer(bool begin);
+		VkCommandBuffer GetCommandBuffer(bool begin, bool p_compute = false);
 		void FlushCommandBuffer(VkCommandBuffer command_buffer);
-		void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue);
+		void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, kb::vk::command_buffer_type_t p_command_buffer_type);
 
 		VkCommandBuffer CreateSecondaryCommandBuffer();
 
-		IntrusiveRef<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
+		ref<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 		VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
-		VkDevice GetVkDevice() { return m_device; }
+		VkDevice GetVkDevice() { return m_vk_device; }
+    private:
+        ref<kb::vk::command_pool> get_thread_local_command_pool();
+        ref<kb::vk::command_pool> get_or_create_thread_local_command_pool();
 	private:
-		VkDevice m_device;
-		IntrusiveRef<VulkanPhysicalDevice> m_physical_device;
+		VkDevice m_vk_device;
+		ref<VulkanPhysicalDevice> m_physical_device;
 		VkPhysicalDeviceFeatures m_enabled_features;
-		VkCommandPool m_command_pool;
 
-		VkQueue m_graphics_queue;
+		VkQueue m_vk_graphics_queue;
+        VkQueue m_vk_compute_queue;
+
+        std::map<std::thread::id, ref<kb::vk::command_pool>> m_command_pools;
 
 		bool m_destroyed = false;
 	};

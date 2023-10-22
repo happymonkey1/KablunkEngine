@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanTexture2D : public Texture2D
 	{
@@ -21,7 +21,7 @@ namespace Kablunk
 		virtual ~VulkanTexture2D();
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
-		virtual IntrusiveRef<Image2D> GetImage() const override { return m_image; }
+		virtual ref<Image2D> GetImage() const override { return m_image; }
 
 		virtual ImageFormat GetFormat() const { return m_format; }
 
@@ -33,6 +33,7 @@ namespace Kablunk
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
 		virtual Buffer& GetWriteableBuffer() override;
+        virtual const Buffer& get_buffer() const override { return m_image_data; }
 
 		virtual bool loaded() const override { return m_loaded; }
 
@@ -48,10 +49,11 @@ namespace Kablunk
 		uint32_t m_width;
 		uint32_t m_height;
 
-		IntrusiveRef<Image2D> m_image;
+		ref<Image2D> m_image;
 
 		ImageFormat m_format;
 
+        // buffer of image data stored on cpu
 		Buffer m_image_data;
 
 		bool m_loaded = false;

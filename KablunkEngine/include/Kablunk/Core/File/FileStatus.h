@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-namespace Kablunk
+namespace kb
 {
 	enum class FileStatus : uint8_t
 	{

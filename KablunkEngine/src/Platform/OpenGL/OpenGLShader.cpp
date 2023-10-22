@@ -6,7 +6,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Kablunk
+namespace kb
 {
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
@@ -23,7 +23,7 @@ namespace Kablunk
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		std::string shaderSrc = ReadFile(filePath);
 		auto shaderSources = PreProcess(shaderSrc);
@@ -40,7 +40,7 @@ namespace Kablunk
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name{name}
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
@@ -51,14 +51,14 @@ namespace Kablunk
 
 	OpenGLShader::~OpenGLShader()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glDeleteProgram(m_RendererID);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		std::string result;
 		std::ifstream in{ filePath, std::ios::in | std::ios::binary };
@@ -81,7 +81,7 @@ namespace Kablunk
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		std::unordered_map<GLenum, std::string> shaderSources;
 		const char* typeToken = "#type";
@@ -109,7 +109,7 @@ namespace Kablunk
 		* FROM https://www.khronos.org/opengl/wiki/Shader_Compilation
 		*/
 
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		GLuint program = glCreateProgram();
 		KB_CORE_ASSERT(shaderSources.size() <= 2, "Only 2 shaders are supported!");
@@ -186,14 +186,14 @@ namespace Kablunk
 
 	void OpenGLShader::Bind() const
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glUseProgram(m_RendererID);
 	}
 
 	void OpenGLShader::Unbind() const
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glUseProgram(0);
 	}
@@ -228,49 +228,49 @@ namespace Kablunk
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformMat4(name, value);
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformFloat(name, value);
 	}
 
 	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformFloat2(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformFloat3(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		UploadUniformIntArray(name, values, count);
 	}

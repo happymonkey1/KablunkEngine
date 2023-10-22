@@ -6,7 +6,7 @@
 
 #include "Kablunk/Renderer/UniformBuffer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class UniformBufferSet : public RefCounted
@@ -16,10 +16,10 @@ namespace Kablunk
 
 		virtual void Create(uint32_t size, uint32_t binding) = 0;
 
-		virtual IntrusiveRef<UniformBuffer> Get(uint32_t binding, uint32_t set = 0, uint32_t frame = 0) = 0;
-		virtual void Set(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t set = 0, uint32_t frame = 0) = 0;
+		virtual ref<UniformBuffer> Get(uint32_t binding, uint32_t set = 0, uint32_t frame = 0) = 0;
+		virtual void Set(ref<UniformBuffer> uniform_buffer, uint32_t set = 0, uint32_t frame = 0) = 0;
 
-		static IntrusiveRef<UniformBufferSet> Create(uint32_t frames);
+		static ref<UniformBufferSet> Create(uint32_t frames);
 	};
 
 }

@@ -14,7 +14,8 @@ workspace "KablunkEngine"
 
     solution_items
     {
-        ".editorconfig"
+        ".editorconfig",
+        ".clang-tidy"
     }
 
     flags
@@ -35,6 +36,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/spdlog"
     include "KablunkEngine/vendor/FreeType"
     include "KablunkEngine/vendor/box2d"
+    include "KablunkEngine/vendor/optick"
 group ""
 
 group "Tools"

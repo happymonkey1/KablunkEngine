@@ -14,13 +14,13 @@
 #include <vector>
 
 // forward declaration
-namespace Kablunk
+namespace kb
 {
 	struct SceneRendererCamera;
 	class Texture2D;
 }
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	enum class panel_type_t : u32

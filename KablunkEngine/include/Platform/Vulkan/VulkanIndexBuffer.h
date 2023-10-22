@@ -9,7 +9,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanIndexBuffer : public IndexBuffer
 	{

@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 
-namespace Kablunk::Parser
+namespace kb::Parser
 {
 	enum class ParserTokenDescriptor : uint8_t
 	{

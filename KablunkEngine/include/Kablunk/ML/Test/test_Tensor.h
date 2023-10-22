@@ -4,7 +4,7 @@
 
 //#include "Kablunk/Test/KablunkUnitTestAPI.h"
 
-namespace Kablunk::ml::tensor
+namespace kb::ml::tensor
 {
 
 	void test_tensor_main();

@@ -4,7 +4,7 @@
 
 #include <Kablunk.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class AssetEditor
@@ -72,13 +72,13 @@ namespace Kablunk
 		{
 			static_assert(std::is_base_of<AssetEditor, T>::value, "AssetEditorPanel requires type to be derived from AssetEditor!");
 			KB_CORE_ASSERT(m_registered_editors.find(asset_type) == m_registered_editors.end(), "asset editor for that type already registered!");
-			m_registered_editors[asset_type] = CreateScope<T>();
+			m_registered_editors[asset_type] = create_box<T>();
 		}
 	private:
 		// current scene context
 		ref<Scene> m_scene_context = nullptr;
 		// registered asset editors
-		map<asset::AssetType, Scope<AssetEditor>> m_registered_editors;
+		map<asset::AssetType, box<AssetEditor>> m_registered_editors;
 	};
 
 }

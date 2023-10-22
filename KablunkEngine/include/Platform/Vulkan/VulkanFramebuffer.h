@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanFramebuffer : public Framebuffer 
 	{
@@ -20,7 +20,7 @@ namespace Kablunk
 		virtual ~VulkanFramebuffer() override;
 
 		virtual void Resize(uint32_t width, uint32_t height, bool forceRecreate = false) override;
-		virtual void AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func) override;
+		virtual void AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func) override;
 
 		virtual void Bind() const override {}
 		virtual void Unbind() const override {}
@@ -33,14 +33,14 @@ namespace Kablunk
 		virtual RendererID GetColorAttachmentRendererID() const { return 0; }
 		virtual RendererID GetDepthAttachmentRendererID() const { return 0; }
 
-		virtual IntrusiveRef<Image2D> GetImage(uint32_t attachment_index = 0) const override
+		virtual ref<Image2D> GetImage(uint32_t attachment_index = 0) const override
 		{ 
 			KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!"); 
 			//KB_CORE_ASSERT(m_attachment_images[attachment_index].As<VulkanImage2D>()->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout undefined!");
 
 			return m_attachment_images[attachment_index];
 		}
-		virtual IntrusiveRef<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
+		virtual ref<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
 
 		virtual int ReadPixel(uint32_t attachment_index, int x, int y) override;
 		virtual void ClearAttachment(uint32_t attachment_index, int value) override;
@@ -59,14 +59,14 @@ namespace Kablunk
 		FramebufferSpecification m_specification;
 		uint32_t m_width = 0, m_height = 0;
 
-		std::vector<IntrusiveRef<Image2D>> m_attachment_images;
-		IntrusiveRef<Image2D> m_depth_attachment_image;
+		std::vector<ref<Image2D>> m_attachment_images;
+		ref<Image2D> m_depth_attachment_image;
 
 		std::vector<VkClearValue> m_clear_values;
 		VkRenderPass m_render_pass = nullptr;
 		VkFramebuffer m_framebuffer = nullptr;
 
-		std::vector<std::function<void(IntrusiveRef<Framebuffer>)>> m_resize_callbacks;
+		std::vector<std::function<void(ref<Framebuffer>)>> m_resize_callbacks;
 
 	};
 }

@@ -6,7 +6,7 @@
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Scene/Entity.h"
 
-namespace Kablunk
+namespace kb
 {
 	// #TODO think about moving into runtime (KablunkEngine) because scene hierarchy and entity browsing could be useful for debugging runtime 
 
@@ -14,9 +14,9 @@ namespace Kablunk
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const IntrusiveRef<Scene>& context);
+		SceneHierarchyPanel(const ref<Scene>& context);
 
-		void SetContext(const IntrusiveRef<Scene>& context);
+		void SetContext(const ref<Scene>& context);
 		
 		void OnImGuiRender();
 		
@@ -31,7 +31,7 @@ namespace Kablunk
 		void UI_DrawComponents(Entity entity);
 		void UI_RenameScenePopup();
 	private:
-		IntrusiveRef<Scene> m_context;
+		ref<Scene> m_context;
 		Entity m_selection_context;
 
 		// #TODO move to properties panel class

@@ -5,7 +5,7 @@
 #include "Kablunk/Scripts/NativeScriptModule.h"
 #include <iostream>
 
-namespace Kablunk
+namespace kb
 {
 
 	NativeScriptModule::NativeScriptModule(const std::string& dll_name, const std::string& dll_path)

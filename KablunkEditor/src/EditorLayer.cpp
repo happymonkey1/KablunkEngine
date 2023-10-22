@@ -22,7 +22,7 @@
 
 #include "Kablunk/Plugin/PluginManager.h"
 
-#include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
@@ -39,11 +39,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
+// #TODO refactor application singleton reference and remove
+#include "Kablunk/Core/Application.h"
 
 
 #define DISABLE_NATIVE_SCRIPTING 0
 
-namespace Kablunk
+namespace kb
 {
 
 	constexpr uint32_t MAX_PROJECT_NAME_LENGTH = 255;
@@ -57,8 +59,6 @@ namespace Kablunk
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		
-
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
 		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
@@ -69,31 +69,38 @@ namespace Kablunk
 
 	void EditorLayer::OnAttach()
 	{
+		KB_CORE_INFO("EditorLayer::OnAttach()");
+
 		//m_missing_texture		= Texture2D::Create("assets/textures/missing_texture.png");
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		m_editor_scene = IntrusiveRef<Scene>::Create();
+		m_editor_scene = ref<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = IntrusiveRef<SceneRenderer>::Create(m_active_scene);
+		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene);
+        m_renderer_2d = Application::Get().get_renderer_2d();
+
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		NativeScriptEngine::get().set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
+		// pump a frame from the render thread to *hopefully* initialize stuff?
+		//Application::Get().get_render_thread().pump();
+
 		KB_CORE_INFO("Kablunk install path: '{0}'", s_kablunk_install_path);
 	}
 
 	void EditorLayer::OnDetach()
 	{
-
+        KB_CLIENT_INFO("detaching EditorLayer!");
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		// ==========
 		//   Update
@@ -117,7 +124,7 @@ namespace Kablunk
 		//   Render
 		// ==========
 
-		render2d::reset_stats();
+		m_renderer_2d->reset_stats();
 
 
 		switch (m_scene_state)
@@ -127,20 +134,20 @@ namespace Kablunk
 			m_editor_camera.OnUpdate(ts);
 
 			m_active_scene->OnUpdateEditor(ts);
-			m_active_scene->OnRenderEditor(m_viewport_renderer, m_editor_camera);
+			m_active_scene->OnRenderEditor(m_viewport_renderer, m_renderer_2d, m_editor_camera);
 
 			//ViewportClickSelectEntity();
 			break;
 		case SceneState::Play:
 
 			m_active_scene->OnUpdateRuntime(ts);
-			m_active_scene->OnRenderRuntime(m_viewport_renderer);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, m_renderer_2d);
 
 			break;
 		case SceneState::Pause:
 
 			m_editor_camera.OnUpdate(ts);
-			m_active_scene->OnRenderRuntime(m_viewport_renderer, &m_editor_camera);
+			m_active_scene->OnRenderRuntime(m_viewport_renderer, m_renderer_2d, &m_editor_camera);
 
 			break;
 		}
@@ -158,7 +165,7 @@ namespace Kablunk
 
 	void EditorLayer::OnImGuiRender(Timestep ts)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		static bool opt_fullscreen	= true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -231,7 +238,7 @@ namespace Kablunk
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			render2d::renderer_2d_stats_t stats = render2d::get_stats();
+			renderer_2d_stats_t stats = m_renderer_2d->get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -355,7 +362,7 @@ namespace Kablunk
 				{
 					auto original_rotation = transform_component.Rotation;
 					glm::vec3 translation, scale, rotation;
-					if (Math::decompose_transform(transform, translation, scale, rotation))
+					if (math::decompose_transform(transform, translation, scale, rotation))
 					{
 						// Translation
 						transform_component.Translation = translation;
@@ -387,12 +394,12 @@ namespace Kablunk
 			m_active_scene->OnImGuiRender();
 
 
-		CSharpScriptEngine::OnImGuiRender();
+		// CSharpScriptEngine::OnImGuiRender();
 
 		UI_Toolbar();
 		UI_KablunkInstallPopup();
 
-		m_viewport_renderer->OnImGuiRender();
+		m_viewport_renderer->on_imgui_render(m_renderer_2d);
 
 		if (m_show_create_new_project_popup)
 		{
@@ -923,7 +930,7 @@ namespace Kablunk
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = IntrusiveRef<Scene>::Create();
+		m_editor_scene = ref<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
 		m_viewport_renderer->set_scene(m_active_scene);
@@ -965,7 +972,7 @@ namespace Kablunk
 		}
 	}
 
-	void EditorLayer::SerializeScene(IntrusiveRef<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(ref<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -985,7 +992,7 @@ namespace Kablunk
 	{
 		NewScene();
 
-		IntrusiveRef<Scene> new_scene = IntrusiveRef<Scene>::Create();
+		auto new_scene = ref<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -1121,6 +1128,15 @@ namespace Kablunk
 			std::filesystem::create_directories(project_path / "assets" / "materials");
 			std::filesystem::create_directories(project_path / "assets" / "meshes");
 			std::filesystem::create_directories(project_path / "assets" / "prefabs");
+			std::filesystem::create_directories(project_path / "resources");
+
+            // copy engine resources over
+            {
+                // copy fonts
+                std::filesystem::copy(resources_path / "fonts", project_path / "resources" / "fonts", std::filesystem::copy_options::recursive);
+                // copy shaders
+                std::filesystem::copy(resources_path / "shaders", project_path / "resources" / "shaders");
+            }
 
 			if (create_native_script_project)
 				std::filesystem::create_directories(project_path / "include");
@@ -1173,7 +1189,7 @@ namespace Kablunk
 		if (ProjectManager::get().get_active())
 			CloseProject();
 
-		IntrusiveRef<Project> project = IntrusiveRef<Project>::Create();
+		auto project = ref<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
@@ -1324,8 +1340,8 @@ namespace Kablunk
 
 			// #TODO move to scene renderer
 
-			render2d::begin_scene(*camera, transform);
-			render2d::set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
+			m_renderer_2d->begin_scene(*camera, transform);
+			m_renderer_2d->set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
@@ -1340,7 +1356,7 @@ namespace Kablunk
 					auto scale = glm::vec2{ transform.Scale.x, transform.Scale.y } *bc2D_comp.Size;
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					render2d::draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
+					m_renderer_2d->draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
 
 				}
 			}
@@ -1354,12 +1370,12 @@ namespace Kablunk
 					auto scale = transform_comp.Scale * glm::vec3{ cc2D_comp.Radius * 2.0f };
 
 					auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
-					render2d::draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
+					m_renderer_2d->draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
 
 
-			render2d::end_scene();
+			m_renderer_2d->end_scene();
 			
 		}
 	}

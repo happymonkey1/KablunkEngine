@@ -32,3 +32,6 @@
 [submodule "KablunkEngine/vendor/RuntimeCompiledCPlusPlus"]
 	path = KablunkEngine/vendor/RuntimeCompiledCPlusPlus
 	url = https://github.com/happymonkey1/RuntimeCompiledCPlusPlus.git
+[submodule "KablunkEngine/vendor/optick"]
+	path = KablunkEngine/vendor/optick
+	url = https://github.com/happymonkey1/optick

@@ -7,7 +7,7 @@
 #include "Kablunk/Core/Buffer.h"
 #include <glm/glm.hpp>
 
-namespace Kablunk
+namespace kb
 {
 	enum class ImageFormat
 	{
@@ -111,8 +111,8 @@ namespace Kablunk
 	class Image2D : public Image
 	{
 	public:
-		static IntrusiveRef<Image2D> Create(ImageSpecification specification, Buffer buffer);
-		static IntrusiveRef<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
+		static ref<Image2D> Create(ImageSpecification specification, Buffer buffer);
+		static ref<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
 	};
 
 	namespace Utils {
@@ -121,13 +121,13 @@ namespace Kablunk
 		{
 			switch (format)
 			{
-			case ImageFormat::RED32I:  return 4;
-			case ImageFormat::RED32F:  return 4;
+			case ImageFormat::RED32I:   return 4;
+			case ImageFormat::RED32F:   return 4;
 			case ImageFormat::RGB:
-			case ImageFormat::SRGB:    return 3;
-			case ImageFormat::RGBA:    return 4;
-			case ImageFormat::RGBA16F: return 2 * 4;
-			case ImageFormat::RGBA32F: return 4 * 4;
+			case ImageFormat::SRGB:     return 3;
+			case ImageFormat::RGBA:     return 4;
+			case ImageFormat::RGBA16F:  return 2 * 4;
+			case ImageFormat::RGBA32F:  return 4 * 4;
 			}
 			KB_CORE_ASSERT(false, "Unknown ImageFormat!");
 			return 0;

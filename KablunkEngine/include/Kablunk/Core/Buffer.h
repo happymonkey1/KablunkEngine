@@ -4,15 +4,20 @@
 
 #include "Kablunk/Core/Core.h"
 
-namespace Kablunk
+namespace kb
 {
-	class Buffer : public RefCounted
+	class Buffer
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
 		Buffer(void* data, size_t size) : m_data{ (u8*)data }, m_size{ size } {}
-		Buffer(size_t size) : m_data{ nullptr }, m_size{ size } { Allocate(size); }
-		Buffer(const Buffer& other) : m_data{ nullptr }, m_size{ other.m_size }
+		Buffer(size_t size) 
+            : m_data{ nullptr }, m_size{ size } 
+        { 
+            Allocate(size); 
+        }
+		Buffer(const Buffer& other) 
+            : m_data{ nullptr }, m_size{ other.m_size }
 		{
 			if (other.m_data)
 			{
@@ -63,6 +68,9 @@ namespace Kablunk
 		{
 			Buffer buffer;
 			buffer.Allocate(size);
+
+            KB_CORE_ASSERT(buffer.m_data, "[Buffer] Copy(): destination buffer is null?");
+
 			memcpy(buffer.m_data, data, size);
 			return buffer;
 		}
@@ -77,7 +85,10 @@ namespace Kablunk
 			}
 
 			if (size == 0)
+            {
+                KB_CORE_WARN("[Buffer]: allocating a buffer of size 0!");
 				return;
+            }
 
 			//m_data = new uint8_t[size];
 			m_data = kb_new_array(u8, size);
@@ -123,15 +134,16 @@ namespace Kablunk
 
 		operator bool() const { return m_data; }
 
-		u8& operator[](int index) { return m_data[index]; }
+		u8& operator[](size_t index) { return m_data[index]; }
 
-		u8 operator[](int index) const { return m_data[index]; }
+		u8 operator[](size_t index) const { return m_data[index]; }
 
 		template <typename T>
 		T* As() const { return (T*)m_data; }
 
 		inline size_t size() const { return m_size; }
 		inline void* get() { return (void*)m_data; }
+        inline void* data() { return (void*)m_data; }
 		inline const void* get() const { return (void*)m_data; }
 	private:
 		// capacity of the buffer

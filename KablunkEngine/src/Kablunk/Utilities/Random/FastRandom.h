@@ -7,7 +7,7 @@
 
 #include <chrono>
 
-namespace Kablunk::util::random
+namespace kb::util::random
 {
 	// #TODO move elsewhere
 	// from https://stackoverflow.com/a/26751389
@@ -54,7 +54,7 @@ namespace Kablunk::util::random
 
 	inline f32 random_f32()
 	{
-		Kablunk::Singleton<Random<f32, &xorshift_generator<f32>>>();
+        kb::Singleton<Random<f32, &xorshift_generator<f32>>>();
 	}
 }
 

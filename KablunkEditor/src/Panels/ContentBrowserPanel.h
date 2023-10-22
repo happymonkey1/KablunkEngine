@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <shared_mutex>
 
-namespace Kablunk
+namespace kb
 {
 	constexpr const int MAX_SEARCH_BUFFER_LENGTH = 128;
 
@@ -46,11 +46,11 @@ namespace Kablunk
 		std::vector<std::filesystem::directory_entry> m_directory_entries{};
 		mutable std::shared_mutex m_mutex;
 
-		Asset<Texture2D> m_directory_icon;
-		Asset<Texture2D> m_file_icon;
-		Asset<Texture2D> m_back_button;
-		Asset<Texture2D> m_forward_button;
-		Asset<Texture2D> m_refresh_button;
+		ref<Texture2D> m_directory_icon;
+		ref<Texture2D> m_file_icon;
+		ref<Texture2D> m_back_button;
+		ref<Texture2D> m_forward_button;
+		ref<Texture2D> m_refresh_button;
 		ref<Texture2D> m_asset_icon;
 
 		ref<AssetEditorPanel> m_asset_editor_panel;

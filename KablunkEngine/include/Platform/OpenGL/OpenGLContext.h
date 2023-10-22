@@ -3,7 +3,7 @@
 
 struct GLFWwindow;
 
-namespace Kablunk {
+namespace kb {
 	class OpenGLContext : public GraphicsContext {
 	public:
 		OpenGLContext(GLFWwindow* windowHandle);

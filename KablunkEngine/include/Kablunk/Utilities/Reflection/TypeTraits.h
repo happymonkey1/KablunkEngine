@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-namespace Kablunk::Reflect
+namespace kb::Reflect
 {
 	struct TypeTraits
 	{

@@ -4,13 +4,13 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Material.h"
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLMaterial : public Material
 	{
 	public:
 		OpenGLMaterial() = default;
-		OpenGLMaterial(const IntrusiveRef<Shader>& shader, const std::string& name = "");
+		OpenGLMaterial(const ref<Shader>& shader, const std::string& name = "");
 		virtual ~OpenGLMaterial() = default;
 
 		virtual void Invalidate() override { KB_CORE_ASSERT(false, "not implemented!"); };
@@ -29,9 +29,9 @@ namespace Kablunk
 		virtual void Set(const std::string& name, const glm::ivec4& value) override;
 		virtual void Set(const std::string& name, const glm::mat3& value) override;
 		virtual void Set(const std::string& name, const glm::mat4& value) override;
-		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture) override;
-		virtual void Set(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) override;
-		virtual void Set(const std::string& name, const IntrusiveRef<Image2D>& image) override;
+		virtual void Set(const std::string& name, const ref<Texture2D>& texture) override;
+		virtual void Set(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index) override;
+		virtual void Set(const std::string& name, const ref<Image2D>& image) override;
 
 		virtual bool& GetBool(const std::string& name) override { KB_CORE_ASSERT(false, "not implemented!"); bool a = true;  return a; }
 		virtual float& GetFloat(const std::string& name) override;
@@ -42,9 +42,9 @@ namespace Kablunk
 		virtual glm::vec4& GetVec4(const std::string& name) override;
 		virtual glm::mat3& GetMat3(const std::string& name) override;
 		virtual glm::mat4& GetMat4(const std::string& name) override;
-		virtual IntrusiveRef<Texture2D> GetTexture2D(const std::string& name) override;
+		virtual ref<Texture2D> GetTexture2D(const std::string& name) override;
 
-		virtual IntrusiveRef<Shader> GetShader() override { return m_shader; };
+		virtual ref<Shader> GetShader() override { return m_shader; };
 		virtual const std::string& GetName() const override { return m_name; };
 	private:
 
@@ -63,10 +63,10 @@ namespace Kablunk
 		}
 
 	private:
-		IntrusiveRef<Shader> m_shader;
+		ref<Shader> m_shader;
 		std::string m_name;
 
-		std::vector<IntrusiveRef<Texture2D>> m_textures;
+		std::vector<ref<Texture2D>> m_textures;
 	};
 }
 

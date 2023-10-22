@@ -13,7 +13,7 @@
 #include "Kablunk/Imgui/ImGuiLayer.h"
 #include "Kablunk/Core/Input.h"
 
-#include "Kablunk/Core/Timing.h"
+#include "Kablunk/Core/Timers.h"
 #include "Kablunk/Core/Timestep.h"
 
 #include "Kablunk/Core/JobSystem.h"
@@ -21,9 +21,13 @@
 #include "Kablunk/Core/RefCounting.h"
 // ----------------------------------------------
 
+// ---Math---------------------------------------
+#include <glm/glm.hpp>
+// ----------------------------------------------
 
 // ---Renderer-----------------------------------
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
@@ -33,6 +37,7 @@
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Renderer/SceneRenderer.h"
+
 
 #include "Kablunk/Renderer/Camera.h"
 // ----------------------------------------------
@@ -53,8 +58,6 @@
 // ----------------------------------------------
 
 // ---Assets-------------------------------------
-// #TODO remove old asset manager
-#include "Kablunk/Core/AssetManager.h"
 #include "Kablunk/Asset/AssetCommand.h"
 // ----------------------------------------------
 

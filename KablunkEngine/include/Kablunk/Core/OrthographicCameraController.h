@@ -6,7 +6,7 @@
 #include "Kablunk/Events/ApplicationEvent.h"
 #include "Kablunk/Events/MouseEvent.h"
 
-namespace Kablunk
+namespace kb
 {
 	// #TODO deprecate
 	class OrthographicCameraController

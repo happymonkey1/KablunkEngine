@@ -4,7 +4,7 @@
 #include <entt.hpp>
 #include "Scene.h"
 
-namespace Kablunk
+namespace kb
 {
 	// Forward dec
 	struct TransformComponent;

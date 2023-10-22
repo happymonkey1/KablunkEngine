@@ -8,7 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanPipeline : public Pipeline
 	{
@@ -21,8 +21,8 @@ namespace Kablunk
 
 		virtual void Invalidate() override;
 		void RT_Invalidate();
-		virtual void SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) override;
-		void RT_SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0);
+		virtual void SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) override;
+		void RT_SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0);
 
 		VkPipeline GetVkPipeline() { return m_vk_pipeline; }
 		VkPipelineLayout GetVkPipelineLayout() { return m_vk_pipeline_layout; }

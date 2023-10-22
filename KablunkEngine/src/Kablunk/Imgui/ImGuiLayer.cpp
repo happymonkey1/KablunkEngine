@@ -10,7 +10,7 @@
 
 
 
-namespace Kablunk 
+namespace kb 
 {
 	void ImGuiLayer::SetDarkTheme()
 	{

@@ -11,7 +11,7 @@
 #include <sstream>
 #include <string_view>
 
-namespace Kablunk::Parser
+namespace kb::Parser
 {
 	namespace String
 	{

@@ -6,7 +6,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-namespace Kablunk
+namespace kb
 {
 #ifndef KB_SINGLETON_INTERNAL_IMPL
 
@@ -16,7 +16,7 @@ namespace Kablunk
 		struct SingletonManager
 		{
 			void* obj = nullptr;
-			// #TODO should this be Kablunk::IntrusiveRef?
+			// #TODO should this be kb::IntrusiveRef?
 			std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
 		};
 

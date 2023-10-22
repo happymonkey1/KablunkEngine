@@ -7,13 +7,34 @@
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Core/Memory/Memory.h"
+#include "Kablunk/Core/Expected.hpp"
+#include "Kablunk/Debugging/profiling.h"
+
+// #NOTE c++17+ implementation of std::expected
+//       this can be removed when the project switches to c++23
+#include "tl/expected.hpp"
+
 #include <memory>
 
-namespace Kablunk
+namespace kb
 {
 	void InitCore();
 	void ShutdownCore();
 }
+
+#if 0
+#if defined(KB_PLATFORM_WINDOWS)
+#	define KB_FORCE_INLINE __forceinline
+#elif defined(KB_PLATFORM_LINUX)
+#	if defined(GCC_VERSION)  // check if compiling with gcc
+#		define KB_FORCE_INLINE __attribute__((always_inline))
+#	endif
+#else
+	// #TODO(Sean) force inline on other platforms
+#	define KB_FORCE_INLINE inline
+#	warning "force inlined not defined for platform!"
+#endif
+#endif
 
 #define BIT(x) (1 << x)
 
@@ -23,13 +44,16 @@ namespace Kablunk
 #	define ENTT_ID_TYPE uint64_t
 #endif
 
-namespace Kablunk
+// force glm mats to use vulkan z range
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
+namespace kb
 {
 	template <typename T>
-	using Scope = std::unique_ptr<T>;
+	using box = std::unique_ptr<T>;
 
 	template <typename T, typename ... Args>
-	constexpr Scope<T> CreateScope(Args&& ... args)
+	constexpr box<T> create_box(Args&& ... args)
 	{
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}

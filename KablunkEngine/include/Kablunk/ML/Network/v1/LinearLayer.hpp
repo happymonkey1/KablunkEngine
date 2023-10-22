@@ -13,11 +13,11 @@
 #include <stdint.h>
 
 
-namespace Kablunk::ml::network::v1
+namespace kb::ml::network::v1
 {
 	// #TODO stack allocated layer?
 	// computes activation(x.dot(w) + b)
-	template <typename T = f32, typename tensor_t = Kablunk::ml::tensor::Tensor<T, 2ull>>
+	template <typename T = f32, typename tensor_t = kb::ml::tensor::Tensor<T, 2ull>>
 	class LinearLayer : public ILayer<T, tensor_t>
 	{
 	public:

@@ -14,7 +14,7 @@
 #	define KB_TRUE_UUID
 #endif
 
-namespace Kablunk::uuid
+namespace kb::uuid
 {
 	
 	using uuid64 = uint64_t;

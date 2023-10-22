@@ -16,7 +16,7 @@
 
 #include <ImGuizmo.h>
 
-namespace Kablunk
+namespace kb
 {
 	OpenGLImguiLayer::OpenGLImguiLayer()
 		: ImGuiLayer{}
@@ -31,7 +31,7 @@ namespace Kablunk
 
 	void OpenGLImguiLayer::OnAttach()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -70,7 +70,7 @@ namespace Kablunk
 
 	void OpenGLImguiLayer::OnDetach()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -106,7 +106,7 @@ namespace Kablunk
 
 	void OpenGLImguiLayer::Begin()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -116,7 +116,7 @@ namespace Kablunk
 
 	void OpenGLImguiLayer::End()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();

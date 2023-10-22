@@ -10,9 +10,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <unordered_map>
-
-namespace Kablunk::render
+namespace kb::render
 {
 
 	struct font_asset_create_info
@@ -38,11 +36,13 @@ namespace Kablunk::render
 	struct glyph_info
 	{
 		// start and end positions in the texture atlas
-		size_t m_x0, m_y0, m_x1, m_y1;
+		float m_x0, m_y0, m_x1, m_y1;
 		// left & top bearing when rendering
 		size_t m_x_off, m_y_off;
 		// x advance when rendering
 		size_t m_advance;
+        // size of the glyph
+        glm::vec2 m_size;
 	};
 
 	using glyph_info_t = glyph_info;
@@ -59,6 +59,10 @@ namespace Kablunk::render
 		// get the font point 
 		// font points are a physical distance, representing 1/72th of an inch
 		size_t get_font_point() const { return m_font_point; }
+        // get the horizontal dpi used to render bitmaps
+        size_t get_dpi_x() const { return m_dpi_x; }
+        // get the vertical dpi used to render bitmaps
+        size_t get_dpi_y() const { return m_dpi_y; }
 		// set the font point
 		// font points are a physical distance, representing 1/72th of an inch
 		void set_font_point(size_t new_font_point);
@@ -67,7 +71,7 @@ namespace Kablunk::render
 		// release resources owned by the asset
 		void release();
 		// get the glpyh rendering info map
-		const std::unordered_map<char, glyph_info_t> get_glyph_rendering_map() const { return m_glyph_info_map; }
+		auto get_glyph_rendering_map() const -> const kb::unordered_flat_map<char, glyph_info_t>& { return m_glyph_info_map; }
 	private:
 		// load an ft face to the asset
 		bool load_ft_face_from_file(const font_asset_create_info_t& create_info);
@@ -84,12 +88,16 @@ namespace Kablunk::render
 		size_t m_font_face_index = 0ull;
 		// number of glyphs loaded
 		size_t m_num_glyphs = 0ull;
+        // horizontal dpi used for rendering the glyph bitmaps
+        size_t m_dpi_x = 96ull;
+        // vertical dpi used for rendering the glyph bitmaps
+        size_t m_dpi_y = 96ull;
 		// reference to the texture atlas
 		// for now, the font asset "owns" the texture atlas, should this be stored in a cache on the font manager instead?
 		ref<Texture2D> m_texture_atlas;
 		// glyph rendering info
 		// maps chars to their rendering info
-		std::unordered_map<char, glyph_info_t> m_glyph_info_map;
+		kb::unordered_flat_map<char, glyph_info_t> m_glyph_info_map;
 		// friend declaration(s)
 		friend class font_manager;
 	};

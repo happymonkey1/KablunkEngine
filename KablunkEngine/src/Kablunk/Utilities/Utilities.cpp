@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Utilities/Utilities.h"
 
-namespace Kablunk::Utils
+namespace kb::Utils
 {
 	template <typename T>
 	void WaitForSecondsCallback(float delay, T callback)

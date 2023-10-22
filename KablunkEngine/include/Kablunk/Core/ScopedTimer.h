@@ -5,11 +5,11 @@
 #include <chrono>
 #include <functional>
 
-namespace Kablunk
+namespace kb
 {
 
 // adapted from https://gist.github.com/justgord/4482447
-template <typename _timer_resolution_t = std::chrono::nanoseconds>
+template <typename _timer_resolution_t = std::chrono::microseconds>
 class scoped_timer
 {
 public:

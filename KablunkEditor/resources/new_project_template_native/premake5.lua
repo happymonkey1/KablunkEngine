@@ -23,7 +23,8 @@ workspace "%{ProjectName}"
 project "$PROJECT_NAME$"
 	kind "SharedLib"
 	language "C++"
-	cppdialect "C++17"
+	cppdialect "C++20"
+	conformancemode "off"
 
 	targetname "%{ProjectName}"
 

@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Core.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	const char* Parser::parser_token_descriptor_to_c_str(ParserTokenDescriptor token_type)

@@ -3,7 +3,7 @@
 #include "Kablunk/Utilities/Containers/Node.hpp"
 #include <type_traits>
 
-namespace Kablunk::Utilties
+namespace kb::Utilties
 {
 	// default function template parameter
 	using void_compare_func_t = void(*)(void*, void*);

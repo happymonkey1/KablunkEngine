@@ -9,7 +9,7 @@
 
 #include <stb_image.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data)
@@ -30,7 +30,7 @@ namespace Kablunk
 		//	spec.usage = ImageUsage::Storage;
 		m_image = Image2D::Create(spec);
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -42,10 +42,10 @@ namespace Kablunk
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
 		: m_filepath{ path }
 	{
-		m_loaded = LoadImage(m_filepath);
+		m_loaded = this->LoadImage(m_filepath);
 
 		if (!m_loaded)
-			m_loaded = LoadImage("resources/texture/missing_texture.png");
+			m_loaded = this->LoadImage("resources/texture/missing_texture.png");
 		
 		ImageSpecification spec{};
 		spec.format = m_format;
@@ -56,7 +56,7 @@ namespace Kablunk
 		m_image = Image2D::Create(spec);
 
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -76,7 +76,7 @@ namespace Kablunk
 		m_width = width;
 		m_height = height;
 
-		IntrusiveRef<VulkanTexture2D> instance = this;
+		ref<VulkanTexture2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -90,7 +90,13 @@ namespace Kablunk
 
 	void VulkanTexture2D::SetData(void* data, uint32_t size)
 	{
+        m_image_data = Buffer::Copy(data, size);
 
+        ref<VulkanTexture2D> instance = this;
+        render::submit([instance]() mutable
+            {
+                instance->Invalidate();
+            });
 	}
 
 	void VulkanTexture2D::Bind(uint32_t slot) const
@@ -120,7 +126,7 @@ namespace Kablunk
 		if (!m_image_data)
 			image_spec.usage = ImageUsage::Storage;
 
-		IntrusiveRef<VulkanImage2D> image = m_image.As<VulkanImage2D>();
+		ref<VulkanImage2D> image = m_image.As<VulkanImage2D>();
 		image->RT_Invalidate();
 
 		auto& info = image->GetImageInfo();

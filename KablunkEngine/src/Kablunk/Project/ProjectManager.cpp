@@ -2,8 +2,9 @@
 #include "Kablunk/Project/ProjectManager.h"
 
 #include "Kablunk/Asset/AssetManager.h"
+#include "Kablunk/Core/Application.h"
 
-namespace Kablunk
+namespace kb
 {
 	void ProjectManager::init()
 	{
@@ -13,12 +14,15 @@ namespace Kablunk
 	void ProjectManager::shutdown()
 	{
 		if (m_active_project)
+        {
 			Singleton<asset::AssetManager>::get().shutdown();
+            Application::Get().get_renderer_2d()->set_asset_manager(nullptr);
+        }
 
 		m_active_project = nullptr;
 	}
 
-	void ProjectManager::set_active(const IntrusiveRef<Project>& project)
+	void ProjectManager::set_active(const ref<Project>& project)
 	{
 		if (m_active_project)
 		{
@@ -28,7 +32,8 @@ namespace Kablunk
 		m_active_project = project;
 		if (m_active_project)
 		{
-			Singleton<asset::AssetManager>::get().init();
+			Singleton<asset::AssetManager>::get().init(m_active_project);
+            Application::Get().get_renderer_2d()->set_asset_manager(&Singleton<asset::AssetManager>::get());
 		}
 	}
 }

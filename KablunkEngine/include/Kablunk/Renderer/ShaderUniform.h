@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace Kablunk
+namespace kb
 {
 	enum class ShaderDomain
 	{

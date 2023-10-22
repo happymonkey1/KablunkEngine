@@ -4,7 +4,10 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk
+// #TODO remove when Application singleton is refactored
+#include "Kablunk/Core/Application.h"
+
+namespace kb
 {
 
 	static const std::string s_albedo_color_uniform_str = "u_MaterialUniforms.AlbedoColor";
@@ -31,14 +34,16 @@ namespace Kablunk
 		SetRoughness(0.4f);
 
 		// Maps
-		SetAlbedoMap(render::get_white_texture());
-		SetNormalMap(render::get_white_texture());
-		SetMetalnessMap(render::get_white_texture());
-		SetRoughnessMap(render::get_white_texture());
+        // #TODO refactor application singleton reference and remove
+        auto texture = Application::Get().get_renderer_2d()->get_white_texture();
+		SetAlbedoMap(texture);
+		SetNormalMap(texture);
+		SetMetalnessMap(texture);
+		SetRoughnessMap(texture);
 
 	}
 
-	MaterialAsset::MaterialAsset(IntrusiveRef<Material> material)
+	MaterialAsset::MaterialAsset(ref<Material> material)
 	{
 		m_material = Material::Copy(material);
 	}
@@ -88,27 +93,27 @@ namespace Kablunk
 		m_material->Set(s_emission_uniform_str, emission);
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetAlbedoMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetAlbedoMap()
 	{
 		return m_material->TryGetTexture2D(s_albedo_map_uniform_str);
 	}
 
-	void MaterialAsset::SetAlbedoMap(IntrusiveRef<Texture2D> texture)
+	void MaterialAsset::SetAlbedoMap(ref<Texture2D> texture)
 	{
 		m_material->Set(s_albedo_map_uniform_str, texture);
 	}
 
 	void MaterialAsset::ClearAlbedoMap()
 	{
-		m_material->Set(s_albedo_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetNormalMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetNormalMap()
 	{
 		return m_material->TryGetTexture2D(s_normal_map_uniform_str);
 	}
 
-	void MaterialAsset::SetNormalMap(IntrusiveRef<Texture2D> texture)
+	void MaterialAsset::SetNormalMap(ref<Texture2D> texture)
 	{
 		m_material->Set(s_normal_map_uniform_str, texture);
 	}
@@ -125,53 +130,53 @@ namespace Kablunk
 
 	void MaterialAsset::ClearNormalMap()
 	{
-		m_material->Set(s_normal_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetMetalnessMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetMetalnessMap()
 	{
 		return m_material->TryGetTexture2D(s_metalness_map_uniform_str);
 	}
 
-	void MaterialAsset::SetMetalnessMap(IntrusiveRef<Texture2D> texture)
+	void MaterialAsset::SetMetalnessMap(ref<Texture2D> texture)
 	{
 		m_material->Set(s_metalness_map_uniform_str, texture);
 	}
 
 	void MaterialAsset::ClearMetalnessMap()
 	{
-		m_material->Set(s_metalness_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
-	Kablunk::IntrusiveRef<Kablunk::Texture2D> MaterialAsset::GetRoughnessMap()
+	kb::ref<kb::Texture2D> MaterialAsset::GetRoughnessMap()
 	{
 		return m_material->TryGetTexture2D(s_roughness_map_uniform_str);
 	}
 
-	void MaterialAsset::SetRoughnessMap(IntrusiveRef<Texture2D> texture)
+	void MaterialAsset::SetRoughnessMap(ref<Texture2D> texture)
 	{
 		m_material->Set(s_roughness_map_uniform_str, texture);
 	}
 
 	void MaterialAsset::ClearRoughnessMap()
 	{
-		m_material->Set(s_roughness_map_uniform_str, render::get_white_texture());
+		m_material->Set(s_roughness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 	}
 
 	MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)
 		: m_material_count{ material_count }
 	{
-		
+
 	}
 
-	MaterialTable::MaterialTable(IntrusiveRef<MaterialTable> other)
+	MaterialTable::MaterialTable(ref<MaterialTable> other)
 	{
 		const auto& other_materials = other->GetMaterials();
 		for (auto [index, material_asset] : other_materials)
 			SetMaterial(index, material_asset);
 	}
 
-	void MaterialTable::SetMaterial(uint32_t index, IntrusiveRef<MaterialAsset> material)
+	void MaterialTable::SetMaterial(uint32_t index, ref<MaterialAsset> material)
 	{
 		m_materials[index] = material;
 		if (index >= m_material_count)

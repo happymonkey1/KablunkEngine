@@ -5,7 +5,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-namespace Kablunk {
+namespace kb {
 
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
 		: m_WindowHandle{windowHandle}
@@ -15,7 +15,7 @@ namespace Kablunk {
 
 	void OpenGLContext::Init()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glfwMakeContextCurrent(m_WindowHandle);
 
@@ -26,9 +26,9 @@ namespace Kablunk {
 		KB_CORE_ASSERT(status, "Failed to initialize Glad!");
 
 		KB_CORE_INFO("OpengGL Info:");
-		KB_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
-		KB_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
-		KB_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
+		KB_CORE_INFO("  Vendor: {0}", (const char*)glGetString(GL_VENDOR));
+		KB_CORE_INFO("  Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+		KB_CORE_INFO("  Version: {0}", (const char*)glGetString(GL_VERSION));
 
 #ifdef KB_ENABLE_ASSERTS
 		int versionMajor;
@@ -42,7 +42,7 @@ namespace Kablunk {
 
 	void OpenGLContext::SwapBuffers()
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		glfwSwapBuffers(m_WindowHandle);
 	}

@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <map>
 
-namespace Kablunk
+namespace kb
 {
 	class ShaderCache
 	{

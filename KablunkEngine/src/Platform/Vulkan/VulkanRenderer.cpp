@@ -2,7 +2,7 @@
 
 #include "Platform/Vulkan/VulkanRenderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	namespace Utils
 	{
@@ -100,8 +100,11 @@ namespace Kablunk
 				// Make sure any shader reads from the image have been finished
 				image_memory_barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
+            case VK_IMAGE_LAYOUT_GENERAL:
+                break;
 			default:
 				// Other source layouts aren't handled (yet)
+                KB_CORE_ASSERT(false, "[VulkanRenderer]: unhandled source layout");
 				break;
 			}
 
@@ -142,8 +145,11 @@ namespace Kablunk
 				}
 				image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
+            case VK_IMAGE_LAYOUT_GENERAL:
+                break;
 			default:
 				// Other source layouts aren't handled (yet)
+                KB_CORE_ASSERT(false, "[VulkanRenderer]: unhandled destination layout");
 				break;
 			}
 

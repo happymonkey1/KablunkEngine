@@ -3,7 +3,7 @@
 
 #include "Kablunk/Audio/AudioEngine.h"
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 	AudioAsset::AudioAsset(const audio_asset_config& config)
 	{
@@ -20,7 +20,7 @@ namespace Kablunk::audio
 
 	ref<AudioAsset> AudioAsset::create(const audio_asset_config& config)
 	{
-		return IntrusiveRef<AudioAsset>::Create(config);
+		return ref<AudioAsset>::Create(config);
 	}
 
 	void AudioAsset::play()

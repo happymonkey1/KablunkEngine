@@ -26,8 +26,9 @@ project "KablunkEngine"
 
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.h",
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp",
-		"vendor/cr/cr.h"
+		"vendor/cr/cr.h",
 
+		"vendor/expected/include/**.hpp"
 	}
 
 	defines
@@ -63,7 +64,10 @@ project "KablunkEngine"
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.VulkanSDK_LocalInclude}",
 		"%{IncludeDir.boost}",
-		"%{IncludeDir.miniaudio}"
+		"%{IncludeDir.miniaudio}",
+		"%{IncludeDir.optick}",
+		"%{IncludeDir.tl_expected}",
+		"%{IncludeDir.robin_hood}"
 	}
 
 	links
@@ -76,6 +80,7 @@ project "KablunkEngine"
 		"FreeType",
 		"Box2d",
 		"opengl32.lib",
+		"optick",
 
 		"%{Library.Vulkan}",
 		"%{Library.VulkanUtils}",
@@ -130,6 +135,7 @@ project "KablunkEngine"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
+		symbols "off"
 
 		links
         {

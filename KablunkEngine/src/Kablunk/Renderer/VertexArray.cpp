@@ -4,9 +4,9 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
-namespace Kablunk
+namespace kb
 {
-	IntrusiveRef<VertexArray> VertexArray::Create()
+	ref<VertexArray> VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,7 +15,7 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "RendererAPI::None is not supported!");
 			return nullptr;
 		case RendererAPI::render_api_t::OpenGL:
-			return IntrusiveRef<OpenGLVertexArray>::Create();
+			return ref<OpenGLVertexArray>::Create();
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
 			return nullptr;

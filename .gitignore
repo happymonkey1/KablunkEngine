@@ -3,6 +3,8 @@ bin/
 bin-int/
 KablunkEditor/resources/scripts/*.dll
 JSON/
+profiling/
+profiling
 **.sln
 **.vcxproj
 **.vcxproj.filters

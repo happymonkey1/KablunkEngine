@@ -8,11 +8,14 @@
 
 #include "imgui/imgui_internal.h"
 
+// #TODO refactor application singleton and remove
+#include "Kablunk/Core/Application.h"
+
 #include <filesystem>
 
 #define DISABLE_NATIVE_SCRIPT 0
 
-namespace Kablunk
+namespace kb
 {
 
 	std::string KablunkRigidBodyTypeToString(RigidBody2DComponent::RigidBodyType type)
@@ -43,13 +46,13 @@ namespace Kablunk
 		}
 	}
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const IntrusiveRef<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const ref<Scene>& context)
 	{
 		SetContext(context);
 
 	}
 
-	void SceneHierarchyPanel::SetContext(const IntrusiveRef<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const ref<Scene>& context)
 	{
 		m_context = context;
 		m_selection_context = {};
@@ -374,7 +377,7 @@ namespace Kablunk
 	}
 
 	template <typename ComponentT>
-	void DrawMaterialTable(IntrusiveRef<MaterialTable> mesh_material_table)
+	void DrawMaterialTable(ref<MaterialTable> mesh_material_table)
 	{
 		if (UI::BeginTreeNode("Materials"))
 		{
@@ -392,7 +395,7 @@ namespace Kablunk
 				std::string id = fmt::format("{0}-{1}", label, i);
 				ImGui::PushID(id.c_str());
 
-				IntrusiveRef<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+				ref<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
 				std::string mesh_material_name = mesh_material_asset->GetMaterial()->GetName();
 				if (mesh_material_name.empty())
 					mesh_material_name = "Unnamed Material";
@@ -576,6 +579,13 @@ namespace Kablunk
 				ImGui::CloseCurrentPopup();
 			}
 
+            // text 2d component
+            if (!m_selection_context.HasComponent<TextComponent>() && ImGui::MenuItem("Text"))
+            {
+                m_selection_context.AddComponent<TextComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+
 			ImGui::EndPopup();
 		}
 
@@ -712,18 +722,32 @@ namespace Kablunk
 				UI::EndProperties();
 			});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](auto& component)
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [this](SpriteRendererComponent& component)
 			{
 				UI::BeginProperties();
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-				if (UI::PropertyImageButton("Texture", component.Texture, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
+                const ref<Texture>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+                ref<Texture> texture_asset = component.Texture != asset::null_asset_id ?
+                    asset::get_asset<Texture2D>(component.Texture) : white_texture;
+                if (!texture_asset)
+                {
+                    KB_CORE_ERROR(
+                        "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
+                        component.Texture
+                    );
+                    
+                    texture_asset = white_texture;
+                }
+
+				if (UI::PropertyImageButton("Texture", texture_asset, {32, 32}, {0.0f, 1.0f}, {1.0f, 0.0f}))
 				{
 					auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
 					if (!filepath.empty())
 					{
-						component.Texture = Asset<Texture2D>(filepath);
+                        const auto& texture_asset = asset::get_asset<Texture2D>(filepath);
+						component.Texture = texture_asset->get_id();
 					}
 				}
 
@@ -735,7 +759,19 @@ namespace Kablunk
 						auto path = std::filesystem::path{ ProjectManager::get().get_active()->get_asset_directory_path() / path_wchar_str };
 						auto path_str = path.string();
 						if (path.extension() == ".png")
-							component.Texture = Asset<Texture2D>(path_str);
+                        {
+                            const auto& texture_asset = asset::get_asset<Texture2D>(path);
+                            if (texture_asset)
+                                component.Texture = texture_asset->get_id();
+                            else
+                            {
+                                KB_CORE_ERROR(
+                                    "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id", 
+                                    path_str
+                                );
+                                component.Texture = asset::null_asset_id;
+                            }
+                        }
 						else
 							KB_CORE_ERROR("Tried to load non image file as a texture, {0}", path_str);
 					}
@@ -884,7 +920,7 @@ namespace Kablunk
 				UI::Property("Filename:", component.Filepath.c_str());
 				UI::PopItemDisabled();
 
-				IntrusiveRef<Mesh> mesh = component.Mesh;
+				ref<Mesh> mesh = component.Mesh;
 				if (mesh)
 				{
 					for (uint32_t submesh_index : mesh->GetSubmeshes())
@@ -954,6 +990,16 @@ namespace Kablunk
 
 				UI::EndProperties();
 			});
+
+        DrawComponent<TextComponent>("Text", entity, [&](TextComponent& component)
+            {
+                UI::BeginProperties();
+
+                UI::Property("Text String", component.m_text_str);
+                UI::PropertyColorEdit4("Color", component.m_tint_color);
+
+                UI::EndProperties();
+            });
 
 		// Debug Panels
 		if (m_display_debug_properties)

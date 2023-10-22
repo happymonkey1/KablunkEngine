@@ -6,7 +6,7 @@
 
 #include <stdarg.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	std::string ConverToKablunkFormat(const char* format)

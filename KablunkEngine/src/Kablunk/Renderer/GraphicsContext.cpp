@@ -5,9 +5,9 @@
 #include "Platform/OpenGL/OpenGLContext.h"
 #include "Platform/Vulkan/VulkanContext.h"
 
-namespace Kablunk
+namespace kb
 {
-	Scope<GraphicsContext> GraphicsContext::Create(void* window)
+	ref<GraphicsContext> GraphicsContext::Create(void* window)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,9 +15,9 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
 			return nullptr;
 		case RendererAPI::render_api_t::OpenGL:
-			return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
+			return ref<OpenGLContext>::Create(static_cast<GLFWwindow*>(window));
 		case RendererAPI::render_api_t::Vulkan:
-			return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
+			return ref<VulkanContext>::Create(static_cast<GLFWwindow*>(window));
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
 			return nullptr;

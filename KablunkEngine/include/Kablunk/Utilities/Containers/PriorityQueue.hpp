@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <type_traits>
 
-namespace Kablunk::Utilties
+namespace kb::Utilties
 {
 	// #TODO extend so priority queue can use multiple different containers, like max heap, min heap (like std priority queue container)
 	template <

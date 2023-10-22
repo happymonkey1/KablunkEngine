@@ -3,7 +3,7 @@
 
 #include "Kablunk/Renderer/RendererTypes.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
-namespace Kablunk
+namespace kb
 {
 
 	class OpenGLUniformBuffer : public UniformBuffer

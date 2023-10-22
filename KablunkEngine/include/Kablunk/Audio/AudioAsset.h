@@ -7,7 +7,7 @@
 
 #include <miniaudio.h>
 
-namespace Kablunk::audio
+namespace kb::audio
 {
 
 	struct audio_asset_config

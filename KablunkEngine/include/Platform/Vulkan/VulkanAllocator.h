@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace Kablunk
+namespace kb
 {
 	struct GPUMemoryStats
 	{
@@ -45,7 +45,7 @@ namespace Kablunk
 		static void DumpStats();
 		static GPUMemoryStats GetStats();
 
-		static void Init(IntrusiveRef<VulkanDevice> device);
+		static void Init(ref<VulkanDevice> device);
 		static void Shutdown();
 
 		static VmaAllocator& GetVMAAllocator();

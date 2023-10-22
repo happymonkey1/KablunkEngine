@@ -3,7 +3,9 @@
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/Renderer/Renderer2D.h"
+
+#include "Kablunk/Scene/Entity.h"
 
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
@@ -11,13 +13,13 @@
 
 #include <imgui.h>
 
-namespace Kablunk
+namespace kb
 {
 	static std::vector<std::thread> s_thread_pool;
 
 	
 
-	SceneRenderer::SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec)
+	SceneRenderer::SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec)
 		: m_context{ context }, m_specification{ spec }
 	{
 		KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan, "SceneRenderer only supports Vulkan!");
@@ -27,7 +29,8 @@ namespace Kablunk
 
 	SceneRenderer::~SceneRenderer()
 	{
-
+        if (m_point_lights_ub)
+            delete m_point_lights_ub;
 	}
 
 	void SceneRenderer::init()
@@ -57,7 +60,7 @@ namespace Kablunk
 			geometry_framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
 			geometry_framebuffer_spec.debug_name = "Geometry";
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.debug_name = "GeometryPipeline";
@@ -100,13 +103,13 @@ namespace Kablunk
 			else
 				composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
 
 			RenderPassSpecification composite_render_pass_spec;
 			composite_render_pass_spec.target_framebuffer = framebuffer;
 			composite_render_pass_spec.debug_name = "SceneComposite";
 
-			IntrusiveRef<Shader> composite_shader = render::get_shader("scene_composite");
+			ref<Shader> composite_shader = render::get_shader("scene_composite");
 
 			PipelineSpecification pipeline_spec;
 			pipeline_spec.layout = {
@@ -138,7 +141,7 @@ namespace Kablunk
 			external_composite_framebuffer_spec.existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
 			external_composite_framebuffer_spec.existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
 
-			IntrusiveRef<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
+			ref<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
 			
 			RenderPassSpecification render_pass_spec;
 			render_pass_spec.target_framebuffer = framebuffer;
@@ -150,14 +153,14 @@ namespace Kablunk
 		m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 		m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
-		IntrusiveRef<SceneRenderer> instance = this;
+		ref<SceneRenderer> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->m_resources_created = true;
 			});
 	}
 
-	void SceneRenderer::set_scene(IntrusiveRef<Scene> context)
+	void SceneRenderer::set_scene(ref<Scene> context)
 	{
 		//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 		m_context = context;
@@ -165,6 +168,8 @@ namespace Kablunk
 
 	void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 	{
+        KB_PROFILE_FUNC()
+
 		KB_CORE_ASSERT(m_context, "No scene context set!");
 		KB_CORE_ASSERT(!m_active, "Already active!");
 		m_active = true;
@@ -189,8 +194,7 @@ namespace Kablunk
 				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
-		// Update uniform buffers
-		PointLightUB& point_light_ub_data = m_point_lights_ub;
+		
 
 		auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
@@ -208,10 +212,10 @@ namespace Kablunk
 			camera_position
 		};
 		
-		IntrusiveRef<SceneRenderer> instance = this;
+		ref<SceneRenderer> instance = this;
 		render::submit([instance, camera_data]() mutable
 			{
-				uint32_t buffer_index = render::get_current_frame_index();
+				uint32_t buffer_index = render::rt_get_current_frame_index();
 				instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
 			}
 		);
@@ -219,7 +223,7 @@ namespace Kablunk
 		// Set Renderer Transform
 		render::submit([instance]() mutable
 			{
-				uint32_t buffer_index = render::get_current_frame_index();
+				uint32_t buffer_index = render::rt_get_current_frame_index();
 				glm::mat4 transform = glm::mat4{ 1.0f };
 				instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
 			}
@@ -228,23 +232,27 @@ namespace Kablunk
 		// Submit point lights uniform buffer
 		const auto light_enviornment_copy = m_scene_data.light_environment;
 		const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
-		point_light_ub_data.count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
-		std::memcpy(point_light_ub_data.point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
-		render::submit([instance, &point_light_ub_data]() mutable
+
+		m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
+		std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
+
+		render::submit([instance, point_lights = m_point_lights_ub]() mutable
 			{
-				const uint32_t buffer_index = render::get_current_frame_index();
-				IntrusiveRef<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
+				const uint32_t buffer_index = render::rt_get_current_frame_index();
+				ref<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
 				size_t point_light_vec_offset = 16ull;
-				buffer_set->RT_SetData(&point_light_ub_data, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_light_ub_data.count));
+				buffer_set->RT_SetData(point_lights, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count));
 			}
 		);
 	}
 
 	void SceneRenderer::end_scene()
 	{
+        KB_PROFILE_FUNC()
+
 		if (m_use_threads)
 		{
-			IntrusiveRef<SceneRenderer> instance = this;
+			ref<SceneRenderer> instance = this;
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
 					instance->flush_draw_list();
@@ -261,7 +269,7 @@ namespace Kablunk
 		m_active = false;
 	}
 
-	void SceneRenderer::submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, IntrusiveRef<Material> override_material/* = nullptr */)
+	void SceneRenderer::submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, ref<Material> override_material/* = nullptr */)
 	{
 		//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 		//uint32_t material_index = 0; // #TODO fix
@@ -287,13 +295,15 @@ namespace Kablunk
 		}
 	}
 
-	IntrusiveRef<RenderPass> SceneRenderer::get_final_render_pass()
+	ref<RenderPass> SceneRenderer::get_final_render_pass()
 	{
 		return m_composite_pipeline->GetSpecification().render_pass;
 	}
 
-	IntrusiveRef<Image2D> SceneRenderer::get_final_render_pass_image()
+	ref<Image2D> SceneRenderer::get_final_render_pass_image()
 	{
+        KB_PROFILE_FUNC()
+
 		if (!m_resources_created)
 			return nullptr;
 
@@ -301,22 +311,26 @@ namespace Kablunk
 		return image;
 	}
 
-	void SceneRenderer::OnImGuiRender()
+	void SceneRenderer::on_imgui_render(const ref<Renderer2D>& p_renderer_2d)
 	{
+        KB_PROFILE_FUNC()
+
 		ImGui::Begin("Render Statistics");
 
-		uint32_t current_frame_index = render::get_current_frame_index();
+		uint32_t current_frame_index = render::rt_get_current_frame_index();
 		ImGui::Text("GPU time: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index));
 		ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
 		ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
-		render2d::on_imgui_render();
+        p_renderer_2d->on_imgui_render();
 
 		ImGui::End();
 	}
 
 	void SceneRenderer::wait_for_threads()
 	{
+        KB_PROFILE_FUNC()
+
 		for (auto& thread : s_thread_pool)
 			thread.join();
 
@@ -330,6 +344,8 @@ namespace Kablunk
 
 	void SceneRenderer::flush_draw_list()
 	{
+        KB_PROFILE_FUNC()
+
 		m_command_buffer->Begin();
 		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 		{
@@ -356,6 +372,9 @@ namespace Kablunk
 
 	void SceneRenderer::flush_2d_draw_list()
 	{
+        // disabled when refactoring renderer2d singleton
+        // #TODO refactor
+#if 0
 		// 2d composite and ui pass
 		if (get_final_render_pass_image())
 		{
@@ -382,7 +401,7 @@ namespace Kablunk
 		}
 		else
 			KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
-		
+#endif
 
 		m_entity_list.clear();
 		m_ui_panels_list.clear();
@@ -399,7 +418,7 @@ namespace Kablunk
 		render::end_render_pass(m_command_buffer);
 	}
 
-	void SceneRenderer::clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear /*= false*/)
+	void SceneRenderer::clear_pass(ref<RenderPass> render_pass, bool explicit_clear /*= false*/)
 	{
 		KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
 		render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
@@ -417,9 +436,12 @@ namespace Kablunk
 
 	void SceneRenderer::two_dimensional_pass()
 	{
-
+        // disabled when refactoring renderer2d singleton
+        // #TODO refactor
+#if 0
 		for (Entity entity : m_entity_list)
 			render2d::draw_sprite(entity);
+#endif
 
 		// #TODO circles, lines, rectangles, text
 
@@ -427,6 +449,8 @@ namespace Kablunk
 
 	void SceneRenderer::geometry_pass()
 	{
+        KB_PROFILE_FUNC()
+
 		m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
 
@@ -461,6 +485,8 @@ namespace Kablunk
 
 	void SceneRenderer::composite_pass()
 	{
+        KB_PROFILE_FUNC()
+
 		m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
 		render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
 
@@ -480,6 +506,13 @@ namespace Kablunk
 			m_composite_material->Set("u_Uniforms.BloomIntensity", 0.0f);
 			m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 0.0f);
 		}
+
+        const float saturation = 1.0f;
+        const float contrast = 1.0f;
+        const float brightness = 0.0f;
+        m_composite_material->Set("u_Uniforms.Saturation", saturation);
+        m_composite_material->Set("u_Uniforms.Contrast", contrast);
+        m_composite_material->Set("u_Uniforms.Brightness", brightness);
 
 		m_composite_material->Set("u_Texture", framebuffer->GetImage());
 		m_composite_material->Set("u_BloomTexture", m_bloom_texture);

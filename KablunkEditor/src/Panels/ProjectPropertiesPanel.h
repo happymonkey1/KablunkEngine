@@ -4,13 +4,13 @@
 #include <Kablunk.h> 
 #include <Kablunk/Project/Project.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class ProjectPropertiesPanel
 	{
 	public:
-		ProjectPropertiesPanel(const IntrusiveRef<Project>& project);
+		ProjectPropertiesPanel(const ref<Project>& project);
 		~ProjectPropertiesPanel() = default;
 
 		void OnImGuiRender(bool& show);
@@ -19,7 +19,7 @@ namespace Kablunk
 		void UI_GeneralSettings();
 
 	private:
-		IntrusiveRef<Project> m_project;
+		ref<Project> m_project;
 		std::string m_default_scene;
 	};
 

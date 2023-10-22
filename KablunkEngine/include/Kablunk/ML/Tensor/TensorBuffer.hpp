@@ -8,7 +8,7 @@
 #include <string>
 #include <numeric>
 
-namespace Kablunk::ml::tensor
+namespace kb::ml::tensor
 {
 
 	// #TODO fixed size (stack allocated) tensor storage

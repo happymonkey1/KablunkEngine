@@ -3,6 +3,8 @@
 
 #include "Kablunk/Core/Singleton.h"
 
+#include <format>
+#include <string>
 
 // ignore warnings raises in external headers
 #pragma warning(push, 0)
@@ -10,7 +12,7 @@
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 
-namespace Kablunk 
+namespace kb 
 {
 	enum class LoggerType : uint8_t
 	{
@@ -39,20 +41,20 @@ namespace Kablunk
 	
 }
 
-#define KB_CORE_TRACE(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->trace(__VA_ARGS__)
-#define KB_CORE_INFO(...)    ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->info(__VA_ARGS__)
-#define KB_CORE_WARN(...)    ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->warn(__VA_ARGS__)
-#define KB_CORE_ERROR(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->error(__VA_ARGS__)
-#define KB_CORE_FATAL(...)   ::Kablunk::Singleton<Kablunk::Logger>::get().get_core_logger()->critical(__VA_ARGS__)
+#define KB_CORE_TRACE(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->trace(__VA_ARGS__)
+#define KB_CORE_INFO(...)    ::kb::Singleton<kb::Logger>::get().get_core_logger()->info(__VA_ARGS__)
+#define KB_CORE_WARN(...)    ::kb::Singleton<kb::Logger>::get().get_core_logger()->warn(__VA_ARGS__)
+#define KB_CORE_ERROR(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->error(__VA_ARGS__)
+#define KB_CORE_FATAL(...)   ::kb::Singleton<kb::Logger>::get().get_core_logger()->critical(__VA_ARGS__)
 												  
-#define KB_CLIENT_TRACE(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->trace(__VA_ARGS__)
-#define KB_CLIENT_INFO(...)  ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->info(__VA_ARGS__)
-#define KB_CLIENT_WARN(...)  ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->warn(__VA_ARGS__)
-#define KB_CLIENT_ERROR(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->error(__VA_ARGS__)
-#define KB_CLIENT_FATAL(...) ::Kablunk::Singleton<Kablunk::Logger>::get().get_client_logger()->critical(__VA_ARGS__)
+#define KB_CLIENT_TRACE(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->trace(__VA_ARGS__)
+#define KB_CLIENT_INFO(...)  ::kb::Singleton<kb::Logger>::get().get_client_logger()->info(__VA_ARGS__)
+#define KB_CLIENT_WARN(...)  ::kb::Singleton<kb::Logger>::get().get_client_logger()->warn(__VA_ARGS__)
+#define KB_CLIENT_ERROR(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->error(__VA_ARGS__)
+#define KB_CLIENT_FATAL(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->critical(__VA_ARGS__)
 
-namespace Kablunk::log
-{  // start namespace Kablunk::log
+namespace kb::log
+{  // start namespace kb::log
 
 
 // enum for logger type
@@ -194,6 +196,18 @@ enum class logger_level_t
 	NONE
 };
 
+namespace details
+{ // start namespace ::details
+
+// internal message formatting func for Error C7595
+template <typename T1, typename... args_t>
+std::string create_log_message(T1&& p_format, args_t&&... args)
+{
+	return std::vformat(p_format, std::make_format_args(std::forward<args_t>(args)...));
+}
+
+} // end namespace ::details
+
 // generic logging helper to log a message (potentially with a tag)
 // logger_type specifies which "class" of logger to use (core or client)
 // level specifies what level of message to log (trace, info, warn, etc.)
@@ -206,15 +220,17 @@ void log_message(logger_type_t logger_type, logger_level_t level, const std::str
 	auto logger = logger_type == logger_type_t::core ? Singleton<Logger>::get().get_core_logger() : Singleton<Logger>::get().get_client_logger();
 	// create log formatting string
 	std::string log_message = log_tag.empty() ? "{}{}" : "[{}] {}";
-
+	// #TODO see if we can get compile time formatting working...
 	// #TODO there is probably a more elegant solution without the use of fmt::format before sending to logger...
+	std::string formatted_msg = std::vformat(log_message, std::make_format_args(log_tag, details::create_log_message(std::forward<args_t>(args)...)));
+
 	switch (level)
 	{
-		case logger_level_t::trace:		logger->trace(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::info:		logger->info(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::warn:		logger->warn(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::error:		logger->error(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
-		case logger_level_t::critical:	logger->critical(log_message, log_tag, fmt::format(std::forward<args_t>(args)...)); break;
+		case logger_level_t::trace:		logger->trace(formatted_msg); break;
+		case logger_level_t::info:		logger->info(formatted_msg); break;
+		case logger_level_t::warn:		logger->warn(formatted_msg); break;
+		case logger_level_t::error:		logger->error(formatted_msg); break;
+		case logger_level_t::critical:	logger->critical(formatted_msg); break;
 		case logger_level_t::NONE:
 			KB_CORE_ASSERT(false, "NONE logger level is not valid!");
 		default:
@@ -257,7 +273,7 @@ void log_message_critical(logger_type_t logger_type, logger_tag_t logger_tag, ar
 	log_message(logger_type, logger_level_t::critical, logger_tag_to_cstr(logger_tag), std::forward<args_t>(args)...);
 }
 
-}  // end namespace Kablunk::log
+}  // end namespace kb::log
 
 #ifdef KB_DEBUG
 #	define KB_TIME_FUNCTION_BEGIN()	float delta##__FUNCSIG__ = PlatformAPI::GetTime();

@@ -9,7 +9,7 @@
 
 #include <glm/glm.hpp>
 
-namespace Kablunk::ml::optimizer
+namespace kb::ml::optimizer
 {
 
 	template <typename T = f32>
@@ -17,7 +17,7 @@ namespace Kablunk::ml::optimizer
 	{
 	public:
 		using value_t = T;
-		using tensor_t = Kablunk::ml::tensor::Tensor<T, 2>;
+		using tensor_t = kb::ml::tensor::Tensor<T, 2>;
 	public:
 		virtual ~ILossFunction() = default;
 
@@ -34,7 +34,7 @@ namespace Kablunk::ml::optimizer
 	{
 	public:
 		using value_t = T;
-		using tensor_t = Kablunk::ml::tensor::Tensor<T, 2>;
+		using tensor_t = kb::ml::tensor::Tensor<T, 2>;
 	public:
 		virtual ~negative_log_loss() = default;
 
@@ -59,7 +59,7 @@ namespace Kablunk::ml::optimizer
 		virtual tensor_t grad(const tensor_t& y_true, const tensor_t& y_pred) const
 		{
 			// #TODO cache lambda instead of re-creating each func call
-			auto d_sigmoid = [](value_t v) -> value_t { return Kablunk::ml::network::sigmoid(v) * (1 - Kablunk::ml::network::sigmoid(v)); };
+			auto d_sigmoid = [](value_t v) -> value_t { return kb::ml::network::sigmoid(v) * (1 - kb::ml::network::sigmoid(v)); };
 			tensor_t output{ y_pred };
 
 			return output.apply(d_sigmoid);

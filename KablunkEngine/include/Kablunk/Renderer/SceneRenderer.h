@@ -16,8 +16,9 @@
 #include "Kablunk/Renderer/MaterialAsset.h"
 #include "Kablunk/Renderer/Mesh.h"
 
-namespace Kablunk
+namespace kb
 {
+    class Renderer2D;
 
 	// forward declaration
 	namespace ui
@@ -50,31 +51,39 @@ namespace Kablunk
 		LightEnvironmentData light_environment;
 	};
 
+    struct PointLightUB
+    {
+        static constexpr const size_t k_point_light_buffer_size = 1024ull;
+        uint32_t count{ 0 };
+        glm::vec3 padding{};
+        PointLight point_lights[1024]{};
+    };
 
 	class SceneRenderer : public RefCounted
 	{
 	public:
-		SceneRenderer(const IntrusiveRef<Scene>& context, const SceneRendererSpecification& spec = {});
+		SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
 		~SceneRenderer();
 
+        // #TODO this should be private, if construct is only place that calls this
 		void init();
-		void set_scene(IntrusiveRef<Scene> context);
+		void set_scene(ref<Scene> context);
 
 		void begin_scene(const SceneRendererCamera& camera);
 		void end_scene();
 
-		void submit_mesh(IntrusiveRef<Mesh> mesh, uint32_t submesh_index, IntrusiveRef<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, IntrusiveRef<Material> override_material = nullptr);
+		void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = nullptr);
 
 		void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
 		bool is_multi_threaded() const { return m_use_threads; }
 
 		void set_viewport_size(uint32_t width, uint32_t height);
-		IntrusiveRef<RenderPass> get_final_render_pass();
-		IntrusiveRef<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
-		IntrusiveRef<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
-		IntrusiveRef<Image2D> get_final_render_pass_image();
+		ref<RenderPass> get_final_render_pass();
+		ref<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
+		ref<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
+		ref<Image2D> get_final_render_pass_image();
 
-		void OnImGuiRender();
+		void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
 
 		static void wait_for_threads();
 
@@ -88,7 +97,7 @@ namespace Kablunk
 		void geometry_pass();
 		void composite_pass();
 
-		void clear_pass(IntrusiveRef<RenderPass> render_pass, bool explicit_clear = false);
+		void clear_pass(ref<RenderPass> render_pass, bool explicit_clear = false);
 		
 		// draw all ui elements presented to the scene renderer
 		void ui_pass();
@@ -97,17 +106,17 @@ namespace Kablunk
 		void two_dimensional_pass();
 		
 	private:
-		IntrusiveRef<Scene> m_context;
+		ref<Scene> m_context;
 		SceneRendererSpecification m_specification;
 
-		IntrusiveRef<RenderCommandBuffer> m_command_buffer;
+		ref<RenderCommandBuffer> m_command_buffer;
 
-		IntrusiveRef<Pipeline> m_geometry_pipeline;
-		IntrusiveRef<Pipeline> m_composite_pipeline;
+		ref<Pipeline> m_geometry_pipeline;
+		ref<Pipeline> m_composite_pipeline;
 
-		IntrusiveRef<Material> m_composite_material;
+		ref<Material> m_composite_material;
 
-		IntrusiveRef<RenderPass> m_external_composite_render_pass;
+		ref<RenderPass> m_external_composite_render_pass;
 
 		struct GPUTimeQueryIndices
 		{
@@ -115,25 +124,20 @@ namespace Kablunk
 			uint32_t composite_pass_query;
 		};
 
-		IntrusiveRef<Texture2D> m_bloom_texture;
-		IntrusiveRef<Texture2D> m_bloom_dirt_texture;
+		ref<Texture2D> m_bloom_texture;
+		ref<Texture2D> m_bloom_dirt_texture;
 
 		struct TransformVertexData
 		{
 			glm::vec4 MRow[3];
 		};
-		IntrusiveRef<VertexBuffer> m_transform_buffer;
+		ref<VertexBuffer> m_transform_buffer;
 		TransformVertexData* m_transform_vertex_data = nullptr;
 
-		IntrusiveRef<UniformBufferSet> m_uniform_buffer_set;
-		IntrusiveRef<StorageBufferSet> m_storage_buffer_set;
+		ref<UniformBufferSet> m_uniform_buffer_set;
+		ref<StorageBufferSet> m_storage_buffer_set;
 
-		struct PointLightUB
-		{
-			uint32_t count{ 0 };
-			glm::vec3 padding{};
-			PointLight point_lights[1024]{};
-		} m_point_lights_ub;
+        PointLightUB* m_point_lights_ub = new PointLightUB{};
 
 		GPUTimeQueryIndices m_gpu_time_query_indices;
 
@@ -143,16 +147,16 @@ namespace Kablunk
 		bool m_resources_created = false;
 
 		// flag for flushing scene data on a separate "job" thread
-		bool m_use_threads = true;
+		bool m_use_threads = false;
 
 		SceneRendererData m_scene_data;
 
 		struct DrawCommandData
 		{
-			IntrusiveRef<MeshData> Mesh;
+			ref<Mesh> Mesh;
 			uint32_t Submesh_index;
-			IntrusiveRef<MaterialTable> Material_table;
-			IntrusiveRef<Material> Override_material;
+			ref<MaterialTable> Material_table;
+			ref<Material> Override_material;
 
 			uint32_t Instance_count = 0;
 			uint32_t Instance_offset = 0;

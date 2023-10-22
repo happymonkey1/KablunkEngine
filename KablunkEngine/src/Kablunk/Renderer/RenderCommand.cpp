@@ -4,19 +4,22 @@
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
-namespace Kablunk::render
+#include "Platform/Vulkan/VulkanContext.h"
+#include "Platform/Vulkan/VulkanSwapChain.h" // #TODO temporary while there is no swap chain abstraction
+
+#include "Kablunk/Core/Application.h"
+
+namespace kb::render
+{ // start namespace kb::render
+
+u32 rt_get_current_frame_index()
 {
-
-	static RenderCommandQueue s_resource_free_queue[3];
-
-	RenderCommandQueue& get_render_resource_release_queue(uint32_t index)
-	{
-		return s_resource_free_queue[index];
-	}
-
-	RenderCommandQueue& get_render_command_queue()
-	{
-		return Singleton<RenderCommandQueue>::get();
-	}
-
+	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
 }
+
+uint32_t get_current_frame_index()
+{
+	return Application::Get().get_current_frame_index();
+}
+
+} // end namespace kb::render

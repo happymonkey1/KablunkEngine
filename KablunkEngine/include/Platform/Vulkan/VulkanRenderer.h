@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	namespace Utils {

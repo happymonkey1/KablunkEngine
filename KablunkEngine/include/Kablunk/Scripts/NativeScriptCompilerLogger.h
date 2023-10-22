@@ -5,7 +5,7 @@
 
 #include "RCCPP/RuntimeCompiler/ICompilerLogger.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class NativeScriptCompilerLogger : public ICompilerLogger

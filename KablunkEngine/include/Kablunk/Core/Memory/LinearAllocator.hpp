@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace Kablunk::memory
+namespace kb::memory
 {
 
 	/* 

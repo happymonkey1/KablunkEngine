@@ -5,7 +5,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count /*= 0*/, const std::string& debug_name /*= ""*/)
@@ -43,8 +43,8 @@ namespace Kablunk
 				KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
 
 		// Timestamp queries
-		constexpr uint32_t MAX_USER_QUERIES = 10;
-		m_timestamp_query_count = 2 + 2 * MAX_USER_QUERIES;
+		constexpr const uint32_t k_max_user_queries = 10;
+		m_timestamp_query_count = 2 + 2 * k_max_user_queries;
 
 		VkQueryPoolCreateInfo query_pool_create_info = {};
 		query_pool_create_info.pNext = nullptr;
@@ -74,17 +74,19 @@ namespace Kablunk
 		uint32_t frames_in_flight = render::get_frames_in_flights();
 
 		m_command_buffers.resize(frames_in_flight);
-		VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
-		for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
-			m_command_buffers[frame] = swapChain.GetDrawCommandBuffer(frame);
+        for (size_t i = 0; i < frames_in_flight; ++i)
+        {
+            auto& command_buffer = m_command_buffers.at(i);
+            command_buffer = VulkanContext::Get()->GetSwapchain().GetDrawCommandBuffer(i);
+        }
 
 		VkQueryPoolCreateInfo query_pool_create_info = {};
 		query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 		query_pool_create_info.pNext = nullptr;
 
 		// Timestamp queries
-		const uint32_t maxUserQueries = 10;
-		m_timestamp_query_count = 2 + 2 * maxUserQueries;
+        constexpr const uint32_t k_max_user_queries = 10;
+		m_timestamp_query_count = 2 + 2 * k_max_user_queries;
 
 		query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
 		query_pool_create_info.queryCount = m_timestamp_query_count;
@@ -121,10 +123,10 @@ namespace Kablunk
 	{
 		m_timestamp_next_available_query = 2;
 
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 
 				VkCommandBufferBeginInfo cmd_buf_info = {};
 				cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -136,9 +138,13 @@ namespace Kablunk
 				{
 					VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
 					vk_command_buffer = swap_chain.GetDrawCommandBuffer(frame_index);
+                    instance->m_command_buffers[frame_index] = vk_command_buffer;
 				}
 				else
 					vk_command_buffer = instance->m_command_buffers[frame_index];
+
+                KB_CORE_ASSERT(vk_command_buffer, "[VulkanRenderCommandBuffer]: vk_command_buffer is null!");
+                instance->m_active_command_buffer = vk_command_buffer;
 				
 				if (vkBeginCommandBuffer(vk_command_buffer, &cmd_buf_info) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to begin command buffer");
@@ -149,21 +155,23 @@ namespace Kablunk
 
 				// #TODO Pipeline stats query
 			});
-
 	}
 
 	void VulkanRenderCommandBuffer::End()
 	{
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
-		render::submit([instance]()
+		ref<VulkanRenderCommandBuffer> instance = this;
+		render::submit([instance]() mutable
 			{
-				uint32_t frame_index = render::get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				uint32_t frame_index = render::rt_get_current_frame_index();
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: active command buffer is null!");
 
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], 1);
 
 				if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "Vulkan failed to end command buffer");
+
+                instance->m_active_command_buffer = nullptr;
 			});
 
 	}
@@ -173,13 +181,13 @@ namespace Kablunk
 		if (m_owned_by_swapchain)
 			return;
 
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();
 				VkDevice vk_device = device->GetVkDevice();
 
-				uint32_t frame_index = render::get_current_frame_index();
+				uint32_t frame_index = render::rt_get_current_frame_index();
 
 				VkSubmitInfo submit_info{};
 				submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -194,9 +202,9 @@ namespace Kablunk
 					KB_CORE_ASSERT(false, "Vulkan failed to reset fences!");
 
 				if(vkQueueSubmit(device->GetGraphicsQueue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan fialed to submit queue")
+					KB_CORE_ASSERT(false, "Vulkan failed to submit queue")
 
-				// Retrieve timestamp query results
+				// retrieve timestamp query results
 				vkGetQueryPoolResults(vk_device, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_next_available_query,
 					instance->m_timestamp_next_available_query * sizeof(uint64_t), instance->m_timestamp_query_results[frame_index].data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
 
@@ -205,7 +213,7 @@ namespace Kablunk
 					uint64_t startTime = instance->m_timestamp_query_results[frame_index][i];
 					uint64_t endTime = instance->m_timestamp_query_results[frame_index][i + 1];
 					float ns_time = endTime > startTime ? (endTime - startTime) * device->GetPhysicalDevice()->GetLimits().timestampPeriod : 0.0f;
-					instance->m_execution_gpu_times[frame_index][i / 2] = ns_time * 0.000001f; // Time in ms
+					instance->m_execution_gpu_times[frame_index][i / 2] = ns_time * 0.000001f; // time in ms
 				}
 
 				// #TODO pipeline stats results
@@ -217,11 +225,12 @@ namespace Kablunk
 	{
 		uint64_t query_index = m_timestamp_next_available_query;
 		m_timestamp_next_available_query += 2;
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
-				uint32_t frame_index = render::get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				uint32_t frame_index = render::rt_get_current_frame_index();
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: command buffer in BeginTimestampQuery() is null!");
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index));
 			});
 
@@ -230,11 +239,12 @@ namespace Kablunk
 
 	void VulkanRenderCommandBuffer::EndTimestampQuery(uint64_t query_index)
 	{
-		IntrusiveRef<VulkanRenderCommandBuffer> instance = this;
+		ref<VulkanRenderCommandBuffer> instance = this;
 		render::submit([instance, query_index]()
 			{
-				uint32_t frame_index = render::get_current_frame_index();
-				VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
+				uint32_t frame_index = render::rt_get_current_frame_index();
+				VkCommandBuffer command_buffer = instance->m_active_command_buffer;
+                KB_CORE_ASSERT(command_buffer, "[VulkanRenderCommandBuffer]: command buffer in EndTimestampQuery() is null!");
 				vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_timestamp_query_pools[frame_index], static_cast<uint32_t>(query_index + 1));
 			});
 	}

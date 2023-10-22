@@ -13,7 +13,7 @@
 #	error "Native scripting is only supported on windows!"
 #endif
 
-namespace Kablunk
+namespace kb
 {
 	class ProcPtr
 	{

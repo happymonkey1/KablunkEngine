@@ -1,7 +1,7 @@
 #ifndef KABLUNK_PLATFORM_PLATFORM_API_H
 #define KABLUNK_PLATFORM_PLATFORM_API_H
 
-namespace Kablunk
+namespace kb
 {
 	class PlatformAPI
 	{

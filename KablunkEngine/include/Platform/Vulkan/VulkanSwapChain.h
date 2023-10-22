@@ -10,14 +10,14 @@
 
 struct GLFWwindow;
 
-namespace Kablunk
+namespace kb
 {
 	class VulkanSwapChain
 	{
 	public:
 		VulkanSwapChain() = default;
 
-		void Init(VkInstance instance, const IntrusiveRef<VulkanDevice>& device);
+		void Init(VkInstance instance, const ref<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* window_handle);
 		void Create(uint32_t* width, uint32_t* height, bool vsync);
 
@@ -45,7 +45,7 @@ namespace Kablunk
 		VkCommandBuffer GetDrawCommandBuffer(uint32_t index)
 		{
 			KB_CORE_ASSERT(index < m_command_buffers.size(), "index out of bounds");
-			return m_command_buffers[index];
+			return m_command_buffers[index].m_command_buffer;
 		}
 
 		VkSemaphore GetRenderCompleteSemaphore() { return m_semaphores.render_complete; }
@@ -64,7 +64,7 @@ namespace Kablunk
 		void CreateDepthStencil();
 	private:
 		VkInstance m_instance;
-		IntrusiveRef<VulkanDevice> m_device;
+		ref<VulkanDevice> m_device;
 		bool m_vsync = false;
 
 		VkSwapchainKHR m_swapchain = nullptr;
@@ -90,8 +90,13 @@ namespace Kablunk
 		DepthStencilData m_depth_stencil{};
 
 		std::vector<VkFramebuffer> m_framebuffers;
-		VkCommandPool m_command_pool = nullptr;
-		std::vector<VkCommandBuffer> m_command_buffers;
+
+        struct swapchain_command_buffer_t
+        {
+            VkCommandPool m_command_pool = nullptr;
+            VkCommandBuffer m_command_buffer = nullptr;
+        };
+		std::vector<swapchain_command_buffer_t> m_command_buffers;
 
 		struct Semaphores
 		{

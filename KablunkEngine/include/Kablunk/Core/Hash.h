@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace Kablunk
+namespace kb
 {
 	class Hash
 	{

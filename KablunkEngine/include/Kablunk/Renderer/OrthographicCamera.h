@@ -1,11 +1,10 @@
 #ifndef KB_KABLUNK_RENDERER_ORTHOGRAPHIC_CAMERA_H
 #define KB_KABLUNK_RENDERER_ORTHOGRAPHIC_CAMERA_H
 
-
-
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-namespace Kablunk 
+namespace kb 
 {
 	class OrthographicCamera
 	{

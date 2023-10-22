@@ -5,13 +5,13 @@
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Core/Logger.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanStorageBuffer::VulkanStorageBuffer(size_t size, uint32_t binding)
 		: m_size{ size }, m_binding{ binding }
 	{
-		IntrusiveRef<VulkanStorageBuffer> instance = this;
+		ref<VulkanStorageBuffer> instance = this;
 		render::submit([instance]() mutable { instance->RT_Invalidate(); });
 	}
 
@@ -23,7 +23,7 @@ namespace Kablunk
 	void VulkanStorageBuffer::SetData(const void* data, size_t size, uint32_t offset /*= 0*/)
 	{
 		memcpy(m_local_storage, data, size);
-		IntrusiveRef<VulkanStorageBuffer> instance = this;
+		ref<VulkanStorageBuffer> instance = this;
 		render::submit([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);
@@ -45,7 +45,7 @@ namespace Kablunk
 	void VulkanStorageBuffer::Resize(size_t new_size)
 	{
 		m_size = new_size;
-		IntrusiveRef<VulkanStorageBuffer> instance = this;
+		ref<VulkanStorageBuffer> instance = this;
 		render::submit([instance]() mutable { instance->RT_Invalidate(); });
 	}
 

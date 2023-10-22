@@ -5,7 +5,7 @@
 #include "Platform/Vulkan/VulkanUniformBuffer.h"
 
 
-namespace Kablunk
+namespace kb
 {
 
 	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, uint32_t binding)
@@ -13,7 +13,7 @@ namespace Kablunk
 	{
 		m_local_storage = new uint8_t[size];
 
-		IntrusiveRef<VulkanUniformBuffer> instance = this;
+		ref<VulkanUniformBuffer> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -29,7 +29,7 @@ namespace Kablunk
 	{
 		memcpy(m_local_storage, data, size);
 
-		IntrusiveRef<VulkanUniformBuffer> instance = this;
+		ref<VulkanUniformBuffer> instance = this;
 		render::submit([instance, data, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);
@@ -40,6 +40,7 @@ namespace Kablunk
 	{
 		VulkanAllocator allocator{ "UniformBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
+        // can this be memmove?
 		memcpy(data_ptr, (const uint8_t*)data + offset, size);
 		allocator.UnmapMemory(m_vk_allocation);
 	}

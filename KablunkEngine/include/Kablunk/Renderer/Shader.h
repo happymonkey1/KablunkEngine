@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
+#include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Renderer/RendererTypes.h"
 #include "Kablunk/Renderer/ShaderUniform.h"
 
@@ -9,7 +10,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace Kablunk {
+namespace kb {
 
 	enum class ShaderUniformType
 	{
@@ -67,7 +68,6 @@ namespace Kablunk {
 	class Shader : public RefCounted
 	{
 	public:
-		
 		using ShaderReloadedCallback = std::function<void()>;
 		virtual ~Shader() {}
 
@@ -96,9 +96,7 @@ namespace Kablunk {
 		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const = 0;
 		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
-		static IntrusiveRef<Shader> Create(const std::string& filePath, bool force_compile = false);
-	private:
-		static std::vector<IntrusiveRef<Shader>> s_all_shaders; // Temporary while we don't have an asset system
+		static ref<Shader> Create(const std::string& filePath, bool force_compile = false);
 	};
 
 	class ShaderLibrary : public RefCounted
@@ -109,15 +107,15 @@ namespace Kablunk {
 
 		void Destroy();
 
-		void Add(const IntrusiveRef<Shader>& shader);
-		void Add(const std::string& name, const IntrusiveRef<Shader>& shader);
-		IntrusiveRef<Shader> Load(const std::string& filepath);
-		IntrusiveRef<Shader> Load(const std::string& name, const std::string& filepath);
+		void Add(const ref<Shader>& shader);
+		void Add(const std::string& name, const ref<Shader>& shader);
+		ref<Shader> Load(const std::string& filepath);
+		ref<Shader> Load(const std::string& name, const std::string& filepath);
 
-		IntrusiveRef<Shader> Get(const std::string& name);
+		ref<Shader> Get(const std::string& name);
 
 		bool Exists(const std::string& name);
 	private:
-		std::unordered_map<std::string, IntrusiveRef<Shader>> m_shaders;
+		std::unordered_map<std::string, ref<Shader>> m_shaders;
 	};
 }

@@ -6,12 +6,12 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace Kablunk
+namespace kb
 {
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const IntrusiveRef<Scene>& scene);
+		SceneSerializer(const ref<Scene>& scene);
 	
 		void Serialize(const std::string& filepath);
 		void SerializeBinary(const std::string& filepath);
@@ -21,7 +21,7 @@ namespace Kablunk
 	private:
 		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
-		IntrusiveRef<Scene> m_scene;
+		ref<Scene> m_scene;
 	};
 }
 

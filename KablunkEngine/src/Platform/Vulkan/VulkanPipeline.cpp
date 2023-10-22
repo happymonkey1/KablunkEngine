@@ -8,7 +8,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	namespace Utils
@@ -70,7 +70,7 @@ namespace Kablunk
 
 	void VulkanPipeline::Invalidate()
 	{
-		IntrusiveRef<VulkanPipeline> instance = this;
+		ref<VulkanPipeline> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -80,8 +80,8 @@ namespace Kablunk
 	void VulkanPipeline::RT_Invalidate()
 	{
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-		IntrusiveRef<VulkanShader> vulkan_shader = IntrusiveRef<VulkanShader>(m_specification.shader);
-		IntrusiveRef<VulkanFramebuffer> framebuffer = m_specification.render_pass->GetSpecification().target_framebuffer.As<VulkanFramebuffer>();
+		ref<VulkanShader> vulkan_shader = ref<VulkanShader>(m_specification.shader);
+		ref<VulkanFramebuffer> framebuffer = m_specification.render_pass->GetSpecification().target_framebuffer.As<VulkanFramebuffer>();
 
 		auto descriptor_set_layouts = vulkan_shader->GetAllDescriptorSetLayouts();
 
@@ -349,18 +349,18 @@ namespace Kablunk
 			KB_CORE_ASSERT(false, "Vulkan failed to create pipeline!");
 	}
 
-	void VulkanPipeline::SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
+	void VulkanPipeline::SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
 	{
-		IntrusiveRef<VulkanPipeline> instance = this;
+		ref<VulkanPipeline> instance = this;
 		render::submit([instance, uniform_buffer, binding, set]() mutable
 			{
 				instance->RT_SetUniformBuffer(uniform_buffer, binding, set);
 			});
 	}
 
-	void VulkanPipeline::RT_SetUniformBuffer(IntrusiveRef<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
+	void VulkanPipeline::RT_SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
 	{
-		IntrusiveRef<VulkanUniformBuffer> vulkan_uniform_buffer = uniform_buffer.As<VulkanUniformBuffer>();
+		ref<VulkanUniformBuffer> vulkan_uniform_buffer = uniform_buffer.As<VulkanUniformBuffer>();
 
 		KB_CORE_ASSERT(set < m_descriptor_sets.descriptor_sets.size(), "out of bounds!");
 

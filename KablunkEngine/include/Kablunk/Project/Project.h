@@ -6,7 +6,7 @@
 #include <string>
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 
 	struct ProjectConfig

@@ -5,7 +5,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Project/Project.h"
 
-namespace Kablunk
+namespace kb
 {
 	class ProjectManager
 	{
@@ -18,7 +18,7 @@ namespace Kablunk
 
 		SINGLETON_GET_FUNC(ProjectManager);
 
-		void set_active(const IntrusiveRef<Project>& project);
+		void set_active(const ref<Project>& project);
 	private:
 		ref<Project> m_active_project = nullptr;
 	};

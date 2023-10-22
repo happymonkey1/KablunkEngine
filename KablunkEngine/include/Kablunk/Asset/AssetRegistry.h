@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-namespace Kablunk::asset
+namespace kb::asset
 {
 	class AssetRegistry
 	{

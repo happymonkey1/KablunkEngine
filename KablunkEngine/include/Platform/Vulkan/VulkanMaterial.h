@@ -11,14 +11,14 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	class VulkanMaterial : public Material
 	{
 	public:
-		VulkanMaterial(const IntrusiveRef<Shader>& shader, const std::string& name = "");
-		VulkanMaterial(IntrusiveRef<Material> material, const std::string& name = "");
+		VulkanMaterial(const ref<Shader>& shader, const std::string& name = "");
+		VulkanMaterial(ref<Material> material, const std::string& name = "");
 		virtual ~VulkanMaterial() override;
 
 		virtual void Invalidate() override;
@@ -36,9 +36,9 @@ namespace Kablunk
 		virtual void Set(const std::string& name, const glm::ivec4& value) override;
 		virtual void Set(const std::string & name, const glm::mat3 & value) override;
 		virtual void Set(const std::string & name, const glm::mat4 & value) override;
-		virtual void Set(const std::string & name, const IntrusiveRef<Texture2D>& texture) override;
-		virtual void Set(const std::string & name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index) override;
-		virtual void Set(const std::string & name, const IntrusiveRef<Image2D>& image) override;
+		virtual void Set(const std::string & name, const ref<Texture2D>& texture) override;
+		virtual void Set(const std::string & name, const ref<Texture2D>& texture, uint32_t array_index) override;
+		virtual void Set(const std::string & name, const ref<Image2D>& image) override;
 
 		virtual bool& GetBool(const std::string& name) override;
 		virtual float& GetFloat(const std::string & name) override;
@@ -49,8 +49,8 @@ namespace Kablunk
 		virtual glm::vec4& GetVec4(const std::string & name) override;
 		virtual glm::mat3& GetMat3(const std::string & name) override;
 		virtual glm::mat4& GetMat4(const std::string & name) override;
-		virtual IntrusiveRef<Texture2D> GetTexture2D(const std::string & name) override;
-		virtual IntrusiveRef<Texture2D> TryGetTexture2D(const std::string & name) override;
+		virtual ref<Texture2D> GetTexture2D(const std::string & name) override;
+		virtual ref<Texture2D> TryGetTexture2D(const std::string & name) override;
 
 		template <typename T>
 		void Set(const std::string& name, const T& value)
@@ -72,17 +72,19 @@ namespace Kablunk
 		}
 
 		template<typename T>
-		IntrusiveRef<T> GetResource(const std::string& name)
+		ref<T> GetResource(const std::string& name)
 		{
 			auto decl = FindResourceDeclaration(name);
 			KB_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+            if (!decl)
+                return nullptr;
 			uint32_t slot = decl->GetRegister();
 			KB_CORE_ASSERT(slot < m_textures.size(), "Texture slot is invalid!");
-			return m_textures[slot];
+			return m_texture_array[slot];
 		}
 
 		template<typename T>
-		IntrusiveRef<T> TryGetResource(const std::string& name)
+		ref<T> TryGetResource(const std::string& name)
 		{
 			auto decl = FindResourceDeclaration(name);
 			if (!decl)
@@ -92,7 +94,7 @@ namespace Kablunk
 			if (slot >= m_textures.size())
 				return nullptr;
 
-			return m_textures[slot];
+			return m_texture_array[slot];
 		}
 
 		virtual uint32_t GetFlags() const override { return m_material_flags; }
@@ -105,7 +107,7 @@ namespace Kablunk
 				m_material_flags &= ~(uint32_t)flag;
 		}
 
-		virtual IntrusiveRef<Shader> GetShader() override { return m_shader; }
+		virtual ref<Shader> GetShader() override { return m_shader; }
 		virtual const std::string& GetName() const override { return m_name; }
 
 		Buffer GetUniformStorageBuffer() { return m_uniform_storage_buffer; }
@@ -120,18 +122,18 @@ namespace Kablunk
 		void AllocateStorage();
 		void OnShaderReloaded();
 
-		void SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Texture2D>& texture);
-		void SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Texture2D>& texture, uint32_t array_index);
-		void SetVulkanDescriptor(const std::string& name, const IntrusiveRef<Image2D>& images);
+		void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture);
+		void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index);
+		void SetVulkanDescriptor(const std::string& name, const ref<Image2D>& images);
 
 		const ShaderUniform* FindUniformDeclaration(const std::string& name);
 		const ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);
 	private:
-		IntrusiveRef<Shader> m_shader;
+		ref<Shader> m_shader;
 
-		std::vector<IntrusiveRef<Image>> m_textures;
-		std::vector<std::vector<IntrusiveRef<Texture2D>>> m_texture_array;
-		std::vector<IntrusiveRef<Image>> m_images;
+		std::vector<ref<Image>> m_textures;
+		std::vector<std::vector<ref<Texture2D>>> m_texture_array;
+		std::vector<ref<Image>> m_images;
 
 		enum class PendingDescriptorType
 		{
@@ -143,8 +145,8 @@ namespace Kablunk
 			PendingDescriptorType type = PendingDescriptorType::None;
 			VkWriteDescriptorSet write_descriptor_set;
 			VkDescriptorImageInfo image_info;
-			IntrusiveRef<Texture2D> texture;
-			IntrusiveRef<Image2D> image;
+			ref<Texture2D> texture;
+			ref<Image2D> image;
 			VkDescriptorImageInfo submitted_image_info{};
 		};
 
@@ -153,8 +155,8 @@ namespace Kablunk
 			PendingDescriptorType type = PendingDescriptorType::None;
 			VkWriteDescriptorSet write_descriptor_set;
 			std::vector<VkDescriptorImageInfo> image_infos;
-			std::vector<IntrusiveRef<Texture2D>> textures;
-			std::vector<IntrusiveRef<Image2D>> images;
+			std::vector<ref<Texture2D>> textures;
+			std::vector<ref<Image2D>> images;
 			VkDescriptorImageInfo submitted_image_info{};
 		};
 		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptor>> m_resident_descriptors;

@@ -6,16 +6,16 @@
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
 #include "Platform/Vulkan/VulkanFramebuffer.h"
 
-namespace Kablunk
+namespace kb
 {
-	IntrusiveRef<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
+	ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specs)
 	{
-		IntrusiveRef<Framebuffer> framebuffer;
+		ref<Framebuffer> framebuffer;
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:	framebuffer = IntrusiveRef<OpenGLFramebuffer>::Create(specs); break;
-		case RendererAPI::render_api_t::Vulkan:	framebuffer = IntrusiveRef<VulkanFramebuffer>::Create(specs); break;
+		case RendererAPI::render_api_t::OpenGL:	framebuffer = ref<OpenGLFramebuffer>::Create(specs); break;
+		case RendererAPI::render_api_t::Vulkan:	framebuffer = ref<VulkanFramebuffer>::Create(specs); break;
 		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
 		}
 
@@ -35,12 +35,12 @@ namespace Kablunk
 
 	}
 
-	std::weak_ptr<Kablunk::Framebuffer> FramebufferPool::AllocateBuffer()
+	std::weak_ptr<kb::Framebuffer> FramebufferPool::AllocateBuffer()
 	{
 		return std::weak_ptr<Framebuffer>();
 	}
 
-	void FramebufferPool::Add(const IntrusiveRef<Framebuffer>& framebuffer)
+	void FramebufferPool::Add(const ref<Framebuffer>& framebuffer)
 	{
 		m_pool.push_back(framebuffer);
 	}

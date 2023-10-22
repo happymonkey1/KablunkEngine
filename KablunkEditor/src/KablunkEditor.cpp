@@ -3,20 +3,21 @@
 
 #include "EditorLayer.h"
 
-namespace Kablunk
+namespace kb
 {
 
-	Kablunk::Application* Kablunk::CreateApplication(int argc, char** argv)
+	kb::Application* kb::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification specification = {
-			"Kablunk Editor",
-			1920,
-			1080,
-			false,
-			false,
-			"",
+			"Kablunk Editor",					// window name
+			1920,								// width
+			1080,								// height
+			false,								// fullscreen
+			false,								// vsync
+			"",									// working directory (unused)
 			true,
-			true
+			true,
+			threading_policy_t::single_threaded // threading policy for engine
 		};
 
 		Application& app = Singleton<Application>::get();
@@ -26,4 +27,5 @@ namespace Kablunk
 		
 		return &app;
 	}
+
 }

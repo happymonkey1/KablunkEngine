@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Kablunk
+namespace kb
 {
 
 	class PluginManager
@@ -35,7 +35,7 @@ namespace Kablunk
 
 		SINGLETON_GET_FUNC(PluginManager)
 	private:
-		std::unordered_map<std::string, IntrusiveRef<Plugin>> m_plugins;
+		std::unordered_map<std::string, ref<Plugin>> m_plugins;
 	};
 
 }

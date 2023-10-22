@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-namespace Kablunk::ml::network
+namespace kb::ml::network
 {
 
 	template <typename T>
@@ -15,8 +15,8 @@ namespace Kablunk::ml::network
 	{
 	public:
 		using value_t = T;
-		using network_tensor_t = Kablunk::ml::tensor::Tensor<value_t, 2>;
-		using optimizer_t = Kablunk::ml::optimizer::IOptimizer<value_t>;
+		using network_tensor_t = kb::ml::tensor::Tensor<value_t, 2>;
+		using optimizer_t = kb::ml::optimizer::IOptimizer<value_t>;
 	public:
 		virtual ~INetwork() = default;
 

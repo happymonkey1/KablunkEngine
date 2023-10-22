@@ -2,7 +2,7 @@
 
 #include "Kablunk/Events/Event.h"
 
-namespace Kablunk {
+namespace kb {
 	class WindowResizeEvent : public Event {
 	public:
 		WindowResizeEvent(unsigned int width, unsigned int height) : m_Width(width), m_Height(height) {}

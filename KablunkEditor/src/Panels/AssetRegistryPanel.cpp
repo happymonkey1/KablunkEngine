@@ -2,7 +2,7 @@
 
 #include <Kablunk/Imgui/ImGuiWrappers.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	void AssetRegistryPanel::on_imgui_render()

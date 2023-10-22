@@ -13,7 +13,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 
-namespace Kablunk::input
+namespace kb::input
 {
 
 	bool is_key_pressed(int keycode)
@@ -86,7 +86,7 @@ namespace Kablunk::input
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
-		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		if (kb::Application::Get().GetSpecification().Enable_imgui)
 		{
 			mouse_pos = glm::vec2{ ImGui::GetMousePos().x, ImGui::GetMousePos().y };
 			window_pos = render::get_viewport_pos();
@@ -111,7 +111,7 @@ namespace Kablunk::input
 		glm::vec2 window_pos = glm::vec2{ 0.0f };
 		glm::vec2 window_size;
 
-		if (Kablunk::Application::Get().GetSpecification().Enable_imgui)
+		if (kb::Application::Get().GetSpecification().Enable_imgui)
 		{
 			// get imgui mouse pos (in screen coordinates)
 			auto [x, y] = ImGui::GetMousePos();

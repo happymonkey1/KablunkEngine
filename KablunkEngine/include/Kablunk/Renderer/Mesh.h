@@ -27,12 +27,12 @@ namespace Assimp
 	class Importer;
 }
 
-namespace Kablunk
+namespace kb
 {
 	class Entity;
 }
 
-namespace Kablunk
+namespace kb
 {
 	struct Vertex
 	{
@@ -137,21 +137,21 @@ namespace Kablunk
 	class MeshData : public RefCounted
 	{
 	public:
-		MeshData(const std::string& filename, Kablunk::Entity entity);
+		MeshData(const std::string& filename, kb::Entity entity);
 		MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform);
 		virtual ~MeshData();
 
 		const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 		const std::vector<Index>& GetIndicies() const { return m_indices; }
-		IntrusiveRef<Shader> GetShader() { return m_mesh_shader; }
-		IntrusiveRef<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
-		IntrusiveRef<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
+		ref<Shader> GetShader() { return m_mesh_shader; }
+		ref<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
+		ref<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
 
-		std::vector<IntrusiveRef<Material>>& GetMaterials() { return m_materials; }
-		const std::vector<IntrusiveRef<Material>> GetMaterials() const { return m_materials; }
+		std::vector<ref<Material>>& GetMaterials() { return m_materials; }
+		const std::vector<ref<Material>> GetMaterials() const { return m_materials; }
 
-		const std::vector<IntrusiveRef<Texture2D>> GetTextures() const { return m_textures; }
-		const std::vector<IntrusiveRef<Texture2D>> GetNormalMaps() const { return m_normal_map; }
+		const std::vector<ref<Texture2D>> GetTextures() const { return m_textures; }
+		const std::vector<ref<Texture2D>> GetNormalMaps() const { return m_normal_map; }
 		const std::string& GetFilepath() const { return m_filepath; }
 
 		void SetSubmeshes(const std::vector<Submesh>& submeshes);
@@ -172,10 +172,10 @@ namespace Kablunk
 	private:
 		void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, uint32_t level = 0);
 	private:
-		Scope<Assimp::Importer> m_importer;
+		box<Assimp::Importer> m_importer;
 
-		IntrusiveRef<VertexBuffer> m_vertex_buffer;
-		IntrusiveRef<IndexBuffer> m_index_buffer;
+		ref<VertexBuffer> m_vertex_buffer;
+		ref<IndexBuffer> m_index_buffer;
 
 		std::vector<Vertex> m_static_vertices;
 		std::vector<AnimatedVertex> m_animated_vertices;
@@ -191,10 +191,10 @@ namespace Kablunk
 
 		glm::mat4 m_inverse_transform{ 1.0f };
 
-		IntrusiveRef<Shader> m_mesh_shader;
-		std::vector<IntrusiveRef<Texture2D>> m_textures;
-		std::vector<IntrusiveRef<Texture2D>> m_normal_map;
-		std::vector<IntrusiveRef<Material>> m_materials;
+		ref<Shader> m_mesh_shader;
+		std::vector<ref<Texture2D>> m_textures;
+		std::vector<ref<Texture2D>> m_normal_map;
+		std::vector<ref<Material>> m_materials;
 		
 		std::unordered_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
 
@@ -214,9 +214,9 @@ namespace Kablunk
 	class Mesh : public RefCounted
 	{
 	public:
-		Mesh(IntrusiveRef<MeshData> mesh_data);
-		Mesh(const IntrusiveRef<Mesh>& other);
-		Mesh(IntrusiveRef<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
+		Mesh(ref<MeshData> mesh_data);
+		Mesh(const ref<Mesh>& other);
+		Mesh(ref<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
 		virtual ~Mesh();
 
 		void OnUpdate(Timestep ts);
@@ -226,24 +226,24 @@ namespace Kablunk
 
 		void SetSubmeshes(const std::vector<uint32_t>& submeshes);
 
-		IntrusiveRef<MeshData> GetMeshData() { return m_mesh_data; }
-		IntrusiveRef<MeshData> GetMeshData() const { return m_mesh_data; }
-		void SetMeshData(IntrusiveRef<MeshData> mesh_data) { m_mesh_data = mesh_data; }
+		ref<MeshData> GetMeshData() { return m_mesh_data; }
+		ref<MeshData> GetMeshData() const { return m_mesh_data; }
+		void SetMeshData(ref<MeshData> mesh_data) { m_mesh_data = mesh_data; }
 
-		IntrusiveRef<MaterialTable>& GetMaterials() { return m_material_table; }
-		const IntrusiveRef<MaterialTable>& GetMaterials() const { return m_material_table; }
+		ref<MaterialTable>& GetMaterials() { return m_material_table; }
+		const ref<MaterialTable>& GetMaterials() const { return m_material_table; }
 	private:
-		IntrusiveRef<MeshData> m_mesh_data;
+		ref<MeshData> m_mesh_data;
 		std::vector<uint32_t> m_submeshes;
 
-		IntrusiveRef<MaterialTable> m_material_table;
+		ref<MaterialTable> m_material_table;
 	};
 
 	// #TODO move elsewhere
 	class MeshFactory
 	{
 	public:
-		static IntrusiveRef<Mesh> CreateCube(float side_length, Entity entity);
+		static ref<Mesh> CreateCube(float side_length, Entity entity);
 	};
 }
 

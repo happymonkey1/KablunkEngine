@@ -6,7 +6,7 @@
 
 #include "Kablunk/Core/Logger.h"
 
-namespace Kablunk::memory
+namespace kb::memory
 {
 	GeneralAllocator::GeneralAllocator()
 		: m_data{ nullptr }, m_is_initializing{ false }
@@ -172,67 +172,67 @@ namespace Kablunk::memory
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new(size_t size)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size);
 }
 
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new[](size_t size)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size);
 }
 
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new(size_t size, const char* desc)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size, desc);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size, desc);
 }
 
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new[](size_t size, const char* desc)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size, desc);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size, desc);
 }
 
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new(size_t size, const char* file, int line)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size, file, line);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size, file, line);
 }
 
 _NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size) _VCRT_ALLOCATOR
 void* __CRTDECL operator new[](size_t size, const char* file, int line)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().allocate(size, file, line);
+	return kb::memory::GeneralAllocator::get_mutable().allocate(size, file, line);
 }
 
 void __CRTDECL operator delete(void* memory)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 void __CRTDECL operator delete(void* memory, const char* desc)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 void __CRTDECL operator delete(void* memory, const char* file, int line)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 void __CRTDECL operator delete[](void* memory)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 void __CRTDECL operator delete[](void* memory, const char* desc)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 void __CRTDECL operator delete[](void* memory, const char* file, int line)
 {
-	return Kablunk::memory::GeneralAllocator::get_mutable().free(memory);
+	return kb::memory::GeneralAllocator::get_mutable().free(memory);
 }
 
 #endif

@@ -8,8 +8,8 @@
 #include <string>
 #include <unordered_map>
 
-namespace Kablunk::util::container::test
-{ // start namespace Kablunk::util::container::test
+namespace kb::util::container::test
+{ // start namespace kb::container::test
 
 // main test function that runs unit tests
 void test_flat_hash_map_main()
@@ -482,4 +482,4 @@ void test_flat_hash_map_performance()
 
 }
 
-} // end namespace Kablunk::util::container::test
+} // end namespace kb::util::container::test

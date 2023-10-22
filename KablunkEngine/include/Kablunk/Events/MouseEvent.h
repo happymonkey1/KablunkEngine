@@ -4,7 +4,7 @@
 #include <sstream>
 
 
-namespace Kablunk {
+namespace kb {
 
 	class MouseMovedEvent : public Event
 	{

@@ -4,7 +4,7 @@
 #include "Kablunk/Utilities/Reflection/TypeTraits.h"
 #include "Kablunk/Utilities/Reflection/IntegralTypeTraits.h"
 
-namespace Kablunk::Reflect
+namespace kb::Reflect
 {
 	class BaseResolver
 	{

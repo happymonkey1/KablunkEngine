@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	static std::map<VkImage, WeakRef<VulkanImage2D>> s_image_refs;
 
@@ -43,7 +43,7 @@ namespace Kablunk
 
 	void VulkanImage2D::Invalidate()
 	{
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -53,10 +53,10 @@ namespace Kablunk
 
 	void VulkanImage2D::Release()
 	{
-		if (m_info.image == nullptr)
+		if (!m_info.image)
 			return;
 
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -192,7 +192,7 @@ namespace Kablunk
 
 	void VulkanImage2D::CreatePerLayerImageViews()
 	{
-		IntrusiveRef<VulkanImage2D> instance = this;
+		ref<VulkanImage2D> instance = this;
 		render::submit([instance]() mutable
 			{
 				instance->RT_CreatePerLayerImageViews();
@@ -270,7 +270,7 @@ namespace Kablunk
 	{
 		if (m_mip_image_views.find(mip) == m_mip_image_views.end())
 		{
-			IntrusiveRef<VulkanImage2D> instance = this;
+			ref<VulkanImage2D> instance = this;
 			render::submit([instance, mip]() mutable
 				{
 					instance->RT_GetMipImageView(mip);
@@ -323,9 +323,6 @@ namespace Kablunk
 			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
 			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		if (m_specification.usage == ImageUsage::Storage)
-			m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 		m_descriptor_image_info.imageView = m_info.image_view;
 		m_descriptor_image_info.sampler = m_info.sampler;

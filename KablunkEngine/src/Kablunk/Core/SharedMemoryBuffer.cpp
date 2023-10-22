@@ -8,7 +8,7 @@
 #	error "Shared Memory Buffers are only supported on Windows!"
 #endif
 
-namespace Kablunk
+namespace kb
 {
 
 	SharedMemoryBufferLayout::SharedMemoryBufferLayout(const std::initializer_list<SharedMemoryBufferLayoutElement>& elements)

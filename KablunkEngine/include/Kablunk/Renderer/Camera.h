@@ -4,7 +4,7 @@
 #include "Kablunk/Core/Input.h"
 #include <glm/glm.hpp>
 
-namespace Kablunk
+namespace kb
 {
 	class Camera
 	{

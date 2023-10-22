@@ -33,7 +33,10 @@ project "KablunkEditor"
         "%{IncludeDir.mono}",
         "%{IncludeDir.Vulkan}",
         "%{IncludeDir.boost}",
-		"%{IncludeDir.miniaudio}"
+		"%{IncludeDir.miniaudio}",
+        "%{IncludeDir.optick}",
+        "%{IncludeDir.tl_expected}",
+		"%{IncludeDir.robin_hood}"
     }
 
     links
@@ -102,6 +105,7 @@ project "KablunkEditor"
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"
+        symbols "off"
 
         links
         {

@@ -10,7 +10,7 @@
 typedef unsigned int GLenum;
 
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLShader : public Shader
 	{

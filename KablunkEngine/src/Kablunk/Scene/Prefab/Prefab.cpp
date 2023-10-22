@@ -5,7 +5,7 @@
 #include "Kablunk/Scene/Prefab/PrefabSerializer.h"
 #include "Kablunk/Project/ProjectManager.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	Prefab::Prefab(Entity entity) noexcept

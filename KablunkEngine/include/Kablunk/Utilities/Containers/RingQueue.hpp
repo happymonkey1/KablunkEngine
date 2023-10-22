@@ -5,7 +5,7 @@
 #include <Kablunk/Core/Logger.h>
 #include <Kablunk/Core/CoreTypes.h>
 
-namespace Kablunk
+namespace kb
 {
 
 	template <typename T, u64 Size = 1024ull>

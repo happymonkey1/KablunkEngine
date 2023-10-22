@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLTexture2D : public Texture2D
 	{
@@ -18,7 +18,7 @@ namespace Kablunk
 
 		virtual void Resize(uint32_t width, uint32_t height) override { KB_CORE_ASSERT(false, "not implemented!"); };
 
-		virtual IntrusiveRef<Image2D> GetImage() const override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
+		virtual ref<Image2D> GetImage() const override { KB_CORE_ASSERT(false, "not implemented!"); return {}; };
 		virtual ImageFormat GetFormat() const override { return m_format; }
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
@@ -31,6 +31,7 @@ namespace Kablunk
 		virtual uint64_t GetHash() const { KB_CORE_ASSERT(false, "not implemented!"); return 0; };
 
 		virtual Buffer& GetWriteableBuffer() override { KB_CORE_ASSERT(false, "not implemented!"); return m_unused; };
+		virtual const Buffer& get_buffer() const override { KB_CORE_ASSERT(false, "not implemented!"); return m_unused; };
 
 		virtual void Bind(uint32_t slot) const override;
 		virtual bool operator==(const Texture2D& other) const override { return m_RendererID == other.GetRendererID(); }

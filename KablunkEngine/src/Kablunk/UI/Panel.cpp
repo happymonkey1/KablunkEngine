@@ -1,15 +1,17 @@
 #include "kablunkpch.h"
 #include "Kablunk/UI/Panel.h"
 
+// #TODO remove when singleton reference to application is refactored
+#include "Kablunk/Core/Application.h"
+
 #include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/RenderCommand.h"
 
 #include "Kablunk/Events/MouseEvent.h"
 
-#include "Kablunk/Renderer/SceneRenderer.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
-
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	Panel::Panel(const glm::vec2& position, const glm::vec2& size, uuid::uuid64 id)
@@ -109,16 +111,18 @@ namespace Kablunk::ui
 		if (!m_visible)
 			return;
 
-		ref<Texture2D> white_texture = render2d::get_white_texture();
+        ref<Renderer2D> renderer_2d = Application::Get().get_renderer_2d();
+
+		ref<Texture2D> white_texture = renderer_2d->get_white_texture();
 		glm::vec3 pos_relative = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
 		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
 
 		if (m_panel_style.render_background)
-			render2d::draw_quad_ui(pos_relative, m_size, white_texture, 1.0f, m_panel_style.background_color);
+            renderer_2d->draw_quad_ui(pos_relative, m_size, white_texture, 1.0f, m_panel_style.background_color);
 
 		glm::vec4 highlight_color = !m_is_hovered ? glm::vec4{ 1.0f } : m_panel_style.highlight_color;
 		if (m_panel_style.image)
-			render2d::draw_quad_ui(pos_relative, m_size, m_panel_style.image, 1.0f, highlight_color);
+            renderer_2d->draw_quad_ui(pos_relative, m_size, m_panel_style.image, 1.0f, highlight_color);
 
 		for (IPanel* child : m_children)
 			child->on_render(scene_camera);

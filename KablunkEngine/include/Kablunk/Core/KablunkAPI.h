@@ -30,6 +30,25 @@
 #	error "Unknown platform"
 #endif
 
+// compiler detection
+#if defined(_MSC_VER) // MSVC
+#   define KB_NOT_NULL _Notnull_
+#   define KB_FORCE_INLINE __forceinline
+#elif defined(__clang__) // CLANG
+#   define KB_NOT_NULL _Nonnull
+#   define KB_FORCE_INLINE [[clang::always_inline]]
+#elif defined(__GNUC__) // GCC
+#   define KB_NOT_NULL __attribute__((nonnull))
+#   define KB_FORCE_INLINE __attribute((always_inline))
+#else
+#   error "Failed to detect compiler!"
+#endif
+
+// fail-safe if compiler detection couldn't define force inline
+#ifndef KB_FORCE_INLINE
+#   define KB_FORCE_INLINE inline
+#endif
+
 
 #ifdef KB_DEBUG
 #	if defined(KB_PLATFORM_WINDOWS)
@@ -41,8 +60,8 @@
 #	endif	
 #	define KB_ENABLE_ASSERTS
 #	define KB_PROFILE 0
-#	define KB_TRACK_MEMORY
-#	define KB_UNIT_TEST
+// #	define KB_TRACK_MEMORY
+//#	define KB_UNIT_TEST
 #endif
 
 #ifdef KB_RELEASE
@@ -59,8 +78,8 @@
 #endif
 
 #ifdef KB_ENABLE_ASSERTS
-#	define KB_ASSERT(x, ...)      { if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } }
-#	define KB_CORE_ASSERT(x, ...) { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); KB_DEBUG_BREAK(); } } 
+#	define KB_ASSERT(x, ...)      { if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } }
+#	define KB_CORE_ASSERT(x, ...) { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } } 
 #	define KB_ASSERT_NO_LOG(x)    { if (!(x)) KB_DEBUG_BREAK(); }
 #else
 #	define KB_ASSERT(x, ...)		{ if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); } }

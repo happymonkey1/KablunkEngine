@@ -10,7 +10,7 @@
 
 #include <map>
 
-namespace Kablunk
+namespace kb
 {
 	struct VulkanImageInfo
 	{

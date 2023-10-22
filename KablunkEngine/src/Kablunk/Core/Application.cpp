@@ -6,6 +6,7 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Core/Input.h"
 #include "Platform/PlatformAPI.h"
@@ -13,6 +14,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 
 //#include "Kablunk/Scripts/NativeScriptEngine.h"
+#include "Kablunk/Core/Timers.h"
 #include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
@@ -22,17 +24,25 @@
 
 #include "Kablunk/Audio/AudioCommand.h"
 
+#include <GLFW/glfw3.h>
 
 
-namespace Kablunk
+
+namespace kb
 {
 	constexpr uint8_t NUM_JOB_THREADS = 4;
 
 
 	Application::Application()
-		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }
+		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ m_specification.m_engine_threading_policy }
 	{
 		
+	}
+
+	Application::Application(const ApplicationSpecification& spec)
+		: m_specification{ spec }, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ spec.m_engine_threading_policy }
+	{
+
 	}
 
 	Application::~Application()
@@ -42,18 +52,33 @@ namespace Kablunk
 
 	void Application::init()
 	{
-		KB_CORE_INFO("Application initialized")
+        KB_PROFILE_FUNC();
+		KB_CORE_INFO("Application initialized");
+		
+		const char* thread_policy_cstr = m_render_thread.m_threading_policy == threading_policy_t::multi_threaded ? "multi-threaded" : "single-threaded";
+		KB_CORE_INFO("engine threading policy {}", thread_policy_cstr);
 
-		KB_PROFILE_FUNCTION();
+		m_render_thread.run();
+
 		{
-			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height });
+			m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height, m_specification.Fullscreen });
 			m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
 			m_window->SetVsync(m_specification.Vsync);
 		}
 
+
 		audio::init_audio_engine();
 		render::init();
-		render::wait_and_render();
+		KB_CORE_INFO("Finished initializing renderer!");
+		// start rendering render one frame
+		m_render_thread.pump();
+
+        m_renderer_2d = ref<Renderer2D>::Create();
+        m_renderer_2d->init();
+
+		m_render_thread.pump();
+		
+		//m_render_thread.pump();
 
 		if (m_specification.Enable_imgui)
 		{
@@ -68,7 +93,7 @@ namespace Kablunk
 		}
 
 		PluginManager::get().init();
-		CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
+		//CSharpScriptEngine::Init("Resources/Scripts/Kablunk-ScriptCore.dll");
 
 
 		// #TODO should be based on projects later
@@ -86,19 +111,23 @@ namespace Kablunk
 			return;
 		
 		m_thread_pool.Shutdown();
-		CSharpScriptEngine::Shutdown();
+		//CSharpScriptEngine::Shutdown();
 
 		// clear the framebuffer pool
 		FramebufferPool::Get()->GetAll().clear();
 
+
+		m_render_thread.terminate();
+		
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
-		render::wait_and_render();
+        m_renderer_2d.reset();
+		render::shutdown();
+
 
 		ProjectManager::get().shutdown();
 
-		render::shutdown();
 
 		NativeScriptEngine::get().shutdown();
 		PluginManager::get().shutdown();
@@ -113,7 +142,7 @@ namespace Kablunk
 
 	void Application::PushLayer(Layer* layer)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_layer_stack.PushLayer(layer);
 		layer->OnAttach();
@@ -121,10 +150,21 @@ namespace Kablunk
 
 	void Application::PushOverlay(Layer* overlay)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		m_layer_stack.PushOverlay(overlay);
 		overlay->OnAttach();
+	}
+
+	bool Application::on_key_released(KeyReleasedEvent& e)
+	{
+		if (e.GetKeyCode() == Key::F11)
+			toggle_fullscreen();
+
+		if (e.GetKeyCode() == Key::F3)
+			m_show_debug_statistics = !m_show_debug_statistics;
+
+		return false;
 	}
 
 	void Application::Close()
@@ -134,12 +174,12 @@ namespace Kablunk
 
 	void Application::OnEvent(Event& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC()
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClosed(e); });
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
-
+		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e){ return on_key_released(e); });
 
 		for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) 
 		{
@@ -157,7 +197,7 @@ namespace Kablunk
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		KB_PROFILE_FUNCTION();
+        KB_PROFILE_FUNC();
 
 		const uint32_t width = e.GetWidth(), height = e.GetHeight();
 		if (width == 0 || height == 0)
@@ -167,32 +207,47 @@ namespace Kablunk
 		}
 
 		m_minimized = false;
-		render::on_window_resize(width, height);
-
+		render::submit([&](){ render::on_window_resize(width, height); });
 		return false;
 	}
 
 	void Application::Run()
 	{
-		KB_PROFILE_FUNCTION();
-
 		while (m_running)
 		{
-			KB_PROFILE_SCOPE("RunLoop - Application::Run");
+            OPTICK_FRAME("main thread");
 
 			//KB_CORE_TRACE("Vsync: {0}", GetWindow().IsVsync());
 			//if (NativeScriptEngine::Update())
 			//	continue;
 
+			{
+				timer main_thread_wait_timer{};
+
+				// synchronize threads
+				m_render_thread.block_until_rendering_complete();
+				m_thread_performance_timings.main_thread_wait_time = main_thread_wait_timer.get_elapsed_ms();
+			}
+
+			// poll events on main thread
 			m_window->PollEvents();
+
+            m_render_thread.next_frame();
+            m_render_thread.kick();
 
 			if (!m_minimized)
 			{
+				timer main_thread_cpu_timer{};
+
+				// #TODO(Sean) not renderer agnostic
+				// start swapchain presentation on render thread
+				render::submit([&]() { VulkanContext::Get()->GetSwapchain().BeginFrame(); });
+
 				render::begin_frame();
 				{
-					KB_PROFILE_SCOPE("Layer OnUpdate - Application::Run")
-						for (Layer* layer : m_layer_stack)
-							layer->OnUpdate(m_timestep);
+                    KB_PROFILE_SCOPE_DYNAMIC("Application::Run() layer stack OnUpdate()")
+					for (Layer* layer : m_layer_stack)
+						layer->OnUpdate(m_timestep);
 				}
 
 				if (m_specification.Enable_imgui)
@@ -205,19 +260,30 @@ namespace Kablunk
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
 
+				// draw debug statistics for engine
+				{
+					if (m_show_debug_statistics)
+						draw_debug_statistics();
+				}
+
 				render::end_frame();
 
+				render::submit([&](){ m_window->swap_buffers(); });
+
 				// #TODO fix this so API agnostic
-				if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+				/*if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
 				{
 					VulkanContext::Get()->GetSwapchain().BeginFrame();
 					render::wait_and_render();
-				}
+				}*/
 
-				m_window->OnUpdate();
+				//m_window->OnUpdate();
+
+				m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
+				m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 			}
 
-			float time = PlatformAPI::GetTime(); // Platform::GetTime
+			float time = static_cast<float>(glfwGetTime()); // Platform::GetTime
 			m_timestep = time - m_last_frame_time;
 			m_last_frame_time = time;
 		}
@@ -229,10 +295,36 @@ namespace Kablunk
 	{
 		m_imgui_layer->Begin();
 		{
-			KB_PROFILE_SCOPE("Layer OnImGuiRender - Application::Run");
+            KB_PROFILE_SCOPE_DYNAMIC("Layer OnImGuiRender - Application::Run");
 			for (Layer* layer : m_layer_stack)
 				layer->OnImGuiRender(m_timestep);
 		}
 		
 	}
+
+	void Application::toggle_fullscreen()
+	{
+		if (m_window->is_fullscreen())
+			m_window->set_window_mode(window_mode_t::windowed);
+		else
+			m_window->set_window_mode(window_mode_t::borderless_fullscreen);
+	}
+
+	void Application::draw_debug_statistics()
+	{
+#if 0
+        // #TODO this should use "screen renderer" rather than world space renderer
+		const auto& font_manager_ = m_renderer_2d->get_font_manager();
+		ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
+		if (!font_asset)
+		{
+			KB_CORE_WARN("trying to draw debug statistics with an null font asset!");
+			return;
+		}
+
+		Singleton<Renderer2D>::get().draw_text_string("test", glm::vec3{ 0.f, 0.f, 0.f }, glm::vec2{ 1.0f, 1.0f }, font_asset, glm::vec4{ 1.0f });
+#endif
+
+	}
+
 }

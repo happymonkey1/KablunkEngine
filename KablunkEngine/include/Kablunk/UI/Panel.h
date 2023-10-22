@@ -4,7 +4,7 @@
 
 #include "Kablunk/UI/IPanel.h"
 
-namespace Kablunk::ui
+namespace kb::ui
 {
 
 	class Panel : public IPanel

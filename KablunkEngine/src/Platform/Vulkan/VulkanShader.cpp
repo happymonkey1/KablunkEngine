@@ -16,7 +16,7 @@
 
 #include <filesystem>
 
-namespace Kablunk
+namespace kb
 {
 
 	namespace Internal
@@ -114,8 +114,10 @@ namespace Kablunk
 
 
 	VulkanShader::VulkanShader(const std::string& path, bool force_compile)
-		: m_file_path{ path }
+		: m_file_path{ path }, m_hash{ 0 }
 	{
+        m_hash = std::hash<std::string>{}(m_file_path);
+
 		// Get name from filepath
 		size_t found = path.find_last_of("/\\");
 		m_name = found != std::string::npos ? path.substr(found + 1) : path;
@@ -137,7 +139,7 @@ namespace Kablunk
 		if (m_has_destroyed)
 			return;
 
-		IntrusiveRef<VulkanShader> instance = this;
+		ref<VulkanShader> instance = this;
 		render::submit_resource_free([instance]()
 			{
 				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -151,7 +153,9 @@ namespace Kablunk
 
 	void VulkanShader::Reload(bool force_compile /*= false*/)
 	{
-		IntrusiveRef<VulkanShader> instance = this;
+        KB_PROFILE_FUNC()
+
+		ref<VulkanShader> instance = this;
 
 		
 		render::submit([instance, force_compile]() mutable
@@ -185,7 +189,7 @@ namespace Kablunk
 
 	size_t VulkanShader::GetHash() const
 	{
-		return std::hash<std::string>{}(m_file_path);
+		return m_hash;
 	}
 
 	void VulkanShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
@@ -240,6 +244,8 @@ namespace Kablunk
 
 	std::vector<VkDescriptorSetLayout> VulkanShader::GetAllDescriptorSetLayouts()
 	{
+        KB_PROFILE_FUNC()
+
 		std::vector<VkDescriptorSetLayout> result;
 		result.reserve(m_descriptor_set_layouts.size());
 
@@ -249,8 +255,10 @@ namespace Kablunk
 		return result;
 	}
 
-	Kablunk::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
+	kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
 	{
+        KB_PROFILE_FUNC()
+
 		KB_CORE_ASSERT(set < m_descriptor_set_layouts.size(), "set outside of map bounds");
 		ShaderMaterialDescriptorSet result;
 
@@ -275,6 +283,8 @@ namespace Kablunk
 
 	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set /*= 0*/)
 	{
+        KB_PROFILE_FUNC()
+
 		ShaderMaterialDescriptorSet result;
 
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -305,6 +315,8 @@ namespace Kablunk
 
 	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set, uint32_t number_of_sets)
 	{
+        KB_PROFILE_FUNC()
+
 		ShaderMaterialDescriptorSet result;
 
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -422,6 +434,8 @@ namespace Kablunk
 
 	void VulkanShader::CompileOrGetVulkanBinaries(std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile)
 	{
+        KB_PROFILE_FUNC()
+
 		std::filesystem::path cache_dir = Internal::GetCacheDirectory();
 		for (auto [stage, source] : m_shader_source)
 		{
@@ -710,6 +724,8 @@ namespace Kablunk
 
 	void VulkanShader::CreateDescriptors()
 	{
+        KB_PROFILE_FUNC()
+
 		VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 		m_type_counts.clear();

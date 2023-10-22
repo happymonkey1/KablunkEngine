@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/Framebuffer.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-namespace Kablunk
+namespace kb
 {
 	class OpenGLFramebuffer : public Framebuffer
 	{
@@ -13,7 +13,7 @@ namespace Kablunk
 		OpenGLFramebuffer(const FramebufferSpecification& specs);
 		virtual ~OpenGLFramebuffer();
 
-		virtual void AddResizeCallback(const std::function<void(IntrusiveRef<Framebuffer>)>& func) override;
+		virtual void AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func) override;
 		void Invalidate();
 
 		virtual void Bind() const override;
@@ -33,8 +33,8 @@ namespace Kablunk
 		uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const { KB_CORE_ASSERT(index < m_color_attachments.size(), "index out of bounds!"); return m_color_attachments[index]; }
 		RendererID GetDepthAttachmentRendererID() const { return m_depth_attachment; };
 
-		virtual IntrusiveRef<Image2D> GetImage(uint32_t attachment_index = 0) const override;
-		virtual IntrusiveRef<Image2D> GetDepthImage() const override;
+		virtual ref<Image2D> GetImage(uint32_t attachment_index = 0) const override;
+		virtual ref<Image2D> GetDepthImage() const override;
 
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 	private:

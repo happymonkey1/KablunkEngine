@@ -7,12 +7,16 @@
 #include "Kablunk/Renderer/RenderCommand2D.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/Font/FontAsset.h"
+#include "Kablunk/Renderer/Renderer2D.h"
 
 #include "Kablunk/Math/Math.h"
 
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
 #include "Kablunk/Audio/AudioEngine.h"
+
+#include "Kablunk/Asset/AssetCommand.h"
 
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
@@ -23,7 +27,7 @@
 #include <exception>
 
 
-namespace Kablunk
+namespace kb
 {
 
 	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
@@ -64,9 +68,9 @@ namespace Kablunk
 			delete m_primary_camera_entity;
 	}
 
-	IntrusiveRef<Scene> Scene::Create()
+	ref<Scene> Scene::Create()
 	{
-		return IntrusiveRef<Scene>::Create(DEFAULT_SCENE_NAME);
+		return ref<Scene>::Create(DEFAULT_SCENE_NAME);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -108,9 +112,9 @@ namespace Kablunk
 			return false;
 	}
 
-	IntrusiveRef<Scene> Scene::Copy(IntrusiveRef<Scene> src_scene)
+	ref<Scene> Scene::Copy(ref<Scene> src_scene)
 	{
-		IntrusiveRef<Scene> dest_scene = IntrusiveRef<Scene>::Create();
+		ref<Scene> dest_scene = ref<Scene>::Create();
 		KB_CORE_INFO("copying source scene '{0}' into '{1}'", src_scene->m_scene_id, dest_scene->m_scene_id);
 		dest_scene->m_name = src_scene->m_name;
 
@@ -496,7 +500,7 @@ namespace Kablunk
 		}
 	}
 
-	void Scene::OnRenderRuntime(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera* editor_cam /*= nullptr*/)
+	void Scene::OnRenderRuntime(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
 	{
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
@@ -584,11 +588,11 @@ namespace Kablunk
 		if (scene_renderer->is_multi_threaded())
 			SceneRenderer::wait_for_threads();
 
-		// #TODO move to SceneRenderer
+		// #TODO move to SceneRenderer2D
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			render2d::begin_scene(*main_camera, main_camera_transform);
-			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
+			p_renderer_2d->begin_scene(*main_camera, main_camera_transform);
+			p_renderer_2d->set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			// map for checking whether sprites have 'already been rendered by code'
 			// this is a hack for a tilemap implementation while the engine does not support
@@ -617,7 +621,7 @@ namespace Kablunk
 					continue;
 
 				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
-					render2d::draw_sprite({ entity, this });
+					p_renderer_2d->draw_sprite({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
@@ -626,11 +630,12 @@ namespace Kablunk
 				Entity circle_entity = Entity{ entity, this };
 				auto& transform = circle_entity.GetComponent<TransformComponent>();
 				auto& circle_component = circle_entity.GetComponent<CircleRendererComponent>();
-				render2d::draw_circle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+				p_renderer_2d->draw_circle(get_world_space_transform_matrix(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 
 			// ui pass
 			{
+                // ui panels
 				auto panel_view = m_registry.view<TransformComponent, UIPanelComponent>();
 				for (auto entity : panel_view)
 				{
@@ -641,9 +646,25 @@ namespace Kablunk
 					if (panel_comp.panel)
 						panel_comp.panel->on_render({ *main_camera, main_camera_transform });
 				}
+
+                // text
+                auto text_view = m_registry.view<TransformComponent, TextComponent>();
+                for (auto entity : text_view)
+                {
+                    Entity text_entity = Entity{ entity, this };
+                    auto& transform_comp = text_entity.GetComponent<TransformComponent>();
+                    auto& text_comp = text_entity.GetComponent<TextComponent>();
+
+                    KB_CORE_ASSERT(false, "need to re-implement!");
+                    ref<render::font_asset_t> font_asset = nullptr;
+                    //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+
+                    if (font_asset)
+                        p_renderer_2d->draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);
+                }
 			}
 
-			render2d::end_scene();
+			p_renderer_2d->end_scene();
 		}
 		else
 			KB_CORE_WARN("Skipping render2d, final render pass image is not ready!");
@@ -702,7 +723,7 @@ namespace Kablunk
 		
 	}
 
-	void Scene::OnRenderEditor(IntrusiveRef<SceneRenderer> scene_renderer, EditorCamera& camera)
+	void Scene::OnRenderEditor(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera)
 	{
 
 		// Lights
@@ -758,8 +779,8 @@ namespace Kablunk
 		// #TODO move to scene renderer
 		if (scene_renderer->get_final_render_pass_image())
 		{
-			render2d::begin_scene(camera, camera.GetViewMatrix());
-			render2d::set_target_render_pass(scene_renderer->get_external_composite_render_pass());
+			p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
+			p_renderer_2d->set_target_render_pass(scene_renderer->get_external_composite_render_pass());
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)
@@ -768,7 +789,7 @@ namespace Kablunk
 				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
 
 				if (src.Visible)
-					render2d::draw_sprite({ entity, this });
+					p_renderer_2d->draw_sprite({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
@@ -777,7 +798,7 @@ namespace Kablunk
 				Entity circle_entity = Entity{ entity, this };
 				auto& transform = circle_entity.GetComponent<TransformComponent>();
 				auto& circle_component = circle_entity.GetComponent<CircleRendererComponent>();
-				render2d::draw_circle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
+				p_renderer_2d->draw_circle(get_world_space_transform(circle_entity), circle_component.Color, circle_component.Radius, circle_component.Thickness, circle_component.Fade, (int32_t)entity);
 			}
 
 			// ui pass
@@ -794,7 +815,23 @@ namespace Kablunk
 				}
 			}
 
-			render2d::end_scene();
+            // text
+            auto text_view = m_registry.view<TransformComponent, TextComponent>();
+            for (auto entity : text_view)
+            {
+                Entity text_entity = Entity{ entity, this };
+                auto& transform_comp = text_entity.GetComponent<TransformComponent>();
+                auto& text_comp = text_entity.GetComponent<TextComponent>();
+
+                KB_CORE_ASSERT(false, "need to re-implement");
+                ref<render::font_asset_t> font_asset = nullptr;
+                //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+
+                if (font_asset)
+                    p_renderer_2d->draw_text_string(text_comp.m_text_str, transform_comp.Translation, transform_comp.Scale, font_asset, text_comp.m_tint_color);
+            }
+
+			p_renderer_2d->end_scene();
 		}
 	}
 
@@ -966,7 +1003,7 @@ namespace Kablunk
 
 		auto transform_component = TransformComponent{};
 
-		Math::decompose_transform(transform, transform_component.Translation, transform_component.Scale, transform_component.Rotation);
+		math::decompose_transform(transform, transform_component.Translation, transform_component.Scale, transform_component.Rotation);
 
 		return transform_component;
 	}
@@ -1037,6 +1074,9 @@ namespace Kablunk
 		}
 	}
 
+    // unnecessary boiler plate originally used to have an "oncomponentadded" function for the camera
+    // #TODO remove and use Entt method...
+
 	template <>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component) { }
 
@@ -1089,5 +1129,8 @@ namespace Kablunk
 
 	template <>
 	void Scene::OnComponentAdded<UIPanelComponent>(Entity entity, UIPanelComponent& component) { }
+
+    template <>
+    void Scene::OnComponentAdded<TextComponent>(Entity entity, TextComponent& component) {}
 }
 

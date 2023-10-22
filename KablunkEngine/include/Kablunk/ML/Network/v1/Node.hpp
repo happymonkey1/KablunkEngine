@@ -10,7 +10,7 @@
 #include <vector>
 #include <stdint.h>
 
-namespace Kablunk::ml::network::v1
+namespace kb::ml::network::v1
 {
 	using node_id_t = uuid::uuid64;
 

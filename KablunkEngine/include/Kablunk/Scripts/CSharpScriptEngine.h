@@ -16,7 +16,7 @@ extern "C"
 	typedef struct _MonoClass MonoClass;
 }
 
-namespace Kablunk
+namespace kb
 {
 	struct EntityScriptClass;
 	struct EntityInstance

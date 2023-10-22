@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace Kablunk
+namespace kb
 {
 	class VertexArray : public RefCounted
 	{
@@ -17,13 +17,13 @@ namespace Kablunk
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void AddVertexBuffer(const IntrusiveRef<VertexBuffer>& vertexBuffer) = 0;
-		virtual void SetIndexBuffer(const IntrusiveRef<IndexBuffer>& indexBuffer) = 0;
+		virtual void AddVertexBuffer(const ref<VertexBuffer>& vertexBuffer) = 0;
+		virtual void SetIndexBuffer(const ref<IndexBuffer>& indexBuffer) = 0;
 
-		virtual const std::vector<IntrusiveRef<VertexBuffer>>& GetVertexBuffers() const = 0;
-		virtual const IntrusiveRef<IndexBuffer>& GetIndexBuffer() const = 0;
+		virtual const std::vector<ref<VertexBuffer>>& GetVertexBuffers() const = 0;
+		virtual const ref<IndexBuffer>& GetIndexBuffer() const = 0;
 
-		static IntrusiveRef<VertexArray> Create();
+		static ref<VertexArray> Create();
 	};
 }
 

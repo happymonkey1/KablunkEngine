@@ -4,7 +4,7 @@
 
 #include "Panels/AssetEditorPanel.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class TextureViewer : public AssetEditor

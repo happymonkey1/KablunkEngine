@@ -10,7 +10,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-namespace Kablunk
+namespace kb
 {
 
 	EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)

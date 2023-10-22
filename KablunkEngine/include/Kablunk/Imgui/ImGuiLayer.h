@@ -5,7 +5,7 @@
 #include "Kablunk/Events/KeyEvent.h"
 #include "Kablunk/Events/ApplicationEvent.h"
 
-namespace Kablunk 
+namespace kb 
 {
 
 	class ImGuiLayer : public Layer

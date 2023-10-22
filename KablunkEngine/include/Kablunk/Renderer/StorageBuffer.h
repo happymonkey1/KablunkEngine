@@ -4,7 +4,7 @@
 
 #include "Kablunk/Core/Core.h"
 
-namespace Kablunk
+namespace kb
 {
 
 	class StorageBuffer : public RefCounted
@@ -18,7 +18,7 @@ namespace Kablunk
 
 		virtual uint32_t GetBinding() = 0;
 
-		static IntrusiveRef<StorageBuffer> Create(size_t size, uint32_t binding);
+		static ref<StorageBuffer> Create(size_t size, uint32_t binding);
 	};
 
 }

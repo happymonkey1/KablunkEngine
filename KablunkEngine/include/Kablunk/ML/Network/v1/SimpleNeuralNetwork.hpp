@@ -9,7 +9,7 @@
 
 #include <array>
 
-namespace Kablunk::ml::network::v1
+namespace kb::ml::network::v1
 {
 	// #TODO layers with different underlying types
 	// for example int16 layer -> int8 layer -> int8 layer, all in one network
@@ -20,14 +20,14 @@ namespace Kablunk::ml::network::v1
 	{
 	public:
 		using value_t = T;
-		using layer_t = Kablunk::ml::network::ILayer<T>;
-		using optimizer_t = Kablunk::ml::network::INetwork<T>::optimizer_t;
+		using layer_t = kb::ml::network::ILayer<T>;
+		using optimizer_t = kb::ml::network::INetwork<T>::optimizer_t;
 		// #TODO this may not be correct
-		using network_tensor_t = Kablunk::ml::tensor::Tensor<value_t, 2>;
+		using network_tensor_t = kb::ml::tensor::Tensor<value_t, 2>;
 	public:
 		SimpleNeuralNetwork(
 			const std::initializer_list<layer_t*>& layers, 
-			optimizer_t* optimizer = new Kablunk::ml::optimizer::B4<value_t>{ 0.002f, new Kablunk::ml::optimizer::negative_log_loss<T>{} }
+			optimizer_t* optimizer = new kb::ml::optimizer::B4<value_t>{ 0.002f, new kb::ml::optimizer::negative_log_loss<T>{} }
 		)
 			: m_layers{ layers }, m_optimizer{ optimizer }
 		{

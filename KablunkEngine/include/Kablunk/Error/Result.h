@@ -5,7 +5,7 @@
 
 #include <variant>
 
-namespace Kablunk::error
+namespace kb::error
 {
 
 	// Struct that holds a variant of okay and error results from a function. Modeled after rust's error handling system
