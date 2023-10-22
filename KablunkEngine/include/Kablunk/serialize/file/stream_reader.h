@@ -111,7 +111,7 @@ public:
 
     // read key, value pairs into the reference unordered map parameter
     template <typename key_t, typename value_t>
-    auto read_unordered_map(std::unordered_map<key_t, value_t>& p_map, size_t p_size = 0) noexcept  -> void
+    auto read_unordered_map(kb::unordered_flat_map<key_t, value_t>& p_map, size_t p_size = 0) noexcept  -> void
     {
         if (!p_size)
             read_trivial_into(p_size);
@@ -134,7 +134,7 @@ public:
 
     // read key, value pairs into the reference unordered map parameter
     template <typename value_t>
-    auto read_unordered_map(std::unordered_map<std::string, value_t>& p_map, size_t p_size = 0) noexcept -> void
+    auto read_unordered_map(kb::unordered_flat_map<std::string, value_t>& p_map, size_t p_size = 0) noexcept -> void
     {
         if (!p_size)
             read_trivial_into(p_size);

@@ -13,7 +13,7 @@ namespace kb
 {
 
 	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data)
-		: m_width{ width }, m_height{ height }, m_format{ format }
+		: m_width{ width }, m_height{ height }, m_format{ format }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) }
 	{
 		size_t size = Utils::GetImageMemorySize(format, width, height);
 
@@ -40,7 +40,7 @@ namespace kb
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
-		: m_filepath{ path }
+		: m_filepath{ path }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) }
 	{
 		m_loaded = this->LoadImage(m_filepath);
 

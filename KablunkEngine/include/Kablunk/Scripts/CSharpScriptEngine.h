@@ -35,7 +35,7 @@ namespace kb
 	};
 
 	// map scene ids to a map of uuids and EntityInstanceData
-	using EntityInstanceMap = std::unordered_map<uuid::uuid64, std::unordered_map<uuid::uuid64, EntityInstanceData>>;
+	using EntityInstanceMap = kb::unordered_flat_map<uuid::uuid64, kb::unordered_flat_map<uuid::uuid64, EntityInstanceData>>;
 
 	class CSharpScriptEngine
 	{

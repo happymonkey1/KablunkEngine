@@ -18,8 +18,8 @@
 #include <box2d/b2_fixture.h>
 
 namespace kb {
-	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
-	extern std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
+	extern kb::unordered_flat_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
+	extern kb::unordered_flat_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
 }
 
 

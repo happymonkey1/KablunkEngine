@@ -53,7 +53,7 @@ namespace kb::asset
 	private:
 		// map of asset ids and metadata
 		// #TODO replace with database
-		std::unordered_map<asset_id_t, AssetMetadata> m_registry;
+		kb::unordered_flat_map<asset_id_t, AssetMetadata> m_registry;
 	};
 
 }

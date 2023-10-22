@@ -78,7 +78,7 @@ namespace kb
 		// current scene context
 		ref<Scene> m_scene_context = nullptr;
 		// registered asset editors
-		map<asset::AssetType, box<AssetEditor>> m_registered_editors;
+		kb::unordered_flat_map<asset::AssetType, box<AssetEditor>> m_registered_editors;
 	};
 
 }

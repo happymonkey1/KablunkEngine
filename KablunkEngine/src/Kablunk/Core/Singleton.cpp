@@ -28,7 +28,7 @@ namespace kb
 
 		static SingletonManager* get_singleton_manager(const std::type_index& type_index)
 		{
-			static std::unordered_map<std::type_index, SingletonManager> s_manager_map;
+			static kb::unordered_flat_map<std::type_index, SingletonManager> s_manager_map;
 
 			auto it = s_manager_map.find(type_index);
 			if (it != s_manager_map.end())

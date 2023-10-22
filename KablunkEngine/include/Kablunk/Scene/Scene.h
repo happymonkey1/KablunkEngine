@@ -21,7 +21,7 @@ namespace kb
 
     class Renderer2D;
 	
-	using EntityMap = std::unordered_map<uuid::uuid64, Entity>;
+	using EntityMap = kb::unordered_flat_map<uuid::uuid64, Entity>;
 	constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
 
 	struct PointLight

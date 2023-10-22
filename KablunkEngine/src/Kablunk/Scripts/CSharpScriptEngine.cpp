@@ -108,8 +108,8 @@ namespace kb
 	static MonoMethod* s_exception_method = nullptr;
 	static MonoClass* s_entity_class = nullptr;
 
-	static std::unordered_map<std::string, MonoClass*> s_classes;
-	static std::unordered_map<std::string, EntityScriptClass> s_entity_class_map;
+	static kb::unordered_flat_map<std::string, MonoClass*> s_classes;
+	static kb::unordered_flat_map<std::string, EntityScriptClass> s_entity_class_map;
 	
 	struct EntityScriptClass
 	{

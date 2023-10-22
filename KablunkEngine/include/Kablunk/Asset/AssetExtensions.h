@@ -9,9 +9,9 @@
 #include <unordered_map>
 
 namespace kb::asset
-{
+{ // start namespace kb::asset
 
-	inline static const std::unordered_map<std::string, AssetType> s_asset_extension_map = {
+	inline static const kb::unordered_flat_map<std::string, AssetType> s_asset_extension_map = {
 		// texture
 		{ ".png",			AssetType::Texture },
 		{ ".jpg",			AssetType::Texture },
@@ -46,6 +46,6 @@ namespace kb::asset
 		{ ".hpp",			AssetType::NativeScript }
 	};
 
-}
+} // end namespace kb::asset
 
 #endif

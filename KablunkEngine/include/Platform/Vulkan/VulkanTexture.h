@@ -28,7 +28,7 @@ namespace kb
 		virtual uint32_t GetWidth() const override { return m_width; }
 		virtual uint32_t GetHeight() const override { return m_height; }
 		virtual RendererID GetRendererID() const override { return 0; }
-		virtual uint64_t GetHash() const override { return static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)); }
+		virtual uint64_t GetHash() const override { return m_hash; }
 
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
@@ -46,6 +46,7 @@ namespace kb
 		bool LoadImage(const std::string& filepath);
 	private:
 		std::string m_filepath;
+        u64 m_hash = 0ull;
 		uint32_t m_width;
 		uint32_t m_height;
 

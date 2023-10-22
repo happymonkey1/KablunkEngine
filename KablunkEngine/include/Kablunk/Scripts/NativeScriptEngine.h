@@ -130,7 +130,7 @@ namespace kb
 	private:
 		inline static NativeScriptEngine* s_native_script_engine;
 	private:
-		using NativeScriptContainer = std::unordered_map<std::string, Internal::NativeScriptRuntimeObject>;
+		using NativeScriptContainer = kb::unordered_flat_map<std::string, Internal::NativeScriptRuntimeObject>;
 		
 		bool m_dll_directory_set = false;
 

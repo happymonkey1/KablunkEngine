@@ -5366,7 +5366,7 @@ struct VmaPairFirstLess
 #endif // _VMA_PAIR
 
 #ifndef _VMA_MAP
-/* Class compatible with subset of interface of std::unordered_map.
+/* Class compatible with subset of interface of kb::unordered_flat_map.
 KeyT, ValueT must be POD because they will be stored in VmaVector.
 */
 template<typename KeyT, typename ValueT>

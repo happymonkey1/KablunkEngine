@@ -35,7 +35,7 @@ namespace kb
 
 		SINGLETON_GET_FUNC(PluginManager)
 	private:
-		std::unordered_map<std::string, ref<Plugin>> m_plugins;
+		kb::unordered_flat_map<std::string, ref<Plugin>> m_plugins;
 	};
 
 }

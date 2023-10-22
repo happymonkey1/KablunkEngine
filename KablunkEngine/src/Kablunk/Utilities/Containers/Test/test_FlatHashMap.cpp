@@ -253,7 +253,7 @@ void test_flat_hash_map_find()
 	}
 }
 
-// test performance compared to std::unordered_map
+// test performance compared to kb::unordered_flat_map
 void test_flat_hash_map_performance()
 {
 
@@ -271,10 +271,10 @@ void test_flat_hash_map_performance()
 		flat_unordered_hash_map<std::string, uint64_t> test_map;
 	}
 
-	// test default std::unordered_map constructor
+	// test default kb::unordered_flat_map constructor
 	{
 		scoped_timer<> timer{ [](std::chrono::nanoseconds nanos) -> void { KB_CORE_TRACE("[Test] [unordered_map]: default constructor took {} ns", nanos.count()); } };
-		std::unordered_map<std::string, uint64_t> test_map;
+		kb::unordered_flat_map<std::string, uint64_t> test_map;
 	}
 
 	// test inserting 1024 values into flat_unordered_hash_map
@@ -294,18 +294,18 @@ void test_flat_hash_map_performance()
 			test_map.insert({ std::to_string(i), i });
 	}
 
-	// test inserting 1024 values into std::unordered_map
+	// test inserting 1024 values into kb::unordered_flat_map
 	{
 		scoped_timer<> timer{
 			[](std::chrono::nanoseconds nanos) -> void
 			{
 				KB_CORE_TRACE(
-					"[Test] [std::unordered_map]: insert 1024 values took {} ns",
+					"[Test] [kb::unordered_flat_map]: insert 1024 values took {} ns",
 					nanos.count()
 				);
 			}
 		};
-		std::unordered_map<std::string, uint64_t> test_map;
+		kb::unordered_flat_map<std::string, uint64_t> test_map;
 		constexpr const size_t insert_count = 1024ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 			test_map.insert({ std::to_string(i), i });
@@ -328,18 +328,18 @@ void test_flat_hash_map_performance()
 			test_map.emplace({ std::to_string(i), i });
 	}
 
-	// test inserting 131072 values into std::unordered_map
+	// test inserting 131072 values into kb::unordered_flat_map
 	{
 		scoped_timer<> timer{
 			[](std::chrono::nanoseconds nanos) -> void
 			{
 				KB_CORE_TRACE(
-					"[Test] [std::unordered_map]: insert 131072 values took {} ns",
+					"[Test] [kb::unordered_flat_map]: insert 131072 values took {} ns",
 					nanos.count()
 				);
 			}
 		};
-		std::unordered_map<std::string, uint64_t> test_map;
+		kb::unordered_flat_map<std::string, uint64_t> test_map;
 		constexpr const size_t insert_count = 1024ull * 128ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 			test_map.emplace(std::make_pair(std::to_string(i), i));
@@ -362,18 +362,18 @@ void test_flat_hash_map_performance()
 			test_map.emplace({ std::to_string(i), i });
 	}
 
-	// test inserting 1048576 values into std::unordered_map
+	// test inserting 1048576 values into kb::unordered_flat_map
 	{
 		scoped_timer<> timer{
 			[](std::chrono::nanoseconds nanos) -> void
 			{
 				KB_CORE_TRACE(
-					"[Test] [std::unordered_map]: insert 1048576 values took {} ns",
+					"[Test] [kb::unordered_flat_map]: insert 1048576 values took {} ns",
 					nanos.count()
 				);
 			}
 		};
-		std::unordered_map<std::string, uint64_t> test_map;
+		kb::unordered_flat_map<std::string, uint64_t> test_map;
 		constexpr const size_t insert_count = 1024ull * 1024ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 			test_map.emplace(std::make_pair(std::to_string(i), i));
@@ -382,7 +382,7 @@ void test_flat_hash_map_performance()
 	// test iteration through 1024 values
 	{
 		flat_unordered_hash_map<std::string, uint64_t> test_map_a;
-		std::unordered_map<std::string, uint64_t> test_map_b;
+		kb::unordered_flat_map<std::string, uint64_t> test_map_b;
 		constexpr const size_t insert_count = 1024ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 		{
@@ -409,13 +409,13 @@ void test_flat_hash_map_performance()
 			KB_CORE_INFO("[flat_unordered_hash_map]: sum of 1024 integers in a series: {}", sum);
 		}
 
-		// test std::unordered_map
+		// test kb::unordered_flat_map
 		{
 			scoped_timer<> timer{
 				[](std::chrono::nanoseconds nanos) -> void
 				{
 					KB_CORE_TRACE(
-						"[Test] [std::unordered_map]: iterating 1024 values took {} ns",
+						"[Test] [kb::unordered_flat_map]: iterating 1024 values took {} ns",
 						nanos.count()
 					);
 				}
@@ -424,7 +424,7 @@ void test_flat_hash_map_performance()
 			size_t sum = 0ull;
 			for (auto& [key, value] : test_map_b)
 				sum += value;
-			KB_CORE_INFO("[std::unordered_map]: sum of 1024 integers in a series: {}", sum);
+			KB_CORE_INFO("[kb::unordered_flat_map]: sum of 1024 integers in a series: {}", sum);
 		}
 
 	}
@@ -432,7 +432,7 @@ void test_flat_hash_map_performance()
 	// test iterating 8192 values
 	{
 		flat_unordered_hash_map<std::string, uint64_t> test_map_a;
-		std::unordered_map<std::string, uint64_t> test_map_b;
+		kb::unordered_flat_map<std::string, uint64_t> test_map_b;
 		constexpr const size_t insert_count = 1024ull * 4ull;
 		for (size_t i = 0ull; i < insert_count; ++i)
 		{
@@ -459,13 +459,13 @@ void test_flat_hash_map_performance()
 			KB_CORE_INFO("[flat_unordered_hash_map]: sum of 8192 integers in a series: {}", sum);
 		}
 
-		// test std::unordered_map
+		// test kb::unordered_flat_map
 		{
 			scoped_timer<> timer{
 				[](std::chrono::nanoseconds nanos) -> void
 				{
 					KB_CORE_TRACE(
-						"[Test] [std::unordered_map]: iterating 8192 values took {} ns",
+						"[Test] [kb::unordered_flat_map]: iterating 8192 values took {} ns",
 						nanos.count()
 					);
 				}
@@ -474,7 +474,7 @@ void test_flat_hash_map_performance()
 			size_t sum = 0ull;
 			for (auto& [key, value] : test_map_b)
 				sum += value;
-			KB_CORE_INFO("[std::unordered_map]: sum of 8192 integers in a series: {}", sum);
+			KB_CORE_INFO("[kb::unordered_flat_map]: sum of 8192 integers in a series: {}", sum);
 		}
 
 		KB_CORE_INFO("[Test] performance testing finished");

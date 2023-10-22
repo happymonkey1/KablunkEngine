@@ -67,7 +67,7 @@ namespace kb::render
 		// font points are a physical distance, representing 1/72th of an inch
 		void set_font_point(size_t new_font_point);
 		// get the texture atlas
-		ref<Texture2D> get_texture_atlas() const { return m_texture_atlas; }
+		auto get_texture_atlas() const -> const ref<Texture2D>& { return m_texture_atlas; }
 		// release resources owned by the asset
 		void release();
 		// get the glpyh rendering info map

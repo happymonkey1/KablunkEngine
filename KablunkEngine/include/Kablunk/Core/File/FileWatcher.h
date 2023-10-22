@@ -26,7 +26,7 @@ namespace kb
 	private:
 		bool m_running = true;
 
-		std::unordered_map<std::filesystem::path, std::filesystem::file_time_type> m_paths;
+		kb::unordered_flat_map<std::filesystem::path, std::filesystem::file_time_type> m_paths;
 	};
 
 }

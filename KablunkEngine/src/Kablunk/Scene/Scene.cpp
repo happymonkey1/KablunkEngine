@@ -30,7 +30,7 @@
 namespace kb
 {
 
-	static std::unordered_map<uuid::uuid64, Scene*> s_active_scenes;
+	static kb::unordered_flat_map<uuid::uuid64, Scene*> s_active_scenes;
 
 	Scene::Scene(const std::string& name)
 		: m_name{ name }

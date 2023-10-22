@@ -15,7 +15,7 @@ void test_flat_hash_map_insert_and_erase();
 void test_flat_hash_map_iterators();
 // test find
 void test_flat_hash_map_find();
-// test performance compared to std::unordered_map
+// test performance compared to kb::unordered_flat_map
 void test_flat_hash_map_performance();
 
 }  // end namespace kb::util::container::test

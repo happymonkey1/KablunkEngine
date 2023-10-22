@@ -78,7 +78,7 @@ public:
     }
 
     template <typename key_t, typename value_t>
-    auto write_unordered_map(const std::unordered_map<key_t, value_t>& p_map, bool p_write_size = true) noexcept -> void
+    auto write_unordered_map(const kb::unordered_flat_map<key_t, value_t>& p_map, bool p_write_size = true) noexcept -> void
     {
         if (p_write_size)
             write_trivial(static_cast<size_t>(p_map.size()));
