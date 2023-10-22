@@ -68,12 +68,12 @@ public:
 	}
 
 	// get an immutable reference to the per frame data map
-	const std::unordered_map<const char*, f32>& get_per_frame_data() const { return m_per_frame_data_map; }
+	const kb::unordered_flat_map<const char*, f32>& get_per_frame_data() const { return m_per_frame_data_map; }
 private:
 	// mutex for a scoped lock to ensure synchronization between render and main thread
 	std::mutex m_per_frame_data_mutex{};
 	// map of per frame data 
-	std::unordered_map<const char*, f32> m_per_frame_data_map;
+	kb::unordered_flat_map<const char*, f32> m_per_frame_data_map;
 };
 
 	

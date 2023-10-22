@@ -159,18 +159,18 @@ namespace kb
 			std::vector<ref<Image2D>> images;
 			VkDescriptorImageInfo submitted_image_info{};
 		};
-		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptor>> m_resident_descriptors;
-		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> m_resident_descriptor_array;
+		kb::unordered_flat_map<uint32_t, std::shared_ptr<PendingDescriptor>> m_resident_descriptors;
+		kb::unordered_flat_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> m_resident_descriptor_array;
 		std::vector<std::shared_ptr<PendingDescriptor>> m_pending_descriptors; // #TODO weak ref
 
 		uint32_t m_material_flags;
 
-		std::unordered_map<uint32_t, uint64_t> m_image_hashes;
+		kb::unordered_flat_map<uint32_t, uint64_t> m_image_hashes;
 
 		std::vector<std::vector<VkWriteDescriptorSet>> m_write_descriptors;
 		std::vector<bool> m_dirty_descriptor_sets;
 
-		std::unordered_map<std::string, VkDescriptorImageInfo> m_image_infos;
+		kb::unordered_flat_map<std::string, VkDescriptorImageInfo> m_image_infos;
 
 		Buffer m_uniform_storage_buffer;
 

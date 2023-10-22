@@ -12,8 +12,8 @@
 
 namespace kb
 {
-	std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
-	std::unordered_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
+	kb::unordered_flat_map<MonoType*, std::function<bool(Entity&)>> s_has_component_funcs;
+	kb::unordered_flat_map<MonoType*, std::function<void(Entity&)>> s_create_component_funcs;
 
 	extern MonoImage* s_core_assembly_image;
 	#define Component_RegisterType(Type) \

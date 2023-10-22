@@ -7,7 +7,6 @@
 
 #include <glm/glm.hpp>
 
-#include <unordered_map>
 #include <string>
 
 namespace kb {
@@ -61,7 +60,7 @@ namespace kb {
 	{
 		std::string name;
 		uint32_t size = 0;
-		std::unordered_map<std::string, ShaderUniform> uniforms;
+		kb::unordered_flat_map<std::string, ShaderUniform> uniforms;
 	};
 
 
@@ -93,8 +92,8 @@ namespace kb {
 		virtual const std::string& GetName() const = 0;
 		virtual RendererID GetRendererID() const = 0;
 
-		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const = 0;
-		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
+		virtual const kb::unordered_flat_map<std::string, ShaderBuffer>& GetShaderBuffers() const = 0;
+		virtual const kb::unordered_flat_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
 		static ref<Shader> Create(const std::string& filePath, bool force_compile = false);
 	};
@@ -116,6 +115,6 @@ namespace kb {
 
 		bool Exists(const std::string& name);
 	private:
-		std::unordered_map<std::string, ref<Shader>> m_shaders;
+		kb::unordered_flat_map<std::string, ref<Shader>> m_shaders;
 	};
 }

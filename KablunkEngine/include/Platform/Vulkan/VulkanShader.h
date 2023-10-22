@@ -2,6 +2,7 @@
 #ifndef KABLUNK_PLATFORM_VULKAN_SHADER_H
 #define KABLUNK_PLATFORM_VULKAN_SHADER_H
 
+#include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/ShaderUniform.h"
 
@@ -15,8 +16,8 @@ namespace kb
 		struct UniformBuffer
 		{
 			VkDescriptorBufferInfo descriptor;
-			uint32_t size = 0;
-			uint32_t binding_point = 0;
+			u32 size = 0;
+			u32 binding_point = 0;
 			std::string name;
 			VkShaderStageFlagBits shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 		};
@@ -24,17 +25,17 @@ namespace kb
 		struct StorageBuffer
 		{
 			VkDescriptorBufferInfo descriptor;
-			uint32_t size = 0;
-			uint32_t binding_point = 0;
+			u32 size = 0;
+			u32 binding_point = 0;
 			std::string name;
 			VkShaderStageFlagBits shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 		};
 
 		struct ImageSampler
 		{
-			uint32_t binding_point = 0;
-			uint32_t descriptor_set = 0;
-			uint32_t array_size = 0;
+            u32 binding_point = 0;
+            u32 descriptor_set = 0;
+            u32 array_size = 0;
 			std::string name;
 			VkShaderStageFlagBits shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 		};
@@ -42,8 +43,8 @@ namespace kb
 		struct PushConstantRange
 		{
 			VkShaderStageFlagBits shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
-			uint32_t offset = 0;
-			uint32_t size = 0;
+            u32 offset = 0;
+            u32 size = 0;
 		};
 
 
@@ -69,8 +70,8 @@ namespace kb
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 
 		virtual const std::string& GetName() const { return m_name; };
-		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const override { return m_buffers; }
-		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const override { return m_resources; };
+		virtual const kb::unordered_flat_map<std::string, ShaderBuffer>& GetShaderBuffers() const override { return m_buffers; }
+		virtual const kb::unordered_flat_map<std::string, ShaderResourceDeclaration>& GetResources() const override { return m_resources; };
 		virtual RendererID GetRendererID() const { KB_CORE_ASSERT(false, "does not apply for Vulkan!"); return 0; };
 
 		const std::vector<VkPipelineShaderStageCreateInfo>& GetPipelineShaderStageCreateInfos() const { return m_pipeline_shader_stage_create_infos; }
@@ -94,12 +95,12 @@ namespace kb
 
 		struct ShaderDescriptorSet
 		{
-			std::unordered_map<uint32_t, UniformBuffer*> uniform_buffers;
-			std::unordered_map<uint32_t, StorageBuffer*> storage_buffers;
-			std::unordered_map<uint32_t, ImageSampler> image_samplers;
-			std::unordered_map<uint32_t, ImageSampler> storage_images;
+			kb::unordered_flat_map<uint32_t, UniformBuffer*> uniform_buffers;
+			kb::unordered_flat_map<uint32_t, StorageBuffer*> storage_buffers;
+			kb::unordered_flat_map<uint32_t, ImageSampler> image_samplers;
+			kb::unordered_flat_map<uint32_t, ImageSampler> storage_images;
 
-			std::unordered_map<std::string, VkWriteDescriptorSet> write_descriptor_sets;
+            kb::unordered_flat_map<std::string, VkWriteDescriptorSet> write_descriptor_sets;
 
 			operator bool() const { return !(uniform_buffers.empty() && storage_buffers.empty() && image_samplers.empty() && storage_images.empty()); }
 		};
@@ -122,16 +123,16 @@ namespace kb
 
 		static void ClearUniformBuffers();
 	private:
-		std::unordered_map<VkShaderStageFlagBits, std::string> PreProcess(const std::string& source);
-		void CompileOrGetVulkanBinaries(std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile);
-		void LoadAndCreateShaders(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
+		kb::unordered_flat_map<VkShaderStageFlagBits, std::string> PreProcess(const std::string& source);
+		void CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile);
+		void LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
 		void Reflect(VkShaderStageFlagBits shader_stage, const std::vector<uint32_t>& shader_data);
-		void ReflectAllShaderStages(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
+		void ReflectAllShaderStages(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
 
 		void CreateDescriptors();
 	private:
 		std::vector<VkPipelineShaderStageCreateInfo> m_pipeline_shader_stage_create_infos;
-		std::unordered_map<VkShaderStageFlagBits, std::string> m_shader_source;
+        kb::unordered_flat_map<VkShaderStageFlagBits, std::string> m_shader_source;
 		std::string m_file_path;
 		std::string m_name;
         size_t m_hash;
@@ -139,14 +140,14 @@ namespace kb
 		std::vector<ShaderDescriptorSet> m_shader_descriptor_sets;
 		
 		std::vector<PushConstantRange> m_push_constant_ranges;
-		std::unordered_map<std::string, ShaderResourceDeclaration> m_resources;
+        kb::unordered_flat_map<std::string, ShaderResourceDeclaration> m_resources;
 
-		std::unordered_map<std::string, ShaderBuffer> m_buffers;
+        kb::unordered_flat_map<std::string, ShaderBuffer> m_buffers;
 
 		std::vector<VkDescriptorSetLayout> m_descriptor_set_layouts;
 		VkDescriptorSet m_descriptor_set;
 
-		std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> m_type_counts;
+        kb::unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> m_type_counts;
 
 		// flag for whether this shader has been freed
 		bool m_has_destroyed = false;

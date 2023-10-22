@@ -35,11 +35,11 @@ namespace kb::render
 		const FT_Library& get_ft_engine() const { return m_ft_library; }
 		// get the font cache
 		// maps relative font paths to font assets
-		const std::unordered_map<asset::asset_id_t, ref<font_asset_t>>& get_font_cache() const { return m_font_cache; }
+		const kb::unordered_flat_map<asset::asset_id_t, ref<font_asset_t>>& get_font_cache() const { return m_font_cache; }
 	private:
 		// cache of fonts loaded into memory
 		// maps font filename to font assets
-		std::unordered_map<asset::asset_id_t, ref<font_asset_t>> m_font_cache;
+		kb::unordered_flat_map<asset::asset_id_t, ref<font_asset_t>> m_font_cache;
 		// underlying font rendering engine (freetype)
 		FT_Library m_ft_library = nullptr;
 	};

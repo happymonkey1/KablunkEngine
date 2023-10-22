@@ -180,8 +180,8 @@ namespace kb
 		std::vector<Vertex> m_static_vertices;
 		std::vector<AnimatedVertex> m_animated_vertices;
 		std::vector<Index> m_indices;
-		std::unordered_map<std::string, uint32_t> m_bone_mapping;
-		std::unordered_map<aiNode*, std::vector<uint32_t>> m_node_map;
+		kb::unordered_flat_map<std::string, uint32_t> m_bone_mapping;
+		kb::unordered_flat_map<aiNode*, std::vector<uint32_t>> m_node_map;
 
 		uint32_t m_bone_count = 0;
 		std::vector<BoneInfo> m_bone_info;
@@ -196,7 +196,7 @@ namespace kb
 		std::vector<ref<Texture2D>> m_normal_map;
 		std::vector<ref<Material>> m_materials;
 		
-		std::unordered_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
+		kb::unordered_flat_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
 
 		std::string m_filepath;
 

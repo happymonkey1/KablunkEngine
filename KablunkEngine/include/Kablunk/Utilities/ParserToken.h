@@ -38,7 +38,7 @@ namespace kb::Parser
 			}
 
 		private:
-			inline static const std::unordered_map<std::string, bool> s_annotation_map = std::unordered_map<std::string, bool>{ 
+			inline static const kb::unordered_flat_map<std::string, bool> s_annotation_map = kb::unordered_flat_map<std::string, bool>{ 
 				{ std::string{ SERIALIZE_FIELD }, false }
 			};
 		};

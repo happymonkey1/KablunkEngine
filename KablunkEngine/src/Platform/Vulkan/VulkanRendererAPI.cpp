@@ -38,8 +38,8 @@ namespace kb
 		std::vector<VkDescriptorPool> descriptor_pools;
 		std::vector<uint32_t> descriptor_pool_allocation_count;
 
-		std::unordered_map<UniformBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> uniform_buffer_write_descriptor_cache;
-		std::unordered_map<StorageBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> storage_buffer_write_descriptor_cache;
+		kb::unordered_flat_map<UniformBufferSet*, kb::unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> uniform_buffer_write_descriptor_cache;
+		kb::unordered_flat_map<StorageBufferSet*, kb::unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> storage_buffer_write_descriptor_cache;
 
 		int32_t draw_call_count = 0;
 	};

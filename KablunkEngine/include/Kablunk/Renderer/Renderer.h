@@ -105,7 +105,7 @@ namespace kb
             std::vector<ref<kb::render::compute_pipeline>> compute_pipelines;
 		};
 
-		std::unordered_map<uint64_t, ShaderDependencies> m_shader_dependencies;
+		kb::unordered_flat_map<uint64_t, ShaderDependencies> m_shader_dependencies;
 		RendererOptions m_options = { };
 		ref<ShaderLibrary> m_shader_library;
 		RendererAPI* m_renderer_api = nullptr;

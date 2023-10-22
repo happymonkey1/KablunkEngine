@@ -896,6 +896,7 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& posi
 	draw_text_string(text, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
 }
 
+// #TODO draw command should be done on the render thread
 void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
 {
 	if (m_renderer_data.text_count + 1 > m_renderer_data.max_quads)
@@ -905,21 +906,24 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
 	KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
 
+    // #TODO it should not be possible to have a font asset that is not cached in the font manager
 	if (!m_renderer_data.m_font_manager.has_font_cached(font_asset))
 	{
 		KB_CORE_WARN("[renderer2d]: font asset was not cached in the font manager when draw command issue!");
 	}
 
-	ref<Texture2D> font_texture_atlas = font_asset->get_texture_atlas();
+	const auto& font_texture_atlas = font_asset->get_texture_atlas();
 
 	float texture_index = -1.0f;
 	for (u32 i = 0; i < m_renderer_data.text_texture_atlas_slot_index; ++i)
 	{
-		if (*m_renderer_data.text_texture_atlas_slots[i].get() == *font_texture_atlas.get())
-			texture_index = (float)i;
-	}
+		if (m_renderer_data.text_texture_atlas_slots[i]->GetHash() == font_texture_atlas->GetHash())
+        {
+            texture_index = (float)i;
+            break;
+        }
+    }
 
-	// insert into renderer texture atlas cache if not found
 	if (texture_index == -1.0f)
 	{
 		texture_index = (float)m_renderer_data.text_texture_atlas_slot_index;

@@ -84,7 +84,7 @@ private:
     // padding between textures inside atlas
     u32 m_padding = 0ul;
     // map for parsed textures
-    std::unordered_map<kb::uuid::uuid64, TextureAtlasSprite> m_sprite_map;
+    kb::unordered_flat_map<kb::uuid::uuid64, TextureAtlasSprite> m_sprite_map;
     // filepath of the atlas
     std::string m_atlas_filepath;
 };

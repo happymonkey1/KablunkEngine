@@ -326,18 +326,21 @@ namespace kb
 		const VkWriteDescriptorSet* write_descriptor_set = m_shader.As<VulkanShader>()->GetDescriptorSet(name);
 		KB_CORE_ASSERT(write_descriptor_set, "nullptr!");
 
-		if (m_resident_descriptor_array.find(binding) == m_resident_descriptor_array.end())
+		if (!m_resident_descriptor_array.contains(binding))
 		{
-			m_resident_descriptor_array[binding] = std::make_shared<PendingDescriptorArray>(
-				PendingDescriptorArray
-				{
-					PendingDescriptorType::Texture2D,
-					*write_descriptor_set,
-					{},
-					{},
-					{}
-				}
-			);
+			m_resident_descriptor_array.emplace(
+                binding, 
+                std::make_shared<PendingDescriptorArray>(
+				    PendingDescriptorArray
+				    {
+					    PendingDescriptorType::Texture2D,
+					    *write_descriptor_set,
+					    {},
+					    {},
+					    {}
+				    }
+			    )
+            );
 		}
 
 		auto& resident_descriptor_array = m_resident_descriptor_array.at(binding);

@@ -28,8 +28,8 @@ namespace kb
 		virtual size_t GetHash() const override;
 
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
-		virtual const std::unordered_map<std::string, ShaderBuffer>& GetShaderBuffers() const override;
-		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& GetResources() const override;
+		virtual const kb::unordered_flat_map<std::string, ShaderBuffer>& GetShaderBuffers() const override;
+		virtual const kb::unordered_flat_map<std::string, ShaderResourceDeclaration>& GetResources() const override;
 
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -57,8 +57,8 @@ namespace kb
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 	private:
 		std::string ReadFile(const std::string& filePath);
-		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
-		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+		kb::unordered_flat_map<GLenum, std::string> PreProcess(const std::string& source);
+		void Compile(const kb::unordered_flat_map<GLenum, std::string>& shaderSources);
 	private:
 		RendererID m_RendererID;
 		std::string m_Name;
