@@ -12,6 +12,8 @@
 #include <unordered_set>
 #include <type_traits>
 
+#define KB_LIVE_REFERENCES 0
+
 namespace kb
 {
 
@@ -182,11 +184,13 @@ public:
 private:
     constexpr KB_FORCE_INLINE auto IncRef() const -> void
 	{
-		if (m_ptr)
-		{
-			m_ptr->inc_ref();
-			Internal::AddToLiveReferences((void*)m_ptr);
-		}
+        if (!m_ptr)
+            return;
+
+        m_ptr->inc_ref();
+#if KB_LIVE_REFERENCES
+        Internal::AddToLiveReferences((void*)m_ptr);
+#endif
 	}
 
     constexpr KB_FORCE_INLINE auto DecRef() const -> void
@@ -199,7 +203,9 @@ private:
 		{
             std::atomic_thread_fence(std::memory_order_acquire);
 			delete m_ptr;
+#if KB_LIVE_REFERENCES
 			Internal::RemoveFromLiveReferences((void*)m_ptr);
+#endif
 		}
 
         m_ptr = nullptr;
@@ -226,8 +232,11 @@ public:
 
 	~WeakRef() = default;
 
-	// #TODO make sure pointer is valid in the live reference map
+#if KB_LIVE_REFERENCES
 	bool Valid() const { return m_ptr ? Internal::IsLive(m_ptr) : false; }
+#else
+    auto Valid() const -> bool { return m_ptr; }
+#endif
 
 	T* operator->() { return m_ptr; }
 	T& operator*() { return *m_ptr; }

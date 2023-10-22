@@ -10,8 +10,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <unordered_map>
-
 namespace kb::render
 {
 
@@ -73,7 +71,7 @@ namespace kb::render
 		// release resources owned by the asset
 		void release();
 		// get the glpyh rendering info map
-		const std::unordered_map<char, glyph_info_t>& get_glyph_rendering_map() const { return m_glyph_info_map; }
+		auto get_glyph_rendering_map() const -> const kb::unordered_flat_map<char, glyph_info_t>& { return m_glyph_info_map; }
 	private:
 		// load an ft face to the asset
 		bool load_ft_face_from_file(const font_asset_create_info_t& create_info);
@@ -99,7 +97,7 @@ namespace kb::render
 		ref<Texture2D> m_texture_atlas;
 		// glyph rendering info
 		// maps chars to their rendering info
-		std::unordered_map<char, glyph_info_t> m_glyph_info_map;
+		kb::unordered_flat_map<char, glyph_info_t> m_glyph_info_map;
 		// friend declaration(s)
 		friend class font_manager;
 	};

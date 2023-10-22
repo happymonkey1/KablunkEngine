@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <unordered_map>
+#include <robin-hood/robin_hood.h>
 
 // #TODO deprecate "Kablunk" namespace
 namespace kb
@@ -25,6 +26,10 @@ namespace kb
 	// unordered map
 	template <typename K, typename V>
 	using map = std::unordered_map<K, V>;
+
+    // unordered flat map
+    template <typename K, typename V>
+    using unordered_flat_map = robin_hood::unordered_flat_map<K, V>;
 }
 
 namespace kb
