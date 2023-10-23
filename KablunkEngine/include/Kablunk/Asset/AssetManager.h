@@ -47,6 +47,11 @@ namespace kb::asset
         std::filesystem::path get_relative_path(const AssetMetadata& p_metadata) const;
 		// get the relative path for a given path
 		std::filesystem::path get_relative_path(const std::filesystem::path& path) const;
+        // get the absolute path to the asset directory
+        inline auto get_absolute_asset_directory_path() const -> std::filesystem::path
+        {
+            return m_active_project->get_asset_directory_path();
+        }
 		// get an asset type by a given extension
 		AssetType get_asset_type_by_extension(const std::string& extension) const { return extension_to_asset_type(extension); }
 		// get an asset type from a given path

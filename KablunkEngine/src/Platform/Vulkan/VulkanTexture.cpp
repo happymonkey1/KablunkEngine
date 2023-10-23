@@ -308,6 +308,8 @@ namespace kb
 			m_format = ImageFormat::RGBA;
 		}
 
+        delete data;
+
 		if (!m_image_data.get())
 		{
 			KB_CORE_ASSERT(false, "Image loaded but data is null!");
