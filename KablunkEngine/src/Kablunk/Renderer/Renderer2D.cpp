@@ -136,7 +136,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 	// Create framebuffer
 	FramebufferSpecification framebuffer_spec{};
-	framebuffer_spec.Attachments = { ImageFormat::RGBA32F };
+	framebuffer_spec.Attachments = { ImageFormat::RGBA };
 	framebuffer_spec.samples = 1;
 	framebuffer_spec.clear_on_load = false;
 	framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };

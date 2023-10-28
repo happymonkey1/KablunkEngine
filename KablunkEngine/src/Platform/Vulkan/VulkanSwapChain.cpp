@@ -510,6 +510,7 @@ void VulkanSwapChain::FindImageFormatAndColorSpace()
 	}
 	else
 	{
+        std::optional<VkSurfaceFormatKHR> found_8bit_srgb = std::nullopt;
         std::optional<VkSurfaceFormatKHR> found_8bit_normalized = std::nullopt;
         // hdr capable display format
         std::optional<VkSurfaceFormatKHR> found_16bit_extended = std::nullopt;
@@ -519,6 +520,8 @@ void VulkanSwapChain::FindImageFormatAndColorSpace()
                 found_8bit_normalized = format;
             else if (format.format == VK_FORMAT_R16G16B16A16_SFLOAT)
                 found_16bit_extended = format;
+            else if (format.format == VK_FORMAT_B8G8R8A8_SRGB)
+                found_8bit_srgb = format;
 		}
 
         // #TODO expose
@@ -533,6 +536,12 @@ void VulkanSwapChain::FindImageFormatAndColorSpace()
         {
             m_color_format = (*found_8bit_normalized).format;
             m_color_space = (*found_8bit_normalized).colorSpace;
+        }
+        // #TODO imgui does not support srgb framebuffer for swapchain, so we have to default to UNORM
+        else if (found_8bit_srgb.has_value())
+        {
+            m_color_format = (*found_8bit_srgb).format;
+            m_color_space = (*found_8bit_srgb).colorSpace;
         }
         else
 		{
