@@ -11,7 +11,7 @@ from zipfile import ZipFile
 
 VULKAN_SDK = os.environ.get('VULKAN_SDK')
 VULKAN_SDK_INSTALLER_URL = 'https://sdk.lunarg.com/sdk/download/latest/windows/vulkan_sdk.exe'
-KABLUNK_VULKAN_VERSION = '1.2.198.1'
+KABLUNK_VULKAN_VERSION = '1.3.204.1'
 VULKAN_SDK_LOCAL_PATH = 'KablunkEngine/vendor/VulkanSDK'
 VULKAN_SDK_EXE_PATH = f'{VULKAN_SDK_LOCAL_PATH}/VulkanSDK.exe'
 
@@ -45,7 +45,7 @@ def CheckVulkanSDK():
     print(f"Correct Vulkan SDK located at {VULKAN_SDK}")
     return True
 
-
+'''
 VULKAN_SDK_DEBUG_LIBS_URL = 'https://sdk.lunarg.com/sdk/download/1.2.170.0/windows/VulkanSDK-1.2.170.0-DebugLibs.zip'
 VULKAN_SDK_DEBUG_LIBS_ZIP =  f'{VULKAN_SDK_LOCAL_PATH}/VulkanDebugLibs.zip'
 
@@ -64,4 +64,4 @@ def CheckVulkanSDKDebugLibs():
 
         os.remove(VULKAN_SDK_DEBUG_LIBS_ZIP)
 
-    return True
+    return True'''
