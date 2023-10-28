@@ -35,3 +35,6 @@
 [submodule "KablunkEngine/vendor/optick"]
 	path = KablunkEngine/vendor/optick
 	url = https://github.com/happymonkey1/optick
+[submodule "KablunkEngine/vendor/flatbuffers"]
+	path = KablunkEngine/vendor/flatbuffers
+	url = https://github.com/happymonkey1/flatbuffers

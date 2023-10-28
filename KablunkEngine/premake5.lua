@@ -67,7 +67,8 @@ project "KablunkEngine"
 		"%{IncludeDir.miniaudio}",
 		"%{IncludeDir.optick}",
 		"%{IncludeDir.tl_expected}",
-		"%{IncludeDir.robin_hood}"
+		"%{IncludeDir.robin_hood}",
+		"%{IncludeDir.flatbuffers}"
 	}
 
 	links
@@ -81,6 +82,8 @@ project "KablunkEngine"
 		"Box2d",
 		"opengl32.lib",
 		"optick",
+		"flatbuffers",
+		"flatc",
 
 		"%{Library.Vulkan}",
 		"%{Library.VulkanUtils}",

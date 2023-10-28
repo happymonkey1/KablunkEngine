@@ -37,6 +37,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/FreeType"
     include "KablunkEngine/vendor/box2d"
     include "KablunkEngine/vendor/optick"
+    include "KablunkEngine/vendor/flatbuffers"
 group ""
 
 group "Tools"
