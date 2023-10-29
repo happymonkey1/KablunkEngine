@@ -25,8 +25,6 @@ workspace "KablunkEngine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-
-
 group "Dependencies"
     include "vendor/premake"
     include "KablunkEngine/vendor/GLFW"
@@ -37,8 +35,8 @@ group "Dependencies"
     include "KablunkEngine/vendor/FreeType"
     include "KablunkEngine/vendor/box2d"
     include "KablunkEngine/vendor/optick"
-    include "KablunkEngine/vendor/protobuf"
     include "KablunkEngine/vendor/abseil-cpp"
+    include "KablunkEngine/vendor/protobuf"
 group ""
 
 group "Tools"

@@ -83,9 +83,9 @@ project "KablunkEngine"
 		"Box2d",
 		"opengl32.lib",
 		"optick",
+		"absl",
 		"protobuf",
 		"protoc",
-		"absl",
 
 		"%{Library.Vulkan}",
 		"%{Library.VulkanUtils}",
