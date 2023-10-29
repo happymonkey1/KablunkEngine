@@ -25,7 +25,7 @@ IncludeDir["miniaudio"] = "%{wks.location}/KablunkEngine/vendor/miniaudio/includ
 IncludeDir["optick"] = "%{wks.location}/KablunkEngine/vendor/optick/src"
 IncludeDir["tl_expected"] = "%{wks.location}/KablunkEngine/vendor/expected/include"
 IncludeDir["robin_hood"] = "%{wks.location}/KablunkEngine/vendor/robin-hood/include"
-IncludeDir["protobuf"] = "%{wks.location}/KablunkEngine/vendor/protobuf"
+IncludeDir["protobuf"] = "%{wks.location}/KablunkEngine/vendor/protobuf/src"
 IncludeDir["absl"] = "%{wks.location}/KablunkEngine/vendor/abseil-cpp/"
 
 LibraryDir = {}
