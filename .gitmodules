@@ -38,3 +38,9 @@
 [submodule "KablunkEngine/vendor/flatbuffers"]
 	path = KablunkEngine/vendor/flatbuffers
 	url = https://github.com/happymonkey1/flatbuffers
+[submodule "KablunkEngine/vendor/protobuf"]
+	path = KablunkEngine/vendor/protobuf
+	url = git@github.com:happymonkey1/protobuf.git
+[submodule "KablunkEngine/vendor/abseil-cpp"]
+	path = KablunkEngine/vendor/abseil-cpp
+	url = git@github.com:happymonkey1/abseil-cpp.git

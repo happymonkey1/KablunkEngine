@@ -68,7 +68,8 @@ project "KablunkEngine"
 		"%{IncludeDir.optick}",
 		"%{IncludeDir.tl_expected}",
 		"%{IncludeDir.robin_hood}",
-		"%{IncludeDir.flatbuffers}"
+		"%{IncludeDir.protobuf}",
+		"%{IncludeDir.absl}"
 	}
 
 	links
@@ -82,8 +83,9 @@ project "KablunkEngine"
 		"Box2d",
 		"opengl32.lib",
 		"optick",
-		"flatbuffers",
-		"flatc",
+		"protobuf",
+		"protoc",
+		"absl",
 
 		"%{Library.Vulkan}",
 		"%{Library.VulkanUtils}",
