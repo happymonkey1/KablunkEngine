@@ -304,7 +304,8 @@ namespace kb::asset
 
 	void AssetManager::reload_assets()
 	{
-		process_directory(m_active_project->get_asset_directory_path());
+        auto asset_directory_path = m_active_project->get_asset_directory_path();
+		process_directory(asset_directory_path);
 		write_registry_to_file();
 	}
 

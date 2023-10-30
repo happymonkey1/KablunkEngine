@@ -412,6 +412,11 @@ void Renderer2D::flush()
                 m_renderer_data.quad_material->Set("u_Textures", m_renderer_data.white_texture, i);
         }
 
+        KB_CORE_ASSERT(
+            m_renderer_data.quad_index_count < m_renderer_data.max_indices,
+            "[kb::Renderer2D]: quad index buffer overflow!"
+        );
+
 		render::render_geometry(
             m_renderer_data.render_command_buffer,
             m_renderer_data.quad_pipeline,
