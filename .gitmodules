@@ -1,6 +1,3 @@
-[submodule "KablunkEngine/vendor/loguru"]
-	path = KablunkEngine/vendor/loguru
-	url = https://github.com/emilk/loguru
 [submodule "spdlog1"]
 	path = spdlog1
 	url = https://github.com/gabime/spdlog
