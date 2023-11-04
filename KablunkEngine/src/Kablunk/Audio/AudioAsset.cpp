@@ -11,7 +11,7 @@ namespace kb::audio
 		ma_result result = ma_sound_init_from_file(AudioEngine::get().get_ma_engine(), config.filepath.string().c_str(), flags, nullptr, nullptr, &m_sound);
 		if (result != MA_SUCCESS)
 		{
-			KB_CORE_ERROR("[AudioAsset]: miniaudio engine failed to initialize sound from file '{}'", config.filepath);
+			KB_CORE_ERROR("[AudioAsset]: miniaudio engine failed to initialize sound from file '{}'", config.filepath.string().c_str());
 			m_loaded = false;
 		}
 		else
@@ -36,7 +36,7 @@ namespace kb::audio
 
 		ma_result result = ma_sound_stop(&m_sound);
 		if (result != MA_SUCCESS)
-			KB_CORE_ERROR("[AudioAsset]: failed to stop sound! error code '{}'", result);
+			KB_CORE_ERROR("[AudioAsset]: failed to stop sound! error code '{}'", static_cast<u64>(result));
 	}
 
 }

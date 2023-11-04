@@ -1,15 +1,15 @@
 /*
+---------------------------------------------------------------------------
 Open Asset Import Library (assimp)
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 Copyright (c) 2006-2022, assimp team
-
 
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
-with or without modification, are permitted provided that the
-following conditions are met:
+with or without modification, are permitted provided that the following
+conditions are met:
 
 * Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
@@ -36,53 +36,33 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 */
 
 #pragma once
-#ifndef INCLUDED_ASSIMP_XML_TOOLS_H
-#define INCLUDED_ASSIMP_XML_TOOLS_H
+#ifndef AI_BASE64_HPP_INC
+#define AI_BASE64_HPP_INC
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
+#include <stdint.h>
+#include <vector>
 #include <string>
 
 namespace Assimp {
-    // XML escape the 5 XML special characters (",',<,> and &) in |data|
-    // Based on http://stackoverflow.com/questions/5665231
-    std::string XMLEscape(const std::string& data) {
-        std::string buffer;
+namespace Base64 {
 
-        const size_t size = data.size();
-        buffer.reserve(size + size / 8);
-        for(size_t i = 0; i < size; ++i) {
-            const char c = data[i];
-            switch(c) {
-                case '&' :
-                    buffer.append("&amp;");
-                    break;
-                case '\"':
-                    buffer.append("&quot;");
-                    break;
-                case '\'':
-                    buffer.append("&apos;");
-                    break;
-                case '<' :
-                    buffer.append("&lt;");
-                    break;
-                case '>' :
-                    buffer.append("&gt;");
-                    break;
-                default:
-                    buffer.append(&c, 1);
-                    break;
-            }
-        }
-        return buffer;
-    }
-}
+/// @brief Will encode the given 
+/// @param in 
+/// @param inLength 
+/// @param out 
+void Encode(const uint8_t *in, size_t inLength, std::string &out);
+void Encode(const std::vector<uint8_t>& in, std::string &out);
+std::string Encode(const std::vector<uint8_t>& in);
 
-#endif // INCLUDED_ASSIMP_XML_TOOLS_H
+size_t Decode(const char *in, size_t inLength, uint8_t *&out);
+size_t Decode(const std::string& in, std::vector<uint8_t>& out);
+std::vector<uint8_t> Decode(const std::string& in);
+
+} // namespace Base64
+} // namespace Assimp
+
+#endif // AI_BASE64_HPP_INC

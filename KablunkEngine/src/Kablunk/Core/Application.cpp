@@ -13,7 +13,6 @@
 
 #include "Platform/Vulkan/VulkanContext.h"
 
-//#include "Kablunk/Scripts/NativeScriptEngine.h"
 #include "Kablunk/Core/Timers.h"
 #include "Kablunk/Plugin/PluginManager.h"
 #include "Kablunk/Scripts/CSharpScriptEngine.h"

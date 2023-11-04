@@ -37,7 +37,7 @@ namespace kb
 		if (res != VK_SUCCESS)
 		{
 			KB_CORE_ERROR("VulkanAllocator failed to create buffer!");
-			KB_CORE_ERROR("  {0}", res);
+			KB_CORE_ERROR("  {0}", static_cast<u64>(res));
 		}
 
 		VmaAllocationInfo alloc_info{};

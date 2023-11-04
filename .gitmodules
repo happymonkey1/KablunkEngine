@@ -41,3 +41,6 @@
 [submodule "KablunkEngine/vendor/abseil-cpp"]
 	path = KablunkEngine/vendor/abseil-cpp
 	url = git@github.com:happymonkey1/abseil-cpp.git
+[submodule "KablunkEngine/vendor/fmt"]
+	path = KablunkEngine/vendor/fmt
+	url = https://github.com/happymonkey1/fmt.git

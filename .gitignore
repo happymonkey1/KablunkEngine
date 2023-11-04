@@ -392,3 +392,6 @@ Sandbox/src/Eclipse
 Sandbox/assets/Eclipse
 KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll
 KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll
+
+# don't ignore assimp dist lib/dlls
+!*/KablunkEngine/vendor/assimp/bin/debug/assimp-vc143.lib

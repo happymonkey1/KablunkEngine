@@ -32,9 +32,7 @@ namespace kb::util::random
 	class Random
 	{
 	public:
-		using value_t = T;
-	public:
-		Random() : m_state{ std::chrono::system_clock::now() }, m_generator_func{ generator_func } {}
+		Random() : m_state{ static_cast<T>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) }, m_generator_func{generator_func} {}
 		~Random() = default;
 
 		void set_seed(T seed) { m_state = seed; }
@@ -54,7 +52,7 @@ namespace kb::util::random
 
 	inline f32 random_f32()
 	{
-        kb::Singleton<Random<f32, &xorshift_generator<f32>>>();
+        kb::Singleton<Random<f32, &xorshift_generator<f32>>>::get()();
 	}
 }
 

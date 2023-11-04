@@ -5,6 +5,8 @@ Open Asset Import Library (assimp)
 
 Copyright (c) 2006-2022, assimp team
 
+
+
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
@@ -39,36 +41,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
 
-/** @file ai_assert.h
- *  @brief Declares the assimp-specific assertion handler.
- */
+/** @file ZipArchiveIOSystem.h
+ *  @brief Implementation of IOSystem to read a ZIP file from another IOSystem
+*/
 
 #pragma once
-#ifndef AI_ASSERT_H_INC
-#define AI_ASSERT_H_INC
+#ifndef AI_ZIPARCHIVEIOSYSTEM_H_INC
+#define AI_ZIPARCHIVEIOSYSTEM_H_INC
 
-#include <assimp/defs.h>
+#ifdef __GNUC__
+#   pragma GCC system_header
+#endif
 
-#if defined(ASSIMP_BUILD_DEBUG)
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
 
 namespace Assimp {
 
-/// @brief Assert violation behavior can be customized: see AssertHandler.h.
-/// @param failedExpression     The expression to validate.
-/// @param file                 The file location    
-/// @param line                 The line number
-ASSIMP_API void aiAssertViolation(const char* failedExpression, const char* file, int line);
+class ZipArchiveIOSystem : public IOSystem {
+public:
+    //! Open a Zip using the proffered IOSystem
+    ZipArchiveIOSystem(IOSystem* pIOHandler, const char *pFilename, const char* pMode = "r");
+    ZipArchiveIOSystem(IOSystem* pIOHandler, const std::string& rFilename, const char* pMode = "r");
+    virtual ~ZipArchiveIOSystem();
+    bool Exists(const char* pFilename) const override;
+    char getOsSeparator() const override;
+    IOStream* Open(const char* pFilename, const char* pMode = "rb") override;
+    void Close(IOStream* pFile) override;
 
-}
-#endif
+    // Specific to ZIP
+    //! The file was opened and is a ZIP
+    bool isOpen() const;
 
-// Define assertion resolinig
-#if defined(ASSIMP_BUILD_DEBUG)
-#   define ai_assert(expression) (void)((!!(expression)) || (Assimp::aiAssertViolation(#expression, __FILE__, __LINE__), 0))
-#   define ai_assert_entry() ai_assert(false)
-#else
-#   define  ai_assert(expression)
-#   define  ai_assert_entry()
-#endif // ASSIMP_BUILD_DEBUG
+    //! Get the list of all files with their simplified paths
+    //! Intended for use within Assimp library boundaries
+    void getFileList(std::vector<std::string>& rFileList) const;
 
-#endif // AI_ASSERT_H_INC
+    //! Get the list of all files with extension (must be lowercase)
+    //! Intended for use within Assimp library boundaries
+    void getFileListExtension(std::vector<std::string>& rFileList, const std::string& extension) const;
+
+    static bool isZipArchive(IOSystem* pIOHandler, const char *pFilename);
+    static bool isZipArchive(IOSystem* pIOHandler, const std::string& rFilename);
+
+private:
+    class Implement;
+    Implement *pImpl = nullptr;
+};
+
+} // Namespace Assimp
+
+#endif // AI_ZIPARCHIVEIOSYSTEM_H_INC

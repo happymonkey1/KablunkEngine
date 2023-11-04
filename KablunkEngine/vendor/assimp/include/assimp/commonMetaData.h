@@ -1,15 +1,15 @@
 /*
+---------------------------------------------------------------------------
 Open Asset Import Library (assimp)
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 Copyright (c) 2006-2022, assimp team
-
 
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
-with or without modification, are permitted provided that the
-following conditions are met:
+with or without modification, are permitted provided that the following
+conditions are met:
 
 * Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
@@ -36,53 +36,34 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 */
 
+/** @file commonMetaData.h
+ *  @brief Defines a set of common scene metadata keys.
+ */
 #pragma once
-#ifndef INCLUDED_ASSIMP_XML_TOOLS_H
-#define INCLUDED_ASSIMP_XML_TOOLS_H
+#ifndef AI_COMMONMETADATA_H_INC
+#define AI_COMMONMETADATA_H_INC
 
 #ifdef __GNUC__
-#   pragma GCC system_header
+#pragma GCC system_header
 #endif
 
-#include <string>
+/// Scene metadata holding the name of the importer which loaded the source asset.
+/// This is always present if the scene was created from an imported asset.
+#define AI_METADATA_SOURCE_FORMAT "SourceAsset_Format"
 
-namespace Assimp {
-    // XML escape the 5 XML special characters (",',<,> and &) in |data|
-    // Based on http://stackoverflow.com/questions/5665231
-    std::string XMLEscape(const std::string& data) {
-        std::string buffer;
+/// Scene metadata holding the version of the source asset as a string, if available.
+/// Not all formats add this metadata.
+#define AI_METADATA_SOURCE_FORMAT_VERSION "SourceAsset_FormatVersion"
 
-        const size_t size = data.size();
-        buffer.reserve(size + size / 8);
-        for(size_t i = 0; i < size; ++i) {
-            const char c = data[i];
-            switch(c) {
-                case '&' :
-                    buffer.append("&amp;");
-                    break;
-                case '\"':
-                    buffer.append("&quot;");
-                    break;
-                case '\'':
-                    buffer.append("&apos;");
-                    break;
-                case '<' :
-                    buffer.append("&lt;");
-                    break;
-                case '>' :
-                    buffer.append("&gt;");
-                    break;
-                default:
-                    buffer.append(&c, 1);
-                    break;
-            }
-        }
-        return buffer;
-    }
-}
+/// Scene metadata holding the name of the software which generated the source asset, if available.
+/// Not all formats add this metadata.
+#define AI_METADATA_SOURCE_GENERATOR "SourceAsset_Generator"
 
-#endif // INCLUDED_ASSIMP_XML_TOOLS_H
+/// Scene metadata holding the source asset copyright statement, if available.
+/// Not all formats add this metadata.
+#define AI_METADATA_SOURCE_COPYRIGHT "SourceAsset_Copyright"
+
+#endif

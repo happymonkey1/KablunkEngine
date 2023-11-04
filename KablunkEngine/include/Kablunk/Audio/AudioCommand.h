@@ -20,7 +20,7 @@ namespace kb::audio
 	{
 		ma_result result = Singleton<AudioEngine>::get().play_sound_inline(sound_id);
 		if (result != MA_SUCCESS)
-			KB_CORE_ERROR("[AudioEngine]: failed to play sound! error code '{}'", result);
+			KB_CORE_ERROR("[AudioEngine]: failed to play sound! error code '{}'", static_cast<u64>(result));
 	}
 
 	// \brief add sound to audio queue

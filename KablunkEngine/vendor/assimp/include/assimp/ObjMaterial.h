@@ -1,15 +1,15 @@
 /*
+---------------------------------------------------------------------------
 Open Asset Import Library (assimp)
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 Copyright (c) 2006-2022, assimp team
-
 
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
-with or without modification, are permitted provided that the
-following conditions are met:
+with or without modification, are permitted provided that the following
+conditions are met:
 
 * Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
@@ -36,53 +36,49 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-----------------------------------------------------------------------
+---------------------------------------------------------------------------
 */
 
-#pragma once
-#ifndef INCLUDED_ASSIMP_XML_TOOLS_H
-#define INCLUDED_ASSIMP_XML_TOOLS_H
+/** @file OBJMATERIAL.h
+ *  @brief Obj-specific material macros
+ *  
+ */
+
+#ifndef AI_OBJMATERIAL_H_INC
+#define AI_OBJMATERIAL_H_INC
 
 #ifdef __GNUC__
 #   pragma GCC system_header
 #endif
 
-#include <string>
+#include <assimp/material.h>
 
-namespace Assimp {
-    // XML escape the 5 XML special characters (",',<,> and &) in |data|
-    // Based on http://stackoverflow.com/questions/5665231
-    std::string XMLEscape(const std::string& data) {
-        std::string buffer;
+// ---------------------------------------------------------------------------
 
-        const size_t size = data.size();
-        buffer.reserve(size + size / 8);
-        for(size_t i = 0; i < size; ++i) {
-            const char c = data[i];
-            switch(c) {
-                case '&' :
-                    buffer.append("&amp;");
-                    break;
-                case '\"':
-                    buffer.append("&quot;");
-                    break;
-                case '\'':
-                    buffer.append("&apos;");
-                    break;
-                case '<' :
-                    buffer.append("&lt;");
-                    break;
-                case '>' :
-                    buffer.append("&gt;");
-                    break;
-                default:
-                    buffer.append(&c, 1);
-                    break;
-            }
-        }
-        return buffer;
-    }
-}
+// the original illum property
+#define AI_MATKEY_OBJ_ILLUM "$mat.illum", 0, 0
 
-#endif // INCLUDED_ASSIMP_XML_TOOLS_H
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Pure key names for all obj texture-related properties
+//! @cond MATS_DOC_FULL
+
+// support for bump -bm 
+#define _AI_MATKEY_OBJ_BUMPMULT_BASE "$tex.bumpmult"
+//! @endcond
+
+// ---------------------------------------------------------------------------
+#define AI_MATKEY_OBJ_BUMPMULT(type, N) _AI_MATKEY_OBJ_BUMPMULT_BASE, type, N
+
+//! @cond MATS_DOC_FULL
+#define AI_MATKEY_OBJ_BUMPMULT_NORMALS(N) \
+    AI_MATKEY_OBJ_BUMPMULT(aiTextureType_NORMALS, N)
+
+#define AI_MATKEY_OBJ_BUMPMULT_HEIGHT(N) \
+    AI_MATKEY_OBJ_BUMPMULT(aiTextureType_HEIGHT, N)
+
+//! @endcond
+
+
+#endif

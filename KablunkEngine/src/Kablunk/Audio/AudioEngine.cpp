@@ -62,7 +62,7 @@ namespace kb::audio
 		std::filesystem::path sound_filepath = asset::get_absolute_path(sound_asset_id);
 		if (sound_filepath.empty())
 		{
-			KB_CORE_ERROR("[AudioEngine]: tried playing inline sound '{}' but it was not a valid asset!", sound_filepath);
+			KB_CORE_ERROR("[AudioEngine]: tried playing inline sound '{}' but it was not a valid asset!", sound_filepath.string().c_str());
 			return MA_ERROR;
 		}
 

@@ -36,17 +36,17 @@ project "KablunkEditor"
 		"%{IncludeDir.miniaudio}",
         "%{IncludeDir.optick}",
         "%{IncludeDir.tl_expected}",
-		"%{IncludeDir.robin_hood}"
+		"%{IncludeDir.robin_hood}",
+        -- included bc of ICE in MSVC 17.7
+        "%{IncludeDir.fmt}",
     }
 
     links
     {
         "KablunkEngine",
-        "Sandbox",
-        --"Sandbox.dll",
         "FreeType",
         "%{Library.mono}",
-        "GLFW"
+        "GLFW",
     }
 
     defines
@@ -70,14 +70,14 @@ project "KablunkEditor"
 		symbols "on"
         links
         {
-            "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+            "%{Library.assimp}",
         }
         
         
 
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
             '{COPY} "%{LibraryDir.VulkanSDK_Debug_Bin}/shaderc_sharedd.dll" "%{cfg.targetdir}"'
             -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
@@ -90,12 +90,12 @@ project "KablunkEditor"
 
         links
         {
-            "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "%{Library.assimp_release}",
         }
         
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
             '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
            -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
@@ -109,12 +109,12 @@ project "KablunkEditor"
 
         links
         {
-            "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+            "%{Library.assimp_release}",
         }
         
         postbuildcommands
         {
-            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+            '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
             '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
             '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
             -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'

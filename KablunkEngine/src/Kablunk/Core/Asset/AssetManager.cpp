@@ -109,7 +109,7 @@ namespace kb::asset
 		std::filesystem::path relative_path = get_relative_path(filepath);
 		if (relative_path.empty())
 		{
-			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath, m_active_project->get_asset_directory_path());
+			KB_CORE_WARN("[AssetManager] Path '{}' relative to '{}' is empty!", filepath.string().c_str(), m_active_project->get_asset_directory_path().string().c_str());
 			return asset::null_asset_id;
 		}
 

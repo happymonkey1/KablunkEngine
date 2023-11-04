@@ -6,6 +6,8 @@
 #include <format>
 #include <string>
 
+// ICE in MSVC 17.7 in fmt/ostream.h, can remove when msvc updates
+#define SPDLOG_FMT_EXTERNAL
 // ignore warnings raises in external headers
 #pragma warning(push, 0)
 #include <spdlog/spdlog.h>
@@ -52,6 +54,16 @@ namespace kb
 #define KB_CLIENT_WARN(...)  ::kb::Singleton<kb::Logger>::get().get_client_logger()->warn(__VA_ARGS__)
 #define KB_CLIENT_ERROR(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->error(__VA_ARGS__)
 #define KB_CLIENT_FATAL(...) ::kb::Singleton<kb::Logger>::get().get_client_logger()->critical(__VA_ARGS__)
+
+template <>
+struct fmt::formatter<std::filesystem::path> : formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const std::filesystem::path& path, FormatContext& ctx)
+    {
+        return formatter<std::string_view>::format(path.string(), ctx);
+    }
+};
 
 namespace kb::log
 {  // start namespace kb::log

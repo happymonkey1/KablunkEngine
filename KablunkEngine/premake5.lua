@@ -69,7 +69,9 @@ project "KablunkEngine"
 		"%{IncludeDir.tl_expected}",
 		"%{IncludeDir.robin_hood}",
 		"%{IncludeDir.protobuf}",
-		"%{IncludeDir.absl}"
+		"%{IncludeDir.absl}",
+		-- external fmt lib because of MSVC 17.7 bug
+		"%{IncludeDir.fmt}",
 	}
 
 	links
@@ -86,11 +88,13 @@ project "KablunkEngine"
 		"absl",
 		"protobuf",
 		"protoc",
+		-- external fmt lib because of MSVC 17.7 bug
+		"fmt",
 
 		"%{Library.Vulkan}",
-		"%{Library.VulkanUtils}",
+		-- "%{Library.VulkanUtils}",
 
-		"%{Library.mono}"
+		
 	}
 
 	postbuildcommands
@@ -112,12 +116,13 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Debug/assimp-vc141-mtd.lib",
+            "%{Library.assimp}",
 			"%{Library.ShaderC_Debug}",
 			"%{Library.ShaderC_Utils_Debug}",
 			"%{Library.SPIRV_Cross_Debug}",
 			"%{Library.SPIRV_Cross_GLSL_Debug}",
-			"%{Library.SPIRV_Tools_Debug}"
+			"%{Library.SPIRV_Tools_Debug}",
+			"%{Library.mono}",
         }
 	
 	filter "configurations:Release"
@@ -127,12 +132,13 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+            "%{Library.assimp_release}",
 			"%{Library.ShaderC_Release}",
 			"%{Library.ShaderC_Utils_Release}",
 			"%{Library.SPIRV_Cross_Release}",
 			"%{Library.SPIRV_Cross_GLSL_Release}",
-			"%{Library.SPIRV_Tools}"
+			"%{Library.SPIRV_Tools}",
+			"%{Library.mono_release}",
         }
         
 	
@@ -144,9 +150,10 @@ project "KablunkEngine"
 
 		links
         {
-            "vendor/assimp/bin/Release/assimp-vc141-mt.lib",
+            "%{Library.assimp_release}",
 			"%{Library.ShaderC_Release}",
 			"%{Library.ShaderC_Utils_Release}",
 			"%{Library.SPIRV_Cross_Release}",
 			"%{Library.SPIRV_Cross_GLSL_Release}",
+			"%{Library.mono_release}"
         }

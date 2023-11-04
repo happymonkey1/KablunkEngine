@@ -236,7 +236,7 @@ struct NativeScriptComponent
 		auto struct_names = Parser::CPP::FindClassAndStructNames(absolute_path.string(), 1);
 		if (struct_names.empty())
 		{
-			KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath);
+			KB_CORE_ERROR("Could not parse struct from file '{0}'", filepath.string().c_str());
 			return;
 		}
 		auto struct_name = struct_names[0];
@@ -245,7 +245,7 @@ struct NativeScriptComponent
 
 		if (!Instance)
 		{
-			KB_CORE_ERROR("Script could not be loaded from file '{0}'", absolute_path);
+			KB_CORE_ERROR("Script could not be loaded from file '{0}'", absolute_path.string().c_str());
 			return;
 		}
 

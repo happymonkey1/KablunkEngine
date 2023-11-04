@@ -27,6 +27,8 @@ IncludeDir["tl_expected"] = "%{wks.location}/KablunkEngine/vendor/expected/inclu
 IncludeDir["robin_hood"] = "%{wks.location}/KablunkEngine/vendor/robin-hood/include"
 IncludeDir["protobuf"] = "%{wks.location}/KablunkEngine/vendor/protobuf/src"
 IncludeDir["absl"] = "%{wks.location}/KablunkEngine/vendor/abseil-cpp/"
+-- external fmt lib because of MSVC 17.7 bug
+IncludeDir["fmt"] = "%{wks.location}/KablunkEngine/vendor/fmt/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
@@ -35,7 +37,10 @@ LibraryDir["VulkanSDK_Bin"] = "%{VULKAN_SDK}/Bin"
 LibraryDir["VulkanSDK_Debug_Bin"] = "%{VULKAN_SDK}/Bin"
 
 Library = {}
-Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/Debug/mono-2.0-sgen.lib"
+Library["assimp"] = "%{wks.location}/KablunkEngine/vendor/assimp/bin/debug/assimp-vc143-mtd.lib"
+Library["assimp_release"] = "%{wks.location}/KablunkEngine/vendor/assimp/bin/release/assimp-vc143-mt.lib"
+Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/windows/debug/mono-2.0-sgen.lib"
+Library["mono_release"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/windows/release/mono-2.0-sgen.lib"
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 Library["VulkanUtils"] = "%{LibraryDir.VulkanSDK}/VkLayer_utils.lib"
 
