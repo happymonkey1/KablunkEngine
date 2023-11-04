@@ -394,4 +394,14 @@ KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll
 KablunkEditor/resources/scripts/Kablunk-ScriptCore.dll
 
 # don't ignore assimp dist lib/dlls
-!*/KablunkEngine/vendor/assimp/bin/debug/assimp-vc143.lib
+!KablunkEngine/vendor/assimp/bin
+!KablunkEngine/vendor/assimp/bin/Debug
+!KablunkEngine/vendor/assimp/bin/Release
+
+# don't ignore mono dist lib/dlls
+!KablunkEngine/vendor/mono/lib
+!KablunkEngine/vendor/mono/lib/windows/debug
+!KablunkEngine/vendor/mono/lib/windows/release
+!KablunkEngine/vendor/mono/bin
+!KablunkEngine/vendor/mono/bin/debug
+!KablunkEngine/vendor/mono/bin/release
