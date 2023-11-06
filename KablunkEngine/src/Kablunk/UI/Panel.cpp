@@ -117,12 +117,12 @@ namespace kb::ui
 		glm::vec3 pos_relative = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
 		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
 
-		if (m_panel_style.render_background)
-            renderer_2d->draw_quad_ui(pos_relative, m_size, white_texture, 1.0f, m_panel_style.background_color);
+        if (m_panel_style.render_background)
+            KB_CORE_ASSERT(false, "[kb::ui::panel]: panel rendering deprecated!");
 
 		glm::vec4 highlight_color = !m_is_hovered ? glm::vec4{ 1.0f } : m_panel_style.highlight_color;
 		if (m_panel_style.image)
-            renderer_2d->draw_quad_ui(pos_relative, m_size, m_panel_style.image, 1.0f, highlight_color);
+            KB_CORE_ASSERT(false, "[kb::ui::panel]: panel rendering deprecated!");
 
 		for (IPanel* child : m_children)
 			child->on_render(scene_camera);

@@ -38,6 +38,7 @@ struct QuadVertex
 	glm::vec2 TexCoord;
 	float TexIndex;
 	float TilingFactor;
+    //u8 padding[20]{ 0 };
 };
 
 // #TODO remove when entity id is removed from quadvertex
@@ -75,6 +76,8 @@ struct text_vertex_t
 	glm::vec4 m_tint_color;
 	glm::vec2 m_tex_coord;
 	float m_tex_index;
+
+    //u8 padding[24]{ 0 };
 };
 
 struct renderer_2d_specification_t
@@ -107,22 +110,23 @@ struct renderer_2d_data_t
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
-	std::vector<ref<VertexBuffer>> quad_vertex_buffers;
-    ref <IndexBuffer> quad_index_buffer;
+    using vertex_per_frame_buffer = std::vector<ref<VertexBuffer>>;
+	std::vector<vertex_per_frame_buffer> quad_vertex_buffers;
+    ref<IndexBuffer> quad_index_buffer;
 
 	// circle
-	std::vector<ref<VertexBuffer>> circle_vertex_buffers;
+	std::vector<vertex_per_frame_buffer> circle_vertex_buffers;
 
 	// lines
-	std::vector<ref<VertexBuffer>> line_vertex_buffers;
+	std::vector<vertex_per_frame_buffer> line_vertex_buffers;
     ref<IndexBuffer> line_index_buffer;
 
 	// ui quads
-	std::vector<ref<VertexBuffer>> ui_quad_vertex_buffers;
+	std::vector<vertex_per_frame_buffer> ui_quad_vertex_buffers;
     ref<IndexBuffer> ui_quad_index_buffer;
 
 	// text
-	std::vector<ref<VertexBuffer>> text_vertex_buffers;
+	std::vector<vertex_per_frame_buffer> text_vertex_buffers;
     ref<IndexBuffer> text_index_buffer;
 
 	// =======
@@ -141,39 +145,37 @@ struct renderer_2d_data_t
 
 	// Quads
     // base pointers act as a rudimentary, manually controlled ring buffer
-	std::vector<QuadVertex*> quad_vertex_buffer_base_ptrs;
-	QuadVertex* quad_vertex_buffer_ptr = nullptr;
+    using quad_per_frame_base_buffer = std::vector<QuadVertex*>;
+	std::vector<quad_per_frame_base_buffer> quad_vertex_buffer_base_ptrs;
+	std::vector<QuadVertex*> quad_vertex_buffer_ptrs;
 	uint32_t quad_count = 0;
 	uint32_t quad_index_count = 0;
+    u32 m_quad_write_index = 0;
 
 	// Circles
-    // base pointers act as a rudimentary, manually controlled ring buffer
-	std::vector<CircleVertex*> circle_vertex_buffer_base_ptrs;
-	CircleVertex* circle_vertex_buffer_ptr = nullptr;
+    using circle_per_frame_base_buffer = std::vector<CircleVertex*>;
+	std::vector<circle_per_frame_base_buffer> circle_vertex_buffer_base_ptrs;
+	std::vector<CircleVertex*> circle_vertex_buffer_ptr;
 	uint32_t circle_count = 0;
 	uint32_t circle_index_count = 0;
+    u32 m_circle_write_index = 0;
 
 	// Lines
-    // base pointers act as a rudimentary, manually controlled ring buffer
-	std::vector<LineVertex*> line_vertex_buffer_base_ptrs;
-	LineVertex* line_vertex_buffer_ptr = nullptr;
+    using line_per_frame_base_buffer = std::vector<LineVertex*>;
+	std::vector<line_per_frame_base_buffer> line_vertex_buffer_base_ptrs;
+	std::vector<LineVertex*> line_vertex_buffer_ptr;
 	uint32_t line_count = 0;
 	uint32_t line_index_count = 0;
+    u32 m_line_write_index = 0;
 	float line_width = 1.0f;
 
-	// UI
-    // base pointers act as a rudimentary, manually controlled ring buffer
-	std::vector<UIQuadVertex*> ui_quad_vertex_buffer_base_ptrs;
-	UIQuadVertex* ui_quad_vertex_buffer_ptr = nullptr;
-	uint32_t ui_quad_count = 0;
-	uint32_t ui_quad_index_count = 0;
-
 	// text
-    // base pointers act as a rudimentary, manually controlled ring buffer
-	std::vector<text_vertex_t*> text_vertex_buffer_base_ptrs;
-	text_vertex_t* text_vertex_buffer_ptr = nullptr;
+    using text_per_frame_base_buffer = std::vector<text_vertex_t*>;
+	std::vector<text_per_frame_base_buffer> text_vertex_buffer_base_ptrs;
+    std::vector<text_vertex_t*> text_vertex_buffer_ptr;
 	uint32_t text_count = 0;
 	uint32_t text_index_count = 0;
+    u32 m_text_write_index = 0;
 
 	uint32_t texture_slot_index = 1; //0 = white texture
 	u32 text_texture_atlas_slot_index = 0;
@@ -242,6 +244,8 @@ public:
 	render::font_manager& get_font_manager() { return m_renderer_data.m_font_manager; }
 	// return an immutable reference to the font manager
 	const render::font_manager& get_font_manager() const { return m_renderer_data.m_font_manager; }
+
+    // ---draw commands-------------------------------------------------------------------------------------------------
 
 	// Entity
 	void draw_sprite(Entity entity);
@@ -322,30 +326,6 @@ public:
 	// draw rectangle
 	void draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
 
-	// draw ui quad
-	void draw_quad_ui(
-		const glm::vec2& position, 
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture,
-		float tiling_factor = 1.0f, 
-		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
-	// draw ui quad
-	void draw_quad_ui(
-		const glm::vec3& position, 
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		float tiling_factor = 1.0f, 
-		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
-	// draw ui quad
-	void draw_quad_ui(
-		const glm::mat4& transform, 
-		const ref<Texture2D>& texture, 
-		float tiling_factor = 1.0f, 
-		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
-
 	// draw text string
 	void draw_text_string(
 		const std::string& text,
@@ -363,6 +343,8 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     // add a texture which can be rendered during the current scene
     // returns texture index (float) of slot occupied
     auto add_texture(const ref<Texture2D>& p_texture) -> f32;
@@ -377,6 +359,16 @@ public:
 private:
 	void start_new_batch();
 	void end_batch();
+
+    auto get_writeable_quad_buffer(u32 p_new_quad_count = 0) -> QuadVertex*&;
+    auto get_writeable_circle_buffer(u32 p_new_circle_count = 0) -> CircleVertex*&;
+    auto get_writeable_line_buffer(u32 p_new_line_count = 0) -> LineVertex*&;
+    auto get_writeable_text_buffer(u32 p_new_text_count = 0) -> text_vertex_t*&;
+
+    auto add_quad_buffer() -> void;
+    auto add_circle_buffer() -> void;
+    auto add_line_buffer() -> void;
+    auto add_text_buffer() -> void;
 private:
     renderer_2d_data_t m_renderer_data{};
     ref<asset::AssetManager> m_asset_manager = nullptr;

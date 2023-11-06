@@ -34,7 +34,7 @@ namespace kb
 				// copy data to staging buffer (cpu)
 				uint8_t* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
 				memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
-				KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{0}'", instance->m_local_data.size());
+				KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{}'", instance->m_local_data.size());
 				allocator.UnmapMemory(staging_buffer_allocation);
 
 				
