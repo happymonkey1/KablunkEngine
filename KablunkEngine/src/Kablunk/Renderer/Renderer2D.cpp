@@ -429,6 +429,7 @@ void Renderer2D::flush()
                 m_renderer_data.quad_index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
+
             m_renderer_data.Stats.Draw_calls++;
 
             clear_pass = clear_pass && false;
@@ -461,9 +462,9 @@ void Renderer2D::flush()
                 glm::mat4{ 1.0f },
                 m_renderer_data.circle_index_count
             );
-            m_renderer_data.Stats.Draw_calls++;
             render::end_render_pass(m_renderer_data.render_command_buffer);
 
+            m_renderer_data.Stats.Draw_calls++;
             clear_pass = clear_pass && false;
         }
     }
@@ -496,13 +497,12 @@ void Renderer2D::flush()
                 m_renderer_data.line_index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
-            m_renderer_data.Stats.Draw_calls++;
 
+            m_renderer_data.Stats.Draw_calls++;
             clear_pass = clear_pass && false;
         }
     }
 	
-
 	// render text geometry
     for (u32 i = 0; i <= m_renderer_data.m_line_write_index; ++i)
     {
@@ -539,12 +539,11 @@ void Renderer2D::flush()
                 m_renderer_data.text_index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
-            m_renderer_data.Stats.Draw_calls++;
 
+            m_renderer_data.Stats.Draw_calls++;
             clear_pass = clear_pass && false;
         }
     }
-	
 
 	m_renderer_data.render_command_buffer->EndTimestampQuery(m_renderer_data.gpu_time_query.renderer_2D_query);
 
@@ -835,9 +834,6 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& posi
 // #TODO draw command should be done on the render thread
 void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/)
 {
-    
-	
-
 	// check for programmer error
 	KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
 	KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
@@ -950,7 +946,7 @@ auto Renderer2D::add_texture(const ref<Texture2D>& p_texture) -> kb::f32
 
 auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) -> void
 {
-    size_t quad_count = p_quad_buffer.size() / (4 * sizeof(kb::QuadVertex));
+    const size_t quad_count = p_quad_buffer.size() / (4 * sizeof(kb::QuadVertex));
     KB_CORE_ASSERT(
         m_renderer_data.quad_count + quad_count <= m_renderer_data.max_quads,
         "[Renderer2D]: quad buffer overflow!"
@@ -963,15 +959,30 @@ auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) -> void
 
         const size_t quad_vertex_count = quad_count * 4;
         quad_vertex_buffer_ptr += quad_vertex_count;
-
-        m_renderer_data.quad_count += quad_count;
-        m_renderer_data.quad_index_count += 6 * quad_count;
-        m_renderer_data.Stats.Quad_count += quad_count;
     }
     else
     {
-        KB_CORE_ASSERT(false, "[kb::renderer2d]: new batch not implemented for submit_quad_data!");
+        const size_t quad_count_for_existing_batch = m_renderer_data.max_quads - m_renderer_data.quad_count;
+        const size_t quad_count_for_new_batch = quad_count - quad_count_for_existing_batch;
+
+        const size_t existing_buffer_copy_size = quad_count_for_existing_batch * 4ul * sizeof(QuadVertex);
+        auto& existing_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
+        memcpy(existing_quad_vertex_buffer_ptr, p_quad_buffer.get(), existing_buffer_copy_size);
+
+        add_quad_buffer();
+
+        const size_t new_buffer_copy_size = quad_count_for_new_batch * 4ul * sizeof(QuadVertex);
+        auto& new_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
+        memcpy(
+            existing_quad_vertex_buffer_ptr,
+            reinterpret_cast<const u8*>(p_quad_buffer.get()) + existing_buffer_copy_size,
+            new_buffer_copy_size
+        );
     }
+
+    m_renderer_data.quad_count += quad_count;
+    m_renderer_data.quad_index_count += 6 * quad_count;
+    m_renderer_data.Stats.Quad_count += quad_count;
 }
 
 void Renderer2D::reset_stats()

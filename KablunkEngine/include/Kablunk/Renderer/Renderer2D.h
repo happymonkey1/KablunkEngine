@@ -41,16 +41,6 @@ struct QuadVertex
     //u8 padding[20]{ 0 };
 };
 
-// #TODO remove when entity id is removed from quadvertex
-struct UIQuadVertex
-{
-	glm::vec3 Position;
-	glm::vec4 Color;
-	glm::vec2 TexCoord;
-	float TexIndex;
-	float TilingFactor;
-};
-
 struct CircleVertex
 {
 	glm::vec3 WorldPosition;
