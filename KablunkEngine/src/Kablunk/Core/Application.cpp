@@ -6,10 +6,6 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/Renderer2D.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
-
-#include "Kablunk/Core/Input.h"
-#include "Platform/PlatformAPI.h"
 
 #include "Platform/Vulkan/VulkanContext.h"
 
@@ -18,8 +14,6 @@
 #include "Kablunk/Scripts/CSharpScriptEngine.h"
 
 #include "Kablunk/Imgui/ImGuiGlobalContext.h"
-
-#include "Kablunk/Asset/AssetManager.h"
 
 #include "Kablunk/Audio/AudioCommand.h"
 
@@ -33,15 +27,13 @@ namespace kb
 
 
 	Application::Application()
-		: m_specification{}, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ m_specification.m_engine_threading_policy }
+		: m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ m_specification.m_engine_threading_policy }
 	{
-		
 	}
 
 	Application::Application(const ApplicationSpecification& spec)
 		: m_specification{ spec }, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ spec.m_engine_threading_policy }
 	{
-
 	}
 
 	Application::~Application()
@@ -53,7 +45,7 @@ namespace kb
 	{
         KB_PROFILE_FUNC();
 		KB_CORE_INFO("Application initialized");
-		
+
 		const char* thread_policy_cstr = m_render_thread.m_threading_policy == threading_policy_t::multi_threaded ? "multi-threaded" : "single-threaded";
 		KB_CORE_INFO("engine threading policy {}", thread_policy_cstr);
 
@@ -76,7 +68,7 @@ namespace kb
         m_renderer_2d->init();
 
 		m_render_thread.pump();
-		
+
 		//m_render_thread.pump();
 
 		if (m_specification.Enable_imgui)
@@ -108,7 +100,7 @@ namespace kb
 	{
 		if (m_has_shutdown)
 			return;
-		
+
 		m_thread_pool.Shutdown();
 		//CSharpScriptEngine::Shutdown();
 
@@ -117,7 +109,7 @@ namespace kb
 
 
 		m_render_thread.terminate();
-		
+
 		// deletes any pushed layers, including imgui layer
 		m_layer_stack.Destroy();
 
@@ -252,10 +244,10 @@ namespace kb
 				if (m_specification.Enable_imgui)
 				{
 					//KB_TIME_FUNCTION_BEGIN()
-					Application* app = this;
+					auto app = this;
 					render::submit([app]() { app->RenderImGui(); });
 					render::submit([=]() { m_imgui_layer->End(); });
-					
+
 					//KB_TIME_FUNCTION_END("imgui layer time")
 				}
 
@@ -298,7 +290,6 @@ namespace kb
 			for (Layer* layer : m_layer_stack)
 				layer->OnImGuiRender(m_timestep);
 		}
-		
 	}
 
 	void Application::toggle_fullscreen()
@@ -323,7 +314,6 @@ namespace kb
 
 		Singleton<Renderer2D>::get().draw_text_string("test", glm::vec3{ 0.f, 0.f, 0.f }, glm::vec2{ 1.0f, 1.0f }, font_asset, glm::vec4{ 1.0f });
 #endif
-
 	}
 
 }

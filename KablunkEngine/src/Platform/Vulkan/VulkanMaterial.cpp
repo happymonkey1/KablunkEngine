@@ -15,7 +15,7 @@ namespace kb
 		: m_shader{ shader }, m_name{ name }, m_write_descriptors(render::get_frames_in_flights()), m_dirty_descriptor_sets(render::get_frames_in_flights())
 	{
 		Init();
-		render::register_shader_dependency(shader, this);
+		render::register_shader_dependency(shader, ref<Material>{ this });
 	}
 
 	VulkanMaterial::VulkanMaterial(ref<Material> material, const std::string& name /*= ""*/)
@@ -26,7 +26,7 @@ namespace kb
 		if (name.empty())
 			m_name = material->GetName();
 
-		render::register_shader_dependency(m_shader, this);
+		render::register_shader_dependency(m_shader, ref<Material>{ this });
 
 		auto vulkan_material = material.As<VulkanMaterial>();
 		m_uniform_storage_buffer = Buffer::Copy(vulkan_material->m_uniform_storage_buffer.get(), vulkan_material->m_uniform_storage_buffer.size());
@@ -53,7 +53,7 @@ namespace kb
 		m_material_flags |= static_cast<uint32_t>(MaterialFlag::Blend);
 
 
-		ref<VulkanMaterial> instance = this;
+        ref<VulkanMaterial> instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -296,7 +296,7 @@ namespace kb
 				PendingDescriptorType::Texture2D,
 				*write_descriptor_set,
 				{},
-				texture.As<Texture>()
+				texture.As<Texture2D>()
 			}
 		);
 
@@ -376,11 +376,11 @@ namespace kb
 		m_resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
 			PendingDescriptor
 			{ 
-				PendingDescriptorType::Image2D, 
-				*write_descriptor_set, 
-				{}, 
-				nullptr, 
-				image.As<Image>() 
+				PendingDescriptorType::Image2D,
+				*write_descriptor_set,
+				{},
+                ref<Texture2D>{},
+				image.As<Image2D>()
 			}
 		);
 
@@ -467,7 +467,7 @@ namespace kb
         KB_CORE_ASSERT(false, "disabled!");
 
 		//return GetResource<Texture2D>(name);
-        return nullptr;
+        return ref<Texture2D>{};
 	}
 
 	ref<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
@@ -475,7 +475,7 @@ namespace kb
         KB_CORE_ASSERT(false, "disabled!");
 
         //return GetResource<Texture2D>(name);
-        return nullptr;
+        return ref<Texture2D>{};
 	}
 
 }

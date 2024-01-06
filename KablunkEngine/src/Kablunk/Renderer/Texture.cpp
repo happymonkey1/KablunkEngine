@@ -11,11 +11,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-
-		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:  return ref<OpenGLTexture2D>::Create(format, width, height);
-		case RendererAPI::render_api_t::Vulkan:  return ref<VulkanTexture2D>::Create(format, width, height, data);
-		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<Texture2D>{};
+		case RendererAPI::render_api_t::OpenGL:  return static_cast<ref<Texture2D>>(ref<OpenGLTexture2D>::Create(format, width, height));
+		case RendererAPI::render_api_t::Vulkan:  return static_cast<ref<Texture2D>>(ref<VulkanTexture2D>::Create(format, width, height, data));
+		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return ref<Texture2D>{};
 		}
 	}
 
@@ -23,12 +22,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-
-		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:  return ref<OpenGLTexture2D>::Create(path);
-		case RendererAPI::render_api_t::Vulkan:  return ref<VulkanTexture2D>::Create(path);
-		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:    KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<Texture2D>{};
+		case RendererAPI::render_api_t::OpenGL:  return static_cast<ref<Texture2D>>(ref<OpenGLTexture2D>::Create(path));
+		case RendererAPI::render_api_t::Vulkan:  return static_cast<ref<Texture2D>>(ref<VulkanTexture2D>::Create(path));
+		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return ref<Texture2D>{};
 		}
 	}
-
 }

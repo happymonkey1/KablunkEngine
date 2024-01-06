@@ -20,7 +20,7 @@ namespace kb::render
 
 namespace details
 { // start namespace ::details
-	
+
 // to be called on render thread
 inline void render_thread_func(render_thread* rendering_thread)
 {
@@ -104,7 +104,7 @@ inline void register_shader_dependency(ref<Shader> shader, ref<Pipeline> pipelin
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, pipeline);
 }
 
-inline void register_shader_dependency(ref<Shader> p_shader, ref<kb::render::compute_pipeline> p_compute_pipeline)
+inline void register_shader_dependency(ref<Shader> p_shader, ref<compute_pipeline> p_compute_pipeline)
 {
     Singleton<Renderer>::get().register_shader_dependency(p_shader, p_compute_pipeline);
 }
@@ -271,20 +271,20 @@ inline void render_instanced_submesh(
 inline void submit_fullscreen_quad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<Material> material)
 {
 	Singleton<Renderer>::get().get_renderer()->SubmitFullscreenQuad(
-		render_command_buffer, 
-		pipeline, 
-		uniform_buffer_set, 
-		nullptr, // storage buffer set
+		render_command_buffer,
+		pipeline,
+		uniform_buffer_set,
+        ref<StorageBufferSet>{}, // storage buffer set
 		material
 	);
 }
 
 // submit a fullscreen quad to be rendered with a material (includes storage buffer set)
 inline void SubmitFullscreenQuad(
-	ref<RenderCommandBuffer> render_command_buffer, 
-	ref<Pipeline> pipeline, 
-	ref<UniformBufferSet> uniform_buffer_set, 
-	ref<StorageBufferSet> storage_buffer_set, 
+	ref<RenderCommandBuffer> render_command_buffer,
+	ref<Pipeline> pipeline,
+	ref<UniformBufferSet> uniform_buffer_set,
+	ref<StorageBufferSet> storage_buffer_set,
 	ref<Material> material
 )
 {
@@ -375,41 +375,40 @@ inline kb::render_command_queue& get_render_command_queue()
 }
 
 // #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
-// submit a function to be queued (and run) on the render thread
-template <typename FuncT>
-inline void submit(FuncT&& func)
+// submit a function to be queued (and run) on the render 
+inline void submit(auto func)
 {
-	//static std::mutex s_submit_mutex;
-	//std::lock_guard lock{ s_submit_mutex };
+    using func_t = decltype(func);
+
 	auto render_cmd = [](void* ptr)
 	{
-		auto p_func = (FuncT*)ptr;
+		auto p_func = static_cast<func_t*>(ptr);
 		(*p_func)();
 
-		p_func->~FuncT();
+		p_func->~func_t();
 	};
 
 	auto storage_buffer = get_render_command_queue().allocate(render_cmd, sizeof(func));
-	new (storage_buffer) FuncT(std::forward<FuncT>(func));
+	new (storage_buffer) func_t(std::forward<func_t>(func));
 }
 
-template <typename FuncT>
-inline void submit_resource_free(FuncT&& func)
+inline void submit_resource_free(auto func)
 {
+    using func_t = decltype(func);
+
 	auto render_cmd = [](void* ptr)
 	{
-		auto p_func = (FuncT*)ptr;
+		auto p_func = static_cast<func_t*>(ptr);
 		(*p_func)();
 
-		p_func->~FuncT();
+		p_func->~func_t();
 	};
 
 	render::submit([render_cmd, func]()
 		{
 			const uint32_t index = rt_get_current_frame_index();
 			auto storage_buffer = get_render_resource_release_queue(index).allocate(render_cmd, sizeof(func));
-			new (storage_buffer) FuncT(std::forward<FuncT>((FuncT&&)func));
+			new (storage_buffer) func_t(std::forward<func_t>(static_cast<func_t>(func)));
 		});
 }
-
 }

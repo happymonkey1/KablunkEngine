@@ -12,11 +12,9 @@
 #include "Kablunk/Renderer/OrthographicCamera.h"
 #include "Kablunk/Renderer/EditorCamera.h"
 #include "Kablunk/Renderer/Camera.h"
-#include "Kablunk/Scene/Entity.h"
 
 #include "Kablunk/Renderer/SceneRenderer.h"
 
-#include "Kablunk/Renderer/UniformBuffer.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Buffer.h"
 
@@ -90,13 +88,13 @@ struct renderer_2d_stats_t
 // #TODO move onto renderer class, this is leftover from old static renderer
 struct renderer_2d_data_t
 {
-	static const uint32_t max_quads = 20'000;
-	static const uint32_t max_vertices = max_quads * 4;
-	static const uint32_t max_indices = max_quads * 6;
-	static constexpr const uint32_t max_lines = 10000;
-	static constexpr const uint32_t max_line_vertices = max_lines * 2;
-	static constexpr const uint32_t max_line_indices = max_lines * 6;
-	static const uint32_t max_texture_slots = 32;
+	static constexpr uint32_t max_quads = 20'000;
+	static constexpr uint32_t max_vertices = max_quads * 4;
+	static constexpr uint32_t max_indices = max_quads * 6;
+	static constexpr uint32_t max_lines = 10000;
+	static constexpr uint32_t max_line_vertices = max_lines * 2;
+	static constexpr uint32_t max_line_indices = max_lines * 6;
+	static constexpr uint32_t max_texture_slots = 32;
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
@@ -207,11 +205,11 @@ class Renderer2D : public RefCounted
 public:
 	Renderer2D() = default;
 	~Renderer2D();
-		
+
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
 
-    auto set_asset_manager(ref<asset::AssetManager> p_asset_manager) -> void;
+    auto set_asset_manager(const ref<asset::AssetManager>& p_asset_manager) -> void;
 
     ref<Texture2D> get_white_texture();
 
@@ -242,72 +240,72 @@ public:
 
 	// draw quad
 	void draw_quad(
-		const glm::vec2& position, 
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		float tilingFactor = 1.0f, 
+		const glm::vec2& position,
+		const glm::vec2& size,
+		const ref<Texture2D>& texture,
+		float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4{ 1.0f }
 	);
 	// draw quad
 	void draw_quad(
 		const glm::vec3& position,
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		float tilingFactor = 1.0f, 
+		const glm::vec2& size,
+		const ref<Texture2D>& texture,
+		float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4{ 1.0f }
 	);
 	// draw quad
-	// #TODO figure out how to pass 64 bit integers to OpenGL so we can support int64_t instead of int32_t
+	// #TODO figure out how to pass 64-bit integers to OpenGL, so we can support int64_t instead of int32_t
 	void draw_quad(
-		const glm::mat4& transform, 
-		const ref<Texture2D>& texture, 
-		float tilingFactor = 1.0f, 
-		const glm::vec4& tintColor = glm::vec4{ 1.0f }, 
+		const glm::mat4& transform,
+		const ref<Texture2D>& texture,
+		float tilingFactor = 1.0f,
+		const glm::vec4& tintColor = glm::vec4{ 1.0f },
 		int32_t entity_id = -1
 	);
 
 	// draw quad from texture atlas
 	void draw_quad_from_texture_atlas(
-		const glm::vec2& position, 
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		const glm::vec2* texture_atlas_offsets, 
-		float tiling_factor = 1.0f, 
+		const glm::vec2& position,
+		const glm::vec2& size,
+		const ref<Texture2D>& texture,
+		const glm::vec2* texture_atlas_offsets,
+		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 	// draw quad from texture atlas
 	void draw_quad_from_texture_atlas(
-		const glm::vec3& position, 
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		const glm::vec2* texture_atlas_offsets, 
-		float tiling_factor = 1.0f, 
+		const glm::vec3& position,
+		const glm::vec2& size,
+		const ref<Texture2D>& texture,
+		const glm::vec2* texture_atlas_offsets,
+		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 	// draw quad from texture atlas
 	void draw_quad_from_texture_atlas(
 		const glm::mat4& transform,
-		const glm::vec2& size, 
-		const ref<Texture2D>& texture, 
-		const glm::vec2* texture_atlas_offsets, 
-		float tiling_factor = 1.0f, 
+		const glm::vec2& size,
+		const ref<Texture2D>& texture,
+		const glm::vec2* texture_atlas_offsets,
+		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 
 	// draw circle
 	void draw_circle(
-		const glm::mat4& transform, 
-		const glm::vec4& color, 
-		float radius = 0.5f, 
-		float thickness = 1.0f, 
-		float fade = 0.005f, 
+		const glm::mat4& transform,
+		const glm::vec4& color,
+		float radius = 0.5f,
+		float thickness = 1.0f,
+		float fade = 0.005f,
 		int32_t entity_id = -1
 	);
 
 	// draw line
 	void draw_line(
-		const glm::vec3& p0, 
-		const glm::vec3& p1, 
+		const glm::vec3& p0,
+		const glm::vec3& p1,
 		const glm::vec4& color = glm::vec4{ 1.0f }
 	);
 
@@ -319,17 +317,17 @@ public:
 	// draw text string
 	void draw_text_string(
 		const std::string& text,
-		const glm::vec2& position, 
-		const glm::vec2& size, 
-		const ref<render::font_asset_t>& font_asset, 
+		const glm::vec2& position,
+		const glm::vec2& size,
+		const ref<render::font_asset_t>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 	// draw text string 
 	void draw_text_string(
-		const std::string& text, 
-		const glm::vec3& position, 
-		const glm::vec2& size, 
-		const ref<render::font_asset_t>& font_asset, 
+		const std::string& text,
+		const glm::vec3& position,
+		const glm::vec2& size,
+		const ref<render::font_asset_t>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
 
@@ -359,9 +357,10 @@ private:
     auto add_circle_buffer() -> void;
     auto add_line_buffer() -> void;
     auto add_text_buffer() -> void;
+
 private:
     renderer_2d_data_t m_renderer_data{};
-    ref<asset::AssetManager> m_asset_manager = nullptr;
+    ref<asset::AssetManager> m_asset_manager{};
     bool m_explicit_render_pass_clear = false;
 };
 

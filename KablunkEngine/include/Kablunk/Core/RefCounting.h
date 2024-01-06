@@ -32,7 +32,7 @@ public:
 	KB_FORCE_INLINE auto inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
 	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release); }
 private:
-	mutable std::atomic<u32> m_ref_count = 0;
+    mutable std::atomic<u32> m_ref_count{ 0 };
 };
 
 namespace Internal
@@ -46,7 +46,7 @@ namespace concepts
 { // start namespace ::concepts
 
 template <typename T>
-concept is_ref_counted = std::is_base_of<RefCounted, T>::value || std::is_same<T, std::nullptr_t>::value;
+concept is_ref_counted = std::is_base_of_v<RefCounted, T> || std::is_same_v<T, std::nullptr_t>;
 
 } // end namespace ::concepts
 
@@ -55,16 +55,17 @@ class ref
 {
 public:
 	constexpr ref() : m_ptr{ nullptr } {}
-	constexpr ref(std::nullptr_t n) : m_ptr { nullptr } {}
-    constexpr ref(T* ptr) : m_ptr{ ptr }
+    explicit constexpr ref(std::nullptr_t) : m_ptr { nullptr } {}
+
+    explicit constexpr ref(T* ptr) : m_ptr{ ptr }
 	{
-		static_assert(std::is_base_of<RefCounted, T>::value, "Class is not RefCounted!");
+		static_assert(std::is_base_of_v<RefCounted, T>, "Class is not RefCounted!");
 
 		IncRef();
 	}
 
 	template <typename T2>
-    constexpr ref(const ref<T2>& other)
+    explicit constexpr ref(const ref<T2>& other)
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
 
@@ -72,7 +73,7 @@ public:
 	}
 
 	template <typename T2>
-    constexpr ref(ref<T2>&& other)
+    explicit constexpr ref(ref<T2>&& other)
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
 		other.m_ptr = nullptr;
@@ -103,7 +104,7 @@ public:
 		return *this;
 	}
 
-    constexpr ref& operator=(const ref<T>& other)
+    constexpr ref& operator=(const ref& other)
 	{
 		other.IncRef();
 		DecRef();
@@ -157,23 +158,23 @@ public:
 	}
 
 	template <typename... Args>
-    constexpr static ref<T> Create(Args&&... args)
+    constexpr static ref Create(Args&&... args)
 	{
-		return ref<T>(new T(std::forward<Args>(args)...));
+		return ref(new T(std::forward<Args>(args)...));
 	}
 
 	// ptr comparison, not value
-    constexpr bool operator==(const ref<T> other) const
+    constexpr bool operator==(const ref other) const
 	{
 		return m_ptr == other.m_ptr;
 	}
 
-    constexpr bool operator!=(const ref<T> other) const
+    constexpr bool operator!=(const ref other) const
 	{
 		return !(*this == other);
 	}
 
-    constexpr bool Equals(const ref<T>& other) const
+    constexpr bool Equals(const ref& other) const
 	{
 		if (!m_ptr || !other.m_ptr)
 			return false;
@@ -197,7 +198,6 @@ private:
 	{
 		if (!m_ptr)
 			return;
-			
 			
 		if (!m_ptr->dec_ref())
 		{

@@ -204,7 +204,7 @@ namespace kb
 	ref<Texture2D> OpenGLMaterial::GetTexture2D(const std::string& name)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return nullptr;
+		return ref<Texture2D>{};
 	}
 
 }

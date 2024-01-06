@@ -12,14 +12,14 @@ static VkFence s_vk_compute_fence = nullptr;
 compute_pipeline::compute_pipeline(kb::ref<kb::Shader> compute_shader)
     : m_shader{ compute_shader.As<kb::VulkanShader>() }
 {
-    kb::render::submit(
+    render::submit(
         [instance = kb::ref{ this }]() mutable
         {
             instance->rt_create_pipeline();
         }
     );
 
-    kb::render::register_shader_dependency(compute_shader, this);
+    register_shader_dependency(compute_shader, ref<render::compute_pipeline>{ this });
 }
 
 void compute_pipeline::execute(VkDescriptorSet* p_descriptor_sets, uint32_t p_descriptor_set_count, uint32_t p_group_count_x, uint32_t p_group_count_y, uint32_t p_group_count_z)

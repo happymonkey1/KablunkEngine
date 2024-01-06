@@ -58,12 +58,12 @@ namespace kb
 	{
 		// query if device has presenting support. Iterate to find which queues support present
 		std::vector<VkBool32> supports_present(m_queue_family_properties.size());
-		uint32_t i = 0;
+		uint32_t queue_family_index = 0;
 		for (const auto& queue_family : m_queue_family_properties)
 		{
-			vkGetPhysicalDeviceSurfaceSupportKHR(m_device, i, surface, &supports_present[i]);
+			vkGetPhysicalDeviceSurfaceSupportKHR(m_device, queue_family_index, surface, &supports_present[queue_family_index]);
 
-			i++;
+			queue_family_index++;
 		}
 
 		uint32_t graphics_queue_index = UINT32_MAX;

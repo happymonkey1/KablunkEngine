@@ -308,30 +308,30 @@ namespace kb
 		}
 
 		{
-			auto view = m_registry.view<NativeScriptComponent>();
-			for (auto e : view)
+			auto nsc_view = m_registry.view<NativeScriptComponent>();
+			for (auto e : nsc_view)
 			{
-				Entity entity = Entity{ e, this };
+				auto entity = Entity{ e, this };
 				auto& nsc = entity.GetComponent<NativeScriptComponent>();
 
 				if (!nsc.Instance.get())
 					KB_CORE_ASSERT(false, "Instance not set");
-				
+
 				nsc.Instance->bind_entity(entity);
 
 				try
 				{
 					nsc.Instance->OnAwake();
 				}
-				catch (std::bad_alloc& e)
+				catch (std::bad_alloc& err)
 				{
-					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", err.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
 					nsc.destroy_script();
 				}
-				catch (std::exception& e)
+				catch (std::exception& err)
 				{
-					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
+					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", err.what());
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
 					nsc.destroy_script();
 				}
@@ -341,7 +341,6 @@ namespace kb
 					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
 					nsc.destroy_script();
 				}
-
 			}
 		}
 	}
@@ -656,7 +655,7 @@ namespace kb
                     auto& text_comp = text_entity.GetComponent<TextComponent>();
 
                     KB_CORE_ASSERT(false, "need to re-implement!");
-                    ref<render::font_asset_t> font_asset = nullptr;
+                    ref<render::font_asset_t> font_asset{};
                     //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                     if (font_asset)
@@ -824,7 +823,7 @@ namespace kb
                 auto& text_comp = text_entity.GetComponent<TextComponent>();
 
                 KB_CORE_ASSERT(false, "need to re-implement");
-                ref<render::font_asset_t> font_asset = nullptr;
+                ref<render::font_asset_t> font_asset{};
                 //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 if (font_asset)

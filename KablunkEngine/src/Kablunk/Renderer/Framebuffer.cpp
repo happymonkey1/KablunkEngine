@@ -13,10 +13,10 @@ namespace kb
 		ref<Framebuffer> framebuffer;
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<Framebuffer>{};
 		case RendererAPI::render_api_t::OpenGL:	framebuffer = ref<OpenGLFramebuffer>::Create(specs); break;
 		case RendererAPI::render_api_t::Vulkan:	framebuffer = ref<VulkanFramebuffer>::Create(specs); break;
-		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
+		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<Framebuffer>{};
 		}
 
 		FramebufferPool::Get()->Add(framebuffer);
@@ -30,14 +30,11 @@ namespace kb
 
 	}
 
-	FramebufferPool::~FramebufferPool()
-	{
+	FramebufferPool::~FramebufferPool() = default;
 
-	}
-
-	std::weak_ptr<kb::Framebuffer> FramebufferPool::AllocateBuffer()
+    std::weak_ptr<kb::Framebuffer> FramebufferPool::AllocateBuffer()
 	{
-		return std::weak_ptr<Framebuffer>();
+		return {};
 	}
 
 	void FramebufferPool::Add(const ref<Framebuffer>& framebuffer)

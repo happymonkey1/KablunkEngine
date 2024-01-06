@@ -87,8 +87,8 @@ namespace kb
 
 		GLFWwindow* m_window_handle;
 
-		ref<VulkanPhysicalDevice> m_physical_device = nullptr;
-		ref<VulkanDevice> m_device = nullptr;
+		ref<VulkanPhysicalDevice> m_physical_device{};
+		ref<VulkanDevice> m_device{};
 
 		VulkanSwapChain m_swap_chain;
 

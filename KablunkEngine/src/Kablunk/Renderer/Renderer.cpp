@@ -1,6 +1,5 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
@@ -17,7 +16,7 @@
 namespace kb
 {
 
-	void Renderer::init()
+    void Renderer::init()
 	{
         KB_PROFILE_FUNC();
 

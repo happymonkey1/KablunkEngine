@@ -57,7 +57,8 @@ namespace kb
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f }, m_project_properties_panel{ nullptr }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
+        m_project_properties_panel{ ref<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
@@ -1224,7 +1225,7 @@ namespace kb
 
 	void EditorLayer::SaveProject()
 	{
-		auto& project = ProjectManager::get().get_active();
+		auto project = ProjectManager::get().get_active();
 		if (!project)
 		{
 			KB_CORE_ERROR("SaveProject called without active project!");
@@ -1242,12 +1243,12 @@ namespace kb
 		CSharpScriptEngine::SetSceneContext(nullptr);
 		NativeScriptEngine::get().set_scene(nullptr);
 
-		m_viewport_renderer->set_scene(nullptr);
-		m_scene_hierarchy_panel.SetContext(nullptr);
+		m_viewport_renderer->set_scene(ref<Scene>{});
+		m_scene_hierarchy_panel.SetContext(ref<Scene>{});
 		m_active_scene = nullptr;
 
 		if (unload)
-			ProjectManager::get().set_active(nullptr);
+			ProjectManager::get().set_active(ref<Project>{});
 	}
 
 	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const

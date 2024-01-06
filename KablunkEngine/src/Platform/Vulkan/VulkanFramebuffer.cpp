@@ -69,7 +69,7 @@ namespace kb
 		}
 
 		KB_CORE_ASSERT(m_specification.Attachments.Attachments.size(), "no images were created!");
-		Resize(m_width, m_height, true);
+        VulkanFramebuffer::Resize(m_width, m_height, true);
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer()
@@ -91,14 +91,17 @@ namespace kb
 		if (!m_specification.existing_framebuffer)
 		{
 			uint32_t attachment_index = 0;
-			for (ref<VulkanImage2D> image : m_attachment_images)
+			for (ref<Image2D>& image : m_attachment_images)
 			{
 				if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 					continue;
 
-				// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
-				if (!image->GetSpecification().deinterleaved || attachment_index == 0 && !image->GetLayerImageView(0))
-					image->Release();
+                // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
+				if (ref<VulkanImage2D> vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved ||
+                    attachment_index == 0 && !vk_image->GetLayerImageView(0))
+				{
+                    vk_image->Release();
+				}
 
 				attachment_index++;
 			}
@@ -118,7 +121,7 @@ namespace kb
 		if (!force_recreate && (m_width == width && m_height == height))
 			return;
 
-		ref<VulkanFramebuffer> instance = this;
+        ref instance{ this };
 		render::submit([instance, width, height]() mutable
 			{
 				instance->m_width = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * instance->m_specification.scale));
@@ -137,7 +140,7 @@ namespace kb
 			});
 
 		for (auto& callback : m_resize_callbacks)
-			callback(this);
+			callback(ref<Framebuffer>{ this });
 	}
 
 	void VulkanFramebuffer::AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func)
@@ -169,7 +172,7 @@ namespace kb
 
 	void VulkanFramebuffer::Invalidate()
 	{
-		ref<VulkanFramebuffer> instance = this;
+        ref<VulkanFramebuffer> instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -193,14 +196,16 @@ namespace kb
 			if (!m_specification.existing_framebuffer)
 			{
 				uint32_t attachment_index = 0;
-				for (ref<VulkanImage2D> image : m_attachment_images)
+				for (ref<Image2D> image : m_attachment_images)
 				{
 					if (m_specification.existing_images.find(attachment_index) != m_specification.existing_images.end())
 						continue;
 
-					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
-					if (!image->GetSpecification().deinterleaved || attachment_index == 0 && !image->GetLayerImageView(0))
-						image->Release();
+                    // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
+					if (ref vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved || attachment_index == 0 && !vk_image->GetLayerImageView(0))
+					{
+                        vk_image->Release();
+					}
 
 					attachment_index++;
 				}
@@ -211,7 +216,6 @@ namespace kb
 					if (m_specification.existing_images.find(static_cast<uint32_t>(m_specification.Attachments.Attachments.size()) - 1) == m_specification.existing_images.end())
 						m_depth_attachment_image->Release();
 				}
-
 			}
 		}
 

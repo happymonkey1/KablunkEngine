@@ -613,7 +613,7 @@ namespace kb
 					for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
 					{
 						// set = 0 for now
-						ref<VulkanUniformBuffer> uniform_buffer = uniform_buffer_set->Get(binding, 0, frame); 
+						ref uniform_buffer = uniform_buffer_set->Get(binding, 0, frame).As<VulkanUniformBuffer>();
 
 						VkWriteDescriptorSet write_descriptor_set = {};
 						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -658,7 +658,7 @@ namespace kb
 					write_descriptor.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
 					{
-						ref<VulkanStorageBuffer> storage_buffer = storage_buffer_set->Get(binding, 0, frame); // set = 0 for now
+						ref storage_buffer = storage_buffer_set->Get(binding, 0, frame).As<VulkanStorageBuffer>(); // set = 0 for now
 
 						VkWriteDescriptorSet write_descriptor_set = {};
 						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -830,7 +830,7 @@ namespace kb
 				vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
 
 				// Update dynamic scissor state
-				VkRect2D scissor = {};
+				VkRect2D scissor;
 				scissor.extent.width = width;
 				scissor.extent.height = height;
 				scissor.offset.x = 0;

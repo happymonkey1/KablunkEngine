@@ -13,14 +13,14 @@ namespace kb
 		{
 		case RendererAPI::render_api_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!");
-			return nullptr;
+			return ref<GraphicsContext>{};
 		case RendererAPI::render_api_t::OpenGL:
-			return ref<OpenGLContext>::Create(static_cast<GLFWwindow*>(window));
+			return static_cast<ref<GraphicsContext>>(ref<OpenGLContext>::Create(static_cast<GLFWwindow*>(window)));
 		case RendererAPI::render_api_t::Vulkan:
-			return ref<VulkanContext>::Create(static_cast<GLFWwindow*>(window));
+			return static_cast<ref<GraphicsContext>>(ref<VulkanContext>::Create(static_cast<GLFWwindow*>(window)));
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
-			return nullptr;
+			return ref<GraphicsContext>{};
 		}
 	}
 }

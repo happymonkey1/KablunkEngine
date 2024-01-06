@@ -122,7 +122,7 @@ namespace kb {
 		bool m_show_debug_statistics = false;
 
         // primary 2d renderer which uses world space camera
-        ref<Renderer2D> m_renderer_2d = nullptr;
+        ref<Renderer2D> m_renderer_2d{};
 
 		u32 m_current_frame_index = 0;
 

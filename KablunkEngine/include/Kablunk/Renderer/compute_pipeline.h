@@ -16,9 +16,9 @@ public:
     virtual ~compute_pipeline() = 0;
 
     // begin pass for the compute pipeline
-    virtual void begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) = 0;
+    virtual void begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
     // begin pass on the render thread for the compute pipeline
-    virtual void rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) = 0;
+    virtual void rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
     // end pass for the compute pipeline
     virtual void end() = 0;
 

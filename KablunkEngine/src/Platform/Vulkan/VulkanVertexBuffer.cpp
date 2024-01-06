@@ -15,12 +15,12 @@ namespace kb
 
 		KB_CORE_ASSERT(m_local_data.size() == m_size, "sizes do not match!");
 
-		ref<VulkanVertexBuffer> instance = this;
+        ref instance{ this };
 		render::submit([instance]() mutable
 			{
 				ref<VulkanDevice> device = VulkanContext::Get()->GetDevice();
 				VulkanAllocator allocator{ "VertexBuffer" };
-				
+
 				// create staging buffer
 				VkBufferCreateInfo staging_buffer_create_info{};
 				staging_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -37,7 +37,6 @@ namespace kb
 				KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{}'", instance->m_local_data.size());
 				allocator.UnmapMemory(staging_buffer_allocation);
 
-				
 				// Create vertex buffer info
 				VkBufferCreateInfo vertex_buffer_create_info{};
 				vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -65,7 +64,7 @@ namespace kb
 	{
 		m_local_data.Allocate(size);
 
-		ref<VulkanVertexBuffer> instance = this;
+        ref instance{ this };
 		render::submit([instance]() mutable
 			{
 				VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -106,7 +105,7 @@ namespace kb
 	void VulkanVertexBuffer::SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
 	{
 		memcpy(m_local_data.get(), (uint8_t*)data + offset, size);
-		ref<VulkanVertexBuffer> instance = this;
+        ref instance{ this };
 		render::submit([instance, size, offset]() mutable {
 				instance->RT_SetData(instance->m_local_data.get(), size, offset);
 			});

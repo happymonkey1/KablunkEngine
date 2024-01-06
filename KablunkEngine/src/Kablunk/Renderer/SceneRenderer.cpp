@@ -153,7 +153,7 @@ namespace kb
 		m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 		m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
-		ref<SceneRenderer> instance = this;
+        ref<SceneRenderer> instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->m_resources_created = true;
@@ -194,25 +194,23 @@ namespace kb
 				m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
 		}
 
-		
-
-		auto& scene_camera = m_scene_data.camera;
+		const auto& scene_camera = m_scene_data.camera;
 		const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
 		const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
 		const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
 		const glm::vec3 camera_position = view_inverse[3];
 
 		const auto inverse_view_projection = glm::inverse(view_projection);
-		
+
 		// Set camera uniform buffer
-		CameraDataUB camera_data = { 
-			view_projection, 
-			scene_camera.camera.GetProjection(), 
-			scene_camera.view_mat, 
+		CameraDataUB camera_data = {
+			view_projection,
+			scene_camera.camera.GetProjection(),
+			scene_camera.view_mat,
 			camera_position
 		};
-		
-		ref<SceneRenderer> instance = this;
+
+        ref<SceneRenderer> instance{ this };
 		render::submit([instance, camera_data]() mutable
 			{
 				uint32_t buffer_index = render::rt_get_current_frame_index();
@@ -252,7 +250,7 @@ namespace kb
 
 		if (m_use_threads)
 		{
-			ref<SceneRenderer> instance = this;
+            ref<SceneRenderer> instance{ this };
 			s_thread_pool.emplace_back(([instance]() mutable
 				{
 					instance->flush_draw_list();
@@ -305,7 +303,7 @@ namespace kb
         KB_PROFILE_FUNC()
 
 		if (!m_resources_created)
-			return nullptr;
+			return ref<Image2D>{};
 
 		auto image = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
 		return image;
@@ -518,7 +516,7 @@ namespace kb
 		m_composite_material->Set("u_BloomTexture", m_bloom_texture);
 		m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
 
-		render::submit_fullscreen_quad(m_command_buffer, m_composite_pipeline, nullptr, m_composite_material);
+        render::submit_fullscreen_quad(m_command_buffer, m_composite_pipeline, ref<UniformBufferSet>{}, m_composite_material);
 
 		render::end_render_pass(m_command_buffer);
 		m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);

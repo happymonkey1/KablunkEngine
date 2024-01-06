@@ -97,7 +97,7 @@ void texture_atlas::splice_texture_atlas()
 			(float)(border_uv_offset_x + x * m_texture_width) / width,
 			(float)(-border_uv_offset_y + y * m_texture_height) / height + texture_uv_height
 		};
-		sprite.texture_atlas = this;
+        sprite.texture_atlas = ref{ this };
 	}
 #if 0
 	// #TODO I think this only works for RGBA textures (not RGBA16, RGBA32)

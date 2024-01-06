@@ -75,7 +75,7 @@ namespace kb::render
 
 	ref<kb::render::font_asset_t> font_manager::get_font_asset(asset::asset_id_t p_font_asset_id) const
 	{
-		return m_font_cache.contains(p_font_asset_id) ? m_font_cache.at(p_font_asset_id) : nullptr;
+		return m_font_cache.contains(p_font_asset_id) ? m_font_cache.at(p_font_asset_id) : ref<font_asset>{};
 	}
 
 	bool font_manager::has_font_cached(ref<font_asset_t> font_asset)

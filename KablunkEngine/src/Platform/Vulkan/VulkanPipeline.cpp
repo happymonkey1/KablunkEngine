@@ -52,14 +52,14 @@ namespace kb
 		KB_CORE_ASSERT(specification.shader, "no shader set!");
 		KB_CORE_ASSERT(specification.render_pass, "no render pass set!");
 
-		render::register_shader_dependency(specification.shader, this);
+        render::register_shader_dependency(specification.shader, ref<Pipeline>{ this });
 
-		Invalidate();
+        VulkanPipeline::Invalidate();
 	}
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		render::submit_resource_free([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]() 
+		render::submit_resource_free([pipeline = m_vk_pipeline, pipeline_layout = m_vk_pipeline_layout]()
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 				vkDestroyPipeline(vk_device, pipeline, nullptr);
@@ -70,7 +70,7 @@ namespace kb
 
 	void VulkanPipeline::Invalidate()
 	{
-		ref<VulkanPipeline> instance = this;
+        ref<VulkanPipeline> instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -351,7 +351,7 @@ namespace kb
 
 	void VulkanPipeline::SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set /*= 0*/)
 	{
-		ref<VulkanPipeline> instance = this;
+        ref<VulkanPipeline> instance{ this };
 		render::submit([instance, uniform_buffer, binding, set]() mutable
 			{
 				instance->RT_SetUniformBuffer(uniform_buffer, binding, set);

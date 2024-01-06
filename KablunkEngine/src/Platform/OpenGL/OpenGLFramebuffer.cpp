@@ -253,16 +253,16 @@ namespace kb
 			Utilities::KablunkTextureFormatToGLenum(spec.format), GL_INT, &value);
 	}
 
-	kb::ref<kb::Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
+	ref<Image2D> OpenGLFramebuffer::GetImage(uint32_t attachment_index /*= 0*/) const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return nullptr;
+		return ref<Image2D>{};
 	}
 
-	kb::ref<kb::Image2D> OpenGLFramebuffer::GetDepthImage() const
+	ref<Image2D> OpenGLFramebuffer::GetDepthImage() const
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		return nullptr;
+		return ref<Image2D>{};
 	}
 
 	void OpenGLFramebuffer::DeleteBuffer()

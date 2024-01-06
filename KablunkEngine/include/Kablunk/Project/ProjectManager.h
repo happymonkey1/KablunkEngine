@@ -7,21 +7,23 @@
 
 namespace kb
 {
-	class ProjectManager
-	{
-	public:
 
-		void init();
-		void shutdown();
+class ProjectManager
+{
+public:
+    void init();
+    void shutdown();
 
-		ref<Project> get_active() { return m_active_project; }
+    ref<Project> get_active() { return m_active_project; }
 
-		SINGLETON_GET_FUNC(ProjectManager);
+    SINGLETON_GET_FUNC(ProjectManager);
 
-		void set_active(const ref<Project>& project);
-	private:
-		ref<Project> m_active_project = nullptr;
-	};
+    void set_active(const ref<Project>& project);
+
+private:
+    ref<Project> m_active_project{ nullptr };
+};
+
 }
 
 #endif

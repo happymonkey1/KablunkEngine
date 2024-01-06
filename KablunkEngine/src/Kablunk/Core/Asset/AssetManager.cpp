@@ -13,19 +13,19 @@
 
 namespace kb::asset
 {
-
 	void AssetManager::init(ref<Project> p_active_project, bool p_load_internal_engine_assets /* = true */)
 	{
         KB_CORE_INFO("[asset_manager]: starting initialization");
 
         m_active_project = p_active_project;
 
+        ref instance{ this };
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
-		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create(this);
-		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create(this);
-		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create(this);
-		
+		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create(instance);
+		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create(instance);
+		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create(instance);
+
 		m_asset_registry.clear();
 		load_asset_registry();
 
@@ -421,5 +421,4 @@ namespace kb::asset
         KB_CORE_INFO("[AssetManager] Imported new asset '{}'!", metadata.id);
         return metadata.id;
     }
-
 }

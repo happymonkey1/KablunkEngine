@@ -10,15 +10,14 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-
 		case RendererAPI::render_api_t::None:
 			KB_CORE_ASSERT(false, "RendererAPI::None is not supported!");
-			return nullptr;
+			return ref<VertexArray>{};
 		case RendererAPI::render_api_t::OpenGL:
-			return ref<OpenGLVertexArray>::Create();
+			return static_cast<ref<VertexArray>>(ref<OpenGLVertexArray>::Create());
 		default:
 			KB_CORE_ASSERT(false, "Unknown RenderAPI!");
-			return nullptr;
+			return ref<VertexArray>{};
 		}
 	}
 }

@@ -728,8 +728,8 @@ namespace kb
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-                const ref<Texture>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
-                ref<Texture> texture_asset = component.Texture != asset::null_asset_id ?
+                const ref<Texture2D>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+                ref<Texture2D> texture_asset = component.Texture != asset::null_asset_id ?
                     asset::get_asset<Texture2D>(component.Texture) : white_texture;
                 if (!texture_asset)
                 {

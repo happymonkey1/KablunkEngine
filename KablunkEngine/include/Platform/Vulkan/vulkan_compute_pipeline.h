@@ -12,7 +12,6 @@
 
 namespace kb::vk
 { // start namespace kb::vk
-    
 class compute_pipeline : public render::compute_pipeline
 {
 public:
@@ -21,9 +20,9 @@ public:
 
     // execute the compute pipeline
     void execute(
-        VkDescriptorSet* p_descriptor_sets, 
-        uint32_t p_descriptor_set_count, 
-        uint32_t p_group_count_x, 
+        VkDescriptorSet* p_descriptor_sets,
+        uint32_t p_descriptor_set_count,
+        uint32_t p_group_count_x,
         uint32_t p_group_count_y,
         uint32_t p_group_count_z
     );
@@ -32,10 +31,10 @@ public:
     // render::compute_pipeline interface
     // ==================================
 
-    virtual void begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
-    virtual void rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = nullptr) override;
+    virtual void begin(ref<RenderCommandBuffer> p_render_command_buffer = {}) override;
+    virtual void rt_begin(ref<RenderCommandBuffer> p_render_command_buffer = {}) override;
     virtual void end() override;
-    virtual kb::ref<kb::Shader> get_shader() const override { return m_shader; }
+    virtual ref<Shader> get_shader() const override { return static_cast<ref<Shader>>(m_shader); }
 
     // ==================================
 
@@ -54,7 +53,7 @@ private:
     void rt_create_pipeline();
 private:
     // ref to the underlying shader
-    kb::ref<kb::VulkanShader> m_shader;
+    ref<VulkanShader> m_shader;
     // pipeline layout
     VkPipelineLayout m_vk_compute_pipeline_layout = nullptr;
     // pipeline cache
@@ -66,7 +65,6 @@ private:
     // flag for whether the pipeline is using the graphics queue
     bool m_using_graphics_queue = false;
 };
-
 } // end namespace kb::vk
 
 #endif

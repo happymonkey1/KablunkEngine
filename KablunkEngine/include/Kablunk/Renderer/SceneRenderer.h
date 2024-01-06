@@ -72,7 +72,7 @@ namespace kb
 		void begin_scene(const SceneRendererCamera& camera);
 		void end_scene();
 
-		void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = nullptr);
+		void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = {});
 
 		void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
 		bool is_multi_threaded() const { return m_use_threads; }

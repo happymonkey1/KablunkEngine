@@ -3,8 +3,6 @@
 
 #include "Kablunk/Asset/AssetManager.h"
 
-#include "Kablunk/Renderer/VertexArray.h"
-#include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
 #include "Kablunk/Renderer/Renderer.h"
@@ -18,7 +16,6 @@
 
 namespace kb
 {
-
 Renderer2D::~Renderer2D()
 {
     shutdown();
@@ -38,7 +35,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
         sizeof(QuadVertex)
     )
 #endif
-    KB_PROFILE_FUNC();
+    KB_PROFILE_FUNC()
 
 	m_renderer_data.specification = spec;
 
@@ -58,14 +55,14 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.quad_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data.quad_vertex_buffers[0].emplace_back(VertexBuffer::Create(m_renderer_data.max_vertices * sizeof(QuadVertex)));
-		m_renderer_data.quad_vertex_buffer_base_ptrs[0].emplace_back(new QuadVertex[m_renderer_data.max_vertices]);
+		m_renderer_data.quad_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(QuadVertex)));
+		m_renderer_data.quad_vertex_buffer_base_ptrs[0].emplace_back(new QuadVertex[kb::renderer_2d_data_t::max_vertices]);
 	}
 
-	auto* quad_indices = new uint32_t[m_renderer_data.max_indices];
+	auto* quad_indices = new uint32_t[kb::renderer_2d_data_t::max_indices];
 
 	uint32_t offset = 0;
-	for (uint32_t i = 0; i < m_renderer_data.max_indices; i += 6)
+	for (uint32_t i = 0; i < kb::renderer_2d_data_t::max_indices; i += 6)
 	{
 		quad_indices[i + uint32_t{ 0 }] = offset + uint32_t{ 0 };
 		quad_indices[i + uint32_t{ 1 }] = offset + uint32_t{ 1 };
@@ -78,7 +75,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 		offset += 4;
 	}
 
-	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, m_renderer_data.max_indices);
+	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, kb::renderer_2d_data_t::max_indices);
 	delete[] quad_indices;
 
 	// =======
@@ -93,8 +90,8 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.circle_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-        m_renderer_data.circle_vertex_buffers[0].emplace_back(VertexBuffer::Create(m_renderer_data.max_vertices * sizeof(CircleVertex)));
-        m_renderer_data.circle_vertex_buffer_base_ptrs[0].emplace_back(new CircleVertex[m_renderer_data.max_vertices]);
+        m_renderer_data.circle_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(CircleVertex)));
+        m_renderer_data.circle_vertex_buffer_base_ptrs[0].emplace_back(new CircleVertex[kb::renderer_2d_data_t::max_vertices]);
 	}
 
 	// =====
@@ -109,8 +106,8 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.line_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(m_renderer_data.max_vertices * sizeof(LineVertex)));
-        m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[m_renderer_data.max_vertices]);
+        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(LineVertex)));
+        m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[kb::renderer_2d_data_t::max_vertices]);
     }
 
 	// ====
@@ -125,8 +122,8 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.text_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.text_vertex_buffers[0].emplace_back(VertexBuffer::Create(m_renderer_data.max_vertices * sizeof(text_vertex_t)));
-        m_renderer_data.text_vertex_buffer_base_ptrs[0].emplace_back(new text_vertex_t[m_renderer_data.max_vertices]);
+        m_renderer_data.text_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(text_vertex_t)));
+        m_renderer_data.text_vertex_buffer_base_ptrs[0].emplace_back(new text_vertex_t[kb::renderer_2d_data_t::max_vertices]);
     }
 
 	uint32_t white_texture_data = 0xFFFFFFFF;
@@ -238,11 +235,11 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 		m_renderer_data.line_pipeline = Pipeline::Create(pipeline_spec);
 
-		uint32_t* line_indices = new uint32_t[m_renderer_data.max_line_indices];
-		for (uint32_t i = 0; i < m_renderer_data.max_line_indices; ++i)
+		uint32_t* line_indices = new uint32_t[kb::renderer_2d_data_t::max_line_indices];
+		for (uint32_t i = 0; i < kb::renderer_2d_data_t::max_line_indices; ++i)
 			line_indices[i] = i;
 
-		m_renderer_data.line_index_buffer = IndexBuffer::Create(line_indices, m_renderer_data.max_line_indices);
+		m_renderer_data.line_index_buffer = IndexBuffer::Create(line_indices, kb::renderer_2d_data_t::max_line_indices);
 		delete[] line_indices;
 	}
 
@@ -280,40 +277,40 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 void Renderer2D::shutdown()
 {
-    KB_PROFILE_FUNC();
+    KB_PROFILE_FUNC()
 
 	KB_CORE_INFO("Shutting down Renderer2D!");
 
 	// free quad vertex buffers
 	for (auto& frame_buffers : m_renderer_data.quad_vertex_buffer_base_ptrs)
-        for (auto& buffer : frame_buffers)
+        for (const auto buffer : frame_buffers)
 		    delete[] buffer;
 
     m_renderer_data.quad_vertex_buffer_base_ptrs.clear();
 	    
     // free circle vertex buffers
 	for (auto& frame_buffers : m_renderer_data.circle_vertex_buffer_base_ptrs)
-        for (auto& buffer : frame_buffers)
+        for (const auto buffer : frame_buffers)
 		    delete[] buffer;
 
     m_renderer_data.circle_vertex_buffer_base_ptrs.clear();
 
 	// free line vertex buffers
 	for (auto& frame_buffers : m_renderer_data.line_vertex_buffer_base_ptrs)
-        for (auto& buffer : frame_buffers)
+        for (const auto buffer : frame_buffers)
 		    delete[] buffer;
 
     m_renderer_data.line_vertex_buffer_base_ptrs.clear();
 
 	// free text vertex buffers
 	for (auto& frame_buffers : m_renderer_data.text_vertex_buffer_base_ptrs)
-        for (auto& buffer : frame_buffers)
+        for (const auto buffer : frame_buffers)
 		    delete[] buffer;
 
     m_renderer_data.text_vertex_buffer_base_ptrs.clear();
 }
 
-auto Renderer2D::set_asset_manager(ref<asset::AssetManager> p_asset_manager) -> void
+auto Renderer2D::set_asset_manager(const ref<asset::AssetManager>& p_asset_manager) -> void
 {
     m_asset_manager = p_asset_manager;
 }
@@ -333,7 +330,7 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, b
 	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.uniform_buffer_set;
 	render::submit([uniform_buffer_set, view_proj]() mutable
 		{
-			uint32_t buffer_index = render::rt_get_current_frame_index();
+			const uint32_t buffer_index = render::rt_get_current_frame_index();
 			uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
 		});
 
@@ -345,7 +342,7 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, b
 void Renderer2D::begin_scene(const EditorCamera& camera, bool p_explicit_clear /* = false */)
 {
     m_explicit_render_pass_clear = p_explicit_clear;
-	Renderer2D::begin_scene(camera, camera.GetViewMatrix());
+	begin_scene(camera, camera.GetViewMatrix());
 
 	start_new_batch();
 }
@@ -358,7 +355,7 @@ void Renderer2D::begin_scene(const glm::mat4& p_projection, const glm::mat4& p_t
     ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.uniform_buffer_set;
     render::submit([uniform_buffer_set, view_proj]() mutable
         {
-            uint32_t buffer_index = render::rt_get_current_frame_index();
+            const uint32_t buffer_index = render::rt_get_current_frame_index();
             uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
         });
 
@@ -374,9 +371,9 @@ void Renderer2D::end_scene()
 
 void Renderer2D::flush()
 {
-    KB_PROFILE_FUNC();
+    KB_PROFILE_FUNC()
 
-	KB_CORE_ASSERT(m_renderer_data.Stats.batch_count < 1, "Multiple batches per frame not supported!");
+	KB_CORE_ASSERT(m_renderer_data.Stats.batch_count < 1, "Multiple batches per frame not supported!")
 
 	m_renderer_data.render_command_buffer->Begin();
 
@@ -384,7 +381,7 @@ void Renderer2D::flush()
 
     bool clear_pass = m_explicit_render_pass_clear;
 
-	uint32_t frame_index = render::get_current_frame_index();
+	const uint32_t frame_index = render::get_current_frame_index();
 
 	// Quad
 	// calculate data size in bytes
@@ -393,8 +390,7 @@ void Renderer2D::flush()
         const auto& quad_vertex_buffer_base_ptr = m_renderer_data.quad_vertex_buffer_base_ptrs[i][frame_index];
         const auto& quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[i];
 
-        auto data_size = static_cast<u32>(reinterpret_cast<u8*>(quad_vertex_buffer_ptr) - reinterpret_cast<u8*>(quad_vertex_buffer_base_ptr));
-        if (data_size)
+        if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(quad_vertex_buffer_ptr) - reinterpret_cast<u8*>(quad_vertex_buffer_base_ptr)))
         {
             auto& quad_vertex_buffer = m_renderer_data.quad_vertex_buffers[i][frame_index];
             quad_vertex_buffer->SetData(quad_vertex_buffer_base_ptr, data_size);
@@ -404,24 +400,24 @@ void Renderer2D::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.texture_slots;
-            for (uint32_t i = 0; i < m_renderer_data.max_texture_slots; i++)
+            for (uint32_t j = 0; j < kb::renderer_2d_data_t::max_texture_slots; j++)
             {
-                if (textures[i])
-                    m_renderer_data.quad_material->Set("u_Textures", textures[i], i);
+                if (textures[j])
+                    m_renderer_data.quad_material->Set("u_Textures", textures[j], j);
                 else
-                    m_renderer_data.quad_material->Set("u_Textures", m_renderer_data.white_texture, i);
+                    m_renderer_data.quad_material->Set("u_Textures", m_renderer_data.white_texture, j);
             }
 
             KB_CORE_ASSERT(
                 m_renderer_data.quad_index_count < m_renderer_data.max_indices,
                 "[kb::Renderer2D]: quad index buffer overflow!"
-            );
+            )
 
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
                 m_renderer_data.quad_pipeline,
                 m_renderer_data.uniform_buffer_set,
-                nullptr,
+                ref<StorageBufferSet>{},
                 m_renderer_data.quad_material,
                 quad_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -435,7 +431,6 @@ void Renderer2D::flush()
             clear_pass = clear_pass && false;
         }
     }
-	
 
 	// Circle
     for (u32 i = 0; i <= m_renderer_data.m_circle_write_index; ++i)
@@ -443,8 +438,7 @@ void Renderer2D::flush()
         const auto& circle_vertex_base_buffer_ptr = m_renderer_data.circle_vertex_buffer_base_ptrs[i][frame_index];
         const auto& circle_vertex_buffer_ptr = m_renderer_data.circle_vertex_buffer_ptr[i];
 
-        auto data_size = static_cast<u32>(reinterpret_cast<u8*>(circle_vertex_buffer_ptr) - reinterpret_cast<u8*>(circle_vertex_base_buffer_ptr));
-        if (data_size)
+        if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(circle_vertex_buffer_ptr) - reinterpret_cast<u8*>(circle_vertex_base_buffer_ptr)))
         {
             auto& circle_vertex_buffer = m_renderer_data.circle_vertex_buffers[i][frame_index];
             circle_vertex_buffer->SetData(circle_vertex_base_buffer_ptr, data_size);
@@ -455,7 +449,7 @@ void Renderer2D::flush()
                 m_renderer_data.render_command_buffer,
                 m_renderer_data.circle_pipeline,
                 m_renderer_data.uniform_buffer_set,
-                nullptr,
+                ref<StorageBufferSet>{},
                 m_renderer_data.circle_material,
                 circle_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -468,7 +462,6 @@ void Renderer2D::flush()
             clear_pass = clear_pass && false;
         }
     }
-	
 
 	// Line
     for (u32 i = 0; i <= m_renderer_data.m_line_write_index; ++i)
@@ -476,8 +469,7 @@ void Renderer2D::flush()
         const auto& line_vertex_buffer_base_ptr = m_renderer_data.line_vertex_buffer_base_ptrs[i][frame_index];
         const auto& line_vertex_buffer_ptr = m_renderer_data.line_vertex_buffer_ptr[i];
 
-        auto data_size = static_cast<u32>(reinterpret_cast<u8*>(line_vertex_buffer_ptr) - reinterpret_cast<u8*>(line_vertex_buffer_base_ptr));
-        if (data_size)
+        if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(line_vertex_buffer_ptr) - reinterpret_cast<u8*>(line_vertex_buffer_base_ptr)))
         {
             auto& line_vertex_buffer = m_renderer_data.line_vertex_buffers[i][frame_index];
             line_vertex_buffer->SetData(line_vertex_buffer_base_ptr, data_size);
@@ -489,7 +481,7 @@ void Renderer2D::flush()
                 m_renderer_data.render_command_buffer,
                 m_renderer_data.line_pipeline,
                 m_renderer_data.uniform_buffer_set,
-                nullptr,
+                ref<StorageBufferSet>{},
                 m_renderer_data.line_material,
                 line_vertex_buffer,
                 m_renderer_data.line_index_buffer,
@@ -502,27 +494,26 @@ void Renderer2D::flush()
             clear_pass = clear_pass && false;
         }
     }
-	
+
 	// render text geometry
     for (u32 i = 0; i <= m_renderer_data.m_line_write_index; ++i)
     {
         const auto& text_vertex_buffer_base_ptr = m_renderer_data.text_vertex_buffer_base_ptrs[i][frame_index];
         const auto& text_vertex_buffer_ptr = m_renderer_data.text_vertex_buffer_ptr[i];
 
-        auto data_size = static_cast<u32>(reinterpret_cast<u8*>(text_vertex_buffer_ptr) - reinterpret_cast<u8*>(text_vertex_buffer_base_ptr));
-        if (data_size)
+        if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(text_vertex_buffer_ptr) - reinterpret_cast<u8*>(text_vertex_buffer_base_ptr)))
         {
             auto& text_vertex_buffer = m_renderer_data.text_vertex_buffers[i][frame_index];
             text_vertex_buffer->SetData(text_vertex_buffer_base_ptr, data_size);
 
             // Set Textures
             auto& textures = m_renderer_data.text_texture_atlas_slots;
-            for (uint32_t i = 0; i < m_renderer_data.max_texture_slots; i++)
+            for (uint32_t j = 0; j < kb::renderer_2d_data_t::max_texture_slots; j++)
             {
-                if (textures[i])
-                    m_renderer_data.text_material->Set("u_FontAtlases", textures[i], i);
+                if (textures[j])
+                    m_renderer_data.text_material->Set("u_FontAtlases", textures[j], j);
                 else
-                    m_renderer_data.text_material->Set("u_FontAtlases", m_renderer_data.white_texture, i);
+                    m_renderer_data.text_material->Set("u_FontAtlases", m_renderer_data.white_texture, j);
             }
 
             const auto& text_pass = m_renderer_data.text_pipeline->GetSpecification().render_pass;
@@ -531,7 +522,7 @@ void Renderer2D::flush()
                 m_renderer_data.render_command_buffer,
                 m_renderer_data.text_pipeline,
                 m_renderer_data.uniform_buffer_set,
-                nullptr,
+                ref<StorageBufferSet>{},
                 m_renderer_data.text_material,
                 text_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -555,7 +546,7 @@ void Renderer2D::flush()
 
 void Renderer2D::on_imgui_render() const
 {
-	uint32_t current_frame_index = render::get_current_frame_index();
+	const uint32_t current_frame_index = render::get_current_frame_index();
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data.render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data.gpu_time_query.renderer_2D_query)));
 }
 
@@ -623,7 +614,7 @@ void Renderer2D::set_swap_chain_target(bool p_swap_chain_target /* = true */)
 
 void Renderer2D::draw_sprite(Entity entity)
 {
-	auto transform = entity.m_scene->get_world_space_transform_matrix(entity);
+    const auto transform = entity.m_scene->get_world_space_transform_matrix(entity);
 
 	auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
@@ -636,8 +627,8 @@ void Renderer2D::draw_sprite(Entity entity)
         texture = m_renderer_data.white_texture;
     }
 
-	auto tint_color = sprite_renderer_comp.Color;
-	auto tiling_factor = sprite_renderer_comp.Tiling_factor;
+    const auto tint_color = sprite_renderer_comp.Color;
+    const auto tiling_factor = sprite_renderer_comp.Tiling_factor;
 
 	draw_quad(transform, texture, tiling_factor, tint_color, static_cast<int32_t>(entity.GetHandle()));
 }
@@ -653,7 +644,7 @@ void Renderer2D::draw_quad(const glm::vec2& position, const glm::vec2& size, con
 
 void Renderer2D::draw_quad(const glm::vec3& position, const glm::vec2& size, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color)
 {
-	glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+    const glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 		* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 	draw_quad(transform, texture, tiling_factor, tint_color);
@@ -667,12 +658,12 @@ void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& tex
 	{
 		// Dereference shared_ptrs and compare the textures
 		if (*m_renderer_data.texture_slots[i] == *texture)
-			texture_index = (float)i;
+			texture_index = static_cast<float>(i);
 	}
 
 	if (texture_index == 0.0f)
 	{
-		texture_index = (float)m_renderer_data.texture_slot_index;
+		texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
 		m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
 		KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
 	}
@@ -703,7 +694,7 @@ void Renderer2D::draw_quad_from_texture_atlas(const glm::vec2& position, const g
 }
 void Renderer2D::draw_quad_from_texture_atlas(const glm::vec3& position, const glm::vec2& size, const ref<Texture2D>& texture, const glm::vec2* texture_atlas_offsets, float tiling_factor, const glm::vec4& tint_color)
 {
-	glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+	const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
 		* glm::rotate(glm::mat4{ 1.0f }, 0.0f, { 0.0f, 0.0f, 1.0f })
 		* glm::scale(glm::mat4{ 1.0f }, { size.x, size.y, 1.0f });
 
@@ -717,14 +708,14 @@ void Renderer2D::draw_quad_from_texture_atlas(const glm::mat4& transform, const 
 	{
 		// Dereference and compare the textures
 		if (*m_renderer_data.texture_slots[i] == *texture)
-			texture_index = (float)i;
+			texture_index = static_cast<float>(i);
 	}
 
 	if (texture_index == 0.0f)
 	{
-		texture_index = (float)m_renderer_data.texture_slot_index;
+		texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
 		m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
-		KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+		KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
 	}
 
 	constexpr size_t quad_vertex_count = 4;
@@ -747,13 +738,12 @@ void Renderer2D::draw_quad_from_texture_atlas(const glm::mat4& transform, const 
 
 void Renderer2D::draw_circle(const glm::mat4& transform, const glm::vec4& color, float radius /*= 0.5f*/, float thickness /*= 1.0f*/, float fade /*= 0.005f*/, int32_t entity_id /*= -1*/)
 {
-	constexpr size_t circle_vertex_count = 4;
     auto& circle_vertex_buffer_ptr = get_writeable_circle_buffer(1);
 
-	for (u32 i = 0; i < circle_vertex_count; ++i)
-	{
-		circle_vertex_buffer_ptr->WorldPosition = transform * m_renderer_data.quad_vertex_positions[i];
-		circle_vertex_buffer_ptr->LocalPosition = m_renderer_data.quad_vertex_positions[i] * 2.0f;
+	for (const auto& quad_vertex_position : m_renderer_data.quad_vertex_positions)
+    {
+		circle_vertex_buffer_ptr->WorldPosition = transform * quad_vertex_position;
+		circle_vertex_buffer_ptr->LocalPosition = quad_vertex_position * 2.0f;
 		circle_vertex_buffer_ptr->Color = color;
 		circle_vertex_buffer_ptr->Radius = radius;
 		circle_vertex_buffer_ptr->Thickness = thickness;
@@ -769,7 +759,7 @@ void Renderer2D::draw_circle(const glm::mat4& transform, const glm::vec4& color,
 
 void Renderer2D::draw_line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color /*= glm::vec4{ 1.0f }*/)
 {
-	if (m_renderer_data.line_index_count + 2 > m_renderer_data.max_line_indices)
+	if (m_renderer_data.line_index_count + 2 > kb::renderer_2d_data_t::max_line_indices)
 		end_batch();
 
     auto& line_vertex_buffer_ptr = get_writeable_line_buffer(1);
@@ -784,7 +774,7 @@ void Renderer2D::draw_line(const glm::vec3& p0, const glm::vec3& p1, const glm::
 
 	m_renderer_data.line_index_count += 2;
 	m_renderer_data.line_count += 1;
-		
+
 	// #TODO statistics
 }
 
@@ -795,11 +785,11 @@ void Renderer2D::draw_rect(const glm::vec2& position, const glm::vec2& size, flo
 
 void Renderer2D::draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation /* = 0 */, const glm::vec4& color /* = glm::vec4 */)
 {
-	glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+	const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
 		* glm::rotate(glm::mat4{ 1.0f }, rotation, { 0.0f, 0.0f, 1.0f })
 		* glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
 
-	glm::vec3 positions[4] =
+	const glm::vec3 positions[4] =
 	{
 		transform * m_renderer_data.quad_vertex_positions[0],
 		transform * m_renderer_data.quad_vertex_positions[1],
@@ -851,32 +841,32 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	{
 		if (m_renderer_data.text_texture_atlas_slots[i]->GetHash() == font_texture_atlas->GetHash())
         {
-            texture_index = (float)i;
+            texture_index = static_cast<float>(i);
             break;
         }
     }
 
 	if (texture_index == -1.0f)
 	{
-		texture_index = (float)m_renderer_data.text_texture_atlas_slot_index;
+		texture_index = static_cast<float>(m_renderer_data.text_texture_atlas_slot_index);
 		m_renderer_data.text_texture_atlas_slots[m_renderer_data.text_texture_atlas_slot_index++] = font_texture_atlas;
 		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.max_texture_slots, "font texture atlas slot overflow!");
 	}
 
 	const auto& glyph_info_map = font_asset->get_glyph_rendering_map();
 
-    glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
         * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
 
 	// iterate over characters and select the correct glyph bitmap
-    glm::vec2 char_position = glm::vec2{ 0, 0 };
+    auto char_position = glm::vec2{ 0, 0 };
     f32 pixel_x_scale = (static_cast<f32>(font_asset->get_font_point()) * static_cast<f32>(font_asset->get_dpi_x()) / 72.0f);
 
 	for (char text_char : text)
 	{
 		const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
 
-        const glm::vec2 render_char_position = glm::vec2{ 
+        auto render_char_position = glm::vec2{ 
             char_position.x + glyph_data.m_x_off,
             // #NOTE adding the difference between size and bearing here, since vulkan renders with -y facing up
             char_position.y - (glyph_data.m_y_off)
@@ -899,7 +889,7 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 			glm::vec2{ glyph_data.m_x1, glyph_data.m_y1 },
 			glm::vec2{ glyph_data.m_x0, glyph_data.m_y1 },
 		};
-		
+
 		constexpr const size_t quad_vertex_count = 4;
         // #TODO probably not the most efficient to potentially get a new buffer while iterating
         auto& text_vertex_buffer_ptr = get_writeable_text_buffer(1);
@@ -924,21 +914,21 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	}
 }
 
-auto Renderer2D::add_texture(const ref<Texture2D>& p_texture) -> kb::f32
+auto Renderer2D::add_texture(const ref<Texture2D>& p_texture) -> f32
 {
-    kb::f32 texture_index = 0.0f;
+    f32 texture_index = 0.0f;
     for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
     {
         // Dereference and compare the textures
         if (*m_renderer_data.texture_slots[i] == *p_texture)
-            texture_index = (f32)i;
+            texture_index = static_cast<f32>(i);
     }
 
     if (texture_index == 0.0f)
     {
-        texture_index = (f32)m_renderer_data.texture_slot_index;
+        texture_index = static_cast<f32>(m_renderer_data.texture_slot_index);
         m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
-        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
     }
 
     return texture_index;
@@ -950,9 +940,9 @@ auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) -> void
     KB_CORE_ASSERT(
         m_renderer_data.quad_count + quad_count <= m_renderer_data.max_quads,
         "[Renderer2D]: quad buffer overflow!"
-    );
+    )
 
-    if (m_renderer_data.quad_count + quad_count <= m_renderer_data.max_quads)
+    if (m_renderer_data.quad_count + quad_count <= renderer_2d_data_t::max_quads)
     {
         auto& quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
         memcpy(quad_vertex_buffer_ptr, p_quad_buffer.get(), p_quad_buffer.size());
@@ -962,20 +952,20 @@ auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) -> void
     }
     else
     {
-        const size_t quad_count_for_existing_batch = m_renderer_data.max_quads - m_renderer_data.quad_count;
+        const size_t quad_count_for_existing_batch = renderer_2d_data_t::max_quads - m_renderer_data.quad_count;
         const size_t quad_count_for_new_batch = quad_count - quad_count_for_existing_batch;
 
         const size_t existing_buffer_copy_size = quad_count_for_existing_batch * 4ul * sizeof(QuadVertex);
-        auto& existing_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
+        const auto& existing_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
         memcpy(existing_quad_vertex_buffer_ptr, p_quad_buffer.get(), existing_buffer_copy_size);
 
         add_quad_buffer();
 
         const size_t new_buffer_copy_size = quad_count_for_new_batch * 4ul * sizeof(QuadVertex);
-        auto& new_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
+        const auto new_quad_vertex_buffer_ptr = m_renderer_data.quad_vertex_buffer_ptrs[m_renderer_data.m_quad_write_index];
         memcpy(
-            existing_quad_vertex_buffer_ptr,
-            reinterpret_cast<const u8*>(p_quad_buffer.get()) + existing_buffer_copy_size,
+            new_quad_vertex_buffer_ptr,
+            static_cast<const u8*>(p_quad_buffer.get()) + existing_buffer_copy_size,
             new_buffer_copy_size
         );
     }
@@ -996,36 +986,48 @@ renderer_2d_stats_t Renderer2D::get_stats() { return m_renderer_data.Stats; }
 
 void Renderer2D::start_new_batch()
 {
-	uint32_t frame_index = render::get_current_frame_index();
+    const uint32_t frame_index = render::get_current_frame_index();
 
 	m_renderer_data.quad_count = 0;
 	m_renderer_data.quad_index_count = 0;
     for (size_t i = 0; i < m_renderer_data.quad_vertex_buffer_ptrs.size(); ++i)
+    {
         m_renderer_data.quad_vertex_buffer_ptrs[i] = m_renderer_data.quad_vertex_buffer_base_ptrs[i][frame_index];
+    }
 
 	m_renderer_data.circle_count = 0;
 	m_renderer_data.circle_index_count = 0;
     for (size_t i = 0; i < m_renderer_data.circle_vertex_buffer_ptr.size(); ++i)
+    {
         m_renderer_data.circle_vertex_buffer_ptr[i] = m_renderer_data.circle_vertex_buffer_base_ptrs[i][frame_index];
+    }
 
 	m_renderer_data.line_count = 0;
 	m_renderer_data.line_index_count = 0;
     for (size_t i = 0; i < m_renderer_data.line_vertex_buffer_ptr.size(); ++i)
+    {
         m_renderer_data.line_vertex_buffer_ptr[i] = m_renderer_data.line_vertex_buffer_base_ptrs[i][frame_index];
+    }
 
 	m_renderer_data.text_count = 0;
 	m_renderer_data.text_index_count = 0;
     for (size_t i = 0; i < m_renderer_data.text_vertex_buffer_ptr.size(); ++i)
+    {
         m_renderer_data.text_vertex_buffer_ptr[i] = m_renderer_data.text_vertex_buffer_base_ptrs[i][frame_index];
+    }
 
 	m_renderer_data.texture_slot_index = 1;
 	m_renderer_data.text_texture_atlas_slot_index = 0;
-	for (size_t i = 0; i < m_renderer_data.max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	{
 		if (i != 0)
 			m_renderer_data.texture_slots[i] = nullptr;
+	}
 
-	for (size_t i = 0; i < m_renderer_data.max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	{
 		m_renderer_data.text_texture_atlas_slots[i] = nullptr;
+	}
 }
 
 void Renderer2D::end_batch()
@@ -1036,9 +1038,9 @@ void Renderer2D::end_batch()
 
 auto Renderer2D::get_writeable_quad_buffer(u32 p_new_quad_count /* = 0 */) -> QuadVertex*&
 {
-    u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::rt_get_current_frame_index();
 
-    u32 quad_write_index = (m_renderer_data.quad_count + p_new_quad_count) / m_renderer_data.max_quads;
+    const u32 quad_write_index = (m_renderer_data.quad_count + p_new_quad_count) / renderer_2d_data_t::max_quads;
     if (quad_write_index >= m_renderer_data.quad_vertex_buffer_base_ptrs.size())
     {
         add_quad_buffer();
@@ -1051,9 +1053,10 @@ auto Renderer2D::get_writeable_quad_buffer(u32 p_new_quad_count /* = 0 */) -> Qu
 
 auto Renderer2D::get_writeable_circle_buffer(u32 p_new_circle_count /* = 0 */) -> CircleVertex*&
 {
-    u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::rt_get_current_frame_index();
 
-    u32 circle_write_index = (m_renderer_data.circle_count + p_new_circle_count) / m_renderer_data.max_quads;
+    const u32 circle_write_index = (m_renderer_data.circle_count + p_new_circle_count) /
+        kb::renderer_2d_data_t::max_quads;
     if (circle_write_index >= m_renderer_data.circle_vertex_buffer_base_ptrs.size())
     {
         add_circle_buffer();
@@ -1066,9 +1069,9 @@ auto Renderer2D::get_writeable_circle_buffer(u32 p_new_circle_count /* = 0 */) -
 
 auto Renderer2D::get_writeable_line_buffer(u32 p_new_line_count /* = 0 */) -> LineVertex*&
 {
-    u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::rt_get_current_frame_index();
 
-    u32 line_write_index = (m_renderer_data.line_count + p_new_line_count) / m_renderer_data.max_lines;
+    const u32 line_write_index = (m_renderer_data.line_count + p_new_line_count) / kb::renderer_2d_data_t::max_lines;
     if (line_write_index >= m_renderer_data.line_vertex_buffer_base_ptrs.size())
     {
         add_line_buffer();
@@ -1081,9 +1084,9 @@ auto Renderer2D::get_writeable_line_buffer(u32 p_new_line_count /* = 0 */) -> Li
 
 auto Renderer2D::get_writeable_text_buffer(u32 p_new_text_count /* = 0 */) -> text_vertex_t*&
 {
-    u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::rt_get_current_frame_index();
 
-    u32 text_write_index = (m_renderer_data.line_count + p_new_text_count) / m_renderer_data.max_lines;
+    const u32 text_write_index = (m_renderer_data.line_count + p_new_text_count) / kb::renderer_2d_data_t::max_lines;
     if (text_write_index >= m_renderer_data.text_vertex_buffer_base_ptrs.size())
     {
         add_text_buffer();
@@ -1096,7 +1099,7 @@ auto Renderer2D::get_writeable_text_buffer(u32 p_new_text_count /* = 0 */) -> te
 
 auto Renderer2D::add_quad_buffer() -> void
 {
-    u32 frames_in_flight = render::get_frames_in_flights();
+    const u32 frames_in_flight = render::get_frames_in_flights();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.quad_vertex_buffers.emplace_back();
     renderer_2d_data_t::quad_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.quad_vertex_buffer_base_ptrs.emplace_back();
@@ -1104,7 +1107,7 @@ auto Renderer2D::add_quad_buffer() -> void
     new_vertex_buffer.reserve(frames_in_flight);
     new_vertex_buffer_base.reserve(frames_in_flight);
 
-    const size_t buffer_size = m_renderer_data.max_vertices * sizeof(QuadVertex);
+    constexpr size_t buffer_size = kb::renderer_2d_data_t::max_vertices * sizeof(QuadVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
         new_vertex_buffer.emplace_back(VertexBuffer::Create(buffer_size));
@@ -1114,7 +1117,7 @@ auto Renderer2D::add_quad_buffer() -> void
 
 auto Renderer2D::add_circle_buffer() -> void
 {
-    u32 frames_in_flight = render::get_frames_in_flights();
+    const u32 frames_in_flight = render::get_frames_in_flights();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.circle_vertex_buffers.emplace_back();
     renderer_2d_data_t::circle_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.circle_vertex_buffer_base_ptrs.emplace_back();
@@ -1122,7 +1125,7 @@ auto Renderer2D::add_circle_buffer() -> void
     new_vertex_buffer.reserve(frames_in_flight);
     new_vertex_buffer_base.reserve(frames_in_flight);
 
-    const size_t buffer_size = m_renderer_data.max_vertices * sizeof(CircleVertex);
+    constexpr size_t buffer_size = kb::renderer_2d_data_t::max_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
         new_vertex_buffer.emplace_back(VertexBuffer::Create(buffer_size));
@@ -1132,7 +1135,7 @@ auto Renderer2D::add_circle_buffer() -> void
 
 auto Renderer2D::add_line_buffer() -> void
 {
-    u32 frames_in_flight = render::get_frames_in_flights();
+    const u32 frames_in_flight = render::get_frames_in_flights();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.line_vertex_buffers.emplace_back();
     renderer_2d_data_t::line_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.line_vertex_buffer_base_ptrs.emplace_back();
@@ -1140,7 +1143,7 @@ auto Renderer2D::add_line_buffer() -> void
     new_vertex_buffer.reserve(frames_in_flight);
     new_vertex_buffer_base.reserve(frames_in_flight);
 
-    const size_t buffer_size = m_renderer_data.max_line_vertices * sizeof(CircleVertex);
+    constexpr size_t buffer_size = kb::renderer_2d_data_t::max_line_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
         new_vertex_buffer.emplace_back(VertexBuffer::Create(buffer_size));
@@ -1150,7 +1153,7 @@ auto Renderer2D::add_line_buffer() -> void
 
 auto Renderer2D::add_text_buffer() -> void
 {
-    u32 frames_in_flight = render::get_frames_in_flights();
+    const u32 frames_in_flight = render::get_frames_in_flights();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.text_vertex_buffers.emplace_back();
     renderer_2d_data_t::text_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.text_vertex_buffer_base_ptrs.emplace_back();
@@ -1158,12 +1161,11 @@ auto Renderer2D::add_text_buffer() -> void
     new_vertex_buffer.reserve(frames_in_flight);
     new_vertex_buffer_base.reserve(frames_in_flight);
 
-    const size_t buffer_size = m_renderer_data.max_vertices * sizeof(CircleVertex);
+    constexpr size_t buffer_size = kb::renderer_2d_data_t::max_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
         new_vertex_buffer.emplace_back(VertexBuffer::Create(buffer_size));
         new_vertex_buffer_base.emplace_back(new text_vertex_t[buffer_size]);
     }
 }
-
 }

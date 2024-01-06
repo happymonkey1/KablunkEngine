@@ -30,7 +30,7 @@ namespace kb
 		//	spec.usage = ImageUsage::Storage;
 		m_image = Image2D::Create(spec);
 
-		ref<VulkanTexture2D> instance = this;
+        ref<VulkanTexture2D> instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -46,7 +46,7 @@ namespace kb
 
 		if (!m_loaded)
 			m_loaded = this->LoadImage("resources/texture/missing_texture.png");
-		
+
 		ImageSpecification spec{};
 		spec.format = m_format;
 		spec.width = m_width;
@@ -56,7 +56,7 @@ namespace kb
 		m_image = Image2D::Create(spec);
 
 
-		ref<VulkanTexture2D> instance = this;
+        ref instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -76,7 +76,7 @@ namespace kb
 		m_width = width;
 		m_height = height;
 
-		ref<VulkanTexture2D> instance = this;
+        ref instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->Invalidate();
@@ -92,7 +92,7 @@ namespace kb
 	{
         m_image_data = Buffer::Copy(data, size);
 
-        ref<VulkanTexture2D> instance = this;
+        ref instance{ this };
         render::submit([instance]() mutable
             {
                 instance->Invalidate();
@@ -308,7 +308,7 @@ namespace kb
 			m_format = ImageFormat::RGBA;
 		}
 
-        delete data;
+        stbi_image_free(data);
 
 		if (!m_image_data.get())
 		{

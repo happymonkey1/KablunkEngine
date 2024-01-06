@@ -22,7 +22,6 @@ namespace kb
 
 namespace kb::ui
 {
-
 	enum class panel_type_t : u32
 	{
 		Blank,
@@ -40,7 +39,7 @@ namespace kb::ui
 		glm::vec4 background_color = glm::vec4{ 1.0f };
 		bool render_background = true;
 		glm::vec4 highlight_color = glm::vec4{ 0.9f };
-		ref<Texture2D> image = nullptr;
+		ref<Texture2D> image = {};
 	};
 
 	// abstract base class for a ui panel

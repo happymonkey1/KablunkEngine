@@ -11,10 +11,10 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No renderer api set!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:	return ref<OpenGLUniformBuffer>::Create(size, binding);
-		case RendererAPI::render_api_t::Vulkan:	return ref<VulkanUniformBuffer>::Create(size, binding);
-		default:								KB_CORE_ASSERT(false, "Unknown render api set while trying to create uniform buffer!"); return nullptr;
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No renderer api set!"); return ref<UniformBuffer>{};
+		case RendererAPI::render_api_t::OpenGL:	return static_cast<ref<UniformBuffer>>(ref<OpenGLUniformBuffer>::Create(size, binding));
+		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<UniformBuffer>>(ref<VulkanUniformBuffer>::Create(size, binding));
+		default:								KB_CORE_ASSERT(false, "Unknown render api set while trying to create uniform buffer!"); return ref<UniformBuffer>{};
 		}
 	}
 }

@@ -18,7 +18,7 @@ namespace kb::ui
 	{
 		glm::vec2 position = glm::vec2{ 0.0f };
 		glm::vec2 size = glm::vec2{ 0.5f, 0.5f };
-		ref<Texture2D> image = nullptr;
+		ref<Texture2D> image = {};
 	};
 
 	class PanelFactory

@@ -13,7 +13,7 @@ namespace kb
 	{
 		m_local_storage = new uint8_t[size];
 
-		ref<VulkanUniformBuffer> instance = this;
+        ref instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->RT_Invalidate();
@@ -29,8 +29,8 @@ namespace kb
 	{
 		memcpy(m_local_storage, data, size);
 
-		ref<VulkanUniformBuffer> instance = this;
-		render::submit([instance, data, size, offset]() mutable
+        ref instance{ this };
+		render::submit([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_local_storage, size, offset);
 			});
@@ -41,7 +41,7 @@ namespace kb
 		VulkanAllocator allocator{ "UniformBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
         // can this be memmove?
-		memcpy(data_ptr, (const uint8_t*)data + offset, size);
+		memcpy(data_ptr, static_cast<const uint8_t*>(data) + offset, size);
 		allocator.UnmapMemory(m_vk_allocation);
 	}
 

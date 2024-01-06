@@ -13,10 +13,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:	return ref<OpenGLVertexBuffer>::Create(size);
-		case RendererAPI::render_api_t::Vulkan:	return ref<VulkanVertexBuffer>::Create(size);
-		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<VertexBuffer>{};
+		case RendererAPI::render_api_t::OpenGL:	return static_cast<ref<VertexBuffer>>(ref<OpenGLVertexBuffer>::Create(size));
+		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(size));
+		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<VertexBuffer>{};
 		}
 	}
 
@@ -24,10 +24,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:		return ref<OpenGLVertexBuffer>::Create(data, size);
-		case RendererAPI::render_api_t::Vulkan:		return ref<VulkanVertexBuffer>::Create(data, size);
-		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<VertexBuffer>{};
+		case RendererAPI::render_api_t::OpenGL:		return static_cast<ref<VertexBuffer>>(ref<OpenGLVertexBuffer>::Create(data, size));
+		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(data, size));
+		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<VertexBuffer>{};
 		}
 	}
 
@@ -35,11 +35,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-
-		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:		return ref<OpenGLIndexBuffer>::Create(count);
-		case RendererAPI::render_api_t::Vulkan:		return ref<VulkanIndexBuffer>::Create(count);
-		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return ref<IndexBuffer>{};
+		case RendererAPI::render_api_t::OpenGL:		return static_cast<ref<IndexBuffer>>(ref<OpenGLIndexBuffer>::Create(count));
+		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(count));
+		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return ref<IndexBuffer>{};
 		}
 	}
 
@@ -47,11 +46,10 @@ namespace kb
 	{
 		switch (Renderer::GetAPI())
 		{
-
-		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return nullptr;
-		case RendererAPI::render_api_t::OpenGL:		return ref<OpenGLIndexBuffer>::Create(data, count);
-		case RendererAPI::render_api_t::Vulkan:		return ref<VulkanIndexBuffer>::Create(data, count);
-		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return nullptr;
+		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return ref<IndexBuffer>{};
+        case RendererAPI::render_api_t::OpenGL:		return static_cast<ref<IndexBuffer>>(ref<OpenGLIndexBuffer>::Create(data, count));
+        case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(data, count));
+		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return ref<IndexBuffer>{};
 		}
 	}
 

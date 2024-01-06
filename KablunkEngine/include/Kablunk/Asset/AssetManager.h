@@ -114,6 +114,7 @@ namespace kb::asset
 
 			return asset;
 		}
+
 		// get an asset based off an asset id
 		template <typename T>
 		ref<T> get_asset(const asset_id_t& id)
@@ -127,17 +128,17 @@ namespace kb::asset
 			if (!metadata.is_valid())
 			{
 				KB_CORE_INFO("[AssetManager] Tried to get asset '{}' but metadata is invalid!", id);
-				return nullptr;
+				return ref<T>{};
 			}
 
 			// imported assets are not loaded by default, so try to load if we find one that hasn't been loaded
 			// #TODO async asset loading
-			ref<IAsset> asset = nullptr;
+            ref<IAsset> asset{ nullptr };
 			if (!metadata.is_data_loaded)
 			{
 				metadata.is_data_loaded = try_load_asset(metadata, asset);
 				if (!metadata.is_data_loaded)
-					return nullptr;
+					return ref<T>{};
 
                 KB_CORE_ASSERT(asset, "[asset_manager]: trying to emplace null asset into loaded asset registry?");
 
@@ -151,9 +152,11 @@ namespace kb::asset
 			//KB_CORE_INFO("[AssetManager] Successfully retrieved asset '{}'", metadata.filepath);
 			return asset.As<T>();
 		}
+
 		// get an asset based on a filepath
 		template <typename T>
 		ref<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
+
 		// check whether the asset exists in the asset registry
 		bool asset_exists(const std::filesystem::path& filepath) const;
 		// check whether the asset referenced by the id is a memory only asset
@@ -166,6 +169,7 @@ namespace kb::asset
 		const AssetRegistry& get_asset_registry() const { return m_asset_registry; }
 		// check if the file exists on the filesystem
 		bool file_exists(const AssetMetadata& asset_metadata) const;
+
 	private:
 		// load asset registry file from disk
 		void load_asset_registry();
@@ -189,24 +193,26 @@ namespace kb::asset
 
         // import an engine asset's metadata into the asset registry
         asset_id_t import_engine_asset_metadata(const std::filesystem::path& filepath);
+
 	public:
 		// extension for registry file
 		// #TODO constexpr in c++20?
 		inline static const std::filesystem::path s_asset_registry_path = "asset_registry.kbreg";
+
 	private:
-        ref<Project> m_active_project = nullptr;
+        ref<Project> m_active_project{ nullptr };
 		// asset registry that maps ids to metadata
 		AssetRegistry m_asset_registry;
 		// map of assets that are fully loaded
-		kb::unordered_flat_map<asset_id_t, ref<IAsset>> m_loaded_assets;
+		unordered_flat_map<asset_id_t, ref<IAsset>> m_loaded_assets;
 		// map of assets loaded in memory
-		kb::unordered_flat_map<asset_id_t, ref<IAsset>> m_memory_assets;
+		unordered_flat_map<asset_id_t, ref<IAsset>> m_memory_assets;
 		// #TODO filesystem changed callback
 
 		// null metadata for functions that return references
 		inline static AssetMetadata s_null_metadata{};
 		// map for serializers of specific asset types
-		kb::unordered_flat_map<AssetType, ref<AssetSerializer>> m_asset_serializers;
+		unordered_flat_map<AssetType, ref<AssetSerializer>> m_asset_serializers;
 	};
 
 	// check whether a given filepath refers to the asset registry

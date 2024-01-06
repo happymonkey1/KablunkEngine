@@ -6,28 +6,24 @@
 
 namespace kb::render
 { // start namespace kb::render
-
-
-
-kb::ref<kb::render::compute_pipeline> compute_pipeline::create(kb::ref<kb::Shader> p_compute_shader)
+ref<compute_pipeline> compute_pipeline::create(ref<Shader> p_compute_shader)
 {
-    switch (kb::RendererAPI::GetAPI())
+    switch (RendererAPI::GetAPI())
     {
-        case kb::RendererAPI::render_api_t::OpenGL:
+        case RendererAPI::render_api_t::OpenGL:
         {
             KB_ASSERT(false, "[compute_pipeline]: compute pipelines are not supported on OpenGL!");
-            return nullptr;
+            return ref<compute_pipeline>{};
         }
-        case kb::RendererAPI::render_api_t::Vulkan:
+        case RendererAPI::render_api_t::Vulkan:
         {
-            return kb::ref<kb::vk::compute_pipeline>::Create(p_compute_shader);
+            return static_cast<ref<compute_pipeline>>(ref<vk::compute_pipeline>::Create(p_compute_shader));
         }
         default:
         {
             KB_ASSERT(false, "[compute_pipeline]: unhandled rendererAPI!");
-            return nullptr;
+            return ref<compute_pipeline>{};
         }
     }
 }
-
 } // end namespace kb::render
