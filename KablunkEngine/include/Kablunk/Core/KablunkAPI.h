@@ -49,6 +49,9 @@
 #   define KB_FORCE_INLINE inline
 #endif
 
+#ifdef GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#   define KB_PACKED_MATH_TYPES
+#endif
 
 #ifdef KB_DEBUG
 #	if defined(KB_PLATFORM_WINDOWS)

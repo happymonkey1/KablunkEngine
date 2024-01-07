@@ -4,6 +4,7 @@ project "KablunkEditor"
     cppdialect "C++20"
     staticruntime "off"
     conformancemode "off"
+    editandcontinue "Off"
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -39,6 +40,7 @@ project "KablunkEditor"
 		"%{IncludeDir.robin_hood}",
         -- included bc of ICE in MSVC 17.7
         "%{IncludeDir.fmt}",
+        "%{IncludeDir.tracy}",
     }
 
     links
@@ -52,7 +54,10 @@ project "KablunkEditor"
     defines
     {
         "KB_BUILD_DLL",
-        "GLFW_DLL"
+        "GLFW_DLL",
+		"GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
+		"GLM_FORCE_INTRINSICS",
+        
     }
 
     postbuildcommands

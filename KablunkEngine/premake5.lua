@@ -5,6 +5,7 @@ project "KablunkEngine"
 	staticruntime "off"
 	conformancemode "off"
 	vectorextensions "AVX2"
+	editandcontinue "Off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -12,8 +13,7 @@ project "KablunkEngine"
 	pchheader "kablunkpch.h"
 	pchsource "src/kablunkpch.cpp"
 
-	files
-	{
+	files {
 		"include/**.h",
 		"include/**.hpp",
 		"src/**.cpp",
@@ -29,21 +29,23 @@ project "KablunkEngine"
 		"vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp",
 		"vendor/cr/cr.h",
 
-		"vendor/expected/include/**.hpp"
+		"vendor/expected/include/**.hpp",
+
+		"vendor/tracy/public/TracyClient.cpp",
+		"vendor/tracy/public/tracy/Tracy.hpp",
 	}
 
-	defines
-	{
+	defines {
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE",
 		"NOMINMAX",
 		"KB_BUILD_DLL",
 		"GLFW_DLL",
-		"GLM_FORCE_AVX2"
+		"GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
+		"GLM_FORCE_INTRINSICS",
 	}
 
-	includedirs
-	{
+	includedirs {
 		"include",
 		"src",
 		"%{IncludeDir.GLFW}",
@@ -74,10 +76,10 @@ project "KablunkEngine"
 		"%{IncludeDir.absl}",
 		-- external fmt lib because of MSVC 17.7 bug
 		"%{IncludeDir.fmt}",
+		"%{IncludeDir.tracy}"
 	}
 
-	links
-	{
+	links {
 		--"GLFW",
 		"Glad",
 		"ImGui",
@@ -99,8 +101,7 @@ project "KablunkEngine"
 		
 	}
 
-	postbuildcommands
-	{
+	postbuildcommands {
 		'{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"'
 	}
 	
@@ -112,7 +113,10 @@ project "KablunkEngine"
 		systemversion "latest"
 
 	filter "configurations:Debug"
-		defines "KB_DEBUG"
+		defines {
+			"KB_DEBUG",
+			"TRACY_ENABLE",
+		}
 		runtime "Debug"
 		symbols "on"
 
@@ -128,12 +132,14 @@ project "KablunkEngine"
         }
 	
 	filter "configurations:Release"
-		defines "KB_RELEASE"
+		defines {
+			"KB_RELEASE",
+			"TRACY_ENABLE",
+		}
 		runtime "Release"
 		optimize "on"
 
-		links
-        {
+		links {
             "%{Library.assimp_release}",
 			"%{Library.ShaderC_Release}",
 			"%{Library.ShaderC_Utils_Release}",
@@ -150,8 +156,7 @@ project "KablunkEngine"
 		optimize "on"
 		symbols "off"
 
-		links
-        {
+		links {
             "%{Library.assimp_release}",
 			"%{Library.ShaderC_Release}",
 			"%{Library.ShaderC_Utils_Release}",

@@ -10,6 +10,7 @@
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Math/vec.hpp"
 
 #include <vector>
 #include <string>
@@ -36,20 +37,20 @@ namespace kb
 {
 	struct Vertex
 	{
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
-		glm::vec2 TexCoord;
+		vec3_packed Position;
+		vec3_packed Normal;
+		vec3_packed Tangent;
+		vec3_packed Binormal;
+		vec2_packed TexCoord;
 	};
 
 	struct AnimatedVertex
 	{
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
-		glm::vec2 TexCoord;
+		vec3_packed Position;
+		vec3_packed Normal;
+		vec3_packed Tangent;
+		vec3_packed Binormal;
+		vec2_packed TexCoord;
 
 		uint32_t Ids[4] = { 0, 0, 0, 0 };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };

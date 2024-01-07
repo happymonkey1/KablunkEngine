@@ -20,30 +20,31 @@
 
 #include "Kablunk/Renderer/Font/FontManager.h"
 
+#include "Kablunk/Math/vec.hpp"
+
 namespace kb
 { // start namespace kb
 
-// forward declaration
-namespace asset
-{ // start namespace ::asset
-
-} // end namespace ::asset 
-
+// #TODO portable pack
+#pragma pack(push, 1)
 struct QuadVertex
 {
-	glm::vec3 Position;
-	glm::vec4 Color;
-	glm::vec2 TexCoord;
-	float TexIndex;
-	float TilingFactor;
+	vec3_packed Position;
+	vec4_packed Color;
+	vec2_packed TexCoord;
+    f32 TexIndex;
+	f32 TilingFactor;
     //u8 padding[20]{ 0 };
 };
+#pragma pack(pop)
+
+static_assert(sizeof(QuadVertex) == 44);
 
 struct CircleVertex
 {
-	glm::vec3 WorldPosition;
-	glm::vec3 LocalPosition;
-	glm::vec4 Color;
+    vec3_packed WorldPosition;
+    vec3_packed LocalPosition;
+	vec4_packed Color;
 	float Radius;
 	float Thickness;
 	float Fade;
@@ -54,19 +55,21 @@ struct CircleVertex
 
 struct LineVertex
 {
-	glm::vec3 Position;
-	glm::vec4 Color;
+	vec3_packed Position;
+	vec4_packed Color;
 };
 
 struct text_vertex_t
 {
-	glm::vec3 m_position;
-	glm::vec4 m_tint_color;
-	glm::vec2 m_tex_coord;
+	vec3_packed m_position;
+	vec4_packed m_tint_color;
+	vec2_packed m_tex_coord;
 	float m_tex_index;
 
     //u8 padding[24]{ 0 };
 };
+
+static_assert(sizeof(text_vertex_t) == 12 + 16 + 8 + 4);
 
 struct renderer_2d_specification_t
 {
@@ -91,7 +94,7 @@ struct renderer_2d_data_t
 	static constexpr uint32_t max_quads = 20'000;
 	static constexpr uint32_t max_vertices = max_quads * 4;
 	static constexpr uint32_t max_indices = max_quads * 6;
-	static constexpr uint32_t max_lines = 10000;
+    static constexpr uint32_t max_lines = 10'000;
 	static constexpr uint32_t max_line_vertices = max_lines * 2;
 	static constexpr uint32_t max_line_indices = max_lines * 6;
 	static constexpr uint32_t max_texture_slots = 32;

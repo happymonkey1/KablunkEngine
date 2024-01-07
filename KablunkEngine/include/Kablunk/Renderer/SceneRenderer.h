@@ -3,6 +3,7 @@
 #define KABLUNK_RENDERER_SCENE_RENDERER_H
 
 #include "Kablunk/Core/Core.h"
+#include "Kablunk/Math/vec.hpp"
 
 #include "Kablunk/Scene/Scene.h"
 
@@ -18,178 +19,178 @@
 
 namespace kb
 {
-    class Renderer2D;
+class Renderer2D;
 
-	// forward declaration
-	namespace ui
-	{
-		class IPanel;
-	}
+// forward declaration
+namespace ui
+{
+	class IPanel;
+}
 
-	struct SceneRendererSpecification
+struct SceneRendererSpecification
+{
+	bool swap_chain_target = false;
+};
+
+struct CameraDataUB
+{
+	glm::mat4 view_projection;
+	glm::mat4 projection;
+	glm::mat4 view;
+	vec3_packed position;
+};
+
+struct SceneRendererCamera
+{
+	Camera camera;
+	glm::mat4 view_mat;
+};
+
+struct SceneRendererData
+{
+	SceneRendererCamera camera;
+	LightEnvironmentData light_environment;
+};
+
+struct PointLightUB
+{
+    static constexpr const size_t k_point_light_buffer_size = 1024ull;
+    uint32_t count{ 0 };
+    vec3_packed padding{};
+    PointLight point_lights[1024]{};
+};
+
+class SceneRenderer : public RefCounted
+{
+public:
+	SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
+	~SceneRenderer();
+
+    // #TODO this should be private, if construct is only place that calls this
+	void init();
+	void set_scene(ref<Scene> context);
+
+	void begin_scene(const SceneRendererCamera& camera);
+	void end_scene();
+
+	void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = {});
+
+	void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
+	bool is_multi_threaded() const { return m_use_threads; }
+
+	void set_viewport_size(uint32_t width, uint32_t height);
+	ref<RenderPass> get_final_render_pass();
+	ref<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
+	ref<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
+	ref<Image2D> get_final_render_pass_image();
+
+	void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
+
+	static void wait_for_threads();
+
+	void submit_ui_panel(ui::IPanel* panel);
+
+private:
+	void flush_draw_list();
+	void flush_2d_draw_list();
+	void pre_render();
+	void clear_pass();
+	void geometry_pass();
+	void composite_pass();
+
+	void clear_pass(ref<RenderPass> render_pass, bool explicit_clear = false);
+	
+	// draw all ui elements presented to the scene renderer
+	void ui_pass();
+
+	// draw all 2d elements presented to the scene renderer
+	void two_dimensional_pass();
+	
+private:
+	ref<Scene> m_context;
+	SceneRendererSpecification m_specification;
+
+	ref<RenderCommandBuffer> m_command_buffer;
+
+	ref<Pipeline> m_geometry_pipeline;
+	ref<Pipeline> m_composite_pipeline;
+
+	ref<Material> m_composite_material;
+
+	ref<RenderPass> m_external_composite_render_pass;
+
+	struct GPUTimeQueryIndices
 	{
-		bool swap_chain_target = false;
+		uint32_t geometry_pass_query;
+		uint32_t composite_pass_query;
 	};
 
-	struct CameraDataUB
+	ref<Texture2D> m_bloom_texture;
+	ref<Texture2D> m_bloom_dirt_texture;
+
+	struct TransformVertexData
 	{
-		glm::mat4 view_projection;
-		glm::mat4 projection;
-		glm::mat4 view;
-		glm::vec3 position;
+		glm::vec4 MRow[3];
+	};
+	ref<VertexBuffer> m_transform_buffer;
+	TransformVertexData* m_transform_vertex_data = nullptr;
+
+	ref<UniformBufferSet> m_uniform_buffer_set;
+	ref<StorageBufferSet> m_storage_buffer_set;
+
+    PointLightUB* m_point_lights_ub = new PointLightUB{};
+
+	GPUTimeQueryIndices m_gpu_time_query_indices;
+
+	uint32_t m_viewport_width = 0, m_viewport_height = 0;
+	bool m_active = false;
+	bool m_needs_resize = false;
+	bool m_resources_created = false;
+
+	// flag for flushing scene data on a separate "job" thread
+	bool m_use_threads = false;
+
+	SceneRendererData m_scene_data;
+
+	struct DrawCommandData
+	{
+		ref<Mesh> Mesh;
+		uint32_t Submesh_index;
+		ref<MaterialTable> Material_table;
+		ref<Material> Override_material;
+
+		uint32_t Instance_count = 0;
+		uint32_t Instance_offset = 0;
+		glm::mat4 Transform; // #TODO store separately in a map that maps MeshKey to transforms
 	};
 
-	struct SceneRendererCamera
-	{
-		Camera camera;
-		glm::mat4 view_mat;
-	};
+	// #TODO MeshKeys
+	// Mesh Keys store AssetHandles to the mesh data and material handle, as well as the submesh index of the mesh
+	// implement a operator< so they can be sorted into a map
 
-	struct SceneRendererData
-	{
-		SceneRendererCamera camera;
-		LightEnvironmentData light_environment;
-	};
+	// #TODO replace with a map that maps MeshKeys to DrawCommandData
+	std::vector<DrawCommandData> m_draw_list;
 
-    struct PointLightUB
-    {
-        static constexpr const size_t k_point_light_buffer_size = 1024ull;
-        uint32_t count{ 0 };
-        glm::vec3 padding{};
-        PointLight point_lights[1024]{};
-    };
+	// =========
+	// ui panels
+	// =========
 
-	class SceneRenderer : public RefCounted
-	{
-	public:
-		SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
-		~SceneRenderer();
+	std::vector<ui::IPanel*> m_ui_panels_list;
+	
+	// =========
 
-        // #TODO this should be private, if construct is only place that calls this
-		void init();
-		void set_scene(ref<Scene> context);
+	// =================
+	// 2d composite data
+	// =================
+	
+	// list of sprite entities to be drawn in the 2d composite pass
+	// #TODO linear allocator 
+	std::vector<Entity> m_entity_list;
 
-		void begin_scene(const SceneRendererCamera& camera);
-		void end_scene();
+	// =================
 
-		void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = {});
-
-		void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
-		bool is_multi_threaded() const { return m_use_threads; }
-
-		void set_viewport_size(uint32_t width, uint32_t height);
-		ref<RenderPass> get_final_render_pass();
-		ref<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
-		ref<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
-		ref<Image2D> get_final_render_pass_image();
-
-		void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
-
-		static void wait_for_threads();
-
-		void submit_ui_panel(ui::IPanel* panel);
-
-	private:
-		void flush_draw_list();
-		void flush_2d_draw_list();
-		void pre_render();
-		void clear_pass();
-		void geometry_pass();
-		void composite_pass();
-
-		void clear_pass(ref<RenderPass> render_pass, bool explicit_clear = false);
-		
-		// draw all ui elements presented to the scene renderer
-		void ui_pass();
-
-		// draw all 2d elements presented to the scene renderer
-		void two_dimensional_pass();
-		
-	private:
-		ref<Scene> m_context;
-		SceneRendererSpecification m_specification;
-
-		ref<RenderCommandBuffer> m_command_buffer;
-
-		ref<Pipeline> m_geometry_pipeline;
-		ref<Pipeline> m_composite_pipeline;
-
-		ref<Material> m_composite_material;
-
-		ref<RenderPass> m_external_composite_render_pass;
-
-		struct GPUTimeQueryIndices
-		{
-			uint32_t geometry_pass_query;
-			uint32_t composite_pass_query;
-		};
-
-		ref<Texture2D> m_bloom_texture;
-		ref<Texture2D> m_bloom_dirt_texture;
-
-		struct TransformVertexData
-		{
-			glm::vec4 MRow[3];
-		};
-		ref<VertexBuffer> m_transform_buffer;
-		TransformVertexData* m_transform_vertex_data = nullptr;
-
-		ref<UniformBufferSet> m_uniform_buffer_set;
-		ref<StorageBufferSet> m_storage_buffer_set;
-
-        PointLightUB* m_point_lights_ub = new PointLightUB{};
-
-		GPUTimeQueryIndices m_gpu_time_query_indices;
-
-		uint32_t m_viewport_width = 0, m_viewport_height = 0;
-		bool m_active = false;
-		bool m_needs_resize = false;
-		bool m_resources_created = false;
-
-		// flag for flushing scene data on a separate "job" thread
-		bool m_use_threads = false;
-
-		SceneRendererData m_scene_data;
-
-		struct DrawCommandData
-		{
-			ref<Mesh> Mesh;
-			uint32_t Submesh_index;
-			ref<MaterialTable> Material_table;
-			ref<Material> Override_material;
-
-			uint32_t Instance_count = 0;
-			uint32_t Instance_offset = 0;
-			glm::mat4 Transform; // #TODO store separately in a map that maps MeshKey to transforms
-		};
-
-		// #TODO MeshKeys
-		// Mesh Keys store AssetHandles to the mesh data and material handle, as well as the submesh index of the mesh
-		// implement a operator< so they can be sorted into a map
-
-		// #TODO replace with a map that maps MeshKeys to DrawCommandData
-		std::vector<DrawCommandData> m_draw_list;
-
-		// =========
-		// ui panels
-		// =========
-
-		std::vector<ui::IPanel*> m_ui_panels_list;
-		
-		// =========
-
-		// =================
-		// 2d composite data
-		// =================
-		
-		// list of sprite entities to be drawn in the 2d composite pass
-		// #TODO linear allocator 
-		std::vector<Entity> m_entity_list;
-
-		// =================
-
-		friend class VulkanRenderer2D;
-	};
+	friend class VulkanRenderer2D;
+};
 }
 
 #endif

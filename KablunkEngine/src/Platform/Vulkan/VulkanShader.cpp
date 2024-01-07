@@ -116,6 +116,8 @@ static kb::unordered_flat_map<uint32_t, kb::unordered_flat_map<uint32_t, VulkanS
 VulkanShader::VulkanShader(const std::string& path, bool force_compile)
 	: m_file_path{ path }, m_hash{ 0 }
 {
+    KB_PROFILE_SCOPE;
+
     m_hash = std::hash<std::string>{}(m_file_path);
 
 	// Get name from filepath
@@ -136,6 +138,8 @@ VulkanShader::~VulkanShader()
 
 void VulkanShader::destroy()
 {
+    KB_PROFILE_SCOPE;
+
 	if (m_has_destroyed)
 		return;
 
@@ -153,7 +157,7 @@ void VulkanShader::destroy()
 
 void VulkanShader::Reload(bool force_compile /*= false*/)
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
     ref instance{ this };
 	render::submit([instance, force_compile]() mutable
@@ -241,7 +245,7 @@ void VulkanShader::SetIntArray(const std::string& name, int* values, uint32_t co
 
 std::vector<VkDescriptorSetLayout> VulkanShader::GetAllDescriptorSetLayouts()
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	std::vector<VkDescriptorSetLayout> result;
 	result.reserve(m_descriptor_set_layouts.size());
@@ -254,7 +258,7 @@ std::vector<VkDescriptorSetLayout> VulkanShader::GetAllDescriptorSetLayouts()
 
 kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	KB_CORE_ASSERT(set < m_descriptor_set_layouts.size(), "set outside of map bounds");
 	ShaderMaterialDescriptorSet result;
@@ -280,7 +284,7 @@ kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSe
 
 VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set /*= 0*/)
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	ShaderMaterialDescriptorSet result;
 
@@ -312,7 +316,7 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 
 VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uint32_t set, uint32_t number_of_sets)
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	ShaderMaterialDescriptorSet result;
 
@@ -431,7 +435,7 @@ kb::unordered_flat_map<VkShaderStageFlagBits, std::string> VulkanShader::PreProc
 
 void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile)
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	std::filesystem::path cache_dir = Internal::GetCacheDirectory();
 	for (auto [stage, source] : m_shader_source)
@@ -506,6 +510,8 @@ void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderSta
 
 void VulkanShader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data)
 {
+    KB_PROFILE_SCOPE;
+
 	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	m_pipeline_shader_stage_create_infos.clear();
@@ -721,7 +727,7 @@ void VulkanShader::ReflectAllShaderStages(const kb::unordered_flat_map<VkShaderS
 
 void VulkanShader::CreateDescriptors()
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
@@ -857,7 +863,7 @@ void VulkanShader::CreateDescriptors()
 
 		if (set >= m_descriptor_set_layouts.size())
 			m_descriptor_set_layouts.resize((size_t)(set + 1));
-			
+
 		if (vkCreateDescriptorSetLayout(device, &descriptor_layout_create_info, nullptr, &m_descriptor_set_layouts[set]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create descriptor set layout!");
 	}

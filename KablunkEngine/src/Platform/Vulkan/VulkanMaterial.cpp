@@ -100,12 +100,12 @@ namespace kb
 
 	void VulkanMaterial::Set(const std::string& name, const glm::vec2& value)
 	{
-		Set<glm::vec2>(name, value);
+		Set<vec2_packed>(name, value);
 	}
 
 	void VulkanMaterial::Set(const std::string& name, const glm::vec3& value)
 	{
-		Set<glm::vec3>(name, value);
+		Set<vec3_packed>(name, value);
 	}
 
 	void VulkanMaterial::Set(const std::string& name, const glm::vec4& value)

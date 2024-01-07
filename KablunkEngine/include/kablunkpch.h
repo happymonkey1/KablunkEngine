@@ -32,6 +32,7 @@
 #include "Kablunk/Events/Event.h"
 
 #include "Kablunk/Debugging/Instrumentor.h"
+#include "Kablunk/Debugging/profiling.h"
 
 #include "Kablunk/Utilities/Reflection/ReflectionCore.h"
 #include "Kablunk/Utilities/Containers/FlatHashMap.hpp"

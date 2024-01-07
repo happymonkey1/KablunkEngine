@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 
 namespace kb
-{ // start namespace Kablunk
+{ // start namespace kb
 
 void VulkanSwapChain::Init(VkInstance instance, const ref<VulkanDevice>& device)
 {
@@ -19,10 +19,10 @@ void VulkanSwapChain::Init(VkInstance instance, const ref<VulkanDevice>& device)
 void VulkanSwapChain::InitSurface(GLFWwindow* window_handle)
 {
 	VkPhysicalDevice vk_physical_device = m_device->GetVkPhysicalDevice();
-		
+
 	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_surface) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
-		
+
 	m_device->GetPhysicalDevice()->FindPresentingIndices(m_surface);
 
 	FindImageFormatAndColorSpace();
@@ -30,6 +30,8 @@ void VulkanSwapChain::InitSurface(GLFWwindow* window_handle)
 
 void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 {
+    KB_PROFILE_SCOPE;
+
 	KB_CORE_INFO("Creating VulkanSwapChain!");
 	m_vsync = vsync;
 
@@ -326,7 +328,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 
 void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 {
-    KB_PROFILE_FUNC();
+    KB_PROFILE_SCOPE;
 
 	auto device = m_device->GetVkDevice();
 
@@ -345,10 +347,12 @@ void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 
 void VulkanSwapChain::BeginFrame()
 {
+    KB_PROFILE_SCOPE;
+
 	// Make sure the frame we're requesting has finished rendering
 	uint32_t frames_in_flight = render::get_frames_in_flights();
-	if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
+    if (auto res = vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
+		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences, Error={}", static_cast<u32>(res));
 
 	// execute resource release queue
 
@@ -368,7 +372,7 @@ void VulkanSwapChain::BeginFrame()
 
 void VulkanSwapChain::Present()
 {
-    KB_PROFILE_FUNC();
+    KB_PROFILE_SCOPE;
 
 	constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
 
@@ -388,8 +392,6 @@ void VulkanSwapChain::Present()
 		KB_CORE_ASSERT(false, "Vulkan failed to reset fence!");
 
     {
-        KB_PROFILE_SCOPE_DYNAMIC("VulkanSwapChain::Present(): vkQueueSubmit()");
-
 		if (vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submit_info, m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to submit!");
     }
@@ -404,8 +406,6 @@ void VulkanSwapChain::Present()
 	}
 
     {
-        KB_PROFILE_SCOPE_DYNAMIC("VulkanSwapChain::Present(): vkWaitForFences()");
-
 		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
@@ -414,6 +414,8 @@ void VulkanSwapChain::Present()
 
 void VulkanSwapChain::Destroy()
 {
+    KB_PROFILE_SCOPE;
+
 	VkDevice device = m_device->GetVkDevice();
 
 	if (m_swapchain)
@@ -467,13 +469,15 @@ void VulkanSwapChain::Destroy()
 
 VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index)
 {
+    KB_PROFILE_SCOPE;
+
 	// why no fence?
 	return vkAcquireNextImageKHR(m_device->GetVkDevice(), m_swapchain, UINT64_MAX, present_complete_sem, (VkFence)nullptr, image_index);
 }
 
 VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem /*= VK_NULL_HANDLE*/)
 {
-    KB_PROFILE_FUNC();
+    KB_PROFILE_SCOPE;
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -553,10 +557,11 @@ void VulkanSwapChain::FindImageFormatAndColorSpace()
 
 void VulkanSwapChain::CreateFramebuffer()
 {
+    KB_PROFILE_SCOPE;
+
 	for (auto& framebuffer : m_framebuffers)
 		if (framebuffer)
 			vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
-
 
 	// Depth stencil not needed?
 	//image_view_attachments[1] = m_depth_stencil.image_view;
@@ -585,6 +590,8 @@ void VulkanSwapChain::CreateFramebuffer()
 
 void VulkanSwapChain::CreateDepthStencil()
 {
+    KB_PROFILE_SCOPE;
+
 	VkDevice device = m_device->GetVkDevice();
 	VkFormat depth_format = m_device->GetPhysicalDevice()->GetDepthFormat();
 
@@ -621,4 +628,4 @@ void VulkanSwapChain::CreateDepthStencil()
 		KB_CORE_ASSERT(false, "Vulkan failed to create depth stencil image view!");
 }
 
-} // end namespace Kablunk
+} // end namespace kb

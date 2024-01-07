@@ -101,7 +101,7 @@ namespace kb
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-        KB_PROFILE_FUNC();
+        KB_PROFILE_SCOPE;
 
 		// ==========
 		//   Update
@@ -155,18 +155,16 @@ namespace kb
 
 		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
-		
 		SceneRenderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
 #endif
-		
 	}
 
 	void EditorLayer::OnImGuiRender(Timestep ts)
 	{
-        KB_PROFILE_FUNC();
+        KB_PROFILE_SCOPE;
 
 		static bool opt_fullscreen	= true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;

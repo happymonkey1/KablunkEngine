@@ -33,7 +33,7 @@ namespace kb
 	void SceneCamera::SetProjectionType(ProjectionType new_projection_type)
 	{
 		bool perspective_changed = new_projection_type != m_projection_type;
-		m_projection_type = new_projection_type; 
+		m_projection_type = new_projection_type;
 
 		if (perspective_changed)
 			RecalculateProjection();

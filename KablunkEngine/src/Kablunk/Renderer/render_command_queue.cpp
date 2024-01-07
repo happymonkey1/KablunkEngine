@@ -39,6 +39,8 @@ render_command_queue& render_command_queue::operator=(render_command_queue&& p_o
 
 void* render_command_queue::allocate(RenderCommandFn func, uint32_t size)
 {
+    KB_PROFILE_SCOPE;
+
 	*reinterpret_cast<RenderCommandFn*>(m_command_buffer_ptr) = func;
 	m_command_buffer_ptr += sizeof(RenderCommandFn);
 
@@ -54,7 +56,7 @@ void* render_command_queue::allocate(RenderCommandFn func, uint32_t size)
 
 void render_command_queue::execute()
 {
-    KB_PROFILE_FUNC()
+    KB_PROFILE_SCOPE;
 
 	uint8_t* buffer = m_command_buffer;
 

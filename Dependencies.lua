@@ -29,6 +29,7 @@ IncludeDir["protobuf"] = "%{wks.location}/KablunkEngine/vendor/protobuf/src"
 IncludeDir["absl"] = "%{wks.location}/KablunkEngine/vendor/abseil-cpp/"
 -- external fmt lib because of MSVC 17.7 bug
 IncludeDir["fmt"] = "%{wks.location}/KablunkEngine/vendor/fmt/include"
+IncludeDir["tracy"] = "%{wks.location}/KablunkEngine/vendor/tracy/public"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
