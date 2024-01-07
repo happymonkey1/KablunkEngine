@@ -94,7 +94,8 @@ public:
 
     constexpr ref(const ref<T>& other) : m_ptr{ other.m_ptr }
 	{
-		IncRef();
+        if (this != &other)
+		    IncRef();
 	}
 
     constexpr ref& operator=(std::nullptr_t)
@@ -106,6 +107,9 @@ public:
 
     constexpr ref& operator=(const ref& other)
 	{
+        if (this == &other)
+            return *this;
+
 		other.IncRef();
 		DecRef();
 

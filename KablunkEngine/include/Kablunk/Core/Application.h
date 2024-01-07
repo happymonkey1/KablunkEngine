@@ -41,6 +41,7 @@ namespace kb {
 			f32 render_thread_work_time = 0.0f;
 			f32 render_thread_wait_time = 0.0f;
 		};
+
 	public:
 		Application();
 		Application(const ApplicationSpecification& spec);
@@ -53,7 +54,11 @@ namespace kb {
 		void shutdown();
 
 		// Set application specification for the application. Does not inherently modify application parameters.
-		void set_application_specification(const ApplicationSpecification& specification) { m_specification = specification; m_render_thread = std::move(render_thread{ specification.m_engine_threading_policy }); }
+		void set_application_specification(const ApplicationSpecification& specification)
+		{
+            m_specification = specification;
+		    m_render_thread = render_thread{ specification.m_engine_threading_policy };
+		}
 
 		void Run();
 		void OnEvent(Event& e);
@@ -74,7 +79,6 @@ namespace kb {
 		ImGuiLayer* GetImGuiLayer() { return m_imgui_layer; }
 		void RenderImGui();
 
-
 		void SetWindowTitle(const std::string& title) { m_window->SetWindowTitle(title); }
 		glm::vec2 GetWindowDimensions() const { return m_window->GetDimensions(); }
 
@@ -83,7 +87,7 @@ namespace kb {
 		const Threading::ThreadPool& GetThreadPool() const { return m_thread_pool; }
 
 		render_thread& get_render_thread() { return m_render_thread; }
-		
+
         // get a mutable reference to the primary renderer2d
         ref<Renderer2D> get_renderer_2d() { return m_renderer_2d; }
         // get an immutable reference to the primary renderer2d
@@ -97,6 +101,8 @@ namespace kb {
 		u32 get_current_frame_index() const { return m_current_frame_index; }
 
 		performance_timings_t get_thread_performance_timings() const { return m_thread_performance_timings; }
+        performance_timings_t& get_thread_performance_timings_mut() { return m_thread_performance_timings; }
+
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -107,7 +113,7 @@ namespace kb {
 		bool m_running = true;
 		bool m_minimized = false;
 		LayerStack m_layer_stack;
-		
+
 		// thread pool where tasks run
 		Threading::ThreadPool m_thread_pool;
 		// render thread
@@ -116,7 +122,7 @@ namespace kb {
 		performance_timings_t m_thread_performance_timings{};
 		Timestep m_timestep;
 		float m_last_frame_time = 0.0f;
-		
+
 		bool m_has_shutdown = false;
 		// flag for whether we should draw debug statistics to the screen
 		bool m_show_debug_statistics = false;

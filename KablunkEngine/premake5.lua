@@ -4,6 +4,7 @@ project "KablunkEngine"
 	cppdialect "C++20"
 	staticruntime "off"
 	conformancemode "off"
+	vectorextensions "AVX2"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -37,7 +38,8 @@ project "KablunkEngine"
 		"GLFW_INCLUDE_NONE",
 		"NOMINMAX",
 		"KB_BUILD_DLL",
-		"GLFW_DLL"
+		"GLFW_DLL",
+		"GLM_FORCE_AVX2"
 	}
 
 	includedirs

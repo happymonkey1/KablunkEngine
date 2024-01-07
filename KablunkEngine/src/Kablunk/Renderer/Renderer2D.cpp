@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 
+#include <glm/simd/matrix.h>
+
 
 namespace kb
 {
@@ -668,13 +670,13 @@ void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& tex
 		KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
 	}
 
-	constexpr glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
+	const glm::vec2 texture_coords[] = { {0.0f, 0.0f}, { 1.0f, 0.0f}, { 1.0f, 1.0f}, { 0.0f, 1.0f } };
 	constexpr size_t quad_vertex_count = 4;
-    auto& quad_vertex_buffer_ptr = get_writeable_quad_buffer(1);
+    auto quad_vertex_buffer_ptr = get_writeable_quad_buffer(1);
 
 	for (uint32_t i = 0; i < quad_vertex_count; ++i)
 	{
-		quad_vertex_buffer_ptr->Position = transform * m_renderer_data.quad_vertex_positions[i];
+		quad_vertex_buffer_ptr->Position = transform * m_renderer_data.quad_vertex_positions[i]; 
 		quad_vertex_buffer_ptr->Color = tint_color;
 		quad_vertex_buffer_ptr->TexCoord = texture_coords[i];
 		quad_vertex_buffer_ptr->TexIndex = texture_index;
@@ -734,6 +736,49 @@ void Renderer2D::draw_quad_from_texture_atlas(const glm::mat4& transform, const 
 	m_renderer_data.quad_count++;
 
 	m_renderer_data.Stats.Quad_count += 1;
+}
+
+void Renderer2D::draw_quad_from_texture_atlas_no_mat(
+    const glm::vec4& position,
+    const glm::vec2& size,
+    const ref<Texture2D>& texture,
+    const glm::vec2* texture_atlas_offsets,
+    float tiling_factor,
+    const glm::vec4& tint_color
+)
+{
+    //constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+    float texture_index = 0.0f;
+    for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
+    {
+        // Dereference and compare the textures
+        if (*m_renderer_data.texture_slots[i] == *texture)
+            texture_index = static_cast<float>(i);
+    }
+
+    if (texture_index == 0.0f)
+    {
+        texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
+        m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
+        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
+    }
+
+    constexpr size_t quad_vertex_count = 4;
+    auto& quad_vertex_buffer_ptr = get_writeable_quad_buffer(1);
+
+    for (uint32_t i = 0; i < quad_vertex_count; ++i)
+    {
+        quad_vertex_buffer_ptr->Position = position * m_renderer_data.quad_vertex_positions[i];
+        quad_vertex_buffer_ptr->Color = tint_color;
+        quad_vertex_buffer_ptr->TexCoord = texture_atlas_offsets[i];
+        quad_vertex_buffer_ptr->TexIndex = texture_index;
+        quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
+        quad_vertex_buffer_ptr++;
+    }
+    m_renderer_data.quad_index_count += 6;
+    m_renderer_data.quad_count++;
+
+    m_renderer_data.Stats.Quad_count += 1;
 }
 
 void Renderer2D::draw_circle(const glm::mat4& transform, const glm::vec4& color, float radius /*= 0.5f*/, float thickness /*= 1.0f*/, float fade /*= 0.005f*/, int32_t entity_id /*= -1*/)

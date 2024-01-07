@@ -375,7 +375,7 @@ namespace kb
 		KB_CORE_ASSERT(write_descriptor_set, "nullptr!");
 		m_resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
 			PendingDescriptor
-			{ 
+			{
 				PendingDescriptorType::Image2D,
 				*write_descriptor_set,
 				{},

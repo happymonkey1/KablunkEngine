@@ -96,8 +96,6 @@ namespace kb::asset
 		return path.is_relative() ? path : std::filesystem::relative(path, m_active_project->get_asset_directory_path());
 	}
 
-    
-
 	AssetType AssetManager::get_asset_type_from_filepath(const std::filesystem::path& path) const
 	{
 		// try use asset metadata if available
@@ -188,7 +186,7 @@ namespace kb::asset
 
 		std::ifstream stream{ asset_registry_path };
 		KB_CORE_ASSERT(stream, "stream failed to load!");
-		
+
 		std::stringstream ss;
 		ss << stream.rdbuf();
 

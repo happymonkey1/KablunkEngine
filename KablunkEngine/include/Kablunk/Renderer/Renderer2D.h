@@ -291,6 +291,15 @@ public:
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	);
+    // draw quad from texture atlas without a transform
+    void draw_quad_from_texture_atlas_no_mat(
+        const glm::vec4& position,
+        const glm::vec2& size,
+        const ref<Texture2D>& texture,
+        const glm::vec2* texture_atlas_offsets,
+        float tiling_factor = 1.0f,
+        const glm::vec4& tint_color = glm::vec4{ 1.0f }
+    );
 
 	// draw circle
 	void draw_circle(

@@ -12,6 +12,7 @@
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include "Kablunk/Core/Application.h"
+#include "Kablunk/Core/Timers.h"
 
 namespace kb
 {
@@ -141,14 +142,20 @@ namespace kb
 	{
         KB_PROFILE_FUNC()
 		KB_CORE_ASSERT(rendering_thread, "render thread is null?");
-		
+
+        auto& thread_performance_timers = Application::Get().get_thread_performance_timings_mut();
+
 		{
-			// #TODO add profiling
+            timer render_thread_wait_timer{};
 			rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
+            thread_performance_timers.render_thread_wait_time = render_thread_wait_timer.get_elapsed_ms();
 		}
+
 		// execute command queue
+        timer render_thread_work_timer{};
 		m_command_queues[get_render_command_queue_index()].execute();
 		rendering_thread->set(thread_state_t::idle);
+        thread_performance_timers.render_thread_work_time = render_thread_work_timer.get_elapsed_ms();
 	}
 
 	// main render function which runs on render thread

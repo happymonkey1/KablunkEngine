@@ -104,7 +104,7 @@ void render_thread::set(thread_state_t p_state)
 
 void render_thread::next_frame()
 {
-	m_app_thread_frame++;
+	++m_app_thread_frame;
 	render::swap_queues();
 }
 
@@ -143,7 +143,7 @@ render_thread& render_thread::operator=(render_thread&& other) noexcept
 			DeleteCriticalSection(&m_data->m_critical_section);
 		delete m_data;
 	}
-	
+
 	m_data = other.m_data;
 	m_running = other.m_data;
 	m_thread = std::move(other.m_thread);
