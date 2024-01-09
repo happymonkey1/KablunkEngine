@@ -22,8 +22,18 @@
 
 #include "Kablunk/Math/vec.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace kb
 { // start namespace kb
+
+// #TODO move to separate file
+namespace render
+{ // start namespace render
+
+using renderer_2d_texture_id = size_t;
+
+} // end namespace render
 
 // #TODO portable pack
 #pragma pack(push, 1)
@@ -239,24 +249,39 @@ public:
     // ---draw commands-------------------------------------------------------------------------------------------------
 
 	// Entity
-	void draw_sprite(Entity entity);
+	void draw_sprite(Entity entity) noexcept;
 
 	// draw quad
-	void draw_quad(
+	inline void draw_quad(
 		const glm::vec2& position,
 		const glm::vec2& size,
 		const ref<Texture2D>& texture,
-		float tilingFactor = 1.0f,
-		const glm::vec4& tintColor = glm::vec4{ 1.0f }
-	);
+		float tiling_factor = 1.0f,
+		const glm::vec4& tint_color = glm::vec4{ 1.0f }
+	) noexcept
+    {
+        KB_PROFILE_SCOPE;
+
+        draw_quad({ position.x, position.y, 0.0f }, size, texture, tiling_factor, tint_color);
+    }
+
 	// draw quad
-	void draw_quad(
+	inline void draw_quad(
 		const glm::vec3& position,
 		const glm::vec2& size,
 		const ref<Texture2D>& texture,
-		float tilingFactor = 1.0f,
-		const glm::vec4& tintColor = glm::vec4{ 1.0f }
-	);
+		float tiling_factor = 1.0f,
+		const glm::vec4& tint_color = glm::vec4{ 1.0f }
+	) noexcept
+    {
+        KB_PROFILE_SCOPE;
+
+        const glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+            * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+        draw_quad(transform, texture, tiling_factor, tint_color);
+    }
+
 	// draw quad
 	// #TODO figure out how to pass 64-bit integers to OpenGL, so we can support int64_t instead of int32_t
 	void draw_quad(
@@ -265,44 +290,65 @@ public:
 		float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4{ 1.0f },
 		int32_t entity_id = -1
-	);
+	) noexcept;
 
 	// draw quad from texture atlas
-	void draw_quad_from_texture_atlas(
+	inline void draw_quad_from_texture_atlas(
 		const glm::vec2& position,
 		const glm::vec2& size,
 		const ref<Texture2D>& texture,
-		const glm::vec2* texture_atlas_offsets,
+        const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
+	) noexcept
+    {
+        KB_PROFILE_SCOPE;
+
+        draw_quad_from_texture_atlas(glm::vec3{ position.x, position.y, 0.0f }, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
+    }
+
 	// draw quad from texture atlas
-	void draw_quad_from_texture_atlas(
+	inline void draw_quad_from_texture_atlas(
 		const glm::vec3& position,
 		const glm::vec2& size,
 		const ref<Texture2D>& texture,
-		const glm::vec2* texture_atlas_offsets,
+        const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
+	) noexcept
+    {
+        KB_PROFILE_SCOPE;
+
+        glm::mat4 transform;
+        {
+            KB_PROFILE_SCOPE_NAMED("Compute transform");
+            static const glm::mat4 m{ 1.0f };
+
+            transform = glm::translate(m, position)
+            //  * glm::rotate(m, 0.0f, { 0.0f, 0.0f, 1.0f }) #NOTE disabled for performance while rotation in api is not supported
+                * glm::scale(m, { size.x, size.y, 1.0f });
+        }
+
+        draw_quad_from_texture_atlas(transform, texture, texture_atlas_offsets, tiling_factor, tint_color);
+    }
+
 	// draw quad from texture atlas
 	void draw_quad_from_texture_atlas(
 		const glm::mat4& transform,
-		const glm::vec2& size,
 		const ref<Texture2D>& texture,
-		const glm::vec2* texture_atlas_offsets,
+        const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
+	) noexcept;
     // draw quad from texture atlas without a transform
     void draw_quad_from_texture_atlas_no_mat(
         const glm::vec4& position,
         const glm::vec2& size,
         const ref<Texture2D>& texture,
-        const glm::vec2* texture_atlas_offsets,
+        const std::array<glm::vec2, 4>& texture_atlas_offsets,
         float tiling_factor = 1.0f,
         const glm::vec4& tint_color = glm::vec4{ 1.0f }
-    );
+    ) noexcept;
 
 	// draw circle
 	void draw_circle(
@@ -312,19 +358,19 @@ public:
 		float thickness = 1.0f,
 		float fade = 0.005f,
 		int32_t entity_id = -1
-	);
+	) noexcept;
 
 	// draw line
 	void draw_line(
 		const glm::vec3& p0,
 		const glm::vec3& p1,
 		const glm::vec4& color = glm::vec4{ 1.0f }
-	);
+	) noexcept;
 
 	// draw rectangle
-	void draw_rect(const glm::vec2& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
+	void draw_rect(const glm::vec2& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f }) noexcept;
 	// draw rectangle
-	void draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f });
+	void draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation = 0, const glm::vec4& color = glm::vec4{ 1.0f }) noexcept;
 
 	// draw text string
 	void draw_text_string(
@@ -333,7 +379,7 @@ public:
 		const glm::vec2& size,
 		const ref<render::font_asset_t>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
+	) noexcept;
 	// draw text string 
 	void draw_text_string(
 		const std::string& text,
@@ -341,34 +387,34 @@ public:
 		const glm::vec2& size,
 		const ref<render::font_asset_t>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
-	);
+	) noexcept;
 
     // -----------------------------------------------------------------------------------------------------------------
 
     // add a texture which can be rendered during the current scene
     // returns texture index (float) of slot occupied
-    auto add_texture(const ref<Texture2D>& p_texture) -> f32;
+    auto add_texture(const ref<Texture2D>& p_texture) noexcept -> f32;
 
     // submit batched quad data
-    auto submit_quad_data(const Buffer& p_quad_buffer) -> void;
+    auto submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void;
 
 	// reset renderer2d stats
 	void reset_stats();
 	// get renderer2d stats
 	renderer_2d_stats_t get_stats();
 private:
-	void start_new_batch();
-	void end_batch();
+	void start_new_batch() noexcept;
+	void end_batch() noexcept;
 
-    auto get_writeable_quad_buffer(u32 p_new_quad_count = 0) -> QuadVertex*&;
-    auto get_writeable_circle_buffer(u32 p_new_circle_count = 0) -> CircleVertex*&;
-    auto get_writeable_line_buffer(u32 p_new_line_count = 0) -> LineVertex*&;
-    auto get_writeable_text_buffer(u32 p_new_text_count = 0) -> text_vertex_t*&;
+    auto get_writeable_quad_buffer(u32 p_new_quad_count = 0) noexcept -> QuadVertex*&;
+    auto get_writeable_circle_buffer(u32 p_new_circle_count = 0) noexcept -> CircleVertex*&;
+    auto get_writeable_line_buffer(u32 p_new_line_count = 0) noexcept -> LineVertex*&;
+    auto get_writeable_text_buffer(u32 p_new_text_count = 0) noexcept -> text_vertex_t*&;
 
-    auto add_quad_buffer() -> void;
-    auto add_circle_buffer() -> void;
-    auto add_line_buffer() -> void;
-    auto add_text_buffer() -> void;
+    auto add_quad_buffer() noexcept -> void;
+    auto add_circle_buffer() noexcept -> void;
+    auto add_line_buffer() noexcept -> void;
+    auto add_text_buffer() noexcept -> void;
 
 private:
     renderer_2d_data_t m_renderer_data{};

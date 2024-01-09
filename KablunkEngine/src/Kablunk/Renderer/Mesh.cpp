@@ -97,20 +97,20 @@ namespace kb
 				for (size_t i = 0; i < mesh->mNumVertices; ++i)
 				{
 					AnimatedVertex v;
-					v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-					v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+					v.Position = vec3_packed{ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+					v.Normal = vec3_packed{ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 					v.EntityID = static_cast<int32_t>(entity);
 
 					if (mesh->HasTangentsAndBitangents())
 					{
-						v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						v.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						v.Tangent = vec3_packed{ mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+						v.Binormal = vec3_packed{ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
 					{
 						// #FIXME figure out how to deal with multiple textures
-						v.TexCoord = { mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
+						v.TexCoord = vec2_packed{ mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y };
 					}
 
 					m_animated_vertices.push_back(v);
@@ -121,19 +121,19 @@ namespace kb
 				for (size_t i = 0; i < mesh->mNumVertices; ++i)
 				{
 					Vertex v;
-					v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-					v.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+					v.Position = vec3_packed{ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+					v.Normal = vec3_packed{ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 
 					if (mesh->HasTangentsAndBitangents())
 					{
-						v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						v.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						v.Tangent = vec3_packed{ mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+						v.Binormal = vec3_packed{ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
 					{
 						// #FIXME figure out how to deal with multiple textures
-						v.TexCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+						v.TexCoord = vec2_packed{ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 					}
 
 					m_static_vertices.push_back(v);
@@ -627,54 +627,54 @@ namespace kb
 	{
 		std::vector<Vertex> verts;
 		verts.resize(8);
-		verts[0].Position = { -side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
-		verts[1].Position = { side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
-		verts[2].Position = { side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
-		verts[3].Position = { -side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
-		verts[4].Position = { -side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
-		verts[5].Position = { side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
-		verts[6].Position = { side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
-		verts[7].Position = { -side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
-		
-		verts[0].Normal = { -1.0f, -1.0f,  1.0f };
-		verts[1].Normal = { 1.0f, -1.0f,  1.0f };
-		verts[2].Normal = { 1.0f,  1.0f,  1.0f };
-		verts[3].Normal = { -1.0f,  1.0f,  1.0f };
-		verts[4].Normal = { -1.0f, -1.0f, -1.0f };
-		verts[5].Normal = { 1.0f, -1.0f, -1.0f };
-		verts[6].Normal = { 1.0f,  1.0f, -1.0f };
-		verts[7].Normal = { -1.0f,  1.0f, -1.0f };
+		verts[0].Position = vec3_packed{ -side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
+		verts[1].Position = vec3_packed{ side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
+		verts[2].Position = vec3_packed{ side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
+		verts[3].Position = vec3_packed{ -side_length / 2.0f,  side_length / 2.0f,  side_length / 2.0f };
+		verts[4].Position = vec3_packed{ -side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
+		verts[5].Position = vec3_packed{ side_length / 2.0f, -side_length / 2.0f, -side_length / 2.0f };
+		verts[6].Position = vec3_packed{ side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
+		verts[7].Position = vec3_packed{ -side_length / 2.0f,  side_length / 2.0f, -side_length / 2.0f };
+
+		verts[0].Normal = vec3_packed{ -1.0f, -1.0f,  1.0f };
+		verts[1].Normal = vec3_packed{ 1.0f, -1.0f,  1.0f };
+		verts[2].Normal = vec3_packed{ 1.0f,  1.0f,  1.0f };
+		verts[3].Normal = vec3_packed{ -1.0f,  1.0f,  1.0f };
+		verts[4].Normal = vec3_packed{ -1.0f, -1.0f, -1.0f };
+		verts[5].Normal = vec3_packed{ 1.0f, -1.0f, -1.0f };
+		verts[6].Normal = vec3_packed{ 1.0f,  1.0f, -1.0f };
+		verts[7].Normal = vec3_packed{ -1.0f,  1.0f, -1.0f };
 
 
 		// #FIXME this is garbage data
-		verts[0].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[1].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[2].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[3].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[4].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[5].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[6].Binormal = { 1.0f, 1.0f, 1.0f };
-		verts[7].Binormal = { 1.0f, 1.0f, 1.0f };
+		verts[0].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[1].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[2].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[3].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[4].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[5].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[6].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[7].Binormal = vec3_packed{ 1.0f, 1.0f, 1.0f };
 
 		// #FIXME this is garbage data
-		verts[0].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[1].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[2].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[3].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[4].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[5].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[6].Tangent = { 1.0f, 1.0f, 1.0f };
-		verts[7].Tangent = { 1.0f, 1.0f, 1.0f };
+		verts[0].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[1].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[2].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[3].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[4].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[5].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[6].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
+		verts[7].Tangent = vec3_packed{ 1.0f, 1.0f, 1.0f };
 
 		// #FIXME this is garbage data
-		verts[0].TexCoord = { 1.0f, 1.0f, };
-		verts[1].TexCoord = { 1.0f, 1.0f, };
-		verts[2].TexCoord = { 1.0f, 1.0f, };
-		verts[3].TexCoord = { 1.0f, 1.0f, };
-		verts[4].TexCoord = { 1.0f, 1.0f, };
-		verts[5].TexCoord = { 1.0f, 1.0f, };
-		verts[6].TexCoord = { 1.0f, 1.0f, };
-		verts[7].TexCoord = { 1.0f, 1.0f, };
+		verts[0].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[1].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[2].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[3].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[4].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[5].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[6].TexCoord = vec2_packed{ 1.0f, 1.0f, };
+		verts[7].TexCoord = vec2_packed{ 1.0f, 1.0f, };
 
 		std::vector<Index> indices;
 		indices.resize(12);

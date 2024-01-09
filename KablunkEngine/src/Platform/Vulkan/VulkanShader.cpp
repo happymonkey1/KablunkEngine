@@ -160,32 +160,32 @@ void VulkanShader::Reload(bool force_compile /*= false*/)
     KB_PROFILE_SCOPE;
 
     ref instance{ this };
-	render::submit([instance, force_compile]() mutable
-	{
-		// Clear old shader data
-		instance->m_shader_descriptor_sets.clear();
-		instance->m_resources.clear();
-		instance->m_push_constant_ranges.clear();
-		instance->m_pipeline_shader_stage_create_infos.clear();
-		instance->m_descriptor_set_layouts.clear();
-		instance->m_shader_source.clear();
-		instance->m_buffers.clear();
-		instance->m_type_counts.clear();
+	render::submit([inst = instance, force_compile]() mutable
+	    {
+		    // Clear old shader data
+            inst->m_shader_descriptor_sets.clear();
+            inst->m_resources.clear();
+            inst->m_push_constant_ranges.clear();
+            inst->m_pipeline_shader_stage_create_infos.clear();
+            inst->m_descriptor_set_layouts.clear();
+            inst->m_shader_source.clear();
+            inst->m_buffers.clear();
+            inst->m_type_counts.clear();
 
-		Internal::CreateCacheDirectoryIfNecessary();
+		    Internal::CreateCacheDirectoryIfNecessary();
 
-		std::string source = Internal::ReadShaderFromFile(instance->m_file_path);
-		force_compile = ShaderCache::HasChanged(instance->m_file_path, source);
+		    std::string source = Internal::ReadShaderFromFile(inst->m_file_path);
+		    force_compile = ShaderCache::HasChanged(inst->m_file_path, source);
 
-		instance->m_shader_source = instance->PreProcess(source);
-		kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
-		instance->CompileOrGetVulkanBinaries(shader_data, force_compile);
-		instance->LoadAndCreateShaders(shader_data);
-		instance->ReflectAllShaderStages(shader_data);
-		instance->CreateDescriptors();
+            inst->m_shader_source = inst->PreProcess(source);
+		    kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
+            inst->CompileOrGetVulkanBinaries(shader_data, force_compile);
+            inst->LoadAndCreateShaders(shader_data);
+            inst->ReflectAllShaderStages(shader_data);
+            inst->CreateDescriptors();
 
-		render::on_shader_reloaded(instance->GetHash());
-	});
+		    render::on_shader_reloaded(inst->GetHash());
+	    });
 }
 
 size_t VulkanShader::GetHash() const

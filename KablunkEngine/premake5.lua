@@ -132,6 +132,7 @@ project "KablunkEngine"
         }
 	
 	filter "configurations:Release"
+		flags { "LinkTimeOptimization" }
 		defines {
 			"KB_RELEASE",
 			"TRACY_ENABLE",
@@ -151,6 +152,7 @@ project "KablunkEngine"
         
 	
 	filter "configurations:Distribution"
+		flags { "LinkTimeOptimization" }
 		defines "KB_DISTRIBUTION"
 		runtime "Release"
 		optimize "on"

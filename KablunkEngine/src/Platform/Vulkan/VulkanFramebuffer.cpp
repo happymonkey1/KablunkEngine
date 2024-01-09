@@ -112,7 +112,6 @@ namespace kb
 				if (m_specification.existing_images.find(static_cast<uint32_t>(m_specification.Attachments.Attachments.size()) - 1) == m_specification.existing_images.end())
 					m_depth_attachment_image->Release();
 			}
-
 		}
 	}
 

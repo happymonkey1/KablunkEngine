@@ -21,7 +21,7 @@ namespace kb
 		CreateInstance();
 
 		SetupDebugMessageCallback();
-		
+
 		m_physical_device = ref<VulkanPhysicalDevice>::Create();
 
 		VkPhysicalDeviceFeatures enabled_features{};

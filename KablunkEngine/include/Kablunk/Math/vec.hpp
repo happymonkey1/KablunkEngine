@@ -32,6 +32,10 @@ struct alignas(4) vec2_packed
     constexpr vec2_packed() = default;
     constexpr ~vec2_packed() = default;
 
+    explicit constexpr vec2_packed(T p_x, T p_y)
+        : m_storage{ p_x, p_y }
+    { }
+
     constexpr vec2_packed(const glm::vec2& p_vec)
         : m_storage{ p_vec.x, p_vec.y }
     {
@@ -52,6 +56,11 @@ struct alignas(4) vec3_packed
     constexpr vec3_packed() = default;
     constexpr ~vec3_packed() = default;
 
+    explicit constexpr vec3_packed(T p_x, T p_y, T p_z)
+        : m_storage{ p_x, p_y, p_z }
+    {
+    }
+
     constexpr vec3_packed(const glm::vec3& p_vec)
         : m_storage{ p_vec.x, p_vec.y, p_vec.z }
     {
@@ -71,6 +80,11 @@ struct alignas(4) vec4_packed
 
     constexpr vec4_packed() = default;
     constexpr ~vec4_packed() = default;
+
+    explicit constexpr vec4_packed(T p_x, T p_y, T p_z, T p_a)
+        : m_storage{ p_x, p_y, p_z, p_a }
+    {
+    }
 
     constexpr vec4_packed(const glm::vec4& p_vec)
         : m_storage{ p_vec.x, p_vec.y, p_vec.z, p_vec.a }

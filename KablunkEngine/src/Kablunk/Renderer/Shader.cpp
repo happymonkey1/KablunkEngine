@@ -49,7 +49,7 @@ void ShaderLibrary::Add(const ref<Shader>& shader)
 
 ref<Shader> ShaderLibrary::Load(const std::string& filepath)
 {
-	auto shader = Shader::Create(filepath);
+    auto shader{ Shader::Create(filepath) };
 	Add(shader);
 	return shader;
 }
