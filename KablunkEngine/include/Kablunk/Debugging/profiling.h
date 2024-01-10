@@ -3,7 +3,6 @@
 #define KB_ENABLE_PROFILING !defined(KB_DISTRIBUTION)
 
 #if KB_ENABLE_PROFILING
-#    define TRACY_ENABLE
 #    include <tracy/Tracy.hpp>
 #endif
 

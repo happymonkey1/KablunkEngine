@@ -74,7 +74,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 		offset += 4;
 	}
 
-	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, kb::renderer_2d_data_t::max_indices);
+	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, kb::renderer_2d_data_t::max_indices * 4ull);
 	delete[] quad_indices;
 
 	// =======
@@ -238,7 +238,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 		for (uint32_t i = 0; i < kb::renderer_2d_data_t::max_line_indices; ++i)
 			line_indices[i] = i;
 
-		m_renderer_data.line_index_buffer = IndexBuffer::Create(line_indices, kb::renderer_2d_data_t::max_line_indices);
+		m_renderer_data.line_index_buffer = IndexBuffer::Create(line_indices, kb::renderer_2d_data_t::max_line_indices * 4ull);
 		delete[] line_indices;
 	}
 
@@ -286,7 +286,7 @@ void Renderer2D::shutdown()
 		    delete[] buffer;
 
     m_renderer_data.quad_vertex_buffer_base_ptrs.clear();
-	    
+
     // free circle vertex buffers
 	for (auto& frame_buffers : m_renderer_data.circle_vertex_buffer_base_ptrs)
         for (const auto buffer : frame_buffers)
@@ -393,10 +393,14 @@ void Renderer2D::flush()
 
         if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(quad_vertex_buffer_ptr) - reinterpret_cast<u8*>(quad_vertex_buffer_base_ptr)))
         {
+            const u32 index_count = i == m_renderer_data.m_quad_write_index ? m_renderer_data.quad_index_count -
+                (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
+
             auto& quad_vertex_buffer = m_renderer_data.quad_vertex_buffers[i][frame_index];
             quad_vertex_buffer->SetData(quad_vertex_buffer_base_ptr, data_size);
 
             const auto& quad_pass = m_renderer_data.quad_pipeline->GetSpecification().render_pass;
+
             render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, clear_pass);
 
             // Set Textures
@@ -409,11 +413,6 @@ void Renderer2D::flush()
                     m_renderer_data.quad_material->Set("u_Textures", m_renderer_data.white_texture, j);
             }
 
-            KB_CORE_ASSERT(
-                m_renderer_data.quad_index_count < m_renderer_data.max_indices,
-                "[kb::Renderer2D]: quad index buffer overflow!"
-            )
-
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
                 m_renderer_data.quad_pipeline,
@@ -423,7 +422,7 @@ void Renderer2D::flush()
                 quad_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
                 glm::mat4{ 1.0f },
-                m_renderer_data.quad_index_count
+                index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
 
@@ -441,6 +440,9 @@ void Renderer2D::flush()
 
         if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(circle_vertex_buffer_ptr) - reinterpret_cast<u8*>(circle_vertex_base_buffer_ptr)))
         {
+            const u32 index_count = i == m_renderer_data.m_circle_write_index ? m_renderer_data.circle_index_count -
+                (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
+
             auto& circle_vertex_buffer = m_renderer_data.circle_vertex_buffers[i][frame_index];
             circle_vertex_buffer->SetData(circle_vertex_base_buffer_ptr, data_size);
 
@@ -455,7 +457,7 @@ void Renderer2D::flush()
                 circle_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
                 glm::mat4{ 1.0f },
-                m_renderer_data.circle_index_count
+                index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
 
@@ -472,6 +474,9 @@ void Renderer2D::flush()
 
         if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(line_vertex_buffer_ptr) - reinterpret_cast<u8*>(line_vertex_buffer_base_ptr)))
         {
+            const u32 index_count = i == m_renderer_data.m_line_write_index ? m_renderer_data.line_index_count -
+                (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
+
             auto& line_vertex_buffer = m_renderer_data.line_vertex_buffers[i][frame_index];
             line_vertex_buffer->SetData(line_vertex_buffer_base_ptr, data_size);
 
@@ -487,7 +492,7 @@ void Renderer2D::flush()
                 line_vertex_buffer,
                 m_renderer_data.line_index_buffer,
                 glm::mat4{ 1.0f },
-                m_renderer_data.line_index_count
+                index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
 
@@ -504,6 +509,9 @@ void Renderer2D::flush()
 
         if (const auto data_size = static_cast<u32>(reinterpret_cast<u8*>(text_vertex_buffer_ptr) - reinterpret_cast<u8*>(text_vertex_buffer_base_ptr)))
         {
+            const u32 index_count = i == m_renderer_data.m_text_write_index ? m_renderer_data.text_index_count -
+                (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
+
             auto& text_vertex_buffer = m_renderer_data.text_vertex_buffers[i][frame_index];
             text_vertex_buffer->SetData(text_vertex_buffer_base_ptr, data_size);
 
@@ -528,7 +536,7 @@ void Renderer2D::flush()
                 text_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
                 glm::mat4{ 1.0f },
-                m_renderer_data.text_index_count
+                index_count
             );
             render::end_render_pass(m_renderer_data.render_command_buffer);
 
@@ -623,7 +631,7 @@ void Renderer2D::set_swap_chain_target(bool p_swap_chain_target /* = true */)
 
 void Renderer2D::draw_sprite(Entity entity) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
     const auto transform = entity.m_scene->get_world_space_transform_matrix(entity);
 
@@ -650,7 +658,7 @@ void Renderer2D::draw_sprite(Entity entity) noexcept
 
 void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
     // #TODO this should probably be moved out of the hotpath...
     float texture_index = 0.0f;
@@ -699,7 +707,7 @@ void Renderer2D::draw_quad_from_texture_atlas(
     const glm::vec4& tint_color
 ) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
     // #TODO this should probably be moved out of the hotpath...
     float texture_index = 0.0f;
@@ -749,23 +757,9 @@ void Renderer2D::draw_quad_from_texture_atlas_no_mat(
 ) noexcept
 {
     KB_CORE_ASSERT(false, "DO NOT USE, DOES NOT WORK");
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
-    //constexpr glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
-    float texture_index = 0.0f;
-    for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
-    {
-        // Dereference and compare the textures
-        if (*m_renderer_data.texture_slots[i] == *texture)
-            texture_index = static_cast<float>(i);
-    }
-
-    if (texture_index == 0.0f)
-    {
-        texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
-        m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
-        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
-    }
+    const auto texture_index = submit_texture(texture);
 
     constexpr size_t quad_vertex_count = 4;
     auto& quad_vertex_buffer_ptr = get_writeable_quad_buffer(1);
@@ -775,7 +769,7 @@ void Renderer2D::draw_quad_from_texture_atlas_no_mat(
         quad_vertex_buffer_ptr->Position = position * m_renderer_data.quad_vertex_positions[i];
         quad_vertex_buffer_ptr->Color = tint_color;
         quad_vertex_buffer_ptr->TexCoord = texture_atlas_offsets[i];
-        quad_vertex_buffer_ptr->TexIndex = texture_index;
+        quad_vertex_buffer_ptr->TexIndex = static_cast<f32>(texture_index);
         quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
         quad_vertex_buffer_ptr++;
     }
@@ -787,7 +781,7 @@ void Renderer2D::draw_quad_from_texture_atlas_no_mat(
 
 void Renderer2D::draw_circle(const glm::mat4& transform, const glm::vec4& color, float radius /*= 0.5f*/, float thickness /*= 1.0f*/, float fade /*= 0.005f*/, int32_t entity_id /*= -1*/) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
     auto& circle_vertex_buffer_ptr = get_writeable_circle_buffer(1);
 
@@ -810,7 +804,7 @@ void Renderer2D::draw_circle(const glm::mat4& transform, const glm::vec4& color,
 
 void Renderer2D::draw_line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color /*= glm::vec4{ 1.0f }*/) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
 	if (m_renderer_data.line_index_count + 2 > kb::renderer_2d_data_t::max_line_indices)
 		end_batch();
@@ -833,14 +827,14 @@ void Renderer2D::draw_line(const glm::vec3& p0, const glm::vec3& p1, const glm::
 
 void Renderer2D::draw_rect(const glm::vec2& position, const glm::vec2& size, float rotation /* = 0 */, const glm::vec4& color /* = glm::vec4 */) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
 	draw_rect(glm::vec3{ position.x, position.y, 0.0f }, size, rotation, color);
 }
 
 void Renderer2D::draw_rect(const glm::vec3& position, const glm::vec2& size, float rotation /* = 0 */, const glm::vec4& color /* = glm::vec4 */) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
 	const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
 		* glm::rotate(glm::mat4{ 1.0f }, rotation, { 0.0f, 0.0f, 1.0f })
@@ -875,7 +869,7 @@ void Renderer2D::draw_rect(const glm::vec3& position, const glm::vec2& size, flo
 
 void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
 	draw_text_string(text, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
 }
@@ -883,7 +877,7 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& posi
 // #TODO draw command should be done on the render thread
 void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/) noexcept
 {
-    KB_PROFILE_SCOPE;
+    //KB_PROFILE_SCOPE;
 
 	// check for programmer error
 	KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
@@ -975,28 +969,6 @@ void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& posi
 	}
 }
 
-auto Renderer2D::add_texture(const ref<Texture2D>& p_texture) noexcept -> f32
-{
-    KB_PROFILE_SCOPE;
-
-    f32 texture_index = 0.0f;
-    for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
-    {
-        // Dereference and compare the textures
-        if (*m_renderer_data.texture_slots[i] == *p_texture)
-            texture_index = static_cast<f32>(i);
-    }
-
-    if (texture_index == 0.0f)
-    {
-        texture_index = static_cast<f32>(m_renderer_data.texture_slot_index);
-        m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
-        KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
-    }
-
-    return texture_index;
-}
-
 auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void
 {
     KB_PROFILE_SCOPE;
@@ -1014,6 +986,15 @@ auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void
 
         const size_t quad_vertex_count = quad_count * 4;
         quad_vertex_buffer_ptr += quad_vertex_count;
+
+        {
+            const auto frame_index = render::get_current_frame_index();
+            auto max_ptr = m_renderer_data.quad_vertex_buffer_base_ptrs[m_renderer_data.m_quad_write_index][frame_index] + renderer_2d_data_t::max_quads;
+            KB_CORE_ASSERT(
+                quad_vertex_buffer_ptr < max_ptr,
+                "BUFFER OVERFLOW"
+            )
+        }
     }
     else
     {
@@ -1126,7 +1107,7 @@ auto Renderer2D::get_writeable_circle_buffer(u32 p_new_circle_count /* = 0 */) n
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::get_current_frame_index();
 
     const u32 circle_write_index = (m_renderer_data.circle_count + p_new_circle_count) /
         kb::renderer_2d_data_t::max_quads;
@@ -1144,7 +1125,7 @@ auto Renderer2D::get_writeable_line_buffer(u32 p_new_line_count /* = 0 */) noexc
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::get_current_frame_index();
 
     const u32 line_write_index = (m_renderer_data.line_count + p_new_line_count) / kb::renderer_2d_data_t::max_lines;
     if (line_write_index >= m_renderer_data.line_vertex_buffer_base_ptrs.size())
@@ -1161,7 +1142,7 @@ auto Renderer2D::get_writeable_text_buffer(u32 p_new_text_count /* = 0 */) noexc
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::rt_get_current_frame_index();
+    const u32 frame_index = render::get_current_frame_index();
 
     const u32 text_write_index = (m_renderer_data.line_count + p_new_text_count) / kb::renderer_2d_data_t::max_lines;
     if (text_write_index >= m_renderer_data.text_vertex_buffer_base_ptrs.size())

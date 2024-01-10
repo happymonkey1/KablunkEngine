@@ -115,7 +115,7 @@ project "KablunkEngine"
 	filter "configurations:Debug"
 		defines {
 			"KB_DEBUG",
-			"TRACY_ENABLE",
+			-- "TRACY_ENABLE",
 		}
 		runtime "Debug"
 		symbols "on"
@@ -136,6 +136,7 @@ project "KablunkEngine"
 		defines {
 			"KB_RELEASE",
 			"TRACY_ENABLE",
+			"TRACY_ON_DEMAND", -- incurs a slight performance overhead
 		}
 		runtime "Release"
 		optimize "on"

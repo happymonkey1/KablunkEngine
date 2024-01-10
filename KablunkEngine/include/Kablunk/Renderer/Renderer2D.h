@@ -32,6 +32,7 @@ namespace render
 { // start namespace render
 
 using renderer_2d_texture_id = size_t;
+inline static constexpr renderer_2d_texture_id k_invalid_renderer2d_texture_id = 4096ull;
 
 } // end namespace render
 
@@ -108,6 +109,12 @@ struct renderer_2d_data_t
 	static constexpr uint32_t max_line_vertices = max_lines * 2;
 	static constexpr uint32_t max_line_indices = max_lines * 6;
 	static constexpr uint32_t max_texture_slots = 32;
+    static constexpr std::array<vec2_packed, 4> k_texture_coords = {
+        vec2_packed{0.0f, 0.0f},
+        vec2_packed{ 1.0f, 0.0f },
+        vec2_packed{ 1.0f, 1.0f },
+        vec2_packed{ 0.0f, 1.0f }
+    };
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
@@ -260,7 +267,7 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
     {
-        KB_PROFILE_SCOPE;
+        //KB_PROFILE_SCOPE;
 
         draw_quad({ position.x, position.y, 0.0f }, size, texture, tiling_factor, tint_color);
     }
@@ -274,7 +281,7 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
     {
-        KB_PROFILE_SCOPE;
+        //KB_PROFILE_SCOPE;
 
         const glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -302,7 +309,7 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
     {
-        KB_PROFILE_SCOPE;
+        //KB_PROFILE_SCOPE;
 
         draw_quad_from_texture_atlas(glm::vec3{ position.x, position.y, 0.0f }, size, texture, texture_atlas_offsets, tiling_factor, tint_color);
     }
@@ -317,11 +324,11 @@ public:
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
     {
-        KB_PROFILE_SCOPE;
+        //KB_PROFILE_SCOPE;
 
         glm::mat4 transform;
         {
-            KB_PROFILE_SCOPE_NAMED("Compute transform");
+            //KB_PROFILE_SCOPE_NAMED("Compute transform");
             static const glm::mat4 m{ 1.0f };
 
             transform = glm::translate(m, position)
@@ -349,6 +356,59 @@ public:
         float tiling_factor = 1.0f,
         const glm::vec4& tint_color = glm::vec4{ 1.0f }
     ) noexcept;
+
+    // draw quad (new api)
+    // #TODO clean up naming of new api, remove old...
+    inline auto submit_quad(
+        const glm::vec3& p_position,
+        const glm::vec2& p_size,
+        render::renderer_2d_texture_id p_texture_id,
+        const std::array<vec2_packed, 4>& p_texture_coords = renderer_2d_data_t::k_texture_coords,
+        const glm::vec4& p_tint_color = glm::vec4{ 1.0f },
+        float p_tiling_factor = 1.0f
+    ) noexcept -> void
+    {
+        glm::mat4 transform;
+        {
+            //KB_PROFILE_SCOPE_NAMED("Compute transform");
+            static const glm::mat4 m{ 1.0f };
+
+            transform = glm::translate(m, p_position)
+                //  * glm::rotate(m, 0.0f, { 0.0f, 0.0f, 1.0f }) #NOTE disabled for performance while rotation in api is not supported
+                * glm::scale(m, { p_size.x, p_size.y, 1.0f });
+        }
+
+        submit_quad(transform, p_texture_id, p_texture_coords, p_tint_color, p_tiling_factor);
+    }
+
+    inline auto submit_quad(
+        const glm::mat4& p_transform,
+        render::renderer_2d_texture_id p_texture_id,
+        const std::array<vec2_packed, 4>& p_texture_coords,
+        const glm::vec4& p_tint_color,
+        float tiling_factor = 1.0f
+    ) noexcept -> void
+    {
+        //KB_PROFILE_SCOPE;
+
+        constexpr size_t quad_vertex_count = 4;
+        auto& quad_vertex_buffer_ptr = get_writeable_quad_buffer(1);
+
+        for (uint32_t i = 0; i < quad_vertex_count; ++i)
+        {
+            quad_vertex_buffer_ptr->Position = p_transform * m_renderer_data.quad_vertex_positions[i];
+            quad_vertex_buffer_ptr->Color = p_tint_color;
+            quad_vertex_buffer_ptr->TexCoord = p_texture_coords[i];
+            quad_vertex_buffer_ptr->TexIndex = p_texture_id;
+            quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
+            quad_vertex_buffer_ptr++;
+        }
+
+        m_renderer_data.quad_index_count += 6;
+        m_renderer_data.quad_count++;
+
+        m_renderer_data.Stats.Quad_count += 1;
+    }
 
 	// draw circle
 	void draw_circle(
@@ -393,7 +453,30 @@ public:
 
     // add a texture which can be rendered during the current scene
     // returns texture index (float) of slot occupied
-    auto add_texture(const ref<Texture2D>& p_texture) noexcept -> f32;
+    [[nodiscard]] inline auto submit_texture(const ref<Texture2D>& p_texture) noexcept -> render::renderer_2d_texture_id
+    {
+        //KB_PROFILE_SCOPE;
+
+        render::renderer_2d_texture_id texture_index = 0ull;
+        for (uint32_t i = 1; i < m_renderer_data.texture_slot_index; ++i)
+        {
+            // Dereference and compare the textures
+            if (*m_renderer_data.texture_slots[i] == *p_texture)
+            {
+                texture_index = i;
+                break;
+            }
+        }
+
+        if (texture_index == 0ull)
+        {
+            texture_index = m_renderer_data.texture_slot_index;
+            m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
+        }
+
+        return texture_index;
+    }
 
     // submit batched quad data
     auto submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void;

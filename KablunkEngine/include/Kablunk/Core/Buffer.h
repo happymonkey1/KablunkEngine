@@ -10,12 +10,14 @@ namespace kb
 	{
 	public:
 		Buffer() : m_data{ nullptr }, m_size{ 0 } {}
-		Buffer(void* data, size_t size) : m_data{ (u8*)data }, m_size{ size } {}
+		Buffer(void* data, size_t size) : m_data{ static_cast<u8*>(data) }, m_size{ size } {}
+
 		Buffer(size_t size) 
             : m_data{ nullptr }, m_size{ size } 
         { 
             Allocate(size); 
         }
+
 		Buffer(const Buffer& other) 
             : m_data{ nullptr }, m_size{ other.m_size }
 		{
@@ -44,6 +46,9 @@ namespace kb
 
 		inline Buffer& operator=(const Buffer& other)
 		{
+            if (this == &other)
+                return *this;
+
 			if (other.m_data != nullptr)
 			{
 				m_size = other.m_size;
@@ -91,7 +96,7 @@ namespace kb
             }
 
 			//m_data = new uint8_t[size];
-			m_data = kb_new_array(u8, size);
+			m_data = new u8[size];
 			m_size = size;
 		}
 
@@ -124,7 +129,7 @@ namespace kb
 		inline uint8_t* ReadBytes(size_t size, size_t offset)
 		{
 			KB_CORE_ASSERT(offset + size <= m_size, "Buffer overflow!");
-			u8* buffer = kb_new_array(u8, size);
+            u8* buffer = new u8[size];
 			memcpy(buffer, m_data + offset, size);
 			return buffer;
 		}
@@ -147,12 +152,13 @@ namespace kb
 		inline size_t size() const { return m_size; }
 		inline void* get() { return (void*)m_data; }
         inline void* data() { return (void*)m_data; }
-		inline const void* get() const { return (void*)m_data; }
+		inline const void* get() const { return static_cast<void*>(m_data); }
+
 	private:
+        // pointer to the head of the block of memory
+        u8* m_data;
 		// capacity of the buffer
 		size_t m_size;
-		// pointer to the head of the block of memory
-		u8* m_data;
 	};
 }
 

@@ -90,7 +90,7 @@ public:
 	// ============
 	// Internal API
 	// ============
-		
+
 	// initialize the general allocator
 	void init();
 	// shutdown the general allocator

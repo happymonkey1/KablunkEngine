@@ -14,7 +14,7 @@
 #include <mono/metadata/class.h>
 
 #define KB_LIVE_REFERENCES 0
-#define KB_REF_MOVE_DEFINED 1
+#define KB_REF_MOVE_DEFINED 0
 
 namespace kb
 {

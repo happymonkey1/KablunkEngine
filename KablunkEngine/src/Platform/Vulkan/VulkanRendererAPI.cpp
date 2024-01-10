@@ -536,11 +536,11 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
 
 			vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 			vkCmdPushConstants(
-				vk_cmd_buffer, 
-				vk_pipeline_layout, 
-				VK_SHADER_STAGE_FRAGMENT_BIT, 
-				sizeof(glm::mat4), 
-				static_cast<uint32_t>(uniform_storage_buffer.size()), 
+				vk_cmd_buffer,
+				vk_pipeline_layout,
+				VK_SHADER_STAGE_FRAGMENT_BIT,
+				sizeof(glm::mat4),
+				static_cast<uint32_t>(uniform_storage_buffer.size()),
 				uniform_storage_buffer.get()
 			);
 			vkCmdDrawIndexed(vk_cmd_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
@@ -559,29 +559,29 @@ void VulkanRendererAPI::RenderGeometry(ref<RenderCommandBuffer> render_command_b
 		{
             KB_PROFILE_SCOPE;
 
-			uint32_t frameIndex = render::rt_get_current_frame_index();
-			VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+            const u32 frameIndex = render::rt_get_current_frame_index();
+            const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
 			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
-			VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
+            const VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
 
 			auto vulkan_geometry_vertex_buffer = vertex_buffer.As<VulkanVertexBuffer>();
-			VkBuffer vk_vertex_buffer = vulkan_geometry_vertex_buffer->GetVkBuffer();
-			VkDeviceSize offsets[1] = { 0 }; // wtf is this
+            const VkBuffer vk_vertex_buffer = vulkan_geometry_vertex_buffer->GetVkBuffer();
+            constexpr VkDeviceSize offsets[1] = { 0 }; // wtf is this
 			vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
 			auto vulkan_geometry_index_buffer = index_buffer.As<VulkanIndexBuffer>();
-			VkBuffer vk_index_buffer = vulkan_geometry_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_geometry_index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+            const VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
 			vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
 			const auto& write_descriptors = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
 			vulkan_material->RT_UpdateForRendering(write_descriptors);
 
-			VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frameIndex);
+            const VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frameIndex);
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
