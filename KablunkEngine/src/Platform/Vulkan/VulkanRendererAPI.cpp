@@ -126,11 +126,9 @@ void VulkanRendererAPI::Init()
 
 	KB_CORE_INFO("creating fullscreen quad vertex buffer!");
 	s_renderer_data->quad_vertex_buffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
-	uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
+    const uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
 	KB_CORE_INFO("creating fullscreen quad index buffer!");
 	s_renderer_data->quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
-
-	
 }
 
 void VulkanRendererAPI::Shutdown()
@@ -142,15 +140,22 @@ void VulkanRendererAPI::Shutdown()
 
 	VulkanShader::ClearUniformBuffers();
 
+    for (const auto& descriptor_pool : s_renderer_data->descriptor_pools)
+    {
+        KB_CORE_INFO("[VulkanRendererApi]: destroying descriptor pool {}", static_cast<void*>(descriptor_pool));
+        vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+    }
+
+    render::get_render_command_queue().execute();
+
 	for (uint32_t i = 0; i < render::get_frames_in_flights(); ++i)
 	{
 		auto& queue = render::get_render_resource_release_queue(i);
 		queue.execute();
 	}
 
-	if (s_renderer_data)
-		delete s_renderer_data;
-	
+	delete s_renderer_data;
+
 	s_renderer_data = nullptr;
 }
 

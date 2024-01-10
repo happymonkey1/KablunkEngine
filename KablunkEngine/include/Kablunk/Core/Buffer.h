@@ -105,7 +105,7 @@ namespace kb
             if (!m_data)
                 return;
 
-			kb_delete(m_data);
+            delete[] m_data;
 			// detete[] m_data;
 			m_data = nullptr;
 			m_size = 0;

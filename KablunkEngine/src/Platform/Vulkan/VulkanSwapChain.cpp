@@ -420,12 +420,11 @@ void VulkanSwapChain::Destroy()
 
 	if (m_swapchain)
 	{
-        // #TODO need to figure out why we crash here...
-        KB_CORE_WARN("[VulkanSwapChain]: not destroying image views!");
-#if 0
 		for (uint32_t i = 0; i < m_image_count; ++i)
-			vkDestroyImageView(device, m_buffers[i].view, nullptr);
-#endif
+		{
+            KB_CORE_INFO("[VulkanSwapChain]: destroying image view {}", static_cast<void*>(m_buffers[i].view));
+            vkDestroyImageView(device, m_buffers[i].view, nullptr);
+		}
 	}
 
     for (auto& swapchain_command_buffer : m_command_buffers)
@@ -433,16 +432,17 @@ void VulkanSwapChain::Destroy()
         if (!swapchain_command_buffer.m_command_pool)
             continue;
 
+        KB_CORE_INFO("[VulkanSwapChain]: destroying command pool {}", static_cast<void*>(swapchain_command_buffer.m_command_pool));
         vkDestroyCommandPool(device, swapchain_command_buffer.m_command_pool, nullptr);
-        KB_CORE_INFO("[VulkanSwapChain]: destroyed command pool");
     }
-        
-    // #TODO need to figure out why we crash here
+
     KB_CORE_WARN("[VulkanSwapChain]: not destroying render pass!");
-#if 0
+
 	if (m_render_pass)
-		vkDestroyRenderPass(device, m_render_pass, nullptr);
-#endif
+	{
+        KB_CORE_INFO("[VulkanSwapChain]: destroying render pass {}", static_cast<void*>(m_render_pass));
+        vkDestroyRenderPass(device, m_render_pass, nullptr);
+	}
 
 	for (auto& framebuffer : m_framebuffers)
 		vkDestroyFramebuffer(device, framebuffer, nullptr);

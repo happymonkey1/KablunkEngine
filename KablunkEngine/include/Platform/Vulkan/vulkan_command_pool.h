@@ -19,7 +19,7 @@ class command_pool : public kb::RefCounted
 {
 public:
     command_pool();
-    ~command_pool();
+    ~command_pool() override;
 
     VkCommandBuffer allocate_command_buffer(bool p_begin, bool p_compute = false);
     void flush_command_buffer(VkCommandBuffer p_vk_command_buffer);

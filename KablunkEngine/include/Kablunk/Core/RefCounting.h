@@ -33,7 +33,7 @@ public:
 	virtual ~RefCounted() = default;
 
 	KB_FORCE_INLINE auto inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
-	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release); }
+	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release) - 1; }
 private:
     mutable std::atomic<u32> m_ref_count{ 0 };
 };

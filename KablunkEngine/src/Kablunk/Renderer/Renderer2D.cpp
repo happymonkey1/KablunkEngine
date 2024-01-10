@@ -307,6 +307,8 @@ void Renderer2D::shutdown()
 		    delete[] buffer;
 
     m_renderer_data.text_vertex_buffer_base_ptrs.clear();
+
+    m_renderer_data.white_texture.reset();
 }
 
 auto Renderer2D::set_asset_manager(const ref<asset::AssetManager>& p_asset_manager) -> void

@@ -355,7 +355,6 @@ namespace kb
 
 		m_command_pools.clear();
 
-        
 		vkDeviceWaitIdle(m_vk_device);
 		vkDestroyDevice(m_vk_device, nullptr);
         KB_CORE_INFO("[VulkanDevice]: destroyed vk device!");
@@ -366,76 +365,16 @@ namespace kb
 	VkCommandBuffer VulkanDevice::GetCommandBuffer(bool begin, bool p_compute /*= false*/)
 	{
         return get_or_create_thread_local_command_pool()->allocate_command_buffer(begin, p_compute);
-#if 0
-		VkCommandBuffer cmd_buf;
-
-		VkCommandBufferAllocateInfo cmd_buf_allocate_info{};
-		cmd_buf_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmd_buf_allocate_info.commandPool = m_command_pool;
-		cmd_buf_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		cmd_buf_allocate_info.commandBufferCount = 1;
-
-		if (vkAllocateCommandBuffers(m_device, &cmd_buf_allocate_info, &cmd_buf) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffer!");
-
-		if (begin)
-		{
-			VkCommandBufferBeginInfo cmd_buffer_begin_info{};
-			cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			if (vkBeginCommandBuffer(cmd_buf, &cmd_buffer_begin_info) != VK_SUCCESS)
-				KB_CORE_ASSERT(false, "Vulkan failed to begin cmd buffer!");
-		}
-
-		return cmd_buf;
-#endif
 	}
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer command_buffer)
 	{
         get_thread_local_command_pool()->flush_command_buffer(command_buffer);
-#if 0 
-		FlushCommandBuffer(command_buffer, m_graphics_queue);
-#endif
 	}
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, kb::vk::command_buffer_type_t p_command_buffer_type)
 	{
         get_thread_local_command_pool()->flush_command_buffer(command_buffer, queue, p_command_buffer_type);
-#if 0
-		constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
-
-		KB_CORE_ASSERT(command_buffer != VK_NULL_HANDLE, "command buffer is null!");
-
-		if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-			KB_CORE_ERROR("failed to end command buffer!");
-
-		VkSubmitInfo submit_info{};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &command_buffer;
-
-		// Create a fence to ensure the command buffer finishes
-		VkFenceCreateInfo fence_create_info{};
-		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fence_create_info.flags = 0;
-
-		// Create Fence
-		VkFence fence;
-		if (vkCreateFence(m_device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
-			KB_CORE_ERROR("Vulkan failed to create fence");
-
-		// Submit Queue
-		if (vkQueueSubmit(queue, 1, &submit_info, fence) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to submit queue");
-
-		// W
-		KB_CORE_INFO("VulkanDevice waiting for fence");
-		if (vkWaitForFences(m_device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT) != VK_SUCCESS)
-			KB_CORE_ERROR("Vulkan failed to wait for fence!");
-
-		vkDestroyFence(m_device, fence, nullptr);
-		vkFreeCommandBuffers(m_device, m_command_pool, 1, &command_buffer);
-#endif
 	}
 
 	VkCommandBuffer VulkanDevice::CreateSecondaryCommandBuffer()

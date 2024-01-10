@@ -17,28 +17,7 @@ namespace kb
 
 	VulkanImage2D::~VulkanImage2D()
 	{
-
-		if (m_info.image)
-		{
-			const VulkanImageInfo& info = m_info;
-			render::submit_resource_free([info, layer_views = m_per_layer_image_views]()
-				{
-					const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-					vkDestroyImageView(vk_device, info.image_view, nullptr);
-					vkDestroySampler(vk_device, info.sampler, nullptr);
-
-					for (auto& view : layer_views)
-						if (view)
-							vkDestroyImageView(vk_device, view, nullptr);
-
-					VulkanAllocator allocator{ "VulkanImage2D" };
-					allocator.DestroyImage(info.image, info.memory_allcation);
-					s_image_refs.erase(info.image);
-				});
-
-			m_per_layer_image_views.clear();
-		}
-
+        Release();
 	}
 
 	void VulkanImage2D::Invalidate()
@@ -48,7 +27,6 @@ namespace kb
 			{
 				instance->RT_Invalidate();
 			});
-
 	}
 
 	void VulkanImage2D::Release()
@@ -60,13 +38,18 @@ namespace kb
 		render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 			{
 				const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+                KB_CORE_INFO("[VulkanImage2D]: destroying image view {}", static_cast<void*>(info.image_view));
 				vkDestroyImageView(vk_device, info.image_view, nullptr);
+                KB_CORE_INFO("[VulkanImage2D]: destroying sampler {}", static_cast<void*>(info.sampler));
 				vkDestroySampler(vk_device, info.sampler, nullptr);
 
 				for (auto& view : layer_views)
 				{
 					if (view)
-						vkDestroyImageView(vk_device, view, nullptr);
+					{
+                        KB_CORE_INFO("[VulkanImage2D]: destroying image view {}", static_cast<void*>(view));
+                        vkDestroyImageView(vk_device, view, nullptr);
+					}
 				}
 				VulkanAllocator allocator{ "VulkanImage2D" };
 				allocator.DestroyImage(info.image, info.memory_allcation);

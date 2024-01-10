@@ -60,14 +60,10 @@ namespace kb
 		) override;
 		// #TODO instanced rendering
 
-
-
-
 		virtual void SubmitFullscreenQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material);
 
-
 		virtual void RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform) override;
-		
+
 		virtual void RenderGeometry(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, ref<VertexBuffer> vertex_buffer, ref<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) override;
 
 		virtual void SetLineWidth(ref<RenderCommandBuffer> render_command_buffer, float line_width) override;
@@ -82,6 +78,7 @@ namespace kb
 		static const std::vector<std::vector<VkWriteDescriptorSet>>& RT_RetrieveOrCreateStorageBufferWriteDescriptors(ref<StorageBufferSet> storage_buffer_set, ref<VulkanMaterial> material);
 		static void RT_UpdateMaterialForRendering(ref<VulkanMaterial> vulkan_material, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set);
 		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info);
+
 	private:
 		bool m_draw_wireframe{ false };
 	};

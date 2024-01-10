@@ -29,6 +29,9 @@ command_pool::~command_pool()
 {
     VkDevice vk_device = kb::VulkanContext::Get()->GetDevice()->GetVkDevice();
 
+    KB_CORE_INFO("[vk::command_pool]: destroying graphics command pool {}", static_cast<void*>(m_vk_graphics_command_pool));
+    KB_CORE_INFO("[vk::command_pool]: destroying compute command pool {}", static_cast<void*>(m_vk_compute_command_pool));
+
     // destroy graphics
     vkDestroyCommandPool(vk_device, m_vk_graphics_command_pool, nullptr);
     // destroy compute

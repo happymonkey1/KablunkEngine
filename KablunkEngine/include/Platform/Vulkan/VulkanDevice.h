@@ -82,7 +82,7 @@ namespace kb
 
 		VkQueue GetGraphicsQueue() { return m_vk_graphics_queue; }
         VkQueue get_vk_compute_queue() { return m_vk_compute_queue; }
-		
+
 		VkCommandBuffer GetCommandBuffer(bool begin, bool p_compute = false);
 		void FlushCommandBuffer(VkCommandBuffer command_buffer);
 		void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, kb::vk::command_buffer_type_t p_command_buffer_type);
@@ -92,9 +92,11 @@ namespace kb
 		ref<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 		VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
 		VkDevice GetVkDevice() { return m_vk_device; }
+
     private:
         ref<kb::vk::command_pool> get_thread_local_command_pool();
         ref<kb::vk::command_pool> get_or_create_thread_local_command_pool();
+
 	private:
 		VkDevice m_vk_device;
 		ref<VulkanPhysicalDevice> m_physical_device;

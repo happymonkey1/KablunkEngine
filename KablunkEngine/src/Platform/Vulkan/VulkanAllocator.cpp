@@ -75,6 +75,7 @@ namespace kb
 	{
 		KB_CORE_ASSERT(image, "trying to destroy image that is nullptr");
 		KB_CORE_ASSERT(allocation, "trying to destroy allocation that is nullptr");
+        KB_CORE_INFO("[VulkanImage2D]: destroying image {}", static_cast<void*>(image));
 		vmaDestroyImage(s_data->allocator, image, allocation);
 	}
 

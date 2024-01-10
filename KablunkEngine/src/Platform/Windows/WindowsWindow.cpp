@@ -219,9 +219,8 @@ void WindowsWindow::Shutdown()
 		// #TODO dynamic_cast bad!
 		VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
 
-        // destroy the vk device before destroying vk context.
-        vk_context->GetDevice()->Destroy();
 		vk_context->GetSwapchain().Destroy();
+        vk_context->GetDevice()->Destroy();
 	}
 
 	//m_context->Shutdown();

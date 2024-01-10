@@ -81,13 +81,9 @@ void Renderer::shutdown()
 	// shutdown vulkan context
 	//VulkanContext::Get()->Shutdown();
 
-    
-	if (m_command_queues)
-	{
-		for (size_t i = 0; i < s_render_command_queue_size; ++i)
-            if (!m_command_queues[i].is_empty())
-			    KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
-	}
+	for (size_t i = 0; i < s_render_command_queue_size; ++i)
+        if (!m_command_queues[i].is_empty())
+			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
 
 	delete m_renderer_api;
 }

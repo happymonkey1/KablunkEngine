@@ -113,9 +113,7 @@ void Application::shutdown()
     m_renderer_2d.reset();
 	render::shutdown();
 
-
 	ProjectManager::get().shutdown();
-
 
 	NativeScriptEngine::get().shutdown();
 	PluginManager::get().shutdown();

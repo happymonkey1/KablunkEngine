@@ -114,6 +114,7 @@ namespace kb
 		VkCommandPool command_pool = m_command_pool;
 		render::submit_resource_free([command_pool]()
 			{
+                KB_CORE_INFO("Destroying command pool {}", static_cast<void*>(command_pool));
 				auto device = VulkanContext::Get()->GetDevice();
 				vkDestroyCommandPool(device->GetVkDevice(), command_pool, nullptr);
 			});
