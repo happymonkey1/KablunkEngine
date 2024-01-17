@@ -11,7 +11,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "OpenGL images not supported yet!"); return ref<Image2D>{};
 		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<Image2D>>(ref<VulkanImage2D>::Create(specification));
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return ref<Image2D>{};
 		}
@@ -21,7 +20,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "OpenGL images not supported yet!"); return ref<Image2D>{};
 		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<Image2D>>(ref<VulkanImage2D>::Create(specification));
 		default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return ref<Image2D>{};
 		}

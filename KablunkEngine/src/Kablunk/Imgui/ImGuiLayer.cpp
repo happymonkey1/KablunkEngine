@@ -3,7 +3,6 @@
 
 #include "imgui.h"
 
-#include "Platform/OpenGL/OpenGLImguiLayer.h"
 #include "Platform/Vulkan/VulkanImGuiLayer.h"
 
 #include "Kablunk/Renderer/RendererAPI.h"
@@ -45,7 +44,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	return new OpenGLImguiLayer{};
 		case RendererAPI::render_api_t::Vulkan:	return new VulkanImGuiLayer{};
 		default:								KB_CORE_ASSERT(false, "unknown renderAPI!"); return nullptr;
 		}

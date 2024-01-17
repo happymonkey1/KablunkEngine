@@ -10,11 +10,6 @@ ref<compute_pipeline> compute_pipeline::create(ref<Shader> p_compute_shader)
 {
     switch (RendererAPI::GetAPI())
     {
-        case RendererAPI::render_api_t::OpenGL:
-        {
-            KB_ASSERT(false, "[compute_pipeline]: compute pipelines are not supported on OpenGL!");
-            return ref<compute_pipeline>{};
-        }
         case RendererAPI::render_api_t::Vulkan:
         {
             return static_cast<ref<compute_pipeline>>(ref<vk::compute_pipeline>::Create(p_compute_shader));

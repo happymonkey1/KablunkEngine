@@ -21,7 +21,8 @@ namespace kb
 	public:
 		enum class render_api_t
 		{
-			None = 0, OpenGL = 1, Vulkan = 2
+			None = 0,
+		    Vulkan = 1
 		};
 
 	public:

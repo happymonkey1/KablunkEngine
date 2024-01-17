@@ -2,7 +2,6 @@
 
 #include "Kablunk/Renderer/Material.h"
 #include "Kablunk/Renderer/RendererAPI.h"
-#include "Platform/OpenGL/OpenGLMaterial.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 
 namespace kb
@@ -11,7 +10,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return ref<Material>{};//return IntrusiveRef<OpenGLMaterial>::Create(shader, name);
         case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<Material>>(ref<VulkanMaterial>::Create(shader, name));
 		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return ref<Material>{};
 		default:								KB_CORE_ASSERT(false, "Unknown rendererAPI set!"); return ref<Material>{};
@@ -22,7 +20,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:  KB_CORE_ASSERT(false, "Not implemented!") return ref<Material>{};
 		case RendererAPI::render_api_t::Vulkan:  return static_cast<ref<Material>>(ref<VulkanMaterial>::Create(material, name));
 		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "No rendererAPI set!"); return ref<Material>{};
 		default:								KB_CORE_ASSERT(false, "Unknown rendererAPI set!"); return ref<Material>{};

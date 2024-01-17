@@ -8,7 +8,6 @@
 
 #include "Kablunk/Renderer/RendererAPI.h"
 
-#include "Platform/OpenGL/OpenGLContext.h"
 #include "Platform/Vulkan/VulkanContext.h"
 
 #define GLFW_INCLUDE_VULKAN
@@ -249,14 +248,6 @@ void WindowsWindow::OnUpdate()
 
 void WindowsWindow::SetVsync(bool enabled)
 {
-	if (RendererAPI::GetAPI() == RendererAPI::render_api_t::OpenGL)
-	{
-		if (enabled)
-			glfwSwapInterval(1);
-		else
-			glfwSwapInterval(0);
-	}
-  
     m_data.VSync = enabled;
 }
 

@@ -1,14 +1,12 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
 
 #include "Platform/Vulkan/VulkanContext.h"
 
 #include "Kablunk/Renderer/RendererAPI.h"
 
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include "Kablunk/Core/Application.h"
@@ -48,7 +46,6 @@ void Renderer::init()
 	// initialize underlying renderer api
 	switch (RendererAPI::GetAPI())
 	{
-		case RendererAPI::render_api_t::OpenGL: { m_renderer_api = new OpenGLRendererAPI{}; break; }
 		case RendererAPI::render_api_t::Vulkan: { m_renderer_api = new VulkanRendererAPI{}; break; }
 		default: { KB_CORE_ASSERT(false, "Unknown RendererAPI!"); break; }
 	}

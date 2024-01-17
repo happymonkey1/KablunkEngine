@@ -11,7 +11,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "OpenGL does not support RenderCommandBuffers!"); return ref<RenderCommandBuffer>{};
 		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<RenderCommandBuffer>>(ref<VulkanRenderCommandBuffer>::Create(count, debug_name));
 		default:								KB_CORE_ASSERT(false, "Unknown RendererAPI!"); return ref<RenderCommandBuffer>{};
 		}
@@ -21,7 +20,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "OpenGL does not support RenderCommandBuffers!"); return ref<RenderCommandBuffer>{};
         case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<RenderCommandBuffer>>(ref<VulkanRenderCommandBuffer>::Create(debug_name, true));
 		default:								KB_CORE_ASSERT(false, "Unknown RendererAPI!"); return ref<RenderCommandBuffer>{};
 		}

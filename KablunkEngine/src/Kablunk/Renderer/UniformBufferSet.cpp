@@ -11,7 +11,6 @@ namespace kb
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::render_api_t::OpenGL:	KB_CORE_ASSERT(false, "not implemented!"); return ref<UniformBufferSet>{};
 		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<UniformBufferSet>>(ref<VulkanUniformBufferSet>::Create(frames));
 		default:								KB_CORE_ASSERT(false, "Unknown RendererAPI!"); return ref<UniformBufferSet>{};
 		}

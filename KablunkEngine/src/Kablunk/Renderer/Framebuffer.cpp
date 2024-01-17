@@ -3,7 +3,6 @@
 #include "Kablunk/Renderer/Framebuffer.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLFramebuffer.h"
 #include "Platform/Vulkan/VulkanFramebuffer.h"
 
 namespace kb
@@ -14,7 +13,6 @@ namespace kb
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<Framebuffer>{};
-		case RendererAPI::render_api_t::OpenGL:	framebuffer = ref<OpenGLFramebuffer>::Create(specs); break;
 		case RendererAPI::render_api_t::Vulkan:	framebuffer = ref<VulkanFramebuffer>::Create(specs); break;
 		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<Framebuffer>{};
 		}

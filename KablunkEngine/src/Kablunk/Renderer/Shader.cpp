@@ -2,7 +2,6 @@
 #include "Kablunk/Renderer/Shader.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
 
 namespace kb
@@ -13,7 +12,6 @@ ref<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 	switch (Renderer::GetAPI())
 	{
 	case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return ref<Shader>{};
-	case RendererAPI::render_api_t::OpenGL:		res = ref<OpenGLShader>::Create(file_path); break;
 	case RendererAPI::render_api_t::Vulkan:		res = ref<VulkanShader>::Create(file_path, force_compile); break;
 	default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<Shader>{};
 	}

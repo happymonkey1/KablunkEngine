@@ -1,7 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include "Platform/Vulkan/VulkanContext.h"
