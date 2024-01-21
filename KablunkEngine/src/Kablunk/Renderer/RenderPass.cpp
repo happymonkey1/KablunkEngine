@@ -10,7 +10,6 @@ namespace kb
 {
 	ref<RenderPass> RenderPass::Create(const RenderPassSpecification& specification)
 	{
-		
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<RenderPass>>(ref<VulkanRenderPass>::Create(specification));

@@ -47,3 +47,6 @@
 [submodule "KablunkEngine/vendor/tracy"]
 	path = KablunkEngine/vendor/tracy
 	url = https://github.com/happymonkey1/tracy.git
+[submodule "KablunkEngine/vendor/GameNetworkingSockets"]
+	path = KablunkEngine/vendor/GameNetworkingSockets
+	url = https://github.com/happymonkey1/GameNetworkingSockets

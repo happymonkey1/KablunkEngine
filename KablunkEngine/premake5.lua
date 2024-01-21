@@ -76,7 +76,8 @@ project "KablunkEngine"
 		"%{IncludeDir.absl}",
 		-- external fmt lib because of MSVC 17.7 bug
 		"%{IncludeDir.fmt}",
-		"%{IncludeDir.tracy}"
+		"%{IncludeDir.tracy}",
+		"%{IncludeDir.GameNetworkingSockets}",
 	}
 
 	links {
@@ -94,6 +95,7 @@ project "KablunkEngine"
 		"protoc",
 		-- external fmt lib because of MSVC 17.7 bug
 		"fmt",
+		"GameNetworkingSockets",
 
 		"%{Library.Vulkan}",
 		-- "%{Library.VulkanUtils}",

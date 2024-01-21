@@ -39,6 +39,7 @@ group "Dependencies"
     include "KablunkEngine/vendor/protobuf"
     -- external fmt lib because of MSVC 17.7 bug
     include "KablunkEngine/vendor/fmt"
+    include "KablunkEngine/vendor/GameNetworkingSockets"
 group ""
 
 group "Tools"
