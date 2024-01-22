@@ -41,6 +41,7 @@ project "KablunkEditor"
         -- included bc of ICE in MSVC 17.7
         "%{IncludeDir.fmt}",
         "%{IncludeDir.tracy}",
+        "%{IncludeDir.GameNetworkingSockets}",
     }
 
     links
@@ -57,7 +58,7 @@ project "KablunkEditor"
         "GLFW_DLL",
 		"GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
 		"GLM_FORCE_INTRINSICS",
-        
+        "STEAMNETWORKINGSOCKETS_STATIC_LINK",
     }
 
     postbuildcommands

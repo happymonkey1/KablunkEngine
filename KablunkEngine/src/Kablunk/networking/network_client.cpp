@@ -212,6 +212,8 @@ auto network_client::network_loop() noexcept -> void
     m_connection_status = connection_status_t::disconnected;
 
     m_interface = nullptr;
+
+    // #NOTE is this ok with a client and server running in the same app?
     GameNetworkingSockets_Kill();
 }
 

@@ -104,7 +104,6 @@ void Application::shutdown()
 	// clear the framebuffer pool
 	FramebufferPool::Get()->GetAll().clear();
 
-
 	m_render_thread.terminate();
 
 	// deletes any pushed layers, including imgui layer

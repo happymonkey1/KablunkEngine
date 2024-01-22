@@ -74,6 +74,13 @@
 #include "Kablunk/Utilities/Containers/PriorityQueue.hpp"
 // ----------------------------------------------
 
+// ---Networking---------------------------------
+#include "Kablunk/networking/networking_types.h"
+#include "Kablunk/networking/network_client.h"
+#include "Kablunk/networking/network_server.h"
+// ----------------------------------------------
+
+
 // ---Misc---------------------------------------
 #include "Platform/PlatformAPI.h"
 #include "imgui.h"

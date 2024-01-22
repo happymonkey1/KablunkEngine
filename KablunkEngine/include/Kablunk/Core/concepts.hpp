@@ -1,4 +1,4 @@
-
+#pragma once
 
 namespace kb::concepts
 { // start namespace kb::concepts
