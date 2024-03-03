@@ -40,6 +40,7 @@ group "Dependencies"
     -- external fmt lib because of MSVC 17.7 bug
     include "KablunkEngine/vendor/fmt"
     include "KablunkEngine/vendor/GameNetworkingSockets"
+    include "KablunkEngine/vendor/Catch2"
 group ""
 
 group "Tools"
@@ -49,3 +50,4 @@ group ""
 group "Core"
     include "KablunkEngine"
     include "Kablunk-ScriptCore"
+    include "KablunkEngineTests"

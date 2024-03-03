@@ -31,6 +31,8 @@ IncludeDir["absl"] = "%{wks.location}/KablunkEngine/vendor/abseil-cpp/"
 IncludeDir["fmt"] = "%{wks.location}/KablunkEngine/vendor/fmt/include"
 IncludeDir["tracy"] = "%{wks.location}/KablunkEngine/vendor/tracy/public"
 IncludeDir["GameNetworkingSockets"] = "%{wks.location}/KablunkEngine/vendor/GameNetworkingSockets/include"
+IncludeDir["LuaJIT"] = "%{wks.location}/KablunkEngine/vendor/LuaJIT/src"
+IncludeDir["Catch2"] = "%{wks.location}/KablunkEngine/vendor/Catch2/extras"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
@@ -45,6 +47,7 @@ Library["mono"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/windows/debug/m
 Library["mono_release"] = "%{wks.location}/KablunkEngine/vendor/mono/lib/windows/release/mono-2.0-sgen.lib"
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 Library["VulkanUtils"] = "%{LibraryDir.VulkanSDK}/VkLayer_utils.lib"
+Library["LuaJIT"] = "%{wks.location}/KablunkEngine/vendor/LuaJIT/src/lua51.lib"
 
 Library["ShaderC_Debug"] = "%{LibraryDir.VulkanSDK_Debug}/shaderc_sharedd.lib"
 Library["ShaderC_Utils_Debug"] = "%{LibraryDir.VulkanSDK_Debug}/shaderc_utild.lib"

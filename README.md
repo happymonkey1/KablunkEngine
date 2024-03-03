@@ -1,23 +1,27 @@
-# KablunkEngine 
+# KablunkEngine
 
-Personal project to develop a basic game engine. Currently in development, meaning features might be broken or not implemented yet. 
+Personal project to develop a basic game engine. Currently in development, meaning features might be broken or not implemented yet.
 
 ## Setup
 
 Note: requires python to run setup scripts.  
 Run scripts/Setup.py to install required libraries `python scripts/Setup.py`  
 Run scripts/Windows-GenProjects.bat to generate project files.  
-Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.  
+Run scripts/Windows-GitUpdateSubmodules.bat to fetch/update vendor submodules.
 
-Compatible with Visual Studio 2022, msvc compiler, and windows 10.  
+Compatible with Visual Studio 2022, msvc compiler, and windows 10.
 
 Required Libraries/Binaries (should be installed by setup.py)
-- Boost
-	- Requires installation in Program Files directory (again should be automated)
+
 - Vulkan
-	- Requires VULKAN_SDK environment variable (again should be automated)
+  - Requires VULKAN_SDK environment variable (again should be automated)
 - Premake
-	- Requires installation in `%KABLUNK_DIR%/vendor/premake/bin/premake5.exe` (again should be automated)
+
+  - Requires installation in `%KABLUNK_DIR%/vendor/premake/bin/premake5.exe` (again should be automated)
+
+- MSVC developer command prompt must be on system path
+  - Add `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\`
+- Catch2 Test adaptor for Visual Studio (Windows)
 
 ## Features
 
@@ -50,4 +54,4 @@ https://trello.com/b/cYhcr9CG/kablunkengine
 
 ## Credits
 
-Inspiration, help, and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) (YouTube) from watching his game engine development series. 
+Inspiration, help, and guidance from [@TheCherno](https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw) (YouTube) from watching his game engine development series.

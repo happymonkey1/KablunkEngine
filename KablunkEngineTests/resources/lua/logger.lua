@@ -1,0 +1,1 @@
+logger_info("hello from lua")

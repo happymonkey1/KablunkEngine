@@ -10,8 +10,10 @@ class Camera
 {
 public:
 	Camera() = default;
-	Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection) : m_projection{ projection }, 
-		m_unreversed_projection{ unreversed_projection } { }
+
+	Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
+    : m_projection{ projection }, m_unreversed_projection{ unreversed_projection } { }
+
 	virtual ~Camera() = default;
 
 	const glm::mat4& GetProjection() const { return m_projection; }

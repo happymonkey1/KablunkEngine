@@ -79,6 +79,8 @@ project "KablunkEngine"
 		"%{IncludeDir.fmt}",
 		"%{IncludeDir.tracy}",
 		"%{IncludeDir.GameNetworkingSockets}",
+		"%{IncludeDir.LuaJIT}",
+		"%{IncludeDir.Catch2}",
 	}
 
 	links {
@@ -97,18 +99,24 @@ project "KablunkEngine"
 		-- external fmt lib because of MSVC 17.7 bug
 		"fmt",
 		"GameNetworkingSockets",
+		"Catch2",
 
 		"%{Library.Vulkan}",
+		"%{Library.LuaJIT}",
 		-- "%{Library.VulkanUtils}",
 
 		
 	}
 
+	prebuildcommands {
+		'cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild'
+	}
+
 	postbuildcommands {
-		'{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"'
+		'{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"',
+		'{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
 	}
 	
-
 	filter "files:vendor/ImGuizmo/**.cpp"
 		flags { "NoPCH" }
 
