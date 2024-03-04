@@ -1,8 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
-
-  <Catch2Adapter>
-    <DllFilenameFilter>Tests$</DllFilenameFilter>
+  <TestAdapterPaths>%KABLUNK_DIR%\bin</TestAdapterPaths>
+  <Catch2Adapter disabled="false">
+    <DebugBreak>on</DebugBreak>
+    <DiscoverTimeout>2500</DiscoverTimeout>
+    <DiscoverCommandLine>--verbosity high --list-tests --reporter xml *</DiscoverCommandLine>
+    <FilenameFilter>KablunkEngineTests</FilenameFilter>
+    <DllFilenameFilter>KablunkEngineTests</DllFilenameFilter>
+    <DllRunner>${dllpath}/KablunkEngineTests.exe</DllRunner>
+    <Environment>
+      <KABLUNK_DIR>%KABLUNK_DIR%</KABLUNK_DIR>
+    </Environment>
+    <Logging>debug</Logging>
+    <WorkingDirectory>${dllpath}</WorkingDirectory>
+    <WorkingDirectoryRoot>Executable</WorkingDirectoryRoot>
+    <IncludeHidden>true</IncludeHidden>
   </Catch2Adapter>
 
 </RunSettings>

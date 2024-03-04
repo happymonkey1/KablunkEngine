@@ -40,7 +40,7 @@ project "KablunkEngineTests"
         defines {
             "KB_DEBUG"
         }
-
+        
         runtime "Debug"
         symbols "on"
 

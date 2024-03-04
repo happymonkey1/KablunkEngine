@@ -34,7 +34,7 @@ namespace kb::asset
 		{ ".gltf",			AssetType::Mesh },
 		{ ".glb",			AssetType::Mesh },
 		{ ".obj",			AssetType::Mesh },
-			
+
 		// Kablunk type
 		{ ".kablunkscene",	AssetType::Scene },
 		{ ".kbscene",		AssetType::Scene },
@@ -43,7 +43,8 @@ namespace kb::asset
 
 		// Script
 		{ ".h",				AssetType::NativeScript },
-		{ ".hpp",			AssetType::NativeScript }
+		{ ".hpp",			AssetType::NativeScript },
+        { ".lua",          AssetType::LuaScript },
 	};
 
 } // end namespace kb::asset

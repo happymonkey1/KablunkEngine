@@ -44,6 +44,12 @@ namespace kb::math
     {
         return p_x + (p_y - p_x) * p_time;
     }
+
+    // vec4 { x_top_left, y_top_left, x_bottom_right, y_bottom_right }
+    KB_FORCE_INLINE auto does_point_overlap_rect(const glm::vec2& p_pos, const glm::vec4& p_rect) noexcept -> bool
+    {
+        return p_pos.x >= p_rect.x && p_pos.y >= p_rect.y && p_pos.x <= p_rect.z && p_pos.y <= p_rect.w;
+    }
 }
 
 #endif

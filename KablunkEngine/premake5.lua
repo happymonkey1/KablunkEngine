@@ -109,7 +109,7 @@ project "KablunkEngine"
 	}
 
 	prebuildcommands {
-		'cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild'
+		'if not exist "%{Library.LuaJIT}" (cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild)'
 	}
 
 	postbuildcommands {

@@ -96,4 +96,20 @@ bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAs
 
 // =====================
 
+// =====================
+// lua_asset_serializer
+// =====================
+
+void lua_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
+{
+    KB_CORE_WARN("[lua_asset_serializer]: serialize() not implemented!");
+}
+
+bool lua_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
+{
+    KB_CORE_ASSERT(false, "not implemented!");
+
+    return nullptr;
+}
+
 }

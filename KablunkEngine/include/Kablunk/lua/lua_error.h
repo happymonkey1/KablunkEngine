@@ -5,10 +5,10 @@
 namespace kb
 { // start namespace kb
 
-struct lua_error
+enum class lua_error_t
 {
-    i32 m_error_code = 0;
-    char* m_error_msg = nullptr;
+
+    internal_key_access_error
 };
 
 } // end namespace kb

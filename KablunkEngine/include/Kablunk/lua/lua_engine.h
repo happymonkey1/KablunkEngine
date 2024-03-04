@@ -11,17 +11,17 @@ namespace kb
 class lua_engine
 {
 public:
-    lua_engine() = default;
-    ~lua_engine();
+    lua_engine() noexcept = default;
+    ~lua_engine() noexcept;
 
-    auto init() -> void;
-    auto shutdown() -> void;
+    auto init() noexcept -> void;
+    auto shutdown() noexcept -> void;
 
-    auto run_file(const std::filesystem::path& p_script_path) -> void;
+    auto run_file(const std::filesystem::path& p_script_path) noexcept -> void;
 
     // expose an engine function to the lua vm
     // NOTE: function must be marked as `extern c`
-    auto register_glue_function(auto p_c_func, std::string_view p_lua_func_name)
+    auto register_glue_function(lua_CFunction p_c_func, std::string_view p_lua_func_name) noexcept -> void
     {
         KB_CORE_ASSERT(m_lua_state, "[lua_engine]: Trying to add engine function but lua state is not initialized!");
 

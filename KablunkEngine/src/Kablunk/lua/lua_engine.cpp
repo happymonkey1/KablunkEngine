@@ -6,31 +6,31 @@ namespace kb
 { // start namespace kb
 
 
-lua_engine::~lua_engine()
+lua_engine::~lua_engine() noexcept
 {
     KB_CORE_INFO("[lua_engine]: Shutting down");
     if (m_lua_state)
         lua_close(m_lua_state);
 }
 
-auto lua_engine::init() -> void
+auto lua_engine::init() noexcept -> void
 {
     KB_CORE_INFO("Initializing lua engine");
 
     m_lua_state = luaL_newstate();
     luaL_openlibs(m_lua_state);
 
-    add_glue_function(lua::logger_info, "logger_info");
+    register_glue_function(lua::logger_info, "logger_info");
 
     KB_CORE_ASSERT(m_lua_state, "[lua_engine]: lua state is null?");
     KB_CORE_INFO("Finished initializing lua engine");
 }
 
-auto lua_engine::shutdown() -> void
+auto lua_engine::shutdown() noexcept -> void
 {
 }
 
-auto lua_engine::run_file(const std::filesystem::path& p_script_path) -> void
+auto lua_engine::run_file(const std::filesystem::path& p_script_path) noexcept -> void
 {
     KB_CORE_ASSERT(m_lua_state, "Tried to run Lua script, but Lua state is not initialized!");
 

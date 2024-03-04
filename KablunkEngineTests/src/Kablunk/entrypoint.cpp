@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 
     int result = Catch::Session().run(argc, argv);
 
-    // your clean-up...
+    ::kb::Singleton<kb::Logger>::get().shutdown();
 
     return result;
 }

@@ -59,6 +59,16 @@ public:
     virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
 };
 
+// lua serializer
+class lua_asset_serializer : public AssetSerializer
+{
+public:
+    lua_asset_serializer(ref<AssetManager> p_asset_manager) : AssetSerializer{ p_asset_manager } {}
+
+    virtual void serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
+    virtual bool try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const override;
+};
+
 } // end namespace kb::asset
 
 #endif

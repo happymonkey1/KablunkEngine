@@ -11,80 +11,84 @@
 #include <string>
 
 namespace kb::asset
+{ // start namespace kb::asset
+
+// #TODO: only 255 different asset types supported
+enum class AssetType : u8
 {
+	Texture = 0,
+	Mesh,
+	MeshSource,
+	Audio,
+	Prefab,
+	Material,
+	NativeScript,
+    LuaScript,
+	Font,
+	Scene,
+	NONE
+};
 
-	// #TODO: only 255 different asset types supports
-	enum class AssetType : u8
+using asset_type_iterator = util::enum_iterator<AssetType, AssetType::Texture, AssetType::NONE>;
+
+struct AssetTypeStrings
+{
+	DEFINE_ENUM_TYPE_STRING(Texture,		"Texture");
+	DEFINE_ENUM_TYPE_STRING(Mesh,			"Mesh");
+	DEFINE_ENUM_TYPE_STRING(MeshSource,		"MeshSource");
+	DEFINE_ENUM_TYPE_STRING(Audio,			"Audio");
+	DEFINE_ENUM_TYPE_STRING(Prefab,			"Prefab");
+	DEFINE_ENUM_TYPE_STRING(Material,		"Material");
+	DEFINE_ENUM_TYPE_STRING(NativeScript,	"NativeScript");
+	DEFINE_ENUM_TYPE_STRING(LuaScript,	    "LuaScript");
+	DEFINE_ENUM_TYPE_STRING(Font,			"Font");
+	DEFINE_ENUM_TYPE_STRING(Scene,			"Scene");
+	DEFINE_ENUM_TYPE_STRING(NONE,			"INV_ASSET_TYPE");
+};
+
+// Get an AssetType from a string
+inline AssetType string_to_asset_type(const std::string& asset_type_str)
+{
+	if (asset_type_str == AssetTypeStrings::Texture)			return AssetType::Texture;
+	else if (asset_type_str == AssetTypeStrings::Mesh)			return AssetType::Mesh;
+	else if (asset_type_str == AssetTypeStrings::MeshSource)	return AssetType::MeshSource;
+	else if (asset_type_str == AssetTypeStrings::Audio)			return AssetType::Audio;
+	else if (asset_type_str == AssetTypeStrings::Prefab)		return AssetType::Prefab;
+	else if (asset_type_str == AssetTypeStrings::Material)		return AssetType::Material;
+	else if (asset_type_str == AssetTypeStrings::NativeScript)	return AssetType::NativeScript;
+	else if (asset_type_str == AssetTypeStrings::LuaScript)	    return AssetType::LuaScript;
+	else if (asset_type_str == AssetTypeStrings::Font)			return AssetType::Font;
+	else if (asset_type_str == AssetTypeStrings::Scene)			return AssetType::Scene;
+	else if (asset_type_str == AssetTypeStrings::NONE)			return AssetType::NONE;
+	else
 	{
-		Texture = 0,
-		Mesh,
-		MeshSource,
-		Audio,
-		Prefab,
-		Material,
-		NativeScript,
-		Font,
-		Scene,
-		NONE
-	};
-
-	using asset_type_iterator = util::enum_iterator<AssetType, AssetType::Texture, AssetType::NONE>;
-
-	struct AssetTypeStrings
-	{
-		DEFINE_ENUM_TYPE_STRING(Texture,		"Texture");
-		DEFINE_ENUM_TYPE_STRING(Mesh,			"Mesh");
-		DEFINE_ENUM_TYPE_STRING(MeshSource,		"MeshSource");
-		DEFINE_ENUM_TYPE_STRING(Audio,			"Audio");
-		DEFINE_ENUM_TYPE_STRING(Prefab,			"Prefab");
-		DEFINE_ENUM_TYPE_STRING(Material,		"Material");
-		DEFINE_ENUM_TYPE_STRING(NativeScript,	"NativeScript");
-		DEFINE_ENUM_TYPE_STRING(Font,			"Font");
-		DEFINE_ENUM_TYPE_STRING(Scene,			"Scene");
-		DEFINE_ENUM_TYPE_STRING(NONE,			"INV_ASSET_TYPE");
-	};
-
-	// Get an AssetType from a string
-	inline AssetType string_to_asset_type(const std::string& asset_type_str)
-	{
-		if (asset_type_str == AssetTypeStrings::Texture)			return AssetType::Texture;
-		else if (asset_type_str == AssetTypeStrings::Mesh)			return AssetType::Mesh;
-		else if (asset_type_str == AssetTypeStrings::MeshSource)	return AssetType::MeshSource;
-		else if (asset_type_str == AssetTypeStrings::Audio)			return AssetType::Audio;
-		else if (asset_type_str == AssetTypeStrings::Prefab)		return AssetType::Prefab;
-		else if (asset_type_str == AssetTypeStrings::Material)		return AssetType::Material;
-		else if (asset_type_str == AssetTypeStrings::NativeScript)	return AssetType::NativeScript;
-		else if (asset_type_str == AssetTypeStrings::Font)			return AssetType::Font;
-		else if (asset_type_str == AssetTypeStrings::Scene)			return AssetType::Scene;
-		else if (asset_type_str == AssetTypeStrings::NONE)			return AssetType::NONE;
-		else
-		{
-			KB_CORE_ASSERT(false, "AssetType not implemented!");
-			return AssetType::NONE;
-		}
+		KB_CORE_ASSERT(false, "AssetType not implemented!");
+		return AssetType::NONE;
 	}
-
-	// get asset type from an extension
-	AssetType extension_to_asset_type(const std::string& extension);
-
-	inline const char* asset_type_to_string(AssetType asset_type)
-	{
-		switch (asset_type)
-		{
-			case AssetType::Texture:		return AssetTypeStrings::Texture;
-			case AssetType::Mesh:			return AssetTypeStrings::Mesh;
-			case AssetType::MeshSource:		return AssetTypeStrings::MeshSource;
-			case AssetType::Audio:			return AssetTypeStrings::Audio;
-			case AssetType::Prefab:			return AssetTypeStrings::Prefab;
-			case AssetType::Material:		return AssetTypeStrings::Material;
-			case AssetType::NativeScript:	return AssetTypeStrings::NativeScript;
-			case AssetType::Font:			return AssetTypeStrings::Font;
-			case AssetType::Scene:			return AssetTypeStrings::Scene;
-			case AssetType::NONE:			KB_CORE_ASSERT(false, "Invalid AssetType!"); return AssetTypeStrings::NONE;
-			default:						KB_CORE_ASSERT(false, "Unhandled AssetType"); return AssetTypeStrings::NONE;
-		}
-	} 
-
 }
+
+// get asset type from an extension
+AssetType extension_to_asset_type(const std::string& extension);
+
+inline const char* asset_type_to_string(AssetType asset_type)
+{
+	switch (asset_type)
+	{
+		case AssetType::Texture:		return AssetTypeStrings::Texture;
+		case AssetType::Mesh:			return AssetTypeStrings::Mesh;
+		case AssetType::MeshSource:		return AssetTypeStrings::MeshSource;
+		case AssetType::Audio:			return AssetTypeStrings::Audio;
+		case AssetType::Prefab:			return AssetTypeStrings::Prefab;
+		case AssetType::Material:		return AssetTypeStrings::Material;
+		case AssetType::NativeScript:	return AssetTypeStrings::NativeScript;
+		case AssetType::LuaScript:	    return AssetTypeStrings::LuaScript;
+		case AssetType::Font:			return AssetTypeStrings::Font;
+		case AssetType::Scene:			return AssetTypeStrings::Scene;
+		case AssetType::NONE:			KB_CORE_ASSERT(false, "Invalid AssetType!"); return AssetTypeStrings::NONE;
+		default:						KB_CORE_ASSERT(false, "Unhandled AssetType"); return AssetTypeStrings::NONE;
+	}
+} 
+
+} // end namespace kb::asset
 
 #endif
