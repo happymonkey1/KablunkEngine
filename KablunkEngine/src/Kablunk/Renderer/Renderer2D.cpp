@@ -942,7 +942,7 @@ void Renderer2D::draw_text_string(
         auto render_char_position = glm::vec2{ 
             char_position.x + glyph_data.m_x_off,
             // #NOTE adding the difference between size and bearing here, since vulkan renders with -y facing up
-            char_position.y - (glyph_data.m_y_off)
+            char_position.y - glyph_data.m_y_off
         };
 
         const f32 char_width = glyph_data.m_size.x;
