@@ -20,8 +20,9 @@ namespace kb {
 
 		virtual unsigned int GetWidth() const override { return m_data.Width; }
 		virtual unsigned int GetHeight()	const override { return m_data.Height; }
-
 		virtual glm::vec2 GetDimensions() const override { return { m_data.Width, m_data.Height }; }
+        virtual const glm::vec2& get_current_dpi() const noexcept override;
+
 		virtual void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
 		virtual void SetVsync(bool enabled) override;
 		virtual bool IsVsync() const override;
@@ -39,6 +40,8 @@ namespace kb {
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
+
+        static auto compute_dpi(const glm::vec2& p_monitor_resolution, const glm::vec2& p_monitor_dimensions) noexcept -> glm::vec2;
 	private:
 		GLFWwindow* m_window;
 		ref<GraphicsContext> m_context;
@@ -48,6 +51,7 @@ namespace kb {
 			unsigned int Width{ 0 }, Height{ 0 };
 			bool VSync{ false };
 			bool Fullscreen{ false };
+            glm::vec2 m_current_dpi{ 0.f };
 
 			EventCallbackFn EventCallback;
 		} m_data;

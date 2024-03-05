@@ -7,7 +7,8 @@ namespace kb::lua
 
 extern "C"
 {
-    auto logger_info(lua_State* p_lua_state) -> int;
+
+auto logger_info(lua_State* p_lua_state) -> int;
 
 }
 

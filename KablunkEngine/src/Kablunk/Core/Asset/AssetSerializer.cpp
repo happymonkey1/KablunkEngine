@@ -11,6 +11,7 @@
 #include "Kablunk/Renderer/Texture.h"
 #include "Kablunk/Audio/AudioAsset.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
+#include "Kablunk/lua/lua_asset.h"
 
 #include "Kablunk/Asset/AssetManager.h"
 
@@ -72,8 +73,8 @@ void font_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>
 
 bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
-    render::font_asset_create_info font_create_info{
-        m_asset_manager->get_absolute_path(metadata).string(),        // path to font asset
+    const render::font_asset_create_info font_create_info{
+        m_asset_manager->get_absolute_path(metadata).string(),                      // path to font asset
         16ull,                                                                      // font point
         // #TODO get rid of singleton reference
         Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),   // underlying font engine

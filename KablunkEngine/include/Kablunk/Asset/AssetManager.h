@@ -160,6 +160,31 @@ public:
 	template <typename T>
 	ref<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
 
+    template <typename T>
+    auto scan_loaded_assets_by_type(asset_type_t p_asset_type) noexcept -> std::vector<ref<T>>
+	{
+        std::vector<ref<T>> assets_found{};
+        assets_found.reserve(64ull);
+	    for (const auto& [asset_id, asset] : m_loaded_assets)
+	    {
+            if (asset->get_static_type() != p_asset_type)
+                continue;
+
+            if (asset->get_flags() != asset_flag_t::NONE)
+            {
+                KB_CORE_WARN(
+                    "[AssetManager]: Found invalid, loaded asset while searching for asset type '{}'",
+                    asset_type_to_string(p_asset_type)
+                );
+                continue;
+            }
+
+            assets_found.emplace_back(asset.As<T>());
+	    }
+
+        return assets_found;
+	}
+
 	// check whether the asset exists in the asset registry
 	bool asset_exists(const std::filesystem::path& filepath) const;
 	// check whether the asset referenced by the id is a memory only asset

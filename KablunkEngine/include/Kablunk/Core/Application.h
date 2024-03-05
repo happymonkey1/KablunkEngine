@@ -89,9 +89,13 @@ namespace kb {
 		render_thread& get_render_thread() { return m_render_thread; }
 
         // get a mutable reference to the primary renderer2d
-        ref<Renderer2D> get_renderer_2d() { return m_renderer_2d; }
+        ref<Renderer2D> get_renderer_2d() noexcept { return m_renderer_2d; }
         // get an immutable reference to the primary renderer2d
-        const ref<Renderer2D>& get_renderer_2d() const { return m_renderer_2d; }
+        const ref<Renderer2D>& get_renderer_2d() const noexcept { return m_renderer_2d; }
+        // get a mutable reference to the secondary renderer2d
+        ref<Renderer2D> get_screen_space_renderer_2d() noexcept { return m_screen_space_renderer_2d; }
+        // get an immutable reference to the secondary renderer2d
+        const ref<Renderer2D>& get_screen_space_renderer_2d() const noexcept { return m_screen_space_renderer_2d; }
 
 		// toggle between fullscreen and windowed mode
 		void toggle_fullscreen();
@@ -102,6 +106,8 @@ namespace kb {
 
 		performance_timings_t get_thread_performance_timings() const { return m_thread_performance_timings; }
         performance_timings_t& get_thread_performance_timings_mut() { return m_thread_performance_timings; }
+
+        auto get_current_dpi() const noexcept -> const glm::vec2& { return m_window->get_current_dpi(); }
 
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
@@ -129,6 +135,8 @@ namespace kb {
 
         // primary 2d renderer which uses world space camera
         ref<Renderer2D> m_renderer_2d{};
+        // secondary 2d renderer that operates in screen space (UI)
+        ref<Renderer2D> m_screen_space_renderer_2d{};
 
 		u32 m_current_frame_index = 0;
 

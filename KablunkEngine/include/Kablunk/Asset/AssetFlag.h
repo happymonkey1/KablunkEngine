@@ -12,7 +12,7 @@ namespace kb::asset
 	enum class AssetFlag : u8
 	{
 		NONE = 0,
-		Invalid = 0b1,
+		Invalid = 0b01,
 		Missing = 0b10,
 	};
 

@@ -4,6 +4,9 @@
 
 #include <string_view>
 
+#include "Kablunk/Asset/AssetManager.h"
+#include "Kablunk/lua/lua_asset.h"
+
 namespace kb
 { // start namespace kb
 
@@ -12,7 +15,13 @@ class lua_engine
 {
 public:
     lua_engine() noexcept = default;
+    lua_engine(const lua_engine&) noexcept = delete;
+    lua_engine(lua_engine&&) noexcept = default;
     ~lua_engine() noexcept;
+
+    lua_engine(const ref<asset::AssetManager>& p_asset_manager) noexcept
+        : m_lua_state{ nullptr }, m_asset_manager{ p_asset_manager }
+    { }
 
     auto init() noexcept -> void;
     auto shutdown() noexcept -> void;
@@ -29,8 +38,19 @@ public:
         // exposes the value at the top of the lua stack as a global
         lua_setglobal(m_lua_state, p_lua_func_name.data());
     }
+
+    auto operator=(const lua_engine&) noexcept -> lua_engine& = delete;
+    auto operator=(lua_engine&&) noexcept -> lua_engine& = default;
+
+private:
+    auto register_engine_glue_functions() noexcept -> void;
+    auto destroy() noexcept -> void;
+
 private:
     lua_State* m_lua_state = nullptr;
+    ref<asset::AssetManager> m_asset_manager{};
+    // cache of lua assets that have been loaded into the engine
+    std::vector<ref<lua_asset>> m_lua_scripts{};
 };
 
 } // end namespace kb

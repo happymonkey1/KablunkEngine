@@ -435,6 +435,7 @@ public:
 	// draw text string
 	void draw_text_string(
 		const std::string& text,
+        const u32 p_font_point,
 		const glm::vec2& position,
 		const glm::vec2& size,
 		const ref<render::font_asset_t>& font_asset,
@@ -443,6 +444,7 @@ public:
 	// draw text string 
 	void draw_text_string(
 		const std::string& text,
+        const u32 p_font_point,
 		const glm::vec3& position,
 		const glm::vec2& size,
 		const ref<render::font_asset_t>& font_asset,

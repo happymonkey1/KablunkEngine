@@ -64,6 +64,9 @@ void Application::init()
     m_renderer_2d = ref<Renderer2D>::Create();
     m_renderer_2d->init();
 
+    m_screen_space_renderer_2d = ref<Renderer2D>::Create();
+    m_screen_space_renderer_2d->init();
+
 	m_render_thread.pump();
 
 	//m_render_thread.pump();
@@ -110,6 +113,7 @@ void Application::shutdown()
 	m_layer_stack.Destroy();
 
     m_renderer_2d.reset();
+    m_screen_space_renderer_2d.reset();
 	render::shutdown();
 
 	ProjectManager::get().shutdown();

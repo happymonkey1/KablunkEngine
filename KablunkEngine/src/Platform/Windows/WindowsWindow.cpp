@@ -89,6 +89,30 @@ void WindowsWindow::Init(const WindowProps& props)
 
 		m_window = glfwCreateWindow((int)m_data.Width, (int)m_data.Height, m_data.Title.c_str(), primary_monitor, nullptr);
 		++s_glfw_window_count;
+
+        // get monitor work size and compute dpi manually
+        {
+            int x, y, resolution_width, resolution_height;
+            int monitor_width = 0, monitor_height = 0;
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            // width and height reported in mm
+            glfwGetMonitorWorkarea(monitor, &x, &y, &resolution_width, &resolution_height);
+            glfwGetMonitorPhysicalSize(monitor, &monitor_width, &monitor_height);
+
+            if (monitor_width > 0 && monitor_height > 0)
+            {
+                m_data.m_current_dpi = compute_dpi(
+                    glm::vec2{ resolution_width, resolution_height },
+                    glm::vec2{ monitor_width, monitor_height }
+                );
+            }
+            else
+            {
+                m_data.m_current_dpi = glm::vec2{ 96.f, 96.f };
+            }
+
+            KB_CORE_INFO("[WindowsWindow]: GLFW reporting monitor DPI as ({}, {})", m_data.m_current_dpi.x, m_data.m_current_dpi.y);
+        }
 	}
 	m_context = GraphicsContext::Create(m_window);
 	m_context->Init();
@@ -131,7 +155,6 @@ void WindowsWindow::Init(const WindowProps& props)
 
         WindowCloseEvent event;
         data.EventCallback(event);
-        
     });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -198,6 +221,8 @@ void WindowsWindow::Init(const WindowProps& props)
         data.EventCallback(event);
     });
 
+    // #TODO callback for dpi change
+
 	// Make sure window data about size is actual size
 	{
 		int width, height;
@@ -231,6 +256,18 @@ void WindowsWindow::Shutdown()
 		glfwTerminate();
 }
 
+auto WindowsWindow::compute_dpi(
+    const glm::vec2& p_monitor_resolution,
+    const glm::vec2& p_monitor_dimensions
+) noexcept -> glm::vec2
+{
+    constexpr f32 k_mm_to_in = 0.0393701f;
+    return glm::vec2{
+        static_cast<f32>(p_monitor_resolution.x) / (static_cast<f32>(p_monitor_dimensions.x) * k_mm_to_in),
+        static_cast<f32>(p_monitor_resolution.y) / (static_cast<f32>(p_monitor_dimensions.y) * k_mm_to_in),
+    };
+}
+
 void WindowsWindow::PollEvents()
 {
     KB_PROFILE_SCOPE;
@@ -245,6 +282,11 @@ void WindowsWindow::OnUpdate()
     m_context->SwapBuffers();
 }
 
+
+const glm::vec2& WindowsWindow::get_current_dpi() const noexcept
+{
+    return m_data.m_current_dpi;
+}
 
 void WindowsWindow::SetVsync(bool enabled)
 {

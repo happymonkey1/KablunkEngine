@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 
+#include "Kablunk/Core/Application.h"
+
 
 namespace kb
 {
@@ -869,15 +871,29 @@ void Renderer2D::draw_rect(const glm::vec3& position, const glm::vec2& size, flo
 	}
 }
 
-void Renderer2D::draw_text_string(const std::string& text, const glm::vec2& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/) noexcept
+void Renderer2D::draw_text_string(
+    const std::string& text,
+    const u32 p_font_point,
+    const glm::vec2& position,
+    const glm::vec2& size,
+    const ref<render::font_asset_t>& font_asset,
+    const glm::vec4& tint_color /* = glm::vec4{1.0f}*/
+) noexcept
 {
     //KB_PROFILE_SCOPE;
 
-	draw_text_string(text, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
+	draw_text_string(text, p_font_point, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
 }
 
 // #TODO draw command should be done on the render thread
-void Renderer2D::draw_text_string(const std::string& text, const glm::vec3& position, const glm::vec2& size, const ref<render::font_asset_t>& font_asset, const glm::vec4& tint_color /* = glm::vec4{1.0f}*/) noexcept
+void Renderer2D::draw_text_string(
+    const std::string& text,
+    const u32 p_font_point,
+    const glm::vec3& position,
+    const glm::vec2& size,
+    const ref<render::font_asset_t>& font_asset,
+    const glm::vec4& tint_color /* = glm::vec4{1.0f}*/
+) noexcept
 {
     //KB_PROFILE_SCOPE;
 
