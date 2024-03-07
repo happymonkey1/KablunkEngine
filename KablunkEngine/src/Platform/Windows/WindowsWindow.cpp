@@ -101,10 +101,10 @@ void WindowsWindow::Init(const WindowProps& props)
 
             if (monitor_width > 0 && monitor_height > 0)
             {
-                m_data.m_current_dpi = compute_dpi(
+                m_data.m_current_dpi = glm::round(compute_dpi(
                     glm::vec2{ resolution_width, resolution_height },
                     glm::vec2{ monitor_width, monitor_height }
-                );
+                ));
             }
             else
             {

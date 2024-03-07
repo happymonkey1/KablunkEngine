@@ -1,6 +1,7 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Font/FontManager.h"
 
+#include "freetype/ftlcdfil.h"
 #include "Kablunk/Asset/AssetCommand.h"
 
 namespace kb::render
@@ -30,7 +31,7 @@ void font_manager::add_font_file_to_library(
 	KB_CORE_ASSERT(font_asset->is_valid(), "[font_manager]: font asset is invalid!");
 
 	// check whether the font cache is already in the map
-	auto it = m_font_cache.find(font_asset->get_id());
+    const auto it = m_font_cache.find(font_asset->get_id());
 	if (it != m_font_cache.end())
 	{
 		KB_CORE_WARN("[font_manager]: tried adding a font asset '{}' but it already exists in the cache!", font_asset->get_id());
@@ -41,13 +42,21 @@ void font_manager::add_font_file_to_library(
 	// loading the ft face will be skipped if set to false
 	const bool load_memory = font_asset->is_flag_set(asset::asset_flag_t::Invalid);
 
+    // #TODO on second thought, maybe we don't want to load here?
+    //       there are like 3 difference `font_asset_create_info_t` instantiations...
 	const font_asset_create_info_t create_info{
-        p_absolute_filepath.string(),		// absolute path to the font file
-		font_asset->get_font_point(),						// font point 
-		m_ft_library,				// pointer to the font engine
-		0ull,						// face index to load
-        128ull,                     // number of glyphs to load
-		load_memory					// whether to load the font into memory
+        // absolute path to the font file
+	    p_absolute_filepath.string(),
+        // font point 
+        k_load_font_point,
+        // pointer to the font engine
+		m_ft_library,
+        // face index to load
+		0ull,
+        // number of glyphs to load
+        128ull,
+        // whether to load the font into memory
+		load_memory
 	};
 
 	// try to load font asset into memory if not already loaded
@@ -77,7 +86,7 @@ ref<kb::render::font_asset_t> font_manager::get_font_asset(asset::asset_id_t p_f
 	return m_font_cache.contains(p_font_asset_id) ? m_font_cache.at(p_font_asset_id) : ref<font_asset>{};
 }
 
-bool font_manager::has_font_cached(ref<font_asset_t> font_asset)
+bool font_manager::has_font_cached(ref<font_asset_t> font_asset) const
 {
 	KB_CORE_ASSERT(font_asset, "null font asset?");
 

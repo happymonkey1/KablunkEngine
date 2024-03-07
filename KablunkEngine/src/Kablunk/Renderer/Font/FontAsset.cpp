@@ -152,8 +152,15 @@ void font_asset::create_texture_atlas()
 	size_t pen_y = 0;
 
 	// load glyph data and store info in map
+    constexpr f32 k_spread = 2.f;
 	for (size_t i = 0; i < m_num_glyphs; ++i) {
-		FT_Load_Char(m_ft_face, static_cast<FT_ULong>(i), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL);
+		FT_Load_Char(
+            m_ft_face,
+            static_cast<FT_ULong>(i),
+            FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL
+        );
+
+        FT_Render_Glyph(m_ft_face->glyph, FT_RENDER_MODE_SDF);
 		FT_Bitmap* bmp = &m_ft_face->glyph->bitmap;
 
 		if (pen_x + bmp->width >= tex_width) {
@@ -170,6 +177,8 @@ void font_asset::create_texture_atlas()
 				const size_t buffer_index = row * bmp->pitch + col;
 				KB_CORE_ASSERT(pixel_index < pixel_buffer_size, "pixel buffer overflow");
 				KB_CORE_ASSERT(buffer_index < bmp->width * bmp->rows, "bmp buffer overflow");
+                //f32 dist = static_cast<f32>(bmp->buffer[buffer_index]) - 128.0f;
+                //dist = (dist / 128.f) * k_spread;
 				pixel_data[pixel_index] = bmp->buffer[buffer_index];
 			}
 		}
@@ -194,14 +203,15 @@ void font_asset::create_texture_atlas()
 	}
 
     // convert bmp pixel data to png (main format that the renderer uses)
-    constexpr const size_t k_channels = 4;
+    // #TODO use 1 channel texture instead when supported by renderer
+    constexpr size_t k_channels = 4;
     char* rgba_array = new char[tex_width * tex_height * k_channels]{ 1 };
     for (size_t i = 0; i < (tex_width * tex_height); ++i)
     {
-        rgba_array[i * k_channels + 0] |= 255;
-        rgba_array[i * k_channels + 1] |= 255;
-        rgba_array[i * k_channels + 2] |= 255;
-        rgba_array[i * k_channels + 3] |= pixel_data[i];
+        rgba_array[i * k_channels + 0] |= pixel_data[i];
+        rgba_array[i * k_channels + 1] |= pixel_data[i];
+        rgba_array[i * k_channels + 2] |= pixel_data[i];
+        rgba_array[i * k_channels + 3] |= 255;
     }
 
 	// store pixel data in texture

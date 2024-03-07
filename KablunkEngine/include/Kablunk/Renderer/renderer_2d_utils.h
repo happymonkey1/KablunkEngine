@@ -2,6 +2,7 @@
 
 #include "Kablunk/Math/bounding_box.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
+#include "Kablunk/Renderer/Font/FontManager.h"
 
 #include <glm/glm.hpp>
 
@@ -23,25 +24,26 @@ inline auto calculate_text_bounds(
 {
     f32 width = 0;
     f32 x = p_pos.x, y = p_pos.y, z = p_pos.x, w = p_pos.y;
+    const f32 scale = static_cast<f32>(p_font_point) / static_cast<f32>(font_manager::k_load_font_point);
 
     const auto& glyph_info_map = p_font_asset->get_glyph_rendering_map();
     for (size_t i = 0; i < p_text.size(); ++i)
     {
         const auto text_char = p_text[i];
         const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
-        const f32 char_height = glyph_data.m_size.y;
+        const f32 char_height = glm::trunc(glyph_data.m_size.y * scale);
 
-        width += static_cast<f32>(glyph_data.m_advance);
+        width += glm::trunc(static_cast<f32>(glyph_data.m_advance) * scale);
 
         if (i == 0)
         {
-            x += static_cast<f32>(glyph_data.m_x_off);
-            y -= static_cast<f32>(glyph_data.m_y_off);
+            x += glm::trunc(static_cast<f32>(glyph_data.m_x_off) * scale);
+            y -= glm::trunc(static_cast<f32>(glyph_data.m_y_off) * scale);
         }
         else if (i == p_text.size() - 1)
         {
             z += width;
-            w += -static_cast<f32>(glyph_data.m_y_off) + char_height;
+            w += glm::trunc(-static_cast<f32>(glyph_data.m_y_off) * scale + char_height);
         }
     }
 

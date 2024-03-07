@@ -928,25 +928,25 @@ void Renderer2D::draw_text_string(
 
 	const auto& glyph_info_map = font_asset->get_glyph_rendering_map();
 
-    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
+    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::trunc(position))
         * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, 1.0f });
 
-	// iterate over characters and select the correct glyph bitmap
+    const f32 scale = static_cast<f32>(p_font_point) / static_cast<f32>(render::font_manager::k_load_font_point);
     auto char_position = glm::vec2{ 0, 0 };
-    f32 pixel_x_scale = (static_cast<f32>(font_asset->get_font_point()) * static_cast<f32>(font_asset->get_dpi_x()) / 72.0f);
 
+    // iterate over characters and select the correct glyph bitmap
 	for (char text_char : text)
 	{
 		const auto& glyph_data = glyph_info_map.contains(text_char) ? glyph_info_map.at(text_char) : glyph_info_map.at('?');
 
         auto render_char_position = glm::vec2{ 
-            char_position.x + glyph_data.m_x_off,
+            char_position.x + glm::trunc(static_cast<f32>(glyph_data.m_x_off) * scale),
             // #NOTE adding the difference between size and bearing here, since vulkan renders with -y facing up
-            char_position.y - glyph_data.m_y_off
+            char_position.y - glm::trunc(static_cast<f32>(glyph_data.m_y_off) * scale)
         };
 
-        const f32 char_width = glyph_data.m_size.x;
-        const f32 char_height = glyph_data.m_size.y;
+        const f32 char_width = glm::trunc(glyph_data.m_size.x * scale);
+        const f32 char_height = glm::trunc(glyph_data.m_size.y * scale);
 
         const glm::vec4 text_quad_coords[4] = {
             { render_char_position.x, render_char_position.y, 0.0f, 1.0f },
@@ -963,7 +963,7 @@ void Renderer2D::draw_text_string(
 			glm::vec2{ glyph_data.m_x0, glyph_data.m_y1 },
 		};
 
-		constexpr const size_t quad_vertex_count = 4;
+		constexpr size_t quad_vertex_count = 4;
         // #TODO probably not the most efficient to potentially get a new buffer while iterating
         auto& text_vertex_buffer_ptr = get_writeable_text_buffer(1);
 
@@ -983,7 +983,7 @@ void Renderer2D::draw_text_string(
 		m_renderer_data.Stats.Quad_count++;
 
         // compute position of char by offsetting the base position with the char advance offset
-        char_position.x += glyph_data.m_advance;
+        char_position.x += glm::trunc(glyph_data.m_advance * scale);
 	}
 }
 

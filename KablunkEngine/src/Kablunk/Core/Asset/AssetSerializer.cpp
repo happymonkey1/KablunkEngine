@@ -74,13 +74,20 @@ void font_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>
 bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
     const render::font_asset_create_info font_create_info{
-        m_asset_manager->get_absolute_path(metadata).string(),                      // path to font asset
-        16ull,                                                                      // font point
+        // path to font asset
+        m_asset_manager->get_absolute_path(metadata).string(),
+        // font point
+        render::font_manager::k_load_font_point,
         // #TODO get rid of singleton reference
-        Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),   // underlying font engine
-        0ull,                                                                       // font face index to load
-        128ull,                                                                     // number of glyphs to load from the font
-        true                                                                        // load font into memory
+        // underlying font engine
+        Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),
+        // font face index to load
+        0ull,
+        // number of glyphs to load from the font
+        // #TODO this is probably wrong for non-ascii fonts
+        128ull,
+        // load font into memory
+        true
     };
 
     asset = render::font_asset_t::create(font_create_info);
