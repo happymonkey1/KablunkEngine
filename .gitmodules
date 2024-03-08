@@ -56,3 +56,9 @@
 [submodule "KablunkEngine/vendor/Catch2"]
 	path = KablunkEngine/vendor/Catch2
 	url = https://github.com/happymonkey1/Catch2.git
+[submodule "KablunkEngine/vendor/msdf-atlas-gen"]
+	path = KablunkEngine/vendor/msdf-atlas-gen
+	url = https://github.com/happymonkey1/msdf-atlas-gen.git
+[submodule "KablunkEngine/vendor/tinyxml2"]
+	path = KablunkEngine/vendor/tinyxml2
+	url = https://github.com/happymonkey1/tinyxml2.git
