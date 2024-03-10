@@ -1,8 +1,11 @@
 #include "kablunkpch.h"
 
 #include "Kablunk/networking/network_server.h"
+#include "Kablunk/networking/net_var.h"
 
 #include <array>
+
+#include "Kablunk/networking/game_networking_sockets.h"
 
 namespace kb::network
 { // start namespace kb::network
@@ -54,6 +57,8 @@ auto network_server::start() noexcept -> void
     if (m_running)
         return;
 
+    init_game_networking_sockets_lib();
+
     m_network_thread = std::thread([this] { network_loop(); });
 }
 
@@ -68,7 +73,7 @@ auto network_server::kick_client(client_id_t p_client_id) noexcept -> void
     m_interface->CloseConnection(p_client_id, 0, "Kicked by host", false);
 }
 
-auto network_server::send_buffer_to_client(client_id_t p_client_id, Buffer p_buffer, bool p_reliable) noexcept -> void
+auto network_server::send_buffer_to_client(client_id_t p_client_id, owning_buffer p_buffer, bool p_reliable) noexcept -> void
 {
     auto result = m_interface->SendMessageToConnection(
         p_client_id,
@@ -80,7 +85,7 @@ auto network_server::send_buffer_to_client(client_id_t p_client_id, Buffer p_buf
 }
 
 auto network_server::send_buffer_to_all_clients(
-    Buffer p_buffer,
+    owning_buffer p_buffer,
     client_id_t p_exclude_client,
     bool p_reliable
 ) noexcept -> void
@@ -127,12 +132,6 @@ network_server::network_server(
 auto network_server::network_loop() noexcept -> void
 {
     m_running = true;
-
-    if (SteamDatagramErrMsg err_message{}; !GameNetworkingSockets_Init(nullptr, err_message))
-    {
-        on_fatal_error(fmt::format("GameNetworkingSockets_Init failed! Error={}", err_message));
-        return;
-    }
 
     m_interface = SteamNetworkingSockets();
 
@@ -213,7 +212,7 @@ auto network_server::poll_incoming_messages() noexcept -> void
         }
 
         if (incoming_message->m_cbSize)
-            m_data_received_callback_func(it_client->second, Buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
+            m_data_received_callback_func(it_client->second, owning_buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
 
         incoming_message->Release();
     }

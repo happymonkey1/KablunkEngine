@@ -104,7 +104,8 @@ bool font_asset::load_ft_face_from_file(const font_asset_create_info_t& create_i
         0,					                            /* char_width in 1/64 of points  */
         static_cast<FT_F26Dot6>(m_font_point << 6),	/* char_height in 1/64 of points */
         static_cast<FT_UInt>(m_dpi_x),	            /* horizontal device resolution  */
-        0					                        /* vertical device resolution    */
+        /* vertical device resolution    */
+        static_cast<FT_UInt>(m_dpi_y)
     );
 
     if (error)

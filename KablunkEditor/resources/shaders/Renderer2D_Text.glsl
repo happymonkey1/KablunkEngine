@@ -67,14 +67,14 @@ float screen_pixel_range()
 
 void main()
 {
-    //vec4 bg_color = vec4(v_Input.Color.rgb, 0.0);
-    //vec4 fg_color = v_Input.Color;
+    vec4 bg_color = vec4(v_Input.Color.rgb, 0.0);
+    vec4 fg_color = v_Input.Color;
 
-    //vec3 msd = texture(u_FontAtlases[int(v_TexIndex)], v_Input.TexCoord).rgb;
-    //float sd = median(msd.r, msd.g, msd.b);
-    //float screen_pixel_distance = screen_pixel_range() * (sd - 0.5f);
-    //float opacity = clamp(screen_pixel_distance + 0.5, 0.0, 1.0);
-    //o_Color = mix(bg_color, fg_color, opacity);
+    vec3 msd = texture(u_FontAtlases[int(v_TexIndex)], v_Input.TexCoord).rgb;
+    float sd = median(msd.r, msd.g, msd.b);
+    float screen_pixel_distance = screen_pixel_range() * (sd - 0.5f);
+    float opacity = clamp(screen_pixel_distance + 0.5, 0.0, 1.0);
+    o_Color = mix(bg_color, fg_color, opacity);
 
-    o_Color = texture(u_FontAtlases[int(v_TexIndex)], v_Input.TexCoord) * v_Input.Color;
+    //o_Color = texture(u_FontAtlases[int(v_TexIndex)], v_Input.TexCoord) * v_Input.Color;
 }

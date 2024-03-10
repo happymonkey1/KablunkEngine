@@ -7,7 +7,7 @@
 
 namespace kb
 {
-	ref<Image2D> Image2D::Create(ImageSpecification specification, Buffer buffer)
+	ref<Image2D> Image2D::Create(ImageSpecification specification, owning_buffer buffer)
 	{
 		switch (RendererAPI::GetAPI())
 		{

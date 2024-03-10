@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 
 #include <map>
 #include <string>
@@ -23,7 +23,7 @@ public:
 
     operator bool() const noexcept { return is_good(); }
 
-    auto write_buffer(const Buffer& p_buffer, bool p_write_size = true) noexcept -> void;
+    auto write_buffer(const owning_buffer& p_buffer, bool p_write_size = true) noexcept -> void;
     auto write_zero(u64 p_size) noexcept -> void;
     auto write_string(const std::string& p_str) noexcept -> void;
 

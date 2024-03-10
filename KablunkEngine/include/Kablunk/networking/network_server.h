@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Core/concepts.hpp"
 #include "Kablunk/networking/client_info.h"
 
@@ -14,10 +14,10 @@
 namespace kb::network
 { // start namespace kb::network
 
-class network_server
+class network_server : public RefCounted
 {
 public:
-    using data_received_callback_func_t = void (*)(const client_info&, const Buffer&);
+    using data_received_callback_func_t = void (*)(const client_info&, const owning_buffer&);
     using client_connected_callback_func_t = void (*)(const client_info&);
     using client_disconnected_callback_func_t = void (*)(const client_info&);
 
@@ -38,19 +38,19 @@ public:
     auto is_running() const noexcept -> bool { return m_running; }
 
     /* data management */
-    auto send_buffer_to_client(client_id_t p_client_id, Buffer p_buffer, bool p_reliable = true) noexcept -> void;
-    auto send_buffer_to_all_clients(Buffer p_buffer, client_id_t p_exclude_client = 0u, bool p_reliable = true) noexcept -> void;
+    auto send_buffer_to_client(client_id_t p_client_id, owning_buffer p_buffer, bool p_reliable = true) noexcept -> void;
+    auto send_buffer_to_all_clients(owning_buffer p_buffer, client_id_t p_exclude_client = 0u, bool p_reliable = true) noexcept -> void;
 
     template <concepts::TrivialT T>
     auto send_data_to_client(client_id_t p_client_id, const T& p_data, bool p_reliable = true) noexcept -> void
     {
-        send_buffer_to_client(p_client_id, Buffer{ &p_data, sizeof(T) }, p_reliable);
+        send_buffer_to_client(p_client_id, owning_buffer{ &p_data, sizeof(T) }, p_reliable);
     }
 
     template <concepts::TrivialT T>
     auto send_data_to_all_clients(const T& p_data, client_id_t p_exclude_client = 0u, bool p_reliable = true) noexcept -> void
     {
-        send_buffer_to_all_clients(Buffer{ &p_data, sizeof(T) }, p_exclude_client, p_reliable);
+        send_buffer_to_all_clients(owning_buffer{ &p_data, sizeof(T) }, p_exclude_client, p_reliable);
     }
 
     // factory function

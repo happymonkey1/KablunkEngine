@@ -42,8 +42,8 @@ namespace kb
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 
-		virtual Buffer& GetWriteableBuffer() = 0;
-        virtual const Buffer& get_buffer() const = 0;
+		virtual owning_buffer& GetWriteableBuffer() = 0;
+        virtual const owning_buffer& get_buffer() const = 0;
 		virtual bool operator==(const Texture2D& other) const = 0;
 
 		virtual bool loaded() const = 0;

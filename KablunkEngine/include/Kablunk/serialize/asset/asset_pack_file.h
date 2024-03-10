@@ -8,7 +8,6 @@ namespace kb::serialize::asset
 
 struct asset_pack_file
 {
-
     struct asset_header
     {
         u64 m_packed_offset = 0ull;
@@ -34,8 +33,8 @@ struct asset_pack_file
 
     struct file_header
     {
-        static constexpr const uint32_t k_version_number = 1000;
-        const char m_magic_header[4] = { 'k', 'b', 'a', 'p' };
+        static constexpr uint32_t k_version_number = 1000;
+        char m_magic_header[4] = { 'k', 'b', 'a', 'p' };
         uint32_t m_version = k_version_number;
         uint64_t m_build_version = 0;
     };

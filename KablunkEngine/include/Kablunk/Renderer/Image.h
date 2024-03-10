@@ -4,7 +4,7 @@
 
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include <glm/glm.hpp>
 
 namespace kb
@@ -28,6 +28,9 @@ namespace kb
 
 		// Defaults
 		Depth = DEPTH24STENCIL8,
+
+        // internal use only
+        END,
 	};
 
 	enum class ImageUsage
@@ -98,8 +101,8 @@ namespace kb
 		virtual ImageSpecification& GetSpecification() = 0;
 		virtual const ImageSpecification& GetSpecification() const = 0;
 
-		virtual const Buffer& GetBuffer() const = 0;
-		virtual Buffer& GetBuffer() = 0;
+		virtual const owning_buffer& GetBuffer() const = 0;
+		virtual owning_buffer& GetBuffer() = 0;
 
 		virtual void CreatePerLayerImageViews() = 0;
 
@@ -111,7 +114,7 @@ namespace kb
 	class Image2D : public Image
 	{
 	public:
-		static ref<Image2D> Create(ImageSpecification specification, Buffer buffer);
+		static ref<Image2D> Create(ImageSpecification specification, owning_buffer buffer);
 		static ref<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
 	};
 

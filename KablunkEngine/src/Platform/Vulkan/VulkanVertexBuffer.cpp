@@ -11,7 +11,7 @@ namespace kb
 	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage /*= VertexBufferUsage::Static*/)
 		: m_size{ size }
 	{
-		m_local_data = Buffer::Copy(data, size);
+		m_local_data = owning_buffer::Copy(data, size);
 
 		KB_CORE_ASSERT(m_local_data.size() == m_size, "sizes do not match!");
 

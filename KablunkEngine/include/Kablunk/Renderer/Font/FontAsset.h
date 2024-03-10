@@ -13,7 +13,7 @@
 namespace kb::render
 { // start namespace kb::render
 
-struct font_asset_create_info
+struct [[deprecated]] font_asset_create_info
 {
 	// path for the font file
 	std::string m_absolute_filepath = "INVALID_FONT_FILEPATH";
@@ -33,7 +33,7 @@ using font_asset_create_info_t = font_asset_create_info;
 
 // info for glyph rendering
 // from https://gist.github.com/baines/b0f9e4be04ba4e6f56cab82eef5008ff
-struct glyph_info
+struct [[deprecated]] glyph_info
 {
 	// start and end positions in the texture atlas
 	float m_x0, m_y0, m_x1, m_y1;
@@ -47,7 +47,7 @@ struct glyph_info
 
 using glyph_info_t = glyph_info;
 
-class font_asset : public asset::Asset
+class [[deprecated]] font_asset : public asset::Asset
 {
 public:
 	font_asset() = default;

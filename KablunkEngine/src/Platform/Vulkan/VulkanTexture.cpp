@@ -18,7 +18,7 @@ namespace kb
 		size_t size = Utils::GetImageMemorySize(format, width, height);
 
 		if (data)
-			m_image_data = Buffer::Copy(data, size);
+			m_image_data = owning_buffer::Copy(data, size);
 
 		ImageSpecification spec;
 		spec.format = m_format;
@@ -83,14 +83,14 @@ namespace kb
 			});
 	}
 
-	Buffer& VulkanTexture2D::GetWriteableBuffer()
+	owning_buffer& VulkanTexture2D::GetWriteableBuffer()
 	{
 		return m_image_data;
 	}
 
 	void VulkanTexture2D::SetData(void* data, uint32_t size)
 	{
-        m_image_data = Buffer::Copy(data, size);
+        m_image_data = owning_buffer::Copy(data, size);
 
         ref instance{ this };
         render::submit([instance]() mutable

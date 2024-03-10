@@ -29,7 +29,7 @@ namespace kb
 		render::register_shader_dependency(m_shader, ref<Material>{ this });
 
 		auto vulkan_material = material.As<VulkanMaterial>();
-		m_uniform_storage_buffer = Buffer::Copy(vulkan_material->m_uniform_storage_buffer.get(), vulkan_material->m_uniform_storage_buffer.size());
+		m_uniform_storage_buffer = owning_buffer::Copy(vulkan_material->m_uniform_storage_buffer.get(), vulkan_material->m_uniform_storage_buffer.size());
 
 		m_resident_descriptors = vulkan_material->m_resident_descriptors;
 		m_resident_descriptor_array = vulkan_material->m_resident_descriptor_array;

@@ -658,7 +658,7 @@ namespace kb
                     ref<render::font_asset_t> font_asset{};
                     //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
-                    if (font_asset)
+                    /*if (font_asset)
                     {
                         p_renderer_2d->draw_text_string(
                             text_comp.m_text_str,
@@ -668,7 +668,7 @@ namespace kb
                             font_asset,
                             text_comp.m_tint_color
                         );
-                    }
+                    }*/
                         
                 }
 			}
@@ -836,7 +836,7 @@ namespace kb
                 ref<render::font_asset_t> font_asset{};
                 //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
-                if (font_asset)
+                /*if (font_asset)
                 {
                     p_renderer_2d->draw_text_string(
                         text_comp.m_text_str,
@@ -846,7 +846,7 @@ namespace kb
                         font_asset,
                         text_comp.m_tint_color
                     );
-                }
+                }*/
             }
 
 			p_renderer_2d->end_scene();

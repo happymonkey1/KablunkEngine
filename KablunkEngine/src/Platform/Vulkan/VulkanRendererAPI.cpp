@@ -268,7 +268,7 @@ void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffe
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
 
-			Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer)
 			{
 				vkCmdPushConstants(
@@ -298,7 +298,7 @@ void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffe
 	);
 }
 
-void VulkanRendererAPI::RenderMeshWithMaterial(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<Material> material, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, Buffer additional_uniforms)
+void VulkanRendererAPI::RenderMeshWithMaterial(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<Material> material, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, owning_buffer additional_uniforms)
 {
     KB_PROFILE_SCOPE;
 
@@ -306,7 +306,7 @@ void VulkanRendererAPI::RenderMeshWithMaterial(ref<RenderCommandBuffer> render_c
 	KB_CORE_ASSERT(mesh->GetMeshData(), "MeshData is null!");
 
 	// Why are we copying the uniform buffer to a new one?
-	Buffer push_constant_buffer;
+	owning_buffer push_constant_buffer;
 	if (additional_uniforms.size() > 0)
 	{
 		push_constant_buffer.Allocate(additional_uniforms.size());
@@ -349,7 +349,7 @@ void VulkanRendererAPI::RenderMeshWithMaterial(ref<RenderCommandBuffer> render_c
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
 
-			Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer)
 				vkCmdPushConstants(vk_command_buffer, pipeline_layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
@@ -432,7 +432,7 @@ void VulkanRendererAPI::render_instanced_submesh(
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
 
-			Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer)
 			{
 				vkCmdPushConstants(
@@ -492,7 +492,7 @@ void VulkanRendererAPI::SubmitFullscreenQuad(ref<RenderCommandBuffer> render_com
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
-			Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer.size())
 				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
@@ -537,7 +537,7 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
 			if (vk_descriptor_set)
 				vkCmdBindDescriptorSets(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout, 0, 1, &vk_descriptor_set, 0, nullptr);
 
-			Buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 
 			vkCmdPushConstants(vk_cmd_buffer, vk_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 			vkCmdPushConstants(
@@ -592,7 +592,7 @@ void VulkanRendererAPI::RenderGeometry(ref<RenderCommandBuffer> render_command_b
 
 			vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 
-			const Buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
+			const owning_buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer)
 				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
@@ -792,9 +792,9 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 				render_pass_begin_info.framebuffer = swap_chain.GetCurrentFramebuffer();
 
 				viewport.x = 0.0f;
-				viewport.y = static_cast<float>(height);
+				viewport.y = 0;
 				viewport.width = static_cast<float>(width);
-				viewport.height = -static_cast<float>(height);
+				viewport.height = static_cast<float>(height);
 			}
 			else
 			{

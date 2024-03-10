@@ -30,7 +30,7 @@ auto asset_pack::load_scene(kb::asset::asset_id_t p_scene_id) -> ref<Scene>
     if (!m_asset_pack_file.m_index_table.m_scenes.contains(p_scene_id))
         return ref<Scene>{};
 
-    const asset_pack_file::scene_header& scene_header_info = m_asset_pack_file.m_index_table.m_scenes.at(p_scene_id);  
+    const asset_pack_file::scene_header& scene_header_info = m_asset_pack_file.m_index_table.m_scenes.at(p_scene_id);
 
     KB_CORE_ASSERT(false, "not implemented!");
     // #TODO read scene data and deserialize into scene
@@ -59,10 +59,10 @@ auto asset_pack::is_asset_id_valid(
     return scene_header_info.m_asset_headers.contains(p_asset_id);
 }
 
-auto asset_pack::read_app_binary()->kb::Buffer
+auto asset_pack::read_app_binary()->kb::owning_buffer
 {
     KB_CORE_ASSERT(false, "not implemented");
-    return Buffer{};
+    return owning_buffer{};
 }
 
 auto asset_pack::create_from_project(

@@ -110,8 +110,8 @@ namespace kb
 		virtual ref<Shader> GetShader() override { return m_shader; }
 		virtual const std::string& GetName() const override { return m_name; }
 
-		Buffer GetUniformStorageBuffer() { return m_uniform_storage_buffer; }
-		const Buffer& GetUniformStorageBuffer() const { return m_uniform_storage_buffer; }
+		owning_buffer GetUniformStorageBuffer() { return m_uniform_storage_buffer; }
+		const owning_buffer& GetUniformStorageBuffer() const { return m_uniform_storage_buffer; }
 
 		void RT_UpdateForRendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors = std::vector<std::vector<VkWriteDescriptorSet>>());
 		void InvalidateDescriptorSets();
@@ -172,7 +172,7 @@ namespace kb
 
 		kb::unordered_flat_map<std::string, VkDescriptorImageInfo> m_image_infos;
 
-		Buffer m_uniform_storage_buffer;
+		owning_buffer m_uniform_storage_buffer;
 
 		VulkanShader::ShaderMaterialDescriptorSet m_descriptor_sets[3];
 

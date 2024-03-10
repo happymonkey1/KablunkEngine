@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 
 #include "Kablunk/serialize/file/stream_reader.h"
 #include "Kablunk/serialize/file/stream_writer.h"

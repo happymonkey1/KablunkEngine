@@ -5,7 +5,7 @@
 namespace kb::serialize::file
 { // start namespace kb::serialize::file
 
-auto stream_writer::write_buffer(const Buffer& p_buffer, bool p_write_size /*= true*/) noexcept -> void
+auto stream_writer::write_buffer(const owning_buffer& p_buffer, bool p_write_size /*= true*/) noexcept -> void
 {
     if (p_write_size)
         write_trivial(p_buffer.size());

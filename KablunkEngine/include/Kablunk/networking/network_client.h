@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Core/concepts.hpp"
 #include "Kablunk/networking/networking_types.h"
 
@@ -10,7 +10,7 @@
 namespace kb::network
 { // start namespace kb::network
 
-class network_client
+class network_client : public RefCounted
 {
 public:
     enum class connection_status_t
@@ -22,7 +22,7 @@ public:
     };
 
     /* callback function definitions */
-    using data_received_callback_func_t = void (*)(const Buffer&);
+    using data_received_callback_func_t = void (*)(const owning_buffer&);
     using client_connected_callback_func_t = void (*)();
     using client_disconnected_callback_func_t = void (*)();
 
@@ -41,10 +41,10 @@ public:
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
 
     /* data management */
-    auto send_buffer(Buffer p_buffer, bool p_reliable = true) noexcept -> void;
+    auto send_buffer(owning_buffer p_buffer, bool p_reliable = true) noexcept -> void;
 
     template <concepts::TrivialT T>
-    auto send_data(const T& p_data, bool p_reliable = true) noexcept -> void { send_buffer(Buffer{ &p_data, sizeof(T) }, p_reliable); }
+    auto send_data(const T& p_data, bool p_reliable = true) noexcept -> void { send_buffer(owning_buffer{ &p_data, sizeof(T) }, p_reliable); }
 
     /* factory create function */
     static auto create() noexcept -> std::unique_ptr<network_client>;

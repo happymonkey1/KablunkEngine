@@ -47,7 +47,7 @@ public:
     VkPipelineLayout get_layout() const { return m_vk_compute_pipeline_layout; }
     
     // set push constants
-    void set_push_constants(kb::Buffer p_constants);
+    void set_push_constants(kb::owning_buffer p_constants);
     void create_pipeline();
 private:
     void rt_create_pipeline();

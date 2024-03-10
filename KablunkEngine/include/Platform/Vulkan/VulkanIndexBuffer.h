@@ -2,7 +2,7 @@
 #ifndef KABLUNK_PLATFORM_VULKAN_INDEX_BUFFER_H
 #define KABLUNK_PLATFORM_VULKAN_INDEX_BUFFER_H
 
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Renderer/Buffer.h"
 
 #include "Platform/Vulkan/VulkanAllocator.h"
@@ -31,7 +31,7 @@ namespace kb
 		VkBuffer GetVkBuffer() { return m_vk_buffer; }
 	private:
 		VkBuffer m_vk_buffer = nullptr;
-		Buffer m_local_data;
+		owning_buffer m_local_data;
 		uint32_t m_size = 0;
 
 		VmaAllocation m_vk_allocation = nullptr;

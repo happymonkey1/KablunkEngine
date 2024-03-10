@@ -218,7 +218,7 @@ inline void render_mesh_with_material(
 	ref<VertexBuffer> transform_buffer, 
 	uint32_t transform_offset, 
 	uint32_t instance_count, 
-	Buffer additional_uniforms = Buffer() // default (nullptr) buffer
+	owning_buffer additional_uniforms = owning_buffer() // default (nullptr) buffer
 )
 {
 	Singleton<Renderer>::get().get_renderer()->RenderMeshWithMaterial(

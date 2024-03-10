@@ -1,11 +1,14 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 
+#include <codecvt>
+
 #include "Kablunk/Asset/AssetManager.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/UniformBuffer.h"
 #include "Kablunk/Renderer/Renderer.h"
+#include "Kablunk/Renderer/renderer_2d_utils.h"
 
 #include "Kablunk/Scene/Components.h"
 #include "Kablunk/Renderer/RendererAPI.h"
@@ -152,7 +155,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	framebuffer_spec.Attachments = { ImageFormat::RGBA };
 	framebuffer_spec.samples = 1;
 	framebuffer_spec.clear_on_load = false;
-	framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+	framebuffer_spec.clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
 	framebuffer_spec.debug_name = "framebuffer::Renderer2D";
 	framebuffer_spec.blend_mode = FramebufferBlendMode::Additive;
 	framebuffer_spec.blend = true;
@@ -432,6 +435,13 @@ void Renderer2D::flush()
 
             m_renderer_data.Stats.Draw_calls++;
 
+            clear_pass = clear_pass && false;
+        }
+        else
+        {
+            const auto& quad_pass = m_renderer_data.quad_pipeline->GetSpecification().render_pass;
+            render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, clear_pass);
+            render::end_render_pass(m_renderer_data.render_command_buffer);
             clear_pass = clear_pass && false;
         }
     }
@@ -873,26 +883,53 @@ void Renderer2D::draw_rect(const glm::vec3& position, const glm::vec2& size, flo
 
 void Renderer2D::draw_text_string(
     const std::string& text,
-    const u32 p_font_point,
     const glm::vec2& position,
     const glm::vec2& size,
-    const ref<render::font_asset_t>& font_asset,
-    const glm::vec4& tint_color /* = glm::vec4{1.0f}*/
+    const ref<render::font>& font_asset,
+    const glm::vec4& tint_color, /* = glm::vec4{1.0f}*/
+    f32 p_max_width, /* = 0.f */
+    f32 p_line_height_offset, /*= 0.f*/
+    f32 p_kerning_offset /*= 0.f*/
 ) noexcept
 {
     //KB_PROFILE_SCOPE;
 
-	draw_text_string(text, p_font_point, glm::vec3{ position.x, position.y, 0.0f }, size, font_asset, tint_color);
+	draw_text_string(
+        text,
+        glm::vec3{ position.x, position.y, 0.0f },
+        size,
+        font_asset,
+        tint_color,
+        p_max_width,
+        p_line_height_offset,
+        p_kerning_offset
+    );
 }
+
+namespace details
+{ // start namespace ::details
+
+auto is_next_line(size_t p_index, const std::vector<i32>& p_next_lines) noexcept -> bool
+{
+    for (const auto line : p_next_lines)
+        if (line == p_index)
+            return true;
+
+    return false;
+}
+
+} // end namespace ::details
 
 // #TODO draw command should be done on the render thread
 void Renderer2D::draw_text_string(
     const std::string& text,
-    const u32 p_font_point,
     const glm::vec3& position,
     const glm::vec2& size,
-    const ref<render::font_asset_t>& font_asset,
-    const glm::vec4& tint_color /* = glm::vec4{1.0f}*/
+    const ref<render::font>& font_asset,
+    const glm::vec4& tint_color, /* = glm::vec4{1.0f}*/
+    f32 p_max_width, /*= 0.f*/
+    f32 p_line_height_offset, /*= 0.f*/
+    f32 p_kerning_offset /*= 0.f*/
 ) noexcept
 {
     //KB_PROFILE_SCOPE;
@@ -901,13 +938,7 @@ void Renderer2D::draw_text_string(
 	KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
 	KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
 
-    // #TODO it should not be possible to have a font asset that is not cached in the font manager
-	if (!m_renderer_data.m_font_manager.has_font_cached(font_asset))
-	{
-		KB_CORE_WARN("[renderer2d]: font asset was not cached in the font manager when draw command issue!");
-	}
-
-	const auto& font_texture_atlas = font_asset->get_texture_atlas();
+	const auto& font_texture_atlas = font_asset->get_font_atlas();
 
 	float texture_index = -1.0f;
 	for (u32 i = 0; i < m_renderer_data.text_texture_atlas_slot_index; ++i)
@@ -926,6 +957,146 @@ void Renderer2D::draw_text_string(
 		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.max_texture_slots, "font texture atlas slot overflow!");
 	}
 
+    // #TODO hopefully c++23 has officially supported method that isn't deprecated...
+    const std::u32string utf32_text = render::to_utf32_str(text);
+
+    const auto& font_geometry = font_asset->get_msdf_metrics()->m_font_geometry;
+    const auto& metrics = font_geometry.getMetrics();
+    const f64 fs_scale = 1 / (metrics.ascenderY - metrics.descenderY);
+
+    // compute font metrics for rendering
+    // #TODO: refactor, this is slow af
+    std::vector<i32> next_lines{};
+    // don't waste cycles if we do not set a max width
+    if (p_max_width != 0.f)
+	{
+        f64 x = 0.;
+        f64 y = -fs_scale * metrics.ascenderY;
+        i32 last_space = -1;
+        for (size_t i = 0; i < utf32_text.size(); ++i)
+        {
+            const auto c = utf32_text[i];
+            if (c == '\n')
+            {
+                x = 0;
+                y -= fs_scale * metrics.lineHeight + p_line_height_offset;
+                continue;
+            }
+            if (c == '\r')
+                continue;
+
+            const auto glyph = font_geometry.getGlyph(c);
+            if (!glyph)
+                continue;
+
+            if (c != ' ')
+            {
+                double pl, pb, pr, pt;
+                glyph->getQuadPlaneBounds(pl, pb, pr, pt);
+                glm::vec2 quad_min{ static_cast<f32>(pl), static_cast<f32>(pb) };
+                glm::vec2 quad_max{ static_cast<f32>(pr), static_cast<f32>(pt) };
+
+                quad_min *= fs_scale;
+                quad_max *= fs_scale;
+                quad_min += glm::vec2{ x, y };
+                quad_max += glm::vec2{ x, y };
+
+                if (quad_max.x > p_max_width && last_space != -1)
+                {
+                    i = last_space;
+                    next_lines.emplace_back(last_space);
+                    last_space = -1;
+                    x = 0;
+                    y += fs_scale * metrics.lineHeight + p_line_height_offset;
+                }
+            }
+            else
+                last_space = i;
+
+            f64 advance = glyph->getAdvance();
+            font_geometry.getAdvance(advance, c, utf32_text[i + 1]);
+            x += fs_scale * advance + p_kerning_offset;
+        }
+	}
+
+    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::trunc(position))
+        * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, size.x });
+
+	{
+        f64 x = 0.;
+        f64 y = 0.;
+        for (size_t i = 0; i < utf32_text.size(); ++i)
+        {
+            auto c = utf32_text[i];
+            if (c == '\n' || details::is_next_line(i, next_lines))
+            {
+                x = 0;
+                y -= fs_scale * metrics.lineHeight + p_line_height_offset;
+                continue;
+            }
+
+            auto glyph = font_geometry.getGlyph(c);
+            if (!glyph)
+            {
+                KB_CORE_WARN("[Renderer2D]: Trying to render text string, found invalid glyph for character");
+                continue;
+            }
+
+            double l, b, r, t;
+            glyph->getQuadAtlasBounds(l, b, r, t);
+
+            double pl, pb, pr, pt;
+            glyph->getQuadPlaneBounds(pl, pb, pr, pt);
+
+            pl *= fs_scale;
+            pl += x;
+            pb *= fs_scale;
+            pb += y;
+            pr *= fs_scale;
+            pr += x;
+            pt *= fs_scale;
+            pt += y;
+
+            const f64 texel_width = 1. / font_texture_atlas->GetWidth();
+            const f64 texel_height = 1. / font_texture_atlas->GetHeight();
+            l *= texel_width; b *= texel_height; r *= texel_width; t *= texel_height;
+
+            auto& buffer_ptr = get_writeable_text_buffer(1);
+            buffer_ptr->m_position = transform * glm::vec4(pl, pt, 0.0f, 1.0f);
+            buffer_ptr->m_tint_color = tint_color;
+            buffer_ptr->m_tex_coord = vec2_packed{ static_cast<f32>(l), static_cast<f32>(t) };
+            buffer_ptr->m_tex_index = texture_index;
+            buffer_ptr++;
+
+            buffer_ptr->m_position = transform * glm::vec4(pr, pt, 0.0f, 1.0f);
+            buffer_ptr->m_tint_color = tint_color;
+            buffer_ptr->m_tex_coord = vec2_packed{ static_cast<f32>(r), static_cast<f32>(t) };
+            buffer_ptr->m_tex_index = texture_index;
+            buffer_ptr++;
+
+            buffer_ptr->m_position = transform * glm::vec4(pr, pb, 0.0f, 1.0f);
+            buffer_ptr->m_tint_color = tint_color;
+            buffer_ptr->m_tex_coord = vec2_packed{ static_cast<f32>(r), static_cast<f32>(b) };
+            buffer_ptr->m_tex_index = texture_index;
+            buffer_ptr++;
+
+            buffer_ptr->m_position = transform * glm::vec4(pl, pb, 0.0f, 1.0f);
+            buffer_ptr->m_tint_color = tint_color;
+            buffer_ptr->m_tex_coord = vec2_packed{ static_cast<f32>(l), static_cast<f32>(b) };
+            buffer_ptr->m_tex_index = texture_index;
+            buffer_ptr++;
+
+            m_renderer_data.text_index_count += 6;
+
+            f64 advance = glyph->getAdvance();
+            font_geometry.getAdvance(advance, c, utf32_text[i + 1]);
+            x += fs_scale * advance + p_kerning_offset;
+
+            m_renderer_data.Stats.Quad_count += 1;
+        }
+	}
+
+#if 0
 	const auto& glyph_info_map = font_asset->get_glyph_rendering_map();
 
     const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::trunc(position))
@@ -985,9 +1156,10 @@ void Renderer2D::draw_text_string(
         // compute position of char by offsetting the base position with the char advance offset
         char_position.x += glm::trunc(glyph_data.m_advance * scale);
 	}
+#endif
 }
 
-auto Renderer2D::submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void
+auto Renderer2D::submit_quad_data(const owning_buffer& p_quad_buffer) noexcept -> void
 {
     KB_PROFILE_SCOPE;
 

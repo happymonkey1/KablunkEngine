@@ -107,8 +107,8 @@ void texture_atlas::splice_texture_atlas()
 	size_t max_sprite_count = (width / m_texture_width) * (height / m_texture_height);
 	m_sprite_map.reserve(max_sprite_count);
 
-	const Buffer& atlas_buffer = m_atlas_texture->GetImage()->GetBuffer();
-	Buffer* sprites = new Buffer[max_sprite_count];
+	const owning_buffer& atlas_buffer = m_atlas_texture->GetImage()->GetBuffer();
+	owning_buffer* sprites = new owning_buffer[max_sprite_count];
 	for (size_t y = 0; y < height; ++y)
 	{
 		for (size_t x = 0; x < width; ++x)
@@ -128,7 +128,7 @@ void texture_atlas::splice_texture_atlas()
 	// check if created sprite is fully transparent
 	for (size_t i = 0; i < max_sprite_count; ++i)
 	{
-		const Buffer& image_buffer = sprites[i];
+		const owning_buffer& image_buffer = sprites[i];
 		bool valid = false;
 
 		// search through buffer and check for pixel that is not fully transparent.
@@ -183,7 +183,7 @@ void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<kb::T
 	image_spec.height = static_cast<uint32_t>(final_atlas_width);
 
 	KB_CORE_ASSERT(textures[0]->GetImage()->GetSpecification().layers == 4, "assertion that RGBA has 4 layers");
-    kb::Buffer atlas_image_data_buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };
+    kb::owning_buffer atlas_image_data_buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };
 
 	size_t x = 0, y = 0;
 	// #TODO out of bounds checks

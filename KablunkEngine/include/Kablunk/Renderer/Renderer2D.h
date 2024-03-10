@@ -435,20 +435,24 @@ public:
 	// draw text string
 	void draw_text_string(
 		const std::string& text,
-        const u32 p_font_point,
 		const glm::vec2& position,
-		const glm::vec2& size,
-		const ref<render::font_asset_t>& font_asset,
-		const glm::vec4& tint_color = glm::vec4{ 1.0f }
+        const glm::vec2& p_size,
+		const ref<render::font>& font_asset,
+		const glm::vec4& tint_color = glm::vec4{ 1.0f },
+        f32 p_max_width = 0.f,
+        f32 p_line_height_offset = 0.f,
+        f32 p_kerning_offset = 0.f
 	) noexcept;
 	// draw text string 
 	void draw_text_string(
 		const std::string& text,
-        const u32 p_font_point,
 		const glm::vec3& position,
 		const glm::vec2& size,
-		const ref<render::font_asset_t>& font_asset,
-		const glm::vec4& tint_color = glm::vec4{ 1.0f }
+		const ref<render::font>& font_asset,
+		const glm::vec4& tint_color = glm::vec4{ 1.0f },
+        f32 p_max_width = 0.f,
+        f32 p_line_height_offset = 0.f,
+        f32 p_kerning_offset = 0.f
 	) noexcept;
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -481,7 +485,7 @@ public:
     }
 
     // submit batched quad data
-    auto submit_quad_data(const Buffer& p_quad_buffer) noexcept -> void;
+    auto submit_quad_data(const owning_buffer& p_quad_buffer) noexcept -> void;
 
 	// reset renderer2d stats
 	void reset_stats();

@@ -20,7 +20,7 @@ namespace kb
 	VulkanIndexBuffer::VulkanIndexBuffer(const void* data, uint32_t size /*= 0*/)
 		: m_size{ size }
 	{
-		m_local_data = Buffer::Copy(data, size);
+		m_local_data = owning_buffer::Copy(data, size);
 		KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
         ref<VulkanIndexBuffer> instance{ this };
 		render::submit([instance]() mutable

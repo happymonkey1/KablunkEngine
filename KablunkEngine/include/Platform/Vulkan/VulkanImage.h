@@ -59,8 +59,8 @@ namespace kb
 
 		const VkDescriptorImageInfo& GetDescriptor() { return m_descriptor_image_info; }
 
-		virtual const Buffer& GetBuffer() const override { return m_image_data; }
-		virtual Buffer& GetBuffer() override { return m_image_data; }
+		virtual const owning_buffer& GetBuffer() const override { return m_image_data; }
+		virtual owning_buffer& GetBuffer() override { return m_image_data; }
 
 		virtual uint64_t GetHash() const override { return (uint64_t)(m_info.image); }
 
@@ -71,7 +71,7 @@ namespace kb
 
 		VkDescriptorImageInfo m_descriptor_image_info;
 
-		Buffer m_image_data;
+		owning_buffer m_image_data;
 
 		std::vector<VkImageView> m_per_layer_image_views;
 		std::map<uint32_t, VkImageView> m_mip_image_views;

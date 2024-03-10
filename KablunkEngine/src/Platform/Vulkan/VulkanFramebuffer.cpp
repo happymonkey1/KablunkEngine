@@ -156,7 +156,7 @@ namespace kb
 
 		IntrusiveRef<Image2D> attachment = m_attachment_images[attachment_index];
 
-		Buffer& attachment_buffer = attachment->GetBuffer();
+		owning_buffer& attachment_buffer = attachment->GetBuffer();
 		if (!attachment_buffer)
 			return -1;
 

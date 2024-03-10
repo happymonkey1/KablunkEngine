@@ -2,7 +2,7 @@
 #ifndef KABLUNK_PLATFORM_VULKAN_VERTEX_BUFFER_H
 #define KABLUNK_PLATFORM_VULKAN_VERTEX_BUFFER_H
 
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Buffer.h"
 
@@ -34,7 +34,7 @@ namespace kb
 		virtual RendererID GetRendererID() const override;
 	private:
 		uint32_t m_size = 0;
-		Buffer m_local_data;
+		owning_buffer m_local_data;
 
 		VkBuffer m_vk_buffer = nullptr;
 		VmaAllocation m_memory_allocation;

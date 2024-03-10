@@ -5,12 +5,12 @@
 namespace kb::serialize::file
 { // start namespace kb::serialize::file
 
-auto stream_reader::read_buffer(size_t p_size /*= 0*/) noexcept -> Buffer
+auto stream_reader::read_buffer(size_t p_size /*= 0*/) noexcept -> owning_buffer
 {
     if (!p_size)
         read_data_unsafe((char*)(&p_size), sizeof(size_t));
 
-    Buffer buffer{ p_size };
+    owning_buffer buffer{ p_size };
 
     read_data_unsafe(static_cast<char*>(buffer.get()), buffer.size());
 

@@ -2,6 +2,8 @@
 
 #include "Kablunk/networking/network_client.h"
 
+#include "Kablunk/networking/game_networking_sockets.h"
+
 namespace kb::network
 { // start namespace kb::network
 
@@ -53,6 +55,8 @@ auto network_client::connect_to_server(const std::string& p_server_address) noex
     if (m_running)
         return;
 
+    init_game_networking_sockets_lib();
+
     if (m_network_thread.joinable())
         m_network_thread.join();
 
@@ -68,7 +72,7 @@ auto network_client::disconnect() noexcept -> void
         m_network_thread.join();
 }
 
-auto network_client::send_buffer(Buffer p_buffer, bool p_reliable) noexcept -> void
+auto network_client::send_buffer(owning_buffer p_buffer, bool p_reliable) noexcept -> void
 {
     auto result = m_interface->SendMessageToConnection(
         m_connection,
@@ -166,15 +170,6 @@ auto network_client::network_loop() noexcept -> void
     // reset connection status
     m_connection_status = connection_status_t::connecting;
 
-    SteamDatagramErrMsg error_message{};
-    if (!GameNetworkingSockets_Init(nullptr, error_message))
-    {
-        m_connection_debug_message = "GameNetworkingSockets_Init failed to initialize!";
-        m_connection_status = connection_status_t::failed_to_connect;
-        on_fatal_error(m_connection_debug_message);
-        return;
-    }
-
     // use default instance
     m_interface = SteamNetworkingSockets();
 
@@ -233,7 +228,7 @@ auto network_client::poll_incoming_messages() noexcept -> void
             return;
         }
 
-        m_data_received_callback_func(Buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
+        m_data_received_callback_func(owning_buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
 
         incoming_message->Release();
     }

@@ -3,7 +3,7 @@
 #define KABLUNK_PLATFORM_VULKAN_TEXTURE_H
 
 #include "Kablunk/Renderer/Image.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Renderer/Texture.h"
 #include "Platform/Vulkan/VulkanContext.h"
 
@@ -32,8 +32,8 @@ namespace kb
 
 		const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
 
-		virtual Buffer& GetWriteableBuffer() override;
-        virtual const Buffer& get_buffer() const override { return m_image_data; }
+		virtual owning_buffer& GetWriteableBuffer() override;
+        virtual const owning_buffer& get_buffer() const override { return m_image_data; }
 
 		virtual bool loaded() const override { return m_loaded; }
 
@@ -55,7 +55,7 @@ namespace kb
 		ImageFormat m_format;
 
         // buffer of image data stored on cpu
-		Buffer m_image_data;
+		owning_buffer m_image_data;
 
 		bool m_loaded = false;
 	};

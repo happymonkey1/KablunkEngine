@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Core/Buffer.h"
+#include "Kablunk/Core/owning_buffer.h"
 
 #include <string>
 #include <vector>
@@ -49,7 +49,7 @@ public:
     operator bool() const { return is_good(); }
 
     // read data into the buffer reference parameter with `p_size` bytes
-    auto read_buffer(size_t p_size = 0) noexcept -> Buffer;
+    auto read_buffer(size_t p_size = 0) noexcept -> owning_buffer;
     // read data into the string reference parameter from the underlying stream.
     // the size of the string is also retrieved from the underlying stream.
     auto read_string() noexcept -> std::string;

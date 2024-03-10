@@ -169,7 +169,7 @@ void compute_pipeline::dispatch(const glm::uvec3& p_work_group_count) const
     vkCmdDispatch(m_vk_active_command_buffer, p_work_group_count.x, p_work_group_count.y, p_work_group_count.z);
 }
 
-void compute_pipeline::set_push_constants(kb::Buffer p_constants)
+void compute_pipeline::set_push_constants(kb::owning_buffer p_constants)
 {
     // call vulkan api to add push constants
     vkCmdPushConstants(
