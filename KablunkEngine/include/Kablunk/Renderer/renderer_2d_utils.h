@@ -83,7 +83,7 @@ inline auto calculate_text_bounds(
         f64 advance = glyph->getAdvance();
         font_geometry.getAdvance(advance, text_char, utf32_text[i + 1]);
         cursor_x += fs_scale * advance + p_kerning_offset;
-
+#if 0
         const f32 char_height = glm::trunc(glyph_data.m_size.y * scale);
 
         width += glm::trunc(static_cast<f32>(glyph_data.m_advance) * scale);
@@ -98,6 +98,7 @@ inline auto calculate_text_bounds(
             z += width;
             w += glm::trunc(-static_cast<f32>(glyph_data.m_y_off) * scale + char_height);
         }
+#endif
     }
 
     return bounding_box{ x, y, z, w };
