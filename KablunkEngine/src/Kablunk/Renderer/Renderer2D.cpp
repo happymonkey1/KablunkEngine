@@ -1,7 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 
-#include <codecvt>
 
 #include "Kablunk/Asset/AssetManager.h"
 
@@ -1007,7 +1006,7 @@ void Renderer2D::draw_text_string(
                     next_lines.emplace_back(last_space);
                     last_space = -1;
                     x = 0;
-                    y += fs_scale * metrics.lineHeight + p_line_height_offset;
+                    y -= fs_scale * metrics.lineHeight + p_line_height_offset;
                 }
             }
             else

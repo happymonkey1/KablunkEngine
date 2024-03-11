@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include <codecvt>
 #include <string_view>
 #include <optional>
 
@@ -15,7 +16,7 @@ namespace kb::render
 
 #pragma warning(disable : 4996)
 // from https://stackoverflow.com/questions/31302506/stdu32string-conversion-to-from-stdstring-and-stdu16string
-auto to_utf32_str(const std::string& p_str) noexcept -> std::u32string
+inline auto to_utf32_str(const std::string& p_str) noexcept -> std::u32string
 {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     return conv.from_bytes(p_str);
@@ -38,8 +39,8 @@ inline auto calculate_text_bounds(
 {
     const auto utf32_text = render::to_utf32_str(p_text);
 
-    f32 width = 0, height = 0;
-    f32 x = p_pos.x, y = p_pos.y, z = p_pos.x, w = p_pos.y;
+    f32 x_min = 0.f, x_max = 0.f;
+    f32 y_min = 0.f, y_max = 0.f;
     const f32 scale = static_cast<f32>(p_font_point) / static_cast<f32>(font_manager::k_load_font_point);
 
     const auto& font_geometry = p_font_asset->get_msdf_metrics()->m_font_geometry;
@@ -67,41 +68,35 @@ inline auto calculate_text_bounds(
             quad_min += glm::vec2{ cursor_x, cursor_y };
             quad_max += glm::vec2{ cursor_x, cursor_y };
 
-            if (quad_max.x > p_max_width && last_space != -1)
+            if (p_max_width > 0 && quad_max.x > p_max_width && last_space != -1)
             {
                 i = last_space;
                 if (p_next_lines)
                     p_next_lines->emplace_back(last_space);
                 last_space = -1;
                 cursor_x = 0;
-                cursor_y += fs_scale * metrics.lineHeight + p_line_height_offset;
+                cursor_y -= fs_scale * metrics.lineHeight + p_line_height_offset;
             }
+
+            if (i == 0)
+                x_min = std::min(quad_min.x * static_cast<f32>(p_font_point), x_min);
+            y_min = std::min(quad_min.y * static_cast<f32>(p_font_point), y_min);
+            
+            
+            y_max = std::max(y_max, std::abs(quad_max.y) * static_cast<f32>(p_font_point));
         }
         else
             last_space = i;
 
         f64 advance = glyph->getAdvance();
         font_geometry.getAdvance(advance, text_char, utf32_text[i + 1]);
-        cursor_x += fs_scale * advance + p_kerning_offset;
-#if 0
-        const f32 char_height = glm::trunc(glyph_data.m_size.y * scale);
+        const f32 char_offset = fs_scale * advance + p_kerning_offset;
+        cursor_x += char_offset;
 
-        width += glm::trunc(static_cast<f32>(glyph_data.m_advance) * scale);
-
-        if (i == 0)
-        {
-            x += glm::trunc(static_cast<f32>(glyph_data.m_x_off) * scale);
-            y -= glm::trunc(static_cast<f32>(glyph_data.m_y_off) * scale);
-        }
-        else if (i == utf32_text.size() - 1)
-        {
-            z += width;
-            w += glm::trunc(-static_cast<f32>(glyph_data.m_y_off) * scale + char_height);
-        }
-#endif
+        x_max = std::max(cursor_x * static_cast<f32>(p_font_point), x_max);
     }
 
-    return bounding_box{ x, y, z, w };
+    return bounding_box{ x_min + p_pos.x, y_min + p_pos.y, x_max - x_min, y_max - y_min };
 }
 
 } // end namespace kb::render

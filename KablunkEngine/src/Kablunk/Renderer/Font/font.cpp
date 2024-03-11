@@ -177,7 +177,7 @@ auto font::generate_atlas(owning_buffer&& p_font_data_buffer) noexcept -> void
         .m_image_type = msdf_atlas::ImageType::MTSDF,
         .m_image_format = msdf_atlas::ImageFormat::BINARY_FLOAT,
         .m_y_direction = msdf_atlas::YDirection::BOTTOM_UP,
-        .m_em_size = 40.,
+        .m_em_size = 96.,
         .m_angle_threshold = k_default_angle_threshold,
         .m_miter_limit = k_default_miter_limit,
         .m_edge_coloring_func = msdfgen::edgeColoringInkTrap,
