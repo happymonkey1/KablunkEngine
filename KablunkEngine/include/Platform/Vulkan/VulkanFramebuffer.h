@@ -12,63 +12,64 @@
 #include <vulkan/vulkan.h>
 
 namespace kb
+{ // start namespace kb
+class VulkanFramebuffer final : public Framebuffer 
 {
-	class VulkanFramebuffer : public Framebuffer 
-	{
-	public:
-		VulkanFramebuffer(const FramebufferSpecification& spec);
-		virtual ~VulkanFramebuffer() override;
+public:
+	VulkanFramebuffer(const FramebufferSpecification& spec);
+	virtual ~VulkanFramebuffer() override;
 
-		virtual void Resize(uint32_t width, uint32_t height, bool forceRecreate = false) override;
-		virtual void AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func) override;
+	virtual void Resize(uint32_t width, uint32_t height, bool forceRecreate = false) override;
+	virtual void AddResizeCallback(const std::function<void(ref<Framebuffer>)>& func) override;
 
-		virtual void Bind() const override {}
-		virtual void Unbind() const override {}
+	virtual void Bind() const override {}
+	virtual void Unbind() const override {}
 
-		virtual void BindTexture(uint32_t attachmentIndex = 0, uint32_t slot = 0) const override {}
+	virtual void BindTexture(uint32_t attachmentIndex = 0, uint32_t slot = 0) const override {}
 
-		virtual uint32_t GetWidth() const override { return m_width; }
-		virtual uint32_t GetHeight() const override { return m_height; }
-		virtual RendererID GetRendererID() const { return 0; }
-		virtual RendererID GetColorAttachmentRendererID() const { return 0; }
-		virtual RendererID GetDepthAttachmentRendererID() const { return 0; }
+	virtual uint32_t GetWidth() const override { return m_width; }
+	virtual uint32_t GetHeight() const override { return m_height; }
+	virtual RendererID GetRendererID() const { return 0; }
+	virtual RendererID GetColorAttachmentRendererID() const { return 0; }
+	virtual RendererID GetDepthAttachmentRendererID() const { return 0; }
 
-		virtual ref<Image2D> GetImage(uint32_t attachment_index = 0) const override
-		{ 
-			KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!"); 
-			//KB_CORE_ASSERT(m_attachment_images[attachment_index].As<VulkanImage2D>()->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout undefined!");
+	virtual ref<Image2D> GetImage(uint32_t attachment_index = 0) const override
+	{ 
+		KB_CORE_ASSERT(attachment_index < m_attachment_images.size(), "out of bounds!"); 
+		//KB_CORE_ASSERT(m_attachment_images[attachment_index].As<VulkanImage2D>()->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout undefined!");
 
-			return m_attachment_images[attachment_index];
-		}
-		virtual ref<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
+		return m_attachment_images[attachment_index];
+	}
 
-		virtual int ReadPixel(uint32_t attachment_index, int x, int y) override;
-		virtual void ClearAttachment(uint32_t attachment_index, int value) override;
+	virtual ref<Image2D> GetDepthImage() const override { return m_depth_attachment_image; }
 
-		size_t GetColorAttachmentCount() const { return m_specification.swap_chain_target ? 1 : m_attachment_images.size(); }
-		bool HasDepthAttachment() const { return (bool)m_depth_attachment_image; }
-		VkRenderPass GetVkRenderPass() const { return m_render_pass; }
-		VkFramebuffer GetVkFramebuffer() const { return m_framebuffer; }
-		const std::vector<VkClearValue>& GetVkClearValues() const { return m_clear_values; }
+	virtual int ReadPixel(uint32_t attachment_index, int x, int y) override;
+	virtual void ClearAttachment(uint32_t attachment_index, int value) override;
 
-		virtual const FramebufferSpecification& GetSpecification() const override { return m_specification; }
+	size_t GetColorAttachmentCount() const { return m_specification.swap_chain_target ? 1 : m_attachment_images.size(); }
+	bool HasDepthAttachment() const { return (bool)m_depth_attachment_image; }
+	VkRenderPass GetVkRenderPass() const { return m_render_pass; }
+	VkFramebuffer GetVkFramebuffer() const { return m_framebuffer; }
+	const std::vector<VkClearValue>& GetVkClearValues() const { return m_clear_values; }
 
-		void Invalidate();
-		void RT_Invalidate();
-	private:
-		FramebufferSpecification m_specification;
-		uint32_t m_width = 0, m_height = 0;
+	virtual const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 
-		std::vector<ref<Image2D>> m_attachment_images;
-		ref<Image2D> m_depth_attachment_image;
+	void Invalidate();
+	void RT_Invalidate();
+private:
+	FramebufferSpecification m_specification;
+	uint32_t m_width = 0, m_height = 0;
 
-		std::vector<VkClearValue> m_clear_values;
-		VkRenderPass m_render_pass = nullptr;
-		VkFramebuffer m_framebuffer = nullptr;
+	std::vector<ref<Image2D>> m_attachment_images;
+	ref<Image2D> m_depth_attachment_image;
 
-		std::vector<std::function<void(ref<Framebuffer>)>> m_resize_callbacks;
+	std::vector<VkClearValue> m_clear_values;
+	VkRenderPass m_render_pass = nullptr;
+	VkFramebuffer m_framebuffer = nullptr;
 
-	};
-}
+	std::vector<std::function<void(ref<Framebuffer>)>> m_resize_callbacks;
+
+};
+} // end namespace kb
 
 #endif

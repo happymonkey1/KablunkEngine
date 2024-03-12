@@ -16,95 +16,95 @@
 struct GLFWwindow;
 
 namespace kb
-{
-	class VulkanContext : public GraphicsContext {
-	public:
-		VulkanContext(GLFWwindow* window_handle);
-		~VulkanContext() = default;
+{ // start namespace kb
+class VulkanContext final : public GraphicsContext {
+public:
+	VulkanContext(GLFWwindow* window_handle);
+	~VulkanContext() = default;
 
-		void Init() override;
-		void SwapBuffers() override;
-		void Shutdown() override;
+	void Init() override;
+	void SwapBuffers() override;
+	void Shutdown() override;
 
 
-		static ref<VulkanContext> Get() { return s_context; }
-		static VkInstance GetInstance() { return s_instance; }
+	static ref<VulkanContext> Get() { return s_context; }
+	static VkInstance GetInstance() { return s_instance; }
 
-		ref<VulkanDevice> GetDevice() { return m_device; }
-		VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
-	private:
-		void CreateInstance();
-		bool CheckValidationLayerSupport();
-		std::vector<const char*> GetRequiredExtensions();
+	ref<VulkanDevice> GetDevice() { return m_device; }
+	VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
+private:
+	void CreateInstance();
+	bool CheckValidationLayerSupport();
+	std::vector<const char*> GetRequiredExtensions();
 
-		// Debug callback for validation layer messages
-		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-			VkDebugUtilsMessageTypeFlagsEXT messageType,
-			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-			void* pUserData)
+	// Debug callback for validation layer messages
+	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData)
+	{
+		
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+			KB_CORE_TRACE("[Vk Trace]: {0}", pCallbackData->pMessage);
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+			KB_CORE_INFO("[Vk Info]: {0}", pCallbackData->pMessage);
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+			KB_CORE_WARN("[Vk Warn]: {0}", pCallbackData->pMessage);
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+			KB_CORE_ERROR("[Vk Error]: {0}", pCallbackData->pMessage);
+		else
 		{
-			
-			if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-				KB_CORE_TRACE("[Vk Trace]: {0}", pCallbackData->pMessage);
-			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-				KB_CORE_INFO("[Vk Info]: {0}", pCallbackData->pMessage);
-			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-				KB_CORE_WARN("[Vk Warn]: {0}", pCallbackData->pMessage);
-			else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-				KB_CORE_ERROR("[Vk Error]: {0}", pCallbackData->pMessage);
-			else
-			{
-				KB_CORE_WARN("Unknown VkMessageType!");
-				KB_CORE_INFO("[Vk Unknown]: {0}", pCallbackData->pMessage);
-			}
-
-			return VK_FALSE;
+			KB_CORE_WARN("Unknown VkMessageType!");
+			KB_CORE_INFO("[Vk Unknown]: {0}", pCallbackData->pMessage);
 		}
 
-		// Load Debug Extension Proxy
-		VkResult CreateDebugUtilsMessengerExtension(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
-		{
-			auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-			if (func != nullptr)
-				return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-			else
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-		}
+		return VK_FALSE;
+	}
 
-		// Destroy Debug Extension Proxy 
-		void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) 
-		{
-			auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-			if (func != nullptr)
-				func(instance, debugMessenger, pAllocator);
-		}
+	// Load Debug Extension Proxy
+	VkResult CreateDebugUtilsMessengerExtension(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
+	{
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr)
+			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		else
+			return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
 
-		void SetupDebugMessageCallback();
-	private:
-		// #TODO move
-		inline static ref<VulkanContext> s_context;
-		inline static VkInstance s_instance;
+	// Destroy Debug Extension Proxy 
+	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) 
+	{
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (func != nullptr)
+			func(instance, debugMessenger, pAllocator);
+	}
 
-		GLFWwindow* m_window_handle;
+	void SetupDebugMessageCallback();
+private:
+	// #TODO move
+	inline static ref<VulkanContext> s_context;
+	inline static VkInstance s_instance;
 
-		ref<VulkanPhysicalDevice> m_physical_device{};
-		ref<VulkanDevice> m_device{};
+	GLFWwindow* m_window_handle;
 
-		VulkanSwapChain m_swap_chain;
+	ref<VulkanPhysicalDevice> m_physical_device{};
+	ref<VulkanDevice> m_device{};
 
-		VkPipelineCache m_pipeline_cache;
+	VulkanSwapChain m_swap_chain;
 
-		// Validation layers
-		const std::vector<const char*> m_validation_layers;
-		VkDebugUtilsMessengerEXT m_debug_messenger = nullptr;
+	VkPipelineCache m_pipeline_cache;
+
+	// Validation layers
+	const std::vector<const char*> m_validation_layers;
+	VkDebugUtilsMessengerEXT m_debug_messenger = nullptr;
 #ifdef KB_DEBUG
-		const bool m_enable_validation_layers = true;
+	const bool m_enable_validation_layers = true;
 #else
-		const bool m_enable_validation_layers = false;
+	const bool m_enable_validation_layers = false;
 #endif
 
-		friend class VulkanDevice;
-	};
-}
+	friend class VulkanDevice;
+};
+} // end namespace kb
 
 #endif

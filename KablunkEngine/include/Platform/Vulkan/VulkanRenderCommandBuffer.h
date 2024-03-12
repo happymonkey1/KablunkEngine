@@ -12,53 +12,53 @@
 #include <vector>
 
 namespace kb
+{ // start namespace kb
+class VulkanRenderCommandBuffer final : public RenderCommandBuffer
 {
-	class VulkanRenderCommandBuffer : public RenderCommandBuffer
+public:
+	VulkanRenderCommandBuffer(uint32_t count = 0, const std::string& debug_name = "");
+	VulkanRenderCommandBuffer(const std::string& debug_name, bool swap_chain);
+	~VulkanRenderCommandBuffer() override;
+
+	virtual void Begin() override;
+	virtual void End() override;
+	virtual void Submit() override;
+
+	virtual float GetExecutionGPUTime(uint32_t frame_index, uint32_t query_index /* = 0 */) const override
 	{
-	public:
-		VulkanRenderCommandBuffer(uint32_t count = 0, const std::string& debug_name = "");
-		VulkanRenderCommandBuffer(const std::string& debug_name, bool swap_chain);
-		~VulkanRenderCommandBuffer() override;
+		if (query_index / 2 >= m_timestamp_next_available_query / 2)
+			return 0.0f;
 
-		virtual void Begin() override;
-		virtual void End() override;
-		virtual void Submit() override;
+		return m_execution_gpu_times[frame_index][query_index / 2];
+	}
 
-		virtual float GetExecutionGPUTime(uint32_t frame_index, uint32_t query_index /* = 0 */) const override
-		{
-			if (query_index / 2 >= m_timestamp_next_available_query / 2)
-				return 0.0f;
+	virtual uint64_t BeginTimestampQuery() override;
+	virtual void EndTimestampQuery(uint64_t query_index) override;
 
-			return m_execution_gpu_times[frame_index][query_index / 2];
-		}
+	inline VkCommandBuffer GetCommandBuffer(uint32_t frame_index) const
+	{
+		KB_CORE_ASSERT(frame_index < m_command_buffers.size(), "index out of range!");
+		return m_command_buffers[frame_index];
+	}
 
-		virtual uint64_t BeginTimestampQuery() override;
-		virtual void EndTimestampQuery(uint64_t query_index) override;
+    inline VkCommandBuffer get_active_command_buffer() const { return m_active_command_buffer; }
+private:
+	std::string m_debug_name;
 
-		inline VkCommandBuffer GetCommandBuffer(uint32_t frame_index) const
-		{
-			KB_CORE_ASSERT(frame_index < m_command_buffers.size(), "index out of range!");
-			return m_command_buffers[frame_index];
-		}
+	VkCommandPool m_command_pool = nullptr;
+	std::vector<VkCommandBuffer> m_command_buffers;
+    VkCommandBuffer m_active_command_buffer = nullptr;
+	std::vector<VkFence> m_wait_fences;
 
-        inline VkCommandBuffer get_active_command_buffer() const { return m_active_command_buffer; }
-	private:
-		std::string m_debug_name;
+	bool m_owned_by_swapchain = false;
 
-		VkCommandPool m_command_pool = nullptr;
-		std::vector<VkCommandBuffer> m_command_buffers;
-        VkCommandBuffer m_active_command_buffer = nullptr;
-		std::vector<VkFence> m_wait_fences;
+	uint32_t m_timestamp_query_count = 0;
+	uint32_t m_timestamp_next_available_query = 2;
 
-		bool m_owned_by_swapchain = false;
-
-		uint32_t m_timestamp_query_count = 0;
-		uint32_t m_timestamp_next_available_query = 2;
-
-		std::vector<VkQueryPool> m_timestamp_query_pools;
-		std::vector<std::vector<uint64_t>> m_timestamp_query_results;
-		std::vector<std::vector<float>> m_execution_gpu_times;
-	};
-}
+	std::vector<VkQueryPool> m_timestamp_query_pools;
+	std::vector<std::vector<uint64_t>> m_timestamp_query_results;
+	std::vector<std::vector<float>> m_execution_gpu_times;
+};
+} // end namespace kb
 
 #endif

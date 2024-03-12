@@ -7,6 +7,8 @@
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 
+#include "Kablunk/networking/rpc_dispatcher.h"
+
 namespace kb::network
 { // start namespace kb::network
 
@@ -29,7 +31,7 @@ public:
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
 public:
     network_client() noexcept = default;
-    ~network_client() noexcept;
+    ~network_client() noexcept override;
 
     network_client(const network_client&) noexcept = delete;
     network_client(network_client&&) noexcept = default;
@@ -40,14 +42,13 @@ public:
     auto is_running() const noexcept -> bool { return m_running; }
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
 
-    /* data management */
-    auto send_buffer(owning_buffer p_buffer, bool p_reliable = true) noexcept -> void;
+    // serialize arguments and send an rpc request
+    auto call_rpc(const std::string& p_rpc_name, auto&&... p_args) const noexcept -> void;
 
-    template <concepts::TrivialT T>
-    auto send_data(const T& p_data, bool p_reliable = true) noexcept -> void { send_buffer(owning_buffer{ &p_data, sizeof(T) }, p_reliable); }
+    auto send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable = true) const noexcept -> void;
 
     /* factory create function */
-    static auto create() noexcept -> std::unique_ptr<network_client>;
+    [[nodiscard]] static auto create() noexcept -> ref<network_client>;
 
     /* overloaded operators */
     auto operator=(const network_client&) noexcept -> network_client& = delete;
@@ -79,5 +80,37 @@ private:
     ISteamNetworkingSockets* m_interface = nullptr;
     client_id_t m_connection = 0;
 };
+
+// serialize arguments and send an rpc request
+auto network_client::call_rpc(
+    const std::string& p_rpc_name,
+    auto&&... p_args
+) const noexcept -> void
+{
+    KB_CORE_INFO("[network::network_client]: Calling rpc {}", p_rpc_name);
+
+    // pack arguments
+    // #TODO is there better way than serializing and immediately deserializing?
+    auto arguments = msgpack::type::make_tuple(p_args...);
+    msgpack::sbuffer args_buffer{};
+    msgpack::pack(args_buffer, arguments);
+
+    const msgpack::object_handle args_handle = msgpack::unpack(
+        args_buffer.data(),
+        args_buffer.size()
+    );
+
+    // serialize rpc request
+    const auto request = rpc_request{
+        .m_header = {
+            .m_id = 0x01,
+            .m_name = p_rpc_name,
+        },
+        .m_arguments = args_handle.get(),
+    };
+
+    // send request over network
+    send_packed_buffer(request.as_buffer());
+}
 
 } // end namespace kb::network

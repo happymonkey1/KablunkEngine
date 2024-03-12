@@ -9,37 +9,37 @@
 #include <vulkan/vulkan.h>
 
 namespace kb
+{ // start namespace kb
+class VulkanStorageBuffer final : public StorageBuffer 
 {
-	class VulkanStorageBuffer : public StorageBuffer 
-	{
-	public:
-		VulkanStorageBuffer(size_t size, uint32_t binding);
-		virtual ~VulkanStorageBuffer();
+public:
+	VulkanStorageBuffer(size_t size, uint32_t binding);
+	virtual ~VulkanStorageBuffer() override;
 
-		virtual void SetData(const void* data, size_t size, uint32_t offset = 0) override;
-		virtual void RT_SetData(const void* data, size_t size, uint32_t offset = 0) override;
-		virtual void Resize(size_t new_size) override;
+	virtual void SetData(const void* data, size_t size, uint32_t offset = 0) override;
+	virtual void RT_SetData(const void* data, size_t size, uint32_t offset = 0) override;
+	virtual void Resize(size_t new_size) override;
 
-		virtual uint32_t GetBinding() { return m_binding; };
+	virtual uint32_t GetBinding() { return m_binding; };
 
-		const VkDescriptorBufferInfo& GetVkDescriptorInfo() const { return m_vk_descriptor_info; }
-	private:
-		void Release();
-		void RT_Invalidate();
-	private:
-		VmaAllocation m_vk_memory_allocation;
-		VkBuffer m_vk_buffer{};
+	const VkDescriptorBufferInfo& GetVkDescriptorInfo() const { return m_vk_descriptor_info; }
+private:
+	void Release();
+	void RT_Invalidate();
+private:
+	VmaAllocation m_vk_memory_allocation;
+	VkBuffer m_vk_buffer{};
 
-		VkDescriptorBufferInfo m_vk_descriptor_info{};
+	VkDescriptorBufferInfo m_vk_descriptor_info{};
 
-		size_t m_size;
-		uint32_t m_binding;
+	size_t m_size;
+	uint32_t m_binding;
 
-		std::string m_name;
-		VkShaderStageFlagBits m_vk_shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	std::string m_name;
+	VkShaderStageFlagBits m_vk_shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 
-		uint8_t* m_local_storage = nullptr; // #TODO change to buffer;
-	};
-}
+	uint8_t* m_local_storage = nullptr; // #TODO change to buffer;
+};
+} // end namespace kb
 
 #endif

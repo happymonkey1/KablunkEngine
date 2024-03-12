@@ -14,7 +14,6 @@ constexpr size_t k_max_servers = 8ull;
 static std::size_t s_registered_server_count = 0ull;
 static std::array<network_server*, k_max_servers> s_registered_servers{};
 
-
 namespace details
 { // start namespace ::details
 
@@ -48,8 +47,12 @@ static auto unregister_server_for_connection_callback(network_server* p_server_p
 
 network_server::~network_server() noexcept
 {
+    KB_CORE_INFO("[network::network_server]: Destroying network server.");
     if (m_network_thread.joinable())
+    {
+        KB_CORE_TRACE("[network::network_server]: Joining network loop thread.");
         m_network_thread.join();
+    }
 }
 
 auto network_server::start() noexcept -> void
@@ -59,11 +62,25 @@ auto network_server::start() noexcept -> void
 
     init_game_networking_sockets_lib();
 
+    KB_CORE_ASSERT(
+        m_client_connected_callback_func,
+        "[network::network_server]: client connected callback is not set!"
+    );
+    KB_CORE_ASSERT(
+        m_client_disconnected_callback_func,
+        "[network::network_server]: client disconnected callback is not set!"
+    );
+    KB_CORE_ASSERT(
+        m_data_received_callback_func,
+        "[network::network_server]: data received callback is not set!"
+    );
+
     m_network_thread = std::thread([this] { network_loop(); });
 }
 
 auto network_server::stop() noexcept -> void
 {
+    KB_CORE_INFO("[network_server]: Stopping server.");
     m_running = false;
     details::unregister_server_for_connection_callback(this);
 }
@@ -73,6 +90,7 @@ auto network_server::kick_client(client_id_t p_client_id) noexcept -> void
     m_interface->CloseConnection(p_client_id, 0, "Kicked by host", false);
 }
 
+#if 0
 auto network_server::send_buffer_to_client(client_id_t p_client_id, owning_buffer p_buffer, bool p_reliable) noexcept -> void
 {
     auto result = m_interface->SendMessageToConnection(
@@ -98,21 +116,84 @@ auto network_server::send_buffer_to_all_clients(
         send_buffer_to_client(client_id, p_buffer, p_reliable);
     }
 }
+#endif
+
+auto network_server::send(
+    client_id_t p_client_id,
+    const void* p_data,
+    size_t p_size,
+    bool p_reliable /*= true*/
+) const noexcept -> void
+{
+    // #TODO check result
+    auto result = m_interface->SendMessageToConnection(
+        p_client_id,
+        p_data,
+        static_cast<u32>(p_size),
+        p_reliable ? k_nSteamNetworkingSend_Reliable : k_nSteamNetworkingSend_Unreliable,
+        nullptr
+    );
+}
+
+auto network_server::send_packed_buffer_to_all_clients(
+    msgpack::sbuffer p_buffer,
+    client_id_t p_exclude_client,
+    bool p_reliable
+) const noexcept -> void
+{
+    for (const auto& [client_id, client_info] : m_connected_clients)
+    {
+        if (client_id == p_exclude_client)
+            continue;
+
+        send(
+            client_id,
+            p_buffer.data(),
+            p_buffer.size(),
+            p_reliable
+        );
+    }
+}
+
+auto network_server::send_packed_buffer_to_all_clients(
+    const ref<msgpack::sbuffer>& p_buffer_ref,
+    client_id_t p_exclude_client,
+    bool p_reliable
+) const noexcept -> void
+{
+    KB_CORE_ASSERT(
+        p_buffer_ref,
+        "[network::network_server]: Trying to send buffer to all clients but buffer is null?"
+    );
+
+    for (const auto& [client_id, client_info] : m_connected_clients)
+    {
+        if (client_id == p_exclude_client)
+            continue;
+
+        send(
+            client_id,
+            p_buffer_ref->data(),
+            p_buffer_ref->size(),
+            p_reliable
+        );
+    }
+}
 
 auto network_server::create(
     i32 p_port,
     data_received_callback_func_t p_data_received_callback_func,
     client_connected_callback_func_t p_client_connected_callback_func,
     client_disconnected_callback_func_t p_client_disconnected_callback
-) noexcept -> std::unique_ptr<network_server>
+) noexcept -> ref<network_server>
 {
-    return std::unique_ptr<network_server>(
-        new network_server{
-            p_port,
-            p_data_received_callback_func,
-            p_client_connected_callback_func,
-            p_client_disconnected_callback
-        }
+    KB_CORE_ASSERT(p_port < std::numeric_limits<u16>::max(), "[network::network_server]: Port out of range!");
+
+    return ref<network_server>::Create(
+        p_port,
+        p_data_received_callback_func,
+        p_client_connected_callback_func,
+        p_client_disconnected_callback
     );
 }
 
@@ -131,13 +212,14 @@ network_server::network_server(
 
 auto network_server::network_loop() noexcept -> void
 {
+    KB_CORE_INFO("[network::network_server]: Starting network loop.");
     m_running = true;
 
     m_interface = SteamNetworkingSockets();
 
     SteamNetworkingIPAddr server_local_address{};
     server_local_address.Clear();
-    server_local_address.m_port = m_port;
+    server_local_address.m_port = static_cast<u16>(m_port);
 
     SteamNetworkingConfigValue_t config{};
     // must correspond to the number of config values set below
@@ -161,7 +243,7 @@ auto network_server::network_loop() noexcept -> void
         return;
     }
 
-    KB_CORE_INFO("[network_server]: Server listening on port {}", m_port);
+    KB_CORE_INFO("[network::network_server]: Server listening on port {}", m_port);
 
     while (m_running)
     {
@@ -170,26 +252,42 @@ auto network_server::network_loop() noexcept -> void
         std::this_thread::sleep_for(std::chrono::milliseconds(k_network_thread_sleep_ms));
     }
 
-    KB_CORE_INFO("[network_server]: Network loop shutting down.");
-    KB_CORE_INFO("[network_server]: Closing all connections...");
+    KB_CORE_INFO("[network::network_server]: Finished blocking network thread.");
+    KB_CORE_INFO("[network::network_server]: Closing all open connections ({})", m_connected_clients.size());
     for (const auto& [client_id, client_info] : m_connected_clients)
     {
-        m_interface->CloseConnection(client_id, 0, "Server Shutdown", true);
+        m_interface->CloseConnection(
+            client_id,
+            0,
+            "Server Shutdown",
+            true
+        );
+        KB_CORE_TRACE("[network::network_server]: Closing connect for client_id {}", client_id);
     }
 
     m_connected_clients.clear();
 
-    m_interface->CloseListenSocket(m_listen_socket);
-    m_listen_socket = k_HSteamListenSocket_Invalid;
-
-    m_interface->DestroyPollGroup(m_poll_group);
+    KB_CORE_ASSERT(
+        m_interface->DestroyPollGroup(m_poll_group),
+        "[network::network_server]: Failed to destroy poll group. Poll group was invalid?"
+    );
     m_poll_group = k_HSteamNetPollGroup_Invalid;
 
+    KB_CORE_ASSERT(
+        m_interface->CloseListenSocket(m_listen_socket),
+        "[network::network_server]: Failed to destroy listen socket!"
+    );
+    m_listen_socket = k_HSteamListenSocket_Invalid;
+
     m_interface = nullptr;
+
+    kill_game_networking_sockets_lib();
+    KB_CORE_INFO("[network::network_server]: Network loop cleanup complete.");
 }
 
 auto network_server::poll_incoming_messages() noexcept -> void
 {
+    //KB_CORE_TRACE("[network::network_server]: Polling messages...");
     while (m_running)
     {
         constexpr i32 k_max_message = 1ull;
@@ -212,10 +310,19 @@ auto network_server::poll_incoming_messages() noexcept -> void
         }
 
         if (incoming_message->m_cbSize)
-            m_data_received_callback_func(it_client->second, owning_buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
+        {
+            msgpack::sbuffer buffer{};
+            buffer.write(
+                static_cast<const char*>(incoming_message->m_pData),
+                static_cast<std::size_t>(incoming_message->m_cbSize)
+            );
+
+            m_data_received_callback_func(it_client->second,buffer);
+        }
 
         incoming_message->Release();
     }
+    //KB_CORE_TRACE("[network::network_server]: Finished polling messages.");
 }
 
 auto network_server::set_client_description(client_id_t p_connection, const std::string& p_description) noexcept -> void
@@ -252,6 +359,18 @@ auto network_server::on_connection_status_change(const SteamNetConnectionStatusC
             // and connection change callbacks are dispatched in queue order.
             const auto it_client = m_connected_clients.find(p_status->m_hConn);
             //assert(itClient != m_mapClients.end());
+            if (it_client == m_connected_clients.end())
+            {
+                KB_CORE_WARN(
+                    "[network::network_server]: Trying to handle client disconnect but could not find client locally?"
+                );
+                break;
+            }
+
+            KB_CORE_INFO(
+                "[network::network_server]: client '{}' disconnected",
+                it_client->second.m_client_id
+            );
 
             // either ClosedByPeer or ProblemDetectedLocally - should be communicated to user callback
             m_client_disconnected_callback_func(it_client->second);
@@ -296,6 +415,8 @@ auto network_server::on_connection_status_change(const SteamNetConnectionStatusC
         client.m_client_id = static_cast<client_id_t>(p_status->m_hConn);
         client.m_connection_description = connection_info.m_szConnectionDescription;
 
+        KB_CORE_INFO("[network::network_server]: Accepted connection from client '{}'", client.m_client_id);
+
         // user callback
         m_client_connected_callback_func(client);
 
@@ -321,4 +442,6 @@ auto network_server::on_fatal_error(const std::string& p_message) -> void
 {
     KB_CORE_ERROR("[network_server]: Fatal Error! Message='{}'", p_message);
 }
+
+
 } // end namespace kb::network

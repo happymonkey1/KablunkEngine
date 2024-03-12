@@ -10,29 +10,36 @@ namespace kb
 class owning_buffer
 {
 public:
-	owning_buffer() : m_data{ nullptr }, m_size{ 0 } {}
-	owning_buffer(void* data, const size_t size) : m_data{ static_cast<u8*>(data) }, m_size{ size } {}
+	constexpr owning_buffer() noexcept : m_data{ nullptr }, m_size{ 0 } {}
 
-	owning_buffer(const size_t size)
+	constexpr owning_buffer(const void* data, const size_t size) noexcept
+    : m_data{ new u8[size] }, m_size{size}
+	{
+        for (size_t i = 0; i < size; ++i)
+            m_data[i] = static_cast<const u8*>(data)[i];
+	}
+
+	constexpr owning_buffer(const size_t size) noexcept
         : m_data{ nullptr }, m_size{ size }
     {
         Allocate(size);
     }
 
-	owning_buffer(const owning_buffer& other)
-        : m_data{ nullptr }, m_size{ other.m_size }
+	constexpr owning_buffer(const owning_buffer& other) noexcept
+        : m_data{ nullptr }, m_size{other.m_size}
 	{
-		if (other.m_data)
-		{
-			Allocate(m_size);
-			if (m_data && other.m_data)
-				memcpy(m_data, other.m_data, m_size);
-			else
-				KB_CORE_ASSERT(false, "memcpy C6381 warning");
-		}
+        if (!other.m_data)
+            return;
+
+        Allocate(m_size);
+        if (m_data && other.m_data)
+        {
+            for (size_t i = 0; i < m_size; ++i)
+                m_data[i] = static_cast<const u8*>(other.m_data)[i];
+        }
 	}
 
-	owning_buffer(owning_buffer&& other) noexcept
+	constexpr owning_buffer(owning_buffer&& other) noexcept
 		: m_data{ other.m_data }, m_size{ other.m_size }
 	{
 		other.m_size = 0;
@@ -40,12 +47,12 @@ public:
 	}
 
 
-	~owning_buffer()
+	constexpr ~owning_buffer() noexcept
 	{
 		Release();
 	}
 
-	inline owning_buffer& operator=(const owning_buffer& other)
+	inline constexpr owning_buffer& operator=(const owning_buffer& other) noexcept
 	{
         if (this == &other)
             return *this;
@@ -55,36 +62,34 @@ public:
 			m_size = other.m_size;
 			Allocate(m_size);
 			if (m_data && other.m_data)
-				memcpy(m_data, other.m_data, m_size);
-			else
-				KB_CORE_ASSERT(false, "memcpy C6381 warning");
+			{
+                for (size_t i = 0; i < m_size; ++i)
+                    m_data[i] = static_cast<const u8*>(other.m_data)[i];
+			}
 		}
 
 		return *this;
 	}
 
-	owning_buffer& operator=(owning_buffer&& other) noexcept
+	constexpr owning_buffer& operator=(owning_buffer&& other) noexcept
 	{
+        const auto tmp_size = m_size;
         m_size = other.m_size;
-	    other.m_size = 0;
+	    other.m_size = tmp_size;
+
+        const auto tmp = m_data;
         m_data = other.m_data;
-	    other.m_data = nullptr;
+	    other.m_data = tmp;
 		return *this;
 	}
 
-	inline static owning_buffer Copy(const void* data, size_t size)
+	inline static constexpr owning_buffer Copy(const void* data, size_t size)
 	{
-		owning_buffer buffer;
-		buffer.Allocate(size);
-
-        KB_CORE_ASSERT(buffer.m_data, "[owning_buffer] Copy(): destination buffer is null?");
-
-		memcpy(buffer.m_data, data, size);
-		return buffer;
+		return owning_buffer{ data, size };
 	}
 
 	// size in bytes
-	inline void Allocate(const size_t size)
+	inline constexpr void Allocate(const size_t size) noexcept
 	{
 		if (m_data)
 		{
@@ -103,59 +108,69 @@ public:
 		m_size = size;
 	}
 
-	inline void Release()
+	inline constexpr void Release() noexcept
 	{
         if (!m_data)
             return;
 
         delete[] m_data;
-		// detete[] m_data;
 		m_data = nullptr;
 		m_size = 0;
 	}
 
-	inline void ZeroInitialize()
+	inline constexpr void zero() noexcept
 	{
 		if (m_data && m_size > 0)
-			memset(m_data, 0, m_size);
+		{
+            for (size_t i = 0; i < m_size; ++i)
+                m_data[i] = 0;
+		}
 		else
 			KB_CORE_ERROR("Trying to Zero Initialize an invalid buffer!");
 	}
 
 	template <typename T>
-	T& Read(uint32_t offset)
+	constexpr T& Read(uint32_t offset) noexcept
 	{
 		KB_CORE_ASSERT(offset + sizeof(T) <= m_size, "trying to access memory out of bounds!");
 		return *reinterpret_cast<T*>(m_data + offset);
 	}
 
-	inline uint8_t* ReadBytes(const size_t size, const size_t offset)
+	inline constexpr void Write(const void* data, const size_t size, const size_t offset = 0) noexcept
 	{
 		KB_CORE_ASSERT(offset + size <= m_size, "owning_buffer overflow!");
-        const auto buffer = new u8[size];
-		memcpy(buffer, m_data + offset, size);
-		return buffer;
+        for (size_t i = 0; i < m_size; ++i)
+            m_data[i + offset] = static_cast<const u8*>(data)[i];
 	}
 
-	inline void Write(const void* data, const size_t size, const size_t offset = 0)
+    inline constexpr void write(const char* p_data, const size_t p_size) noexcept
 	{
-		KB_CORE_ASSERT(offset + size <= m_size, "owning_buffer overflow!");
-		memcpy(m_data + offset, data, size);
+        KB_CORE_ASSERT(p_size <= m_size, "owning_buffer overflow!");
+        for (size_t i = 0; i < m_size; ++i)
+            m_data[i] = reinterpret_cast<const u8*>(p_data)[i];
 	}
 
-	operator bool() const { return m_data; }
+    // take a pointer by reference, moving the pointer into the `owning_buffer`,
+    // which will now manage the de-allocation
+    constexpr auto own(void*& p_data, const size_t p_size) noexcept -> void
+	{
+        m_data = static_cast<u8*>(p_data);
+        m_size = p_size;
+	}
 
-	u8& operator[](size_t index) { return m_data[index]; }
+	constexpr operator bool() const noexcept { return m_data; }
 
-	u8 operator[](size_t index) const { return m_data[index]; }
+	constexpr u8& operator[](size_t index) noexcept { return m_data[index]; }
+
+	constexpr u8 operator[](size_t index) const noexcept { return m_data[index]; }
 
 	template <typename T>
-	T* As() const { return reinterpret_cast<T*>(m_data); }
+	T* As() const noexcept { return reinterpret_cast<T*>(m_data); }
 
-	inline size_t size() const { return m_size; }
-	inline void* get() { return (void*)m_data; }
-    inline void* data() { return (void*)m_data; }
-	inline const void* get() const { return static_cast<void*>(m_data); }
+	inline constexpr size_t size() const noexcept { return m_size; }
+	inline constexpr void* get() noexcept { return (void*)m_data; }
+    inline constexpr void* data() noexcept { return (void*)m_data; }
+	inline constexpr const void* get() const noexcept { return static_cast<void*>(m_data); }
 
 private:
     // pointer to the head of the block of memory

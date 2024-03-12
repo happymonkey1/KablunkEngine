@@ -7,22 +7,22 @@
 #include <map>
 
 namespace kb
+{ // start namespace kb
+class VulkanStorageBufferSet final : public StorageBufferSet
 {
-	class VulkanStorageBufferSet : public StorageBufferSet
-	{
-	public:
-		explicit VulkanStorageBufferSet(uint32_t frames);
-		virtual ~VulkanStorageBufferSet() = default;
+public:
+	explicit VulkanStorageBufferSet(uint32_t frames);
+	virtual ~VulkanStorageBufferSet() override = default;
 
-		virtual void Create(uint32_t size, uint32_t binding) override;
+	virtual void Create(uint32_t size, uint32_t binding) override;
 
-		virtual ref<StorageBuffer> Get(uint32_t binding, uint32_t set, uint32_t frame) override;
-		virtual void Set(ref<StorageBuffer> storage_buffer, uint32_t set = 0, uint32_t frame = 0) override;
-		virtual void Resize(uint32_t binding, uint32_t set, uint32_t new_size) override;
-	private:
-		uint32_t m_frames;
-		std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, ref<StorageBuffer>>>> m_storage_buffers;
-	};
-}
+	virtual ref<StorageBuffer> Get(uint32_t binding, uint32_t set, uint32_t frame) override;
+	virtual void Set(ref<StorageBuffer> storage_buffer, uint32_t set = 0, uint32_t frame = 0) override;
+	virtual void Resize(uint32_t binding, uint32_t set, uint32_t new_size) override;
+private:
+	uint32_t m_frames;
+	std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, ref<StorageBuffer>>>> m_storage_buffers;
+};
+} // end namespace kb
 
 #endif

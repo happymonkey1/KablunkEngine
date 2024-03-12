@@ -261,7 +261,7 @@ namespace kb
 				size += shader_buffer.size;
 
 			m_uniform_storage_buffer.Allocate(size);
-			m_uniform_storage_buffer.ZeroInitialize();
+			m_uniform_storage_buffer.zero();
 		}
 	}
 

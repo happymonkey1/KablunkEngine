@@ -62,3 +62,6 @@
 [submodule "KablunkEngine/vendor/tinyxml2"]
 	path = KablunkEngine/vendor/tinyxml2
 	url = https://github.com/happymonkey1/tinyxml2.git
+[submodule "KablunkEngine/vendor/msgpack-c"]
+	path = KablunkEngine/vendor/msgpack-c
+	url = https://github.com/happymonkey1/msgpack-c.git

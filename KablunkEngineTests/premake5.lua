@@ -1,65 +1,72 @@
 project "KablunkEngineTests"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++20"
-	staticruntime "off"
-	conformancemode "off"
+kind "ConsoleApp"
+language "C++"
+cppdialect "C++20"
+staticruntime "off"
+conformancemode "off"
 
-    targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+targetdir("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+objdir("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files {
-        "include/**test.h",
-        "src/**test.cpp",
-        "src/Kablunk/entrypoint.cpp",
-    }
+files {
+    "include/**test.h",
+    "src/**test.cpp",
+    "src/Kablunk/entrypoint.cpp",
+}
 
-    includedirs {
-        "%{wks.location}/KablunkEngine/include/",
-        "%{IncludeDir.Catch2}",
-        "%{IncludeDir.robin_hood}",
-        "%{IncludeDir.LuaJIT}",
-        "%{IncludeDir.tl_expected}",
-        "%{IncludeDir.spdlog}",
-        "%{IncludeDir.mono}",
-        "%{IncludeDir.fmt}",
-    }
+includedirs {
+    "%{wks.location}/KablunkEngine/include/",
+    "%{IncludeDir.Catch2}",
+    "%{IncludeDir.robin_hood}",
+    "%{IncludeDir.LuaJIT}",
+    "%{IncludeDir.tl_expected}",
+    "%{IncludeDir.spdlog}",
+    "%{IncludeDir.mono}",
+    "%{IncludeDir.fmt}",
+    "%{IncludeDir.GameNetworkingSockets}",
+    "%{IncludeDir.stduuid}",
+    "%{IncludeDir.msgpack}",
+}
 
-    links {
-        "KablunkEngine",
-        "Catch2",
-        "%{Library.LuaJIT}"
-    }
+links {
+    "KablunkEngine",
+    "Catch2",
+    "%{Library.LuaJIT}"
+}
 
-    postbuildcommands {
-		'{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
-        '{COPY} "%{wks.location}KablunkEngineTests/resources/lua" "%{cfg.targetdir}/lua"',
-	}
+postbuildcommands {
+    '{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
+    '{COPY} "%{wks.location}KablunkEngineTests/resources/lua" "%{cfg.targetdir}/lua"',
+}
 
-    filter "configurations:Debug"
-        defines {
-            "KB_DEBUG"
-        }
-        
-        runtime "Debug"
-        symbols "on"
+defines {
+    "MSGPACK_NO_BOOST"
+}
 
-    filter "configurations:Release"
-        flags { "LinkTimeOptimization" }
-        defines {
-            "KB_RELEASE"
-        }
+filter "configurations:Debug"
+defines {
+    "KB_DEBUG"
+}
 
-        runtime "Release"
-        optimize "on"
-        symbols "on"
+runtime "Debug"
+symbols "on"
 
-    filter "configurations:Distribution"
-        flags { "LinkTimeOptimization" }
-        defines {
-            "KB_DISTRIBUTION"
-        }
+filter "configurations:Release"
+flags { "LinkTimeOptimization" }
+defines {
+    "KB_RELEASE"
+}
 
-        runtime "Release"
-        optimize "on"
-        symbols "off"
+runtime "Release"
+optimize "on"
+symbols "on"
+
+filter "configurations:Distribution"
+flags { "LinkTimeOptimization" }
+defines {
+    "KB_DISTRIBUTION"
+}
+
+runtime "Release"
+optimize "on"
+symbols "off"

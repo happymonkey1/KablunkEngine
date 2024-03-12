@@ -7,18 +7,18 @@
 #include <vulkan/vulkan.h>
 
 namespace kb
+{ // start namespace kb
+class VulkanRenderPass final : public RenderPass
 {
-	class VulkanRenderPass : public RenderPass 
-	{
-	public:
-		VulkanRenderPass(const RenderPassSpecification& specification);
-		virtual ~VulkanRenderPass();
+public:
+	VulkanRenderPass(const RenderPassSpecification& specification);
+	virtual ~VulkanRenderPass() override;
 
-		virtual RenderPassSpecification& GetSpecification() override { return m_specification; }
-		virtual const RenderPassSpecification& GetSpecification() const override { return m_specification; }
-	private:
-		RenderPassSpecification m_specification;
-	};
-}
+	virtual RenderPassSpecification& GetSpecification() override { return m_specification; }
+	virtual const RenderPassSpecification& GetSpecification() const override { return m_specification; }
+private:
+	RenderPassSpecification m_specification;
+};
+} // end namespace kb
 
 #endif

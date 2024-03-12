@@ -43,6 +43,7 @@ includedirs
     "%{IncludeDir.GameNetworkingSockets}",
     "%{IncludeDir.msdf_atlas_gen}",
     "%{IncludeDir.msdfgen}",
+    "%{IncludeDir.msgpack}",
 }
 
 links
@@ -51,6 +52,7 @@ links
     "freetype",
     "%{Library.mono}",
     "GLFW",
+    "MSGPACK_NO_BOOST",
 }
 
 defines
@@ -63,6 +65,7 @@ defines
     "MSDFGEN_PUBLIC=__declspec(dllimport)",
     "MSDF_ATLAS_PUBLIC=__declspec(dllimport)",
     "GLM_FORCE_DEPTH_ZERO_TO_ONE",
+    "MSGPACK_NO_BOOST",
 }
 
 postbuildcommands

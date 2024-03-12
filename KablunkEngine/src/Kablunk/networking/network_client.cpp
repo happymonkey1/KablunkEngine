@@ -22,7 +22,7 @@ static auto register_client_for_connection_callback(network_client* p_client_ptr
 
 static auto unregister_client_for_connection_callback(network_client* p_client_ptr) -> void
 {
-    KB_CORE_ASSERT(s_registered_client_count > 0, "[network_server]: Trying to unregister a server when there are none in the registered server list?");
+    KB_CORE_ASSERT(s_registered_client_count > 0, "[network::network_client]: Trying to unregister a server when there are none in the registered server list?");
 
     std::size_t server_index = 0ull;
     for (const auto server_ptr : s_registered_clients)
@@ -44,6 +44,7 @@ static auto unregister_client_for_connection_callback(network_client* p_client_p
 
 network_client::~network_client() noexcept
 {
+    KB_CORE_TRACE("[network::network_client]: Joining network thread");
     if (m_network_thread.joinable())
         m_network_thread.join();
 
@@ -60,6 +61,8 @@ auto network_client::connect_to_server(const std::string& p_server_address) noex
     if (m_network_thread.joinable())
         m_network_thread.join();
 
+    KB_CORE_INFO("[network::network_client]: Trying to connect to {}", p_server_address);
+
     m_server_address = p_server_address;
     m_network_thread = std::thread([this] { this->network_loop(); });
 }
@@ -72,22 +75,22 @@ auto network_client::disconnect() noexcept -> void
         m_network_thread.join();
 }
 
-auto network_client::send_buffer(owning_buffer p_buffer, bool p_reliable) noexcept -> void
+auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) const noexcept -> void
 {
     auto result = m_interface->SendMessageToConnection(
         m_connection,
-        p_buffer.get(),
+        p_buffer.data(),
         static_cast<u32>(p_buffer.size()),
         p_reliable ? k_nSteamNetworkingSend_Reliable : k_nSteamNetworkingSend_Unreliable,
         nullptr
     );
 }
 
-auto network_client::create() noexcept -> std::unique_ptr<network_client>
+auto network_client::create() noexcept -> ref<network_client>
 {
-    auto client = std::make_unique<network_client>();
+    auto client = ref<network_client>::Create();
     details::register_client_for_connection_callback(client.get());
-    return std::move(client);
+    return client;
 }
 
 auto network_client::connection_status_changed_callback(
@@ -129,15 +132,15 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
 
         if (p_info->m_eOldState == k_ESteamNetworkingConnectionState_Connecting)
         {
-            KB_CORE_WARN("[network_server]: Could not connect to remote host. Message='{}'", p_info->m_info.m_szEndDebug);
+            KB_CORE_WARN("[network::network_client]: Could not connect to remote host. Message='{}'", p_info->m_info.m_szEndDebug);
         }
         else if (p_info->m_eOldState == k_ESteamNetworkingConnectionState_ProblemDetectedLocally)
         {
-            KB_CORE_WARN("[network_server]: Lost connection to remote host. Message='{}'", p_info->m_info.m_szEndDebug);
+            KB_CORE_WARN("[network::network_client]: Lost connection to remote host. Message='{}'", p_info->m_info.m_szEndDebug);
         }
         else
         {
-            KB_CORE_WARN("[network_server]: Disconnected from remote host. Message='{}'", p_info->m_info.m_szEndDebug);
+            KB_CORE_WARN("[network::network_client]: Disconnected from remote host. Message='{}'", p_info->m_info.m_szEndDebug);
         }
 
         // clean up the connection. this is important!
@@ -146,9 +149,12 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
         // to finish up.  the reason information do not matter in this case,
         // and we cannot linger because it's already closed on the other end,
         // so we just pass 0s.
-        m_interface->CloseConnection(p_info->m_hConn, 0, nullptr, false);
+        if (m_interface)
+            m_interface->CloseConnection(p_info->m_hConn, 0, nullptr, false);
         m_connection = k_HSteamNetConnection_Invalid;
         m_connection_status = connection_status_t::disconnected;
+
+        m_client_disconnected_callback_func();
 
         break;
     }
@@ -167,6 +173,8 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
 
 auto network_client::network_loop() noexcept -> void
 {
+    KB_CORE_INFO("[network::network_client]: Starting network loop.");
+
     // reset connection status
     m_connection_status = connection_status_t::connecting;
 
@@ -185,16 +193,29 @@ auto network_client::network_loop() noexcept -> void
     SteamNetworkingConfigValue_t config{};
     // must correspond to the number of config values set below
     constexpr i32 k_options_count = 1;
-    config.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, static_cast<void*>(&network_client::connection_status_changed_callback));
-    m_connection = m_interface->ConnectByIPAddress(server_address, k_options_count, &config);
-    if (m_connection == k_HSteamNetConnection_Invalid)
-    {
-        m_connection_debug_message = "Failed to create connection";
-        on_fatal_error(m_connection_debug_message);
-        m_connection_status = connection_status_t::failed_to_connect;
-        return;
-    }
+    config.SetPtr(
+        k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged,
+        static_cast<void*>(&network_client::connection_status_changed_callback)
+    );
 
+    while (m_connection == k_HSteamNetConnection_Invalid)
+    {
+        KB_CORE_TRACE(
+            "[network::network_client]: Attempting to connect to '{}'",
+            m_server_address
+        );
+        m_connection = m_interface->ConnectByIPAddress(server_address, k_options_count, &config);
+        if (m_connection == k_HSteamNetConnection_Invalid)
+        {
+            m_connection_debug_message = "Failed to create connection";
+            on_fatal_error(m_connection_debug_message);
+            m_connection_status = connection_status_t::failed_to_connect;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(k_network_thread_sleep_ms * 10));
+        }
+    }
+    
+    KB_CORE_INFO("[network::network_client]: Connected to '{}'", m_server_address);
     m_running = true;
     while (m_running)
     {
@@ -203,13 +224,15 @@ auto network_client::network_loop() noexcept -> void
         std::this_thread::sleep_for(std::chrono::milliseconds(k_network_thread_sleep_ms));
     }
 
+    KB_CORE_INFO("[network::network_client]: Finished blocking network thread.");
+
     m_interface->CloseConnection(m_connection, 0, nullptr, false);
+    KB_CORE_TRACE("[network::network_client]: Closed connection to {}", m_server_address);
     m_connection_status = connection_status_t::disconnected;
 
     m_interface = nullptr;
 
-    // #NOTE is this ok with a client and server running in the same app?
-    GameNetworkingSockets_Kill();
+    kill_game_networking_sockets_lib();
 }
 
 auto network_client::poll_incoming_messages() noexcept -> void

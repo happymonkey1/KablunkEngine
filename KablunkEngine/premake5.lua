@@ -47,6 +47,8 @@ defines {
 	"MSDFGEN_PUBLIC=__declspec(dllimport)",
 	"MSDF_ATLAS_PUBLIC=__declspec(dllimport)",
 	"GLM_FORCE_DEPTH_ZERO_TO_ONE",
+	-- experimental support for no boost dependency in msgpack-c
+	"MSGPACK_NO_BOOST",
 }
 
 includedirs {
@@ -85,6 +87,7 @@ includedirs {
 	"%{IncludeDir.Catch2}",
 	"%{IncludeDir.msdf_atlas_gen}",
 	"%{IncludeDir.msdfgen}",
+	"%{IncludeDir.msgpack}",
 }
 
 links {
