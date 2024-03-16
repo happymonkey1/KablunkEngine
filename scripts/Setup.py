@@ -15,6 +15,9 @@ KB_ENGINE_ENVIRONMENT_VARIABLE_NAME = "KABLUNK_DIR"
 print(f"setting ${KB_ENGINE_ENVIRONMENT_VARIABLE_NAME}='{cur_dir}'")
 os.environ[KB_ENGINE_ENVIRONMENT_VARIABLE_NAME] = cur_dir
 
+if (not Boost.check_boost_install()):
+    print("Boost not installed.")
+
 if (not Vulkan.CheckVulkanSDK()):
     print("Vulkan SDK not installed.")
 

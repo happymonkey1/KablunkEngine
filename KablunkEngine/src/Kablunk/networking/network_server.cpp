@@ -135,6 +135,16 @@ auto network_server::send(
     );
 }
 
+auto network_server::on_data_received(
+    const client_info& p_client_info,
+    const msgpack::sbuffer& p_data_buffer
+) const noexcept -> void
+{
+    const auto rpc_response = m_rpc_dispatcher->dispatch(p_data_buffer);
+    if (!rpc_response)
+        m_data_received_callback_func(p_client_info, p_data_buffer);
+}
+
 auto network_server::send_packed_buffer_to_all_clients(
     msgpack::sbuffer p_buffer,
     client_id_t p_exclude_client,
@@ -309,6 +319,8 @@ auto network_server::poll_incoming_messages() noexcept -> void
             continue;
         }
 
+        KB_CORE_TRACE("[network_server]: Received message from client '{}'", it_client->first);
+
         if (incoming_message->m_cbSize)
         {
             msgpack::sbuffer buffer{};
@@ -317,7 +329,7 @@ auto network_server::poll_incoming_messages() noexcept -> void
                 static_cast<std::size_t>(incoming_message->m_cbSize)
             );
 
-            m_data_received_callback_func(it_client->second,buffer);
+            on_data_received(it_client->second, buffer);
         }
 
         incoming_message->Release();

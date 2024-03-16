@@ -4,11 +4,14 @@ from pathlib import Path
 import zipfile
 import shutil
 
+BOOST_VERSION = "boost_1_84_0"
 PROGRAM_FILES = os.environ.get("PROGRAMFILES")
-BOOST_LIBRARY_URL = "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip"
+BOOST_LIBRARY_URL = f"https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/{BOOST_VERSION}.zip"
 BOOST_LOCAL_PATH = f"{PROGRAM_FILES}/boost"
 BOOST_DOWNLOAD_TEMP_PATH = f"{BOOST_LOCAL_PATH}/temp"
 BOOST_ZIP_PATH = f"{BOOST_DOWNLOAD_TEMP_PATH}/boost_1_80_0.zip"
+
+# TODO: set BOOST_DIR environment variable, and reference in dependencies.lua instead of fixed path...
 
 def install_boost():
     """download, extract, and cleanup boost library"""

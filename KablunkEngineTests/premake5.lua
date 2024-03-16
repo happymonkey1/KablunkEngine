@@ -26,6 +26,7 @@ includedirs {
     "%{IncludeDir.GameNetworkingSockets}",
     "%{IncludeDir.stduuid}",
     "%{IncludeDir.msgpack}",
+    "%{IncludeDir.boost}",
 }
 
 links {
@@ -40,7 +41,6 @@ postbuildcommands {
 }
 
 defines {
-    "MSGPACK_NO_BOOST"
 }
 
 filter "configurations:Debug"

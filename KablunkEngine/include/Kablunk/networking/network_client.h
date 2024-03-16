@@ -28,6 +28,8 @@ public:
     using client_connected_callback_func_t = void (*)();
     using client_disconnected_callback_func_t = void (*)();
 
+    using packet_underlying_t = std::underlying_type_t<packet_type>;
+
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
 public:
     network_client() noexcept = default;
@@ -43,9 +45,10 @@ public:
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
 
     // serialize arguments and send an rpc request
-    auto call_rpc(const std::string& p_rpc_name, auto&&... p_args) const noexcept -> void;
+    template <typename... Args>
+    auto call_rpc(const std::string& p_rpc_name, Args&&... p_args) noexcept -> void;
 
-    auto send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable = true) const noexcept -> void;
+    auto send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable = true) const noexcept -> bool;
 
     /* factory create function */
     [[nodiscard]] static auto create() noexcept -> ref<network_client>;
@@ -79,38 +82,44 @@ private:
 
     ISteamNetworkingSockets* m_interface = nullptr;
     client_id_t m_connection = 0;
+
+    u32 m_packet_counter = 0;
 };
 
 // serialize arguments and send an rpc request
+template <typename... Args>
 auto network_client::call_rpc(
     const std::string& p_rpc_name,
-    auto&&... p_args
-) const noexcept -> void
+    Args&&... p_args
+) noexcept -> void
 {
     KB_CORE_INFO("[network::network_client]: Calling rpc {}", p_rpc_name);
 
-    // pack arguments
-    // #TODO is there better way than serializing and immediately deserializing?
-    auto arguments = msgpack::type::make_tuple(p_args...);
+    // serialize arguments 
+    auto arguments_pack = std::make_tuple(std::forward<Args>(p_args)...);
     msgpack::sbuffer args_buffer{};
-    msgpack::pack(args_buffer, arguments);
+    msgpack::packer args_packer{ args_buffer };
+    args_packer.pack(arguments_pack);
 
-    const msgpack::object_handle args_handle = msgpack::unpack(
-        args_buffer.data(),
-        args_buffer.size()
-    );
+    const auto args_obj_handle = msgpack::unpack(args_buffer.data(), args_buffer.size());
 
-    // serialize rpc request
-    const auto request = rpc_request{
-        .m_header = {
-            .m_id = 0x01,
-            .m_name = p_rpc_name,
-        },
-        .m_arguments = args_handle.get(),
+    const rpc_request request{
+        .m_type = static_cast<packet_underlying_t>(packet_type::rpc_call),
+        .m_id = m_packet_counter,
+        .m_name = p_rpc_name,
+        .m_arguments = args_obj_handle.get()
     };
 
+    // serialize rpc request
+    msgpack::sbuffer rpc_buffer{};
+    msgpack::packer rpc_packer{ rpc_buffer };
+    rpc_packer.pack(request);
+    //auto arguments = msgpack::type::make_tuple(std::forward<Args>(p_args)...);
+    //rpc_packer.pack(arguments);
+
     // send request over network
-    send_packed_buffer(request.as_buffer());
+    if (send_packed_buffer(std::move(rpc_buffer)))
+        ++m_packet_counter;
 }
 
 } // end namespace kb::network

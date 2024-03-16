@@ -128,6 +128,8 @@ private:
         size_t p_size,
         bool p_reliable = true
     ) const noexcept -> void;
+
+    auto on_data_received(const client_info& p_client_info, const msgpack::sbuffer& p_data_buffer) const noexcept -> void;
 private:
     std::thread m_network_thread;
     i32 m_port = k_default_port;
@@ -144,7 +146,7 @@ private:
     HSteamListenSocket m_listen_socket = 0u;
     HSteamNetPollGroup m_poll_group = 0u;
 
-    ref<rpc_dispatcher> m_rpc_dispatcher{};
+    ref<rpc_dispatcher> m_rpc_dispatcher = ref<rpc_dispatcher>::Create();
 
     friend class ref<network_server>;
 };

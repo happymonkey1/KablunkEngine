@@ -52,7 +52,6 @@ links
     "freetype",
     "%{Library.mono}",
     "GLFW",
-    "MSGPACK_NO_BOOST",
 }
 
 defines

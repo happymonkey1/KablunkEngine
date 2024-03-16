@@ -75,7 +75,7 @@ auto network_client::disconnect() noexcept -> void
         m_network_thread.join();
 }
 
-auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) const noexcept -> void
+auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) const noexcept -> bool
 {
     auto result = m_interface->SendMessageToConnection(
         m_connection,
@@ -84,6 +84,18 @@ auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliab
         p_reliable ? k_nSteamNetworkingSend_Reliable : k_nSteamNetworkingSend_Unreliable,
         nullptr
     );
+
+    if (result != k_EResultOK)
+    {
+        KB_CORE_WARN(
+            "[network_client]: Tried sending buffer to '{}' but result was {}",
+            m_server_address,
+            static_cast<u32>(result)
+        );
+        return false;
+    }
+
+    return true;
 }
 
 auto network_client::create() noexcept -> ref<network_client>
@@ -120,7 +132,8 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
     case k_ESteamNetworkingConnectionState_Connected:
     {
         m_connection_status = connection_status_t::connected;
-        m_client_connected_callback_func();
+        if (m_client_connected_callback_func)
+            m_client_connected_callback_func();
         break;
     }
     case k_ESteamNetworkingConnectionState_ClosedByPeer: [[fallthrough]];
@@ -154,7 +167,8 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
         m_connection = k_HSteamNetConnection_Invalid;
         m_connection_status = connection_status_t::disconnected;
 
-        m_client_disconnected_callback_func();
+        if (m_client_disconnected_callback_func)
+            m_client_disconnected_callback_func();
 
         break;
     }
@@ -251,7 +265,13 @@ auto network_client::poll_incoming_messages() noexcept -> void
             return;
         }
 
-        m_data_received_callback_func(owning_buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) });
+        if (m_data_received_callback_func)
+        {
+            m_data_received_callback_func(
+                owning_buffer{ incoming_message->m_pData, static_cast<std::size_t>(incoming_message->m_cbSize) }
+            );
+        }
+            
 
         incoming_message->Release();
     }

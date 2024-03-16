@@ -16,9 +16,9 @@ Required Libraries/Binaries (should be installed by setup.py)
 - Vulkan
   - Requires VULKAN_SDK environment variable (again should be automated)
 - Premake
-
   - Requires installation in `%KABLUNK_DIR%/vendor/premake/bin/premake5.exe` (again should be automated)
-
+- Boost 1.84.0
+  - **Must** be installed under `C:/Program Files/boost/boost_1_84_0/`
 - MSVC developer command prompt must be on system path
   - Add `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\`
 - Catch2 Test adaptor for Visual Studio (Windows)
