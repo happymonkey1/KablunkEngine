@@ -10,6 +10,7 @@ struct client_info
 {
     client_id_t m_client_id{};
     std::string m_connection_description{};
+    bool m_authenticated = false;
 };
 
 } // end namespace kb::network

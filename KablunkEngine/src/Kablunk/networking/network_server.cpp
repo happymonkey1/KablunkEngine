@@ -2,9 +2,11 @@
 
 #include "Kablunk/networking/network_server.h"
 #include "Kablunk/networking/net_var.h"
+#include "Kablunk/networking/network_utils.h"
 
 #include <array>
 
+#include "Kablunk/networking/authentication.h"
 #include "Kablunk/networking/game_networking_sockets.h"
 
 namespace kb::network
@@ -87,6 +89,7 @@ auto network_server::stop() noexcept -> void
 
 auto network_server::kick_client(client_id_t p_client_id) noexcept -> void
 {
+    KB_CORE_INFO("[network_server]: Kicking client '{}'", p_client_id);
     m_interface->CloseConnection(p_client_id, 0, "Kicked by host", false);
 }
 
@@ -119,7 +122,7 @@ auto network_server::send_buffer_to_all_clients(
 #endif
 
 auto network_server::send(
-    client_id_t p_client_id,
+    const client_id_t p_client_id,
     const void* p_data,
     size_t p_size,
     bool p_reliable /*= true*/
@@ -135,20 +138,204 @@ auto network_server::send(
     );
 }
 
-auto network_server::on_data_received(
-    const client_info& p_client_info,
-    const msgpack::sbuffer& p_data_buffer
-) const noexcept -> void
+auto network_server::handle_client_authentication(
+    client_info& p_client_info,
+    const msgpack::object& p_auth_data_object
+) noexcept -> void
 {
-    const auto rpc_response = m_rpc_dispatcher->dispatch(p_data_buffer);
-    if (!rpc_response)
-        m_data_received_callback_func(p_client_info, p_data_buffer);
+    if (p_client_info.m_authenticated)
+        return;
+
+    const bool auth_check = check_client_auth_packet(p_client_info, p_auth_data_object);
+
+    // disconnect client if they fail the auth check
+    if (!auth_check)
+    {
+        kick_client(p_client_info.m_client_id);
+        return;
+    }
+
+    p_client_info.m_authenticated = auth_check;
+    send_authentication_response_to_client(p_client_info);
+}
+
+auto network_server::on_data_received(
+    client_info& p_client_info,
+    const msgpack::sbuffer& p_data_buffer
+) noexcept -> void
+{
+    const auto object_handle = msgpack::unpack(
+        p_data_buffer.data(),
+        p_data_buffer.size()
+    );
+
+    const auto object = object_handle.get();
+
+    // all kb packets must be a msgpack array
+    if (object.type != msgpack::type::ARRAY)
+    {
+        KB_CORE_WARN("[network_server::on_data_received]: Invalid serialized type {} found", static_cast<u32>(object.type));
+        return;
+    }
+
+    // array must contain data
+    if (object.via.array.size == 0)
+    {
+        KB_CORE_WARN("[ntework_server::on_data_received]: Invalid array size 0!");
+        return;
+    }
+
+    // all kb packets must send their packet type id first
+    const auto packet_type = object.via.array.ptr[0].as<underlying_packet_type_t>();
+
+    // check packet type for kb internal handlers and dispatch
+    // specific unhandled packets are early return, values above `kb_reserved` are dispatched to
+    // user callback
+    dispatch_handler_by_packet_type(packet_type, p_client_info, object);
+}
+
+auto network_server::dispatch_handler_by_packet_type(
+    const underlying_packet_type_t p_packet_type,
+    client_info& p_client_info,
+    const msgpack::object& p_data_object
+) noexcept -> void
+{
+    switch (p_packet_type)
+    {
+    case static_cast<underlying_packet_type_t>(packet_type::none):
+    {
+        KB_CORE_WARN("[network_server::on_data_received]: Invalid packet type 0!");
+        break;
+    }
+    case static_cast<underlying_packet_type_t>(packet_type::kb_auth_check):
+    {
+        handle_client_authentication(p_client_info, p_data_object);
+        break;
+    }
+    case static_cast<underlying_packet_type_t>(packet_type::kb_auth_response):
+    {
+        KB_CORE_WARN(
+            "[network_server::on_data_received]: Unexpected packet type {} from client {}",
+            p_packet_type,
+            p_client_info.m_client_id
+        );
+        break;
+    }
+    case static_cast<underlying_packet_type_t>(packet_type::kb_rpc_call):
+    {
+        // #TODO handle response
+        const auto rpc_response = m_rpc_dispatcher->dispatch(
+            p_client_info,
+            p_data_object
+        );
+        break;
+    }
+    case static_cast<underlying_packet_type_t>(packet_type::kb_rpc_response):
+    {
+        KB_CORE_WARN(
+            "[network_server::on_data_received]: Unexpected packet type {} from client {}",
+            p_packet_type,
+            p_client_info.m_client_id
+        );
+        break;
+    }
+    default:
+    {
+        if (p_packet_type > static_cast<underlying_packet_type_t>(packet_type::kb_reserved))
+            m_data_received_callback_func(p_client_info, p_data_object);
+        else
+        {
+            KB_CORE_ERROR(
+                "[network_server::on_data_received]: Unhandled kb internal packet type {}",
+                p_packet_type
+            );
+            break;
+        }
+    }
+    }
+}
+
+auto network_server::check_client_auth_packet(
+    const client_info& p_client_info,
+    const msgpack::object& p_data_object
+) const noexcept -> bool
+{
+    const auto data_buffer_res = util::convert_object<authentication_check_data>(p_data_object);
+    if (!data_buffer_res)
+    {
+        KB_CORE_WARN(
+            "[network_server]: Tried authentication client '{}' but packet data was not invalid",
+            p_client_info.m_client_id
+        );
+        return false;
+    }
+
+    const auto auth_data = data_buffer_res.value();
+    const auto computed_hash = compute_auth_hash(
+        auth_data.m_auth_version,
+        std::string_view{ m_service_name }
+    );
+    const auto client_hash = auth_data.m_auth_hash;
+
+    if (computed_hash == client_hash)
+    {
+        KB_CORE_INFO(
+            "[network_server]: Successfully authenticated client '{}' with auth hash {}",
+            p_client_info.m_client_id,
+            auth_data.m_auth_hash
+        );
+        return true;
+    }
+    else
+    {
+        KB_CORE_INFO(
+            "[network_server]: Failed to authenticate client '{}' with auth hash {}",
+            p_client_info.m_client_id,
+            auth_data.m_auth_hash
+        );
+        return false;
+    }
+}
+
+auto network_server::disconnect_client(client_id_t p_client_id) noexcept -> void
+{
+    // locate client
+    const auto it_client = m_connected_clients.find(p_client_id);
+    if (it_client == m_connected_clients.end())
+    {
+        KB_CORE_WARN(
+            "[network::network_server]: Trying to handle client disconnect but could not find client locally?"
+        );
+        return;
+    }
+
+    KB_CORE_INFO(
+        "[network::network_server]: Disconnected client '{}'",
+        p_client_id
+    );
+
+    // either ClosedByPeer or ProblemDetectedLocally - should be communicated to user callback
+    m_client_disconnected_callback_func(it_client->second);
+
+    m_connected_clients.erase(it_client);
+}
+
+auto network_server::send_authentication_response_to_client(const client_info& p_client_info) const noexcept -> void
+{
+    const auto auth_response = util::as_buffer(authentication_response_data{
+        .m_packet_type = static_cast<underlying_packet_type_t>(packet_type::kb_auth_response),
+        // #TODO require version in create call and pass...
+        .m_service_version = "0.0.1",
+        .m_client_id = p_client_info.m_client_id
+    });
+
+    send_packed_buffer_to_client(p_client_info.m_client_id, auth_response);
 }
 
 auto network_server::send_packed_buffer_to_all_clients(
     msgpack::sbuffer p_buffer,
-    client_id_t p_exclude_client,
-    bool p_reliable
+    const client_id_t p_exclude_client,
+    const bool p_reliable
 ) const noexcept -> void
 {
     for (const auto& [client_id, client_info] : m_connected_clients)
@@ -167,8 +354,8 @@ auto network_server::send_packed_buffer_to_all_clients(
 
 auto network_server::send_packed_buffer_to_all_clients(
     const ref<msgpack::sbuffer>& p_buffer_ref,
-    client_id_t p_exclude_client,
-    bool p_reliable
+    const client_id_t p_exclude_client,
+    const bool p_reliable
 ) const noexcept -> void
 {
     KB_CORE_ASSERT(
@@ -191,31 +378,29 @@ auto network_server::send_packed_buffer_to_all_clients(
 }
 
 auto network_server::create(
-    i32 p_port,
-    data_received_callback_func_t p_data_received_callback_func,
-    client_connected_callback_func_t p_client_connected_callback_func,
-    client_disconnected_callback_func_t p_client_disconnected_callback
+    const i32 p_port,
+    std::string p_service_name,
+    callback_info&& p_callbacks
 ) noexcept -> ref<network_server>
 {
     KB_CORE_ASSERT(p_port < std::numeric_limits<u16>::max(), "[network::network_server]: Port out of range!");
 
     return ref<network_server>::Create(
         p_port,
-        p_data_received_callback_func,
-        p_client_connected_callback_func,
-        p_client_disconnected_callback
+        std::move(p_service_name),
+        std::forward<callback_info>(p_callbacks)
     );
 }
 
 network_server::network_server(
-    i32 port,
-    data_received_callback_func_t p_data_received_callback_func,
-    client_connected_callback_func_t p_client_connected_callback_func,
-    client_disconnected_callback_func_t p_client_disconnected_callback
+    const i32 port,
+    std::string&& p_service_name,
+    const callback_info& p_callbacks
 ) noexcept
-    : m_port{ port }, m_data_received_callback_func{ p_data_received_callback_func },
-    m_client_connected_callback_func{ p_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_client_disconnected_callback }
+    : m_port{ port }, m_service_name{ std::move(p_service_name) },
+    m_data_received_callback_func{ p_callbacks.m_data_received_callback_func },
+    m_client_connected_callback_func{ p_callbacks.m_client_connected_callback_func },
+    m_client_disconnected_callback_func{ p_callbacks.m_client_disconnected_callback }
 {
     details::register_server_for_connection_callback(this);
 }
@@ -234,7 +419,11 @@ auto network_server::network_loop() noexcept -> void
     SteamNetworkingConfigValue_t config{};
     // must correspond to the number of config values set below
     constexpr i32 k_options_count = 1;
-    config.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, static_cast<void*>(&network_server::connection_status_changed_callback));
+    config.SetPtr(
+        k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged,
+        // #FIXME clang-diagnostic-microsoft-cast conversion between pointer to function and pointer to object
+        static_cast<void*>(&(network_server::connection_status_changed_callback))
+    );
 
     // start listening socket
     m_listen_socket = m_interface->CreateListenSocketIP(server_local_address, k_options_count, &config);
@@ -329,7 +518,8 @@ auto network_server::poll_incoming_messages() noexcept -> void
                 static_cast<std::size_t>(incoming_message->m_cbSize)
             );
 
-            on_data_received(it_client->second, buffer);
+            auto& client_info = it_client->second;
+            on_data_received(client_info, buffer);
         }
 
         incoming_message->Release();
@@ -337,7 +527,10 @@ auto network_server::poll_incoming_messages() noexcept -> void
     //KB_CORE_TRACE("[network::network_server]: Finished polling messages.");
 }
 
-auto network_server::set_client_description(client_id_t p_connection, const std::string& p_description) noexcept -> void
+auto network_server::set_client_description(
+    client_id_t p_connection,
+    const std::string& p_description
+) const noexcept -> void
 {
     m_interface->SetConnectionName(p_connection, p_description.c_str());
 }
@@ -353,7 +546,9 @@ auto network_server::connection_status_changed_callback(
     }
 }
 
-auto network_server::on_connection_status_change(const SteamNetConnectionStatusChangedCallback_t* p_status) noexcept -> void
+auto network_server::on_connection_status_change(
+    const SteamNetConnectionStatusChangedCallback_t* p_status
+) noexcept -> void
 {
     switch (p_status->m_info.m_eState)
     {
@@ -366,28 +561,8 @@ auto network_server::on_connection_status_change(const SteamNetConnectionStatusC
         // ignore if they were not previously connected (if they disconnected before we accepted the connection).
         if (p_status->m_eOldState == k_ESteamNetworkingConnectionState_Connected)
         {
-            // locate the client. Note that it should have been found, because this
-            // is the only codepath where we remove clients (except on shutdown),
-            // and connection change callbacks are dispatched in queue order.
-            const auto it_client = m_connected_clients.find(p_status->m_hConn);
-            //assert(itClient != m_mapClients.end());
-            if (it_client == m_connected_clients.end())
-            {
-                KB_CORE_WARN(
-                    "[network::network_server]: Trying to handle client disconnect but could not find client locally?"
-                );
-                break;
-            }
-
-            KB_CORE_INFO(
-                "[network::network_server]: client '{}' disconnected",
-                it_client->second.m_client_id
-            );
-
-            // either ClosedByPeer or ProblemDetectedLocally - should be communicated to user callback
-            m_client_disconnected_callback_func(it_client->second);
-
-            m_connected_clients.erase(it_client);
+            disconnect_client(p_status->m_hConn);
+            break;
         }
 
         // clean up the connection.  This is important!

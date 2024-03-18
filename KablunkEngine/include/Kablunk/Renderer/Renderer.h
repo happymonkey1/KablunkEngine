@@ -119,8 +119,8 @@ private:
 	// submission index of render command queue
 	std::atomic<u32> m_render_command_queue_submission_index = 0;
 	// number of render command queues
-	constexpr static const u32 s_render_command_queue_size = 3;
-	constexpr static const u32 s_resource_free_queue_size = 3;
+	constexpr static u32 s_render_command_queue_size = 3;
+	constexpr static u32 s_resource_free_queue_size = 3;
 
 	// resource freeing queues
 	kb::render_command_queue m_resource_free_queue[s_resource_free_queue_size]{};

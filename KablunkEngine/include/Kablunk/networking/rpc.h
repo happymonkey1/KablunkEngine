@@ -32,10 +32,13 @@ struct rpc_request
 
 struct rpc_response
 {
-    // rpc packet header
-    rpc_header m_header{};
+    std::underlying_type_t<packet_type> m_type{};
+    u32 m_id{};
+    std::string m_name{};
     // buffer to function response
-    msgpack::sbuffer m_data_buffer{};
+    msgpack::object m_data_buffer{};
+
+    MSGPACK_DEFINE(m_type, m_id, m_name, m_data_buffer);
 };
 
 } // end namespace kb::network

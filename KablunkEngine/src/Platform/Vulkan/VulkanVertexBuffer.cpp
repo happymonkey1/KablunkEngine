@@ -104,10 +104,10 @@ namespace kb
 
 	void VulkanVertexBuffer::SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
 	{
-		memcpy(m_local_data.get(), (uint8_t*)data + offset, size);
+		memcpy(m_local_data.get(), static_cast<const uint8_t*>(data) + offset, size);
         ref instance{ this };
 		render::submit([instance, size, offset]() mutable {
-				instance->RT_SetData(instance->m_local_data.get(), size, offset);
+				instance->RT_SetData(instance->m_local_data.get(), size, 0);
 			});
 	}
 
@@ -115,7 +115,7 @@ namespace kb
 	{
 		VulkanAllocator allocator{ "VertexBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_memory_allocation);
-		memcpy(data_ptr, (uint8_t*)data + offset, size);
+		memcpy(data_ptr, static_cast<const u8*>(data) + offset, size);
 		allocator.UnmapMemory(m_memory_allocation);
 	}
 

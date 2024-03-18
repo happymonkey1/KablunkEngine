@@ -13,30 +13,52 @@ TEST_CASE("network initialization succeeds", "[networking]")
 
     auto data_callback_func = [](
         const network::client_info& p_client_info,
-        const msgpack::sbuffer& p_data_buffer
+        const msgpack::object& p_data_object
         ) -> void
         {
-            KB_CORE_INFO("[networking_test]: data recieved callback called!");
+            KB_CORE_INFO("[networking_test]: server's data recieved callback called!");
         };
     auto client_connected_func = [](
         const network::client_info& p_client_info
         ) -> void
         {
-            KB_CORE_INFO("[networking_test]: client connected callback called!");
+            KB_CORE_INFO("[networking_test]: server's client connected callback called!");
         };
     auto client_disconnected_func = [](
         const network::client_info& p_client_info
         ) -> void
         {
-            KB_CORE_INFO("[networking_test]: client disconnected callback called!");
+            KB_CORE_INFO("[networking_test]: server's client disconnected callback called!");
         };
+
+    auto client_data_callback_func = [](
+        const msgpack::object& p_data_object
+        ) -> void
+        {
+            KB_CORE_INFO("[networking_test]: client's data recieved callback called!");
+        };
+    auto client_client_connected_func = [](
+        ) -> void
+        {
+            KB_CORE_INFO("[networking_test]: client's client connected callback called!");
+        };
+    auto client_client_disconnected_func = [](
+        ) -> void
+        {
+            KB_CORE_INFO("[networking_test]: client's client disconnected callback called!");
+        };
+
+    const std::string service_name = "kablunk-engine-tests@test";
 
     u32 port = 20420;
     auto server = network::network_server::create(
         port,
-        data_callback_func,
-        client_connected_func,
-        client_disconnected_func
+        service_name,
+        {
+            .m_data_received_callback_func = data_callback_func,
+            .m_client_connected_callback_func = client_connected_func,
+            .m_client_disconnected_callback = client_disconnected_func
+        }
     );
     server->bind_rpc(
         "add",
@@ -57,8 +79,15 @@ TEST_CASE("network initialization succeeds", "[networking]")
         std::chrono::milliseconds(k_delay_ms)
     );
 
-    auto client = network::network_client::create();
-    client->connect_to_server(fmt::format("127.0.0.1:{}", port));
+    auto client = network::network_client::create(
+        service_name,
+        {
+            .m_data_received_callback_func = client_data_callback_func,
+            .m_client_connected_callback_func = client_client_connected_func,
+            .m_client_disconnected_callback_func = client_client_disconnected_func,
+        }
+    );
+    client->connect_to_server("127.0.0.1", port);
 
     // #TODO: use `wait_for_connection` function
     std::this_thread::sleep_for(

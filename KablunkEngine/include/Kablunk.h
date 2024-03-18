@@ -75,9 +75,11 @@
 // ----------------------------------------------
 
 // ---Networking---------------------------------
+#include <msgpack.hpp>
 #include "Kablunk/networking/networking_types.h"
 #include "Kablunk/networking/network_client.h"
 #include "Kablunk/networking/network_server.h"
+#include "Kablunk/networking/network_serde.h"
 // ----------------------------------------------
 
 
