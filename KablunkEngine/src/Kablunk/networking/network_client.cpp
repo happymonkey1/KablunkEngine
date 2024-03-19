@@ -133,6 +133,7 @@ auto network_client::dispatch_handler_by_packet_type(
     const msgpack::object& p_data_object
 ) noexcept -> void
 {
+    // dispatch internal handlers
     switch (p_packet_type)
     {
     case static_cast<underlying_packet_type_t>(packet_type::none):
@@ -174,6 +175,9 @@ auto network_client::dispatch_handler_by_packet_type(
         }
     }
     }
+
+    // dispatch user provided handlers
+    m_packet_handler_dispatcher.dispatch(p_packet_type, p_data_object);
 }
 
 auto network_client::handle_auth_response(const msgpack::object& p_data_object) noexcept -> void

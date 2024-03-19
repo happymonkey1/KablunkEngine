@@ -10,6 +10,7 @@
 #include <steam/isteamnetworkingutils.h>
 
 #include "Kablunk/networking/authentication.h"
+#include "Kablunk/networking/packet_handler_dispatcher.h"
 #include "Kablunk/networking/rpc_dispatcher.h"
 
 namespace kb::network
@@ -30,6 +31,8 @@ public:
     using data_received_callback_func_t = void (*)(const msgpack::object&);
     using client_connected_callback_func_t = void (*)();
     using client_disconnected_callback_func_t = void (*)();
+
+    using packet_handler_func_t = client_packet_handler_dispatcher::packet_handler_func_t;
 
     struct callback_info
     {
@@ -60,6 +63,17 @@ public:
     auto disconnect() noexcept -> void;
     auto is_running() const noexcept -> bool { return m_running; }
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
+    auto get_client_id() const noexcept -> client_id_t { return m_client_id; }
+
+    // bind a packet type to a user provided handler
+    // handler is invoked upon receiving the specified packet type, after internal handlers are run
+    auto bind(
+        underlying_packet_type_t p_packet_type,
+        packet_handler_func_t p_handler
+    ) noexcept -> void
+    {
+        m_packet_handler_dispatcher.bind(p_packet_type, p_handler);
+    }
 
     // serialize arguments and send an rpc request
     template <typename... Args>
@@ -132,6 +146,8 @@ private:
     //kb::unordered_flat_map<u32, std::future<>>
 
     u32 m_client_id = 0;
+
+    client_packet_handler_dispatcher m_packet_handler_dispatcher{};
 
     friend class ref<network_client>;
 };

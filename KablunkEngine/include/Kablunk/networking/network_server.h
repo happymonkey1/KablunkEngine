@@ -10,6 +10,7 @@
 
 #include <thread>
 
+#include "Kablunk/networking/packet_handler_dispatcher.h"
 #include "Kablunk/networking/rpc_dispatcher.h"
 
 namespace kb::network
@@ -21,6 +22,8 @@ public:
     using data_received_callback_func_t = void (*)(const client_info&, const msgpack::object&);
     using client_connected_callback_func_t = void (*)(const client_info&);
     using client_disconnected_callback_func_t = void (*)(const client_info&);
+
+    using packet_handler_func_t = server_packet_handler_dispatcher::packet_handler_func_t;
 
     struct callback_info
     {
@@ -51,12 +54,19 @@ public:
     // bind a name to a rpc function
     auto bind_rpc(const std::string& p_name, auto&& p_rpc_func) -> void
     {
-        m_rpc_dispatcher->bind(p_name, std::forward<decltype(p_rpc_func)>(p_rpc_func));
+        m_rpc_dispatcher.bind(p_name, std::forward<decltype(p_rpc_func)>(p_rpc_func));
+    }
+
+    // bind a packet type to an on packet received handler
+    auto bind(
+        underlying_packet_type_t p_packet_type,
+        packet_handler_func_t p_handler
+    ) noexcept -> void
+    {
+        m_packet_handler_dispatcher.bind(p_packet_type, p_handler);
     }
 
     /* data management */
-
-
     auto send_packed_buffer_to_client(
         client_id_t p_client_id,
         const msgpack::sbuffer& p_buffer,
@@ -174,7 +184,10 @@ private:
     HSteamListenSocket m_listen_socket = 0u;
     HSteamNetPollGroup m_poll_group = 0u;
 
-    std::unique_ptr<rpc_dispatcher> m_rpc_dispatcher = std::make_unique<rpc_dispatcher>();
+    // dispatcher for rpc calls
+    rpc_dispatcher m_rpc_dispatcher{};
+    // dispatcher for packet callbacks
+    server_packet_handler_dispatcher m_packet_handler_dispatcher{};
 
     friend class ref<network_server>;
 };

@@ -200,6 +200,7 @@ auto network_server::dispatch_handler_by_packet_type(
     const msgpack::object& p_data_object
 ) noexcept -> void
 {
+    // invoke internal handlers
     switch (p_packet_type)
     {
     case static_cast<underlying_packet_type_t>(packet_type::none):
@@ -224,7 +225,7 @@ auto network_server::dispatch_handler_by_packet_type(
     case static_cast<underlying_packet_type_t>(packet_type::kb_rpc_call):
     {
         // #TODO handle response
-        const auto rpc_response = m_rpc_dispatcher->dispatch(
+        const auto rpc_response = m_rpc_dispatcher.dispatch(
             p_client_info,
             p_data_object
         );
@@ -253,6 +254,9 @@ auto network_server::dispatch_handler_by_packet_type(
         }
     }
     }
+
+    // invoke user provided handlers
+    m_packet_handler_dispatcher.dispatch(p_packet_type, p_client_info, p_data_object);
 }
 
 auto network_server::check_client_auth_packet(
