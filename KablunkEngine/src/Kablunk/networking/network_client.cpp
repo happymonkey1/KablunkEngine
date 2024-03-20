@@ -80,13 +80,19 @@ auto network_client::send_authentication_check(
     const authentication_type p_auth_type /*= authentication_type::kb_sig_v1*/
 ) const noexcept -> void
 {
+    KB_CORE_ASSERT(
+        m_account_credentials.validate(),
+        "[network_client]: Account credentails failed local validation check"
+    )
+
     KB_CORE_INFO("[network_client]: Sending authentication check");
     const auto auth_type = static_cast<underlying_auth_type_t>(p_auth_type);
     auto auth_check_buffer = util::as_buffer(
         authentication_check_data{
             .m_packet_type = static_cast<underlying_packet_type_t>(packet_type::kb_auth_check),
             .m_auth_version = auth_type,
-            .m_auth_hash = compute_auth_hash(auth_type, m_service_name)
+            .m_auth_hash = compute_auth_hash(auth_type, m_service_name),
+            .m_account_credentials = m_account_credentials,
         }
     );
 
@@ -221,12 +227,14 @@ auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliab
 
 auto network_client::create(
     std::string p_service_name,
-    callback_info&& p_callback_info
+    callback_info&& p_callback_info,
+    std::optional<account_credentials> p_account_credentials
 ) noexcept -> ref<network_client>
 {
     auto client = ref<network_client>::Create(
         std::move(p_service_name),
-        std::forward<callback_info>(p_callback_info)
+        std::forward<callback_info>(p_callback_info),
+        std::move(p_account_credentials)
     );
     details::register_client_for_connection_callback(client.get());
     return client;
@@ -234,12 +242,14 @@ auto network_client::create(
 
 network_client::network_client(
     std::string&& p_service_name,
-    callback_info p_callback_info
+    callback_info p_callback_info,
+    std::optional<account_credentials>&& p_account_credentials
 ) noexcept
     : m_service_name{ std::move(p_service_name) },
     m_data_received_callback_func{ p_callback_info.m_data_received_callback_func },
     m_client_connected_callback_func{ p_callback_info.m_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_callback_info.m_client_disconnected_callback_func }
+    m_client_disconnected_callback_func{ p_callback_info.m_client_disconnected_callback_func },
+    m_account_credentials{ p_account_credentials.has_value() ? *p_account_credentials : account_credentials{} }
 {
     KB_CORE_ASSERT(m_data_received_callback_func, "m_data_received_callback_func cannot be null");
     KB_CORE_ASSERT(m_client_connected_callback_func, "m_client_connected_callback_func cannot be null");

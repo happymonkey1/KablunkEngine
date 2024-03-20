@@ -10,6 +10,7 @@
 
 #include <thread>
 
+#include "Kablunk/networking/authentication.h"
 #include "Kablunk/networking/packet_handler_dispatcher.h"
 #include "Kablunk/networking/rpc_dispatcher.h"
 
@@ -156,7 +157,7 @@ private:
     // auth check that only KablunkEngine clients are trying to connect
     auto check_client_auth_packet(
         const client_info& p_client_info,
-        const msgpack::object& p_data_object
+        const authentication_check_data& p_data_object
     ) const noexcept -> bool;
 
     auto disconnect_client(

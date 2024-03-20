@@ -47,6 +47,8 @@ defines {
 	"MSDFGEN_PUBLIC=__declspec(dllimport)",
 	"MSDF_ATLAS_PUBLIC=__declspec(dllimport)",
 	"GLM_FORCE_DEPTH_ZERO_TO_ONE",
+	"_DISABLE_VECTOR_ANNOTATION",
+	"_DISABLE_STRING_ANNOTATION",
 }
 
 includedirs {

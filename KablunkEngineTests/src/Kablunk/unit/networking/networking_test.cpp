@@ -7,6 +7,12 @@
 
 using namespace kb;
 
+auto sub(const network::client_info&, int x, int y) -> int
+{
+    KB_CORE_INFO("sub called!");
+    return x - y;
+}
+
 TEST_CASE("network initialization succeeds", "[networking]")
 {
     constexpr u32 k_delay_ms = 250;
@@ -62,7 +68,7 @@ TEST_CASE("network initialization succeeds", "[networking]")
     );
     server->bind_rpc(
         "add",
-        [](int a, int b) -> int
+        [](const network::client_info& p_client_info, int a, int b) -> int
         {
             KB_CORE_INFO(
                 "[networking_test]: add rpc called! {} + {} = {}",
@@ -72,6 +78,10 @@ TEST_CASE("network initialization succeeds", "[networking]")
             );
             return a + b;
         }
+    );
+    server->bind_rpc(
+        "sub",
+        &sub
     );
     server->start();
 
@@ -85,6 +95,9 @@ TEST_CASE("network initialization succeeds", "[networking]")
             .m_data_received_callback_func = client_data_callback_func,
             .m_client_connected_callback_func = client_client_connected_func,
             .m_client_disconnected_callback_func = client_client_disconnected_func,
+        },
+        network::account_credentials{
+            .m_username = "KablunkEngineTests-username"
         }
     );
     client->connect_to_server("127.0.0.1", port);
@@ -94,6 +107,7 @@ TEST_CASE("network initialization succeeds", "[networking]")
         std::chrono::milliseconds(k_delay_ms)
     );
     client->call_rpc("add", 2, 3);
+    client->call_rpc("sub", 2, 3);
 
     // #TODO: require on response when that is implemented
     std::this_thread::sleep_for(

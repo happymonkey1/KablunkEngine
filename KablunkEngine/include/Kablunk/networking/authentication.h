@@ -2,6 +2,7 @@
 
 #include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/crc_32_hash.h"
+#include "Kablunk/networking/client_info.h"
 
 #include <msgpack.hpp>
 
@@ -25,8 +26,9 @@ struct authentication_check_data
     u16 m_packet_type = 0;
     underlying_auth_type_t m_auth_version = static_cast<underlying_auth_type_t>(authentication_type::kb_sig_v1);
     std::size_t m_auth_hash = 0;
+    account_credentials m_account_credentials{};
 
-    MSGPACK_DEFINE(m_packet_type, m_auth_version, m_auth_hash);
+    MSGPACK_DEFINE(m_packet_type, m_auth_version, m_auth_hash, m_account_credentials);
 };
 
 struct authentication_response_data

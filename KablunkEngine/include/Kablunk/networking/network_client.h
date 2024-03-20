@@ -13,6 +13,8 @@
 #include "Kablunk/networking/packet_handler_dispatcher.h"
 #include "Kablunk/networking/rpc_dispatcher.h"
 
+#include <optional>
+
 namespace kb::network
 { // start namespace kb::network
 
@@ -65,6 +67,12 @@ public:
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
     auto get_client_id() const noexcept -> client_id_t { return m_client_id; }
 
+    auto set_account_credentials(account_credentials&& p_account_credentials) noexcept -> void
+    {
+        m_account_credentials = std::move(p_account_credentials);
+    }
+    auto get_account_credentials() const noexcept -> const account_credentials& { return m_account_credentials; }
+
     // bind a packet type to a user provided handler
     // handler is invoked upon receiving the specified packet type, after internal handlers are run
     auto bind(
@@ -84,7 +92,8 @@ public:
     /* factory create function */
     [[nodiscard]] static auto create(
         std::string p_service_name,
-        callback_info&& p_callback_info
+        callback_info&& p_callback_info,
+        std::optional<account_credentials> p_account_credentials
     ) noexcept -> ref<network_client>;
 
     /* overloaded operators */
@@ -94,7 +103,8 @@ public:
 private:
     network_client(
         std::string&& p_service_name,
-        callback_info p_callback_info
+        callback_info p_callback_info,
+        std::optional<account_credentials>&& p_account_credentials
     ) noexcept;
 
     static auto connection_status_changed_callback(SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
@@ -146,6 +156,7 @@ private:
     //kb::unordered_flat_map<u32, std::future<>>
 
     u32 m_client_id = 0;
+    account_credentials m_account_credentials{};
 
     client_packet_handler_dispatcher m_packet_handler_dispatcher{};
 

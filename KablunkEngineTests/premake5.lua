@@ -4,6 +4,7 @@ language "C++"
 cppdialect "C++20"
 staticruntime "off"
 conformancemode "off"
+editandcontinue "Off"
 
 targetdir("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 objdir("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -41,6 +42,8 @@ postbuildcommands {
 }
 
 defines {
+    "_DISABLE_VECTOR_ANNOTATION",
+    "_DISABLE_STRING_ANNOTATION",
 }
 
 filter "configurations:Debug"

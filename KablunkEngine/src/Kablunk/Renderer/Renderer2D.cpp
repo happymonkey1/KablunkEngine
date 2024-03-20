@@ -1018,7 +1018,7 @@ void Renderer2D::draw_text_string(
         }
 	}
 
-    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::trunc(position))
+    const glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, position)
         * glm::scale(glm::mat4{ 1.0f }, glm::vec3{ size.x, size.y, size.x });
 
 	{

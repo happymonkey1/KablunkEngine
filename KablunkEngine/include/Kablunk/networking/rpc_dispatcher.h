@@ -7,6 +7,7 @@
 #include "Kablunk/networking/rpc.h"
 #include "Kablunk/meta/func_traits.h"
 #include "Kablunk/meta/func_invoke.h"
+#include "Kablunk/meta/tuple_traits.h"
 #include "Kablunk/networking/client_info.h"
 #include "Kablunk/networking/network_utils.h"
 
@@ -88,10 +89,18 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
             const msgpack::object& args)
         {
             constexpr u32 args_count = args_meta::arg_count::value;
-            args_type_t args_obj{};
+
+            // #TODO fix implementation
+            // not the cleanest, client_id is retrieved server side. It is not serialized in client
+            using serialized_args = typename meta::tuple_remove_first_type<args_type_t>::type;
+            serialized_args args_obj{};
             // #TODO validate argument count is correct
             args.convert(args_obj);
-            ::kb::meta::invoke_func(p_rpc_func, args_obj);
+
+            ::kb::meta::invoke_func(
+                p_rpc_func,
+                std::tuple_cat(std::make_tuple(p_client_info), args_obj)
+            );
             return std::make_optional(
                 rpc_response{
                     .m_type = static_cast<packet_underlying_t>(packet_type::kb_rpc_response),

@@ -146,7 +146,18 @@ auto network_server::handle_client_authentication(
     if (p_client_info.m_authenticated)
         return;
 
-    const bool auth_check = check_client_auth_packet(p_client_info, p_auth_data_object);
+    auto data_buffer_res = util::convert_object<authentication_check_data>(p_auth_data_object);
+    if (!data_buffer_res)
+    {
+        KB_CORE_WARN(
+            "[network_server]: Tried authentication client '{}' but packet data was not invalid",
+            p_client_info.m_client_id
+        );
+        return;
+    }
+
+    const auto auth_data = std::move(*data_buffer_res);
+    const bool auth_check = check_client_auth_packet(p_client_info, auth_data);
 
     // disconnect client if they fail the auth check
     if (!auth_check)
@@ -156,6 +167,7 @@ auto network_server::handle_client_authentication(
     }
 
     p_client_info.m_authenticated = auth_check;
+    p_client_info.m_account_credentials = auth_data.m_account_credentials;
     send_authentication_response_to_client(p_client_info);
 }
 
@@ -261,32 +273,23 @@ auto network_server::dispatch_handler_by_packet_type(
 
 auto network_server::check_client_auth_packet(
     const client_info& p_client_info,
-    const msgpack::object& p_data_object
+    const authentication_check_data& p_auth_data
 ) const noexcept -> bool
 {
-    const auto data_buffer_res = util::convert_object<authentication_check_data>(p_data_object);
-    if (!data_buffer_res)
-    {
-        KB_CORE_WARN(
-            "[network_server]: Tried authentication client '{}' but packet data was not invalid",
-            p_client_info.m_client_id
-        );
-        return false;
-    }
-
-    const auto auth_data = data_buffer_res.value();
     const auto computed_hash = compute_auth_hash(
-        auth_data.m_auth_version,
+        p_auth_data.m_auth_version,
         std::string_view{ m_service_name }
     );
-    const auto client_hash = auth_data.m_auth_hash;
+    const auto client_hash = p_auth_data.m_auth_hash;
 
-    if (computed_hash == client_hash)
+
+    if (computed_hash == client_hash && p_auth_data.m_account_credentials.validate())
     {
         KB_CORE_INFO(
-            "[network_server]: Successfully authenticated client '{}' with auth hash {}",
+            "[network_server]: Successfully authenticated client '{}' (client id {}) with auth hash {}",
+            p_auth_data.m_account_credentials.m_username,
             p_client_info.m_client_id,
-            auth_data.m_auth_hash
+            p_auth_data.m_auth_hash
         );
         return true;
     }
@@ -295,7 +298,7 @@ auto network_server::check_client_auth_packet(
         KB_CORE_INFO(
             "[network_server]: Failed to authenticate client '{}' with auth hash {}",
             p_client_info.m_client_id,
-            auth_data.m_auth_hash
+            p_auth_data.m_auth_hash
         );
         return false;
     }

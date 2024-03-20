@@ -197,7 +197,7 @@ auto font::generate_atlas(owning_buffer&& p_font_data_buffer) noexcept -> void
 
     // load charsets
     msdf_atlas::Charset charset{};
-    for (size_t range = 0; range < k_charset_range; range += 2)
+    for (size_t range = 0; range < k_charset_range - 1; range += 2)
         for (uint32_t c = k_charset_ranges[range]; c <= k_charset_ranges[range + 1]; c++)
             charset.add(c);
 

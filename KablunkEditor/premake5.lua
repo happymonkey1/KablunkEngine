@@ -65,6 +65,8 @@ defines
     "MSDF_ATLAS_PUBLIC=__declspec(dllimport)",
     "GLM_FORCE_DEPTH_ZERO_TO_ONE",
     "MSGPACK_NO_BOOST",
+    "_DISABLE_VECTOR_ANNOTATION",
+    "_DISABLE_STRING_ANNOTATION",
 }
 
 postbuildcommands

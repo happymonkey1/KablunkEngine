@@ -139,14 +139,14 @@ public:
 	inline constexpr void Write(const void* data, const size_t size, const size_t offset = 0) noexcept
 	{
 		KB_CORE_ASSERT(offset + size <= m_size, "owning_buffer overflow!");
-        for (size_t i = 0; i < m_size; ++i)
+        for (size_t i = 0; i < size; ++i)
             m_data[i + offset] = static_cast<const u8*>(data)[i];
 	}
 
     inline constexpr void write(const char* p_data, const size_t p_size) noexcept
 	{
         KB_CORE_ASSERT(p_size <= m_size, "owning_buffer overflow!");
-        for (size_t i = 0; i < m_size; ++i)
+        for (size_t i = 0; i < p_size; ++i)
             m_data[i] = reinterpret_cast<const u8*>(p_data)[i];
 	}
 
