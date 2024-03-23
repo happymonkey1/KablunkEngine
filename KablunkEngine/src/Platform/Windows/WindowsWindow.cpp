@@ -13,7 +13,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace kb {
+namespace kb
+{ // start namespace kb
 
 static uint8_t s_glfw_window_count = 0;
 
@@ -382,4 +383,45 @@ void WindowsWindow::swap_buffers()
 	VulkanContext::Get()->GetSwapchain().Present();
 }
 
+cursor_handle WindowsWindow::create_cursor(
+    ref<Texture2D>& p_texture,
+    const glm::ivec2& p_hot_spot
+) noexcept
+{
+    KB_CORE_ASSERT(p_texture, "[WindowsWindow]: Trying to load cursor but texture is null?");
+
+    KB_CORE_ASSERT(
+        m_cursor_count < k_max_cursors,
+        "[WindowsWindow]: Max concurrent cursor count {} reached!",
+        k_max_cursors
+    );
+
+    GLFWimage image{
+        .width = static_cast<i32>(p_texture->GetWidth()),
+        .height = static_cast<i32>(p_texture->GetHeight()),
+        .pixels = static_cast<unsigned char*>(p_texture->GetWriteableBuffer().get())
+    };
+
+    const auto glfw_cursor = glfwCreateCursor(&image, p_hot_spot.x, p_hot_spot.y);
+    const auto new_cursor_handle = cursor_handle{ static_cast<u8>(m_cursor_count) };
+    m_cursors[m_cursor_count++] = glfw_cursor;
+
+    return new_cursor_handle;
 }
+
+void WindowsWindow::set_cursor(cursor_handle p_cursor_handle) noexcept
+{
+    KB_CORE_ASSERT(
+        static_cast<size_t>(static_cast<cursor_handle::value_t>(p_cursor_handle)) < m_cursor_count,
+        "[WindowsWindow]: Cursor index is out of buffer range!"
+    );
+
+    glfwSetCursor(m_window, m_cursors[static_cast<cursor_handle::value_t>(p_cursor_handle)]);
+}
+
+void WindowsWindow::set_default_cursor() noexcept
+{
+    glfwSetCursor(m_window, nullptr);
+}
+
+} // end namespace kb

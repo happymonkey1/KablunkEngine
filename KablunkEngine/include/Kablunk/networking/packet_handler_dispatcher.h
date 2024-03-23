@@ -60,12 +60,10 @@ auto packet_handler_dispatcher<FuncT>::dispatch(
 {
     const auto handler_it = m_handlers.find(p_packet_type);
     if (handler_it == m_handlers.end())
-    {
-        KB_CORE_WARN("[packet_handler_dispatcher]: Could not find handler for packet type '{}'", p_packet_type);
         return;
-    }
+    
 
-    KB_CORE_INFO("[packet_handler_dispatcher]: Dispatching handler for packet type '{}'", p_packet_type);
+    //KB_CORE_INFO("[packet_handler_dispatcher]: Dispatching handler for packet type '{}'", p_packet_type);
     handler_it->second(std::forward<Args>(p_args)...);
 }
 } // end namespace details

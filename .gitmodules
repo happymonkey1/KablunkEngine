@@ -65,3 +65,6 @@
 [submodule "KablunkEngine/vendor/msgpack-c"]
 	path = KablunkEngine/vendor/msgpack-c
 	url = https://github.com/happymonkey1/msgpack-c.git
+[submodule "KablunkEngine/vendor/rapidjson"]
+	path = KablunkEngine/vendor/rapidjson
+	url = https://github.com/happymonkey1/rapidjson.git

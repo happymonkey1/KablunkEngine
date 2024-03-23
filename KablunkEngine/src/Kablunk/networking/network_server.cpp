@@ -515,7 +515,7 @@ auto network_server::poll_incoming_messages() noexcept -> void
             continue;
         }
 
-        KB_CORE_TRACE("[network_server]: Received message from client '{}'", it_client->first);
+        // KB_CORE_TRACE("[network_server]: Received message from client '{}'", it_client->first);
 
         if (incoming_message->m_cbSize)
         {

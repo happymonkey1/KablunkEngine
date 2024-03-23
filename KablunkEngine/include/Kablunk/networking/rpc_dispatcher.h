@@ -112,7 +112,7 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
             );
         }
     );
-    KB_CORE_INFO("[rpc_dispatcher]: Bound rpc function '{}'", p_name);
+    // KB_CORE_INFO("[rpc_dispatcher]: Bound rpc function '{}'", p_name);
 }
 
 // try to call an rpc function and return a response
@@ -121,7 +121,7 @@ inline auto rpc_dispatcher::dispatch(
     const msgpack::object& p_rpc_message
 ) const noexcept -> response_t
 {
-    KB_CORE_INFO("[rpc_dispatcher]: Received rpc message buffer to dispatch.");
+    //KB_CORE_INFO("[rpc_dispatcher]: Received rpc message buffer to dispatch.");
 
     if (!p_client_info.m_authenticated)
     {
@@ -156,7 +156,7 @@ inline auto rpc_dispatcher::dispatch(
         return std::nullopt;
     }
 
-    KB_CORE_INFO("[rpc_dispatcher]: Dispatching call to '{}'", name);
+    // KB_CORE_INFO("[rpc_dispatcher]: Dispatching call to '{}'", name);
     return rpc_it->second(p_client_info, id, arguments);
 }
 

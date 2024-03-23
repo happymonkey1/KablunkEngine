@@ -7,6 +7,7 @@
 // ----------------------------------------------
 
 // ---Core---------------------------------------
+#include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Logger.h"
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Layer.h"

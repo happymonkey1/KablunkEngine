@@ -243,7 +243,7 @@ void Application::Run()
 				//KB_TIME_FUNCTION_BEGIN()
 				auto app = this;
 				render::submit([app]() { app->RenderImGui(); });
-				render::submit([=]() { m_imgui_layer->End(); });
+				render::submit([this]() { m_imgui_layer->End(); });
 
 				//KB_TIME_FUNCTION_END("imgui layer time")
 			}
@@ -258,20 +258,11 @@ void Application::Run()
 
 			render::submit([&](){ m_window->swap_buffers(); });
 
-			// #TODO fix this so API agnostic
-			/*if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
-			{
-				VulkanContext::Get()->GetSwapchain().BeginFrame();
-				render::wait_and_render();
-			}*/
-
-			//m_window->OnUpdate();
-
 			m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
 			m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 		}
 
-		float time = static_cast<float>(glfwGetTime()); // Platform::GetTime
+		const auto time = static_cast<float>(glfwGetTime()); // Platform::GetTime
 		m_timestep = time - m_last_frame_time;
 		m_last_frame_time = time;
 

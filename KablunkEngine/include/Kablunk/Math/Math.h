@@ -1,9 +1,12 @@
+#pragma once
+
 #ifndef KABLUNK_MATH_MATH_H
 #define KABLUNK_MATH_MATH_H
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/Timestep.h"
 
 namespace kb::math

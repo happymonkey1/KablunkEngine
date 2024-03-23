@@ -109,6 +109,21 @@ namespace kb {
 
         auto get_current_dpi() const noexcept -> const glm::vec2& { return m_window->get_current_dpi(); }
 
+        [[nodiscard]] auto create_cursor(
+            ref<Texture2D>& p_texture,
+            const glm::ivec2& p_hot_spot
+        ) const noexcept -> cursor_handle
+		{
+            return m_window->create_cursor(p_texture, p_hot_spot);
+		}
+
+        auto set_cursor(cursor_handle p_cursor_handle) const noexcept -> void
+		{
+            m_window->set_cursor(p_cursor_handle);
+		}
+
+        auto set_default_cursor() const noexcept -> void { m_window->set_default_cursor(); }
+
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);

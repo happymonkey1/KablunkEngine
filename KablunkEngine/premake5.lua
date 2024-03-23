@@ -33,6 +33,8 @@ files {
 
 	"vendor/tracy/public/TracyClient.cpp",
 	"vendor/tracy/public/tracy/Tracy.hpp",
+
+	-- "vendor/rapidjson/include/**.h",
 }
 
 defines {
@@ -88,6 +90,7 @@ includedirs {
 	"%{IncludeDir.msdf_atlas_gen}",
 	"%{IncludeDir.msdfgen}",
 	"%{IncludeDir.msgpack}",
+	"%{IncludeDir.rapidjson}",
 }
 
 links {
