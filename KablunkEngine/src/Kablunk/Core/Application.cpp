@@ -165,6 +165,7 @@ void Application::OnEvent(Event& e)
 {
     KB_PROFILE_SCOPE;
 
+    // Dispatch engine internal event callbacks
 	EventDispatcher dispatcher(e);
 	dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClosed(e); });
 	dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });

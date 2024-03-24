@@ -42,6 +42,8 @@ namespace kb
 	VulkanTexture2D::VulkanTexture2D(const std::string& path)
 		: m_filepath{ path }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) }
 	{
+        KB_CORE_INFO("[VulkanTexture2D]: Creating texture for '{}'", path);
+
 		m_loaded = this->LoadImage(m_filepath);
 
 		if (!m_loaded)
@@ -259,8 +261,7 @@ namespace kb
 		sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		if (vkCreateSampler(vk_device, &sampler, nullptr, &info.sampler) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create sampler!");
-		
-		
+
 		VkImageViewCreateInfo view_create_info{};
 		view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -278,7 +279,7 @@ namespace kb
 			KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 
 		image->UpdateDescriptor();
-		
+
 		KB_CORE_ASSERT(image->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout still undefined!");
 
 		// Release local storage

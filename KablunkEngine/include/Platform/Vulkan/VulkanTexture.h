@@ -58,6 +58,8 @@ private:
 	owning_buffer m_image_data;
 
 	bool m_loaded = false;
+
+    friend class VulkanMaterial;
 };
 } // end namespace kb
 

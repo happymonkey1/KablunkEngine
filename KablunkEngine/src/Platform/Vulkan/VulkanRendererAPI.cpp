@@ -792,7 +792,7 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 				render_pass_begin_info.framebuffer = swap_chain.GetCurrentFramebuffer();
 
 				viewport.x = 0.0f;
-				viewport.y = 0;
+				viewport.y = 0.0f;
 				viewport.width = static_cast<float>(width);
 				viewport.height = static_cast<float>(height);
 			}

@@ -142,19 +142,23 @@ namespace kb::asset
 		return metadata.id;
 	}
 
-	bool AssetManager::reload_asset_data(const asset_id_t& id)
-	{
-		AssetMetadata& metadata = get_metadata_internal(id);
-		if (!metadata.is_valid())
-		{
-			KB_CORE_ERROR("[AssetManager] Trying to reload invalid asset '{}'!", id);
-			return false;
-		}
+    bool AssetManager::reload_asset_data(const asset_id_t& id)
+    {
+        KB_CORE_INFO("[AssetManager]: Reloading assets from disk");
+        AssetMetadata& metadata = get_metadata_internal(id);
+        if (!metadata.is_valid())
+        {
+            KB_CORE_ERROR("[AssetManager] Trying to reload invalid asset '{}'!", id);
+            return false;
+        }
 
-		ref<IAsset> asset;
-		metadata.is_data_loaded = try_load_asset(metadata, asset);
-		if (metadata.is_data_loaded)
-			m_loaded_assets[metadata.id] = asset;
+        ref<IAsset> asset;
+        metadata.is_data_loaded = try_load_asset(metadata, asset);
+        if (metadata.is_data_loaded)
+        {
+            KB_CORE_ASSERT(asset, "[AssetManager]: Trying to emplace null asset into loaded asset registry?");
+            m_loaded_assets[metadata.id] = asset;
+        }
 
 		return metadata.is_data_loaded;
 	}

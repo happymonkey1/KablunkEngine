@@ -57,7 +57,7 @@ namespace kb
 
 		FramebufferBlendMode blend_mode = FramebufferBlendMode::None;
 
-		bool swap_chain_target = false; 
+		bool swap_chain_target = false;
 
 		ref<Image2D> existing_image;
 		std::vector<uint32_t> existing_image_layers;

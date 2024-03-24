@@ -155,6 +155,12 @@ namespace kb
 
 	void VulkanMaterial::RT_UpdateForRendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniform_buffer_write_descriptors /*= std::vector<std::vector<VkWriteDescriptorSet>>()*/)
 	{
+        if (!m_shader.As<VulkanShader>()->HasDescriptorSet(0))
+        {
+            KB_CORE_WARN("[VulkanMaterial]: Destriptor set 0 not set?");
+            return;
+        }
+
 		auto vulkan_device = VulkanContext::Get()->GetDevice();
 		for (auto&& [binding, descriptor] : m_resident_descriptors)
 		{
@@ -192,17 +198,39 @@ namespace kb
 				if (pending_descriptor->type == PendingDescriptorType::Texture2D)
 				{
 					ref<VulkanTexture2D> texture = pending_descriptor->texture.As<VulkanTexture2D>();
-					pending_descriptor->image_info = texture->GetVulkanDescriptorInfo();
+                    if (!texture->loaded())
+                    {
+                        KB_CORE_ERROR(
+                            "[VulkanMaterial]: Trying to demote resident -> pending for image descriptor for image that has not loaded!"
+                        );
+                        continue;
+                    }
+                    const auto& descriptor = texture->GetVulkanDescriptorInfo();
+                    KB_CORE_ASSERT(
+                        descriptor.imageView,
+                        "[VulkanMaterial]: Image view is null for descriptor {}?",
+                        static_cast<const void*>(&descriptor)
+                    );
+					pending_descriptor->image_info = descriptor;
 					pending_descriptor->write_descriptor_set.pImageInfo = &pending_descriptor->image_info;
 				}
 				else if (pending_descriptor->type == PendingDescriptorType::Image2D)
 				{
 					ref<VulkanImage2D> image = pending_descriptor->image.As<VulkanImage2D>();
-					pending_descriptor->image_info = image->GetDescriptor();
+                    const auto& descriptor = image->GetDescriptor();
+                    KB_CORE_ASSERT(
+                        descriptor.imageView,
+                        "[VulkanMaterial]: Image view is null for descriptor {}?",
+                        static_cast<const void*>(&descriptor)
+                    );
+					pending_descriptor->image_info = descriptor;
 					pending_descriptor->write_descriptor_set.pImageInfo = &pending_descriptor->image_info;
 				}
 
-				KB_CORE_ASSERT(pending_descriptor->image_info.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout undefined!");
+				KB_CORE_ASSERT(
+                    pending_descriptor->image_info.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED,
+                    "[VulkanMaterial]: image layout undefined!"
+                );
 
 				m_write_descriptors[frame_index].push_back(pending_descriptor->write_descriptor_set);
 			}
@@ -214,9 +242,27 @@ namespace kb
 					for (size_t i = 0; i < pending_descriptor->textures.size(); ++i)
 					{
 						ref<Texture2D> texture = pending_descriptor->textures[i];
+                        if (!texture->loaded())
+                        {
+                            KB_CORE_ERROR(
+                                "[VulkanMaterial]: Trying to promote pending -> write for image descriptor for image that has not loaded!"
+                            );
+                            continue;
+                        }
 						KB_CORE_ASSERT(texture, "texture is uninitialized!");
 						ref<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
-						array_image_infos.emplace_back(vulkan_texture->GetVulkanDescriptorInfo());
+                        const auto& descriptor = vulkan_texture->GetVulkanDescriptorInfo();
+
+                        // #TODO figure out why images are not invalidated before hand...
+                        if (!descriptor.imageView || !descriptor.imageLayout || !descriptor.sampler)
+                        {
+                            KB_CORE_ERROR(
+                                "[VulkanMaterial]: VulkanTexture2D descriptor {} is null",
+                                static_cast<const void*>(&descriptor)
+                            );
+                            continue;
+                        }
+						array_image_infos.emplace_back(descriptor);
 					}
 				}
 
@@ -227,16 +273,16 @@ namespace kb
 		}
 
 		auto vulkan_shader = m_shader.As<VulkanShader>();
-		auto descriptor_set = vulkan_shader->AllocateDescriptorSet();
+        const auto descriptor_set = vulkan_shader->AllocateDescriptorSet();
 		m_descriptor_sets[frame_index] = descriptor_set;
 		for (auto& write_descriptor : m_write_descriptors[frame_index])
 			write_descriptor.dstSet = descriptor_set.descriptor_sets[0];
 
 		vkUpdateDescriptorSets(
-			vulkan_device->GetVkDevice(), 
-			static_cast<uint32_t>(m_write_descriptors[frame_index].size()), 
-			m_write_descriptors[frame_index].data(), 
-			0, 
+			vulkan_device->GetVkDevice(),
+			static_cast<uint32_t>(m_write_descriptors[frame_index].size()),
+			m_write_descriptors[frame_index].data(),
+			0,
 			nullptr
 		);
 

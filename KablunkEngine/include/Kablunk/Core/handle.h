@@ -30,7 +30,7 @@ public:
 
     auto operator<=>(const handle&) const = default;
 
-    constexpr explicit operator ValueT() const noexcept { return m_handle; }
+    constexpr operator ValueT() const noexcept { return m_handle; }
 private:
     ValueT m_handle{};
 };
@@ -46,4 +46,3 @@ struct cursor_handle_tag{};
 using cursor_handle = handle<details::cursor_handle_tag, uint8_t>;
 
 } // end namespace kb
-

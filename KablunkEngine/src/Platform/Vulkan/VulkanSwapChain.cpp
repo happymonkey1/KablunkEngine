@@ -69,7 +69,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	m_height = *height;
 
 	// select present mode for swapchain
-	VkPresentModeKHR swapchain_present_mode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR swapchain_present_mode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 
     // #NOTE mailbox is another form of display refresh rate synchronization, and *may* cause vulkan to wait to synchronize a frame
     if (!vsync)
@@ -392,13 +392,37 @@ void VulkanSwapChain::Present()
 		KB_CORE_ASSERT(false, "Vulkan failed to reset fence!");
 
     {
-		if (vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submit_info, m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
+		if (
+            vkQueueSubmit(
+                m_device->GetGraphicsQueue(),
+                1,
+                &submit_info,
+                m_wait_fences[m_current_buffer_index]
+            ) != VK_SUCCESS
+        )
 			KB_CORE_ASSERT(false, "Vulkan failed to submit!");
     }
 
 	// present buffer to the swap chain
-	VkResult result = QueuePresent(m_device->GetGraphicsQueue(), m_current_image_index, m_semaphores.render_complete);
+    VkResult result;
+    {
+        KB_PROFILE_SCOPE_NAMED("QueuePresent");
 
+        VkPresentInfoKHR present_info{};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.pNext = nullptr;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &m_swapchain;
+        present_info.pImageIndices = &m_current_buffer_index;
+        //KB_CORE_ASSERT(wait_sem != VK_NULL_HANDLE, "[VulkanSwapChain]: Swap Chain wait semaphore is null?");
+        present_info.pWaitSemaphores = &m_semaphores.render_complete;
+        present_info.waitSemaphoreCount = 1;
+
+        result = vkQueuePresentKHR(m_device->GetGraphicsQueue(), &present_info);
+    }
+#if 0
+    VkResult result = QueuePresent(m_device->GetGraphicsQueue(), m_current_image_index, m_semaphores.render_complete);
+#endif
 	if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
         OnResize(m_width, m_height);
@@ -475,25 +499,23 @@ VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uin
 	return vkAcquireNextImageKHR(m_device->GetVkDevice(), m_swapchain, UINT64_MAX, present_complete_sem, (VkFence)nullptr, image_index);
 }
 
-VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem /*= VK_NULL_HANDLE*/)
+VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem) const
 {
     KB_PROFILE_SCOPE;
 
-	VkPresentInfoKHR present_info{};
-	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_info.pNext = nullptr;
-	present_info.swapchainCount = 1;
-	present_info.pSwapchains = &m_swapchain;
-	present_info.pImageIndices = &image_index;
+    VkPresentInfoKHR present_info{};
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.pNext = nullptr;
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = &m_swapchain;
+    present_info.pImageIndices = &image_index;
+    //KB_CORE_ASSERT(wait_sem != VK_NULL_HANDLE, "[VulkanSwapChain]: Swap Chain wait semaphore is null?");
+    present_info.pWaitSemaphores = &wait_sem;
+    present_info.waitSemaphoreCount = 1;
 
-	if (wait_sem != VK_NULL_HANDLE)
-	{
-		present_info.pWaitSemaphores = &wait_sem;
-		present_info.waitSemaphoreCount = 1;
-	}
-
-	return vkQueuePresentKHR(queue, &present_info);
+    return vkQueuePresentKHR(queue, &present_info);
 }
+
 
 void VulkanSwapChain::FindImageFormatAndColorSpace()
 {

@@ -154,7 +154,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	framebuffer_spec.Attachments = { ImageFormat::RGBA };
 	framebuffer_spec.samples = 1;
 	framebuffer_spec.clear_on_load = false;
-	framebuffer_spec.clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
+    framebuffer_spec.clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
 	framebuffer_spec.debug_name = "framebuffer::Renderer2D";
 	framebuffer_spec.blend_mode = FramebufferBlendMode::Additive;
 	framebuffer_spec.blend = true;
@@ -173,7 +173,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 		pipeline_spec.debug_name = "pipeline::quad::render2d";
 		pipeline_spec.shader = m_renderer_data.quad_shader;
 		pipeline_spec.backface_culling = false;
-        pipeline_spec.depth_test = false;
+        pipeline_spec.depth_test = true;
 		pipeline_spec.layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color" },

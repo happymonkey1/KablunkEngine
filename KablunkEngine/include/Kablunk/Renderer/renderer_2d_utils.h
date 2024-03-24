@@ -29,7 +29,7 @@ inline auto to_utf32_str(const std::string& p_str) noexcept -> std::u32string
 inline auto calculate_text_bounds(
     const std::string& p_text,
     const glm::vec2& p_pos,
-    const u32 p_font_point,
+    const f32 p_font_point,
     const ref<font>& p_font_asset,
     const f32 p_max_width = 0.f,
     const f32 p_line_height_offset = 0.f,
@@ -41,7 +41,8 @@ inline auto calculate_text_bounds(
 
     f32 x_min = 0.f, x_max = 0.f;
     f32 y_min = 0.f, y_max = 0.f;
-    const f32 scale = static_cast<f32>(p_font_point) / static_cast<f32>(font_manager::k_load_font_point);
+    //const f32 scale = p_font_point / static_cast<f32>(font_manager::k_load_font_point);
+    // const f32 scale = p_font_point / k_default_renderer_scale;
 
     const auto& font_geometry = p_font_asset->get_msdf_metrics()->m_font_geometry;
     const auto& metrics = font_geometry.getMetrics();

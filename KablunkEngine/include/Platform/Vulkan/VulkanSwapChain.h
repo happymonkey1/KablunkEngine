@@ -58,7 +58,7 @@ public:
 	uint32_t GetHeight() const { return m_height; }
 private:
 	VkResult AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index);
-	VkResult QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE);
+	VkResult QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE) const;
 
 	void FindImageFormatAndColorSpace();
 

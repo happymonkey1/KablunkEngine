@@ -111,6 +111,7 @@ public:
 
 		ref<T> asset = ref<T>::Create(std::forward<Args>(args)...);
 		asset->set_id(metadata.id);
+        KB_CORE_ASSERT(asset, "[AssetManager]: Trying to emplace null asset into loaded asset registry?");
 		m_loaded_assets[metadata.id] = asset;
 
 		serialize_asset(metadata, asset.As<IAsset>());
@@ -144,11 +145,12 @@ public:
 				return ref<T>{};
 
             KB_CORE_ASSERT(asset, "[asset_manager]: trying to emplace null asset into loaded asset registry?");
-
 			m_loaded_assets[id] = asset;
 		}
 		else
-			asset = m_loaded_assets[id];
+		{
+            asset = m_loaded_assets[id];
+		}
 
 		KB_CORE_ASSERT(asset, "asset null?!");
 

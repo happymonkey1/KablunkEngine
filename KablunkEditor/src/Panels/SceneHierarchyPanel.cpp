@@ -711,6 +711,7 @@ namespace kb
 								if (!filepath.empty())
 								{
 									// #TODO go through asset manager
+                                    KB_CORE_INFO("[SceneHeirarchyPanel]: Texture2D is not created through asset manager!");
 									panel->get_panel_style().image = Texture2D::Create(filepath);
 								}
 							}
@@ -766,7 +767,7 @@ namespace kb
                             else
                             {
                                 KB_CORE_ERROR(
-                                    "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id", 
+                                    "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id",
                                     path_str
                                 );
                                 component.Texture = asset::null_asset_id;
