@@ -23,7 +23,7 @@ public:
     // construct a handle from a value that can convert to the underlying type
     // #TODO concept to ensure `ConvertableT` can be converted
     template <typename ConvertableT>
-    explicit constexpr handle(ConvertableT p_value) noexcept : m_handle{ p_value } {}
+    explicit constexpr handle(ConvertableT p_value) noexcept : m_handle{ static_cast<ValueT>(p_value) } {}
 
     auto operator=(const handle&) noexcept -> handle& = default;
     auto operator=(handle&&) noexcept -> handle& = default;
@@ -31,6 +31,10 @@ public:
     auto operator<=>(const handle&) const = default;
 
     constexpr operator ValueT() const noexcept { return m_handle; }
+
+    // must be implemented on derived types
+    template <typename T>
+    constexpr auto as() const noexcept -> T;
 private:
     ValueT m_handle{};
 };
