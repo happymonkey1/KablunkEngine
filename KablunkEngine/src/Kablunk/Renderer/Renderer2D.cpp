@@ -623,7 +623,21 @@ void Renderer2D::on_viewport_resize(const glm::vec2& p_viewport_dimensions)
     else
     {
         // #TODO this may force recreation twice(?) depending on whether target render pass is externally managed...
-        m_renderer_data.quad_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(p_viewport_dimensions.x, p_viewport_dimensions.y);
+        m_renderer_data
+            .quad_pipeline->GetSpecification()
+            .render_pass->GetSpecification()
+            .target_framebuffer->Resize(
+                static_cast<u32>(p_viewport_dimensions.x),
+                static_cast<u32>(p_viewport_dimensions.y)
+            );
+
+        m_renderer_data
+            .text_pipeline->GetSpecification()
+            .render_pass->GetSpecification()
+            .target_framebuffer->Resize(
+                static_cast<u32>(p_viewport_dimensions.x),
+                static_cast<u32>(p_viewport_dimensions.y)
+            );
     }
 }
 

@@ -21,7 +21,7 @@ VulkanImage2D::~VulkanImage2D()
 
 void VulkanImage2D::Invalidate()
 {
-    ref<VulkanImage2D> instance{ this };
+    ref instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->RT_Invalidate();
@@ -33,7 +33,7 @@ void VulkanImage2D::Release()
 	if (!m_info.image)
 		return;
 
-    ref<VulkanImage2D> instance{ this };
+    ref instance{ this };
 	render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 		{
 			const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -42,7 +42,7 @@ void VulkanImage2D::Release()
             KB_CORE_INFO("[VulkanImage2D]: destroying sampler {}", static_cast<void*>(info.sampler));
 			vkDestroySampler(vk_device, info.sampler, nullptr);
 
-			for (auto& view : layer_views)
+			for (const auto& view : layer_views)
 			{
 				if (view)
 				{
@@ -134,7 +134,7 @@ void VulkanImage2D::RT_Invalidate()
 
 	KB_CORE_INFO(
         "[VulkanImage2D]: Created VkImage '{0}' of width '{1}', height '{2}' for descriptor {3}",
-        (void*)m_info.image,
+        static_cast<void*>(m_info.image),
         m_specification.width,
         m_specification.height,
         static_cast<const void*>(&m_descriptor_image_info)
@@ -198,7 +198,7 @@ void VulkanImage2D::RT_CreatePerLayerImageViews()
 {
 	KB_CORE_ASSERT(m_specification.layers > 1, "cannot create per layer image views because there is only one layer!");
 
-	VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	VkImageAspectFlags aspect_mask = Utils::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 	if (m_specification.format == ImageFormat::DEPTH24STENCIL8)
@@ -229,7 +229,7 @@ void VulkanImage2D::RT_CreatePerLayerImageViews()
 
 void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices)
 {
-	VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	VkImageAspectFlags aspect_mask = Utils::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 	if (m_specification.format == ImageFormat::DEPTH24STENCIL8)
@@ -241,7 +241,7 @@ void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32
 	if (m_per_layer_image_views.empty())
 		m_per_layer_image_views.resize(m_specification.layers);
 
-	for (uint32_t layer : layer_indices)
+	for (const uint32_t layer : layer_indices)
 	{
 		VkImageViewCreateInfo image_view_create_info = {};
 		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -262,7 +262,7 @@ void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32
 
 VkImageView VulkanImage2D::GetMipImageView(uint32_t mip)
 {
-	if (m_mip_image_views.find(mip) == m_mip_image_views.end())
+	if (!m_mip_image_views.contains(mip))
 	{
         ref<VulkanImage2D> instance{ this };
 		render::submit([instance, mip]() mutable
@@ -278,15 +278,15 @@ VkImageView VulkanImage2D::GetMipImageView(uint32_t mip)
 
 VkImageView VulkanImage2D::RT_GetMipImageView(uint32_t mip)
 {
-	if (m_mip_image_views.find(mip) == m_mip_image_views.end())
+	if (!m_mip_image_views.contains(mip))
 	{
-		VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+        const VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 		VkImageAspectFlags aspect_mask = Utils::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (m_specification.format == ImageFormat::DEPTH24STENCIL8)
 			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-		VkFormat vk_format = Utils::VulkanImageFormat(m_specification.format);
+        const VkFormat vk_format = Utils::VulkanImageFormat(m_specification.format);
 
 		m_per_layer_image_views.resize(m_specification.layers);
 		VkImageViewCreateInfo image_view_create_info{};

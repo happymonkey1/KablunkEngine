@@ -43,7 +43,7 @@ public:
 	virtual bool operator==(const Texture2D& other) const override;
 private:
 	virtual void Invalidate() override;
-	bool LoadImage(const std::string& filepath);
+	bool load_image(const std::string& filepath);
 private:
 	std::string m_filepath;
     u64 m_hash = 0ull;

@@ -135,7 +135,7 @@ void VulkanRendererAPI::Shutdown()
 {
     KB_PROFILE_SCOPE;
 	KB_CORE_INFO("Shutting down VulkanRenderer!");
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 	vkDeviceWaitIdle(device);
 
 	VulkanShader::ClearUniformBuffers();
@@ -148,7 +148,7 @@ void VulkanRendererAPI::Shutdown()
 
     render::get_render_command_queue().execute();
 
-	for (uint32_t i = 0; i < render::get_frames_in_flights(); ++i)
+	for (u32 i = 0; i < render::get_frames_in_flights(); ++i)
 	{
 		auto& queue = render::get_render_resource_release_queue(i);
 		queue.execute();
@@ -166,13 +166,17 @@ void VulkanRendererAPI::BeginFrame()
 		{
             KB_PROFILE_SCOPE;
 
-			VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
+            const VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
 
 			// Reset descriptor pools here
-			VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-			uint32_t buffer_index = swap_chain.GetCurrentBufferIndex();
+            const VkDevice vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+            const u32 buffer_index = swap_chain.GetCurrentBufferIndex();
 			vkResetDescriptorPool(vk_device, s_renderer_data->descriptor_pools[buffer_index], 0);
-			memset(s_renderer_data->descriptor_pool_allocation_count.data(), 0, s_renderer_data->descriptor_pool_allocation_count.size() * sizeof(uint32_t));
+			memset(
+                s_renderer_data->descriptor_pool_allocation_count.data(),
+                0,
+                s_renderer_data->descriptor_pool_allocation_count.size() * sizeof(u32)
+            );
 		});
 }
 
@@ -215,7 +219,7 @@ void VulkanRendererAPI::ClearImage(ref<RenderCommandBuffer> command_buffer, ref<
 			subresource_range.levelCount = image->GetSpecification().mips;
 			subresource_range.layerCount = image->GetSpecification().layers;
 
-			VkClearColorValue clear_color{ 0.f, 0.f, 0.f, 0.f };
+            constexpr VkClearColorValue clear_color{ 0.f, 0.f, 0.f, 0.f };
 			vkCmdClearColorImage(vk_command_buffer, image->GetImageInfo().image, image->GetSpecification().usage == ImageUsage::Storage ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &clear_color, 1, &subresource_range);
 		});
 }
@@ -375,13 +379,13 @@ void VulkanRendererAPI::RenderMeshWithMaterial(ref<RenderCommandBuffer> render_c
 }
 
 void VulkanRendererAPI::render_instanced_submesh(
-	ref<RenderCommandBuffer> render_command_buffer, 
-	ref<Pipeline> pipeline, 
+	ref<RenderCommandBuffer> render_command_buffer,
+	ref<Pipeline> pipeline,
 	ref<UniformBufferSet> uniform_buffer_set,
-	ref<StorageBufferSet> storage_buffer_set, 
-	ref<Mesh> mesh, 
-	uint32_t submesh_index, 
-	ref<MaterialTable> material_table, 
+	ref<StorageBufferSet> storage_buffer_set,
+	ref<Mesh> mesh,
+	uint32_t submesh_index,
+	ref<MaterialTable> material_table,
 	ref<VertexBuffer> transform_buffer,
 	uint32_t transform_offset,
 	uint32_t instance_count
@@ -466,35 +470,44 @@ void VulkanRendererAPI::SubmitFullscreenQuad(ref<RenderCommandBuffer> render_com
 		{
             KB_PROFILE_SCOPE;
 
-			uint32_t frame_index = render::rt_get_current_frame_index();
-			VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+			const u32 frame_index = render::rt_get_current_frame_index();
+            const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
-			VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
+            const VkPipelineLayout layout = vulkan_pipeline->GetVkPipelineLayout();
 
 			auto vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
-			VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
-			VkDeviceSize offsets[1] = { 0 };
+            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+            constexpr VkDeviceSize offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
 			auto vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
-			VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			VkPipeline pipeline = vulkan_pipeline->GetVkPipeline();
-			vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            const VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+			vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
 			RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
 			//uint32_t frame_index = render::rt_get_current_frame_index();
-			VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+            const VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 
 			owning_buffer uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer.size())
-				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
+			{
+                vkCmdPushConstants(
+                    command_buffer,
+                    layout,
+                    VK_SHADER_STAGE_FRAGMENT_BIT,
+                    0,
+                    static_cast<u32>(uniform_storage_buffer.size()),
+                    uniform_storage_buffer.get()
+                );
+			}
 
 			vkCmdDrawIndexed(command_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
 		});
@@ -510,30 +523,30 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
 		{
             KB_PROFILE_SCOPE;
 
-			uint32_t frame_index = render::rt_get_current_frame_index();
-			VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+            const u32 frame_index = render::rt_get_current_frame_index();
+            const VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
-			VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
+            const VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->GetVkPipelineLayout();
 
 			ref<VulkanVertexBuffer> vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
-			VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
 			// WTF is this for?
-			VkDeviceSize offsets[1] = { 0 };
+            constexpr VkDeviceSize offsets[1] = { 0 };
 
 			vkCmdBindVertexBuffers(vk_cmd_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
 			ref<VulkanIndexBuffer> vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
-			VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(vk_cmd_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
+            const VkPipeline vk_pipeline = vulkan_pipeline->GetVkPipeline();
 			vkCmdBindPipeline(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
 			RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-			VkDescriptorSet vk_descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
+            const VkDescriptorSet vk_descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
 			if (vk_descriptor_set)
 				vkCmdBindDescriptorSets(vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout, 0, 1, &vk_descriptor_set, 0, nullptr);
 
@@ -545,7 +558,7 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
 				vk_pipeline_layout,
 				VK_SHADER_STAGE_FRAGMENT_BIT,
 				sizeof(glm::mat4),
-				static_cast<uint32_t>(uniform_storage_buffer.size()),
+				static_cast<u32>(uniform_storage_buffer.size()),
 				uniform_storage_buffer.get()
 			);
 			vkCmdDrawIndexed(vk_cmd_buffer, s_renderer_data->quad_index_buffer->GetCount(), 1, 0, 0, 0);
@@ -594,7 +607,7 @@ void VulkanRendererAPI::RenderGeometry(ref<RenderCommandBuffer> render_command_b
 
 			const owning_buffer& uniform_storage_buffer = vulkan_material->GetUniformStorageBuffer();
 			if (uniform_storage_buffer)
-				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), static_cast<uint32_t>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
+				vkCmdPushConstants(command_buffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), static_cast<u32>(uniform_storage_buffer.size()), uniform_storage_buffer.get());
 
 			vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
 		});
@@ -604,8 +617,8 @@ void VulkanRendererAPI::SetLineWidth(ref<RenderCommandBuffer> render_command_buf
 {
 	render::submit([width = line_width, render_cmd_buffer = render_command_buffer]()
 	{
-		uint32_t frame_index = render::rt_get_current_frame_index();
-		VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+		const u32 frame_index = render::rt_get_current_frame_index();
+        const VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 		vkCmdSetLineWidth(vk_cmd_buffer, width);
 	});
 }
@@ -620,7 +633,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 {
     KB_PROFILE_SCOPE;
 
-	size_t shader_hash = material->GetShader()->GetHash();
+    const size_t shader_hash = material->GetShader()->GetHash();
 	if (s_renderer_data->uniform_buffer_write_descriptor_cache.find(uniform_buffer_set.get()) != s_renderer_data->uniform_buffer_write_descriptor_cache.end())
 	{
 		const auto& shader_map = s_renderer_data->uniform_buffer_write_descriptor_cache.at(uniform_buffer_set.get());
@@ -631,7 +644,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 		}
 	}
 
-	uint32_t frames_in_flight = render::get_frames_in_flights();
+	const u32 frames_in_flight = render::get_frames_in_flights();
 	ref<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 	if (shader->HasDescriptorSet(0))
 	{
@@ -642,7 +655,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 			{
 				auto& write_descriptors = s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
 				write_descriptors.resize(frames_in_flight);
-				for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
+				for (u32 frame = 0; frame < frames_in_flight; ++frame)
 				{
 					// set = 0 for now
 					ref uniform_buffer = uniform_buffer_set->Get(binding, 0, frame).As<VulkanUniformBuffer>();
@@ -666,7 +679,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 {
     KB_PROFILE_SCOPE;
 
-	size_t shader_hash = material->GetShader()->GetHash();
+    const size_t shader_hash = material->GetShader()->GetHash();
 	if (s_renderer_data->storage_buffer_write_descriptor_cache.find(storage_buffer_set.get()) != s_renderer_data->storage_buffer_write_descriptor_cache.end())
 	{
 		const auto& shader_map = s_renderer_data->storage_buffer_write_descriptor_cache.at(storage_buffer_set.get());
@@ -677,7 +690,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 		}
 	}
 
-	uint32_t frames_in_flight = render::get_frames_in_flights();
+	const u32 frames_in_flight = render::get_frames_in_flights();
 	ref<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 	if (shader->HasDescriptorSet(0))
 	{
@@ -688,7 +701,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 			{
 				auto& write_descriptor = s_renderer_data->storage_buffer_write_descriptor_cache[storage_buffer_set.get()][shader_hash];
 				write_descriptor.resize(frames_in_flight);
-				for (uint32_t frame = 0; frame < frames_in_flight; ++frame)
+				for (u32 frame = 0; frame < frames_in_flight; ++frame)
 				{
 					ref storage_buffer = storage_buffer_set->Get(binding, 0, frame).As<VulkanStorageBuffer>(); // set = 0 for now
 
@@ -735,8 +748,8 @@ VkDescriptorSet VulkanRendererAPI::RT_AllocateDescriptorSet(VkDescriptorSetAlloc
 {
     KB_PROFILE_SCOPE;
 
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-	uint32_t buffer_index = render::rt_get_current_frame_index();
+    const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    u32 buffer_index = render::rt_get_current_frame_index();
 	alloc_info.descriptorPool = s_renderer_data->descriptor_pools[buffer_index];
 	
 	VkDescriptorSet descriptor_set;
@@ -755,15 +768,15 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 		{
             KB_PROFILE_SCOPE;
 
-			uint32_t frame_index = render::rt_get_current_frame_index();
-			VkCommandBuffer cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+            const u32 frame_index = render::rt_get_current_frame_index();
+            const VkCommandBuffer cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-			auto framebuffer = render_pass->GetSpecification().target_framebuffer;
+			const auto& framebuffer = render_pass->GetSpecification().target_framebuffer;
 			ref<VulkanFramebuffer> vulkan_framebuffer = framebuffer.As<VulkanFramebuffer>();
 			const auto& framebuffer_spec = vulkan_framebuffer->GetSpecification();
 
-			uint32_t width = framebuffer_spec.width;
-			uint32_t height = framebuffer_spec.height;
+            u32 width = framebuffer_spec.width;
+            u32 height = framebuffer_spec.height;
 
 			VkViewport viewport{};
 			viewport.minDepth = 0.0f;
@@ -792,9 +805,9 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 				render_pass_begin_info.framebuffer = swap_chain.GetCurrentFramebuffer();
 
 				viewport.x = 0.0f;
-				viewport.y = 0.0f;
-				viewport.width = static_cast<float>(width);
-				viewport.height = static_cast<float>(height);
+				viewport.y = static_cast<f32>(height);
+				viewport.width = static_cast<f32>(width);
+				viewport.height = -static_cast<f32>(height);
 			}
 			else
 			{
@@ -811,31 +824,32 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 
 				viewport.x = 0.0f;
 				viewport.y = 0.0f;
-				viewport.width = static_cast<float>(width);
-				viewport.height = static_cast<float>(height);
+				viewport.width = static_cast<f32>(width);
+				viewport.height = static_cast<f32>(height);
 			}
 
 			const auto& clear_values = vulkan_framebuffer->GetVkClearValues();
-			render_pass_begin_info.clearValueCount = (uint32_t)clear_values.size();
+			render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
 			render_pass_begin_info.pClearValues = clear_values.data();
 
 			vkCmdBeginRenderPass(cmd_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 			if (explicit_clear)
 			{
-				const uint32_t color_attachment_count = static_cast<uint32_t>(vulkan_framebuffer->GetColorAttachmentCount());
-				const uint32_t total_attachment_count = color_attachment_count + (vulkan_framebuffer->HasDepthAttachment() ? 1 : 0);
+				const u32 color_attachment_count = static_cast<u32>(vulkan_framebuffer->GetColorAttachmentCount());
+				const u32 total_attachment_count = color_attachment_count +
+                    (vulkan_framebuffer->HasDepthAttachment() ? 1 : 0);
 				KB_CORE_ASSERT(clear_values.size() == total_attachment_count, "uh oh");
 
 				std::vector<VkClearAttachment> attachments(total_attachment_count);
 				std::vector<VkClearRect> clear_rects(total_attachment_count);
-				for (uint32_t i = 0; i < color_attachment_count; i++)
+				for (u32 i = 0; i < color_attachment_count; i++)
 				{
 					attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 					attachments[i].colorAttachment = i;
 					attachments[i].clearValue = clear_values[i];
 
-					clear_rects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+					clear_rects[i].rect.offset = { 0, 0 };
 					clear_rects[i].rect.extent = { width, height };
 					clear_rects[i].baseArrayLayer = 0;
 					clear_rects[i].layerCount = 1;
@@ -845,7 +859,7 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 				{
 					attachments[color_attachment_count].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 					attachments[color_attachment_count].clearValue = clear_values[color_attachment_count];
-					clear_rects[color_attachment_count].rect.offset = { (int32_t)0, (int32_t)0 };
+					clear_rects[color_attachment_count].rect.offset = { 0, 0 };
 					clear_rects[color_attachment_count].rect.extent = { width, height };
 					clear_rects[color_attachment_count].baseArrayLayer = 0;
 					clear_rects[color_attachment_count].layerCount = 1;
@@ -881,7 +895,7 @@ void VulkanRendererAPI::EndRenderPass(ref<RenderCommandBuffer> render_command_bu
 		{
             KB_PROFILE_SCOPE;
 
-			VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+            const VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 			vkCmdEndRenderPass(vk_command_buffer);
 		});
