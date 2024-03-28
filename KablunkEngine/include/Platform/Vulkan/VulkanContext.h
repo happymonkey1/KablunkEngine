@@ -43,7 +43,6 @@ private:
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
-		
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
 			KB_CORE_TRACE("[Vk Trace]: {0}", pCallbackData->pMessage);
 		else if (messageType & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
@@ -55,7 +54,7 @@ private:
 		else
 		{
 			KB_CORE_WARN("Unknown VkMessageType!");
-			KB_CORE_INFO("[Vk Unknown]: {0}", pCallbackData->pMessage);
+			KB_CORE_ERROR("[Vk Unknown]: {0}", pCallbackData->pMessage);
 		}
 
 		return VK_FALSE;

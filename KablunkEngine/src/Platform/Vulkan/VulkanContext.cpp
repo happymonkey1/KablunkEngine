@@ -62,7 +62,6 @@ namespace kb
 		app_info.engineVersion		= VK_MAKE_VERSION(1, 0, 0);
 		app_info.apiVersion			= VK_API_VERSION_1_2;
 
-		
 		auto glfw_extensions = GetRequiredExtensions();
 
 		VkInstanceCreateInfo create_info{};
@@ -77,7 +76,7 @@ namespace kb
 		}
 		else
 			create_info.enabledLayerCount = 0;
-		
+
 		if (vkCreateInstance(&create_info, nullptr, &s_instance) != VK_SUCCESS)
 		{
 			KB_CORE_ERROR("failed to create Vulkan instance!");

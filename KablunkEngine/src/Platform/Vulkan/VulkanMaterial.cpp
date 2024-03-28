@@ -321,7 +321,7 @@ namespace kb
 		const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
 		KB_CORE_ASSERT(resource, "resource is nullptr!");
 
-		uint32_t binding = resource->GetRegister();
+        const u32 binding = resource->GetRegister();
 
 		// Texture already bound!
 		if (binding < m_textures.size() && m_textures[binding] && texture->GetHash() == m_textures[binding]->GetHash()
@@ -389,7 +389,7 @@ namespace kb
             );
 		}
 
-		auto& resident_descriptor_array = m_resident_descriptor_array.at(binding);
+        const auto& resident_descriptor_array = m_resident_descriptor_array.at(binding);
 		if (array_index >= resident_descriptor_array->textures.size())
 			resident_descriptor_array->textures.resize(array_index + 1);
 

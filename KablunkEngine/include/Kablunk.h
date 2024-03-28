@@ -20,6 +20,8 @@
 #include "Kablunk/Core/JobSystem.h"
 #include "Kablunk/Core/UUID64.h"
 #include "Kablunk/Core/RefCounting.h"
+
+#include "Kablunk/Core/random/fast_random.h"
 // ----------------------------------------------
 
 // ---Math---------------------------------------
