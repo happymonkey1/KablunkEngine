@@ -577,8 +577,8 @@ void VulkanRendererAPI::RenderGeometry(ref<RenderCommandBuffer> render_command_b
 		{
             KB_PROFILE_SCOPE;
 
-            const u32 frameIndex = render::rt_get_current_frame_index();
-            const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+            const u32 frame_index = render::rt_get_current_frame_index();
+            const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
@@ -599,7 +599,7 @@ void VulkanRendererAPI::RenderGeometry(ref<RenderCommandBuffer> render_command_b
 			const auto& write_descriptors = RT_RetrieveOrCreateUniformBufferWriteDescriptors(uniform_buffer_set, vulkan_material);
 			vulkan_material->RT_UpdateForRendering(write_descriptors);
 
-            const VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frameIndex);
+            const VkDescriptorSet descriptor_set = vulkan_material->GetDescriptorSet(frame_index);
 			if (descriptor_set)
 				vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor_set, 0, nullptr);
 

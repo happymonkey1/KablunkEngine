@@ -388,7 +388,8 @@ void Renderer2D::flush()
 
     bool clear_pass = m_explicit_render_pass_clear;
 
-	const uint32_t frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+	const uint32_t frame_index = render::rt_get_current_frame_index();
 
 	// Quad
 	// calculate data size in bytes
@@ -1191,7 +1192,8 @@ auto Renderer2D::submit_quad_data(const owning_buffer& p_quad_buffer) noexcept -
         quad_vertex_buffer_ptr += quad_vertex_count;
 
         {
-            const auto frame_index = render::get_current_frame_index();
+            // #TODO should this be non render thread frame?
+            const auto frame_index = render::rt_get_current_frame_index();
             auto max_ptr = m_renderer_data.quad_vertex_buffer_base_ptrs[m_renderer_data.m_quad_write_index][frame_index] + renderer_2d_data_t::max_quads;
             KB_CORE_ASSERT(
                 quad_vertex_buffer_ptr < max_ptr,
@@ -1237,7 +1239,8 @@ void Renderer2D::start_new_batch() noexcept
 {
     KB_PROFILE_SCOPE;
 
-    const uint32_t frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+    const uint32_t frame_index = render::rt_get_current_frame_index();
 
 	m_renderer_data.quad_count = 0;
 	m_renderer_data.quad_index_count = 0;
@@ -1291,7 +1294,8 @@ auto Renderer2D::get_writeable_quad_buffer(u32 p_new_quad_count /* = 0 */) noexc
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+    const u32 frame_index = render::rt_get_current_frame_index();
 
     const u32 quad_write_index = (m_renderer_data.quad_count + p_new_quad_count) / renderer_2d_data_t::max_quads;
     if (quad_write_index >= m_renderer_data.quad_vertex_buffer_base_ptrs.size())
@@ -1310,7 +1314,8 @@ auto Renderer2D::get_writeable_circle_buffer(u32 p_new_circle_count /* = 0 */) n
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+    const u32 frame_index = render::rt_get_current_frame_index();
 
     const u32 circle_write_index = (m_renderer_data.circle_count + p_new_circle_count) /
         kb::renderer_2d_data_t::max_quads;
@@ -1328,7 +1333,8 @@ auto Renderer2D::get_writeable_line_buffer(u32 p_new_line_count /* = 0 */) noexc
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+    const u32 frame_index = render::rt_get_current_frame_index();
 
     const u32 line_write_index = (m_renderer_data.line_count + p_new_line_count) / kb::renderer_2d_data_t::max_lines;
     if (line_write_index >= m_renderer_data.line_vertex_buffer_base_ptrs.size())
@@ -1345,7 +1351,8 @@ auto Renderer2D::get_writeable_text_buffer(u32 p_new_text_count /* = 0 */) noexc
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frame_index = render::get_current_frame_index();
+    // #TODO should this be non render thread frame?
+    const u32 frame_index = render::rt_get_current_frame_index();
 
     const u32 text_write_index = (m_renderer_data.line_count + p_new_text_count) / kb::renderer_2d_data_t::max_lines;
     if (text_write_index >= m_renderer_data.text_vertex_buffer_base_ptrs.size())
@@ -1362,7 +1369,8 @@ auto Renderer2D::add_quad_buffer() noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frames_in_flight = render::get_frames_in_flights();
+    // #TODO should this be non render thread frame?
+    const u32 frames_in_flight = render::rt_get_current_frame_index();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.quad_vertex_buffers.emplace_back();
     renderer_2d_data_t::quad_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.quad_vertex_buffer_base_ptrs.emplace_back();
@@ -1382,7 +1390,8 @@ auto Renderer2D::add_circle_buffer() noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frames_in_flight = render::get_frames_in_flights();
+    // #TODO should this be non render thread frame?
+    const u32 frames_in_flight = render::rt_get_current_frame_index();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.circle_vertex_buffers.emplace_back();
     renderer_2d_data_t::circle_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.circle_vertex_buffer_base_ptrs.emplace_back();
@@ -1402,7 +1411,8 @@ auto Renderer2D::add_line_buffer() noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frames_in_flight = render::get_frames_in_flights();
+    // #TODO should this be non render thread frame?
+    const u32 frames_in_flight = render::rt_get_current_frame_index();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.line_vertex_buffers.emplace_back();
     renderer_2d_data_t::line_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.line_vertex_buffer_base_ptrs.emplace_back();
@@ -1422,7 +1432,8 @@ auto Renderer2D::add_text_buffer() noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    const u32 frames_in_flight = render::get_frames_in_flights();
+    // #TODO should this be non render thread frame?
+    const u32 frames_in_flight = render::rt_get_current_frame_index();
 
     renderer_2d_data_t::vertex_per_frame_buffer& new_vertex_buffer = m_renderer_data.text_vertex_buffers.emplace_back();
     renderer_2d_data_t::text_per_frame_base_buffer& new_vertex_buffer_base = m_renderer_data.text_vertex_buffer_base_ptrs.emplace_back();

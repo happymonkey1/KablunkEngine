@@ -82,7 +82,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
                 swapchain_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
                 break;
             }
-				
+
             if ((swapchain_present_mode != VK_PRESENT_MODE_MAILBOX_KHR) && (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR))
                 swapchain_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         }
@@ -158,7 +158,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 
 	if (vkGetSwapchainImagesKHR(device, m_swapchain, &m_image_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ERROR("Vulkan failed to retrieve swapchain image count");
-		
+
 	m_images.resize(m_image_count);
 	if (vkGetSwapchainImagesKHR(device, m_swapchain, &m_image_count, m_images.data()) != VK_SUCCESS)
 		KB_CORE_ERROR("Vulkan failed to retrieve swapchain images");
@@ -229,7 +229,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	// Create semaphores
 	VkSemaphoreCreateInfo semaphore_create_info{};
 	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		
+
 	if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &m_semaphores.present_complete) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create presenting semaphore!");
 
@@ -376,7 +376,7 @@ void VulkanSwapChain::Present()
 
 	constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000u;
 
-	VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    constexpr VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -496,7 +496,14 @@ VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore present_complete_sem, uin
     KB_PROFILE_SCOPE;
 
 	// why no fence?
-	return vkAcquireNextImageKHR(m_device->GetVkDevice(), m_swapchain, UINT64_MAX, present_complete_sem, (VkFence)nullptr, image_index);
+	return vkAcquireNextImageKHR(
+        m_device->GetVkDevice(),
+        m_swapchain,
+        UINT64_MAX,
+        present_complete_sem,
+        nullptr,
+        image_index
+    );
 }
 
 VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem) const

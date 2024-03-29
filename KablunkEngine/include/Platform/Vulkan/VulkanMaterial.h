@@ -159,6 +159,7 @@ private:
 		std::vector<ref<Image2D>> images;
 		VkDescriptorImageInfo submitted_image_info{};
 	};
+
 	kb::unordered_flat_map<uint32_t, std::shared_ptr<PendingDescriptor>> m_resident_descriptors;
 	kb::unordered_flat_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> m_resident_descriptor_array;
 	std::vector<std::shared_ptr<PendingDescriptor>> m_pending_descriptors; // #TODO weak ref
@@ -174,6 +175,7 @@ private:
 
 	owning_buffer m_uniform_storage_buffer;
 
+    // per frame flight data
 	VulkanShader::ShaderMaterialDescriptorSet m_descriptor_sets[3];
 
 	std::string m_name;

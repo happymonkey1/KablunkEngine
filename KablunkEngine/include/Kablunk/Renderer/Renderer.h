@@ -38,7 +38,7 @@ enum RendererPipelineDescriptor
 
 struct RendererOptions
 {
-	uint32_t frames_in_flight = 3;
+    uint32_t frames_in_flight = 3;
 	RendererPipelineDescriptor pipeline = PHONG_DIFFUSE;
 };
 

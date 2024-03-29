@@ -36,6 +36,7 @@ public:
         u32 binding_point = 0;
         u32 descriptor_set = 0;
         u32 array_size = 0;
+        u32 m_dimension = 0;
 		std::string name;
 		VkShaderStageFlagBits shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 	};

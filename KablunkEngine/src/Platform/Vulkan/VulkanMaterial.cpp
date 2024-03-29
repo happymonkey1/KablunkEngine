@@ -153,7 +153,9 @@ namespace kb
 		SetVulkanDescriptor(name, image);
 	}
 
-	void VulkanMaterial::RT_UpdateForRendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniform_buffer_write_descriptors /*= std::vector<std::vector<VkWriteDescriptorSet>>()*/)
+	void VulkanMaterial::RT_UpdateForRendering(
+        const std::vector<std::vector<VkWriteDescriptorSet>>& uniform_buffer_write_descriptors /*= std::vector<std::vector<VkWriteDescriptorSet>>()*/
+    )
 	{
         if (!m_shader.As<VulkanShader>()->HasDescriptorSet(0))
         {
@@ -179,7 +181,7 @@ namespace kb
 
 		std::vector<VkDescriptorImageInfo> array_image_infos;
 
-		uint32_t frame_index = render::rt_get_current_frame_index();
+        const uint32_t frame_index = render::rt_get_current_frame_index();
 
 		// currently can't cache resources because the same material could be rendered in multiple viewports, so we can't bind to the same uniform buffer
 		if (m_dirty_descriptor_sets[frame_index] || true)
@@ -291,8 +293,8 @@ namespace kb
 
 	void VulkanMaterial::InvalidateDescriptorSets()
 	{
-		const uint32_t framesInFlight = render::get_frames_in_flights();
-		for (uint32_t i = 0; i < framesInFlight; i++)
+		const uint32_t frames_in_flight = render::get_frames_in_flights();
+		for (uint32_t i = 0; i < frames_in_flight; i++)
 			m_dirty_descriptor_sets[i] = true;
 	}
 
