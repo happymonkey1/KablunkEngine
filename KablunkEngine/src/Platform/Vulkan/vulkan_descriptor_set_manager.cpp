@@ -134,61 +134,109 @@ auto vulkan_descriptor_set_manager::set_input(
     }
 }
 
-auto vulkan_descriptor_set_manager::set_input(std::string_view p_name, const ref<Texture2D>& p_texture_2d) noexcept -> void
+auto vulkan_descriptor_set_manager::set_input(
+    std::string_view p_name,
+    const ref<Texture2D>& p_texture_2d
+) noexcept -> void
 {
+    if (const auto* decl = get_input_declaration(p_name))
+        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_texture_2d);
+    else
+    {
+        KB_CORE_WARN(
+            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+            m_specification.m_debug_name,
+            p_name
+        );
+    }
 }
 
 auto vulkan_descriptor_set_manager::set_input(std::string_view p_name, const ref<Image2D>& p_image_2d) noexcept -> void
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
 }
 
 auto vulkan_descriptor_set_manager::is_invalidated(u32 p_set, u32 p_binding) const noexcept -> bool
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return false;
 }
 
 auto vulkan_descriptor_set_manager::validate() noexcept -> bool
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return false;
 }
 
 auto vulkan_descriptor_set_manager::bake() noexcept -> void
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
 }
 
 auto vulkan_descriptor_set_manager::has_buffer_sets() noexcept -> std::set<u32>
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return {};
 }
 
 auto vulkan_descriptor_set_manager::invalidate_and_update() noexcept -> void
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
 }
 
 auto vulkan_descriptor_set_manager::has_descriptor_sets() const noexcept -> bool
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return false;
 }
 
 auto vulkan_descriptor_set_manager::get_first_set_index() const noexcept -> u32
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return 0;
 }
 
 auto vulkan_descriptor_set_manager::get_descriptor_sets() const noexcept -> const std::vector<VkDescriptorSet>&
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return m_descriptor_sets[m_specification.m_start_set];
 }
 
 auto vulkan_descriptor_set_manager::is_input_valid(std::string_view p_name) const noexcept -> bool
 {
+    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    return false;
 }
 
 auto vulkan_descriptor_set_manager::get_input_declaration(
-    std::string_view p_name) const noexcept -> const render_pass_input_declaration*
+    std::string_view p_name
+) const noexcept -> const render_pass_input_declaration*
 {
+    return &m_input_declarations.at(std::string{ p_name });
 }
 
 auto vulkan_descriptor_set_manager::operator=(const vulkan_descriptor_set_manager& p_other) noexcept -> vulkan_descriptor_set_manager&
 {
+    m_specification = p_other.m_specification;
+
+    init();
+    m_input_resources = p_other.m_input_resources;
+    bake();
+
+    return *this;
 }
 
 auto vulkan_descriptor_set_manager::operator=(vulkan_descriptor_set_manager&& p_other) noexcept -> vulkan_descriptor_set_manager&
 {
+    std::swap(m_specification, p_other.m_specification);
+    std::swap(m_input_declarations, p_other.m_input_declarations);
+    std::swap(m_invalidated_input_resources, p_other.m_invalidated_input_resources);
+    std::swap(m_input_resources, p_other.m_input_resources);
+    std::swap(m_descriptor_sets, p_other.m_descriptor_sets);
+    std::swap(m_write_descriptor_map, p_other.m_write_descriptor_map);
+    std::swap(m_descriptor_pool, p_other.m_descriptor_pool);
+
+    return *this;
 }
 
 auto vulkan_descriptor_set_manager::init() noexcept -> void

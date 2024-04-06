@@ -6,6 +6,7 @@
 namespace kb
 { // start namespace kb
 
+// CRTP like interface for a zero cost abstraction over integral typed `handles` (ids, etc.)
 template <typename HandleT, typename ValueT = uint32_t>
 class handle
 {
@@ -35,6 +36,15 @@ public:
     // must be implemented on derived types
     template <typename T>
     constexpr auto as() const noexcept -> T;
+
+    // optional interface to convert from T to a derived handle
+    template <typename T>
+    static constexpr auto from(const T& p_value) noexcept -> handle;
+
+    // optional interface to consume T into a derived handle
+    template <typename T>
+    static constexpr auto into(T p_value) noexcept -> handle;
+
 private:
     ValueT m_handle{};
 };

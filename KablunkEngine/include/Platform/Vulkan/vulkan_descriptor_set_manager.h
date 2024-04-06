@@ -199,14 +199,14 @@ struct descriptor_set_manager_specification
 // Invalidated input resources attempt to be re-assigned on the next render pass
 // this is useful for resources that may not exist at render pass creation,
 // but will be present during actual rendering.
-class descriptor_set_manager
+class vulkan_descriptor_set_manager
 {
 public:
-    descriptor_set_manager() noexcept = default;
-    descriptor_set_manager(const descriptor_set_manager& p_other) noexcept;
-    descriptor_set_manager(descriptor_set_manager&& p_other) noexcept;
-    explicit descriptor_set_manager(const descriptor_set_manager_specification& p_spec) noexcept;
-    ~descriptor_set_manager() noexcept;
+    vulkan_descriptor_set_manager() noexcept = default;
+    vulkan_descriptor_set_manager(const vulkan_descriptor_set_manager& p_other) noexcept;
+    vulkan_descriptor_set_manager(vulkan_descriptor_set_manager&& p_other) noexcept;
+    explicit vulkan_descriptor_set_manager(const descriptor_set_manager_specification& p_spec) noexcept;
+    ~vulkan_descriptor_set_manager() noexcept;
 
     auto set_input(std::string_view p_name, const ref<UniformBuffer>& p_uniform_buffer) noexcept -> void;
     auto set_input(std::string_view p_name, const ref<UniformBufferSet>& p_uniform_buffer_set) noexcept -> void;
@@ -233,8 +233,8 @@ public:
     auto is_input_valid(std::string_view p_name) const noexcept -> bool;
     auto get_input_declaration(std::string_view p_name) const noexcept -> const render_pass_input_declaration*;
 
-    auto operator=(const descriptor_set_manager& p_other) noexcept -> descriptor_set_manager&;
-    auto operator=(descriptor_set_manager&& p_other) noexcept -> descriptor_set_manager&;
+    auto operator=(const vulkan_descriptor_set_manager& p_other) noexcept -> vulkan_descriptor_set_manager&;
+    auto operator=(vulkan_descriptor_set_manager&& p_other) noexcept -> vulkan_descriptor_set_manager&;
 
 private:
     auto init() noexcept -> void;
@@ -260,7 +260,7 @@ private:
 };
 
 template <typename T>
-ref<T> descriptor_set_manager::get_input(std::string_view p_name)
+ref<T> vulkan_descriptor_set_manager::get_input(std::string_view p_name)
 {
     if (const auto* decl = get_input_declaration(p_name))
         if (const auto set = m_input_resources.find(decl->m_binding); set != m_input_resources.end())

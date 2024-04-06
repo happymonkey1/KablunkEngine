@@ -1,30 +1,26 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
+#include "Kablunk/Core/concepts.hpp"
+
 #include <glm/glm.hpp>
 
 namespace kb
 { // start namespace kb
-namespace concepts
-{ // start namespace ::concepts
-template <typename T>
-concept NumericType = std::integral<T> || std::floating_point<T>;
-} // end namespace ::concepts
 
 #ifdef KB_PACKED_MATH_TYPES
 // #TODO portable pack macro
 
-
 namespace details
 { // start namespace ::details
 
-template <size_t Extent, concepts::NumericType T>
+template <size_t Extent, concepts::NumericT T>
 struct vec_storage
 {
     T m_storage[Extent];
 };
-
-template <concepts::NumericType T = f32>
+    
+template <concepts::NumericT T = f32>
 struct alignas(4) vec2_packed
 {
     vec_storage<2, T> m_storage;
@@ -48,7 +44,7 @@ struct alignas(4) vec2_packed
     }
 };
 
-template <concepts::NumericType T = f32>
+template <concepts::NumericT T = f32>
 struct alignas(4) vec3_packed
 {
     vec_storage<3, T> m_storage;
@@ -73,7 +69,7 @@ struct alignas(4) vec3_packed
     }
 };
 
-template <concepts::NumericType T = f32>
+template <concepts::NumericT T = f32>
 struct alignas(4) vec4_packed
 {
     vec_storage<4, T> m_storage;
