@@ -151,7 +151,7 @@ font::font(const std::filesystem::path& p_path) noexcept
     KB_CORE_ASSERT(std::filesystem::exists(p_path), "[font]: {} does not exist!", p_path.string().c_str());
     m_name = p_path.stem().string();
 
-    KB_CORE_INFO("[font]: Trying to load font file '{}'", p_path);
+    KB_CORE_INFO("[font]: Trying to load font file '{}'", p_path.string().c_str());
 
     owning_buffer buffer = FileSystem::read_bytes(p_path);
     generate_atlas(std::move(buffer));

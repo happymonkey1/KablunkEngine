@@ -2,9 +2,9 @@
 #define KABLUNK_CORE_CORE_H
 
 #include "Kablunk/Core/CoreTypes.h"
-#include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Logger.h"
+#include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Core/Memory/Memory.h"
 #include "Kablunk/Core/Expected.hpp"

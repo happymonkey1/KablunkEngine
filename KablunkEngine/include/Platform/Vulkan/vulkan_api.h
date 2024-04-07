@@ -1,0 +1,17 @@
+#pragma once
+
+#include "Platform/Vulkan/vulkan_core.h"
+
+namespace kb::vk
+{ // start namespace kb::vk
+
+auto get_descriptor_set_alloc_info(
+    const VkDescriptorSetLayout* p_layouts,
+    u32 p_count = 1,
+    VkDescriptorPool p_pool = nullptr
+) noexcept -> VkDescriptorSetAllocateInfo;
+
+auto create_sampler(VkSamplerCreateInfo p_sampler_create_info) noexcept -> VkSampler;
+auto destroy_sampler(VkSampler p_sampler) noexcept -> void;
+
+} // end namespace kb::vk

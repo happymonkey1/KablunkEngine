@@ -5,6 +5,14 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Platform/Vulkan/VulkanContext.h"
+#include "Platform/Vulkan/VulkanStorageBuffer.h"
+#include "Platform/Vulkan/VulkanStorageBufferSet.h"
+#include "Platform/Vulkan/VulkanTexture.h"
+#include "Platform/Vulkan/VulkanUniformBuffer.h"
+#include "Platform/Vulkan/VulkanUniformBufferSet.h"
+#include "Platform/Vulkan/vulkan_api.h"
+#include "Platform/Vulkan/vulkan_core.h"
 
 namespace kb::render
 { // start namespace kb::render
@@ -75,8 +83,9 @@ auto vulkan_descriptor_set_manager::set_input(
         m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_uniform_buffer);
     else
     {
-        KB_CORE_WARN(
-            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
             m_specification.m_debug_name,
             p_name
         );
@@ -92,8 +101,9 @@ auto vulkan_descriptor_set_manager::set_input(
         m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_uniform_buffer_set);
     else
     {
-        KB_CORE_WARN(
-            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
             m_specification.m_debug_name,
             p_name
         );
@@ -109,8 +119,9 @@ auto vulkan_descriptor_set_manager::set_input(
         m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_storage_buffer);
     else
     {
-        KB_CORE_WARN(
-            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
             m_specification.m_debug_name,
             p_name
         );
@@ -126,8 +137,9 @@ auto vulkan_descriptor_set_manager::set_input(
         m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_storage_buffer_set);
     else
     {
-        KB_CORE_WARN(
-            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
             m_specification.m_debug_name,
             p_name
         );
@@ -136,47 +148,345 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<Texture2D>& p_texture_2d
+    const ref<Texture2D>& p_texture_2d,
+    u32 p_index /*= 0*/
 ) noexcept -> void
 {
     if (const auto* decl = get_input_declaration(p_name))
-        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_texture_2d);
+        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_texture_2d, p_index);
     else
     {
-        KB_CORE_WARN(
-            "[vulkan_descriptor_set_manager]: [RenderPass {}]: Input {} not found!",
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
             m_specification.m_debug_name,
             p_name
         );
     }
 }
 
-auto vulkan_descriptor_set_manager::set_input(std::string_view p_name, const ref<Image2D>& p_image_2d) noexcept -> void
+auto vulkan_descriptor_set_manager::set_input(
+    std::string_view p_name,
+    const ref<Image2D>& p_image_2d
+) noexcept -> void
 {
-    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    if (const auto* decl = get_input_declaration(p_name))
+        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_image_2d);
+    else
+    {
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
+            m_specification.m_debug_name,
+            p_name
+        );
+    }
 }
 
 auto vulkan_descriptor_set_manager::is_invalidated(u32 p_set, u32 p_binding) const noexcept -> bool
 {
-    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    if (m_invalidated_input_resources.contains(p_set))
+    {
+        const auto& resources = m_invalidated_input_resources.at(p_set);
+        return resources.contains(p_binding);
+    }
+
     return false;
 }
 
 auto vulkan_descriptor_set_manager::validate() noexcept -> bool
 {
-    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
-    return false;
+    const auto& shader_descriptor_sets = m_specification.m_shader->GetShaderDescriptorSets();
+
+    for (u32 set = m_specification.m_start_set; set <= m_specification.m_end_set; ++set)
+    {
+        if (set >= shader_descriptor_sets.size())
+            break;
+
+        // no descriptors in this set
+        if (!shader_descriptor_sets[set])
+            continue;
+
+        if (!m_input_resources.contains(set))
+        {
+            log::core::error(
+                log::logger_tag_t::renderer,
+                "[Render Pass {}] No input resources for set {}?",
+                m_specification.m_debug_name,
+                set
+            );
+            return false;
+        }
+
+        const auto& set_input_resources = m_input_resources.at(set);
+        const auto& shader_descriptor = shader_descriptor_sets[set];
+        for (auto&& [name, write_descriptor] : shader_descriptor.write_descriptor_sets)
+        {
+            const u32 binding = write_descriptor.dstBinding;
+            if (!set_input_resources.contains(binding))
+            {
+                log::core::error(
+                    log::logger_tag_t::renderer,
+                    "[Render Pass {}] No input resources for set {}.{}?",
+                    m_specification.m_debug_name,
+                    set,
+                    binding
+                );
+                log::core::error(
+                    log::logger_tag_t::renderer,
+                    "  Required resource is {} ({})",
+                    std::string_view{ name },
+                    static_cast<i32>(write_descriptor.descriptorType)
+                );
+                return false;
+            }
+
+            const auto& resource = set_input_resources.at(binding);
+            if (!is_input_compatible(resource.m_type, write_descriptor.descriptorType))
+            {
+                log::core::error(
+                    log::logger_tag_t::renderer,
+                    "[Render Pass {}] Wrong type for resource. Expected {}, found {}!",
+                    m_specification.m_debug_name,
+                    static_cast<std::underlying_type_t<render_pass_resource_type_t>>(resource.m_type),
+                    static_cast<i32>(write_descriptor.descriptorType)
+                );
+                return false;
+            }
+
+            if (resource.m_type != render_pass_resource_type_t::image_2d && resource.m_input[0] == ref<RefCounted>{})
+            {
+                log::core::error(
+                    log::logger_tag_t::renderer,
+                    "[Render Pass {}] Resource is null! {} ({}.{})",
+                    m_specification.m_debug_name,
+                    name,
+                    set,
+                    binding
+                );
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 auto vulkan_descriptor_set_manager::bake() noexcept -> void
 {
-    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
+    if (!validate())
+    {
+        log::core::error(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}] Validation failed!",
+            m_specification.m_debug_name
+        );
+        return;
+    }
+
+    VkDescriptorPoolSize pool_sizes[] = {
+        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+    };
+
+    constexpr u32 pool_size_count = sizeof(pool_sizes) / sizeof(VkDescriptorPoolSize);
+
+    const VkDescriptorPoolCreateInfo pool_create_info{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+        .maxSets = 10ul * render::get_frames_in_flights(),
+        .poolSizeCount = pool_size_count,
+        .pPoolSizes = pool_sizes
+    };
+
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    KB_VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_create_info, nullptr, &m_descriptor_pool));
+
+    const auto buffer_sets = has_buffer_sets();
+    const u32 descriptor_set_count = render::get_frames_in_flights();
+
+    if (m_descriptor_sets.empty())
+    {
+        for (u32 i = 0; i < descriptor_set_count; ++i)
+        {
+            m_descriptor_sets.emplace_back();
+        }
+    }
+
+    for (auto& descriptor_set : m_descriptor_sets)
+        descriptor_set.clear();
+
+    for (const auto& [set, data_for_set] : m_input_resources)
+    {
+        const u32 descriptor_count_in_set = buffer_sets.contains(set) ? descriptor_set_count : 1;
+        for (u32 frame_index = 0; frame_index < descriptor_set_count; ++frame_index)
+        {
+            const auto vk_descriptor_set_layout = m_specification.m_shader->GetDescriptorSetLayout(set);
+            const auto descriptor_set_allocate_info = kb::vk::get_descriptor_set_alloc_info(
+                &vk_descriptor_set_layout,
+                descriptor_count_in_set,
+                m_descriptor_pool
+            );
+
+            VkDescriptorSet vk_descriptor_set;
+            KB_VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptor_set_allocate_info, &vk_descriptor_set));
+            m_descriptor_sets[frame_index].emplace_back(vk_descriptor_set);
+
+            auto& write_descriptor_map = m_write_descriptor_map.at(frame_index).at(set);
+            std::vector<std::vector<VkDescriptorImageInfo>> image_info_storage{};
+            // #TODO reserve?
+            u32 image_info_storage_index = 0;
+
+            for (const auto& [binding, input] : data_for_set)
+            {
+                auto& stored_write_descriptor = write_descriptor_map.at(binding);
+
+                auto& vk_write_descriptor = stored_write_descriptor.m_write_descriptor_set;
+                vk_write_descriptor.dstSet = vk_descriptor_set;
+
+                switch (input.m_type)
+                {
+                case render_pass_resource_type_t::uniform_buffer:
+                {
+                    auto buffer = input.m_input[0].As<VulkanUniformBuffer>();
+                    vk_write_descriptor.pBufferInfo = &buffer->GetDescriptorBufferInfo();
+                    stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pBufferInfo->buffer;
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pBufferInfo->buffer == nullptr)
+                        m_invalidated_input_resources[set][binding] = input;
+
+                    break;
+                }
+                case render_pass_resource_type_t::uniform_buffer_set:
+                {
+                    auto buffer = input.m_input[0].As<VulkanUniformBufferSet>();
+                    // #TODO validate if this is correct
+                    vk_write_descriptor.pBufferInfo = &buffer->Get(0, 0, frame_index).As<VulkanUniformBuffer>()->GetDescriptorBufferInfo();
+                    stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pBufferInfo->buffer;
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pBufferInfo->buffer == nullptr)
+                        m_invalidated_input_resources[set][binding] = input;
+
+                    break;
+                }
+                case render_pass_resource_type_t::storage_buffer:
+                {
+                    auto buffer = input.m_input[0].As<VulkanStorageBuffer>();
+                    vk_write_descriptor.pBufferInfo = &buffer->GetVkDescriptorInfo();
+                    stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pBufferInfo->buffer;
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pBufferInfo->buffer == nullptr)
+                        m_invalidated_input_resources[set][binding] = input;
+
+                    break;
+                }
+                case render_pass_resource_type_t::storage_buffer_set:
+                {
+                    auto buffer = input.m_input[0].As<VulkanStorageBufferSet>();
+                    // #TODO validate if this is correct
+                    vk_write_descriptor.pBufferInfo = &buffer->Get(0, 0, frame_index).As<VulkanStorageBuffer>()->GetVkDescriptorInfo();
+                    stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pBufferInfo->buffer;
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pBufferInfo->buffer == nullptr)
+                        m_invalidated_input_resources[set][binding] = input;
+
+                    break;
+                }
+                case render_pass_resource_type_t::texture_2d:
+                {
+                    if (input.m_input.size() > 1)
+                    {
+                        image_info_storage.emplace_back(input.m_input.size());
+                        for (size_t i = 0; i < input.m_input.size(); ++i)
+                        {
+                            auto texture = input.m_input[i].As<VulkanTexture2D>();
+                            image_info_storage[image_info_storage_index][i] = texture->GetVulkanDescriptorInfo();
+                        }
+
+                        vk_write_descriptor.pImageInfo = image_info_storage[image_info_storage_index].data();
+                        image_info_storage_index++;
+                    }
+                    else
+                    {
+                        auto texture = input.m_input[0].As<VulkanTexture2D>();
+                        vk_write_descriptor.pImageInfo = image_info_storage[image_info_storage_index].data();
+                    }
+                    stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pImageInfo->imageView;
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pImageInfo->imageView == nullptr)
+                        m_invalidated_input_resources[set][binding] = input;
+
+                    break;
+                }
+                case render_pass_resource_type_t::texture_3d:
+                {
+                    KB_CORE_ASSERT(false, "[vulkan_write_descriptor_set]: Not implemented!");
+                    break;
+                }
+                case render_pass_resource_type_t::image_2d:
+                {
+                    auto image = input.m_input[0].As<VulkanImage2D>()->GetDescriptor();
+
+                    // defer if resource does not exist yet
+                    if (vk_write_descriptor.pImageInfo->imageView == nullptr)
+                    {
+                        m_invalidated_input_resources[set][binding] = input;
+                        break;
+                    }
+
+                    KB_CORE_ASSERT(false, "not finished!");
+
+                    break;
+                }
+                case render_pass_resource_type_t::none: [[fallthrough]];
+                default:
+                {
+                    KB_CORE_ASSERT(
+                        false,
+                        "[vulkan_write_descriptor_set]: Invalid or unhandled render_pass_resource_type_t {}!",
+                        static_cast<std::underlying_type_t<render_pass_resource_type_t>>(input.m_type)
+                    );
+                    return;
+                }
+                }
+            }
+        }
+    }
 }
 
 auto vulkan_descriptor_set_manager::has_buffer_sets() noexcept -> std::set<u32>
 {
-    KB_CORE_ASSERT(false, "[vulkan_descriptor_set_manager]: Not implemented!");
-    return {};
+    std::set<u32> sets{};
+
+    for (const auto& [set, resources] : m_input_resources)
+    {
+        for (const auto& input : resources | std::views::values)
+        {
+            if (input.m_type == render_pass_resource_type_t::uniform_buffer_set ||
+                input.m_type == render_pass_resource_type_t::storage_buffer_set)
+            {
+                sets.insert(set);
+                break;
+            }
+        }
+    }
+
+    return sets;
 }
 
 auto vulkan_descriptor_set_manager::invalidate_and_update() noexcept -> void
@@ -241,6 +551,11 @@ auto vulkan_descriptor_set_manager::operator=(vulkan_descriptor_set_manager&& p_
 
 auto vulkan_descriptor_set_manager::init() noexcept -> void
 {
+    log::core::info(
+        log::logger_tag_t::renderer,
+        "[vulkan_descriptor_set_manager]: Initializing."
+    );
+
     const auto& shader_descriptor_sets = m_specification.m_shader->GetShaderDescriptorSets();
     const auto frames_in_flight = render::get_frames_in_flights();
     m_write_descriptor_map.resize(frames_in_flight);

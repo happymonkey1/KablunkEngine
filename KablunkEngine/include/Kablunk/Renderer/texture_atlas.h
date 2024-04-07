@@ -16,7 +16,7 @@ struct texture_atlas_create_props
 {
     std::filesystem::path m_path = "";
     bool m_force_create = false;
-    kb::u32 m_sprite_width = 0ul;
+    u32 m_sprite_width = 0ul;
 
     std::filesystem::path m_root_directory;
 };
@@ -41,12 +41,12 @@ public:
 
     explicit texture_atlas(const texture_atlas_create_props& p_props) noexcept;
 
-    auto get_filepath() const noexcept -> const std::filesystem::path& { return m_filepath; }
+    [[nodiscard]] auto get_filepath() const noexcept -> const std::filesystem::path& { return m_filepath; }
 
     auto set_texture_atlas(const ref<Texture2D>& p_texture) noexcept -> void { m_texture = p_texture; }
-    auto get_texture_atlas() const noexcept -> const ref<Texture2D>& { return m_texture; }
+    [[nodiscard]] auto get_texture_atlas() const noexcept -> const ref<Texture2D>& { return m_texture; }
 
-    auto get_uv_map() const noexcept -> const unordered_flat_map<texture_handle, virtual_texture_data_t>& { return m_uv_map; }
+    [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<texture_handle, virtual_texture_data_t>& { return m_uv_map; }
 
     auto operator=(const texture_atlas&) noexcept -> texture_atlas& = delete;
 
@@ -74,7 +74,10 @@ private:
         u32 m_height = 0;
         texture_handle m_id;
 
-        constexpr auto is_valid() const noexcept -> bool { return m_width != 0 && m_height != 0 && m_image_data.get(); }
+        [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
+        {
+            return m_width != 0 && m_height != 0 && m_image_data.get();
+        }
     };
 
     struct node_t
@@ -84,8 +87,8 @@ private:
         rect_i32 m_rect{};
         u64 m_image_hash = 0ull;
 
-        auto insert(const image_data_t& p_image_data) noexcept -> node_t*;
-        auto is_leaf() const noexcept -> bool { return !m_left && !m_right; }
+        [[nodiscard]] auto insert(const image_data_t& p_image_data) noexcept -> node_t*;
+        [[nodiscard]] auto is_leaf() const noexcept -> bool { return !m_left && !m_right; }
     };
 
 private:
@@ -95,10 +98,10 @@ private:
         const image_data_t& p_image_data,
         owning_buffer& p_atlas_buffer
     ) noexcept -> void;
-    auto load_image(const std::filesystem::path& p_path) const noexcept -> image_data_t;
+    [[nodiscard]] static auto load_image(const std::filesystem::path& p_path) noexcept -> image_data_t;
     auto calculate_uv_offsets(texture_handle p_id, const rect_i32& p_rect) noexcept -> void;
     // free binary tree
-    auto delete_tree(node_t* p_root) noexcept -> void;
+    static auto delete_tree(node_t* p_root) noexcept -> void;
 
 private:
     std::filesystem::path m_filepath{};

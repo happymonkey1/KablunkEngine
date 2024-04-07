@@ -208,11 +208,12 @@ public:
     explicit vulkan_descriptor_set_manager(const descriptor_set_manager_specification& p_spec) noexcept;
     ~vulkan_descriptor_set_manager() noexcept;
 
+    // #TODO template with tuple type validation at compile time...
     auto set_input(std::string_view p_name, const ref<UniformBuffer>& p_uniform_buffer) noexcept -> void;
     auto set_input(std::string_view p_name, const ref<UniformBufferSet>& p_uniform_buffer_set) noexcept -> void;
     auto set_input(std::string_view p_name, const ref<StorageBuffer>& p_storage_buffer) noexcept -> void;
     auto set_input(std::string_view p_name, const ref<StorageBufferSet>& p_storage_buffer_set) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<Texture2D>& p_texture_2d) noexcept -> void;
+    auto set_input(std::string_view p_name, const ref<Texture2D>& p_texture_2d, u32 p_index = 0) noexcept -> void;
     auto set_input(std::string_view p_name, const ref<Image2D>& p_image_2d) noexcept -> void;
 
     template <typename T>

@@ -326,19 +326,25 @@ namespace kb
 				catch (std::bad_alloc& err)
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", err.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN(
+                        "Script '{0}' failed! Unloading!",
+                        nsc.Filepath.string().c_str()
+                    );
 					nsc.destroy_script();
 				}
 				catch (std::exception& err)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", err.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN(
+                        "Script '{0}' failed! Unloading!",
+                        nsc.Filepath.string().c_str()
+                    );
 					nsc.destroy_script();
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath.string().c_str());
 					nsc.destroy_script();
 				}
 			}
@@ -363,22 +369,21 @@ namespace kb
 				catch (std::bad_alloc& e)
 				{
 					KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath.string().c_str());
 					nsc.destroy_script();
 				}
 				catch (std::exception& e)
 				{
 					KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath.string().c_str());
 					nsc.destroy_script();
 				}
 				catch (...)
 				{
 					KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
-					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath);
+					KB_CORE_WARN("Script '{0}' failed! Unloading!", nsc.Filepath.string().c_str());
 					nsc.destroy_script();
 				}
-
 			}
 		}
 
@@ -404,19 +409,19 @@ namespace kb
 					catch (std::bad_alloc& e)
 					{
 						KB_CORE_ERROR("Memery allocation exception '{0}' occurred during OnUpdate()", e.what());
-						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath.string().c_str());
 						native_script_component.destroy_script();
 					}
 					catch (std::exception& e)
 					{
 						KB_CORE_ERROR("Generic exception '{0}' occurred during OnUpdate()", e.what());
-						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath.string().c_str());
 						native_script_component.destroy_script();
 					}
 					catch (...)
 					{
 						KB_CORE_ERROR("Unkown exception occurred during OnUpdate()");
-						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath);
+						KB_CORE_WARN("Script '{0}' failed! Unloading!", native_script_component.Filepath.string().c_str());
 						native_script_component.destroy_script();
 					}
 				}

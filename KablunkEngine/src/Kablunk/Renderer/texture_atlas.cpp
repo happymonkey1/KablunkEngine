@@ -50,7 +50,7 @@ auto texture_atlas::node_t::insert(const image_data_t& p_image_data) noexcept ->
         p_image_data.m_height == static_cast<u32>(m_rect.get_height());
     if (perfect_fit)
     {
-        m_image_hash = static_cast<kb::u64>(p_image_data.m_id);
+        m_image_hash = static_cast<u64>(p_image_data.m_id);
         return this;
     }
 
@@ -65,12 +65,12 @@ auto texture_atlas::node_t::insert(const image_data_t& p_image_data) noexcept ->
         m_left->m_rect = rect_i32{
             m_rect.m_left,
             m_rect.m_top,
-            m_rect.m_left + static_cast<kb::i32>(p_image_data.m_width),
+            m_rect.m_left + static_cast<i32>(p_image_data.m_width),
             m_rect.m_bottom
         };
 
         m_right->m_rect = rect_i32{
-            m_rect.m_left + static_cast<kb::i32>(p_image_data.m_width),
+            m_rect.m_left + static_cast<i32>(p_image_data.m_width),
             m_rect.m_top,
             m_rect.m_right,
             m_rect.m_bottom
@@ -82,12 +82,12 @@ auto texture_atlas::node_t::insert(const image_data_t& p_image_data) noexcept ->
             m_rect.m_left,
             m_rect.m_top,
             m_rect.m_right,
-            m_rect.m_top + static_cast<kb::i32>(p_image_data.m_height)
+            m_rect.m_top + static_cast<i32>(p_image_data.m_height)
         };
 
         m_right->m_rect = rect_i32{
             m_rect.m_left,
-            m_rect.m_top + static_cast<kb::i32>(p_image_data.m_height),
+            m_rect.m_top + static_cast<i32>(p_image_data.m_height),
             m_rect.m_right,
             m_rect.m_bottom
         };
@@ -147,6 +147,7 @@ auto texture_atlas::create_texture_atlas(
         for (const auto& entry : std::filesystem::directory_iterator(dir_path))
         {
             auto filename_str = entry.path().filename().string();
+            // #TODO ignore pattern should probably be regex
             if (entry.is_directory() && filename_str[0] != '.')
             {
                 directories_to_search.emplace_back(entry.path());
@@ -247,7 +248,7 @@ auto texture_atlas::add_image_to_atlas(
     ++m_sprite_count;
 }
 
-auto texture_atlas::load_image(const std::filesystem::path& p_path) const noexcept -> image_data_t
+auto texture_atlas::load_image(const std::filesystem::path& p_path) noexcept -> image_data_t
 {
     const std::string path_str = p_path.string();
     owning_buffer image_buffer{};
@@ -296,7 +297,7 @@ auto texture_atlas::calculate_uv_offsets(texture_handle p_id, const rect_i32& p_
     KB_ASSERT(
         !m_uv_map.contains(p_id),
         "[render::texture_atlas]: texture_id id '{}' is already in the uv map!",
-        static_cast<kb::u64>(p_id)
+        static_cast<u64>(p_id)
     );
 
     constexpr f32 border_uv_offset_x = 0.0f;

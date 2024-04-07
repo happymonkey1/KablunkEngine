@@ -26,8 +26,7 @@ constexpr auto texture_handle::as<f32>() const noexcept -> f32
 {
     return static_cast<f32>(static_cast<value_t>(m_handle));
 }
-
-// #FIXME clang-diagnostic-invalid-constexpr
+// #TODO check if this is not UB...
 template <>
 template <>
 constexpr auto texture_handle::into(std::string_view p_value) noexcept -> texture_handle

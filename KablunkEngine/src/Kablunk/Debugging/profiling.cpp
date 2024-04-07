@@ -10,7 +10,7 @@ void* operator new(std::size_t size)
     return ptr;
 }
 
-void operator delete(void* ptr)
+void operator delete(void* ptr) noexcept
 {
     TracyFree(ptr);
     free(ptr);

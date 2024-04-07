@@ -98,7 +98,10 @@ namespace kb::audio
 		if (std::find(m_queued_audio.begin(), m_queued_audio.end(), audio_asset) != m_queued_audio.end())
 		{
 			const asset::AssetMetadata& metadata = asset::try_get_asset_metadata(audio_asset->get_id());
-			KB_CORE_WARN("[AudioEngine]: audio '{}' is already in the play queue.", metadata.filepath);
+			KB_CORE_WARN(
+                "[AudioEngine]: audio '{}' is already in the play queue.",
+                metadata.filepath.string().c_str()
+            );
 		}
 
 		m_queued_audio.push_back(audio_asset);

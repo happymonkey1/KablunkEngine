@@ -477,7 +477,7 @@ void VulkanSwapChain::Destroy()
 	if (m_semaphores.render_complete)
 		vkDestroySemaphore(device, m_semaphores.render_complete, nullptr);
 
-	for (auto& fence : m_wait_fences)
+	for (auto fence : m_wait_fences)
 		vkDestroyFence(device, fence, nullptr);
 
     if (m_surface)
@@ -526,7 +526,7 @@ VkResult VulkanSwapChain::QueuePresent(VkQueue queue, uint32_t image_index, VkSe
 
 void VulkanSwapChain::FindImageFormatAndColorSpace()
 {
-	VkPhysicalDevice physical_device = m_device->GetVkPhysicalDevice();
+    const VkPhysicalDevice physical_device = m_device->GetVkPhysicalDevice();
 
 	uint32_t format_count = 0;
 	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, nullptr) != VK_SUCCESS)

@@ -35,8 +35,6 @@ namespace kb
 
 	void ContentBrowserPanel::OnImGuiRender()
 	{
-		
-
 		ImGui::Begin("Content Browser", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 
 		if (!ProjectManager::get().get_active())
@@ -62,7 +60,7 @@ namespace kb
 			//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
 			//ImGui::TableSetupColumn("##Directories", ImGuiTableColumnFlags_WidthStretch, 75.0f);
 			//ImGui::TableHeadersRow();
-			
+
 			// #TODO fix width of first column. Minimum width with stretching?
 			ImGui::TableNextColumn();
 
@@ -96,7 +94,7 @@ namespace kb
 			auto directory_panel_width = cell_rect.Max.x - cell_rect.Min.x;
 			//ImGui::PopStyleVar(); // Frame padding
 			ImGui::TableNextColumn();
-			
+
 			// Calculate how many columns we need to display files/folders
 			auto files_column_width = ImGui::GetContentRegionAvail().x;
 			auto column_count = static_cast<int>(files_column_width / cell_size);
@@ -107,7 +105,6 @@ namespace kb
 			int i = 0;
 			if (ImGui::BeginTable("Intra Directory Browser", column_count))
 			{
-				
 				auto mouse_double_click = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 				for (const auto& directory_entry : m_directory_entries)
 				{
@@ -279,7 +276,7 @@ namespace kb
 				if (asset_type == asset::asset_type_t::NONE)
 					continue;
 
-				KB_CORE_INFO("[ContentBrowserPanel] Trying to import asset '{}'!", relative_path);
+				KB_CORE_INFO("[ContentBrowserPanel] Trying to import asset '{}'!", relative_path.string().c_str());
 				asset::import_asset(relative_path);
 			}
 		}

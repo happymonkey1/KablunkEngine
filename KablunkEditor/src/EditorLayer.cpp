@@ -316,7 +316,7 @@ namespace kb
 							KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
 					}
 					else
-						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path);
+						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path.string().c_str());
 					
 				}
 				ImGui::EndDragDropTarget();

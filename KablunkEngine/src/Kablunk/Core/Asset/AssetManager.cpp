@@ -233,7 +233,9 @@ namespace kb::asset
 			// make sure asset exists in project
 			if (!FileSystem::file_exists(get_absolute_path(metadata)))
 			{
-				KB_CORE_WARN("[AssetManager] Asset '{0}' not found in project, attempting to locate on disk!", get_absolute_path(metadata));
+				KB_CORE_WARN(
+                    "[AssetManager] Asset '{0}' not found in project, attempting to locate on disk!", get_absolute_path(metadata).string().c_str()
+                );
 
 				KB_CORE_ASSERT(false, "not implemented!");
 			}
@@ -368,12 +370,23 @@ namespace kb::asset
 		auto it = m_asset_serializers.find(metadata.type);
 		if (it != m_asset_serializers.end())
 		{
-			KB_CORE_INFO("[AssetManager] Trying to load '{}' from disk using serializer={}", metadata.filepath, asset_type_to_string(metadata.type));
+			KB_CORE_INFO(
+                "[AssetManager] Trying to load '{}' from disk using serializer={}",
+                metadata.filepath.string().c_str(),
+                asset_type_to_string(metadata.type)
+            );
 			// try loading asset using found serializer
 			return it->second->try_load_data(metadata, asset);
 		}
 		else
-			KB_CORE_ASSERT(false, "asset serializer for type asset '{}', '{}' not found!", metadata.id, asset_type_to_string(metadata.type));
+		{
+            KB_CORE_ASSERT(
+                false,
+                "asset serializer for type asset '{}', '{}' not found!",
+                metadata.id,
+                asset_type_to_string(metadata.type)
+            );
+		}
 
 		return false;
 	}
