@@ -58,14 +58,16 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.quad_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-		m_renderer_data.quad_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(QuadVertex)));
-		m_renderer_data.quad_vertex_buffer_base_ptrs[0].emplace_back(new QuadVertex[kb::renderer_2d_data_t::max_vertices]);
+		m_renderer_data.quad_vertex_buffers[0].emplace_back(
+            VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(QuadVertex))
+        );
+		m_renderer_data.quad_vertex_buffer_base_ptrs[0].emplace_back(new QuadVertex[renderer_2d_data_t::max_vertices]);
 	}
 
-	auto* quad_indices = new uint32_t[kb::renderer_2d_data_t::max_indices];
+	auto* quad_indices = new uint32_t[renderer_2d_data_t::max_indices];
 
 	uint32_t offset = 0;
-	for (uint32_t i = 0; i < kb::renderer_2d_data_t::max_indices; i += 6)
+	for (uint32_t i = 0; i < renderer_2d_data_t::max_indices; i += 6)
 	{
 		quad_indices[i + uint32_t{ 0 }] = offset + uint32_t{ 0 };
 		quad_indices[i + uint32_t{ 1 }] = offset + uint32_t{ 1 };
@@ -78,7 +80,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 		offset += 4;
 	}
 
-	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, kb::renderer_2d_data_t::max_indices * 4ull);
+	m_renderer_data.quad_index_buffer = IndexBuffer::Create(quad_indices, renderer_2d_data_t::max_indices * 4ull);
 	delete[] quad_indices;
 
 	// =======
@@ -93,8 +95,8 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.circle_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-        m_renderer_data.circle_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(CircleVertex)));
-        m_renderer_data.circle_vertex_buffer_base_ptrs[0].emplace_back(new CircleVertex[kb::renderer_2d_data_t::max_vertices]);
+        m_renderer_data.circle_vertex_buffers[0].emplace_back(VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(CircleVertex)));
+        m_renderer_data.circle_vertex_buffer_base_ptrs[0].emplace_back(new CircleVertex[renderer_2d_data_t::max_vertices]);
 	}
 
 	// =====
@@ -109,8 +111,8 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.line_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(LineVertex)));
-        m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[kb::renderer_2d_data_t::max_vertices]);
+        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(LineVertex)));
+        m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[renderer_2d_data_t::max_vertices]);
     }
 
 	// ====
@@ -238,11 +240,14 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 		m_renderer_data.line_pipeline = Pipeline::Create(pipeline_spec);
 
-		uint32_t* line_indices = new uint32_t[kb::renderer_2d_data_t::max_line_indices];
-		for (uint32_t i = 0; i < kb::renderer_2d_data_t::max_line_indices; ++i)
+		uint32_t* line_indices = new uint32_t[renderer_2d_data_t::max_line_indices];
+		for (uint32_t i = 0; i < renderer_2d_data_t::max_line_indices; ++i)
 			line_indices[i] = i;
 
-		m_renderer_data.line_index_buffer = IndexBuffer::Create(line_indices, kb::renderer_2d_data_t::max_line_indices * 4ull);
+		m_renderer_data.line_index_buffer = IndexBuffer::Create(
+            line_indices,
+            renderer_2d_data_t::max_line_indices * 4ull
+        );
 		delete[] line_indices;
 	}
 
@@ -531,7 +536,7 @@ void Renderer2D::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.text_texture_atlas_slots;
-            for (uint32_t j = 0; j < kb::renderer_2d_data_t::max_texture_slots; j++)
+            for (uint32_t j = 0; j < renderer_2d_data_t::max_texture_slots; j++)
             {
                 if (textures[j])
                     m_renderer_data.text_material->Set("u_FontAtlases", textures[j], j);
@@ -752,7 +757,10 @@ void Renderer2D::draw_quad_from_texture_atlas(
         {
             texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+            KB_CORE_ASSERT(
+                m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots,
+                "texture slot overflow!"
+            );
         }
     }
 

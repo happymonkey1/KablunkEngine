@@ -275,6 +275,7 @@ auto log_message(
         formatted_message = fmt::format(
             log_message,
             log_tag,
+            // #TODO: can we use compile time formatting here...
             fmt::vformat(
                 p_format_msg,
                 fmt::make_format_args(args...)

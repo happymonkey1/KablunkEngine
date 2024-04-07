@@ -5,6 +5,7 @@
 
 #include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/RefCounting.h"
+#include "Kablunk/meta/tuple_traits.h"
 #include "Kablunk/Renderer/StorageBuffer.h"
 #include "Kablunk/Renderer/StorageBufferSet.h"
 #include "Kablunk/Renderer/Texture.h"
@@ -195,6 +196,29 @@ struct descriptor_set_manager_specification
     bool m_default_resources = false;
 };
 
+namespace details
+{ // start namespace ::details
+// list of valid input resources
+using render_pass_input_types_tuple = std::tuple<
+    UniformBuffer,
+    UniformBufferSet,
+    StorageBuffer,
+    StorageBufferSet,
+    Texture2D,
+    Image2D
+>;
+} // end namespace ::details
+
+namespace concepts
+{ // start namespace concepts
+template <typename T>
+concept RenderPassInputT = std::is_same_v<
+    std::true_type,
+    typename meta::tuple_has_type<T, details::render_pass_input_types_tuple>::value
+>;
+} // end namespace concepts
+
+
 // input resources (map of set -> binding -> resource)
 // Invalidated input resources attempt to be re-assigned on the next render pass
 // this is useful for resources that may not exist at render pass creation,
@@ -205,32 +229,62 @@ public:
     vulkan_descriptor_set_manager() noexcept = default;
     vulkan_descriptor_set_manager(const vulkan_descriptor_set_manager& p_other) noexcept;
     vulkan_descriptor_set_manager(vulkan_descriptor_set_manager&& p_other) noexcept;
-    explicit vulkan_descriptor_set_manager(const descriptor_set_manager_specification& p_spec) noexcept;
-    ~vulkan_descriptor_set_manager() noexcept;
+    explicit vulkan_descriptor_set_manager(descriptor_set_manager_specification p_spec) noexcept;
+    ~vulkan_descriptor_set_manager() noexcept = default;
 
+#if 0
     // #TODO template with tuple type validation at compile time...
-    auto set_input(std::string_view p_name, const ref<UniformBuffer>& p_uniform_buffer) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<UniformBufferSet>& p_uniform_buffer_set) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<StorageBuffer>& p_storage_buffer) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<StorageBufferSet>& p_storage_buffer_set) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<Texture2D>& p_texture_2d, u32 p_index = 0) noexcept -> void;
-    auto set_input(std::string_view p_name, const ref<Image2D>& p_image_2d) noexcept -> void;
+    auto set_input(
+        std::string_view p_name,
+        const ref<UniformBuffer>& p_uniform_buffer
+    ) noexcept -> vulkan_descriptor_set_manager&;
+    auto set_input(
+        std::string_view p_name,
+        const ref<UniformBufferSet>& p_uniform_buffer_set
+    ) noexcept -> vulkan_descriptor_set_manager&;
+    auto set_input(
+        std::string_view p_name,
+        const ref<StorageBuffer>& p_storage_buffer
+    ) noexcept -> vulkan_descriptor_set_manager&;
+    auto set_input(
+        std::string_view p_name,
+        const ref<StorageBufferSet>& p_storage_buffer_set
+    ) noexcept -> vulkan_descriptor_set_manager&;
+    auto set_input(
+        std::string_view p_name,
+        const ref<Texture2D>& p_texture_2d,
+        u32 p_index = 0
+    ) noexcept -> vulkan_descriptor_set_manager&;
+    auto set_input(
+        std::string_view p_name,
+        const ref<Image2D>& p_image_2d
+    ) noexcept -> vulkan_descriptor_set_manager&;
+#endif
+    template <concepts::RenderPassInputT T>
+    auto set_input(
+        std::string_view,
+        const ref<T>& p_resource
+    ) noexcept -> vulkan_descriptor_set_manager&;
 
     template <typename T>
     ref<T> get_input(std::string_view p_name);
 
+    // check if descriptor set at (set, binding) is invalidated
     auto is_invalidated(u32 p_set, u32 p_binding) const noexcept -> bool;
+    // validate render pass inputs
     auto validate() noexcept -> bool;
+    // validate render pass inputs and bind inputs as either write or invalidated write descriptors
     auto bake() noexcept -> void;
 
-    // #TODO can this be unordered set?
+    // get a set of uniform buffer and storage buffer sets
     auto has_buffer_sets() noexcept -> std::set<u32>;
-    auto invalidate_and_update() noexcept -> void;
+    // invalidate and update resources that are not in the write descriptor map
+    auto rt_invalidate_and_update() noexcept -> void;
 
     auto get_descriptor_pool() const noexcept -> VkDescriptorPool { return m_descriptor_pool; }
     auto has_descriptor_sets() const noexcept -> bool;
-    auto get_first_set_index() const noexcept -> u32;
-    auto get_descriptor_sets() const noexcept -> const std::vector<VkDescriptorSet>&;
+    auto get_first_set_index() const noexcept -> std::optional<u32>;
+    auto get_descriptor_sets(u32 frame_index) const noexcept -> const std::vector<VkDescriptorSet>&;
     auto is_input_valid(std::string_view p_name) const noexcept -> bool;
     auto get_input_declaration(std::string_view p_name) const noexcept -> const render_pass_input_declaration*;
 
@@ -241,11 +295,13 @@ private:
     auto init() noexcept -> void;
 
 private:
-    // #TODO do these need to be ordered maps?
+    // map of render pass inputs
     std::map<u32, std::map<u32, render_pass_input>> m_input_resources{};
+    // invalidated per frame resources to be updated
     std::map<u32, std::map<u32, render_pass_input>> m_invalidated_input_resources{};
+    // map of render pass inputs to their input decl
     std::map<std::string, render_pass_input_declaration> m_input_declarations{};
-    // per frames in flight
+    // per frames in flight vulkan descriptor sets
     std::vector<std::vector<VkDescriptorSet>> m_descriptor_sets{};
 
     struct write_descriptor
@@ -259,6 +315,27 @@ private:
     descriptor_set_manager_specification m_specification{};
     VkDescriptorPool m_descriptor_pool = nullptr;
 };
+
+template <concepts::RenderPassInputT T>
+auto vulkan_descriptor_set_manager::set_input(
+    std::string_view p_name,
+    const ref<T>& p_resource
+) noexcept -> vulkan_descriptor_set_manager&
+{
+    if (const auto* decl = get_input_declaration(p_name))
+        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_resource);
+    else
+    {
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
+            m_specification.m_debug_name,
+            p_name
+        );
+    }
+
+    return *this;
+}
 
 template <typename T>
 ref<T> vulkan_descriptor_set_manager::get_input(std::string_view p_name)
