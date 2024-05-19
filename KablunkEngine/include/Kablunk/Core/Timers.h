@@ -16,13 +16,14 @@ public:
 	using timer_resolution_t = std::chrono::microseconds;
 public:
 	// default constructor
-	KB_FORCE_INLINE timer() { reset(); }
+	KB_FORCE_INLINE timer() noexcept { reset(); }
 	// default destructor
-	~timer() = default;
+	~timer() noexcept = default;
 	// reset the timer's start point to the current point in time
-	KB_FORCE_INLINE void reset() { m_start_time = std::chrono::high_resolution_clock::now(); }
-	// get the elapsed time (in seconds) between the recorded start point and current point in time 
-	KB_FORCE_INLINE f32 get_elapsed()
+	KB_FORCE_INLINE auto reset() noexcept -> void { m_start_time = std::chrono::high_resolution_clock::now(); }
+
+	// get the elapsed time (in seconds) between the recorded start point and current point in time
+	KB_FORCE_INLINE auto get_elapsed() const noexcept -> f32
 	{
         return static_cast<f32>(
             std::chrono::duration_cast<timer_resolution_t>(
@@ -30,8 +31,9 @@ public:
             ).count()
         ) / (1000.f * 1000.f);
 	}
+
 	// get the elapsed time (in milliseconds) between the recorded start point and current point in time
-	KB_FORCE_INLINE f32 get_elapsed_ms()
+	KB_FORCE_INLINE auto get_elapsed_ms() const noexcept -> f32
 	{
 		return static_cast<f32>(
             std::chrono::duration_cast<timer_resolution_t>(
@@ -50,7 +52,7 @@ public:
 	~performance_profiler() = default;
 
 	// add frame timing to a specific key
-	void set_per_frame_timing(const char* name, f32 time)
+	auto set_per_frame_timing(const char* name, f32 time) -> void
 	{
 		std::scoped_lock<std::mutex> lock(m_per_frame_data_mutex);
 
@@ -61,21 +63,20 @@ public:
 	}
 
 	// reset recorded frame times
-	void clear()
+	auto clear() -> void
 	{
 		std::scoped_lock<std::mutex> lock(m_per_frame_data_mutex);
 		m_per_frame_data_map.clear();
 	}
 
 	// get an immutable reference to the per frame data map
-	const kb::unordered_flat_map<const char*, f32>& get_per_frame_data() const { return m_per_frame_data_map; }
+	const unordered_flat_map<const char*, f32>& get_per_frame_data() const { return m_per_frame_data_map; }
 private:
 	// mutex for a scoped lock to ensure synchronization between render and main thread
 	std::mutex m_per_frame_data_mutex{};
 	// map of per frame data 
-	kb::unordered_flat_map<const char*, f32> m_per_frame_data_map;
+	unordered_flat_map<const char*, f32> m_per_frame_data_map;
 };
 
-	
 } // end namespace Kablunk
 #endif

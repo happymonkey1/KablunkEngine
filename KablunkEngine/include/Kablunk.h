@@ -35,7 +35,7 @@
 #include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/Framebuffer.h"
+#include "Kablunk/Renderer/frame_buffer.h"
 #include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/Buffer.h"
 #include "Kablunk/Renderer/Texture.h"

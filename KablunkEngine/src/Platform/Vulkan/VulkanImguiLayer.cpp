@@ -141,7 +141,7 @@ void VulkanImGuiLayer::OnAttach()
 				ImGui_ImplVulkan_DestroyFontUploadObjects();
 			}
 
-			const uint32_t frames_in_flight = render::get_frames_in_flights();
+			const uint32_t frames_in_flight = render::get_frames_in_flight();
 			s_imgui_command_buffers.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; ++i)
 				s_imgui_command_buffers[i] = vulkan_context->GetDevice()->CreateSecondaryCommandBuffer();

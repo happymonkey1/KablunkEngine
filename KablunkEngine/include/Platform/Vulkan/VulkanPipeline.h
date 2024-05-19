@@ -8,39 +8,31 @@
 
 #include <vulkan/vulkan.h>
 
-namespace kb
+namespace kb::render
 { // start namespace kb
 class VulkanPipeline final : public Pipeline
 {
 public:
 	VulkanPipeline(const PipelineSpecification& specification);
-	virtual ~VulkanPipeline() override;
+	~VulkanPipeline() override;
 
-	virtual PipelineSpecification& GetSpecification() override { return m_specification; };
-	virtual const PipelineSpecification& GetSpecification() const override { return m_specification; };
+	PipelineSpecification& GetSpecification() override { return m_specification; }
+	const PipelineSpecification& GetSpecification() const override { return m_specification; }
 
-	virtual void Invalidate() override;
+	void Invalidate() override;
+    ref<Shader> get_shader() const noexcept override { return m_specification.shader; }
+
 	void RT_Invalidate();
-	virtual void SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) override;
-	void RT_SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0);
 
-	VkPipeline GetVkPipeline() { return m_vk_pipeline; }
-	VkPipelineLayout GetVkPipelineLayout() { return m_vk_pipeline_layout; }
-	VkDescriptorSet GetVkDescriptorSet(uint32_t set = 0)
-	{
-		KB_CORE_ASSERT(set < m_descriptor_sets.descriptor_sets.size(), "out of bounds!");
-		return m_descriptor_sets.descriptor_sets[set];
-	}
-
-	const std::vector<VkDescriptorSet>& GetDescriptorSets() { return m_descriptor_sets.descriptor_sets; }
+	VkPipeline get_vk_pipeline() const { return m_vk_pipeline; }
+	VkPipelineLayout get_vk_pipeline_layout() const { return m_vk_pipeline_layout; }
 
 private:
 	PipelineSpecification m_specification;
 
 	VkPipeline m_vk_pipeline = nullptr;
 	VkPipelineLayout m_vk_pipeline_layout = nullptr;
-	// #TODO pipeline caching
-	VulkanShader::ShaderMaterialDescriptorSet m_descriptor_sets;
+    VkPipelineCache m_vk_pipeline_cache = nullptr;
 };
 } // end namespace kb
 

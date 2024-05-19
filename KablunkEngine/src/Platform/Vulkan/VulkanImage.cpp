@@ -4,6 +4,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
+#include "Platform/Vulkan/vulkan_core.h"
 
 namespace kb
 { // start namespace kb
@@ -84,7 +85,7 @@ void VulkanImage2D::RT_Invalidate()
 		else //if (m_specification.format != ImageFormat::RED32I)
 			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	}
-	else if (m_specification.usage == ImageUsage::Texture)
+	else if (m_specification.m_transfer || m_specification.usage == ImageUsage::Texture)
 	{
 		usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
@@ -327,5 +328,77 @@ const std::map<VkImage, WeakRef<VulkanImage2D>>& VulkanImage2D::GetImageRefs() c
 {
 	return s_image_refs;
 }
+
+// --- vulkan_image_view -----------------------------
+
+vulkan_image_view::vulkan_image_view(image_view_specification p_specification)
+    : m_specification{ std::move(p_specification) }
+{
+}
+
+vulkan_image_view::~vulkan_image_view()
+{
+    render::submit_resource_free([image_view = m_vk_image_view]() mutable
+        {
+            const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+            vkDestroyImageView(vk_device, image_view, nullptr);
+        });
+
+    m_vk_image_view = nullptr;
+}
+
+
+auto vulkan_image_view::invalidate() noexcept -> void
+{
+    ref instance{ this };
+    render::submit([instance]() mutable
+        {
+            instance->rt_invalidate();
+        });
+}
+
+auto vulkan_image_view::rt_invalidate() noexcept -> void
+{
+    auto vulkan_image = m_specification.m_image.As<VulkanImage2D>();
+    const auto& image_spec = vulkan_image->GetSpecification();
+
+    VkImageAspectFlags aspect_mask = Utils::IsDepthFormat(image_spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+    if (image_spec.format == ImageFormat::DEPTH24STENCIL8)
+        aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+    const auto vk_format = Utils::VulkanImageFormat(image_spec.format);
+
+    const VkImageViewCreateInfo image_view_create_info{
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .image = vulkan_image->get_vk_image_info().image,
+        .viewType = image_spec.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D,
+        .format = vk_format,
+        .components = {},
+        .subresourceRange = VkImageSubresourceRange{
+            .aspectMask = aspect_mask,
+            .baseMipLevel = m_specification.m_mip,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = image_spec.layers
+        },
+    };
+
+    const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    KB_VK_CHECK_RESULT(
+        vkCreateImageView(
+            vk_device,
+            &image_view_create_info,
+            nullptr,
+            &m_vk_image_view
+        )
+    )
+
+    m_vk_descriptor_image_info = vulkan_image->get_vk_image_info_descriptor();
+    m_vk_descriptor_image_info.imageView = m_vk_image_view;
+}
+
+// ---------------------------------------------------
 
 } // end namespace kb

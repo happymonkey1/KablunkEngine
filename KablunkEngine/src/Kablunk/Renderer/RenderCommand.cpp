@@ -10,12 +10,12 @@
 
 namespace kb::render
 { // start namespace kb::render
-u32 rt_get_current_frame_index()
+u32 rt_get_current_frame_index() noexcept
 {
 	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
 }
 
-uint32_t get_current_frame_index()
+u32 get_current_frame_index() noexcept
 {
 	return Application::Get().get_current_frame_index();
 }

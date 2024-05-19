@@ -2,52 +2,55 @@
 
 
 #include "Platform/Vulkan/VulkanContext.h"
-#include "Platform/Vulkan/VulkanUniformBuffer.h"
+#include "Platform/Vulkan/vulkan_uniform_buffer.h"
 
 
 namespace kb
 {
 
-	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, uint32_t binding)
-		: m_size{ size }, m_binding{ binding }
+	vulkan_uniform_buffer::vulkan_uniform_buffer(uint32_t p_size)
+		: m_size{ p_size }
 	{
-		m_local_storage = new uint8_t[size];
+		m_local_storage = new uint8_t[p_size];
 
+#if 0
         ref instance{ this };
 		render::submit([instance]() mutable
 			{
-				instance->RT_Invalidate();
+				instance->rt_invalidate();
 			});
+#endif
+        rt_invalidate();
 	}
 
-	VulkanUniformBuffer::~VulkanUniformBuffer()
+	vulkan_uniform_buffer::~vulkan_uniform_buffer()
 	{
-		Release();
+		release();
 	}
 
-	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
+	void vulkan_uniform_buffer::set_data(const void* p_data, uint32_t p_size, uint32_t p_offset /*= 0*/)
 	{
-		memcpy(m_local_storage, data, size);
+		memcpy(m_local_storage, p_data, p_size);
 
         ref instance{ this };
-		render::submit([instance, size, offset]() mutable
+		render::submit([instance, p_size, p_offset]() mutable
 			{
-				instance->RT_SetData(instance->m_local_storage, size, offset);
+				instance->rt_set_data(instance->m_local_storage, p_size, p_offset);
 			});
 	}
 
-	void VulkanUniformBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset /*= 0*/)
+	void vulkan_uniform_buffer::rt_set_data(const void* p_data, uint32_t p_size, uint32_t p_offset /*= 0*/)
 	{
 		VulkanAllocator allocator{ "UniformBuffer" };
 		uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
         // can this be memmove?
-		memcpy(data_ptr, static_cast<const uint8_t*>(data) + offset, size);
+		memcpy(data_ptr, static_cast<const uint8_t*>(p_data) + p_offset, p_size);
 		allocator.UnmapMemory(m_vk_allocation);
 	}
 
-	void VulkanUniformBuffer::RT_Invalidate()
+	void vulkan_uniform_buffer::rt_invalidate()
 	{
-		Release();
+		release();
 
 		VkBufferCreateInfo buffer_create_info{};
 		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -62,7 +65,7 @@ namespace kb
 		m_descriptor_info.range = m_size;
 	}
 
-	void VulkanUniformBuffer::Release()
+	void vulkan_uniform_buffer::release()
 	{
 		if (!m_vk_allocation)
 			return;

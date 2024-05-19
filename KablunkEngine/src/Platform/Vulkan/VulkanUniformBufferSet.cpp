@@ -1,37 +1,61 @@
 #include "kablunkpch.h"
 
 #include "Platform/Vulkan/VulkanUniformBufferSet.h"
+#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Core/Core.h"
 
 namespace kb
 {
 
-	VulkanUniformBufferSet::VulkanUniformBufferSet(uint32_t frames)
-		: m_frames{ frames }
-	{
+VulkanUniformBufferSet::VulkanUniformBufferSet(u32 p_size, u32 p_frames_in_flight)
+	: m_frames_in_flight{ p_frames_in_flight }
+{
+    if (p_frames_in_flight == 0)
+    {
+        m_frames_in_flight = render::get_frames_in_flight();
+    }
 
-	}
+    for (u32 frame = 0; frame < m_frames_in_flight; ++frame)
+    {
+        m_uniform_buffers.emplace(frame, uniform_buffer::create(p_size));
+    }
+}
 
-	void VulkanUniformBufferSet::Create(uint32_t size, uint32_t binding)
-	{
-		for (uint32_t frame = 0; frame < m_frames; ++frame)
-		{
-			ref<UniformBuffer> uniform_buffer = UniformBuffer::Create(size, binding);
-			Set(uniform_buffer, 0, frame); // #TODO only one uniform buffer set supported!
-		}
-	}
+ref<uniform_buffer> VulkanUniformBufferSet::get()
+{
+    const auto frame = render::get_current_frame_index();
+    KB_CORE_ASSERT(
+        m_uniform_buffers.contains(frame),
+        "[VulkanUniformBufferSet]: Does not contain frame '{}'!",
+        frame
+    );
+    return m_uniform_buffers.at(frame);
+}
 
-	ref<UniformBuffer> VulkanUniformBufferSet::Get(uint32_t binding, uint32_t set /*= 0*/, uint32_t frame /*= 0*/)
-	{
-		KB_CORE_ASSERT(m_uniform_buffers.find(frame) != m_uniform_buffers.end(), "no uniform buffer found!");
-		KB_CORE_ASSERT(m_uniform_buffers.at(frame).find(set) != m_uniform_buffers.at(frame).end(), "no uniform buffer set found!");
-		KB_CORE_ASSERT(m_uniform_buffers.at(frame).at(set).find(binding) != m_uniform_buffers.at(frame).at(set).end(), "no uniform buffer set binding found!");
+ref<uniform_buffer> VulkanUniformBufferSet::rt_get()
+{
+    const auto rt_frame = render::rt_get_current_frame_index();
+    KB_CORE_ASSERT(
+        m_uniform_buffers.contains(rt_frame),
+        "[VulkanUniformBufferSet]: Does not contain frame '{}'!",
+        rt_frame
+    );
+    return m_uniform_buffers.at(rt_frame);
+}
 
-		return m_uniform_buffers.at(frame).at(set).at(binding);
-	}
+ref<uniform_buffer> VulkanUniformBufferSet::get(u32 p_frame)
+{
+    KB_CORE_ASSERT(
+        m_uniform_buffers.contains(p_frame),
+        "[VulkanUniformBufferSet]: Does not contain frame '{}'!",
+        p_frame
+    );
+    return m_uniform_buffers.at(p_frame);
+}
 
-	void VulkanUniformBufferSet::Set(ref<UniformBuffer> uniform_buffer, uint32_t set /*= 0*/, uint32_t frame /*= 0*/)
-	{
-		m_uniform_buffers[frame][set][uniform_buffer->GetBinding()] = uniform_buffer;
-	}
+void VulkanUniformBufferSet::set(ref<uniform_buffer> p_uniform_buffer, uint32_t p_frame)
+{
+    m_uniform_buffers.emplace(p_frame, p_uniform_buffer);
+}
 
 }

@@ -5,51 +5,50 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Shader.h"
 #include "Kablunk/Renderer/Buffer.h"
-#include "Kablunk/Renderer/UniformBuffer.h"
+#include "Kablunk/Renderer/uniform_buffer.h"
+#include "Kablunk/Renderer/frame_buffer.h"
 
-#include "Kablunk/Renderer/RenderPass.h"
-
-namespace kb
+namespace kb::render
+{ // start namespace kb::render
+enum class PrimitiveTopology
 {
-	enum class PrimitiveTopology
-	{
-		None = 0,
-		Points,
-		Lines,
-		Triangles,
-		LineStrip,
-		TriangleStrip,
-		TriangleFan
-	};
+	None = 0,
+	Points,
+	Lines,
+	Triangles,
+	LineStrip,
+	TriangleStrip,
+	TriangleFan
+};
 
-	struct PipelineSpecification
-	{
-		ref<Shader> shader;
-		BufferLayout layout;
-		BufferLayout instance_layout;
-		ref<RenderPass> render_pass;
-		PrimitiveTopology topology = PrimitiveTopology::Triangles;
-		bool backface_culling = true;
-		bool depth_test = true;
-		bool depth_write = true;
-		bool wireframe = false;
+struct PipelineSpecification
+{
+	ref<Shader> shader;
+    ref<frame_buffer> m_target_frame_buffer{};
+	BufferLayout layout;
+	BufferLayout instance_layout;
+	PrimitiveTopology topology = PrimitiveTopology::Triangles;
+	bool backface_culling = true;
+	bool depth_test = true;
+	bool depth_write = true;
+	bool wireframe = false;
 
-		std::string debug_name;
-	};
+	std::string debug_name;
+};
 
-	class Pipeline : public RefCounted
-	{
-	public:
-		virtual ~Pipeline() = default;
+class Pipeline : public RefCounted
+{
+public:
+    ~Pipeline() override = default;
 
-		virtual PipelineSpecification& GetSpecification() = 0;
-		virtual const PipelineSpecification& GetSpecification() const = 0;
+	virtual PipelineSpecification& GetSpecification() = 0;
+	virtual const PipelineSpecification& GetSpecification() const = 0;
 
-		virtual void Invalidate() = 0;
-		virtual void SetUniformBuffer(ref<UniformBuffer> uniform_buffer, uint32_t binding, uint32_t set = 0) = 0;
+	virtual void Invalidate() = 0;
+    virtual ref<Shader> get_shader() const noexcept = 0;
 
-		static ref<Pipeline> Create(const PipelineSpecification& specification);
-	};
-}
+	static ref<Pipeline> Create(const PipelineSpecification& specification);
+};
+} // end namespace kb::render
 
 #endif

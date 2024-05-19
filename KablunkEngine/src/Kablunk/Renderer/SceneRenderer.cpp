@@ -13,6 +13,8 @@
 
 #include <imgui.h>
 
+#include "Kablunk/Core/Application.h"
+
 namespace kb
 {
 static std::vector<std::thread> s_thread_pool;
@@ -20,15 +22,12 @@ static std::vector<std::thread> s_thread_pool;
 SceneRenderer::SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec)
 	: m_context{ context }, m_specification{ spec }
 {
-	KB_CORE_ASSERT(RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan, "SceneRenderer only supports Vulkan!");
-
 	init();
 }
 
 SceneRenderer::~SceneRenderer()
 {
-    if (m_point_lights_ub)
-        delete m_point_lights_ub;
+    delete m_point_lights_ub;
 }
 
 void SceneRenderer::init()
@@ -44,112 +43,141 @@ void SceneRenderer::init()
 	m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
 	m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
 
-	uint32_t frames_in_flight = render::get_frames_in_flights();
-	m_uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
-	m_uniform_buffer_set->Create(sizeof(CameraDataUB), 0);
-	m_uniform_buffer_set->Create(sizeof(glm::mat4), 1);
-	m_uniform_buffer_set->Create(sizeof(PointLightUB), 2);
+	uint32_t frames_in_flight = render::get_frames_in_flight();
+    m_camera_uniform_buffer_set = UniformBufferSet::create(sizeof(CameraDataUB), frames_in_flight);
+    m_point_lights_uniform_buffer_set = UniformBufferSet::create(sizeof(PointLightUB), frames_in_flight);
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
-	// Geometry
+    // Geometry
 	{
-		FramebufferSpecification geometry_framebuffer_spec;
-		geometry_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-		geometry_framebuffer_spec.samples = 1;
-		geometry_framebuffer_spec.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
-		geometry_framebuffer_spec.debug_name = "Geometry";
+        render::frame_buffer_specification geometry_frame_buffer_spec;
+        geometry_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
+        geometry_frame_buffer_spec.m_samples = 1;
+        geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+        geometry_frame_buffer_spec.m_debug_name = "Geometry";
+        ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
 
-		ref<Framebuffer> framebuffer = Framebuffer::Create(geometry_framebuffer_spec);
-
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "GeometryPipeline";
-		std::string shader_to_use = render::get_render_pipeline() == RendererPipelineDescriptor::PBR ? "Kablunk_pbr_static" : "Kablunk_diffuse_static";
- 		pipeline_spec.shader = render::get_shader(shader_to_use);
-		pipeline_spec.backface_culling = false;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float3, "a_Normal" },
-			{ ShaderDataType::Float3, "a_Tangent" },
-			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_TexCoord" }
+        render::PipelineSpecification pipeline_spec{
+            .shader = render::get_shader("Kablunk_diffuse_static"),
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float3, "a_Normal" },
+                { ShaderDataType::Float3, "a_Tangent" },
+                { ShaderDataType::Float3, "a_Binormal" },
+                { ShaderDataType::Float2, "a_TexCoord" }
+            },
+            .instance_layout = {
+                { ShaderDataType::Float4, "a_MRow0" },
+                { ShaderDataType::Float4, "a_MRow1" },
+                { ShaderDataType::Float4, "a_MRow2" },
+            },
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = false,
+            .depth_write = false,
+            .wireframe = false,
+            .debug_name = "scene_renderer::pipeline::geometry"
 		};
-		pipeline_spec.instance_layout = {
-			{ ShaderDataType::Float4, "a_MRow0" },
-			{ ShaderDataType::Float4, "a_MRow1" },
-			{ ShaderDataType::Float4, "a_MRow2" },
-		};
 
-		RenderPassSpecification geo_render_pass_spec{};
-		geo_render_pass_spec.target_framebuffer = framebuffer;
-		geo_render_pass_spec.debug_name = "Geometry";
+        render::render_pass_specification geo_render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(pipeline_spec),
+            .m_debug_name = "scene_renderer::render_pass::geometry"
+        };
 
-		pipeline_spec.render_pass = RenderPass::Create(geo_render_pass_spec);
-		pipeline_spec.debug_name = "diffuse_static";
+        m_geometry_pass = render::render_pass::create(geo_render_pass_spec);
 
-		m_geometry_pipeline = Pipeline::Create(pipeline_spec);
+        m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
+        m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
+
+        KB_CORE_ASSERT(m_geometry_pass->validate(), "Geometry pass validation failed!");
+        m_geometry_pass->bake();
 	}
 
 	// Composite
 	{
-		FramebufferSpecification composite_framebuffer_spec;
-		composite_framebuffer_spec.debug_name = "SceneComposite";
-		composite_framebuffer_spec.clear_color = { 0.5f, 0.1f, 0.1f, 1.0f };
-		composite_framebuffer_spec.swap_chain_target = m_specification.swap_chain_target;
+        render::frame_buffer_specification composite_frame_buffer_spec{};
+        composite_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+        composite_frame_buffer_spec.m_samples = 1;
+        composite_frame_buffer_spec.m_clear_on_load = true;
+        composite_frame_buffer_spec.m_transfer = true;
+        composite_frame_buffer_spec.m_clear_color = { 0.5f, 0.1, 0.1f, 1.0f };
+        composite_frame_buffer_spec.m_debug_name = "scene_renderer::frame_buffer::scene_composite";
 
-		// No depth for swapchain
-		if (m_specification.swap_chain_target)
-			composite_framebuffer_spec.Attachments = { ImageFormat::RGBA };
-		else
-			composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-
-		ref<Framebuffer> framebuffer = Framebuffer::Create(composite_framebuffer_spec);
-
-		RenderPassSpecification composite_render_pass_spec;
-		composite_render_pass_spec.target_framebuffer = framebuffer;
-		composite_render_pass_spec.debug_name = "SceneComposite";
+        auto composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer_spec);
 
 		ref<Shader> composite_shader = render::get_shader("scene_composite");
-
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float2, "a_TexCoord" }
-		};
-		pipeline_spec.backface_culling = false;
-		pipeline_spec.shader = composite_shader;
-		pipeline_spec.render_pass = RenderPass::Create(composite_render_pass_spec);
-		pipeline_spec.debug_name = "SceneComposite";
-		pipeline_spec.depth_write = false;
-		m_composite_pipeline = Pipeline::Create(pipeline_spec);
-
 		m_composite_material = Material::Create(composite_shader);
+        
+        render::PipelineSpecification pipeline_spec{
+            .shader = composite_shader,
+            .m_target_frame_buffer = composite_frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float2, "a_TexCoord" }
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = false,
+            .depth_write = false,
+            .wireframe = false,
+            .debug_name = "scene_renderer::pipeline::scene_composite"
+        };
+
+        render::render_pass_specification composite_render_pass{
+            .m_pipeline = render::Pipeline::Create(pipeline_spec),
+            .m_debug_name = "scene_renderer::render_pass::scene_composite"
+        };
+        m_composite_pass = render::render_pass::create(composite_render_pass);
+
+        m_composite_pass->set_input("u_Texture", m_geometry_pass->get_output_image(0));
+        const auto& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+        m_composite_pass->set_input("u_BloomTexture", white_texture);
+        m_composite_pass->set_input("u_BloomDirtTexture", white_texture);
+        m_composite_pass->set_input("u_DepthTexture", m_geometry_pass->get_depth_output());
+        KB_CORE_ASSERT(m_composite_pass->validate(), "Composite pass validation failed!");
+        m_composite_pass->bake();
 	}
+
+    render::frame_buffer_specification composite_frame_buffer{};
+    composite_frame_buffer.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+    composite_frame_buffer.m_samples = 1;
+    composite_frame_buffer.m_clear_on_load = false;
+    composite_frame_buffer.m_transfer = false;
+    composite_frame_buffer.m_existing_images[0] = m_composite_pass->get_output_image(0);
+    composite_frame_buffer.m_existing_images[1] = m_geometry_pass->get_depth_output();
+    composite_frame_buffer.m_debug_name = "scene_renderer::frame_buffer::composite";
+
+    m_external_composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer);
 
 	// external compositing
 	if (!m_specification.swap_chain_target)
 	{
-		FramebufferSpecification external_composite_framebuffer_spec;
-		external_composite_framebuffer_spec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-		external_composite_framebuffer_spec.clear_color = { 1.0f, 0.1f, 0.1f, 1.0f };
-		external_composite_framebuffer_spec.clear_on_load  = false;
-		external_composite_framebuffer_spec.debug_name = "External Composite";
+#if 0
+		frame_buffer_specification external_composite_framebuffer_spec;
+		external_composite_framebuffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+		external_composite_framebuffer_spec.m_clear_color = { 1.0f, 0.1f, 0.1f, 1.0f };
+		external_composite_framebuffer_spec.m_clear_on_load  = false;
+		external_composite_framebuffer_spec.m_debug_name = "External Composite";
 
 		// Use the color buffer from the final compositing pass, but the depth buffer from
 		// the actual 3D geometry pass, in case we want to composite elements behind meshes
 		// in the scene
-		external_composite_framebuffer_spec.existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
-		external_composite_framebuffer_spec.existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetDepthImage();
+		external_composite_framebuffer_spec.m_existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetImage();
+		external_composite_framebuffer_spec.m_existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetDepthImage();
 
 		ref<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
-		
-		RenderPassSpecification render_pass_spec;
-		render_pass_spec.target_framebuffer = framebuffer;
-		render_pass_spec.debug_name = "External Composite";
+
+		render_pass_specification render_pass_spec;
+		render_pass_spec.target_frame_buffer = framebuffer;
+		render_pass_spec.m_debug_name = "External Composite";
 		m_external_composite_render_pass = RenderPass::Create(render_pass_spec);
+#endif
 	}
 
-	const size_t transform_buffer_count = 100 * 1024;
+    constexpr size_t transform_buffer_count = 1024;
 	m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
@@ -182,11 +210,13 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 
 	if (m_needs_resize)
 	{
-		m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
-		m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
+		m_geometry_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
+		m_composite_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 
 		if (m_external_composite_render_pass)
-			m_external_composite_render_pass->GetSpecification().target_framebuffer->Resize(m_viewport_width, m_viewport_height);
+		{
+            m_external_composite_render_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
+		}
 
 		m_needs_resize = false;
 
@@ -213,12 +243,12 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
     ref<SceneRenderer> instance{ this };
 	render::submit([instance, camera_data]() mutable
 		{
-			uint32_t buffer_index = render::rt_get_current_frame_index();
-			instance->m_uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&camera_data, sizeof(camera_data));
+			instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
 		}
 	);
 
 	// Set Renderer Transform
+#if 0
 	render::submit([instance]() mutable
 		{
 			uint32_t buffer_index = render::rt_get_current_frame_index();
@@ -226,6 +256,7 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 			instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
 		}
 	);
+#endif
 
 	// Submit point lights uniform buffer
 	const auto light_enviornment_copy = m_scene_data.light_environment;
@@ -236,10 +267,11 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 
 	render::submit([instance, point_lights = m_point_lights_ub]() mutable
 		{
-			const uint32_t buffer_index = render::rt_get_current_frame_index();
-			ref<UniformBuffer> buffer_set = instance->m_uniform_buffer_set->Get(2, 0, buffer_index);
-			size_t point_light_vec_offset = 16ull;
-			buffer_set->RT_SetData(point_lights, static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count));
+            constexpr size_t point_light_vec_offset = 16ull;
+			instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
+                point_lights,
+                static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count)
+            );
 		}
 	);
 }
@@ -295,9 +327,9 @@ void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	}
 }
 
-ref<RenderPass> SceneRenderer::get_final_render_pass()
+ref<render::render_pass> SceneRenderer::get_final_render_pass()
 {
-	return m_composite_pipeline->GetSpecification().render_pass;
+	return m_composite_pass;
 }
 
 ref<Image2D> SceneRenderer::get_final_render_pass_image()
@@ -307,7 +339,7 @@ ref<Image2D> SceneRenderer::get_final_render_pass_image()
 	if (!m_resources_created)
 		return ref<Image2D>{};
 
-	auto image = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer->GetImage();
+	auto image = m_composite_pass->get_output_image(0);
 	return image;
 }
 
@@ -414,13 +446,13 @@ void SceneRenderer::pre_render()
 
 void SceneRenderer::clear_pass()
 {
-	render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
+	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 	render::end_render_pass(m_command_buffer);
 }
 
-void SceneRenderer::clear_pass(ref<RenderPass> render_pass, bool explicit_clear /*= false*/)
+void SceneRenderer::clear_pass(ref<render::render_pass> render_pass, bool explicit_clear /*= false*/)
 {
-	KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->GetSpecification().debug_name);
+	KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->get_specification().m_debug_name);
 	render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
 	render::end_render_pass(m_command_buffer);
 }
@@ -452,31 +484,35 @@ void SceneRenderer::geometry_pass()
     KB_PROFILE_SCOPE;
 
 	m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
-	render::begin_render_pass(m_command_buffer, m_geometry_pipeline->GetSpecification().render_pass);
+	render::begin_render_pass(m_command_buffer, m_geometry_pass);
 
 	// submit transform data
 	m_transform_buffer->SetData(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
 	/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 		{
-			transform_buffer->RT_SetData(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
+			transform_buffer->rt_set_data(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
 		}
 	);*/
 	
 	size_t transform_offset_ind = 0;
+    const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
 	for (const auto& draw_command_data : m_draw_list)
 	{
-		render::render_instanced_submesh(
-			m_command_buffer, 
-			m_geometry_pipeline, 
-			m_uniform_buffer_set, 
-			m_storage_buffer_set, 
-			draw_command_data.Mesh, 
-			draw_command_data.Submesh_index, 
-			draw_command_data.Material_table, 
-			m_transform_buffer, 
-			static_cast<uint32_t>(transform_offset_ind++), 
-			1ul
-		);
+        KB_CORE_ASSERT(false, "not implemented!");
+#if 0
+		render::
+#endif
+        Singleton<render::Renderer>::get().get_render_backend().render_instanced_submesh(
+            m_command_buffer,
+            geometry_pipeline,
+            draw_command_data.Mesh,
+            draw_command_data.Submesh_index,
+            draw_command_data.Material_table,
+            m_transform_buffer,
+            static_cast<uint32_t>(transform_offset_ind++),
+            0ull,
+            1ul
+        );
 	}
 
 	render::end_render_pass(m_command_buffer);
@@ -488,11 +524,11 @@ void SceneRenderer::composite_pass()
     KB_PROFILE_SCOPE;
 
 	m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
-	render::begin_render_pass(m_command_buffer, m_composite_pipeline->GetSpecification().render_pass, true);
+	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 
 	constexpr float exposure = 1.0f; // #TODO dynamic based off camera
 	constexpr bool bloom_enabled = false; // #TODO dynamic
-	auto framebuffer = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_framebuffer;
+	auto frame_buffer = m_geometry_pass->get_target_frame_buffer();
 
 	m_composite_material->Set("u_Uniforms.Exposure", exposure);
 	if (bloom_enabled)
@@ -514,11 +550,16 @@ void SceneRenderer::composite_pass()
     m_composite_material->Set("u_Uniforms.Contrast", contrast);
     m_composite_material->Set("u_Uniforms.Brightness", brightness);
 
-	m_composite_material->Set("u_Texture", framebuffer->GetImage());
-	m_composite_material->Set("u_BloomTexture", m_bloom_texture);
-	m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
+	//m_composite_material->Set("u_Texture", frame_buffer->GetImage());
+	//m_composite_material->Set("u_BloomTexture", m_bloom_texture);
+	//m_composite_material->Set("u_BloomDirtTexture", m_bloom_dirt_texture);
 
-    render::submit_fullscreen_quad(m_command_buffer, m_composite_pipeline, ref<UniformBufferSet>{}, m_composite_material);
+    const auto& composite_pipeline = m_composite_pass->get_pipeline();
+    render::submit_fullscreen_quad(
+        m_command_buffer,
+        composite_pipeline,
+        m_composite_material
+    );
 
 	render::end_render_pass(m_command_buffer);
 	m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);

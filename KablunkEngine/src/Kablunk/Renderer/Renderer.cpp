@@ -12,15 +12,15 @@
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Timers.h"
 
-namespace kb
-{
+namespace kb::render
+{ // start namespace kb::render
 void Renderer::init()
 {
     KB_PROFILE_SCOPE;
 
 	// initialize render command queues
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
-		m_command_queues[i] = kb::render_command_queue{};
+		m_command_queues[i] = render_command_queue{};
 
 	m_shader_library = ref<ShaderLibrary>::Create();
 
@@ -43,24 +43,7 @@ void Renderer::init()
 	// compile shaders that were submitted
 	Application::Get().get_render_thread().pump();
 
-	// initialize underlying renderer api
-	switch (RendererAPI::GetAPI())
-	{
-		case RendererAPI::render_api_t::Vulkan: { m_renderer_api = new VulkanRendererAPI{}; break; }
-		default: { KB_CORE_ASSERT(false, "Unknown RendererAPI!"); break; }
-	}
-
-	KB_CORE_ASSERT(m_renderer_api, "RendererAPI not set?");
-	m_renderer_api->Init();
-
-	// Setting up data
-
-	// Uniform buffers
-	//m_SceneData->camera_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::CameraData), 0);
-	//m_SceneData->renderer_uniform_buffer = UniformBuffer::Create(sizeof(SceneData::RendererData), 1);
-	//m_SceneData->point_lights_uniform_buffer = UniformBuffer::Create(sizeof(PointLightsData), 3);
-
-	//render2d::init();
+    m_backend.init();
 }
 
 void Renderer::shutdown()
@@ -68,12 +51,12 @@ void Renderer::shutdown()
     KB_PROFILE_SCOPE;
 
 	m_shader_dependencies.clear();
-	
+
 	m_shader_library.reset();
 
 	// render2d::shutdown();
 
-	m_renderer_api->Shutdown();
+	m_backend.shutdown();
 
 	// shutdown vulkan context
 	//VulkanContext::Get()->Shutdown();
@@ -81,8 +64,6 @@ void Renderer::shutdown()
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
         if (!m_command_queues[i].is_empty())
 			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
-
-	delete m_renderer_api;
 }
 
 ref<ShaderLibrary> Renderer::GetShaderLibrary()
@@ -105,7 +86,7 @@ void Renderer::RegisterShaderDependency(ref<Shader> shader, ref<Material> materi
 	m_shader_dependencies[shader->GetHash()].materials.push_back(material);
 }
 
-void Renderer::register_shader_dependency(ref<Shader> p_shader, ref<kb::render::compute_pipeline> p_compute_pipeline)
+void Renderer::register_shader_dependency(ref<Shader> p_shader, ref<compute_pipeline> p_compute_pipeline)
 {
     m_shader_dependencies[p_shader->GetHash()].compute_pipelines.push_back(p_compute_pipeline);
 }
@@ -124,12 +105,17 @@ void Renderer::OnShaderReloaded(uint64_t hash)
 
 uint32_t Renderer::GetCurrentFrameIndex()
 {
-	switch (RendererAPI::GetAPI())
-	{
-	case RendererAPI::render_api_t::Vulkan:	return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
-	default:								KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return 0;
-	}
-
+    constexpr auto backend = get_render_backend_type();
+    switch (backend)
+    {
+    case render_backend_type_t::vulkan:
+        return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
+    default:
+    {
+        KB_CORE_ASSERT(false, "Unhandled render backend type!");
+        return 0;
+    }
+    }
 }
 
 void Renderer::wait_and_render(render_thread* rendering_thread)
@@ -164,4 +150,4 @@ void Renderer::swap_queues()
 {
 	m_render_command_queue_submission_index = (m_render_command_queue_submission_index + 1) % s_render_command_queue_size;
 }
-}
+} // end namespace kb::render

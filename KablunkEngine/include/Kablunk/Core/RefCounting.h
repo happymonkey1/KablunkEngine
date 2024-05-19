@@ -147,6 +147,7 @@ public:
         return *this;
 	}
 #endif
+
 	template <typename T2>
     constexpr ref& operator=(const ref<T2>& other) noexcept
 	{

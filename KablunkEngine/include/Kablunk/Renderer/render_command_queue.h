@@ -20,7 +20,7 @@ namespace kb
         render_command_queue(render_command_queue&& p_other) noexcept;
         // destructor
 		~render_command_queue();
-        
+
         // allocate a render command in the buffer
 		void* allocate(RenderCommandFn func, uint32_t size);
         // execute all allocated commands

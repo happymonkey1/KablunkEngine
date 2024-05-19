@@ -27,13 +27,13 @@ namespace kb::UI
 
 	void Image(const ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{
-		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->GetImageInfo();
-		auto image_info = image.As<VulkanImage2D>()->GetImageInfo();
+		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->get_vk_image_info();
+		auto image_info = image.As<VulkanImage2D>()->get_vk_image_info();
 
 		if (!image_info.image_view)
 			return;
 
-		const auto texture_id = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<VulkanImage2D>()->GetDescriptor().imageLayout);
+		const auto texture_id = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<VulkanImage2D>()->get_vk_image_info_descriptor().imageLayout);
 		ImGui::Image(texture_id, size, uv0, uv1, tint_col, border_col);
 	}
 

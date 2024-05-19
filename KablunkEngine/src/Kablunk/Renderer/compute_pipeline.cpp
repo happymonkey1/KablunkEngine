@@ -8,17 +8,15 @@ namespace kb::render
 { // start namespace kb::render
 ref<compute_pipeline> compute_pipeline::create(ref<Shader> p_compute_shader)
 {
-    switch (RendererAPI::GetAPI())
+    constexpr auto backend = Renderer::get_render_backend_type();
+    switch (backend)
     {
-        case RendererAPI::render_api_t::Vulkan:
-        {
-            return static_cast<ref<compute_pipeline>>(ref<vk::compute_pipeline>::Create(p_compute_shader));
-        }
-        default:
-        {
-            KB_ASSERT(false, "[compute_pipeline]: unhandled rendererAPI!");
-            return ref<compute_pipeline>{};
-        }
+    case render_backend_type_t::vulkan:
+        return static_cast<ref<compute_pipeline>>(ref<vk::compute_pipeline>::Create(p_compute_shader));
+    default:
+    {
+        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return ref<compute_pipeline>{};
+    }
     }
 }
 } // end namespace kb::render

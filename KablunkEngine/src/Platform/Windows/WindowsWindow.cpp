@@ -58,7 +58,7 @@ void WindowsWindow::Init(const WindowProps& props)
         KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
 
 		// Hint to glfw that this will be rendered with Vulkan
-		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+		if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// #TODO resizing at runtime
@@ -118,7 +118,7 @@ void WindowsWindow::Init(const WindowProps& props)
 	m_context = GraphicsContext::Create(m_window);
 	m_context->Init();
 
-	if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
 	{
 		// #TODO dynamic_cast bad!
 		ref<VulkanContext> context = m_context.As<VulkanContext>();
@@ -238,8 +238,7 @@ void WindowsWindow::Shutdown()
 {
     KB_PROFILE_SCOPE;
 
-	
-	if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
 	{
 		// #TODO dynamic_cast bad!
 		VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());

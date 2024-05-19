@@ -596,7 +596,8 @@ namespace kb
 		if (scene_renderer->get_final_render_pass_image())
 		{
 			p_renderer_2d->begin_scene(*main_camera, main_camera_transform);
-			p_renderer_2d->set_target_render_pass(scene_renderer->get_external_composite_render_pass());
+            auto target_frame_buffer = scene_renderer->get_external_composite_frame_buffer();
+			p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
 
 			// map for checking whether sprites have 'already been rendered by code'
 			// this is a hack for a tilemap implementation while the engine does not support
@@ -734,12 +735,10 @@ namespace kb
 
 	void Scene::OnUpdateEditor(Timestep ts)
 	{
-		
 	}
 
 	void Scene::OnRenderEditor(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera)
 	{
-
 		// Lights
 		// #TODO move to scene renderer?
 		{
@@ -794,7 +793,8 @@ namespace kb
 		if (scene_renderer->get_final_render_pass_image())
 		{
 			p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
-			p_renderer_2d->set_target_render_pass(scene_renderer->get_external_composite_render_pass());
+            auto target_frame_buffer = scene_renderer->get_external_composite_frame_buffer();
+			p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
 
 			auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto entity : sprite_view)

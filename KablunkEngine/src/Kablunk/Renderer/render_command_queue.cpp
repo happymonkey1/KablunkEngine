@@ -41,6 +41,14 @@ void* render_command_queue::allocate(RenderCommandFn func, uint32_t size)
 {
     KB_PROFILE_SCOPE;
 
+#ifdef KB_DEBUG
+    constexpr size_t k_ten_mb = 10ull * 1024ull * 1024ull;
+    KB_CORE_ASSERT(
+        m_command_buffer_ptr + sizeof(RenderCommandFn) + sizeof(uint32_t) + size < m_command_buffer + k_ten_mb,
+        "[render_command_queue]: Command queue buffer overflow!"
+    );
+#endif
+
 	*reinterpret_cast<RenderCommandFn*>(m_command_buffer_ptr) = func;
 	m_command_buffer_ptr += sizeof(RenderCommandFn);
 

@@ -92,7 +92,7 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	uint32_t desired_number_of_swap_images = surface_cap.minImageCount + 1;
 	if ((surface_cap.maxImageCount > 0) && (desired_number_of_swap_images > surface_cap.maxImageCount))
 		desired_number_of_swap_images = surface_cap.maxImageCount;
-		
+
 	VkSurfaceTransformFlagsKHR pre_transform;
 	if (surface_cap.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 		pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -150,9 +150,14 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	// also cleans up old presenting images
 	if (old_swapchain != VK_NULL_HANDLE)
 	{
+#ifdef KB_DEBUG
+        log::core::trace(log::logger_tag_t::renderer, "[VulkanSwapChain]: Destroying old image views");
+#endif
+
 		for (uint32_t i = 0; i < m_image_count; ++i)
 			vkDestroyImageView(device, m_buffers[i].view, nullptr);
 
+        log::core::trace(log::logger_tag_t::renderer, "[VulkanSwapChain]: Destroying old swap chain");
 		vkDestroySwapchainKHR(device, old_swapchain, nullptr);
 	}
 
@@ -252,8 +257,8 @@ void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		
-	m_wait_fences.resize(render::get_frames_in_flights());
+
+	m_wait_fences.resize(render::get_frames_in_flight());
 	for (auto& fence : m_wait_fences)
 		if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
@@ -350,7 +355,7 @@ void VulkanSwapChain::BeginFrame()
     KB_PROFILE_SCOPE;
 
 	// Make sure the frame we're requesting has finished rendering
-	uint32_t frames_in_flight = render::get_frames_in_flights();
+	uint32_t frames_in_flight = render::get_frames_in_flight();
     if (auto res = vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences, Error={}", static_cast<u32>(res));
 
@@ -430,7 +435,7 @@ void VulkanSwapChain::Present()
 	}
 
     {
-		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flights();
+		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flight();
 		if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
     }

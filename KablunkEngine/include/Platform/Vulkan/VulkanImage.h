@@ -25,27 +25,27 @@ class VulkanImage2D final : public Image2D
 {
 public:
 	VulkanImage2D(ImageSpecification spec);
-	virtual ~VulkanImage2D() override;
+	~VulkanImage2D() override;
 
-	virtual void Invalidate() override;
-	virtual void Release() override;
+	void Invalidate() override;
+	void Release() override;
 
-	virtual uint32_t GetWidth() const override { return m_specification.width; }
-	virtual uint32_t GetHeight() const override { return m_specification.height; }
-	virtual float GetAspectRatio() const override { return static_cast<float>(m_specification.width) / static_cast<float>(m_specification.height); }
+	uint32_t GetWidth() const override { return m_specification.width; }
+	uint32_t GetHeight() const override { return m_specification.height; }
+	float GetAspectRatio() const override { return static_cast<float>(m_specification.width) / static_cast<float>(m_specification.height); }
 
-	virtual ImageSpecification& GetSpecification() override { return m_specification; }
-	virtual const ImageSpecification& GetSpecification() const override { return m_specification; }
+	ImageSpecification& GetSpecification() override { return m_specification; }
+	const ImageSpecification& GetSpecification() const override { return m_specification; }
 
 	void RT_Invalidate();
 
 	const std::map<VkImage, WeakRef<VulkanImage2D>>& GetImageRefs() const;
 
-	virtual void CreatePerLayerImageViews() override;
+	void CreatePerLayerImageViews() override;
 	void RT_CreatePerLayerImageViews();
 	void RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices);
 
-	virtual VkImageView GetLayerImageView(uint32_t layer)
+	VkImageView GetLayerImageView(uint32_t layer)
 	{
 		KB_CORE_ASSERT(layer < m_per_layer_image_views.size(), "out of bounds!");
 		return m_per_layer_image_views[layer];
@@ -54,28 +54,59 @@ public:
 	VkImageView GetMipImageView(uint32_t mip);
 	VkImageView RT_GetMipImageView(uint32_t mip);
 
-	VulkanImageInfo& GetImageInfo() { return m_info; }
-	const VulkanImageInfo& GetImageInfo() const { return m_info; }
+	VulkanImageInfo& get_vk_image_info() { return m_info; }
+	const VulkanImageInfo& get_vk_image_info() const { return m_info; }
 
-	const VkDescriptorImageInfo& GetDescriptor() { return m_descriptor_image_info; }
+    resource_descriptor_info_t get_descriptor_info() noexcept override
+	{
+        return &m_descriptor_image_info;
+	}
 
-	virtual const owning_buffer& GetBuffer() const override { return m_image_data; }
-	virtual owning_buffer& GetBuffer() override { return m_image_data; }
+	const VkDescriptorImageInfo& get_vk_image_info_descriptor() const { return m_descriptor_image_info; }
 
-	virtual uint64_t GetHash() const override { return (uint64_t)(m_info.image); }
+	const owning_buffer& GetBuffer() const override { return m_image_data; }
+	owning_buffer& GetBuffer() override { return m_image_data; }
+
+	uint64_t GetHash() const override { return reinterpret_cast<uint64_t>(m_info.image); }
 
 	void UpdateDescriptor();
+
 private:
 	ImageSpecification m_specification;
 	VulkanImageInfo m_info;
 
 	VkDescriptorImageInfo m_descriptor_image_info;
-
+    // local buffer for the image, deleted after the image is transfered to the gpu
 	owning_buffer m_image_data;
 
 	std::vector<VkImageView> m_per_layer_image_views;
 	std::map<uint32_t, VkImageView> m_mip_image_views;
-	
+};
+
+class vulkan_image_view final : public image_view
+{
+public:
+    vulkan_image_view(image_view_specification p_specification);
+    ~vulkan_image_view() override;
+
+    auto invalidate() noexcept -> void;
+    auto rt_invalidate() noexcept -> void;
+
+    auto get_vk_image_view() const noexcept -> VkImageView { return m_vk_image_view; }
+
+    resource_descriptor_info_t get_descriptor_info() noexcept override
+    {
+        return &m_vk_image_view;
+    }
+
+    auto get_vk_descriptor_image_info() const noexcept -> const VkDescriptorImageInfo&
+    {
+        return m_vk_descriptor_image_info;
+    }
+private:
+    image_view_specification m_specification{};
+    VkImageView m_vk_image_view{};
+    VkDescriptorImageInfo m_vk_descriptor_image_info{};
 };
 
 namespace Utils

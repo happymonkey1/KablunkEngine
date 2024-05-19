@@ -16,7 +16,7 @@ namespace kb
 	public:
 		MaterialAsset();
 		MaterialAsset(ref<Material> material);
-		~MaterialAsset();
+        ~MaterialAsset() override = default;
 
 		glm::vec3& GetAlbedoColor();
 		void SetAlbedoColor(const glm::vec3& albedo);

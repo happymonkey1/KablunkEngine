@@ -617,7 +617,7 @@ typedef enum VmaAllocationCreateFlagBits
     By using this flag, you declare that you will check if the allocation ended up in a `HOST_VISIBLE` memory type
     (e.g. using vmaGetAllocationMemoryProperties()) and if not, you will create some "staging" buffer and
     issue an explicit transfer to write/read your data.
-    To prepare for this possibility, don't forget to add appropriate flags like
+    To rt_prepare for this possibility, don't forget to add appropriate flags like
     `VK_BUFFER_USAGE_TRANSFER_DST_BIT`, `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` to the parameters of created buffer or image.
     */
     VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT = 0x00001000,

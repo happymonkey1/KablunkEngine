@@ -12,18 +12,12 @@ layout(location = 5) in vec4 a_MRow0;
 layout(location = 6) in vec4 a_MRow1;
 layout(location = 7) in vec4 a_MRow2;
 
-layout(std140, binding = 0) uniform Camera
+layout(std140, set = 1, binding = 0) uniform Camera
 {
     mat4 u_ViewProjectionMatrix;
     mat4 u_ProjectionMatrix;
     mat4 u_ViewMatrix;
     vec3 u_CameraPosition;
-};
-
-// This is prob really bad performance wise
-layout(std140, binding = 1) uniform Renderer
-{
-    uniform mat4 u_Transform;
 };
 
 struct VertexOutput
@@ -55,10 +49,10 @@ void main()
 
     vec4 worldPosition = transform * vec4(a_Position, 1.0);
     v_Output.WorldPosition = worldPosition.xyz;
-    v_Output.Normal = mat3(u_Transform) * a_Normal;
+    v_Output.Normal = a_Normal;
     v_Output.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
-    v_Output.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
-    v_Output.WorldTransform = mat3(u_Transform);
+    v_Output.WorldNormals = mat3(a_Tangent, a_Binormal, a_Normal);
+    v_Output.WorldTransform = mat3(1.0f);
     v_Output.Binormal = a_Binormal;
 
     v_Output.CameraView = mat3(u_ViewMatrix);
@@ -102,13 +96,13 @@ struct PointLight
     vec2 Padding;
 };
 
-layout(std140, binding = 2) uniform PointLightsData
+layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
     uint Count;
-    PointLight Lights[1024];
+    PointLight Lights[128];
 } u_PointLights;
 
-layout(push_constant) uniform Material
+layout(std140, push_constant) uniform Material
 {
 	float AmbientStrength;
     float DiffuseStrength;

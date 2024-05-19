@@ -6,18 +6,18 @@ layout(location = 1) in vec4 a_Color;
 layout(location = 2) in vec2 a_TexCoord;
 layout(location = 3) in float a_TexIndex;
 
-layout(std140, binding = 0) uniform Camera
+layout (push_constant) uniform Transform
+{
+    mat4 Transform;
+} u_Renderer;
+
+layout(std140, set = 1, binding = 0) uniform Camera
 {
     mat4 u_ViewProjection;
     mat4 u_Projection;
     mat4 u_View;
     vec3 u_Position;
 };
-
-layout (push_constant) uniform Transform
-{
-    mat4 Transform;
-} u_Renderer;
 
 struct VertexOutput
 {
@@ -50,7 +50,7 @@ layout(location = 0) out vec4 o_Color;
 layout(location = 0) in VertexOutput v_Input;
 layout(location = 5) in flat float v_TexIndex;
 
-layout(binding = 1) uniform sampler2D u_FontAtlases[32];
+layout(set = 0, binding = 0) uniform sampler2D u_FontAtlases[32];
 
 float median(float r, float g, float b)
 {

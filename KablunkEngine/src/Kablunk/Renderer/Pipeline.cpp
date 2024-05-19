@@ -2,18 +2,24 @@
 
 #include "Kablunk/Renderer/Pipeline.h"
 
+#include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RendererAPI.h"
 
 #include "Platform/Vulkan/VulkanPipeline.h"
 
-namespace kb
+namespace kb::render
+{ // start namespace kb::render
+ref<Pipeline> Pipeline::Create(const PipelineSpecification& specification)
 {
-	ref<Pipeline> Pipeline::Create(const PipelineSpecification& specification)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<Pipeline>>(ref<VulkanPipeline>::Create(specification));
-		default:									KB_CORE_ASSERT(false, "Unknown RenderAPI!"); return ref<Pipeline>{};
-		}
-	}
+    constexpr auto backend = Renderer::get_render_backend_type();
+    if constexpr (backend == render_backend_type_t::vulkan)
+    {
+        return static_cast<ref<Pipeline>>(ref<VulkanPipeline>::Create(specification));
+    }
+    else
+    {
+        KB_CORE_ASSERT(false, "Unhandled render backend type!");
+        return ref<Pipeline>{};
+    }
 }
+} // start namespace kb::render

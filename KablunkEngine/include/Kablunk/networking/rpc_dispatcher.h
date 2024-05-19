@@ -133,7 +133,7 @@ inline auto rpc_dispatcher::dispatch(
     if (!request_result)
         return std::nullopt;
 
-    const auto request = std::move(request_result.value());
+    const auto& request = request_result.value();
 
     auto&& packet_type = request.m_type;
     KB_CORE_ASSERT(

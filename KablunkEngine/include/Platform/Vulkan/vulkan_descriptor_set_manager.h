@@ -9,7 +9,7 @@
 #include "Kablunk/Renderer/StorageBuffer.h"
 #include "Kablunk/Renderer/StorageBufferSet.h"
 #include "Kablunk/Renderer/Texture.h"
-#include "Kablunk/Renderer/UniformBuffer.h"
+#include "Kablunk/Renderer/uniform_buffer.h"
 #include "Kablunk/Renderer/UniformBufferSet.h"
 #include "Platform/Vulkan/VulkanShader.h"
 
@@ -17,6 +17,24 @@
 
 namespace kb::render
 { // start namespace kb::render
+
+namespace
+{
+// size of the render pass c string array
+constexpr size_t k_render_pass_resource_type_name_size = 8ull;
+// render pass resource c strings
+// must keep size aligned to the number of `render_pass_resource_type_t` enums
+const char* k_render_pass_resource_type_names[k_render_pass_resource_type_name_size]
+{
+    "none",
+    "uniform_buffer",
+    "storage_buffer",
+    "storage_buffer_set",
+    "texture_2d",
+    "texture_3d",
+    "image_2d",
+};
+}
 
 enum class render_pass_resource_type_t : u16
 {
@@ -30,6 +48,20 @@ enum class render_pass_resource_type_t : u16
     texture_3d,
     image_2d,
 };
+
+constexpr auto render_pass_resource_type_to_string(
+    render_pass_resource_type_t p_type
+) noexcept -> std::string_view
+{
+    const auto index = static_cast<std::underlying_type_t<render_pass_resource_type_t>>(p_type);
+    KB_CORE_ASSERT(
+        index < k_render_pass_resource_type_name_size,
+        "[render_pass_resource_type_to_string]: Index out of bounds!"
+    );
+
+    return k_render_pass_resource_type_names[index];
+}
+
 
 enum class render_pass_input_type_t : u16
 {
@@ -52,7 +84,7 @@ struct render_pass_input
     render_pass_input() noexcept = default;
     ~render_pass_input() noexcept = default;
 
-    explicit render_pass_input(const ref<UniformBuffer>& p_uniform_buffer) noexcept
+    explicit render_pass_input(const ref<uniform_buffer>& p_uniform_buffer) noexcept
         : m_type{ render_pass_resource_type_t::uniform_buffer },
         m_input{ std::vector(1, p_uniform_buffer.As<RefCounted>()) }
     {
@@ -88,7 +120,7 @@ struct render_pass_input
     {
     }
 
-    auto set(const ref<UniformBuffer>& p_uniform_buffer, u32 p_index = 0) noexcept -> void
+    auto set(const ref<uniform_buffer>& p_uniform_buffer, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::uniform_buffer;
         m_input[p_index] = p_uniform_buffer;
@@ -96,31 +128,31 @@ struct render_pass_input
 
     auto set(const ref<UniformBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
-        m_type = render_pass_resource_type_t::uniform_buffer;
+        m_type = render_pass_resource_type_t::uniform_buffer_set;
         m_input[p_index] = p_storage_buffer_set;
     }
 
     auto set(const ref<StorageBuffer>& p_storage_buffer, u32 p_index = 0) noexcept -> void
     {
-        m_type = render_pass_resource_type_t::uniform_buffer;
+        m_type = render_pass_resource_type_t::storage_buffer;
         m_input[p_index] = p_storage_buffer;
     }
 
     auto set(const ref<StorageBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
-        m_type = render_pass_resource_type_t::uniform_buffer;
+        m_type = render_pass_resource_type_t::storage_buffer_set;
         m_input[p_index] = p_storage_buffer_set;
     }
 
     auto set(const ref<Texture2D>& p_texture, u32 p_index = 0) noexcept -> void
     {
-        m_type = render_pass_resource_type_t::uniform_buffer;
+        m_type = render_pass_resource_type_t::texture_2d;
         m_input[p_index] = p_texture;
     }
 
     auto set(const ref<Image2D>& p_image, u32 p_index = 0) noexcept -> void
     {
-        m_type = render_pass_resource_type_t::uniform_buffer;
+        m_type = render_pass_resource_type_t::image_2d;
         m_input[p_index] = p_image;
     }
 };
@@ -200,7 +232,7 @@ namespace details
 { // start namespace ::details
 // list of valid input resources
 using render_pass_input_types_tuple = std::tuple<
-    UniformBuffer,
+    uniform_buffer,
     UniformBufferSet,
     StorageBuffer,
     StorageBufferSet,
@@ -214,8 +246,16 @@ namespace concepts
 template <typename T>
 concept RenderPassInputT = std::is_same_v<
     std::true_type,
-    typename meta::tuple_has_type<T, details::render_pass_input_types_tuple>::value
+    typename meta::tuple_has_type<T, details::render_pass_input_types_tuple>::type
 >;
+#if 0
+static_assert(
+    std::is_same_v<
+        std::true_type,
+        meta::tuple_has_type<Texture2D, details::render_pass_input_types_tuple>::type
+    >
+);
+#endif
 } // end namespace concepts
 
 
@@ -232,39 +272,15 @@ public:
     explicit vulkan_descriptor_set_manager(descriptor_set_manager_specification p_spec) noexcept;
     ~vulkan_descriptor_set_manager() noexcept = default;
 
-#if 0
-    // #TODO template with tuple type validation at compile time...
-    auto set_input(
-        std::string_view p_name,
-        const ref<UniformBuffer>& p_uniform_buffer
-    ) noexcept -> vulkan_descriptor_set_manager&;
-    auto set_input(
-        std::string_view p_name,
-        const ref<UniformBufferSet>& p_uniform_buffer_set
-    ) noexcept -> vulkan_descriptor_set_manager&;
-    auto set_input(
-        std::string_view p_name,
-        const ref<StorageBuffer>& p_storage_buffer
-    ) noexcept -> vulkan_descriptor_set_manager&;
-    auto set_input(
-        std::string_view p_name,
-        const ref<StorageBufferSet>& p_storage_buffer_set
-    ) noexcept -> vulkan_descriptor_set_manager&;
-    auto set_input(
-        std::string_view p_name,
-        const ref<Texture2D>& p_texture_2d,
-        u32 p_index = 0
-    ) noexcept -> vulkan_descriptor_set_manager&;
-    auto set_input(
-        std::string_view p_name,
-        const ref<Image2D>& p_image_2d
-    ) noexcept -> vulkan_descriptor_set_manager&;
-#endif
     template <concepts::RenderPassInputT T>
     auto set_input(
-        std::string_view,
-        const ref<T>& p_resource
-    ) noexcept -> vulkan_descriptor_set_manager&;
+        std::string_view p_name,
+        const ref<T>& p_resource,
+        const u32 p_index = 0
+    ) noexcept -> vulkan_descriptor_set_manager&
+    {
+        return set_input_impl(p_name, p_resource, p_index);
+    }
 
     template <typename T>
     ref<T> get_input(std::string_view p_name);
@@ -288,11 +304,28 @@ public:
     auto is_input_valid(std::string_view p_name) const noexcept -> bool;
     auto get_input_declaration(std::string_view p_name) const noexcept -> const render_pass_input_declaration*;
 
+    auto get_input_declarations() const noexcept -> const std::map<std::string, render_pass_input_declaration>&
+    {
+        return m_input_declarations;
+    }
+
+    auto get_input_declarations() noexcept -> std::map<std::string, render_pass_input_declaration>&
+    {
+        return m_input_declarations;
+    }
+
     auto operator=(const vulkan_descriptor_set_manager& p_other) noexcept -> vulkan_descriptor_set_manager&;
     auto operator=(vulkan_descriptor_set_manager&& p_other) noexcept -> vulkan_descriptor_set_manager&;
 
 private:
     auto init() noexcept -> void;
+
+    template <typename T>
+    auto set_input_impl(
+        std::string_view p_name,
+        const ref<T>& p_resource,
+        u32 p_index = 0
+    ) noexcept -> vulkan_descriptor_set_manager&;
 
 private:
     // map of render pass inputs
@@ -316,10 +349,34 @@ private:
     VkDescriptorPool m_descriptor_pool = nullptr;
 };
 
-template <concepts::RenderPassInputT T>
-auto vulkan_descriptor_set_manager::set_input(
+// specialization for Texture2D to set at a specific index
+template <>
+inline auto vulkan_descriptor_set_manager::set_input_impl(
     std::string_view p_name,
-    const ref<T>& p_resource
+    const ref<Texture2D>& p_resource,
+    [[maybe_unused]] u32 p_index /* = 0 */
+) noexcept -> vulkan_descriptor_set_manager&
+{
+    if (const auto* decl = get_input_declaration(p_name))
+        m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_resource, p_index);
+    else
+    {
+        log::core::warn(
+            log::logger_tag_t::renderer,
+            "[Render Pass {}]: Input {} not found!",
+            m_specification.m_debug_name,
+            p_name
+        );
+    }
+
+    return *this;
+}
+
+template <typename T>
+auto vulkan_descriptor_set_manager::set_input_impl(
+    std::string_view p_name,
+    const ref<T>& p_resource,
+    [[maybe_unused]] const u32 p_index /* = 0 */
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))

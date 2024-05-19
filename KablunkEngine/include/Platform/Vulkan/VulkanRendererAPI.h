@@ -5,11 +5,13 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Renderer/RendererAPI.h"
 
-#include "Platform/Vulkan/VulkanRenderPass.h"
+#include "Platform/Vulkan/vulkan_render_pass.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 
 #include <vulkan/vulkan.h>
+
+#if 0 
 
 namespace kb
 { // start namespace kb
@@ -41,14 +43,14 @@ public:
 	// ======
 
 
-	virtual void RenderMesh(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) override;
+	virtual void RenderMesh(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) override;
 
-	virtual void RenderMeshWithMaterial(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<Material> material, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, owning_buffer additional_uniforms) override;
-	
+	virtual void RenderMeshWithMaterial(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<Material> material, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, owning_buffer additional_uniforms) override;
+
 	// #TODO submeshes
 	virtual void render_instanced_submesh(
 		ref<RenderCommandBuffer> render_command_buffer,
-		ref<Pipeline> pipeline,
+		ref<render::Pipeline> pipeline,
 		ref<UniformBufferSet> uniform_buffer_set,
 		ref<StorageBufferSet> storage_buffer_set,
 		ref<Mesh> mesh,
@@ -60,15 +62,26 @@ public:
 	) override;
 	// #TODO instanced rendering
 
-	virtual void SubmitFullscreenQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material);
+	virtual void SubmitFullscreenQuad(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material);
 
-	virtual void RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform) override;
+	virtual void RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform) override;
 
-	virtual void RenderGeometry(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, ref<VertexBuffer> vertex_buffer, ref<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) override;
+	virtual void RenderGeometry(
+        ref<RenderCommandBuffer> render_command_buffer,
+        ref<render::Pipeline> pipeline,
+        ref<UniformBufferSet> uniform_buffer_set,
+        ref<StorageBufferSet> storage_buffer_set,
+        ref<Material> material,
+        ref<VertexBuffer> vertex_buffer,
+        ref<IndexBuffer> index_buffer,
+        const glm::mat4& transform,
+        uint32_t index_count = 0
+    ) override;
+
 
 	virtual void SetLineWidth(ref<RenderCommandBuffer> render_command_buffer, float line_width) override;
 
-	virtual void BeginRenderPass(ref<RenderCommandBuffer> render_command_buffer, const ref<RenderPass>& render_pass, bool explicit_clear = false) override;
+	virtual void BeginRenderPass(ref<RenderCommandBuffer> render_command_buffer, const ref<render::render_pass>& render_pass, bool explicit_clear = false) override;
 	virtual void EndRenderPass(ref<RenderCommandBuffer> render_command_buffer) override;
 
 	virtual void WaitAndRender() override;
@@ -79,9 +92,12 @@ public:
 	static void RT_UpdateMaterialForRendering(ref<VulkanMaterial> vulkan_material, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set);
 	static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& alloc_info);
 
+    [[nodiscard]] static auto rt_allocate_material_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet;
 private:
 	bool m_draw_wireframe{ false };
 };
 } // end namespace kb
+
+#endif
 
 #endif

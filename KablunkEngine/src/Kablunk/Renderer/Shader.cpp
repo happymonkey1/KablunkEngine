@@ -8,15 +8,18 @@ namespace kb
 {
 ref<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 {
-	ref<Shader> res{};
-	switch (Renderer::GetAPI())
+	switch (render::Renderer::get_render_backend_type())
 	{
-	case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::None is not supported when creating Shader!"); return ref<Shader>{};
-	case RendererAPI::render_api_t::Vulkan:		res = ref<VulkanShader>::Create(file_path, force_compile); break;
-	default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<Shader>{};
+	case render::render_backend_type_t::vulkan:
+        return static_cast<ref<Shader>>(ref<VulkanShader>::Create(file_path, force_compile));
+	default:
+        KB_CORE_ASSERT(
+            false,
+            "[Shader::Create]: Unhandled render backend {}!",
+            static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+        );
+	    return ref<Shader>{};
 	}
-
-	return res;
 }
 
 ShaderLibrary::~ShaderLibrary()

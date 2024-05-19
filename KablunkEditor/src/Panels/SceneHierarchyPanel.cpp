@@ -404,6 +404,7 @@ namespace kb
 				UI::Property("Name", mesh_material_name);
 				UI::PopItemDisabled();
 
+#if 0
 				if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 				{
 					// #TODO check if this needs to be set on render thread
@@ -419,6 +420,7 @@ namespace kb
 					if (UI::Property("Specular Strength", specular_strength, 0.01f, 0.0f, 1.0f))
 						mesh_material_asset->GetMaterial()->Set("u_MaterialUniforms.SpecularStrength", specular_strength);
 				}
+#endif
 
 
 				ImGui::PopID();

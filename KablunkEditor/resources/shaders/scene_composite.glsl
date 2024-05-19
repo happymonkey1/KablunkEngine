@@ -31,10 +31,10 @@ struct OutputBlock
 
 layout (location = 0) in OutputBlock Input;
 
-layout (binding = 0) uniform sampler2D u_Texture;
-layout (binding = 1) uniform sampler2D u_BloomTexture;
-layout (binding = 2) uniform sampler2D u_BloomDirtTexture;
-layout (binding = 3) uniform sampler2D u_DepthTexture;
+layout (set = 1, binding = 0) uniform sampler2D u_Texture;
+layout (set = 1, binding = 1) uniform sampler2D u_BloomTexture;
+layout (set = 1, binding = 2) uniform sampler2D u_BloomDirtTexture;
+layout (set = 1, binding = 3) uniform sampler2D u_DepthTexture;
 
 layout(push_constant) uniform Uniforms
 {

@@ -11,16 +11,17 @@ namespace kb
 class VulkanUniformBufferSet final : public UniformBufferSet
 {
 public:
-	VulkanUniformBufferSet(uint32_t frames);
-	virtual ~VulkanUniformBufferSet() override = default;
+	VulkanUniformBufferSet(u32 p_size, u32 p_frames_in_flight);
+	~VulkanUniformBufferSet() override = default;
 
-	virtual void Create(uint32_t size, uint32_t binding) override;
+	ref<uniform_buffer> get() override;
+    ref<uniform_buffer> rt_get() override;
+    ref<uniform_buffer> get(u32 p_frame) override;
 
-	virtual ref<UniformBuffer> Get(uint32_t binding, uint32_t set = 0, uint32_t frame = 0) override;
-	virtual void Set(ref<UniformBuffer> uniform_buffer, uint32_t set = 0, uint32_t frame = 0) override;
+	void set(ref<uniform_buffer> p_uniform_buffer, uint32_t p_frame = 0) override;
 private:
-	uint32_t m_frames;
-	std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, ref<UniformBuffer>>>> m_uniform_buffers;
+	uint32_t m_frames_in_flight;
+	std::map<uint32_t, ref<uniform_buffer>> m_uniform_buffers;
 };
 } // end namespace kb
 

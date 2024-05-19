@@ -196,11 +196,11 @@ struct renderer_2d_data_t
 
 	render::font_manager m_font_manager;
 
-	ref<Pipeline> quad_pipeline;
-	ref<Pipeline> circle_pipeline;
-    ref<Pipeline> line_pipeline;
-    ref<Pipeline> ui_pipeline;
-	ref<Pipeline> text_pipeline;
+    ref<render::render_pass> m_quad_pass;
+	ref<render::render_pass> m_circle_pass;
+    ref<render::render_pass> m_line_pass;
+    ref<render::render_pass> m_ui_pass;
+	ref<render::render_pass> m_text_pass;
 
     ref<Material> quad_material;
     ref<Material> circle_material;
@@ -208,7 +208,7 @@ struct renderer_2d_data_t
     ref<Material> ui_material;
 	ref<Material> text_material;
 
-    ref<UniformBufferSet> uniform_buffer_set;
+    ref<UniformBufferSet> m_camera_uniform_buffer_set;
 
 	renderer_2d_specification_t specification;
 
@@ -241,8 +241,8 @@ public:
 
 	void on_imgui_render() const;
 
-    ref<RenderPass> get_target_render_pass();
-	void set_target_render_pass(ref<RenderPass> render_pass);
+    [[deprecated]] ref<render::render_pass> get_target_render_pass();
+	void set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer);
 	void on_recreate_swapchain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 

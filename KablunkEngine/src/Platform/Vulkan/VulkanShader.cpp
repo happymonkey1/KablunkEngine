@@ -22,10 +22,10 @@ namespace kb
 namespace Internal
 { // start namespace ::Internal
 	static const char* GetCacheDirectory() { return "Resources/Cache/Shader/Vulkan"; }
-		
+
 	static void CreateCacheDirectoryIfNecessary()
 	{
-		std::string cache_dir = GetCacheDirectory();
+        const std::string cache_dir = GetCacheDirectory();
 		if (!std::filesystem::exists(cache_dir))
 			std::filesystem::create_directories(cache_dir);
 	}
@@ -69,7 +69,7 @@ namespace Internal
 		}
 		else
 			KB_CORE_ASSERT(false, "Could not load shader!");
-			
+
 		in.close();
 
 		return result;
@@ -125,15 +125,10 @@ VulkanShader::VulkanShader(const std::string& path, bool force_compile)
 	m_name = found != std::string::npos ? path.substr(found + 1) : path;
 	found = m_name.find_last_of(".");
 	m_name = found != std::string::npos ? m_name.substr(0, found) : m_name;
-		
+
 	KB_CORE_INFO("Creating Vulkan Shader with name: {0}", m_name);
 
 	Reload(force_compile);
-}
-
-VulkanShader::~VulkanShader()
-{
-		
 }
 
 void VulkanShader::destroy()
@@ -146,7 +141,7 @@ void VulkanShader::destroy()
     ref<VulkanShader> instance{ this };
 	render::submit_resource_free([instance]()
 		{
-			VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+            const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 			for (const auto& pipeline_create_info : instance->m_pipeline_shader_stage_create_infos)
 				vkDestroyShaderModule(device, pipeline_create_info.module, nullptr);
 		}
@@ -174,7 +169,7 @@ void VulkanShader::Reload(bool force_compile /*= false*/)
 
 		    Internal::CreateCacheDirectoryIfNecessary();
 
-		    std::string source = Internal::ReadShaderFromFile(inst->m_file_path);
+            const std::string source = Internal::ReadShaderFromFile(inst->m_file_path);
 		    force_compile = ShaderCache::HasChanged(inst->m_file_path, source);
 
             inst->m_shader_source = inst->PreProcess(source);
@@ -256,7 +251,7 @@ std::vector<VkDescriptorSetLayout> VulkanShader::GetAllDescriptorSetLayouts()
 	return result;
 }
 
-kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set /*= 0*/)
+kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::allocate_descriptor_set(uint32_t set /*= 0*/) const
 {
     KB_PROFILE_SCOPE;
 
@@ -271,13 +266,13 @@ kb::VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSe
 	VkDescriptorSetAllocateInfo alloc_info = {};
 	alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	alloc_info.descriptorSetCount = 1;
-	alloc_info.pSetLayouts = &m_descriptor_set_layouts[set];
+	alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
-	VulkanRendererAPI* vulkan_renderer = dynamic_cast<VulkanRendererAPI*>(render::get_renderer());
+    const auto vulkan_render_backend = render::Renderer::get().get_render_backend().backend();
 
-	VkDescriptorSet descriptor_set = vulkan_renderer->RT_AllocateDescriptorSet(alloc_info);
-	KB_CORE_ASSERT(descriptor_set, "Vulkan failed to allocate descriptor set!");
-	result.descriptor_sets.push_back(descriptor_set);
+    const VkDescriptorSet vk_descriptor_set = vulkan_render_backend->rt_allocate_descriptor_set(alloc_info);
+	KB_CORE_ASSERT(vk_descriptor_set, "Vulkan failed to allocate descriptor set!");
+	result.descriptor_sets.push_back(vk_descriptor_set);
 
 	return result;
 }
@@ -286,9 +281,16 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 {
     KB_PROFILE_SCOPE;
 
+    kb::log::core::trace(
+        log::logger_tag_t::shader,
+        "Creating descriptor set {} for '{}'",
+        set,
+        m_name
+    );
+
 	ShaderMaterialDescriptorSet result;
 
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	// #TODO Move this to the centralized renderer
 	VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
@@ -305,12 +307,12 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 	alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	alloc_info.descriptorPool = result.pool;
 	alloc_info.descriptorSetCount = 1;
-	alloc_info.pSetLayouts = &m_descriptor_set_layouts[set];
+	alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
 	result.descriptor_sets.emplace_back();
 	if (vkAllocateDescriptorSets(device, &alloc_info, result.descriptor_sets.data()) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to allocate descriptor sets!");
-		
+
 	return result;
 }
 
@@ -323,27 +325,27 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	kb::unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> pool_sizes;
-	for (uint32_t set = 0; set < m_shader_descriptor_sets.size(); set++)
+	for (uint32_t descript_set = 0; descript_set < m_shader_descriptor_sets.size(); descript_set++)
 	{
-		auto& shader_descriptor_set = m_shader_descriptor_sets[set];
+		auto& shader_descriptor_set = m_shader_descriptor_sets[descript_set];
 		if (!shader_descriptor_set) // Empty descriptor set
 			continue;
 
-		if (shader_descriptor_set.uniform_buffers.size())
+		if (!shader_descriptor_set.uniform_buffers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.uniform_buffers.size()) * number_of_sets;
 		}
-		if (shader_descriptor_set.storage_buffers.size())
+		if (!shader_descriptor_set.storage_buffers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_buffers.size()) * number_of_sets;
 		}
-		if (shader_descriptor_set.image_samplers.size())
+		if (!shader_descriptor_set.image_samplers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			uint32_t descriptor_set_count = 0;
 			for (auto&& [binding, image_sampler] : shader_descriptor_set.image_samplers)
@@ -351,13 +353,12 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 
 			type_count.descriptorCount = descriptor_set_count * number_of_sets;
 		}
-		if (shader_descriptor_set.storage_images.size())
+		if (!shader_descriptor_set.storage_images.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_images.size()) * number_of_sets;
 		}
-
 	}
 
 	KB_CORE_ASSERT(pool_sizes.find(set) != pool_sizes.end(), "set not found in pool!");
@@ -381,7 +382,7 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = result.pool;
 		alloc_info.descriptorSetCount = 1;
-		alloc_info.pSetLayouts = &m_descriptor_set_layouts[set];
+		alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
 		if (vkAllocateDescriptorSets(device, &alloc_info, &result.descriptor_sets[i]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to allocate descriptor sets!");
@@ -413,18 +414,18 @@ kb::unordered_flat_map<VkShaderStageFlagBits, std::string> VulkanShader::PreProc
 {
 	kb::unordered_flat_map<VkShaderStageFlagBits, std::string> shader_sources;
 
-	const char* type_token = "#type";
-	size_t type_token_len = strlen(type_token);
+    const auto type_token = "#type";
+    const size_t type_token_len = strlen(type_token);
 	size_t pos = source.find(type_token, 0);
 	while (pos != std::string::npos)
 	{
-		size_t eol = source.find_first_of("\r\n", pos);
+        const size_t eol = source.find_first_of("\r\n", pos);
 		KB_CORE_ASSERT(eol != std::string::npos, "Syntax error");
-		size_t begin = pos + type_token_len + 1;
+        const size_t begin = pos + type_token_len + 1;
 		std::string type = source.substr(begin, eol - begin);
 		KB_CORE_ASSERT(type == "vertex" || type == "fragment" || type == "pixel" || type == "compute", "Invalid shader type specified");
 
-		size_t next_line_pos = source.find_first_not_of("\r\n", eol);
+        const size_t next_line_pos = source.find_first_not_of("\r\n", eol);
 		pos = source.find(type_token, next_line_pos);
 		auto shader_type = Internal::ShaderTypeFromString(type);
 		shader_sources[shader_type] = source.substr(next_line_pos, pos - (next_line_pos == std::string::npos ? source.size() - 1 : next_line_pos));
@@ -438,7 +439,7 @@ void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderSta
     KB_PROFILE_SCOPE;
 
 	std::filesystem::path cache_dir = Internal::GetCacheDirectory();
-	for (auto [stage, source] : m_shader_source)
+	for (const auto& [stage, source] : m_shader_source)
 	{
 		auto extension = Internal::VkShaderStageCachedFileExtension(stage);
 		if (!force_compile)
@@ -461,7 +462,7 @@ void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderSta
 			}
 		}
 
-		if (output_binary[stage].size() == 0)
+		if (output_binary[stage].empty())
 		{
 			shaderc::Compiler compiler;
 			shaderc::CompileOptions options;
@@ -486,8 +487,8 @@ void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderSta
 				KB_CORE_ASSERT(false, "module compilation failed");
 			}
 
-			const uint8_t* begin = (const uint8_t*)module.cbegin();
-			const uint8_t* end = (const uint8_t*)module.cend();
+            auto begin = reinterpret_cast<const uint8_t*>(module.cbegin());
+            auto end = reinterpret_cast<const uint8_t*>(module.cend());
 			const ptrdiff_t size = end - begin;
 
 			output_binary[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
@@ -512,18 +513,18 @@ void VulkanShader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSta
 {
     KB_PROFILE_SCOPE;
 
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	m_pipeline_shader_stage_create_infos.clear();
 	for (auto [stage, data] : shader_data)
 	{
-		KB_CORE_ASSERT(data.size(), "No Data in shader map!");
+		KB_CORE_ASSERT(!data.empty(), "No Data in shader map!");
 
 		VkShaderModuleCreateInfo module_create_info{};
 		module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		module_create_info.codeSize = data.size() * sizeof(uint32_t);
 		module_create_info.pCode = data.data();
-			
+
 		VkShaderModule shader_module;
 		if (vkCreateShaderModule(device, &module_create_info, nullptr, &shader_module) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create shader module!");
@@ -538,14 +539,12 @@ void VulkanShader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSta
 
 void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector<uint32_t>& shader_data)
 {
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-
 	KB_CORE_TRACE("===========================");
 	KB_CORE_TRACE(" Vulkan Shader Reflection");
 	KB_CORE_TRACE(" {0}", m_file_path);
 	KB_CORE_TRACE("===========================");
 
-	spirv_cross::Compiler compiler(shader_data);
+    const spirv_cross::Compiler compiler{ shader_data };
 	auto resources = compiler.get_shader_resources();
 
 	KB_CORE_TRACE("Uniform Buffers:");
@@ -553,10 +552,10 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 	{
 		const auto& name = resource.name;
 		auto& buffer_type = compiler.get_type(resource.base_type_id);
-		int member_count = (uint32_t)buffer_type.member_types.size();
-		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-		uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-		uint32_t size = (uint32_t)compiler.get_declared_struct_size(buffer_type);
+        u32 member_count = static_cast<u32>(buffer_type.member_types.size());
+        u32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+        u32 descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+        u32 size = static_cast<u32>(compiler.get_declared_struct_size(buffer_type));
 
 		if (descriptor_set >= m_shader_descriptor_sets.size())
 			m_shader_descriptor_sets.resize(descriptor_set + 1);
@@ -564,7 +563,7 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
 		if (s_uniform_buffers[descriptor_set].find(binding) == s_uniform_buffers[descriptor_set].end())
 		{
-			UniformBuffer* uniform_buffer = new UniformBuffer();
+            const auto uniform_buffer = new UniformBuffer();
 			uniform_buffer->binding_point = binding;
 			uniform_buffer->size = size;
 			uniform_buffer->name = name;
@@ -591,10 +590,10 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 	{
 		const auto& name = resource.name;
 		auto& buf_type = compiler.get_type(resource.base_type_id);
-		uint32_t member_count = (uint32_t)buf_type.member_types.size();
-		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-		uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-		uint32_t size = (uint32_t)compiler.get_declared_struct_size(buf_type);
+        u32 member_count = static_cast<u32>(buf_type.member_types.size());
+        u32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+        u32 descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+        u32 size = static_cast<u32>(compiler.get_declared_struct_size(buf_type));
 
 		if (descriptor_set >= m_shader_descriptor_sets.size())
 			m_shader_descriptor_sets.resize(descriptor_set + 1);
@@ -602,7 +601,7 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		ShaderDescriptorSet& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
 		if (s_storage_buffers[descriptor_set].find(binding) == s_storage_buffers[descriptor_set].end())
 		{
-			StorageBuffer* storage_buffer = new StorageBuffer();
+            const auto storage_buffer = new StorageBuffer{};
 			storage_buffer->binding_point = binding;
 			storage_buffer->size = size;
 			storage_buffer->name = name;
@@ -611,7 +610,7 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		}
 		else
 		{
-			StorageBuffer* storage_buffer = s_storage_buffers.at(descriptor_set).at(binding);
+            const auto storage_buffer = s_storage_buffers.at(descriptor_set).at(binding);
 			if (size > storage_buffer->size)
 				storage_buffer->size = size;
 		}
@@ -629,16 +628,20 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 	{
 		const auto& buffer_name = resource.name;
 		auto& buffer_type = compiler.get_type(resource.base_type_id);
-		auto buffer_size = static_cast<uint32_t>(compiler.get_declared_struct_size(buffer_type));
-		uint32_t member_count = static_cast<uint32_t>(buffer_type.member_types.size());
-		uint32_t buffer_offset = 0;
-		if (m_push_constant_ranges.size())
+		auto buffer_size = static_cast<u32>(compiler.get_declared_struct_size(buffer_type));
+        const u32 member_count = static_cast<u32>(buffer_type.member_types.size());
+        u32 buffer_offset = 0;
+		if (!m_push_constant_ranges.empty())
 			buffer_offset = m_push_constant_ranges.back().offset + m_push_constant_ranges.back().size;
 
 		auto& push_constant_range = m_push_constant_ranges.emplace_back();
 		push_constant_range.shader_stage = shader_stage;
-		push_constant_range.size = buffer_size - buffer_offset;
+		push_constant_range.size = buffer_size;
 		push_constant_range.offset = buffer_offset;
+        /*KB_CORE_ASSERT(
+            buffer_size > buffer_offset,
+            "[VulkanShader]: integer overflow when computing push constant size!"
+        )*/
 
 		// Skip empty push constant buffers - these are for the renderer only
 		if (buffer_name.empty() || buffer_name == "u_Renderer")
@@ -651,16 +654,17 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		KB_CORE_TRACE("  Name: {0}", buffer_name);
 		KB_CORE_TRACE("  Member Count: {0}", member_count);
 		KB_CORE_TRACE("  Size: {0}", buffer_size);
+        KB_CORE_TRACE("  Offset: {}", buffer_offset);
 
-		for (uint32_t i = 0; i < member_count; i++)
+		for (u32 i = 0; i < member_count; i++)
 		{
-			auto type = compiler.get_type(buffer_type.member_types[i]);
+			const auto& type = compiler.get_type(buffer_type.member_types[i]);
 			const auto& member_name = compiler.get_member_name(buffer_type.self, i);
-			auto size = (uint32_t)compiler.get_declared_struct_member_size(buffer_type, i);
-			auto offset = compiler.type_struct_member_offset(buffer_type, i) - buffer_offset;
+			const auto size = static_cast<u32>(compiler.get_declared_struct_member_size(buffer_type, i));
+			const auto offset = compiler.type_struct_member_offset(buffer_type, i) - buffer_offset;
 
-			std::string uniformName = fmt::format("{}.{}", buffer_name, member_name);
-			buffer.uniforms[uniformName] = ShaderUniform(uniformName, Internal::SPIRTypeToShaderUniformType(type), size, offset);
+			std::string uniform_name = fmt::format("{}.{}", buffer_name, member_name);
+			buffer.uniforms[uniform_name] = ShaderUniform(uniform_name, Internal::SPIRTypeToShaderUniformType(type), size, offset);
 		}
 	}
 
@@ -670,10 +674,10 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		const auto& name = resource.name;
 		auto& base_type = compiler.get_type(resource.base_type_id);
 		auto& type = compiler.get_type(resource.type_id);
-		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-		uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-		uint32_t dimension = base_type.image.dim;
-		uint32_t array_size = type.array[0];
+		u32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+		u32 descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+		const u32 dimension = base_type.image.dim;
+		u32 array_size = type.array[0];
 		if (array_size == 0)
 			array_size = 1;
 		if (descriptor_set >= m_shader_descriptor_sets.size())
@@ -685,9 +689,11 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		image_sampler.descriptor_set = descriptor_set;
 		image_sampler.name = name;
 		image_sampler.shader_stage = shader_stage;
+        // #TODO do we need both array size and dimension?
 		image_sampler.array_size = array_size;
+        image_sampler.m_dimension = dimension;
 
-		m_resources[name] = ShaderResourceDeclaration(name, binding, 1);
+        m_resources[name] = ShaderResourceDeclaration{ name, descriptor_set,binding, 1 };
 
 		KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
 	}
@@ -697,9 +703,9 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 	{
 		const auto& name = resource.name;
 		auto& type = compiler.get_type(resource.base_type_id);
-		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-		uint32_t descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-		uint32_t dimension = type.image.dim;
+        u32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+        u32 descriptor_set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+        const u32 dimension = type.image.dim;
 
 		if (descriptor_set >= m_shader_descriptor_sets.size())
 			m_shader_descriptor_sets.resize(descriptor_set + 1);
@@ -710,8 +716,9 @@ void VulkanShader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector
 		image_sampler.descriptor_set = descriptor_set;
 		image_sampler.name = name;
 		image_sampler.shader_stage = shader_stage;
+        image_sampler.m_dimension = dimension;
 
-		m_resources[name] = ShaderResourceDeclaration(name, binding, 1);
+        m_resources[name] = ShaderResourceDeclaration{ name, descriptor_set, binding, 1 };
 
 		KB_CORE_TRACE("  {0} ({1}, {2})", name, descriptor_set, binding);
 	}
@@ -729,28 +736,28 @@ void VulkanShader::CreateDescriptors()
 {
     KB_PROFILE_SCOPE;
 
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
 	m_type_counts.clear();
 	for (uint32_t set = 0; set < m_shader_descriptor_sets.size(); ++set)
 	{
 		auto& shader_descriptor_set = m_shader_descriptor_sets[set];
 
-		if (shader_descriptor_set.uniform_buffers.size())
+		if (!shader_descriptor_set.uniform_buffers.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.uniform_buffers.size());
 		}
 
-		if (shader_descriptor_set.storage_buffers.size())
+		if (!shader_descriptor_set.storage_buffers.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_buffers.size());
 		}
 
-		if (shader_descriptor_set.image_samplers.size())
+		if (!shader_descriptor_set.image_samplers.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -758,7 +765,7 @@ void VulkanShader::CreateDescriptors()
 		}
 
 
-		if (shader_descriptor_set.storage_images.size())
+		if (!shader_descriptor_set.storage_images.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -776,12 +783,12 @@ void VulkanShader::CreateDescriptors()
 			layout_binding.pImmutableSamplers = nullptr;
 			layout_binding.binding = binding;
 
-			VkWriteDescriptorSet& set = shader_descriptor_set.write_descriptor_sets[uniform_buffer->name];
-			set = {};
-			set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			set.descriptorType = layout_binding.descriptorType;
-			set.descriptorCount = 1;
-			set.dstBinding = layout_binding.binding;
+			VkWriteDescriptorSet& vk_descriptor_set = shader_descriptor_set.write_descriptor_sets[uniform_buffer->name];
+            vk_descriptor_set = {};
+            vk_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            vk_descriptor_set.descriptorType = layout_binding.descriptorType;
+            vk_descriptor_set.descriptorCount = 1;
+            vk_descriptor_set.dstBinding = layout_binding.binding;
 		}
 
 		// Storage Buffers
@@ -794,12 +801,12 @@ void VulkanShader::CreateDescriptors()
 			layout_binding.pImmutableSamplers = nullptr;
 			layout_binding.binding = binding;
 
-			VkWriteDescriptorSet& set = shader_descriptor_set.write_descriptor_sets[storage_buffer->name];
-			set = {};
-			set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			set.descriptorType = layout_binding.descriptorType;
-			set.descriptorCount = 1;
-			set.dstBinding = layout_binding.binding;
+			VkWriteDescriptorSet& vk_descriptor_set = shader_descriptor_set.write_descriptor_sets[storage_buffer->name];
+            vk_descriptor_set = {};
+            vk_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            vk_descriptor_set.descriptorType = layout_binding.descriptorType;
+            vk_descriptor_set.descriptorCount = 1;
+            vk_descriptor_set.dstBinding = layout_binding.binding;
 		}
 
 		// Image Samplers
@@ -815,12 +822,12 @@ void VulkanShader::CreateDescriptors()
 			KB_CORE_ASSERT(shader_descriptor_set.uniform_buffers.find(binding) == shader_descriptor_set.uniform_buffers.end(), "Binding is already present!");
 			KB_CORE_ASSERT(shader_descriptor_set.storage_buffers.find(binding) == shader_descriptor_set.storage_buffers.end(), "Binding is already present!");
 
-			VkWriteDescriptorSet& set = shader_descriptor_set.write_descriptor_sets[image_sampler.name];
-			set = {};
-			set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			set.descriptorType = layout_binding.descriptorType;
-			set.descriptorCount = image_sampler.array_size;
-			set.dstBinding = layout_binding.binding;
+			VkWriteDescriptorSet& vk_descriptor_set = shader_descriptor_set.write_descriptor_sets[image_sampler.name];
+            vk_descriptor_set = {};
+            vk_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            vk_descriptor_set.descriptorType = layout_binding.descriptorType;
+            vk_descriptor_set.descriptorCount = image_sampler.array_size;
+            vk_descriptor_set.dstBinding = layout_binding.binding;
 		}
 
 		// Storage Images
@@ -828,7 +835,7 @@ void VulkanShader::CreateDescriptors()
 		{
 			auto& layout_binding = layout_bindings.emplace_back();
 			layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			layout_binding.descriptorCount = 1;
+			layout_binding.descriptorCount = image_sampler.array_size;
 			layout_binding.stageFlags = image_sampler.shader_stage;
 			layout_binding.pImmutableSamplers = nullptr;
 
@@ -836,16 +843,25 @@ void VulkanShader::CreateDescriptors()
 			uint32_t binding = binding_and_set & 0xffffffff;
 			layout_binding.binding = binding;
 
-			KB_CORE_ASSERT(shader_descriptor_set.uniform_buffers.find(binding) == shader_descriptor_set.uniform_buffers.end(), "Binding is already present!");
-			KB_CORE_ASSERT(shader_descriptor_set.storage_buffers.find(binding) == shader_descriptor_set.storage_buffers.end(), "Binding is already present!");
-			KB_CORE_ASSERT(shader_descriptor_set.image_samplers.find(binding)  == shader_descriptor_set.image_samplers.end(), "Binding is already present!");
+			KB_CORE_ASSERT(
+                shader_descriptor_set.uniform_buffers.find(binding) == shader_descriptor_set.uniform_buffers.end(),
+                "Binding is already present!"
+            );
+			KB_CORE_ASSERT(
+                shader_descriptor_set.storage_buffers.find(binding) == shader_descriptor_set.storage_buffers.end(),
+                "Binding is already present!"
+            );
+			KB_CORE_ASSERT(
+                shader_descriptor_set.image_samplers.find(binding) == shader_descriptor_set.image_samplers.end(),
+                "Binding is already present!"
+            );
 
-			VkWriteDescriptorSet& set = shader_descriptor_set.write_descriptor_sets[image_sampler.name];
-			set = {};
-			set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			set.descriptorType = layout_binding.descriptorType;
-			set.descriptorCount = 1;
-			set.dstBinding = layout_binding.binding;
+			VkWriteDescriptorSet& vk_descriptor_set = shader_descriptor_set.write_descriptor_sets[image_sampler.name];
+            vk_descriptor_set = {};
+            vk_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            vk_descriptor_set.descriptorType = layout_binding.descriptorType;
+            vk_descriptor_set.descriptorCount = layout_binding.descriptorCount;
+            vk_descriptor_set.dstBinding = layout_binding.binding;
 		}
 
 		VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {};
@@ -861,11 +877,19 @@ void VulkanShader::CreateDescriptors()
 			shader_descriptor_set.storage_images.size()
 		);
 
+        // #TODO can we pre reserve the size?
 		if (set >= m_descriptor_set_layouts.size())
-			m_descriptor_set_layouts.resize((size_t)(set + 1));
+			m_descriptor_set_layouts.resize(set + 1);
 
-		if (vkCreateDescriptorSetLayout(device, &descriptor_layout_create_info, nullptr, &m_descriptor_set_layouts[set]) != VK_SUCCESS)
-			KB_CORE_ASSERT(false, "Vulkan failed to create descriptor set layout!");
+        if (vkCreateDescriptorSetLayout(
+            device,
+            &descriptor_layout_create_info,
+            nullptr,
+            &m_descriptor_set_layouts.at(set)
+        ) != VK_SUCCESS)
+		{
+            KB_CORE_ASSERT(false, "Vulkan failed to create descriptor set layout!");
+		}
 	}
 }
 

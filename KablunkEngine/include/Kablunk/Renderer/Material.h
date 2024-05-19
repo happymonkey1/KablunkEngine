@@ -19,7 +19,7 @@ namespace kb
 	class Material : public RefCounted
 	{
 	public:
-		virtual ~Material() = default;
+		~Material() override = default;
 
 		virtual void Invalidate() = 0;
 		virtual void Bind() = 0;

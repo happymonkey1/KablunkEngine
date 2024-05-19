@@ -81,7 +81,7 @@ namespace kb
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene);
+		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene, SceneRendererSpecification{});
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
@@ -290,8 +290,8 @@ namespace kb
 			
 			// store viewport size and position in renderer
 			ImVec2 viewport_pos = ImGui::GetWindowPos();
-			Singleton<Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
-			Singleton<Renderer>::get().m_viewport_size = m_viewport_size;
+			Singleton<render::Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
+			Singleton<render::Renderer>::get().m_viewport_size = m_viewport_size;
 
 			ImDrawList* viewport_draw_list = ImGui::GetWindowDrawList();
 
@@ -1340,7 +1340,9 @@ namespace kb
 			// #TODO move to scene renderer
 
 			m_renderer_2d->begin_scene(*camera, transform);
-			m_renderer_2d->set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
+			m_renderer_2d->set_target_frame_buffer(
+                m_viewport_renderer->get_external_composite_frame_buffer()
+            );
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 

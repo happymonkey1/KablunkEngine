@@ -22,12 +22,10 @@ auto get_descriptor_set_alloc_info(
     return create_info;
 }
 
-auto create_sampler(VkSamplerCreateInfo p_sampler_create_info) noexcept -> VkSampler
+auto create_sampler(const VkSamplerCreateInfo& p_sampler_create_info) noexcept -> VkSampler
 {
-    const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-
     VkSampler sampler;
-    KB_VK_CHECK_RESULT(vkCreateSampler(vk_device, &p_sampler_create_info, nullptr, &sampler));
+    KB_VK_CHECK_RESULT(vkCreateSampler(get_current_vk_device(), &p_sampler_create_info, nullptr, &sampler));
 
     // #TODO track allocations
 
@@ -36,10 +34,14 @@ auto create_sampler(VkSamplerCreateInfo p_sampler_create_info) noexcept -> VkSam
 
 auto destroy_sampler(VkSampler p_sampler) noexcept -> void
 {
-    const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
-    vkDestroySampler(vk_device, p_sampler, nullptr);
+    vkDestroySampler(get_current_vk_device(), p_sampler, nullptr);
 
     // #TODO track de-allocation
+}
+
+auto get_current_vk_device() noexcept -> VkDevice
+{
+    return VulkanContext::Get()->GetDevice()->GetVkDevice();
 }
 
 } // end namespace kb::vk

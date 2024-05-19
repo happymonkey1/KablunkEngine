@@ -105,7 +105,7 @@ void Application::shutdown()
 	//CSharpScriptEngine::Shutdown();
 
 	// clear the framebuffer pool
-	FramebufferPool::Get()->GetAll().clear();
+	render::frame_buffer_pool::Get()->GetAll().clear();
 
 	m_render_thread.terminate();
 
@@ -197,7 +197,7 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 	}
 
 	m_minimized = false;
-	render::submit([&](){ render::on_window_resize(width, height); });
+	// render::submit([&](){ render::on_window_resize(width, height); });
 	return false;
 }
 
@@ -259,7 +259,7 @@ void Application::Run()
 
 			render::submit([&](){ m_window->swap_buffers(); });
 
-			m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
+			m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flight();
 			m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 		}
 

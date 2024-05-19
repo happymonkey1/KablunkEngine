@@ -1,11 +1,12 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer2D.h"
 
+#include "Kablunk/Core/Core.h"
 
 #include "Kablunk/Asset/AssetManager.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Renderer/UniformBuffer.h"
+#include "Kablunk/Renderer/uniform_buffer.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/renderer_2d_utils.h"
 
@@ -44,7 +45,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
     set_swap_chain_target(m_renderer_data.specification.swap_chain_target);
 
-	uint32_t frames_in_flight = render::get_frames_in_flights();
+	uint32_t frames_in_flight = render::get_frames_in_flight();
 
 	// =====
 	// Quads
@@ -151,94 +152,146 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	m_renderer_data.quad_vertex_positions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 	m_renderer_data.quad_vertex_positions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
 
+    // initialize uniform buffer sets
+    m_renderer_data.m_camera_uniform_buffer_set = UniformBufferSet::create(sizeof(glm::mat4), frames_in_flight);
+    //m_renderer_data.m_camera_uniform_buffer_set->Create(, 0);
+
 	// Create framebuffer
-	FramebufferSpecification framebuffer_spec{};
-	framebuffer_spec.Attachments = { ImageFormat::RGBA };
-	framebuffer_spec.samples = 1;
-	framebuffer_spec.clear_on_load = false;
-    framebuffer_spec.clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
-	framebuffer_spec.debug_name = "framebuffer::Renderer2D";
-	framebuffer_spec.blend_mode = FramebufferBlendMode::Additive;
-	framebuffer_spec.blend = true;
+    render::frame_buffer_specification frame_buffer_spec{};
+	frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+	frame_buffer_spec.m_samples = 1;
+	frame_buffer_spec.m_clear_on_load = false;
+    frame_buffer_spec.m_clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
+	frame_buffer_spec.m_debug_name = "renderer2d::frame_buffer";
+	frame_buffer_spec.m_blend_mode = render::frame_buffer_blend_mode_t::additive;
+	frame_buffer_spec.m_enable_blend = true;
 
-	ref<Framebuffer> framebuffer = Framebuffer::Create(framebuffer_spec);
+    ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(frame_buffer_spec);
 
-	RenderPassSpecification render_pass_spec{};
-	render_pass_spec.target_framebuffer = framebuffer;
-	render_pass_spec.debug_name = "render_pass::Renderer2D";
+    // quad render pass
+    {
+        render::PipelineSpecification quad_pipeline_spec{
+            .shader = m_renderer_data.quad_shader,
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float4, "a_Color" },
+                { ShaderDataType::Float2, "a_TexCoord" },
+                { ShaderDataType::Float, "a_TexIndex" },
+                { ShaderDataType::Float, "a_TilingFactor" },
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = true,
+            .depth_write = true,
+            .wireframe = false,
+            .debug_name = "renderer2d::pipeline::quad"
+        };
 
-	ref<RenderPass> render_pass = RenderPass::Create(render_pass_spec);
+        render::render_pass_specification render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(quad_pipeline_spec),
+            .m_debug_name = "renderer2d::render_pass::quad"
+        };
 
-	// Create quad pipeline
-	{
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "pipeline::quad::render2d";
-		pipeline_spec.shader = m_renderer_data.quad_shader;
-		pipeline_spec.backface_culling = false;
-        pipeline_spec.depth_test = true;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
-			{ ShaderDataType::Float, "a_TilingFactor" },
-		};
-		pipeline_spec.render_pass = render_pass;
-
-		m_renderer_data.quad_pipeline = Pipeline::Create(pipeline_spec);
-	}
+        m_renderer_data.m_quad_pass = render::render_pass::create(render_pass_spec);
+        m_renderer_data.m_quad_pass->set_input("Camera", m_renderer_data.m_camera_uniform_buffer_set);
+        KB_CORE_ASSERT(m_renderer_data.m_quad_pass->validate(), "quad render pass validation failed?");
+        m_renderer_data.m_quad_pass->bake();
+    }
 
 	// UI
-	{
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "pipeline::ui::render2d";
-		pipeline_spec.shader = m_renderer_data.ui_shader;
-		pipeline_spec.backface_culling = false;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" },
-			{ ShaderDataType::Float2, "a_TextCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
-			{ ShaderDataType::Float, "a_TilingFactor" }
-		};
-		pipeline_spec.render_pass = render_pass;
+    {
+        render::PipelineSpecification ui_pipeline_spec{
+            .shader = m_renderer_data.ui_shader,
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float4, "a_Color" },
+                { ShaderDataType::Float2, "a_TexCoord" },
+                { ShaderDataType::Float, "a_TexIndex" },
+                { ShaderDataType::Float, "a_TilingFactor" },
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = true,
+            .depth_write = true,
+            .wireframe = false,
+            .debug_name = "renderer2d::pipeline::ui"
+        };
 
-		m_renderer_data.ui_pipeline = Pipeline::Create(pipeline_spec);
-	}
+        render::render_pass_specification render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(ui_pipeline_spec),
+            .m_debug_name = "renderer2d::render_pass::ui"
+        };
+
+        m_renderer_data.m_ui_pass = render::render_pass::create(render_pass_spec);
+        m_renderer_data.m_ui_pass->set_input("Camera", m_renderer_data.m_camera_uniform_buffer_set);
+        KB_CORE_ASSERT(m_renderer_data.m_ui_pass->validate(), "ui render pass validation failed?");
+        m_renderer_data.m_ui_pass->bake();
+    }
 
 	// Circle
 	{
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "pipeline::circle::render2d";
-		pipeline_spec.shader = m_renderer_data.circle_shader;
-		pipeline_spec.backface_culling = false;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_WorldPosition" },
-			{ ShaderDataType::Float3, "a_LocalPosition" },
-			{ ShaderDataType::Float4, "a_Color"},
-			{ ShaderDataType::Float, "a_Radius" },
-			{ ShaderDataType::Float, "a_Thickness" },
-			{ ShaderDataType::Float, "a_Fade" },
-			{ ShaderDataType::Int, "a_EntityID" }
-		};
-		pipeline_spec.render_pass = render_pass;
+        render::PipelineSpecification circle_pipeline_spec{
+            .shader = m_renderer_data.circle_shader,
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_WorldPosition" },
+                { ShaderDataType::Float3, "a_LocalPosition" },
+                { ShaderDataType::Float4, "a_Color"},
+                { ShaderDataType::Float, "a_Radius" },
+                { ShaderDataType::Float, "a_Thickness" },
+                { ShaderDataType::Float, "a_Fade" },
+                { ShaderDataType::Int, "a_EntityID" },
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = true,
+            .depth_write = true,
+            .wireframe = false,
+            .debug_name = "render2d::pipeline::circle"
+        };
 
-		m_renderer_data.circle_pipeline = Pipeline::Create(pipeline_spec);
+        render::render_pass_specification render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(circle_pipeline_spec),
+            .m_debug_name = "render2d::render_pass::circle"
+        };
+
+        m_renderer_data.m_circle_pass = render::render_pass::create(render_pass_spec);
+        m_renderer_data.m_circle_pass->set_input("Camera", m_renderer_data.m_camera_uniform_buffer_set);
+        KB_CORE_ASSERT(m_renderer_data.m_circle_pass->validate(), "circle render pass validation failed?");
+        m_renderer_data.m_circle_pass->bake();
 	}
 
 	// Line
 	{
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "pipeline::line::render2d";
-		pipeline_spec.shader = m_renderer_data.line_shader;
-		pipeline_spec.backface_culling = false;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" }
-		};
-		pipeline_spec.render_pass = render_pass;
+        render::PipelineSpecification line_pipeline_spec{
+            .shader = m_renderer_data.line_shader,
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float4, "a_Color" }
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = false,
+            .depth_write = false,
+            .wireframe = false,
+            .debug_name = "render2d::pipeline::line"
+        };
 
-		m_renderer_data.line_pipeline = Pipeline::Create(pipeline_spec);
+        render::render_pass_specification render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(line_pipeline_spec),
+            .m_debug_name = "render2d::render_pass::line"
+        };
+        m_renderer_data.m_line_pass = render::render_pass::create(render_pass_spec);
+        m_renderer_data.m_line_pass->set_input("Camera", m_renderer_data.m_camera_uniform_buffer_set);
+        KB_CORE_ASSERT(m_renderer_data.m_line_pass->validate(), "line render pass validation failed?");
+        m_renderer_data.m_line_pass->bake();
 
 		uint32_t* line_indices = new uint32_t[renderer_2d_data_t::max_line_indices];
 		for (uint32_t i = 0; i < renderer_2d_data_t::max_line_indices; ++i)
@@ -253,31 +306,55 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 
 	// create text pipeline
 	{
-		PipelineSpecification pipeline_spec;
-		pipeline_spec.debug_name = "pipeline::text::render2d";
-		pipeline_spec.shader = m_renderer_data.text_shader;
-		pipeline_spec.backface_culling = false;
-        pipeline_spec.depth_test = false;
-		pipeline_spec.layout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
-		};
-		pipeline_spec.render_pass = render_pass;
+        render::PipelineSpecification text_pipeline_spec{
+            .shader = m_renderer_data.text_shader,
+            .m_target_frame_buffer = frame_buffer,
+            .layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float4, "a_Color" },
+                { ShaderDataType::Float2, "a_TexCoord" },
+                { ShaderDataType::Float, "a_TexIndex" },
+            },
+            .instance_layout = {},
+            .topology = render::PrimitiveTopology::Triangles,
+            .backface_culling = false,
+            .depth_test = false,
+            .depth_write = false,
+            .wireframe = false,
+            .debug_name = "render2d::pipeline::text"
+        };
 
-		m_renderer_data.text_pipeline = Pipeline::Create(pipeline_spec);
+        render::render_pass_specification render_pass_spec{
+            .m_pipeline = render::Pipeline::Create(text_pipeline_spec),
+            .m_debug_name = "render2d::render_pass::text"
+        };
+        m_renderer_data.m_text_pass = render::render_pass::create(render_pass_spec);
+        m_renderer_data.m_text_pass->set_input("Camera", m_renderer_data.m_camera_uniform_buffer_set);
+        KB_CORE_ASSERT(m_renderer_data.m_text_pass->validate(), "text render pass validation failed?");
+        m_renderer_data.m_text_pass->bake();
 	}
 
 	// create materials
-	m_renderer_data.quad_material = Material::Create(m_renderer_data.quad_shader);
-	m_renderer_data.circle_material = Material::Create(m_renderer_data.circle_shader);
-	m_renderer_data.line_material = Material::Create(m_renderer_data.line_shader);
-	m_renderer_data.ui_material = Material::Create(m_renderer_data.ui_shader);
-	m_renderer_data.text_material = Material::Create(m_renderer_data.text_shader);
-
-	m_renderer_data.uniform_buffer_set = UniformBufferSet::Create(frames_in_flight);
-	m_renderer_data.uniform_buffer_set->Create(sizeof(glm::mat4), 0);
+	m_renderer_data.quad_material = Material::Create(
+        m_renderer_data.m_quad_pass->get_pipeline()->get_shader(),
+        "render2d::material::quad_material"
+    );
+	m_renderer_data.circle_material = Material::Create(
+        m_renderer_data.m_circle_pass->get_pipeline()->get_shader(),
+        "render2d::material::circle_material"
+    );
+	m_renderer_data.line_material = Material::Create(
+        m_renderer_data.m_line_pass->get_pipeline()->get_shader(),
+        "render2d::material::line_material"
+    );
+	m_renderer_data.ui_material = Material::Create(
+        m_renderer_data.m_ui_pass->get_pipeline()->get_shader(),
+        "render2d::material::ui_material"
+    );
+	m_renderer_data.text_material = Material::Create(
+        m_renderer_data.m_text_pass->get_pipeline()->get_shader(),
+        "render2d::material::text_material"
+    );
 
 	// initialize font manager
 	m_renderer_data.m_font_manager.init();
@@ -337,11 +414,11 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, b
 
 	glm::mat4 view_proj = camera.GetProjection() * transform;
 
-	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.uniform_buffer_set;
+    // #TODO this needs to be fixed
+	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
 	render::submit([uniform_buffer_set, view_proj]() mutable
 		{
-			const uint32_t buffer_index = render::rt_get_current_frame_index();
-			uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
+			uniform_buffer_set->rt_get()->rt_set_data(& view_proj, sizeof(glm::mat4));
 		});
 
 	m_renderer_data.Stats = {};
@@ -357,18 +434,22 @@ void Renderer2D::begin_scene(const EditorCamera& camera, bool p_explicit_clear /
 	start_new_batch();
 }
 
-void Renderer2D::begin_scene(const glm::mat4& p_projection, const glm::mat4& p_transform, bool p_explicit_clear /* = false */)
+void Renderer2D::begin_scene(
+    const glm::mat4& p_projection,
+    const glm::mat4& p_transform,
+    bool p_explicit_clear /* = false */
+)
 {
     KB_PROFILE_SCOPE;
 
     m_explicit_render_pass_clear = p_explicit_clear;
     glm::mat4 view_proj = p_projection * p_transform;
 
-    ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.uniform_buffer_set;
+    // #TODO this needs to be fixed
+    ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
     render::submit([uniform_buffer_set, view_proj]() mutable
         {
-            const uint32_t buffer_index = render::rt_get_current_frame_index();
-            uniform_buffer_set->Get(0, 0, buffer_index)->RT_SetData(&view_proj, sizeof(glm::mat4));
+            uniform_buffer_set->rt_get()->rt_set_data(&view_proj, sizeof(glm::mat4));
         });
 
     m_renderer_data.Stats = {};
@@ -411,9 +492,11 @@ void Renderer2D::flush()
             auto& quad_vertex_buffer = m_renderer_data.quad_vertex_buffers[i][frame_index];
             quad_vertex_buffer->SetData(quad_vertex_buffer_base_ptr, data_size);
 
-            const auto& quad_pass = m_renderer_data.quad_pipeline->GetSpecification().render_pass;
-
-            render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, clear_pass);
+            render::begin_render_pass(
+                m_renderer_data.render_command_buffer,
+                m_renderer_data.m_quad_pass,
+                clear_pass
+            );
 
             // Set Textures
             auto& textures = m_renderer_data.texture_slots;
@@ -425,11 +508,10 @@ void Renderer2D::flush()
                     m_renderer_data.quad_material->Set("u_Textures", m_renderer_data.white_texture, j);
             }
 
+            const auto& quad_pipeline = m_renderer_data.m_quad_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
-                m_renderer_data.quad_pipeline,
-                m_renderer_data.uniform_buffer_set,
-                ref<StorageBufferSet>{},
+                quad_pipeline,
                 m_renderer_data.quad_material,
                 quad_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -444,8 +526,7 @@ void Renderer2D::flush()
         }
         else
         {
-            const auto& quad_pass = m_renderer_data.quad_pipeline->GetSpecification().render_pass;
-            render::begin_render_pass(m_renderer_data.render_command_buffer, quad_pass, clear_pass);
+            render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_quad_pass, clear_pass);
             render::end_render_pass(m_renderer_data.render_command_buffer);
             clear_pass = clear_pass && false;
         }
@@ -465,13 +546,11 @@ void Renderer2D::flush()
             auto& circle_vertex_buffer = m_renderer_data.circle_vertex_buffers[i][frame_index];
             circle_vertex_buffer->SetData(circle_vertex_base_buffer_ptr, data_size);
 
-            const auto& circle_pass = m_renderer_data.circle_pipeline->GetSpecification().render_pass;
-            render::begin_render_pass(m_renderer_data.render_command_buffer, circle_pass, clear_pass);
+            render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_circle_pass, clear_pass);
+            const auto& circle_pipeline = m_renderer_data.m_circle_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
-                m_renderer_data.circle_pipeline,
-                m_renderer_data.uniform_buffer_set,
-                ref<StorageBufferSet>{},
+                circle_pipeline,
                 m_renderer_data.circle_material,
                 circle_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -499,14 +578,12 @@ void Renderer2D::flush()
             auto& line_vertex_buffer = m_renderer_data.line_vertex_buffers[i][frame_index];
             line_vertex_buffer->SetData(line_vertex_buffer_base_ptr, data_size);
 
-            const auto& line_pass = m_renderer_data.line_pipeline->GetSpecification().render_pass;
-            render::begin_render_pass(m_renderer_data.render_command_buffer, line_pass, clear_pass);
+            render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_line_pass, clear_pass);
             render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.line_width);
+            const auto& line_pipeline = m_renderer_data.m_line_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
-                m_renderer_data.line_pipeline,
-                m_renderer_data.uniform_buffer_set,
-                ref<StorageBufferSet>{},
+                line_pipeline,
                 m_renderer_data.line_material,
                 line_vertex_buffer,
                 m_renderer_data.line_index_buffer,
@@ -544,13 +621,11 @@ void Renderer2D::flush()
                     m_renderer_data.text_material->Set("u_FontAtlases", m_renderer_data.white_texture, j);
             }
 
-            const auto& text_pass = m_renderer_data.text_pipeline->GetSpecification().render_pass;
-            render::begin_render_pass(m_renderer_data.render_command_buffer, text_pass, clear_pass);
+            render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_text_pass, clear_pass);
+            const auto& text_pipeline = m_renderer_data.m_text_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
-                m_renderer_data.text_pipeline,
-                m_renderer_data.uniform_buffer_set,
-                ref<StorageBufferSet>{},
+                text_pipeline,
                 m_renderer_data.text_material,
                 text_vertex_buffer,
                 m_renderer_data.quad_index_buffer,
@@ -578,37 +653,41 @@ void Renderer2D::on_imgui_render() const
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data.render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data.gpu_time_query.renderer_2D_query)));
 }
 
-ref<RenderPass> Renderer2D::get_target_render_pass()
+ref<render::render_pass> Renderer2D::get_target_render_pass()
 {
-	return m_renderer_data.quad_pipeline->GetSpecification().render_pass;
+    KB_CORE_ASSERT(false, "Deprecated!");
+    return ref<render::render_pass>{};
 }
 
-void Renderer2D::set_target_render_pass(ref<RenderPass> render_pass)
+void Renderer2D::set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer)
 {
     KB_PROFILE_SCOPE;
 
 	// Quad pipeline
-	if (m_renderer_data.quad_pipeline->GetSpecification().render_pass != render_pass)
+	if (m_renderer_data.m_quad_pass->get_target_frame_buffer() != p_target_frame_buffer)
 	{
-        PipelineSpecification pipeline_spec = m_renderer_data.quad_pipeline->GetSpecification();
-        pipeline_spec.render_pass = render_pass;
-        m_renderer_data.quad_pipeline = Pipeline::Create(pipeline_spec);
+        auto pipeline_spec = m_renderer_data.m_quad_pass->get_pipeline()->GetSpecification();
+        pipeline_spec.m_target_frame_buffer = p_target_frame_buffer;
+        auto& render_pass_spec = m_renderer_data.m_quad_pass->get_specification();
+        render_pass_spec.m_pipeline = render::Pipeline::Create(pipeline_spec);
     }
 
 	// Circle pipeline
-    if (m_renderer_data.circle_pipeline->GetSpecification().render_pass != render_pass)
+    if (m_renderer_data.m_circle_pass->get_target_frame_buffer() != p_target_frame_buffer)
     {
-        PipelineSpecification pipeline_spec = m_renderer_data.circle_pipeline->GetSpecification();
-        pipeline_spec.render_pass = render_pass;
-        m_renderer_data.circle_pipeline = Pipeline::Create(pipeline_spec);
+        auto pipeline_spec = m_renderer_data.m_circle_pass->get_pipeline()->GetSpecification();
+        pipeline_spec.m_target_frame_buffer = p_target_frame_buffer;
+        auto& render_pass_spec = m_renderer_data.m_circle_pass->get_specification();
+        render_pass_spec.m_pipeline = render::Pipeline::Create(pipeline_spec);
     }
 
     // Text Pipeline
-    if (m_renderer_data.text_pipeline->GetSpecification().render_pass != render_pass)
+    if (m_renderer_data.m_text_pass->get_target_frame_buffer() != p_target_frame_buffer)
     {
-        PipelineSpecification pipeline_spec = m_renderer_data.text_pipeline->GetSpecification();
-        pipeline_spec.render_pass = render_pass;
-        m_renderer_data.text_pipeline = Pipeline::Create(pipeline_spec);
+        auto pipeline_spec = m_renderer_data.m_text_pass->get_pipeline()->GetSpecification();
+        pipeline_spec.m_target_frame_buffer = p_target_frame_buffer;
+        auto& render_pass_spec = m_renderer_data.m_text_pass->get_specification();
+        render_pass_spec.m_pipeline = render::Pipeline::Create(pipeline_spec);
     }
 }
 
@@ -629,21 +708,15 @@ void Renderer2D::on_viewport_resize(const glm::vec2& p_viewport_dimensions)
     else
     {
         // #TODO this may force recreation twice(?) depending on whether target render pass is externally managed...
-        m_renderer_data
-            .quad_pipeline->GetSpecification()
-            .render_pass->GetSpecification()
-            .target_framebuffer->Resize(
-                static_cast<u32>(p_viewport_dimensions.x),
-                static_cast<u32>(p_viewport_dimensions.y)
-            );
+        m_renderer_data.m_quad_pass->get_target_frame_buffer()->resize(
+            static_cast<u32>(p_viewport_dimensions.x),
+            static_cast<u32>(p_viewport_dimensions.y)
+        );
 
-        m_renderer_data
-            .text_pipeline->GetSpecification()
-            .render_pass->GetSpecification()
-            .target_framebuffer->Resize(
-                static_cast<u32>(p_viewport_dimensions.x),
-                static_cast<u32>(p_viewport_dimensions.y)
-            );
+        m_renderer_data.m_text_pass->get_target_frame_buffer()->resize(
+            static_cast<u32>(p_viewport_dimensions.x),
+            static_cast<u32>(p_viewport_dimensions.y)
+        );
     }
 }
 

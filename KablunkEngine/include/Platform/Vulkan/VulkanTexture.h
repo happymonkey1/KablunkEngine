@@ -18,29 +18,37 @@ class VulkanTexture2D final : public Texture2D
 public:
 	VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data);
 	VulkanTexture2D(const std::string& path);
-	virtual ~VulkanTexture2D() override;
+	~VulkanTexture2D() override;
 
-	virtual void Resize(uint32_t width, uint32_t height) override;
-	virtual ref<Image2D> GetImage() const override { return m_image; }
+	void Resize(uint32_t width, uint32_t height) override;
+	ref<Image2D> GetImage() const override { return m_image; }
 
-	virtual ImageFormat GetFormat() const { return m_format; }
+	ImageFormat GetFormat() const override { return m_format; }
 
-	virtual uint32_t GetWidth() const override { return m_width; }
-	virtual uint32_t GetHeight() const override { return m_height; }
-	virtual RendererID GetRendererID() const override { return 0; }
-	virtual uint64_t GetHash() const override { return m_hash; }
+	uint32_t GetWidth() const override { return m_width; }
+	uint32_t GetHeight() const override { return m_height; }
+	RendererID GetRendererID() const override { return 0; }
+	uint64_t GetHash() const override { return m_hash; }
 
-	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_image.As<VulkanImage2D>()->GetDescriptor(); }
+    resource_descriptor_info_t get_descriptor_info() noexcept override
+	{
+        return m_image.As<VulkanImage2D>()->get_descriptor_info();
+	}
 
-	virtual owning_buffer& GetWriteableBuffer() override;
-    virtual const owning_buffer& get_buffer() const override { return m_image_data; }
+	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const
+	{
+	    return m_image.As<VulkanImage2D>()->get_vk_image_info_descriptor();
+	}
 
-	virtual bool loaded() const override { return m_loaded; }
+	owning_buffer& GetWriteableBuffer() override;
+    const owning_buffer& get_buffer() const override { return m_image_data; }
 
-	virtual void SetData(void* data, uint32_t size) override;
+	bool loaded() const override { return m_loaded; }
 
-	virtual void Bind(uint32_t slot) const override;
-	virtual bool operator==(const Texture2D& other) const override;
+	void SetData(void* data, uint32_t size) override;
+
+	void Bind(uint32_t slot) const override;
+	bool operator==(const Texture2D& other) const override;
 private:
 	virtual void Invalidate() override;
 	bool load_image(const std::string& filepath);

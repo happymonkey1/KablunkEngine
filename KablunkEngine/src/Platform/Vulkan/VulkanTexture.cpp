@@ -131,7 +131,7 @@ void VulkanTexture2D::Invalidate()
 	ref<VulkanImage2D> image = m_image.As<VulkanImage2D>();
 	image->RT_Invalidate();
 
-	auto& info = image->GetImageInfo();
+	auto& info = image->get_vk_image_info();
 
 	if (m_image_data)
 	{
@@ -231,7 +231,7 @@ void VulkanTexture2D::Invalidate()
 			VK_ACCESS_TRANSFER_READ_BIT,
 			VK_ACCESS_SHADER_READ_BIT,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			image->GetDescriptor().imageLayout,
+			image->get_vk_image_info_descriptor().imageLayout,
 			VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 			subresource_range
@@ -249,7 +249,7 @@ void VulkanTexture2D::Invalidate()
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.layerCount = 1;
 		subresourceRange.levelCount = 1; // #TODO mipmap levels
-		Utils::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, image->GetDescriptor().imageLayout, subresourceRange);
+		Utils::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, image->get_vk_image_info_descriptor().imageLayout, subresourceRange);
 		device->FlushCommandBuffer(transition_cmd_buffer);
 	}
 
@@ -291,7 +291,7 @@ void VulkanTexture2D::Invalidate()
 
 	image->UpdateDescriptor();
 
-	KB_CORE_ASSERT(image->GetDescriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout still undefined!");
+	KB_CORE_ASSERT(image->get_vk_image_info_descriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout still undefined!");
 
 	// Release local storage
 	m_image_data.Release();

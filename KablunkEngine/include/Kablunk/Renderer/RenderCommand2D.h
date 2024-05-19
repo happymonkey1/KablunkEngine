@@ -33,7 +33,7 @@ namespace kb::render2d
 	static inline IntrusiveRef<RenderPass> get_target_render_pass() { Singleton<Renderer2D>::get().get_target_render_pass(); }
 
 	// set the target render pass
-	static inline void set_target_render_pass(IntrusiveRef<RenderPass> render_pass) { Singleton<Renderer2D>::get().set_target_render_pass(render_pass); }
+	static inline void set_target_frame_buffer(IntrusiveRef<RenderPass> render_pass) { Singleton<Renderer2D>::get().set_target_frame_buffer(render_pass); }
 
 	// draw a sprite
 	static inline void draw_sprite(kb::Entity entity) { Singleton<Renderer2D>::get().draw_sprite(entity); }

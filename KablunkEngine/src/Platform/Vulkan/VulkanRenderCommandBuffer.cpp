@@ -12,7 +12,7 @@ namespace kb
 		: m_debug_name{ debug_name }
 	{
 		auto device = VulkanContext::Get()->GetDevice();
-		uint32_t frames_in_flight = render::get_frames_in_flights();
+		uint32_t frames_in_flight = render::get_frames_in_flight();
 
 		VkCommandPoolCreateInfo cmd_pool_create_info{};
 		cmd_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -71,7 +71,7 @@ namespace kb
 		: m_debug_name{ debug_name }, m_owned_by_swapchain{ true }
 	{
 		auto device = VulkanContext::Get()->GetDevice();
-        const uint32_t frames_in_flight = render::get_frames_in_flights();
+        const uint32_t frames_in_flight = render::get_frames_in_flight();
 
 		m_command_buffers.resize(frames_in_flight);
         for (size_t i = 0; i < frames_in_flight; ++i)

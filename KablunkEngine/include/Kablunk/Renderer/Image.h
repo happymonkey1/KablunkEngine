@@ -7,155 +7,172 @@
 #include "Kablunk/Core/owning_buffer.h"
 #include <glm/glm.hpp>
 
+#include "Kablunk/Renderer/render_resource.h"
+
 namespace kb
+{ // start namespace kb
+enum class ImageFormat
 {
-	enum class ImageFormat
+	None = 0,
+	RED32I,
+	RED32F,
+	RGB,
+	RGBA,
+	RGBA16F,
+	RGBA32F,
+	RG16F,
+	RG32F,
+
+	SRGB,
+
+	DEPTH32F,
+	DEPTH24STENCIL8,
+
+	// Defaults
+	Depth = DEPTH24STENCIL8,
+
+    // internal use only
+    END,
+};
+
+enum class ImageUsage
+{
+	None = 0,
+	Texture,
+	Attachment,
+	Storage
+};
+
+enum class TextureWrap
+{
+	None = 0,
+	Clamp,
+	Repeat
+};
+
+enum class TextureFilter
+{
+	None = 0,
+	Linear,
+	Nearest
+};
+
+enum class TextureType
+{
+	None = 0,
+	Texture2D,
+	TextureCube
+};
+
+struct TextureProperties
+{
+	TextureWrap sampler_wrap = TextureWrap::Repeat;
+	TextureFilter sampler_filter = TextureFilter::Linear;
+	bool generate_mips = true;
+	bool SRGB = false;
+	bool Storage = false;
+
+	std::string debug_name;
+};
+
+struct ImageSpecification
+{
+	ImageFormat format = ImageFormat::RGBA;
+	ImageUsage usage = ImageUsage::Texture;
+	uint32_t width = 1;
+	uint32_t height = 1;
+	uint32_t mips = 1;
+	uint32_t layers = 1;
+	bool deinterleaved = false;
+    bool m_transfer = false;
+
+	std::string debug_name;
+};
+
+class Image : public render::render_resource
+{
+public:
+    ~Image() override = default;
+
+	virtual void Invalidate() = 0;
+	virtual void Release() = 0;
+
+	virtual uint32_t GetWidth() const = 0;
+	virtual uint32_t GetHeight() const = 0;
+	virtual float GetAspectRatio() const = 0;
+
+	virtual ImageSpecification& GetSpecification() = 0;
+	virtual const ImageSpecification& GetSpecification() const = 0;
+
+	virtual const owning_buffer& GetBuffer() const = 0;
+	virtual owning_buffer& GetBuffer() = 0;
+
+	virtual void CreatePerLayerImageViews() = 0;
+
+	virtual uint64_t GetHash() const = 0;
+
+	// TODO: usage (eg. shader read)
+};
+
+class Image2D : public Image
+{
+public:
+	static ref<Image2D> Create(const ImageSpecification& specification, owning_buffer buffer);
+	static ref<Image2D> Create(const ImageSpecification& specification, const void* data = nullptr);
+};
+
+struct image_view_specification
+{
+    ref<Image2D> m_image{};
+    u32 m_mip = 0;
+    std::string m_debug_name{};
+};
+
+class image_view : public render::render_resource
+{
+public:
+    ~image_view() override = default;
+
+    static auto create(const image_view_specification& p_specification) noexcept -> ref<image_view>;
+};
+
+namespace Utils
+{ // namespace ::Utils
+inline uint32_t GetImageFormatBPP(ImageFormat format)
+{
+	switch (format)
 	{
-		None = 0,
-		RED32I,
-		RED32F,
-		RGB,
-		RGBA,
-		RGBA16F,
-		RGBA32F,
-		RG16F,
-		RG32F,
-
-		SRGB,
-
-		DEPTH32F,
-		DEPTH24STENCIL8,
-
-		// Defaults
-		Depth = DEPTH24STENCIL8,
-
-        // internal use only
-        END,
-	};
-
-	enum class ImageUsage
-	{
-		None = 0,
-		Texture,
-		Attachment,
-		Storage
-	};
-
-	enum class TextureWrap
-	{
-		None = 0,
-		Clamp,
-		Repeat
-	};
-
-	enum class TextureFilter
-	{
-		None = 0,
-		Linear,
-		Nearest
-	};
-
-	enum class TextureType
-	{
-		None = 0,
-		Texture2D,
-		TextureCube
-	};
-
-	struct TextureProperties
-	{
-		TextureWrap sampler_wrap = TextureWrap::Repeat;
-		TextureFilter sampler_filter = TextureFilter::Linear;
-		bool generate_mips = true;
-		bool SRGB = false;
-		bool Storage = false;
-
-		std::string debug_name;
-	};
-
-	struct ImageSpecification
-	{
-		ImageFormat format = ImageFormat::RGBA;
-		ImageUsage usage = ImageUsage::Texture;
-		uint32_t width = 1;
-		uint32_t height = 1;
-		uint32_t mips = 1;
-		uint32_t layers = 1;
-		bool deinterleaved = false;
-
-		std::string debug_name;
-	};
-
-	class Image : public RefCounted
-	{
-	public:
-		virtual ~Image() {}
-
-		virtual void Invalidate() = 0;
-		virtual void Release() = 0;
-
-		virtual uint32_t GetWidth() const = 0;
-		virtual uint32_t GetHeight() const = 0;
-		virtual float GetAspectRatio() const = 0;
-
-		virtual ImageSpecification& GetSpecification() = 0;
-		virtual const ImageSpecification& GetSpecification() const = 0;
-
-		virtual const owning_buffer& GetBuffer() const = 0;
-		virtual owning_buffer& GetBuffer() = 0;
-
-		virtual void CreatePerLayerImageViews() = 0;
-
-		virtual uint64_t GetHash() const = 0;
-
-		// TODO: usage (eg. shader read)
-	};
-
-	class Image2D : public Image
-	{
-	public:
-		static ref<Image2D> Create(ImageSpecification specification, owning_buffer buffer);
-		static ref<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
-	};
-
-	namespace Utils {
-
-		inline uint32_t GetImageFormatBPP(ImageFormat format)
-		{
-			switch (format)
-			{
-			case ImageFormat::RED32I:   return 4;
-			case ImageFormat::RED32F:   return 4;
-			case ImageFormat::RGB:
-			case ImageFormat::SRGB:     return 3;
-			case ImageFormat::RGBA:     return 4;
-			case ImageFormat::RGBA16F:  return 2 * 4;
-			case ImageFormat::RGBA32F:  return 4 * 4;
-			}
-			KB_CORE_ASSERT(false, "Unknown ImageFormat!");
-			return 0;
-		}
-
-		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
-		{
-			return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1;
-		}
-
-		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height)
-		{
-			return width * height * GetImageFormatBPP(format);
-		}
-
-		inline bool IsDepthFormat(ImageFormat format)
-		{
-			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F)
-				return true;
-
-			return false;
-		}
-
+	case ImageFormat::RED32I:   return 4;
+	case ImageFormat::RED32F:   return 4;
+	case ImageFormat::RGB:
+	case ImageFormat::SRGB:     return 3;
+	case ImageFormat::RGBA:     return 4;
+	case ImageFormat::RGBA16F:  return 2 * 4;
+	case ImageFormat::RGBA32F:  return 4 * 4;
 	}
-
+	KB_CORE_ASSERT(false, "Unknown ImageFormat!");
+	return 0;
 }
+
+inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
+{
+	return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1;
+}
+
+inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height)
+{
+	return width * height * GetImageFormatBPP(format);
+}
+
+inline bool IsDepthFormat(ImageFormat format)
+{
+	if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F)
+		return true;
+
+	return false;
+}
+} // end namespace ::utils
+
+} // end namespace kb
 
 #endif

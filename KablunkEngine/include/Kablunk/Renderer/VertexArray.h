@@ -9,7 +9,7 @@
 
 namespace kb
 {
-	class VertexArray : public RefCounted
+    class VertexArray : public RefCounted
 	{
 	public:
 		virtual ~VertexArray() {}
@@ -23,7 +23,7 @@ namespace kb
 		virtual const std::vector<ref<VertexBuffer>>& GetVertexBuffers() const = 0;
 		virtual const ref<IndexBuffer>& GetIndexBuffer() const = 0;
 
-		static ref<VertexArray> Create();
+		[[deprecated]] static ref<VertexArray> Create();
 	};
 }
 

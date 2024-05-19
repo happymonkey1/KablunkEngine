@@ -22,7 +22,7 @@ namespace details
 { // start namespace ::details
 
 // to be called on render thread
-inline void render_thread_func(render_thread* rendering_thread)
+inline void render_thread_func(render_thread* rendering_thread) noexcept
 {
 	Singleton<Renderer>::get().render_thread_func(rendering_thread);
 }
@@ -31,153 +31,102 @@ inline void render_thread_func(render_thread* rendering_thread)
 
 // \brief get the os screen position of the viewport within the application
 // used for converting screen to world position when in the editor
-inline const glm::vec2& get_viewport_pos()
+inline const glm::vec2& get_viewport_pos() noexcept
 {
 	return Singleton<Renderer>::get().get_viewport_pos();
 }
 
 // \brief get the size of the viewport
 // used for converting screen to world position when in the editor
-inline const glm::vec2& get_viewport_size()
+inline const glm::vec2& get_viewport_size() noexcept
 {
 	return Singleton<Renderer>::get().get_viewport_size();
 }
 
 // initialize the renderer
-inline void init()
+inline void init() noexcept
 {
 	Singleton<Renderer>::get().init();
 }
 
 // shutdown the renderer
-inline void shutdown()
+inline void shutdown() noexcept
 {
 	KB_CORE_INFO("Renderer shutdown called!");
 	Singleton<Renderer>::get().shutdown();
 }
 
-inline RendererAPI* get_renderer() {
-	return Singleton<Renderer>::get().get_renderer();
-}
-
 // begin rendering frame
-inline void begin_frame() { Singleton<Renderer>::get().get_renderer()->BeginFrame(); }
+inline void begin_frame() noexcept { Singleton<Renderer>::get().get_render_backend().begin_frame(); }
 
 // end renderering frame
-inline void end_frame() { Singleton<Renderer>::get().get_renderer()->EndFrame(); }
+inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend().end_frame(); }
 
 // begin render pass
-inline void begin_render_pass(ref<RenderCommandBuffer> render_command_buffer, const ref<RenderPass>& render_pass, bool explicit_clear = false)
+inline void begin_render_pass(
+    const ref<RenderCommandBuffer>& p_render_command_buffer,
+    const ref<render_pass>& p_render_pass,
+    bool explicit_clear = false
+) noexcept
 {
-	Singleton<Renderer>::get().get_renderer()->BeginRenderPass(render_command_buffer, render_pass, explicit_clear);
+	Singleton<Renderer>::get().get_render_backend()
+        .begin_render_pass(p_render_command_buffer, p_render_pass, explicit_clear);
 }
 
-inline void end_render_pass(ref<RenderCommandBuffer> render_command_buffer)
+inline void end_render_pass(const ref<RenderCommandBuffer>& p_render_command_buffer) noexcept
 {
-	Singleton<Renderer>::get().get_renderer()->EndRenderPass(render_command_buffer);
-}
-
-inline RendererPipelineDescriptor get_render_pipeline()
-{
-	return Singleton<Renderer>::get().GetRendererPipeline();
+	Singleton<Renderer>::get().get_render_backend().end_render_pass(p_render_command_buffer);
 }
 
 // return a reference to the shader library
-inline ref<ShaderLibrary> get_shader_library()
+inline ref<ShaderLibrary> get_shader_library() noexcept
 {
 	return Singleton<Renderer>::get().GetShaderLibrary();
 }
 
 // get a specific shader by name
-inline ref<Shader> get_shader(const std::string& name)
+inline ref<Shader> get_shader(const std::string& name) noexcept
 {
 	return Singleton<Renderer>::get().GetShader(name);
 }
 
-inline void register_shader_dependency(ref<Shader> shader, ref<Material> material)
+inline void register_shader_dependency(ref<Shader> shader, ref<Material> material) noexcept
 {
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, material);
 }
 
-inline void register_shader_dependency(ref<Shader> shader, ref<Pipeline> pipeline)
+inline void register_shader_dependency(ref<Shader> shader, ref<Pipeline> pipeline) noexcept
 {
 	Singleton<Renderer>::get().RegisterShaderDependency(shader, pipeline);
 }
 
-inline void register_shader_dependency(ref<Shader> p_shader, ref<compute_pipeline> p_compute_pipeline)
+inline void register_shader_dependency(ref<Shader> p_shader, ref<compute_pipeline> p_compute_pipeline) noexcept
 {
     Singleton<Renderer>::get().register_shader_dependency(p_shader, p_compute_pipeline);
 }
 
-inline void on_shader_reloaded(uint64_t hash)
+inline void on_shader_reloaded(uint64_t hash) noexcept
 {
 	Singleton<Renderer>::get().OnShaderReloaded(hash);
 }
 
 // run submitted commands
-inline void wait_and_render(render_thread* rendering_thread)
+inline void wait_and_render(render_thread* rendering_thread) noexcept
 {
 	Singleton<Renderer>::get().wait_and_render(rendering_thread);
 }
 
 // swap rendering queues
-inline void swap_queues()
+inline void swap_queues() noexcept
 {
 	Singleton<Renderer>::get().swap_queues();
-}
-
-// set viewport dimensions
-inline void set_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-{
-	Singleton<Renderer>::get().get_renderer()->SetViewport(x, y, width, height);
-}
-
-inline void on_window_resize(uint32_t width, uint32_t height)
-{
-	set_viewport(0, 0, width, height);
-}
-
-// set framebuffer clear color
-// DEPRECATED!
-inline void set_clear_color(const glm::vec4& color)
-{
-	KB_CORE_ASSERT(false, "deprecated");
-	Singleton<Renderer>::get().get_renderer()->SetClearColor(color);
-}
-
-// set framebuffer to clear color
-// DEPRECATED!
-inline void clear()
-{
-	KB_CORE_ASSERT(false, "deprecated");
-	Singleton<Renderer>::get().get_renderer()->Clear();
-};
-
-// clear image
-inline void clear_image(ref<RenderCommandBuffer> command_buffer, ref<Image2D> image)
-{
-	Singleton<Renderer>::get().get_renderer()->ClearImage(command_buffer, image);
-}
-
-// draw indexed vertex array
-// DEPRECATED!
-inline void draw_indexed(const ref<VertexArray> vertexArray, uint32_t indexCount = 0)
-{
-	KB_CORE_ASSERT(false, "deprecated");
-	Singleton<Renderer>::get().get_renderer()->DrawIndexed(vertexArray, indexCount);
-};
-
-// set wireframe mode
-inline void set_wireframe_mode(bool draw_wireframe)
-{
-	KB_CORE_ASSERT(false, "not implemented (correctly)");
-	Singleton<Renderer>::get().get_renderer()->SetWireframeMode(draw_wireframe);
 }
 
 // ======
 // Meshes
 // ======
 
+#if 0
 // render mesh with a material table
 inline void render_mesh(
 	ref<RenderCommandBuffer> render_command_buffer, 
@@ -342,41 +291,76 @@ inline void render_geometry(
 		index_count
 	);
 }
+#endif
+
+// render raw geometry
+inline void render_geometry(
+    const ref<RenderCommandBuffer>& p_render_command_buffer,
+    const ref<Pipeline>& p_pipeline,
+    const ref<Material>& p_material,
+    const ref<VertexBuffer>& p_vertex_buffer,
+    const ref<IndexBuffer>& p_index_buffer,
+    const glm::mat4& p_transform,
+    uint32_t p_index_count = 0
+) noexcept
+{
+    Singleton<Renderer>::get().get_render_backend().render_geometry(
+        p_render_command_buffer,
+        p_pipeline,
+        p_material,
+        p_vertex_buffer,
+        p_index_buffer,
+        p_transform,
+        p_index_count
+    );
+}
+
+inline void submit_fullscreen_quad(
+    const ref<RenderCommandBuffer>& p_render_command_buffer,
+    const ref<Pipeline>& p_pipeline,
+    const ref<Material>& p_material
+) noexcept
+{
+    Singleton<Renderer>::get().get_render_backend().submit_fullscreen_quad(
+        p_render_command_buffer,
+        p_pipeline,
+        p_material
+    );
+}
 
 // =======
 // utility
 // =======
 
-inline void set_line_width(ref<RenderCommandBuffer> render_command_buffer, float line_width)
+inline void set_line_width(const ref<RenderCommandBuffer>& p_render_command_buffer, f32 p_line_width) noexcept
 {
-	Singleton<Renderer>::get().get_renderer()->SetLineWidth(render_command_buffer, line_width);
+	Singleton<Renderer>::get().get_render_backend().set_line_width(p_render_command_buffer, p_line_width);
 }
 
 // get the number of frames in flight that will be rendered
-inline uint32_t get_frames_in_flights()
+inline uint32_t get_frames_in_flight() noexcept
 {
-	return Singleton<Renderer>::get().GetConfig().frames_in_flight;
+	return Singleton<Renderer>::get().get_config().frames_in_flight;
 }
 
 // get the current index into which frame is being rendered
-uint32_t get_current_frame_index();
+u32 get_current_frame_index() noexcept;
 
 // get current index into the frame being rendered by the swapchain (which owns the render thread)
-u32 rt_get_current_frame_index();
+u32 rt_get_current_frame_index() noexcept;
 
-inline kb::render_command_queue& get_render_resource_release_queue(uint32_t index)
+inline render_command_queue& get_render_resource_release_queue(uint32_t index) noexcept
 {
 	return Singleton<Renderer>::get().get_resource_free_queue(index);
 }
-// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
-inline kb::render_command_queue& get_render_command_queue()
+
+inline render_command_queue& get_render_command_queue() noexcept
 {
 	return Singleton<Renderer>::get().get_render_command_queue();
 }
 
-// #TODO this is vulkan only so we should figure out an api agnostic way of dealing with this
 // submit a function to be queued (and run) on the render 
-inline void submit(auto func)
+inline void submit(auto func) noexcept
 {
     using func_t = decltype(func);
 
@@ -392,7 +376,7 @@ inline void submit(auto func)
 	new (storage_buffer) func_t(std::forward<func_t>(func));
 }
 
-inline void submit_resource_free(auto func)
+inline void submit_resource_free(auto func) noexcept
 {
     using func_t = decltype(func);
 

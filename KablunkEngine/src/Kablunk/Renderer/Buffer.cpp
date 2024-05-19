@@ -10,42 +10,74 @@ namespace kb
 {
 	ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
-		switch (Renderer::GetAPI())
+		switch (render::Renderer::get_render_backend_type())
 		{
-		case RendererAPI::render_api_t::None:	KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<VertexBuffer>{};
-		case RendererAPI::render_api_t::Vulkan:	return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(size));
-		default:								KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<VertexBuffer>{};
+		case render::render_backend_type_t::vulkan:
+            return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(size));
+        default:
+        {
+            KB_CORE_ASSERT(
+                false,
+                "[VertexBuffer::Create]: Unhandled render backend {}",
+                static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+            );
+            return ref<VertexBuffer>{};
+        }
 		}
 	}
 
 	ref<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
 	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::render_api_t::None:		KB_CORE_ASSERT(false, "RendererAPI::NONE is not supported!"); return ref<VertexBuffer>{};
-		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(data, size));
-		default:									KB_CORE_ASSERT(false, "Unkown RenderAPI!"); return ref<VertexBuffer>{};
-		}
+        switch (render::Renderer::get_render_backend_type())
+        {
+        case render::render_backend_type_t::vulkan:
+            return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(data, size));
+        default:
+        {
+            KB_CORE_ASSERT(
+                false,
+                "[VertexBuffer::Create]: Unhandled render backend {}",
+                static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+            );
+            return ref<VertexBuffer>{};
+        }
+        }
 	}
 
 	ref<IndexBuffer> IndexBuffer::Create(uint32_t count)
 	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return ref<IndexBuffer>{};
-		case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(count));
-		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return ref<IndexBuffer>{};
-		}
+        switch (render::Renderer::get_render_backend_type())
+        {
+        case render::render_backend_type_t::vulkan:
+            return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(count));
+        default:
+        {
+            KB_CORE_ASSERT(
+                false,
+                "[IndexBuffer::Create]: Unhandled render backend {}",
+                static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+            );
+            return ref<IndexBuffer>{};
+        }
+        }
 	}
 
 	ref<IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
 	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::render_api_t::None:		KB_CORE_FATAL("RendererAPI::None is not supported!"); return ref<IndexBuffer>{};
-        case RendererAPI::render_api_t::Vulkan:		return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(data, count));
-		default:									KB_CORE_FATAL("Unkown RenderAPI!"); return ref<IndexBuffer>{};
-		}
+        switch (render::Renderer::get_render_backend_type())
+        {
+        case render::render_backend_type_t::vulkan:
+            return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(data, count));
+        default:
+        {
+            KB_CORE_ASSERT(
+                false,
+                "[IndexBuffer::Create]: Unhandled render backend {}",
+                static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+            );
+            return ref<IndexBuffer>{};
+        }
+        }
 	}
 
 }

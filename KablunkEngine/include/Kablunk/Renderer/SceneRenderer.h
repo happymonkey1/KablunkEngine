@@ -8,7 +8,7 @@
 #include "Kablunk/Scene/Scene.h"
 
 #include "Kablunk/Renderer/Image.h"
-#include "Kablunk/Renderer/RenderPass.h"
+#include "Kablunk/Renderer/render_pass.h"
 #include "Kablunk/Renderer/Pipeline.h"
 #include "Kablunk/Renderer/RenderCommandBuffer.h"
 #include "Kablunk/Renderer/Material.h"
@@ -54,17 +54,17 @@ struct SceneRendererData
 
 struct PointLightUB
 {
-    static constexpr const size_t k_point_light_buffer_size = 1024ull;
+    static constexpr const size_t k_point_light_buffer_size = 128ull;
     uint32_t count{ 0 };
     vec3_packed padding{};
-    PointLight point_lights[1024]{};
+    PointLight point_lights[k_point_light_buffer_size]{};
 };
 
-class SceneRenderer : public RefCounted
+class SceneRenderer final : public RefCounted
 {
 public:
 	SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
-	~SceneRenderer();
+	~SceneRenderer() override;
 
     // #TODO this should be private, if construct is only place that calls this
 	void init();
@@ -79,9 +79,9 @@ public:
 	bool is_multi_threaded() const { return m_use_threads; }
 
 	void set_viewport_size(uint32_t width, uint32_t height);
-	ref<RenderPass> get_final_render_pass();
-	ref<RenderPass> get_composite_render_pass() { return m_composite_pipeline->GetSpecification().render_pass; }
-	ref<RenderPass> get_external_composite_render_pass() { return m_external_composite_render_pass; }
+	ref<render::render_pass> get_final_render_pass();
+	ref<render::render_pass> get_composite_render_pass() { return m_composite_pass; }
+    ref<render::frame_buffer> get_external_composite_frame_buffer() { return m_external_composite_frame_buffer; }
 	ref<Image2D> get_final_render_pass_image();
 
 	void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
@@ -98,26 +98,27 @@ private:
 	void geometry_pass();
 	void composite_pass();
 
-	void clear_pass(ref<RenderPass> render_pass, bool explicit_clear = false);
-	
+	void clear_pass(ref<render::render_pass> render_pass, bool explicit_clear = false);
+
 	// draw all ui elements presented to the scene renderer
 	void ui_pass();
 
 	// draw all 2d elements presented to the scene renderer
 	void two_dimensional_pass();
-	
+
 private:
 	ref<Scene> m_context;
 	SceneRendererSpecification m_specification;
 
 	ref<RenderCommandBuffer> m_command_buffer;
 
-	ref<Pipeline> m_geometry_pipeline;
-	ref<Pipeline> m_composite_pipeline;
+	ref<render::render_pass> m_geometry_pass;
+	ref<render::render_pass> m_composite_pass;
 
 	ref<Material> m_composite_material;
 
-	ref<RenderPass> m_external_composite_render_pass;
+	ref<render::render_pass> m_external_composite_render_pass;
+    ref<render::frame_buffer> m_external_composite_frame_buffer{};
 
 	struct GPUTimeQueryIndices
 	{
@@ -132,10 +133,12 @@ private:
 	{
 		glm::vec4 MRow[3];
 	};
+
 	ref<VertexBuffer> m_transform_buffer;
 	TransformVertexData* m_transform_vertex_data = nullptr;
 
-	ref<UniformBufferSet> m_uniform_buffer_set;
+    ref<UniformBufferSet> m_camera_uniform_buffer_set{};
+    ref<UniformBufferSet> m_point_lights_uniform_buffer_set{};
 	ref<StorageBufferSet> m_storage_buffer_set;
 
     PointLightUB* m_point_lights_ub = new PointLightUB{};
@@ -176,13 +179,13 @@ private:
 	// =========
 
 	std::vector<ui::IPanel*> m_ui_panels_list;
-	
+
 	// =========
 
 	// =================
 	// 2d composite data
 	// =================
-	
+
 	// list of sprite entities to be drawn in the 2d composite pass
 	// #TODO linear allocator 
 	std::vector<Entity> m_entity_list;

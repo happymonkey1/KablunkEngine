@@ -18,7 +18,7 @@ layout (push_constant) uniform Transform
 	mat4 Transform;
 } u_Renderer;
 
-layout(std140, binding = 0) uniform Camera
+layout(std140, set = 1, binding = 0) uniform Camera
 {
 	mat4 u_ViewProjection;
 	mat4 u_Projection;
@@ -47,7 +47,7 @@ layout(location = 1) in vec2 v_TexCoord;
 layout(location = 2) in flat float v_TexIndex;
 layout(location = 3) in float v_TilingFactor;
 
-layout(binding = 1) uniform sampler2D u_Textures[32];
+layout(set = 0, binding = 0) uniform sampler2D u_Textures[32];
 
 void main()
 {
