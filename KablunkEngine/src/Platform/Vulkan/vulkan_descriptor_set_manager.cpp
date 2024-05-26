@@ -480,6 +480,30 @@ auto vulkan_descriptor_set_manager::bake() noexcept -> void
                 }
                 }
             }
+
+            std::vector<VkWriteDescriptorSet> write_descriptors_to_update{};
+            for (auto&& [binding, write_descriptor] : write_descriptor_map)
+            {
+                if (!is_invalidated(set, binding))
+                    write_descriptors_to_update.emplace_back(write_descriptor.m_write_descriptor_set);
+            }
+
+            if (!write_descriptors_to_update.empty())
+            {
+                kb::log::core::info(
+                    log::logger_tag_t::renderer,
+                    "[vulkan_descriptor_set_manager]: Bake updating {} descriptors in set {}",
+                    write_descriptors_to_update.size(),
+                    set
+                );
+                vkUpdateDescriptorSets(
+                    device,
+                    static_cast<u32>(write_descriptors_to_update.size()),
+                    write_descriptors_to_update.data(),
+                    0,
+                    nullptr
+                );
+            }
         }
     }
 }
@@ -581,7 +605,15 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
             {
                 for (size_t i = 0; i < input.m_input.size(); ++i)
                 {
-                    const auto& image_info = input.m_input.at(i).As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
+                    auto vulkan_texture = input.m_input.at(i).As<VulkanTexture2D>();
+                    if (vulkan_texture == ref<VulkanTexture2D>{})
+                    {
+                        // #TODO should be a missing texture
+                        vulkan_texture = Application::Get().get_renderer_2d()->get_white_texture()
+                            .As<VulkanTexture2D>();
+                    }
+                    const auto& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+
                     if (image_info.imageView !=
                         m_write_descriptor_map[frame_index].at(set).at(binding).m_resource_handles.at(i))
                     {
