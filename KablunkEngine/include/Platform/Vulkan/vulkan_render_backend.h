@@ -16,35 +16,33 @@ namespace kb::render
 
 // #TODO need to evaluate whether the refs in each command can be passed by const&
 
-// forward declaration
-struct vulkan_render_backend_data;
-
 class vulkan_render_backend : public render_backend<vulkan_render_backend>
 {
 public:
     vulkan_render_backend() noexcept = default;
     ~vulkan_render_backend() noexcept = default;
 
-    auto init() noexcept -> void;
-    auto shutdown() noexcept -> void;
+    vulkan_render_backend(const vulkan_render_backend&) noexcept = delete;
+    vulkan_render_backend(vulkan_render_backend&&) noexcept = delete;
 
-    auto begin_frame() noexcept -> void;
-    auto end_frame() noexcept -> void;
-
-    auto begin_render_pass(
+    static auto init() noexcept -> void;
+    static auto shutdown() noexcept -> void;
+    static auto begin_frame() noexcept -> void;
+    static auto end_frame() noexcept -> void;
+    static auto begin_render_pass(
         ref<RenderCommandBuffer> p_render_command_buffer,
         ref<render_pass> p_render_pass,
         bool p_explicit_clear
     ) noexcept -> void;
 
-    auto end_render_pass(ref<RenderCommandBuffer> p_render_command_buffer) noexcept -> void;
+    static auto end_render_pass(ref<RenderCommandBuffer> p_render_command_buffer) noexcept -> void;
 
-    auto set_line_width(
+    static auto set_line_width(
         ref<RenderCommandBuffer> render_command_buffer,
         f32 line_width
     ) noexcept -> void;
 
-    auto submit_fullscreen_quad(
+    static auto submit_fullscreen_quad(
         ref<RenderCommandBuffer> p_render_command_buffer,
         ref<Pipeline> p_pipeline,
         ref<Material> p_material
@@ -62,7 +60,7 @@ public:
         uint32_t p_index_count = 0
     ) noexcept -> void;
 
-    auto render_instanced_submesh(
+    static auto render_instanced_submesh(
         ref<RenderCommandBuffer> p_render_command_buffer,
         ref<Pipeline> p_pipeline,
         ref<Mesh> p_mesh,
@@ -74,16 +72,19 @@ public:
         u32 p_instance_count
     ) noexcept -> void;
 
-    auto copy_image(
+    static auto copy_image(
         ref<RenderCommandBuffer> p_render_command_buffer,
         ref<Image2D> p_source_image,
         ref<Image2D> p_destination_image
     ) noexcept -> void;
 
-    auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) const noexcept -> VkDescriptorSet;
-    auto rt_allocate_material_descriptor_set(
+    static auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet;
+    static auto rt_allocate_material_descriptor_set(
         VkDescriptorSetAllocateInfo& p_alloc_info
-    ) const noexcept -> VkDescriptorSet;
+    ) noexcept -> VkDescriptorSet;
+
+    auto operator=(const vulkan_render_backend&) noexcept -> vulkan_render_backend& = delete;
+    auto operator=(vulkan_render_backend&&) noexcept -> vulkan_render_backend& = delete;
 };
 
 } // end namespace kb::render

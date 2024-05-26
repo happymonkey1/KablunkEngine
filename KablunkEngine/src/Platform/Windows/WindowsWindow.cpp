@@ -13,6 +13,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "Kablunk/Core/Application.h"
+
 namespace kb
 { // start namespace kb
 
@@ -305,15 +307,22 @@ void WindowsWindow::SetWindowTitle(const std::string& title)
 
 void WindowsWindow::set_window_mode(window_mode_t mode)
 {
+    if (mode == m_data.m_window_mode)
+        return;
+
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* glfw_mode = glfwGetVideoMode(monitor);
 	KB_CORE_ASSERT(glfw_mode, "null glfw mode?");
-	// whether or not to enable decoration bar
+	// whether to enable decoration bar
 	int decoration_value = GLFW_FALSE;
 	// starting position of the window
 	int x_pos = 0, y_pos = 0;
 	// refresh rate of the primary monitor
     const int refresh_rate = glfw_mode->refreshRate;
+
+    int new_width = m_data.Width;
+    int new_height = m_data.Height;
+
 	switch (mode)
 	{
 		case window_mode_t::windowed:
@@ -322,12 +331,12 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 			decoration_value = GLFW_TRUE;
 
 			// #TODO(Sean) use cached, previous window size
-			m_data.Width = 1920;
-			m_data.Height = 1080;
+            new_width = 1920;
+			new_height = 1080;
 			m_data.Fullscreen = false;
 
-			x_pos = m_data.Width / 2;
-			y_pos = m_data.Height / 2;
+			x_pos = static_cast<i32>(static_cast<f32>(glfw_mode->width) / 2.f - static_cast<f32>(new_width) / 2.f);
+			y_pos = static_cast<i32>(static_cast<f32>(glfw_mode->height) / 2.f - static_cast<f32>(new_height) / 2.f);
 
 			break;
 		}
@@ -340,8 +349,8 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 			glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
 			glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
 
-			m_data.Width = glfw_mode->width;
-			m_data.Height = glfw_mode->height;
+			new_width = glfw_mode->width;
+			new_height = glfw_mode->height;
 			m_data.Fullscreen = true;
 
 			break;
@@ -350,13 +359,15 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 		{
 			decoration_value = GLFW_FALSE;
 
-			glfwWindowHint(GLFW_RED_BITS, glfw_mode->redBits);
-			glfwWindowHint(GLFW_GREEN_BITS, glfw_mode->greenBits);
-			glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
-			glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
+#if 0
+            glfwWindowHint(GLFW_RED_BITS, glfw_mode->redBits);
+            glfwWindowHint(GLFW_GREEN_BITS, glfw_mode->greenBits);
+            glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
+            glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
+#endif
 
-			m_data.Width = glfw_mode->width;
-			m_data.Height = glfw_mode->height;
+			new_width = glfw_mode->width;
+			new_height = glfw_mode->height;
 			m_data.Fullscreen = true;
 
 			// disable decorations (top bar of windowed and fullscreen mode)
@@ -372,7 +383,40 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 	// enable decorations (top bar of windowed and fullscreen mode)
 	glfwSetWindowAttrib(m_window, GLFW_DECORATED, decoration_value);
 
-	glfwSetWindowMonitor(m_window, m_data.Fullscreen ? monitor : nullptr, x_pos, y_pos, m_data.Width, m_data.Height, refresh_rate);
+    const bool window_to_fullscreen = (m_data.m_window_mode == window_mode_t::windowed ||
+        m_data.m_window_mode == window_mode_t::borderless_fullscreen) && mode == window_mode_t::fullscreen;
+    if (window_to_fullscreen || mode == window_mode_t::fullscreen)
+    {
+        glfwSetWindowMonitor(
+            m_window,
+            mode == window_mode_t::fullscreen ? monitor : nullptr,
+            x_pos,
+            y_pos,
+            new_width,
+            new_height,
+            refresh_rate
+        );
+    }
+    else
+    {
+        glfwSetWindowSize(
+            m_window,
+            new_width,
+            new_height
+        );
+        glfwSetWindowPos(m_window, x_pos, y_pos);
+
+        kb::log::core::info(
+            log::logger_tag_t::window,
+            "[WindowsWindow]: Setting window size ({}, {}) and position ({}, {})",
+            m_data.Width,
+            m_data.Height,
+            x_pos,
+            y_pos
+        );
+    }
+
+    m_data.m_window_mode = mode;
 }
 
 void WindowsWindow::swap_buffers()

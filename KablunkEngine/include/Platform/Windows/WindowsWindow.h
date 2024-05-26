@@ -29,7 +29,11 @@ public:
 	virtual void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
 	virtual void SetVsync(bool enabled) override;
 	virtual bool IsVsync() const override;
-	virtual bool is_fullscreen() const override { return m_data.Fullscreen; }
+
+	virtual bool is_fullscreen() const override
+	{
+	    return m_data.Fullscreen;
+	}
 
 	virtual void SetWindowTitle(const std::string& title) override;
 
@@ -60,6 +64,7 @@ private:
 		bool VSync{ false };
 		bool Fullscreen{ false };
         glm::vec2 m_current_dpi{ 0.f };
+        window_mode_t m_window_mode = window_mode_t::windowed;
 
 		EventCallbackFn EventCallback;
 	} m_data;

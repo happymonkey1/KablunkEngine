@@ -22,11 +22,6 @@
 namespace kb::render
 {
 
-namespace
-{
-std::unique_ptr<vulkan_render_backend_data> s_renderer_data{};
-}
-
 struct vulkan_render_backend_data
 {
     ref<VertexBuffer> m_quad_vertex_buffer{};
@@ -46,6 +41,11 @@ struct vulkan_render_backend_data
     int32_t draw_call_count = 0;
 };
 
+namespace
+{
+std::unique_ptr<vulkan_render_backend_data> s_renderer_data{};
+}
+
 auto vulkan_render_backend::init() noexcept -> void
 {
     s_renderer_data = std::make_unique<vulkan_render_backend_data>();
@@ -54,7 +54,7 @@ auto vulkan_render_backend::init() noexcept -> void
     s_renderer_data->m_descriptor_pools.resize(frames_in_flight);
     s_renderer_data->m_descriptor_pool_allocation_count.resize(frames_in_flight);
 
-    submit([frames_in_flight, this]() mutable
+    submit([frames_in_flight]() mutable
         {
             const VkDescriptorPoolSize vk_pool_sizes[] =
             {
@@ -134,7 +134,23 @@ auto vulkan_render_backend::shutdown() noexcept -> void
         log::logger_tag_t::renderer,
         "Shutting down Vulkan render backend"
     );
-    vkDeviceWaitIdle(vk::get_current_vk_device());
+    const auto vk_device = vk::get_current_vk_device();
+    vkDeviceWaitIdle(vk_device);
+
+    for (const auto& vk_descriptor_pool : s_renderer_data->m_descriptor_pools)
+    {
+        vkDestroyDescriptorPool(
+            vk_device,
+            vk_descriptor_pool,
+            nullptr
+        );
+    }
+
+    vkDestroyDescriptorPool(
+        vk_device,
+        s_renderer_data->m_material_descriptor_pool,
+        nullptr
+    );
 
     s_renderer_data.reset();
 }
@@ -373,7 +389,7 @@ auto vulkan_render_backend::submit_fullscreen_quad(
     KB_PROFILE_SCOPE;
 
     ref<VulkanMaterial> vulkan_material = p_material.As<VulkanMaterial>();
-    submit([p_render_command_buffer, p_pipeline, vulkan_material, this]() mutable
+    submit([p_render_command_buffer, p_pipeline, vulkan_material]() mutable
         {
             KB_PROFILE_SCOPE;
 
@@ -837,7 +853,7 @@ auto vulkan_render_backend::copy_image(
 
 auto vulkan_render_backend::rt_allocate_descriptor_set(
     VkDescriptorSetAllocateInfo& p_alloc_info
-) const noexcept -> VkDescriptorSet
+) noexcept -> VkDescriptorSet
 {
     KB_PROFILE_SCOPE;
 
@@ -894,7 +910,7 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
 }
 
 auto vulkan_render_backend::rt_allocate_material_descriptor_set(
-    VkDescriptorSetAllocateInfo& p_alloc_info) const noexcept -> VkDescriptorSet
+    VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet
 {
     KB_PROFILE_SCOPE;
 
