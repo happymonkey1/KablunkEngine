@@ -103,7 +103,8 @@ public:
 	owning_buffer& get_uniform_storage_buffer() { return m_uniform_storage_buffer; }
 	const owning_buffer& get_uniform_storage_buffer() const { return m_uniform_storage_buffer; }
 
-
+    // retrieves the descriptor set for the frame, invalidating and updating descriptor set
+    // if there are changes
 	auto get_vk_descriptor_set(uint32_t frame_index) noexcept -> VkDescriptorSet
 	{
         const auto index_opt = m_descriptor_set_manager.get_first_set_index();
@@ -129,6 +130,7 @@ public:
 	}
 
     auto rt_prepare() noexcept -> void;
+
 private:
 	void Init();
 	void AllocateStorage();

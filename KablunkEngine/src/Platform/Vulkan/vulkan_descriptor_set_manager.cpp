@@ -905,7 +905,7 @@ auto vulkan_descriptor_set_manager::init() noexcept -> void
                 if (input_decl.m_type == render_pass_input_type_t::image_sampler_2d)
                 {
                     for (auto& texture : input.m_input)
-                        texture = Application::Get().get_renderer_2d()->get_white_texture();
+                        texture = Application::Get().get_renderer_2d()->get_white_texture().As<RefCounted>();
                 }
                 // #TODO default texture_3d
             }

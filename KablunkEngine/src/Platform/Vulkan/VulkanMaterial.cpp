@@ -128,7 +128,9 @@ void VulkanMaterial::Invalidate()
             {
                 for (size_t i = 0; i < vk_write_descriptor.descriptorCount; ++i)
                 {
-                    m_material_descriptor_images[binding][i] = white_texture->GetImage();
+                    m_material_descriptor_images[binding][i] = ref<render::render_resource>{
+                        white_texture->GetImage()
+                    };
                 }
             }
         }

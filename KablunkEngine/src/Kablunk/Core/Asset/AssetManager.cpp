@@ -22,9 +22,14 @@ namespace kb::asset
         ref instance{ this };
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
-		m_asset_serializers[AssetType::Texture] = ref<TextureAssetSerializer>::Create(instance);
-		m_asset_serializers[AssetType::Audio] = ref<AudioAssetSerializer>::Create(instance);
-		m_asset_serializers[AssetType::Font] = ref<font_asset_serializer>::Create(instance);
+        m_asset_serializers[AssetType::Texture] = ref<AssetSerializer>{
+            ref<TextureAssetSerializer>::Create(instance) };
+        m_asset_serializers[AssetType::Audio] = ref<AssetSerializer>{
+            ref<AudioAssetSerializer>::Create(instance)
+        };
+        m_asset_serializers[AssetType::Font] = ref<AssetSerializer>{
+            ref<font_asset_serializer>::Create(instance)
+        };
 
 		m_asset_registry.clear();
 		load_asset_registry();

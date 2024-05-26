@@ -148,6 +148,7 @@ public:
 	}
 #endif
 
+#if 0
 	template <typename T2>
     constexpr ref& operator=(const ref<T2>& other) noexcept
 	{
@@ -168,6 +169,7 @@ public:
 
 		return *this;
 	}
+#endif
 
 	constexpr operator bool() noexcept { return m_ptr != nullptr; }
 	constexpr operator bool() const noexcept { return m_ptr != nullptr; }

@@ -123,43 +123,43 @@ struct render_pass_input
     auto set(const ref<uniform_buffer>& p_uniform_buffer, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::uniform_buffer;
-        m_input[p_index] = p_uniform_buffer;
+        m_input[p_index] = ref<RefCounted>{ p_uniform_buffer };
     }
 
     auto set(const ref<UniformBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::uniform_buffer_set;
-        m_input[p_index] = p_storage_buffer_set;
+        m_input[p_index] = ref<RefCounted>{ p_storage_buffer_set };
     }
 
     auto set(const ref<StorageBuffer>& p_storage_buffer, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::storage_buffer;
-        m_input[p_index] = p_storage_buffer;
+        m_input[p_index] = ref<RefCounted>{ p_storage_buffer };
     }
 
     auto set(const ref<StorageBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::storage_buffer_set;
-        m_input[p_index] = p_storage_buffer_set;
+        m_input[p_index] = ref<RefCounted>{ p_storage_buffer_set };
     }
 
     auto set(const ref<Texture2D>& p_texture, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::texture_2d;
-        m_input[p_index] = p_texture;
+        m_input[p_index] = ref<RefCounted>{ p_texture };
     }
 
     auto set(const ref<Image2D>& p_image, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::image_2d;
-        m_input[p_index] = p_image;
+        m_input[p_index] = ref<RefCounted>{ p_image };
     }
 
     auto set(const ref<image_view>& p_image, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::image_2d;
-        m_input[p_index] = p_image;
+        m_input[p_index] = ref<RefCounted>{ p_image };
     }
 };
 

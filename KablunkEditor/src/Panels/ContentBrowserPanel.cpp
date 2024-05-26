@@ -185,7 +185,8 @@ namespace kb
 								{
 									case asset::AssetType::Texture:
 										// path for asset, and args (which is also path)
-										asset = asset::get_asset<Texture2D>(asset::import_asset(relative_path));
+										asset = asset::get_asset<Texture2D>(asset::import_asset(relative_path))
+								            .As<asset::IAsset>();
 										break;
 									case asset::AssetType::Mesh:
 									case asset::AssetType::MeshSource:

@@ -23,7 +23,7 @@ namespace kb::asset
 
 bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
-	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string());
+	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
 	asset->set_id(metadata.id);
 
 	bool success = asset.As<Texture2D>()->loaded();
@@ -50,7 +50,7 @@ bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAss
 {
 	audio::audio_asset_config config{ m_asset_manager->get_absolute_path(metadata).string() };
 
-	asset = audio::AudioAsset::create(config);
+	asset = audio::AudioAsset::create(config).As<IAsset>();
 	asset->set_id(metadata.id);
 
 	bool success = asset.As<audio::AudioAsset>()->loaded();
@@ -90,7 +90,7 @@ bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAs
         true
     };
 
-    asset = render::font_asset_t::create(font_create_info);
+    asset = ref<IAsset>{ render::font_asset_t::create(font_create_info) };
     if (asset)
     {
         ref<render::font_asset_t> font_asset = asset.As<render::font_asset_t>();
