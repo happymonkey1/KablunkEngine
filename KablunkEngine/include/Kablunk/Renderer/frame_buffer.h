@@ -20,6 +20,13 @@ enum class frame_buffer_blend_mode_t
 	zero_src_color
 };
 
+enum class attachment_load_op_t
+{
+    inherit = 0,
+    clear,
+    load
+};
+
 struct frame_buffer_texture_specification
 {
 	frame_buffer_texture_specification() = default;
@@ -30,6 +37,7 @@ struct frame_buffer_texture_specification
 	ImageFormat format;
 	bool blend = true;
 	frame_buffer_blend_mode_t blend_mode = frame_buffer_blend_mode_t::src_alpha_one_minus_src_alpha;
+    attachment_load_op_t m_load_op = attachment_load_op_t::inherit;
 	// #TODO filtering and wrap
 };
 

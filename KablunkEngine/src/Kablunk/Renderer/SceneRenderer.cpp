@@ -52,10 +52,11 @@ void SceneRenderer::init()
     // Geometry
 	{
         render::frame_buffer_specification geometry_frame_buffer_spec;
-        geometry_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
+        geometry_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
         geometry_frame_buffer_spec.m_debug_name = "Geometry";
+        //geometry_frame_buffer_spec.m_transfer = true;
         ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
 
         render::PipelineSpecification pipeline_spec{
@@ -101,7 +102,7 @@ void SceneRenderer::init()
         composite_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
         composite_frame_buffer_spec.m_samples = 1;
         composite_frame_buffer_spec.m_clear_on_load = true;
-        composite_frame_buffer_spec.m_transfer = true;
+        composite_frame_buffer_spec.m_transfer = false;
         composite_frame_buffer_spec.m_clear_color = { 0.5f, 0.1, 0.1f, 1.0f };
         composite_frame_buffer_spec.m_debug_name = "scene_renderer::frame_buffer::scene_composite";
 
@@ -109,7 +110,7 @@ void SceneRenderer::init()
 
 		ref<Shader> composite_shader = render::get_shader("scene_composite");
 		m_composite_material = Material::Create(composite_shader);
-        
+
         render::PipelineSpecification pipeline_spec{
             .shader = composite_shader,
             .m_target_frame_buffer = composite_frame_buffer,
@@ -141,6 +142,7 @@ void SceneRenderer::init()
         m_composite_pass->bake();
 	}
 
+#if 0
     render::frame_buffer_specification composite_frame_buffer{};
     composite_frame_buffer.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
     composite_frame_buffer.m_samples = 1;
@@ -151,6 +153,7 @@ void SceneRenderer::init()
     composite_frame_buffer.m_debug_name = "scene_renderer::frame_buffer::composite";
 
     m_external_composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer);
+#endif
 
 	// external compositing
 	if (!m_specification.swap_chain_target)
@@ -213,10 +216,12 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 		m_geometry_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 		m_composite_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 
+#if 0
 		if (m_external_composite_render_pass)
 		{
             m_external_composite_render_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 		}
+#endif
 
 		m_needs_resize = false;
 

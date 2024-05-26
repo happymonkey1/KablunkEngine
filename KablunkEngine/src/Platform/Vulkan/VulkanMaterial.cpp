@@ -18,7 +18,7 @@ VulkanMaterial::VulkanMaterial(
     const ref<Shader>& shader,
     const std::string& name /*= ""*/
 )
-	: m_shader{ shader.As<VulkanShader>() }, m_name{ name }
+	: m_shader{ shader.As<VulkanShader>() }, m_name{ !name.empty() ? name : shader->GetName() }
 {
 	Init();
 	render::register_shader_dependency(shader, ref<Material>{ this });
@@ -269,6 +269,14 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Imag
     );
 }
 
+void VulkanMaterial::SetVulkanDescriptor(const std::string& p_name, const ref<image_view>& p_image)
+{
+    m_descriptor_set_manager.set_input(
+        std::string_view{ p_name },
+        p_image
+    );
+}
+
 const ShaderUniform* VulkanMaterial::FindUniformDeclaration(const std::string& name)
 {
 	const auto& shader_buffer = m_shader->GetShaderBuffers();
@@ -280,11 +288,11 @@ const ShaderUniform* VulkanMaterial::FindUniformDeclaration(const std::string& n
 		const ShaderBuffer& buffer = shader_buffer.begin()->second;
 		if (buffer.uniforms.find(name) != buffer.uniforms.end())
 			return &buffer.uniforms.at(name);
-		else
-			return nullptr;
+
+	    return nullptr;
 	}
-	else
-		return nullptr;
+
+    return nullptr;
 }
 
 const ShaderResourceDeclaration* VulkanMaterial::FindResourceDeclaration(const std::string& name)

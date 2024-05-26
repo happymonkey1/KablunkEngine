@@ -508,13 +508,13 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
 {
     KB_PROFILE_SCOPE_NAMED("vulkan_descriptor_set_manager::rt_invalidate_and_update");
 
-    log::core::info(
+    log::core::trace(
         log::logger_tag_t::renderer,
         "[Render pass {}] invalidating and updating resources",
         m_specification.m_debug_name
     );
 
-    const auto frame_index = render::rt_get_current_frame_index();
+    const auto frame_index = rt_get_current_frame_index();
 
     // map invalid resources to update
     for (const auto& [set, inputs] : m_input_resources)
@@ -582,7 +582,8 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                 for (size_t i = 0; i < input.m_input.size(); ++i)
                 {
                     const auto& image_info = input.m_input.at(i).As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
-                    if (image_info.imageView != m_write_descriptor_map[frame_index][set][binding].m_resource_handles.at(i))
+                    if (image_info.imageView !=
+                        m_write_descriptor_map[frame_index].at(set).at(binding).m_resource_handles.at(i))
                     {
                         m_invalidated_input_resources[set][binding] = input;
                         break;
@@ -622,7 +623,16 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
 
     // exit early if there are no invalidated resources
     if (m_invalidated_input_resources.empty())
+    {
+#if KB_DEBUG
+        log::core::trace(
+            log::logger_tag_t::renderer,
+            "[vulkan_descriptor_set_manager]: There are no invalidated resources for '{}', exiting descriptor update early!",
+            m_specification.m_debug_name
+        );
+#endif
         return;
+    }
 
     const auto buffer_sets = has_buffer_sets();
     const auto descriptor_set_count = render::get_frames_in_flight();
@@ -783,7 +793,7 @@ auto vulkan_descriptor_set_manager::get_descriptor_sets(
         frame_index,
         m_descriptor_sets.size()
     );
-    return m_descriptor_sets[frame_index];
+    return m_descriptor_sets.at(frame_index);
 }
 
 auto vulkan_descriptor_set_manager::is_input_valid(std::string_view p_name) const noexcept -> bool

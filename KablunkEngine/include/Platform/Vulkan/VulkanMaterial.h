@@ -108,7 +108,14 @@ public:
 	{
         const auto index_opt = m_descriptor_set_manager.get_first_set_index();
         if (!index_opt)
+        {
+            log::core::warn(
+                log::logger_tag_t::material,
+                "[vulkan_material]: Could not find a set descriptor set index in material '{}'!",
+                m_name
+            );
             return nullptr;
+        }
 
         rt_prepare();
         KB_CORE_ASSERT(
@@ -127,6 +134,7 @@ private:
 	void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture);
 	void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index);
 	void SetVulkanDescriptor(const std::string& name, const ref<Image2D>& images);
+    void SetVulkanDescriptor(const std::string& p_name, const ref<image_view>& p_image);
 
 	const ShaderUniform* FindUniformDeclaration(const std::string& name);
 	const ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);

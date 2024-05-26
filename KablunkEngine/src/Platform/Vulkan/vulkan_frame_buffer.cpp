@@ -14,6 +14,34 @@
 namespace kb::render
 { // start namespace kb::render
 
+namespace utils
+{ // start namespace ::utils
+inline auto get_vk_attachment_load_op(
+    const frame_buffer_specification& p_specification,
+    const frame_buffer_texture_specification& p_texture_specification
+) noexcept -> VkAttachmentLoadOp
+{
+    switch (p_texture_specification.m_load_op)
+    {
+    case attachment_load_op_t::inherit:
+    {
+        // #TODO should have separate depth and color clears...
+        if (Utils::IsDepthFormat(p_texture_specification.format))
+            return p_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        return p_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+    }
+    case attachment_load_op_t::clear:
+        return VK_ATTACHMENT_LOAD_OP_CLEAR;
+    case attachment_load_op_t::load:
+        return VK_ATTACHMENT_LOAD_OP_LOAD;
+    default:
+        KB_CORE_ASSERT(false, "[vulkan_frame_buffer]: Unhandled attachment_load_op_t!");
+        return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    }
+}
+} // end namespace ::utils
+
 vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
 	: m_specification{std::move(spec)}
 {
@@ -278,17 +306,21 @@ void vulkan_frame_buffer::RT_Invalidate()
 			attachment_description.flags = 0;
 			attachment_description.format = Utils::VulkanImageFormat(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-			attachment_description.loadOp = m_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+            attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
 			attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachment_description.initialLayout = m_specification.m_clear_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            attachment_description.initialLayout = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR ?
+                VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             // #TODO Separate layouts requires a "separate layouts" flag to be enabled
 			if (attachment_spec.format == ImageFormat::DEPTH24STENCIL8 || true) 
 			{
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // TODO: if sampling
-				depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+				depth_attachment_reference = {
+				    attachment_index,
+				    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+				};
 			}
 			else
 			{
@@ -328,6 +360,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 					spec.height = m_height;
                     spec.m_transfer = m_specification.m_transfer;
 					color_attachment = m_attachment_images.emplace_back(Image2D::Create(spec)).As<VulkanImage2D>();
+                    KB_CORE_ASSERT(false, "Framebuffer attachment image should already be created!");
 				}
 				else
 				{
@@ -336,8 +369,10 @@ void vulkan_frame_buffer::RT_Invalidate()
 					spec.width = m_width;
 					spec.height = m_height;
 					color_attachment = image.As<VulkanImage2D>();
-					if (!color_attachment->GetSpecification().deinterleaved)
-						color_attachment->RT_Invalidate(); // Create immediately
+                    if (!color_attachment->GetSpecification().deinterleaved)
+                        color_attachment->RT_Invalidate(); // Create immediately
+                    else if (color_attachment->GetSpecification().layers == 1)
+                        color_attachment->RT_Invalidate();
 					else if (attachment_index == 0 && m_specification.m_existing_image_layers[0] == 0)// Only invalidate the first layer from only the first framebuffer
 					{
 						color_attachment->RT_Invalidate(); // Create immediately
@@ -348,8 +383,10 @@ void vulkan_frame_buffer::RT_Invalidate()
 						color_attachment->RT_CreatePerSpecificLayerImageViews(m_specification.m_existing_image_layers);
 					}
 
+#if 0
 					if (image.As<VulkanImage2D>()->get_vk_image_info_descriptor().imageLayout == VK_IMAGE_LAYOUT_UNDEFINED)
 						color_attachment->RT_Invalidate();
+#endif
 				}
 			}
 
@@ -357,11 +394,12 @@ void vulkan_frame_buffer::RT_Invalidate()
 			attachment_description.flags = 0;
 			attachment_description.format = Utils::VulkanImageFormat(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-			attachment_description.loadOp = m_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+            attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
 			attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachment_description.initialLayout = m_specification.m_clear_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachment_description.initialLayout = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR ?
+                VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 			const auto& clear_color = m_specification.m_clear_color;

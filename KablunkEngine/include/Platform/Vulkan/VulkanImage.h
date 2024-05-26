@@ -32,6 +32,7 @@ public:
 
 	uint32_t GetWidth() const override { return m_specification.width; }
 	uint32_t GetHeight() const override { return m_specification.height; }
+    glm::uvec2 get_size() const override { return glm::uvec2{ m_specification.width, m_specification.height }; }
 	float GetAspectRatio() const override { return static_cast<float>(m_specification.width) / static_cast<float>(m_specification.height); }
 
 	ImageSpecification& GetSpecification() override { return m_specification; }

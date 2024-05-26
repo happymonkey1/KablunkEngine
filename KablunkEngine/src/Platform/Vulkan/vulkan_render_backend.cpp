@@ -32,9 +32,9 @@ struct vulkan_render_backend_data
     std::vector<uint32_t> m_descriptor_pool_allocation_count{};
 
     // UniformBufferSet -> Shader Hash -> Frame -> WriteDescriptor
-    kb::unordered_flat_map<UniformBufferSet*, kb::unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> uniform_buffer_write_descriptor_cache{};
+    unordered_flat_map<UniformBufferSet*, unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> uniform_buffer_write_descriptor_cache{};
     // StorageBufferSet -> Shader Hash -> Frame -> WriteDescriptor
-    kb::unordered_flat_map<StorageBufferSet*, kb::unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> storage_buffer_write_descriptor_cache{};
+    unordered_flat_map<StorageBufferSet*, unordered_flat_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> storage_buffer_write_descriptor_cache{};
 
     int32_t draw_call_count = 0;
 };
@@ -88,10 +88,10 @@ auto vulkan_render_backend::init() noexcept -> void
         }
     );
 
-    constexpr f32 x = -1.;
-    constexpr f32 y = -1.;
-    constexpr f32 width = 2.;
-    constexpr f32 height = 2.;
+    constexpr f32 x = -1.f;
+    constexpr f32 y = -1.f;
+    constexpr f32 width = 2.f;
+    constexpr f32 height = 2.f;
     struct QuadVertex
     {
         vec3_packed m_position;
@@ -141,15 +141,15 @@ auto vulkan_render_backend::end_frame() noexcept -> void
 }
 
 auto vulkan_render_backend::begin_render_pass(
-    const ref<RenderCommandBuffer>& p_render_command_buffer,
-    const ref<render_pass>& p_render_pass,
+    ref<RenderCommandBuffer> p_render_command_buffer,
+    ref<render_pass> p_render_pass,
     bool p_explicit_clear
 ) noexcept -> void
 {
     submit([p_render_command_buffer, p_render_pass, p_explicit_clear]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_render_pass");
-            log::core::info(
+            log::core::trace(
                 log::logger_tag_t::renderer,
                 "vulkan_render_backend::begin_render_pass {}",
                 p_render_pass->get_specification().m_debug_name
@@ -308,13 +308,13 @@ auto vulkan_render_backend::begin_render_pass(
 }
 
 auto vulkan_render_backend::end_render_pass(
-    const ref<RenderCommandBuffer>& p_render_command_buffer
+    ref<RenderCommandBuffer> p_render_command_buffer
 ) noexcept -> void
 {
     submit([p_render_command_buffer]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::end_render_pass");
-            log::core::info(
+            log::core::trace(
                 log::logger_tag_t::renderer,
                 "vulkan_render_backend::end_render_pass"
             );
@@ -325,8 +325,10 @@ auto vulkan_render_backend::end_render_pass(
     );
 }
 
-auto vulkan_render_backend::set_line_width(const ref<RenderCommandBuffer>& render_command_buffer,
-                                           f32 line_width) noexcept -> void
+auto vulkan_render_backend::set_line_width(
+    ref<RenderCommandBuffer> render_command_buffer,
+    f32 line_width
+) noexcept -> void
 {
     submit([width = line_width, render_cmd_buffer = render_command_buffer]()
         {
@@ -337,15 +339,15 @@ auto vulkan_render_backend::set_line_width(const ref<RenderCommandBuffer>& rende
 }
 
 auto vulkan_render_backend::submit_fullscreen_quad(
-    const ref<RenderCommandBuffer>& p_render_command_buffer,
-    const ref<Pipeline>& p_pipeline,
-    const ref<Material>& p_material
+    ref<RenderCommandBuffer> p_render_command_buffer,
+    ref<Pipeline> p_pipeline,
+    ref<Material> p_material
 ) noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
     ref<VulkanMaterial> vulkan_material = p_material.As<VulkanMaterial>();
-    render::submit([p_render_command_buffer, p_pipeline, vulkan_material, this]() mutable
+    submit([p_render_command_buffer, p_pipeline, vulkan_material, this]() mutable
         {
             KB_PROFILE_SCOPE;
 
@@ -367,8 +369,8 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 
             if (vulkan_material)
             {
-                const VkDescriptorSet descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
-                if (descriptor_set)
+                const VkDescriptorSet vk_descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
+                if (vk_descriptor_set)
                 {
                     vkCmdBindDescriptorSets(
                         vk_command_buffer,
@@ -376,10 +378,21 @@ auto vulkan_render_backend::submit_fullscreen_quad(
                         layout,
                         0,
                         1,
-                        &descriptor_set,
+                        &vk_descriptor_set,
                         0,
                         nullptr
                     );
+                }
+                else
+                {
+#ifdef KB_DEBUG
+                    log::core::warn(
+                        log::logger_tag_t::renderer,
+                        "[vulkan_renderer_backend::submit_fullscreen_quad]: Descriptor set {} is null?",
+                        static_cast<const void*>(vk_descriptor_set)
+                    );
+#endif
+                    // vulkan_material->rt_prepare();
                 }
 
                 const owning_buffer& uniform_storage_buffer = vulkan_material->get_uniform_storage_buffer();
@@ -393,13 +406,14 @@ auto vulkan_render_backend::submit_fullscreen_quad(
                         static_cast<u32>(uniform_storage_buffer.size()),
                         uniform_storage_buffer.get()
                     );
-
+#if 0
 #ifdef KB_DEBUG
                     log::core::trace(
                         log::logger_tag_t::renderer,
                         "[vulkan_render_backend]: Push constant size {}",
                         uniform_storage_buffer.size()
                     );
+#endif
 #endif
                 }
             }
@@ -416,11 +430,11 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 }
 
 auto vulkan_render_backend::render_geometry(
-    const ref<RenderCommandBuffer>& p_render_command_buffer,
-    const ref<Pipeline>& p_pipeline,
-    const ref<Material>& p_material,
-    const ref<VertexBuffer>& p_vertex_buffer,
-    const ref<IndexBuffer>& p_index_buffer,
+    ref<RenderCommandBuffer> p_render_command_buffer,
+    ref<Pipeline> p_pipeline,
+    ref<Material> p_material,
+    ref<VertexBuffer> p_vertex_buffer,
+    ref<IndexBuffer> p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count
 ) noexcept -> void
@@ -451,8 +465,8 @@ auto vulkan_render_backend::render_geometry(
             const VkBuffer vk_index_buffer = vulkan_geometry_index_buffer->GetVkBuffer();
             vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-            const VkDescriptorSet descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
-            if (descriptor_set)
+            const VkDescriptorSet vk_descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
+            if (vk_descriptor_set)
             {
                 vkCmdBindDescriptorSets(
                     command_buffer,
@@ -460,9 +474,17 @@ auto vulkan_render_backend::render_geometry(
                     layout,
                     0,
                     1,
-                    &descriptor_set,
+                    &vk_descriptor_set,
                     0,
                     nullptr
+                );
+            }
+            else
+            {
+                log::core::warn(
+                    log::logger_tag_t::renderer,
+                    "[vulkan_renderer_backend]: Descriptor set {} is null?",
+                    static_cast<const void*>(vk_descriptor_set)
                 );
             }
 
@@ -500,12 +522,12 @@ auto vulkan_render_backend::render_geometry(
 }
 
 auto vulkan_render_backend::render_instanced_submesh(
-    const ref<RenderCommandBuffer>& p_render_command_buffer,
-    const ref<Pipeline>& p_pipeline,
-    const ref<Mesh>& p_mesh,
+    ref<RenderCommandBuffer> p_render_command_buffer,
+    ref<Pipeline> p_pipeline,
+    ref<Mesh> p_mesh,
     u32 p_index,
-    const ref<MaterialTable>& p_material_table,
-    const ref<VertexBuffer>& p_transform_buffer,
+    ref<MaterialTable> p_material_table,
+    ref<VertexBuffer> p_transform_buffer,
     u32 p_transform_offset,
     u32 p_bone_transforms_offset,
     u32 p_instance_count
@@ -513,7 +535,7 @@ auto vulkan_render_backend::render_instanced_submesh(
 {
     KB_PROFILE_SCOPE;
 
-    render::submit([p_render_command_buffer, p_pipeline, p_mesh, p_index, p_material_table, p_transform_buffer, p_transform_offset, p_instance_count]()
+    submit([p_render_command_buffer, p_pipeline, p_mesh, p_index, p_material_table, p_transform_buffer, p_transform_offset, p_instance_count]()
         {
             KB_PROFILE_SCOPE;
 
@@ -570,6 +592,14 @@ auto vulkan_render_backend::render_instanced_submesh(
                         nullptr
                     );
                 }
+                else
+                {
+                    log::core::warn(
+                        log::logger_tag_t::renderer,
+                        "[vulkan_renderer_backend]: Descriptor set {} is null?",
+                        static_cast<const void*>(vk_descriptor_set)
+                    );
+                }
 
                 owning_buffer uniform_storage_buffer = vulkan_material->get_uniform_storage_buffer();
                 if (uniform_storage_buffer)
@@ -597,6 +627,184 @@ auto vulkan_render_backend::render_instanced_submesh(
     );
 }
 
+auto vulkan_render_backend::copy_image(
+    ref<RenderCommandBuffer> p_render_command_buffer,
+    ref<Image2D> p_source_image,
+    ref<Image2D> p_destination_image
+) noexcept -> void
+{
+    KB_PROFILE_SCOPE;
+
+    submit([p_render_command_buffer,
+        source_image = p_source_image.As<VulkanImage2D>(),
+        destination_image = p_destination_image.As<VulkanImage2D>()
+    ]() mutable
+        {
+            KB_PROFILE_SCOPE_NAMED("rt_copy_image");
+
+            const auto frame_index = rt_get_current_frame_index();
+            const auto vk_command_buffer = p_render_command_buffer
+                .As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
+
+            auto vk_src_image = source_image->get_vk_image_info().image;
+            auto vk_dst_image = destination_image->get_vk_image_info().image;
+
+            const auto src_size = source_image->get_size();
+            const auto dst_size = destination_image->get_size();
+            constexpr VkImageSubresourceLayers vk_subresource_layers{
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            };
+            // #TODO: why do we not have a dest image copy?
+            const VkImageCopy vk_image_copy{
+                .srcSubresource = vk_subresource_layers,
+                .srcOffset = { 0, 0, 0 },
+                .dstSubresource = vk_subresource_layers,
+                .dstOffset = { 0, 0, 0 },
+                .extent = { src_size.x, src_size.y, 1 }
+            };
+
+            const auto vk_src_image_layout = source_image->get_vk_image_info_descriptor().imageLayout;
+            const auto vk_dst_image_layout = destination_image->get_vk_image_info_descriptor().imageLayout;
+
+            constexpr VkImageSubresourceRange vk_image_subresource_range{
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            };
+
+            // destination image barrier
+            {
+                const VkImageMemoryBarrier vk_image_memory_barrier{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    .pNext = nullptr,
+                    .srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+                    .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                    .oldLayout = vk_dst_image_layout,
+                    .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    .srcQueueFamilyIndex = {}, // #TODO: is this correct?
+                    .dstQueueFamilyIndex = {}, // #TODO: is this correct?
+                    .image = vk_dst_image,
+                    .subresourceRange = vk_image_subresource_range
+                };
+
+                vkCmdPipelineBarrier(
+                    vk_command_buffer,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    0,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr,
+                    1,
+                    &vk_image_memory_barrier
+                );
+            }
+
+            // source image barrier
+            {
+                const VkImageMemoryBarrier vk_image_memory_barrier{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    .pNext = nullptr,
+                    .srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+                    .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                    .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    .newLayout = vk_src_image_layout,
+                    .srcQueueFamilyIndex = {},
+                    .dstQueueFamilyIndex = {},
+                    .image = vk_src_image,
+                    .subresourceRange = vk_image_subresource_range
+                };
+
+                vkCmdPipelineBarrier(
+                    vk_command_buffer,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    0,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr,
+                    1,
+                    &vk_image_memory_barrier
+                );
+            }
+
+            vkCmdCopyImage(
+                vk_command_buffer,
+                vk_src_image,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                vk_dst_image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &vk_image_copy
+            );
+
+            // source image barrier
+            {
+                const VkImageMemoryBarrier vk_image_memory_barrier{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    .pNext = nullptr,
+                    .srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+                    .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                    .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    .newLayout = vk_src_image_layout,
+                    .srcQueueFamilyIndex = {},
+                    .dstQueueFamilyIndex = {},
+                    .image = vk_src_image,
+                    .subresourceRange = vk_image_subresource_range
+                };
+
+                vkCmdPipelineBarrier(
+                    vk_command_buffer,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    0,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr,
+                    1,
+                    &vk_image_memory_barrier
+                );
+            }
+
+            // destination image barrier
+            {
+                const VkImageMemoryBarrier vk_image_memory_barrier{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    .pNext = nullptr,
+                    .srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+                    .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                    .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    .newLayout = vk_dst_image_layout,
+                    .srcQueueFamilyIndex = {},
+                    .dstQueueFamilyIndex = {},
+                    .image = vk_dst_image,
+                    .subresourceRange = vk_image_subresource_range
+                };
+
+                vkCmdPipelineBarrier(
+                    vk_command_buffer,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                    0,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr,
+                    1,
+                    &vk_image_memory_barrier
+                );
+            }
+        });
+}
+
 auto vulkan_render_backend::rt_allocate_descriptor_set(
     VkDescriptorSetAllocateInfo& p_alloc_info
 ) const noexcept -> VkDescriptorSet
@@ -613,5 +821,4 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
     m_renderer_data->m_descriptor_pool_allocation_count[buffer_index] += p_alloc_info.descriptorSetCount;
     return vk_descriptor_set;
 }
-
-}
+} // end namespace kb::render

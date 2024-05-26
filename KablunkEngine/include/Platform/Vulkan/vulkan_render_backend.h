@@ -14,6 +14,8 @@ typedef VkDescriptorSet_T* VkDescriptorSet;
 namespace kb::render
 { // start namespace kb::render
 
+// #TODO need to evaluate whether the refs in each command can be passed by const&
+
 // forward declaration
 struct vulkan_render_backend_data;
 
@@ -30,46 +32,52 @@ public:
     auto end_frame() noexcept -> void;
 
     auto begin_render_pass(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<render_pass>& p_render_pass,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<render_pass> p_render_pass,
         bool p_explicit_clear
     ) noexcept -> void;
 
-    auto end_render_pass(const ref<RenderCommandBuffer>& p_render_command_buffer) noexcept -> void;
+    auto end_render_pass(ref<RenderCommandBuffer> p_render_command_buffer) noexcept -> void;
 
     auto set_line_width(
-        const ref<RenderCommandBuffer>& render_command_buffer,
+        ref<RenderCommandBuffer> render_command_buffer,
         f32 line_width
     ) noexcept -> void;
 
     auto submit_fullscreen_quad(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Material>& p_material
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Material> p_material
     ) noexcept -> void;
 
     // geometry rendering
 
     static auto render_geometry(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Material>& p_material,
-        const ref<VertexBuffer>& p_vertex_buffer,
-        const ref<IndexBuffer>& p_index_buffer,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Material> p_material,
+        ref<VertexBuffer> p_vertex_buffer,
+        ref<IndexBuffer> p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void;
 
     auto render_instanced_submesh(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Mesh>& p_mesh,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Mesh> p_mesh,
         u32 p_index,
-        const ref<MaterialTable>& p_material_table,
-        const ref<VertexBuffer>& p_transform_buffer,
+        ref<MaterialTable> p_material_table,
+        ref<VertexBuffer> p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,
         u32 p_instance_count
+    ) noexcept -> void;
+
+    auto copy_image(
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Image2D> p_source_image,
+        ref<Image2D> p_destination_image
     ) noexcept -> void;
 
     auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) const noexcept -> VkDescriptorSet;

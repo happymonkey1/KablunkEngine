@@ -81,7 +81,7 @@ public:
 	void set_viewport_size(uint32_t width, uint32_t height);
 	ref<render::render_pass> get_final_render_pass();
 	ref<render::render_pass> get_composite_render_pass() { return m_composite_pass; }
-    ref<render::frame_buffer> get_external_composite_frame_buffer() { return m_external_composite_frame_buffer; }
+    ref<render::frame_buffer> get_external_composite_frame_buffer() { return m_composite_pass->get_target_frame_buffer(); }
 	ref<Image2D> get_final_render_pass_image();
 
 	void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
@@ -117,8 +117,10 @@ private:
 
 	ref<Material> m_composite_material;
 
+#if 0
 	ref<render::render_pass> m_external_composite_render_pass;
     ref<render::frame_buffer> m_external_composite_frame_buffer{};
+#endif
 
 	struct GPUTimeQueryIndices
 	{

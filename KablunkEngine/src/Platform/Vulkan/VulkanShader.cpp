@@ -322,30 +322,30 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 
 	ShaderMaterialDescriptorSet result;
 
-	VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
 
-	kb::unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> pool_sizes;
-	for (uint32_t descript_set = 0; descript_set < m_shader_descriptor_sets.size(); descript_set++)
+	unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> pool_sizes;
+	for (uint32_t descriptor_set = 0; descriptor_set < m_shader_descriptor_sets.size(); descriptor_set++)
 	{
-		auto& shader_descriptor_set = m_shader_descriptor_sets[descript_set];
+		auto& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
 		if (!shader_descriptor_set) // Empty descriptor set
 			continue;
 
 		if (!shader_descriptor_set.uniform_buffers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.uniform_buffers.size()) * number_of_sets;
 		}
 		if (!shader_descriptor_set.storage_buffers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_buffers.size()) * number_of_sets;
 		}
 		if (!shader_descriptor_set.image_samplers.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			uint32_t descriptor_set_count = 0;
 			for (auto&& [binding, image_sampler] : shader_descriptor_set.image_samplers)
@@ -355,7 +355,7 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::CreateDescriptorSets(uin
 		}
 		if (!shader_descriptor_set.storage_images.empty())
 		{
-			VkDescriptorPoolSize& type_count = pool_sizes[descript_set].emplace_back();
+			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_images.size()) * number_of_sets;
 		}
@@ -410,9 +410,9 @@ void VulkanShader::ClearUniformBuffers()
 	s_storage_buffers.clear();
 }
 
-kb::unordered_flat_map<VkShaderStageFlagBits, std::string> VulkanShader::PreProcess(const std::string& source)
+unordered_flat_map<VkShaderStageFlagBits, std::string> VulkanShader::PreProcess(const std::string& source)
 {
-	kb::unordered_flat_map<VkShaderStageFlagBits, std::string> shader_sources;
+	unordered_flat_map<VkShaderStageFlagBits, std::string> shader_sources;
 
     const auto type_token = "#type";
     const size_t type_token_len = strlen(type_token);
@@ -434,7 +434,7 @@ kb::unordered_flat_map<VkShaderStageFlagBits, std::string> VulkanShader::PreProc
 	return shader_sources;
 }
 
-void VulkanShader::CompileOrGetVulkanBinaries(kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile)
+void VulkanShader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile)
 {
     KB_PROFILE_SCOPE;
 
@@ -826,7 +826,7 @@ void VulkanShader::CreateDescriptors()
             vk_descriptor_set = {};
             vk_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             vk_descriptor_set.descriptorType = layout_binding.descriptorType;
-            vk_descriptor_set.descriptorCount = image_sampler.array_size;
+            vk_descriptor_set.descriptorCount = layout_binding.descriptorCount;
             vk_descriptor_set.dstBinding = layout_binding.binding;
 		}
 

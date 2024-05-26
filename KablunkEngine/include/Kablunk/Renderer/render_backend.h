@@ -24,39 +24,39 @@ struct render_backend
     auto end_frame() noexcept -> void { backend()->end_frame(); }
 
     auto begin_render_pass(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<render_pass>& p_render_pass,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<render_pass> p_render_pass,
         bool p_explicit_clear = false
     ) noexcept -> void
     {
         backend()->begin_render_pass(p_render_command_buffer, p_render_pass, p_explicit_clear);
     }
 
-    auto end_render_pass(const ref<RenderCommandBuffer>& p_render_command_buffer) noexcept -> void
+    auto end_render_pass(ref<RenderCommandBuffer> p_render_command_buffer) noexcept -> void
     {
         backend()->end_render_pass(p_render_command_buffer);
     }
 
-    auto set_line_width(const ref<RenderCommandBuffer>& p_render_command_buffer, f32 p_line_width) noexcept -> void
+    auto set_line_width(ref<RenderCommandBuffer> p_render_command_buffer, f32 p_line_width) noexcept -> void
     {
         backend()->set_line_width(p_render_command_buffer, p_line_width);
     }
 
     auto submit_fullscreen_quad(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Material>& p_material
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Material> p_material
     ) noexcept -> void
     {
         backend()->submit_fullscreen_quad(p_render_command_buffer, p_pipeline, p_material);
     }
 
     auto render_geometry(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Material>& p_material,
-        const ref<VertexBuffer>& p_vertex_buffer,
-        const ref<IndexBuffer>& p_index_buffer,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Material> p_material,
+        ref<VertexBuffer> p_vertex_buffer,
+        ref<IndexBuffer> p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void
@@ -73,12 +73,12 @@ struct render_backend
     }
 
     auto render_instanced_submesh(
-        const ref<RenderCommandBuffer>& p_render_command_buffer,
-        const ref<Pipeline>& p_pipeline,
-        const ref<Mesh>& p_mesh,
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Pipeline> p_pipeline,
+        ref<Mesh> p_mesh,
         u32 p_index,
-        const ref<MaterialTable>& p_material_table,
-        const ref<VertexBuffer>& p_transform_buffer,
+        ref<MaterialTable> p_material_table,
+        ref<VertexBuffer> p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,
         u32 p_instance_count
@@ -95,6 +95,15 @@ struct render_backend
             p_bone_transforms_offset,
             p_instance_count
         );
+    }
+
+    auto copy_image(
+        ref<RenderCommandBuffer> p_render_command_buffer,
+        ref<Image2D> p_source_image,
+        ref<Image2D> p_destination_image
+    ) noexcept -> void
+    {
+        backend()->copy_image(p_render_command_buffer, p_source_image, p_destination_image);
     }
 
     auto backend() noexcept -> RenderBackend* { return static_cast<RenderBackend*>(this); }

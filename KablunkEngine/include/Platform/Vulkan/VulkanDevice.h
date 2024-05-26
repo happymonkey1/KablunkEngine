@@ -33,7 +33,7 @@ class VulkanPhysicalDevice final : public RefCounted
 {
 public:
 	VulkanPhysicalDevice();
-	~VulkanPhysicalDevice() override;
+    ~VulkanPhysicalDevice() override = default;
 
 	VkPhysicalDevice GetVkDevice() { return m_device; }
 	const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_queue_family_indices; }
@@ -49,7 +49,7 @@ private:
 	bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
 	bool CheckDeviseExtensionSupport(VkPhysicalDevice device);
 	std::vector<VkExtensionProperties> FindSupportedExtensions(VkPhysicalDevice device);
-	VkFormat FindDepthFormat();
+	VkFormat FindDepthFormat() const;
     void CreateQueueInfos();
 private:
 	VkPhysicalDevice m_device = nullptr;
@@ -72,7 +72,7 @@ private:
 };
 
 // Logical Device
-class VulkanDevice final : public RefCounted 
+class VulkanDevice final : public RefCounted
 {
 public:
 	VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
@@ -80,21 +80,22 @@ public:
 
 	void Destroy();
 
-	VkQueue GetGraphicsQueue() { return m_vk_graphics_queue; }
-    VkQueue get_vk_compute_queue() { return m_vk_compute_queue; }
+	VkQueue GetGraphicsQueue() const { return m_vk_graphics_queue; }
+    VkQueue get_vk_compute_queue() const { return m_vk_compute_queue; }
 
 	VkCommandBuffer GetCommandBuffer(bool begin, bool p_compute = false);
 	void FlushCommandBuffer(VkCommandBuffer command_buffer);
-	void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, kb::vk::command_buffer_type_t p_command_buffer_type);
+	void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, vk::command_buffer_type_t p_command_buffer_type);
 
 	VkCommandBuffer CreateSecondaryCommandBuffer();
 
 	ref<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 	VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
-	VkDevice GetVkDevice() { return m_vk_device; }
+	VkDevice GetVkDevice() const { return m_vk_device; }
+
 private:
-    ref<kb::vk::command_pool> get_thread_local_command_pool();
-    ref<kb::vk::command_pool> get_or_create_thread_local_command_pool();
+    ref<vk::command_pool> get_thread_local_command_pool();
+    ref<vk::command_pool> get_or_create_thread_local_command_pool();
 
 private:
 	VkDevice m_vk_device;
@@ -104,7 +105,7 @@ private:
 	VkQueue m_vk_graphics_queue;
     VkQueue m_vk_compute_queue;
 
-    std::map<std::thread::id, ref<kb::vk::command_pool>> m_command_pools;
+    std::map<std::thread::id, ref<vk::command_pool>> m_command_pools;
 
 	bool m_destroyed = false;
 };

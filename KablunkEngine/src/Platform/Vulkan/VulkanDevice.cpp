@@ -61,7 +61,12 @@ namespace kb
 		uint32_t queue_family_index = 0;
 		for (const auto& queue_family : m_queue_family_properties)
 		{
-			vkGetPhysicalDeviceSurfaceSupportKHR(m_device, queue_family_index, surface, &supports_present[queue_family_index]);
+			vkGetPhysicalDeviceSurfaceSupportKHR(
+                m_device,
+                queue_family_index,
+                surface,
+                &supports_present[queue_family_index]
+            );
 
 			queue_family_index++;
 		}
@@ -137,7 +142,7 @@ namespace kb
 
 	bool VulkanPhysicalDevice::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
 	{
-		auto indices = FindQueueFamilies(device);
+        const auto indices = FindQueueFamilies(device);
 		VkPhysicalDeviceProperties device_properties{};
 		VkPhysicalDeviceFeatures device_features{};
 
@@ -146,15 +151,16 @@ namespace kb
 
 		// #TODO score each device and pick best
 
-		bool suitable = device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader 
-			&& indices.HasGraphics() && CheckDeviseExtensionSupport(device);
+        const bool suitable = device_properties.deviceType == 
+            VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader &&
+            indices.HasGraphics() && CheckDeviseExtensionSupport(device);
 
 		if (suitable)
 			m_properties = device_properties;
 
 		return suitable;
 	}
-	
+
 	std::vector<VkExtensionProperties> VulkanPhysicalDevice::FindSupportedExtensions(VkPhysicalDevice device)
 	{
 		uint32_t extension_count = 0;
@@ -174,9 +180,9 @@ namespace kb
 		return {};
 	}
 
-	VkFormat VulkanPhysicalDevice::FindDepthFormat()
-	{
-		std::vector<VkFormat> depth_formats = {
+	VkFormat VulkanPhysicalDevice::FindDepthFormat() const
+    {
+        const std::vector<VkFormat> depth_formats = {
 			VK_FORMAT_D32_SFLOAT_S8_UINT,
 			VK_FORMAT_D32_SFLOAT,
 			VK_FORMAT_D24_UNORM_S8_UINT,
@@ -193,13 +199,14 @@ namespace kb
 				return format;
 		}
 
+        KB_CORE_ASSERT(false, "[VulkanPhysicalDevice]: Could not find optimal depth format for device!");
 		return VK_FORMAT_UNDEFINED;
 	}
 
     void VulkanPhysicalDevice::CreateQueueInfos()
     {
-        constexpr const float k_default_queue_priority = 0.0f;
-        int32_t requested_queue_type = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+        constexpr float k_default_queue_priority = 0.0f;
+        constexpr int32_t requested_queue_type = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
 
         // graphics queue
         if (requested_queue_type & VK_QUEUE_GRAPHICS_BIT)
@@ -246,12 +253,12 @@ namespace kb
 
     bool VulkanPhysicalDevice::CheckDeviseExtensionSupport(VkPhysicalDevice device)
 	{
-		auto supported_extensions = FindSupportedExtensions(device);
+        const auto supported_extensions = FindSupportedExtensions(device);
 		std::vector<const char*> supported_extensions_named;
 		supported_extensions_named.reserve(supported_extensions.size());
 		for (const auto& extension : supported_extensions)
 			supported_extensions_named.emplace_back(extension.extensionName);
-		
+
 		for (const auto& extension : m_required_extensions)
 		{
 			bool found = false;
@@ -270,11 +277,6 @@ namespace kb
 
 
 		return true;
-	}
-
-	VulkanPhysicalDevice::~VulkanPhysicalDevice()
-	{
-
 	}
 
     // ================

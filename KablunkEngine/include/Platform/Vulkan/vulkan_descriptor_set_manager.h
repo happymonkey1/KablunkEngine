@@ -155,6 +155,12 @@ struct render_pass_input
         m_type = render_pass_resource_type_t::image_2d;
         m_input[p_index] = p_image;
     }
+
+    auto set(const ref<image_view>& p_image, u32 p_index = 0) noexcept -> void
+    {
+        m_type = render_pass_resource_type_t::image_2d;
+        m_input[p_index] = p_image;
+    }
 };
 
 [[nodiscard]] static auto is_input_compatible(
@@ -237,7 +243,8 @@ using render_pass_input_types_tuple = std::tuple<
     StorageBuffer,
     StorageBufferSet,
     Texture2D,
-    Image2D
+    Image2D,
+    image_view
 >;
 } // end namespace ::details
 
