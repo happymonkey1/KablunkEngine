@@ -196,12 +196,14 @@ struct renderer_2d_data_t
 
 	render::font_manager m_font_manager;
 
+    // --- render passes ------------------------
     ref<render::render_pass> m_quad_pass;
 	ref<render::render_pass> m_circle_pass;
     ref<render::render_pass> m_line_pass;
     ref<render::render_pass> m_ui_pass;
 	ref<render::render_pass> m_text_pass;
 
+    // --- materials ----------------------------
     ref<Material> quad_material;
     ref<Material> circle_material;
     ref<Material> line_material;
@@ -241,7 +243,6 @@ public:
 
 	void on_imgui_render() const;
 
-    [[deprecated]] ref<render::render_pass> get_target_render_pass();
 	void set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer);
 	void on_recreate_swapchain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
@@ -249,9 +250,9 @@ public:
     void set_swap_chain_target(bool p_swap_chain_target = true);
 
 	// return a mutable reference to the font manager
-	render::font_manager& get_font_manager() { return m_renderer_data.m_font_manager; }
+	[[deprecated]] render::font_manager& get_font_manager() { return m_renderer_data.m_font_manager; }
 	// return an immutable reference to the font manager
-	const render::font_manager& get_font_manager() const { return m_renderer_data.m_font_manager; }
+	[[deprecated]] const render::font_manager& get_font_manager() const { return m_renderer_data.m_font_manager; }
 
     // ---draw commands-------------------------------------------------------------------------------------------------
 

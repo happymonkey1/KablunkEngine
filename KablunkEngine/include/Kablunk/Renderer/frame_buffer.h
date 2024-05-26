@@ -66,7 +66,9 @@ struct frame_buffer_specification
     // clear color of the frame buffer
 	glm::vec4 m_clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
     // flag to set the frame buffer to clear during the beginning of a render pass
-	bool m_clear_on_load = true;
+	bool m_clear_color_on_load = true;
+    // flag to set the frame buffer to clear depth during the beginning of a render apss
+    bool m_clear_depth_on_load = true;
     // flag to allow frame buffer resizing
 	bool m_no_resize = false;
     // flag to allow transparency blending should be enabled

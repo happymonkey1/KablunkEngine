@@ -4,6 +4,7 @@
 
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
+#include "Platform/Vulkan/vulkan_api.h"
 #include "Platform/Vulkan/vulkan_core.h"
 
 namespace kb
@@ -41,7 +42,7 @@ void VulkanImage2D::Release()
             KB_CORE_INFO("[VulkanImage2D]: destroying image view {}", static_cast<void*>(info.image_view));
 			vkDestroyImageView(vk_device, info.image_view, nullptr);
             KB_CORE_INFO("[VulkanImage2D]: destroying sampler {}", static_cast<void*>(info.sampler));
-			vkDestroySampler(vk_device, info.sampler, nullptr);
+            vk::destroy_sampler(info.sampler);
 
 			for (const auto& view : layer_views)
 			{
@@ -85,11 +86,11 @@ void VulkanImage2D::RT_Invalidate()
 		else //if (m_specification.format != ImageFormat::RED32I)
 			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	}
-	else if (m_specification.m_transfer || m_specification.usage == ImageUsage::Texture)
+	if (m_specification.m_transfer || m_specification.usage == ImageUsage::Texture)
 	{
 		usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
-	else if (m_specification.usage == ImageUsage::Storage)
+	if (m_specification.usage == ImageUsage::Storage)
 	{
 		usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
@@ -156,8 +157,7 @@ void VulkanImage2D::RT_Invalidate()
 	sampler_create_info.minLod = 0.0f;
 	sampler_create_info.maxLod = 100.0f;
 	sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-	if (vkCreateSampler(vk_device, &sampler_create_info, nullptr, &m_info.sampler) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to create sampler!");
+    m_info.sampler = vk::create_sampler(sampler_create_info);
 
 	if (m_specification.usage == ImageUsage::Storage)
 	{
@@ -170,11 +170,17 @@ void VulkanImage2D::RT_Invalidate()
 		subresource_range.levelCount = m_specification.mips;
 		subresource_range.layerCount = m_specification.layers;
 
-		Utils::InsertImageMemoryBarrier(command_buffer, m_info.image,
-			0, 0,
-			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			subresource_range);
+		Utils::InsertImageMemoryBarrier(
+            command_buffer,
+            m_info.image,
+			0,
+            0,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_GENERAL,
+			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			subresource_range
+        );
 
 		VulkanContext::Get()->GetDevice()->FlushCommandBuffer(command_buffer);
 	}
@@ -225,7 +231,6 @@ void VulkanImage2D::RT_CreatePerLayerImageViews()
 		if (vkCreateImageView(vk_device, &image_view_create_info, nullptr, &m_per_layer_image_views[layer]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create per layer image view!");
 	}
-
 }
 
 void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices)

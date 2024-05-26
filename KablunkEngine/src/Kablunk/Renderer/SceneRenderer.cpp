@@ -51,12 +51,14 @@ void SceneRenderer::init()
 
     // Geometry
 	{
-        render::frame_buffer_specification geometry_frame_buffer_spec;
+        render::frame_buffer_specification geometry_frame_buffer_spec{};
         geometry_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
         geometry_frame_buffer_spec.m_debug_name = "Geometry";
         //geometry_frame_buffer_spec.m_transfer = true;
+        geometry_frame_buffer_spec.m_clear_color_on_load = true;
+        geometry_frame_buffer_spec.m_clear_depth_on_load = true;
         ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
 
         render::PipelineSpecification pipeline_spec{
@@ -101,9 +103,10 @@ void SceneRenderer::init()
         render::frame_buffer_specification composite_frame_buffer_spec{};
         composite_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
         composite_frame_buffer_spec.m_samples = 1;
-        composite_frame_buffer_spec.m_clear_on_load = true;
+        composite_frame_buffer_spec.m_clear_color_on_load = false;
+        composite_frame_buffer_spec.m_clear_depth_on_load = false;
         composite_frame_buffer_spec.m_transfer = false;
-        composite_frame_buffer_spec.m_clear_color = { 0.5f, 0.1, 0.1f, 1.0f };
+        composite_frame_buffer_spec.m_clear_color = { 0.1f, 0.1, 0.1f, 1.0f };
         composite_frame_buffer_spec.m_debug_name = "scene_renderer::frame_buffer::scene_composite";
 
         auto composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer_spec);

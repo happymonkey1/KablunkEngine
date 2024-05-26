@@ -112,7 +112,9 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.line_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(LineVertex)));
+        m_renderer_data.line_vertex_buffers[0].emplace_back(VertexBuffer::Create(
+            renderer_2d_data_t::max_vertices * sizeof(LineVertex))
+        );
         m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[renderer_2d_data_t::max_vertices]);
     }
 
@@ -128,8 +130,12 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     m_renderer_data.text_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.text_vertex_buffers[0].emplace_back(VertexBuffer::Create(kb::renderer_2d_data_t::max_vertices * sizeof(text_vertex_t)));
-        m_renderer_data.text_vertex_buffer_base_ptrs[0].emplace_back(new text_vertex_t[kb::renderer_2d_data_t::max_vertices]);
+        m_renderer_data.text_vertex_buffers[0].emplace_back(
+            VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(text_vertex_t))
+        );
+        m_renderer_data.text_vertex_buffer_base_ptrs[0].emplace_back(
+            new text_vertex_t[renderer_2d_data_t::max_vertices]
+        );
     }
 
 	uint32_t white_texture_data = 0xFFFFFFFF;
@@ -160,7 +166,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
     render::frame_buffer_specification frame_buffer_spec{};
 	frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 	frame_buffer_spec.m_samples = 1;
-	frame_buffer_spec.m_clear_on_load = false;
+	frame_buffer_spec.m_clear_color_on_load = false;
     frame_buffer_spec.m_clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
 	frame_buffer_spec.m_debug_name = "renderer2d::frame_buffer";
 	frame_buffer_spec.m_blend_mode = render::frame_buffer_blend_mode_t::additive;
@@ -418,7 +424,7 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, b
 	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
 	render::submit([uniform_buffer_set, view_proj]() mutable
 		{
-			uniform_buffer_set->rt_get()->rt_set_data(& view_proj, sizeof(glm::mat4));
+			uniform_buffer_set->rt_get()->rt_set_data(&view_proj, sizeof(glm::mat4));
 		});
 
 	m_renderer_data.Stats = {};
@@ -651,12 +657,6 @@ void Renderer2D::on_imgui_render() const
 {
 	const uint32_t current_frame_index = render::get_current_frame_index();
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data.render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data.gpu_time_query.renderer_2D_query)));
-}
-
-ref<render::render_pass> Renderer2D::get_target_render_pass()
-{
-    KB_CORE_ASSERT(false, "Deprecated!");
-    return ref<render::render_pass>{};
 }
 
 void Renderer2D::set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer)

@@ -27,9 +27,9 @@ inline auto get_vk_attachment_load_op(
     {
         // #TODO should have separate depth and color clears...
         if (Utils::IsDepthFormat(p_texture_specification.format))
-            return p_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+            return p_specification.m_clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 
-        return p_specification.m_clear_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+        return p_specification.m_clear_color_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
     }
     case attachment_load_op_t::clear:
         return VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -313,10 +313,12 @@ void vulkan_frame_buffer::RT_Invalidate()
             attachment_description.initialLayout = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR ?
                 VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             // #TODO Separate layouts requires a "separate layouts" flag to be enabled
-			if (attachment_spec.format == ImageFormat::DEPTH24STENCIL8 || true) 
+			if (attachment_spec.format == ImageFormat::DEPTH24STENCIL8 || true)
 			{
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // TODO: if sampling
+                // TODO: if not sampling
+				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                // TODO: if sampling
+				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 				depth_attachment_reference = {
 				    attachment_index,
 				    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL

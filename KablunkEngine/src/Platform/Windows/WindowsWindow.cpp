@@ -118,9 +118,9 @@ void WindowsWindow::Init(const WindowProps& props)
 	m_context = GraphicsContext::Create(m_window);
 	m_context->Init();
 
+    // #TODO can we abstract and not have render backend specifics here...
 	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
 	{
-		// #TODO dynamic_cast bad!
 		ref<VulkanContext> context = m_context.As<VulkanContext>();
 		//vk_context->GetSwapchain().Init(vk_context->GetInstance(), vk_context->GetDevice());
 		context->GetSwapchain().InitSurface(m_window);
@@ -130,14 +130,13 @@ void WindowsWindow::Init(const WindowProps& props)
 	}
 
 	KB_CORE_INFO("Context created!");
-    
-    
+
     glfwSetWindowUserPointer(m_window, &m_data);
     SetVsync(false);
 
     //GLFW Callbacks
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         WindowResizeEvent event(width, height);
         data.EventCallback(event);
@@ -152,14 +151,14 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         WindowCloseEvent event;
         data.EventCallback(event);
     });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         switch (action) {
             case GLFW_PRESS:
@@ -184,13 +183,13 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int keycode) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
         KeyTypedEvent event(keycode);
         data.EventCallback(event);
     });
 
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         switch (action) {
             case GLFW_PRESS:
@@ -209,16 +208,16 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xOffset, double yOffset) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-        MouseScrolledEvent event((float)xOffset, (float)yOffset);
+        MouseScrolledEvent event(static_cast<float>(xOffset), static_cast<float>(yOffset));
         data.EventCallback(event);
     });
 
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-        MouseMovedEvent event((float)xPos, (float)yPos);
+        MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
         data.EventCallback(event);
     });
 
@@ -314,7 +313,7 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 	// starting position of the window
 	int x_pos = 0, y_pos = 0;
 	// refresh rate of the primary monitor
-	int refresh_rate = glfw_mode->refreshRate;
+    const int refresh_rate = glfw_mode->refreshRate;
 	switch (mode)
 	{
 		case window_mode_t::windowed:
@@ -395,7 +394,7 @@ cursor_handle WindowsWindow::create_cursor(
         k_max_cursors
     );
 
-    GLFWimage image{
+    const GLFWimage image{
         .width = static_cast<i32>(p_texture->GetWidth()),
         .height = static_cast<i32>(p_texture->GetHeight()),
         .pixels = static_cast<unsigned char*>(p_texture->GetWriteableBuffer().get())

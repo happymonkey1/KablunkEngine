@@ -89,9 +89,9 @@ namespace kb
 		std::vector<VkExtensionProperties> extensions(extension_count);
 		vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
 
-		KB_CORE_TRACE("Available Vulkan Extensions:");
+		KB_CORE_INFO("Available Vulkan Extensions:");
 		for (const auto& extension : extensions)
-			KB_CORE_TRACE("  {0}", extension.extensionName);
+			KB_CORE_INFO("  {0}", extension.extensionName);
 
 		// #TODO validate that required extensions by Vulkan are present in GLFW
 

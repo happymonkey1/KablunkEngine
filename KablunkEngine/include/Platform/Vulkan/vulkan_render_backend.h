@@ -81,9 +81,9 @@ public:
     ) noexcept -> void;
 
     auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) const noexcept -> VkDescriptorSet;
-
-private:
-    std::unique_ptr<vulkan_render_backend_data> m_renderer_data{};
+    auto rt_allocate_material_descriptor_set(
+        VkDescriptorSetAllocateInfo& p_alloc_info
+    ) const noexcept -> VkDescriptorSet;
 };
 
 } // end namespace kb::render

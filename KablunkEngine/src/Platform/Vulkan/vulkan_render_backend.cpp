@@ -17,8 +17,15 @@
 
 #include <vulkan/vulkan.h>
 
+#include "Kablunk/Core/Application.h"
+
 namespace kb::render
 {
+
+namespace
+{
+std::unique_ptr<vulkan_render_backend_data> s_renderer_data{};
+}
 
 struct vulkan_render_backend_data
 {
@@ -41,11 +48,11 @@ struct vulkan_render_backend_data
 
 auto vulkan_render_backend::init() noexcept -> void
 {
-    m_renderer_data = std::make_unique<vulkan_render_backend_data>();
+    s_renderer_data = std::make_unique<vulkan_render_backend_data>();
     const auto frames_in_flight = render::get_frames_in_flight();
 
-    m_renderer_data->m_descriptor_pools.resize(frames_in_flight);
-    m_renderer_data->m_descriptor_pool_allocation_count.resize(frames_in_flight);
+    s_renderer_data->m_descriptor_pools.resize(frames_in_flight);
+    s_renderer_data->m_descriptor_pool_allocation_count.resize(frames_in_flight);
 
     submit([frames_in_flight, this]() mutable
         {
@@ -77,13 +84,13 @@ auto vulkan_render_backend::init() noexcept -> void
             for (u32 i = 0; i < frames_in_flight; i++)
             {
                 KB_VK_CHECK_RESULT(
-                    vkCreateDescriptorPool(vk_device, &vk_pool_info, nullptr, &m_renderer_data->m_descriptor_pools[i])
+                    vkCreateDescriptorPool(vk_device, &vk_pool_info, nullptr, &s_renderer_data->m_descriptor_pools[i])
                 );
-                m_renderer_data->m_descriptor_pool_allocation_count[i] = 0;
+                s_renderer_data->m_descriptor_pool_allocation_count[i] = 0;
             }
 
             KB_VK_CHECK_RESULT(
-                vkCreateDescriptorPool(vk_device, &vk_pool_info, nullptr, &m_renderer_data->m_material_descriptor_pool)
+                vkCreateDescriptorPool(vk_device, &vk_pool_info, nullptr, &s_renderer_data->m_material_descriptor_pool)
             );
         }
     );
@@ -110,14 +117,14 @@ auto vulkan_render_backend::init() noexcept -> void
         log::logger_tag_t::renderer,
         "Creating fullscreen quad vertex buffer"
     );
-    m_renderer_data->m_quad_vertex_buffer = VertexBuffer::Create(quad_data, 4 * sizeof(QuadVertex));
+    s_renderer_data->m_quad_vertex_buffer = VertexBuffer::Create(quad_data, 4 * sizeof(QuadVertex));
     constexpr u32 indices[6] = { 0, 1, 2, 2, 3, 0, };
 
     log::core::info(
         log::logger_tag_t::renderer,
         "Creating fullscreen quad index buffer"
     );
-    m_renderer_data->m_quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
+    s_renderer_data->m_quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 }
 
 auto vulkan_render_backend::shutdown() noexcept -> void
@@ -129,11 +136,31 @@ auto vulkan_render_backend::shutdown() noexcept -> void
     );
     vkDeviceWaitIdle(vk::get_current_vk_device());
 
-    m_renderer_data.reset();
+    s_renderer_data.reset();
 }
 
 auto vulkan_render_backend::begin_frame() noexcept -> void
 {
+    submit([]()
+        {
+            KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_frame");
+            const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+            const auto& swap_chain = VulkanContext::Get()->GetSwapchain();
+            const auto buffer_index = swap_chain.GetCurrentBufferIndex();
+
+            vkResetDescriptorPool(
+                vk_device,
+                s_renderer_data->m_descriptor_pools[buffer_index],
+                0
+            );
+            memset(
+                s_renderer_data->m_descriptor_pool_allocation_count.data(),
+                0,
+                s_renderer_data->m_descriptor_pool_allocation_count.size() * sizeof(u32)
+            );
+            s_renderer_data->draw_call_count = 0;
+        }
+    );
 }
 
 auto vulkan_render_backend::end_frame() noexcept -> void
@@ -155,7 +182,6 @@ auto vulkan_render_backend::begin_render_pass(
                 p_render_pass->get_specification().m_debug_name
             );
 
-            KB_PROFILE_SCOPE;
 
             const u32 frame_index = rt_get_current_frame_index();
             const VkCommandBuffer vk_command_buffer = p_render_command_buffer.As<VulkanRenderCommandBuffer>()->get_active_command_buffer();
@@ -358,12 +384,12 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
-            auto vulkan_vertex_buffer = m_renderer_data->m_quad_vertex_buffer.As<VulkanVertexBuffer>();
+            auto vulkan_vertex_buffer = s_renderer_data->m_quad_vertex_buffer.As<VulkanVertexBuffer>();
             const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
             constexpr VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
-            auto vulkan_index_buffer = m_renderer_data->m_quad_index_buffer.As<VulkanIndexBuffer>();
+            auto vulkan_index_buffer = s_renderer_data->m_quad_index_buffer.As<VulkanIndexBuffer>();
             const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
             vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -385,12 +411,14 @@ auto vulkan_render_backend::submit_fullscreen_quad(
                 }
                 else
                 {
+#if 0
 #ifdef KB_DEBUG
                     log::core::warn(
                         log::logger_tag_t::renderer,
                         "[vulkan_renderer_backend::submit_fullscreen_quad]: Descriptor set {} is null?",
                         static_cast<const void*>(vk_descriptor_set)
                     );
+#endif
 #endif
                     // vulkan_material->rt_prepare();
                 }
@@ -420,7 +448,7 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 
             vkCmdDrawIndexed(
                 vk_command_buffer,
-                m_renderer_data->m_quad_index_buffer->GetCount(),
+                s_renderer_data->m_quad_index_buffer->GetCount(),
                 1,
                 0,
                 0,
@@ -441,7 +469,7 @@ auto vulkan_render_backend::render_geometry(
 {
     KB_PROFILE_SCOPE;
 
-    ref<VulkanMaterial> vulkan_material = p_material.As<VulkanMaterial>();
+    ref vulkan_material = p_material.As<VulkanMaterial>();
     if (p_index_count == 0)
         p_index_count = p_index_buffer->GetCount();
 
@@ -458,7 +486,7 @@ auto vulkan_render_backend::render_geometry(
 
             auto vulkan_geometry_vertex_buffer = p_vertex_buffer.As<VulkanVertexBuffer>();
             const VkBuffer vk_vertex_buffer = vulkan_geometry_vertex_buffer->GetVkBuffer();
-            constexpr VkDeviceSize offsets[1] = { 0 }; // wtf is this
+            constexpr VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
             auto vulkan_geometry_index_buffer = p_index_buffer.As<VulkanIndexBuffer>();
@@ -488,6 +516,8 @@ auto vulkan_render_backend::render_geometry(
                 );
             }
 
+            // push u_Renderer mat4
+            // #TODO why do we still have this?
             vkCmdPushConstants(
                 command_buffer,
                 layout,
@@ -812,13 +842,108 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
     KB_PROFILE_SCOPE;
 
     const auto buffer_index = rt_get_current_frame_index();
-    p_alloc_info.descriptorPool = m_renderer_data->m_descriptor_pools[buffer_index];
+    p_alloc_info.descriptorPool = s_renderer_data->m_descriptor_pools[buffer_index];
     const auto vk_device = vk::get_current_vk_device();
     VkDescriptorSet vk_descriptor_set;
-    KB_VK_CHECK_RESULT(
-        vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set)
-    );
-    m_renderer_data->m_descriptor_pool_allocation_count[buffer_index] += p_alloc_info.descriptorSetCount;
+    const auto res = vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set);
+    if (res != VK_SUCCESS)
+    {
+        switch (res)
+        {
+        case VK_ERROR_OUT_OF_POOL_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_POOL_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_HOST_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_DEVICE_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_FRAGMENTED_POOL:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_FRAGMENTED_POOL!"
+            );
+            break;
+        }
+        default:
+            break;
+        }
+
+        KB_CORE_ASSERT(false, "[vulkan_render_backend]: rt_allocate_descriptor_set() failed!");
+    }
+
+    s_renderer_data->m_descriptor_pool_allocation_count[buffer_index] += p_alloc_info.descriptorSetCount;
+    return vk_descriptor_set;
+}
+
+auto vulkan_render_backend::rt_allocate_material_descriptor_set(
+    VkDescriptorSetAllocateInfo& p_alloc_info) const noexcept -> VkDescriptorSet
+{
+    KB_PROFILE_SCOPE;
+
+    p_alloc_info.descriptorPool = s_renderer_data->m_material_descriptor_pool;
+    const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
+    VkDescriptorSet vk_descriptor_set;
+    const auto res = vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set);
+    if (res != VK_SUCCESS)
+    {
+        switch (res)
+        {
+        case VK_ERROR_OUT_OF_POOL_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_POOL_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_HOST_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_OUT_OF_DEVICE_MEMORY! There is probably a bad memory leak..."
+            );
+            break;
+        }
+        case VK_ERROR_FRAGMENTED_POOL:
+        {
+            kb::log::core::error(
+                log::logger_tag_t::renderer,
+                "[vulkan_render_backend]: rt_allocate_descriptor_set failed with VK_ERROR_FRAGMENTED_POOL!"
+            );
+            break;
+        }
+        default:
+            break;
+        }
+
+        KB_CORE_ASSERT(false, "[vulkan_render_backend]: rt_allocate_descriptor_set() failed!");
+    }
     return vk_descriptor_set;
 }
 } // end namespace kb::render
