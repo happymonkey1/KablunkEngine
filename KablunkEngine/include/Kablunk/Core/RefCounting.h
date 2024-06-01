@@ -77,7 +77,7 @@ public:
             IncRef();
     }
 
-#if KB_REF_MOVE_DEFINED
+//#if KB_REF_MOVE_DEFINED
     constexpr ref(ref&& p_other) noexcept
         : m_ptr{ p_other.m_ptr }
 	{
@@ -85,7 +85,7 @@ public:
 
         p_other.m_ptr = nullptr;
 	}
-#endif
+//#endif
 
 	template <typename T2>
     explicit constexpr ref(const ref<T2>& other) noexcept
@@ -135,18 +135,17 @@ public:
 		return *this;
 	}
 
-#if KB_REF_MOVE_DEFINED
+//#if KB_REF_MOVE_DEFINED
     constexpr ref& operator=(ref&& p_other) noexcept
 	{
-        if (this == &p_other || !p_other.m_ptr)
-            return *this;
+        DecRef();
 
         m_ptr = p_other.m_ptr;
         p_other.m_ptr = nullptr;
 
         return *this;
 	}
-#endif
+//#endif
 
 #if 0
 	template <typename T2>

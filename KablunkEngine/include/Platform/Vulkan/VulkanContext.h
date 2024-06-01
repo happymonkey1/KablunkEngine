@@ -20,7 +20,7 @@ namespace kb
 class VulkanContext final : public GraphicsContext {
 public:
 	VulkanContext(GLFWwindow* window_handle);
-	~VulkanContext() = default;
+	~VulkanContext() override = default;
 
 	void Init() override;
 	void SwapBuffers() override;

@@ -501,7 +501,7 @@ void SceneRenderer::geometry_pass()
 			transform_buffer->rt_set_data(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
 		}
 	);*/
-	
+
 	size_t transform_offset_ind = 0;
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
 	for (const auto& draw_command_data : m_draw_list)

@@ -355,7 +355,7 @@ void VulkanSwapChain::BeginFrame()
     KB_PROFILE_SCOPE;
 
 	// Make sure the frame we're requesting has finished rendering
-	uint32_t frames_in_flight = render::get_frames_in_flight();
+	const auto frames_in_flight = render::get_frames_in_flight();
     if (auto res = vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences, Error={}", static_cast<u32>(res));
 
@@ -367,7 +367,6 @@ void VulkanSwapChain::BeginFrame()
 	if (vkWaitForFences(m_device->GetVkDevice(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
 
-    
 	if (vkResetCommandPool(m_device->GetVkDevice(), m_command_buffers[m_current_buffer_index].m_command_pool, 0))
 		KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 

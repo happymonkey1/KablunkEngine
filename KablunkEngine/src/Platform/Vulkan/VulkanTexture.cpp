@@ -188,7 +188,7 @@ void VulkanTexture2D::Invalidate()
 		image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 		// Source pipeline stage is host write/read execution (VK_PIPELINE_STAGE_HOST_BIT)
 		// Destination pipeline stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(

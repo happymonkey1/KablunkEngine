@@ -147,4 +147,4 @@ public:
 };
 } // end namespace kb
 
-#endif 
+#endif

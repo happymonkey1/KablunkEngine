@@ -26,7 +26,7 @@ bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IA
 	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
 	asset->set_id(metadata.id);
 
-	bool success = asset.As<Texture2D>()->loaded();
+    const bool success = asset.As<Texture2D>()->loaded();
 	if (!success)
 		asset->set_flag(AssetFlag::Invalid, true);
 
@@ -48,12 +48,12 @@ void AudioAssetSerializer::serialize(const AssetMetadata& metadata, ref<IAsset>&
 
 bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
 {
-	audio::audio_asset_config config{ m_asset_manager->get_absolute_path(metadata).string() };
+    const audio::audio_asset_config config{ m_asset_manager->get_absolute_path(metadata).string() };
 
 	asset = audio::AudioAsset::create(config).As<IAsset>();
 	asset->set_id(metadata.id);
 
-	bool success = asset.As<audio::AudioAsset>()->loaded();
+    const bool success = asset.As<audio::AudioAsset>()->loaded();
 	if (!success)
 		asset->set_flag(AssetFlag::Invalid, true);
 

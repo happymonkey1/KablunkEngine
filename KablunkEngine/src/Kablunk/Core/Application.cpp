@@ -64,8 +64,8 @@ void Application::init()
     m_renderer_2d = ref<Renderer2D>::Create();
     m_renderer_2d->init();
 
-    m_screen_space_renderer_2d = ref<Renderer2D>::Create();
-    m_screen_space_renderer_2d->init();
+    //m_screen_space_renderer_2d = ref<Renderer2D>::Create();
+    //m_screen_space_renderer_2d->init();
 
 	m_render_thread.pump();
 
@@ -171,7 +171,7 @@ void Application::OnEvent(Event& e)
 	dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 	dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e){ return on_key_released(e); });
 
-	for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) 
+	for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it)
 	{
 		(*it)->OnEvent(e);
 		if (e.GetStatus())
