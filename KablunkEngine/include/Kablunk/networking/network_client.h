@@ -70,6 +70,12 @@ public:
         TimeResolutionT p_timeout = TimeResolutionT{ 5000 }
     ) noexcept -> connection_status_t;
 
+    // send a blocking authentication packet, blocking until there is a response or times out
+    template <typename TimeResolutionT = std::chrono::milliseconds>
+    [[nodiscard]] auto wait_for_authentication_check(
+        TimeResolutionT p_timeout_duration = TimeResolutionT{ 5000 }
+    ) noexcept -> std::future_status;
+
     auto disconnect() noexcept -> void;
     // check whether the network thread is running
     auto is_running() const noexcept -> bool { return m_running; }
@@ -147,20 +153,9 @@ private:
         const authentication_type p_auth_type = authentication_type::kb_sig_v1
     ) noexcept -> future_t
     {
-        auto fut = create_raw_network_call_future(m_packet_counter);
+        m_auth_check_promise = std::promise<void>{};
         send_raw_authentication_check(p_auth_type);
-        return fut;
-    }
-
-    // send a blocking authentication packet, blocking until there is a response or times out
-    template <typename TimeResolutionT = std::chrono::milliseconds>
-    [[nodiscard]] auto send_blocking_authentication_check(
-        const authentication_type p_auth_type = authentication_type::kb_sig_v1,
-        TimeResolutionT p_timeout_duration = TimeResolutionT{ 5000 }
-    ) noexcept -> std::future_status
-    {
-        const auto duration = std::chrono::duration_cast<TimeResolutionT>(p_timeout_duration);
-        return send_async_authentication_check(p_auth_type).wait_for(duration);
+        return m_auth_check_promise.get_future();
     }
 
     // internal handler which is run before user provided `on_data_received_callback_func`
@@ -178,6 +173,7 @@ private:
     // creates and internally stores a promise
     // returns a future for the corresponding raw network call
     [[nodiscard]] auto create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t;
+
 private:
     std::thread m_network_thread{};
     bool m_running = false;
@@ -201,6 +197,8 @@ private:
     // --- promises ----------------------------------------------------
     // connection status to allow for blocking connect call
     std::promise<void> m_connection_promise{};
+    // authentication check status for blocking
+    std::promise<void> m_auth_check_promise{};
     // hold promises for async network calls
     unordered_flat_map<u32, promise_t> m_raw_network_call_promise_map{};
     // -----------------------------------------------------------------
@@ -231,6 +229,36 @@ auto network_client::wait_for_connection(TimeResolutionT p_timeout) noexcept -> 
 
     KB_CORE_ASSERT(false, "wait_for_connection reached unreachable code?");
     return connection_status_t::failed_to_connect;
+}
+
+template <typename TimeResolutionT>
+auto network_client::wait_for_authentication_check(
+    TimeResolutionT p_timeout_duration
+) noexcept -> std::future_status
+{
+    const auto duration = std::chrono::duration_cast<TimeResolutionT>(p_timeout_duration);
+    const auto status = m_auth_check_promise.get_future().wait_for(duration);
+    switch (status)
+    {
+    case std::future_status::timeout:
+    {
+        log::core::warn(
+            log::logger_tag_t::network_client,
+            "Authentication check timed out!"
+        );
+        break;
+    }
+    default:
+    {
+        log::core::info(
+            log::logger_tag_t::network_client,
+            "Unblocking after receiving authentication response"
+        );
+        break;
+    }
+    }
+
+    return status;
 }
 
 // serialize arguments and send an rpc request

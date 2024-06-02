@@ -90,6 +90,7 @@ auto network_client::send_raw_authentication_check(
     auto auth_check_buffer = util::as_buffer(
         authentication_check_data{
             .m_packet_type = static_cast<underlying_packet_type_t>(packet_type::kb_auth_check),
+            .m_request_id = m_packet_counter,
             .m_auth_version = auth_type,
             .m_auth_hash = compute_auth_hash(auth_type, m_service_name),
             .m_account_credentials = m_account_credentials,
@@ -200,19 +201,6 @@ auto network_client::handle_auth_response(const msgpack::object& p_data_object) 
     m_client_id = auth_response.m_client_id;
 
     KB_CORE_INFO("[network_client]: Received client id '{}' from server", m_client_id);
-
-    // notify promise
-    if (m_raw_network_call_promise_map.contains(auth_response.m_response_id))
-    {
-        m_raw_network_call_promise_map.at(auth_response.m_response_id).set_value();
-    }
-    else
-    {
-        log::core::warn(
-            log::logger_tag_t::network_client,
-            "Authentication response could not find an associated promise!"
-        );
-    }
 }
 
 auto network_client::create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t
@@ -475,28 +463,7 @@ auto network_client::on_fatal_error(const std::string& p_message) noexcept -> vo
 
 auto network_client::on_client_connected() noexcept -> void
 {
-    const auto future_res = send_blocking_authentication_check();
-    switch (future_res)
-    {
-    case std::future_status::timeout:
-    {
-        kb::log::core::warn(
-            kb::log::logger_tag_t::network_client,
-            "Authentication check timed out!"
-        );
-        break;
-    }
-    default:
-    {
-#ifdef KB_DEBUG
-        kb::log::core::trace(
-            kb::log::logger_tag_t::network_client,
-            "Authentication check succeeded!"
-        );
-#endif
-        break;
-    }
-    }
+    send_async_authentication_check();
 
     m_client_connected_callback_func();
 }

@@ -103,6 +103,8 @@ TEST_CASE("network initialization succeeds", "[networking]")
     client->connect_to_server("127.0.0.1", port);
     auto connection_status = client->wait_for_connection();
     REQUIRE(connection_status == network::network_client::connection_status_t::connected);
+    auto auth_status = client->wait_for_authentication_check();
+    REQUIRE(auth_status == std::future_status::ready);
 
 #if 0
     // #TODO: use `wait_for_connection` function
