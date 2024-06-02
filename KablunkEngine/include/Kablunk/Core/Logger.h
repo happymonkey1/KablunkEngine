@@ -141,6 +141,11 @@ enum class logger_tag_t
 	native_script_engine,
 	native_script_module,
 
+    // network
+    network,
+    network_server,
+    network_client,
+
 	// utility
 	utility,
 
@@ -199,6 +204,9 @@ inline constexpr auto logger_tag_to_cstr(logger_tag_t logger_tag) noexcept -> st
 	case logger_tag_t::native_script:			return "native_script";
 	case logger_tag_t::native_script_engine:	return "native_script_engine";
 	case logger_tag_t::native_script_module:	return "native_script_module";
+    case logger_tag_t::network:                 return "network";
+    case logger_tag_t::network_server:          return "network_server";
+    case logger_tag_t::network_client:          return "network_client";
 	case logger_tag_t::utility:					return "utility";
 	case logger_tag_t::NONE:					return "INVALID_TAG";
     default:

@@ -101,11 +101,16 @@ TEST_CASE("network initialization succeeds", "[networking]")
         }
     );
     client->connect_to_server("127.0.0.1", port);
+    auto connection_status = client->wait_for_connection();
+    REQUIRE(connection_status == network::network_client::connection_status_t::connected);
 
+#if 0
     // #TODO: use `wait_for_connection` function
     std::this_thread::sleep_for(
         std::chrono::milliseconds(k_delay_ms)
     );
+#endif
+
     client->call_rpc("add", 2, 3);
     client->call_rpc("sub", 2, 3);
 

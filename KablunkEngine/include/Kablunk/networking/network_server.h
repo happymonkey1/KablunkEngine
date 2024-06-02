@@ -14,6 +14,7 @@
 #include "Kablunk/networking/packet_handler_dispatcher.h"
 #include "Kablunk/networking/rpc_dispatcher.h"
 
+
 namespace kb::network
 { // start namespace kb::network
 
@@ -166,7 +167,8 @@ private:
 
     // send successful authentication response to client
     auto send_authentication_response_to_client(
-        const client_info& p_client_info
+        const client_info& p_client_info,
+        u32 p_response_id
     ) const noexcept -> void;
 private:
     std::thread m_network_thread;

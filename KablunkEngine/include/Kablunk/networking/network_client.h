@@ -1,7 +1,5 @@
 #pragma once
 
-#include <future>
-
 #include "Kablunk/Core/owning_buffer.h"
 #include "Kablunk/Core/concepts.hpp"
 #include "Kablunk/networking/networking_types.h"
@@ -14,6 +12,8 @@
 #include "Kablunk/networking/rpc_dispatcher.h"
 
 #include <optional>
+#include <future>
+#include <chrono>
 
 namespace kb::network
 { // start namespace kb::network
@@ -45,6 +45,9 @@ public:
 
     using packet_underlying_t = std::underlying_type_t<packet_type>;
 
+    using promise_t = std::promise<void>;
+    using future_t = std::future<void>;
+
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
 
 public:
@@ -62,6 +65,12 @@ public:
         connect_to_server(fmt::format("{}:{}", p_server_ip, p_port));
     }
 
+    // blocking call to wait until the client successfully connects to the server
+    template <typename TimeResolutionT = std::chrono::milliseconds>
+    [[nodiscard]] auto wait_for_connection(
+        TimeResolutionT p_timeout = TimeResolutionT{ 5000 }
+    ) noexcept -> connection_status_t;
+
     auto disconnect() noexcept -> void;
     auto is_running() const noexcept -> bool { return m_running; }
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
@@ -71,6 +80,7 @@ public:
     {
         m_account_credentials = std::move(p_account_credentials);
     }
+
     auto get_account_credentials() const noexcept -> const account_credentials& { return m_account_credentials; }
 
     // bind a packet type to a user provided handler
@@ -108,21 +118,46 @@ private:
     ) noexcept;
 
     static auto connection_status_changed_callback(SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
-    auto on_connection_status_changes(SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
+    auto on_connection_status_changes(
+        SteamNetConnectionStatusChangedCallback_t* p_info
+    ) noexcept -> void;
 
+    // main network loop, runs until shutdown is called or `network_client` is destroyed
     auto network_loop() noexcept -> void;
+
     auto poll_incoming_messages() noexcept -> void;
     auto poll_connection_state_changes() noexcept -> void;
 
     auto on_fatal_error(const std::string& p_message) noexcept -> void;
 
     // internal handler which is run before user on_client_connected_callback
-    auto on_client_connected() const noexcept -> void;
+    auto on_client_connected() noexcept -> void;
 
-    // send authentication packet
-    auto send_authentication_check(
+    // send non-blocking authentication packet
+    auto send_raw_authentication_check(
         authentication_type p_auth_type = authentication_type::kb_sig_v1
     ) const noexcept -> void;
+
+    // send a non-blocking authentication packet
+    [[nodiscard]] auto send_async_authentication_check(
+        const authentication_type p_auth_type = authentication_type::kb_sig_v1
+    ) noexcept -> future_t
+    {
+        auto fut = create_raw_network_call_future(m_packet_counter);
+        send_raw_authentication_check(p_auth_type);
+        return fut;
+    }
+
+    // send a blocking authentication packet, blocking until there is a response or times out
+    template <typename TimeResolutionT = std::chrono::milliseconds>
+    auto send_blocking_authentication_check(
+        const authentication_type p_auth_type = authentication_type::kb_sig_v1,
+        TimeResolutionT p_timeout_duration = TimeResolutionT{ 5000 }
+    ) noexcept -> std::future_status
+    {
+        const auto duration = std::chrono::duration_cast<TimeResolutionT>(p_timeout_duration);
+        return send_async_authentication_check(p_auth_type).wait_for(duration);
+    }
 
     // internal handler which is run before user provided `on_data_received_callback_func`
     auto on_data_received(msgpack::sbuffer p_data_buffer) noexcept -> void;
@@ -134,6 +169,10 @@ private:
 
     // internal handler for authentication response
     auto handle_auth_response(const msgpack::object& p_data_object) noexcept -> void;
+
+    // creates and internally stores a promise
+    // returns a future for the corresponding raw network call
+    auto create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t;
 private:
     std::thread m_network_thread{};
     bool m_running = false;
@@ -152,8 +191,13 @@ private:
     client_id_t m_connection = 0;
     // incrementing packet counter
     u32 m_packet_counter = 0;
-    // hold futures for rpc calls that require a non-void response
-    //kb::unordered_flat_map<u32, std::future<>>
+
+    // --- promises ----------------------------------------------------
+    std::promise<void> m_connection_promise{};
+    // hold promises for async network calls
+    unordered_flat_map<u32, promise_t> m_raw_network_call_promise_map{};
+
+    // -----------------------------------------------------------------
 
     u32 m_client_id = 0;
     account_credentials m_account_credentials{};
@@ -162,6 +206,23 @@ private:
 
     friend class ref<network_client>;
 };
+
+template <typename TimeResolutionT>
+auto network_client::wait_for_connection(TimeResolutionT p_timeout) noexcept -> connection_status_t
+{
+    const auto duration_timeout = std::chrono::duration_cast<TimeResolutionT>(p_timeout);
+    const auto connection_status = m_connection_promise.get_future().wait_for(duration_timeout);
+
+    switch (connection_status)
+    {
+    case std::future_status::timeout:
+        return connection_status_t::failed_to_connect;
+    case std::future_status::deferred:
+        return connection_status_t::connecting;
+    case std::future_status::ready:
+        return connection_status_t::connected;
+    }
+}
 
 // serialize arguments and send an rpc request
 template <typename... Args>

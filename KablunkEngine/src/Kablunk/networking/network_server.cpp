@@ -19,13 +19,17 @@ static std::array<network_server*, k_max_servers> s_registered_servers{};
 namespace details
 { // start namespace ::details
 
-static auto register_server_for_connection_callback(network_server* p_server_ptr) -> void
+static auto register_server_for_connection_callback(
+    network_server* p_server_ptr
+) -> void
 {
     KB_CORE_ASSERT(s_registered_server_count < k_max_servers, "[network_server]: exceeded maximum server count!");
     s_registered_servers[s_registered_server_count++] = p_server_ptr;
 }
 
-static auto unregister_server_for_connection_callback(network_server* p_server_ptr) -> void
+static auto unregister_server_for_connection_callback(
+    const network_server* p_server_ptr
+) -> void
 {
     KB_CORE_ASSERT(s_registered_server_count > 0, "[network_server]: Trying to unregister a server when there are none in the registered server list?");
 
@@ -146,7 +150,7 @@ auto network_server::handle_client_authentication(
     if (p_client_info.m_authenticated)
         return;
 
-    auto data_buffer_res = util::convert_object<authentication_check_data>(p_auth_data_object);
+    const auto data_buffer_res = util::convert_object<authentication_check_data>(p_auth_data_object);
     if (!data_buffer_res)
     {
         KB_CORE_WARN(
@@ -156,7 +160,7 @@ auto network_server::handle_client_authentication(
         return;
     }
 
-    const auto auth_data = std::move(*data_buffer_res);
+    const auto auth_data = *data_buffer_res;
     const bool auth_check = check_client_auth_packet(p_client_info, auth_data);
 
     // disconnect client if they fail the auth check
@@ -168,7 +172,7 @@ auto network_server::handle_client_authentication(
 
     p_client_info.m_authenticated = auth_check;
     p_client_info.m_account_credentials = auth_data.m_account_credentials;
-    send_authentication_response_to_client(p_client_info);
+    send_authentication_response_to_client(p_client_info, auth_data.m_request_id);
 }
 
 auto network_server::on_data_received(
@@ -327,11 +331,15 @@ auto network_server::disconnect_client(client_id_t p_client_id) noexcept -> void
     m_connected_clients.erase(it_client);
 }
 
-auto network_server::send_authentication_response_to_client(const client_info& p_client_info) const noexcept -> void
+auto network_server::send_authentication_response_to_client(
+    const client_info& p_client_info,
+    const u32 p_response_id
+) const noexcept -> void
 {
     const auto auth_response = util::as_buffer(authentication_response_data{
         .m_packet_type = static_cast<underlying_packet_type_t>(packet_type::kb_auth_response),
         // #TODO require version in create call and pass...
+        .m_response_id = p_response_id,
         .m_service_version = "0.0.1",
         .m_client_id = p_client_info.m_client_id
     });

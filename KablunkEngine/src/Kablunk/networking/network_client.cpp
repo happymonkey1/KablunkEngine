@@ -76,13 +76,13 @@ auto network_client::disconnect() noexcept -> void
         m_network_thread.join();
 }
 
-auto network_client::send_authentication_check(
+auto network_client::send_raw_authentication_check(
     const authentication_type p_auth_type /*= authentication_type::kb_sig_v1*/
 ) const noexcept -> void
 {
     KB_CORE_ASSERT(
         m_account_credentials.validate(),
-        "[network_client]: Account credentails failed local validation check"
+        "[network_client]: Account credentials failed local validation check"
     )
 
     KB_CORE_INFO("[network_client]: Sending authentication check");
@@ -195,16 +195,35 @@ auto network_client::handle_auth_response(const msgpack::object& p_data_object) 
         return;
     }
 
-    const auto auth_response = auth_response_res.value();
+    const auto& auth_response = auth_response_res.value();
     // #TODO validate version is acceptable
     m_client_id = auth_response.m_client_id;
 
     KB_CORE_INFO("[network_client]: Received client id '{}' from server", m_client_id);
+
+    // notify promise
+    if (m_raw_network_call_promise_map.contains(auth_response.m_response_id))
+    {
+        m_raw_network_call_promise_map.at(auth_response.m_response_id).set_value();
+    }
+    else
+    {
+        log::core::warn(
+            log::logger_tag_t::network_client,
+            "Authentication response could not find an associated promise!"
+        );
+    }
+}
+
+auto network_client::create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t
+{
+    const auto it = m_raw_network_call_promise_map.emplace(p_packet_index, promise_t{});
+    return it.first->second.get_future();
 }
 
 auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) const noexcept -> bool
 {
-    auto result = m_interface->SendMessageToConnection(
+    const auto result = m_interface->SendMessageToConnection(
         m_connection,
         p_buffer.data(),
         static_cast<u32>(p_buffer.size()),
@@ -377,8 +396,10 @@ auto network_client::network_loop() noexcept -> void
             std::this_thread::sleep_for(std::chrono::milliseconds(k_network_thread_sleep_ms * 10));
         }
     }
-    
+
     KB_CORE_INFO("[network::network_client]: Connected to '{}'", m_server_address);
+    // let connection promise know we have successfully connected
+    m_connection_promise.set_value();
     m_running = true;
     while (m_running)
     {
@@ -439,10 +460,30 @@ auto network_client::on_fatal_error(const std::string& p_message) noexcept -> vo
     KB_CORE_ERROR("[network_client]: Fatal error! Message='{}'", p_message);
 }
 
-auto network_client::on_client_connected() const noexcept -> void
+auto network_client::on_client_connected() noexcept -> void
 {
-    // #TODO wait for response
-    send_authentication_check();
+    const auto future_res = send_blocking_authentication_check();
+    switch (future_res)
+    {
+    case std::future_status::timeout:
+    {
+        kb::log::core::warn(
+            kb::log::logger_tag_t::network_client,
+            "Authentication check timed out!"
+        );
+        break;
+    }
+    default:
+    {
+#ifdef KB_DEBUG
+        kb::log::core::trace(
+            kb::log::logger_tag_t::network_client,
+            "Authentication check succeeded!"
+        );
+#endif
+        break;
+    }
+    }
 
     m_client_connected_callback_func();
 }
