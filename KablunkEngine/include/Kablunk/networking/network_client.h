@@ -18,7 +18,7 @@
 namespace kb::network
 { // start namespace kb::network
 
-class network_client : public RefCounted
+class network_client
 {
 public:
     enum class connection_status_t
@@ -52,10 +52,9 @@ public:
 
 public:
     network_client() noexcept = default;
-    ~network_client() noexcept override;
+    ~network_client() noexcept;
 
     network_client(const network_client&) noexcept = delete;
-    network_client(network_client&&) noexcept = default;
 
     /* client management */
     auto connect_to_server(const std::string& p_server_address) noexcept -> void;
@@ -72,6 +71,7 @@ public:
     ) noexcept -> connection_status_t;
 
     auto disconnect() noexcept -> void;
+    // check whether the network thread is running
     auto is_running() const noexcept -> bool { return m_running; }
     auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
     auto get_client_id() const noexcept -> client_id_t { return m_client_id; }
@@ -83,8 +83,8 @@ public:
 
     auto get_account_credentials() const noexcept -> const account_credentials& { return m_account_credentials; }
 
-    // bind a packet type to a user provided handler
-    // handler is invoked upon receiving the specified packet type, after internal handlers are run
+    // bind a packet type to a user provided handler.
+    // handler is invoked upon receiving the specified packet type, after internal handlers are run.
     auto bind(
         underlying_packet_type_t p_packet_type,
         packet_handler_func_t p_handler
@@ -104,7 +104,7 @@ public:
         std::string p_service_name,
         callback_info&& p_callback_info,
         std::optional<account_credentials> p_account_credentials
-    ) noexcept -> ref<network_client>;
+    ) noexcept -> std::unique_ptr<network_client>;
 
     /* overloaded operators */
     auto operator=(const network_client&) noexcept -> network_client& = delete;
@@ -117,6 +117,8 @@ private:
         std::optional<account_credentials>&& p_account_credentials
     ) noexcept;
 
+    network_client(network_client&& p_other) noexcept;
+
     static auto connection_status_changed_callback(SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
     auto on_connection_status_changes(
         SteamNetConnectionStatusChangedCallback_t* p_info
@@ -125,7 +127,9 @@ private:
     // main network loop, runs until shutdown is called or `network_client` is destroyed
     auto network_loop() noexcept -> void;
 
+    // poll incoming messages on network thread
     auto poll_incoming_messages() noexcept -> void;
+    // poll connection changes on network thread
     auto poll_connection_state_changes() noexcept -> void;
 
     auto on_fatal_error(const std::string& p_message) noexcept -> void;
@@ -150,7 +154,7 @@ private:
 
     // send a blocking authentication packet, blocking until there is a response or times out
     template <typename TimeResolutionT = std::chrono::milliseconds>
-    auto send_blocking_authentication_check(
+    [[nodiscard]] auto send_blocking_authentication_check(
         const authentication_type p_auth_type = authentication_type::kb_sig_v1,
         TimeResolutionT p_timeout_duration = TimeResolutionT{ 5000 }
     ) noexcept -> std::future_status
@@ -161,6 +165,7 @@ private:
 
     // internal handler which is run before user provided `on_data_received_callback_func`
     auto on_data_received(msgpack::sbuffer p_data_buffer) noexcept -> void;
+
     // helper to dispatch internal handler for a specific packet type that is received
     auto dispatch_handler_by_packet_type(
         underlying_packet_type_t p_packet_type,
@@ -172,7 +177,7 @@ private:
 
     // creates and internally stores a promise
     // returns a future for the corresponding raw network call
-    auto create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t;
+    [[nodiscard]] auto create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t;
 private:
     std::thread m_network_thread{};
     bool m_running = false;
@@ -181,6 +186,7 @@ private:
     std::string m_service_name{};
 
     /* callbacks */
+    // #TODO why is this not the callback struct?
     data_received_callback_func_t m_data_received_callback_func = nullptr;
     client_connected_callback_func_t m_client_connected_callback_func = nullptr;
     client_disconnected_callback_func_t m_client_disconnected_callback_func = nullptr;
@@ -193,10 +199,10 @@ private:
     u32 m_packet_counter = 0;
 
     // --- promises ----------------------------------------------------
+    // connection status to allow for blocking connect call
     std::promise<void> m_connection_promise{};
     // hold promises for async network calls
     unordered_flat_map<u32, promise_t> m_raw_network_call_promise_map{};
-
     // -----------------------------------------------------------------
 
     u32 m_client_id = 0;
@@ -222,6 +228,9 @@ auto network_client::wait_for_connection(TimeResolutionT p_timeout) noexcept -> 
     case std::future_status::ready:
         return connection_status_t::connected;
     }
+
+    KB_CORE_ASSERT(false, "wait_for_connection reached unreachable code?");
+    return connection_status_t::failed_to_connect;
 }
 
 // serialize arguments and send an rpc request

@@ -248,13 +248,13 @@ auto network_client::create(
     std::string p_service_name,
     callback_info&& p_callback_info,
     std::optional<account_credentials> p_account_credentials
-) noexcept -> ref<network_client>
+) noexcept -> std::unique_ptr<network_client>
 {
-    auto client = ref<network_client>::Create(
+    auto client = std::unique_ptr<network_client>(new network_client{
         std::move(p_service_name),
         std::forward<callback_info>(p_callback_info),
         std::move(p_account_credentials)
-    );
+    });
     details::register_client_for_connection_callback(client.get());
     return client;
 }
@@ -273,6 +273,19 @@ network_client::network_client(
     KB_CORE_ASSERT(m_data_received_callback_func, "m_data_received_callback_func cannot be null");
     KB_CORE_ASSERT(m_client_connected_callback_func, "m_client_connected_callback_func cannot be null");
     KB_CORE_ASSERT(m_client_disconnected_callback_func, "m_client_disconnected_callback_func cannot be null");
+}
+
+network_client::network_client(network_client&& p_other) noexcept
+    : m_service_name{ std::move(p_other.m_service_name) },
+    m_data_received_callback_func{ p_other.m_data_received_callback_func },
+    m_client_connected_callback_func{ p_other.m_client_connected_callback_func },
+    m_client_disconnected_callback_func{ p_other.m_client_disconnected_callback_func },
+    m_account_credentials{ std::move(p_other.m_account_credentials) }
+{
+    p_other.m_running = false;
+    p_other.m_interface = nullptr;
+
+    // #TODO move rpc stuff?
 }
 
 auto network_client::connection_status_changed_callback(

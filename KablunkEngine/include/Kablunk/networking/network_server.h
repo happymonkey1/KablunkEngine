@@ -8,6 +8,7 @@
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 
+#include <memory>
 #include <thread>
 
 #include "Kablunk/networking/authentication.h"
@@ -18,7 +19,7 @@
 namespace kb::network
 { // start namespace kb::network
 
-class network_server : public RefCounted
+class network_server
 {
 public:
     using data_received_callback_func_t = void (*)(const client_info&, const msgpack::object&);
@@ -39,19 +40,29 @@ public:
 
 public:
     network_server() noexcept = default;
-    ~network_server() noexcept override;
+    ~network_server() noexcept;
 
     network_server(const network_server&) = delete;
-    network_server(network_server&&) = default;
 
     /* server management */
 
     auto start() noexcept -> void;
     auto stop() noexcept -> void;
     auto kick_client(client_id_t p_client_id) noexcept -> void;
-    auto get_connected_clients() const noexcept -> const unordered_flat_map<client_id_t, client_info>& { return m_connected_clients; }
-    auto get_connected_clients_count() const noexcept -> std::size_t { return m_connected_clients.size(); }
-    auto is_running() const noexcept -> bool { return m_running; }
+
+    [[nodiscard]] auto get_connected_clients() const noexcept ->
+        const unordered_flat_map<client_id_t, client_info>&
+    {
+        return m_connected_clients;
+    }
+
+    [[nodiscard]] auto get_connected_clients_count() const noexcept -> std::size_t
+    {
+        return m_connected_clients.size();
+    }
+
+    // check whether the network loop is running
+    [[nodiscard]] auto is_running() const noexcept -> bool { return m_running; }
 
     // bind a name to a rpc function
     auto bind_rpc(const std::string& p_name, auto&& p_rpc_func) -> void
@@ -68,7 +79,7 @@ public:
         m_packet_handler_dispatcher.bind(p_packet_type, p_handler);
     }
 
-    /* data management */
+    // send a msgpack buffer to a specific client
     auto send_packed_buffer_to_client(
         client_id_t p_client_id,
         const msgpack::sbuffer& p_buffer,
@@ -110,11 +121,11 @@ public:
         std::string p_service_name,
         // struct that holds server callbacks
         callback_info&& p_callbacks
-    ) noexcept -> ref<network_server>;
+    ) noexcept -> std::unique_ptr<network_server>;
 
     /* operator overloads */
     auto operator=(const network_server&) noexcept -> network_server& = delete;
-    auto operator=(network_server&&) noexcept -> network_server& = default;
+    auto operator=(network_server&&) noexcept -> network_server& = delete;
 
 private:
     network_server(
@@ -122,6 +133,8 @@ private:
         std::string&& p_service_name,
         const callback_info& p_callbacks
     ) noexcept;
+
+    network_server(network_server&& p_other) noexcept;
 
     auto network_loop() noexcept -> void;
     auto poll_incoming_messages() noexcept -> void;
@@ -133,6 +146,7 @@ private:
 
     static auto on_fatal_error(const std::string& p_message) -> void;
 
+    // send raw buffer to a client
     auto send(
         client_id_t p_client_id,
         const void* p_data,
@@ -141,7 +155,11 @@ private:
     ) const noexcept -> void;
 
     // internal handler run before user provided callback
-    auto on_data_received(client_info& p_client_info, const msgpack::sbuffer& p_data_buffer) noexcept -> void;
+    auto on_data_received(
+        client_info& p_client_info,
+        const msgpack::sbuffer& p_data_buffer
+    ) noexcept -> void;
+
     // dispatch different handler depending on packet type
     auto dispatch_handler_by_packet_type(
         underlying_packet_type_t p_packet_type,
@@ -158,7 +176,7 @@ private:
     // auth check that only KablunkEngine clients are trying to connect
     auto check_client_auth_packet(
         const client_info& p_client_info,
-        const authentication_check_data& p_data_object
+        const authentication_check_data& p_auth_data
     ) const noexcept -> bool;
 
     auto disconnect_client(
@@ -170,12 +188,14 @@ private:
         const client_info& p_client_info,
         u32 p_response_id
     ) const noexcept -> void;
+
 private:
     std::thread m_network_thread;
     i32 m_port = k_default_port;
     std::string m_service_name{};
 
     /* callbacks */
+    // #TODO why is this not the callback struct?
     data_received_callback_func_t m_data_received_callback_func = nullptr;
     client_connected_callback_func_t m_client_connected_callback_func = nullptr;
     client_connected_callback_func_t m_client_disconnected_callback_func = nullptr;

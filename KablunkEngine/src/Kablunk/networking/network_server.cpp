@@ -396,15 +396,18 @@ auto network_server::create(
     const i32 p_port,
     std::string p_service_name,
     callback_info&& p_callbacks
-) noexcept -> ref<network_server>
+) noexcept -> std::unique_ptr<network_server>
 {
-    KB_CORE_ASSERT(p_port < std::numeric_limits<u16>::max(), "[network::network_server]: Port out of range!");
+    KB_CORE_ASSERT(
+        p_port < std::numeric_limits<u16>::max(),
+        "[network::network_server]: Port out of range!"
+    );
 
-    return ref<network_server>::Create(
+    return std::unique_ptr<network_server>(new network_server{
         p_port,
         std::move(p_service_name),
         std::forward<callback_info>(p_callbacks)
-    );
+    });
 }
 
 network_server::network_server(
@@ -418,6 +421,27 @@ network_server::network_server(
     m_client_disconnected_callback_func{ p_callbacks.m_client_disconnected_callback }
 {
     details::register_server_for_connection_callback(this);
+}
+
+network_server::network_server(network_server&& p_other) noexcept
+    : m_port{ p_other.m_port }, m_service_name{ std::move(p_other.m_service_name) },
+    m_data_received_callback_func{ p_other.m_data_received_callback_func },
+    m_client_connected_callback_func{ p_other.m_client_connected_callback_func },
+    m_client_disconnected_callback_func{ p_other.m_client_disconnected_callback_func },
+    m_interface{ p_other.m_interface }
+{
+    KB_CORE_ASSERT(
+        !p_other.m_running,
+        "uh oh, did not do work for moving an already running server!"
+    );
+
+
+    p_other.m_running = false;
+    p_other.m_interface = nullptr;
+    p_other.m_listen_socket = 0u;
+    p_other.m_poll_group = 0u;
+
+    // #TODO move rpc stuff?
 }
 
 auto network_server::network_loop() noexcept -> void
