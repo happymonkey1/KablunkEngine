@@ -25,8 +25,6 @@ auto do_work_on_server_with_void_response(const network::client_info&, int) -> v
     KB_CORE_INFO("[networking_test]: do_wrok_on_server_with_void_response");
 }
 
-auto rpc_with_no_args()
-
 TEST_CASE("network initialization succeeds", "[networking]")
 {
     constexpr u32 k_delay_ms = 250;

@@ -53,10 +53,21 @@ public:
 
     network_server(const network_server&) = delete;
 
+    // factory function
+    static auto create(
+        i32 p_port,
+        std::string p_service_name,
+        // struct that holds server callbacks
+        callback_info&& p_callbacks
+    ) noexcept -> std::unique_ptr<network_server>;
+
     /* server management */
 
+    // start the server
     auto start() noexcept -> void;
+    // stop the server
     auto stop() noexcept -> void;
+    // kick a specific client connection
     auto kick_client(client_id_t p_client_id) noexcept -> void;
 
     [[nodiscard]] auto get_connected_clients() const noexcept ->
@@ -143,14 +154,7 @@ public:
         bool p_reliable = true
     ) const noexcept -> void;
 
-    // factory function
-    static auto create(
-        i32 p_port,
-        std::string p_service_name,
-        // struct that holds server callbacks
-        callback_info&& p_callbacks
-    ) noexcept -> std::unique_ptr<network_server>;
-
+    // send user provided error code response to a specific client
     template <concepts::UserErrorT ErrorT>
     auto send_error_response(
         const client_id_t p_client_id,
@@ -195,13 +199,21 @@ private:
     network_server(network_server&& p_other) noexcept;
 
     auto network_loop() noexcept -> void;
+    // poll for incoming client message(s)
+    // runs on the network thread
     auto poll_incoming_messages() noexcept -> void;
     auto set_client_description(client_id_t p_connection, const std::string& p_description) const noexcept -> void;
+    // poll for client connection changes
+    // runs on the network thread
     auto poll_connection_state_changes() -> void;
 
     static auto connection_status_changed_callback(const SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
+    // callback for connection status changes
+    // runs on the network thread
     auto on_connection_status_change(const SteamNetConnectionStatusChangedCallback_t* p_status) noexcept -> void;
 
+    // callback for underlying protocol implementation (steam GameNetworkingSockets) failures
+    // runs on the network thread
     static auto on_fatal_error(const std::string& p_message) -> void;
 
     // send raw buffer to a client
@@ -232,12 +244,14 @@ private:
     }
 
     // internal handler run before user provided callback
+    // runs on the network thread
     auto on_data_received(
         client_info& p_client_info,
         const msgpack::sbuffer& p_data_buffer
     ) noexcept -> void;
 
     // dispatch different handler depending on packet type
+    // runs on the network thread
     auto dispatch_handler_by_packet_type(
         underlying_packet_type_t p_packet_type,
         client_info& p_client_info,
@@ -245,12 +259,14 @@ private:
     ) noexcept -> void;
 
     // handler for authentication, allowing or kicking client
+    // runs on the network thread
     [[nodiscard]] auto client_authentication_handler(
         client_info& p_client_info,
         const msgpack::object& p_auth_data_object
     ) noexcept -> option<internal_error_code_t>;
 
     // auth check that only KablunkEngine clients are trying to connect
+    // runs on the network thread
     [[nodiscard]] auto check_client_auth_packet(
         const client_info& p_client_info,
         const authentication_request_data& p_auth_data
@@ -262,6 +278,7 @@ private:
     ) noexcept -> void;
 
     // send successful authentication response to client
+    // runs on the network thread
     auto send_authentication_response_to_client(
         const client_info& p_client_info,
         u32 p_response_id
@@ -287,7 +304,7 @@ private:
 
     // dispatcher for rpc calls
     rpc_dispatcher m_rpc_dispatcher{};
-    // dispatcher for packet callbacks
+    // dispatcher for user provided packet callbacks
     server_packet_handler_dispatcher m_packet_handler_dispatcher{};
 
     friend class ref<network_server>;

@@ -10,6 +10,7 @@ namespace kb::network
 
 using client_id_t = HSteamNetConnection;
 
+// wrapper for a rust style result
 template <typename T, typename E>
 using network_result = std::variant<T, E>;
 

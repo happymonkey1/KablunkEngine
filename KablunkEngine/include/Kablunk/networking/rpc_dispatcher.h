@@ -51,6 +51,8 @@ public:
     auto operator=(const rpc_dispatcher&) noexcept -> rpc_dispatcher& = delete;
     auto operator=(const rpc_dispatcher&&) noexcept -> rpc_dispatcher& = delete;
 private:
+    // helper function to bind the function to a wrapping lambda handler.
+    // unwraps msgpack::object buffer from client call into arguments to wrapping lambda
     template <typename FuncT>
     auto bind_to_msgpack_buffer(const std::string& p_name, FuncT p_rpc_func) noexcept -> void;
 private:
@@ -88,14 +90,16 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
     m_registry.emplace(
         p_name,
         [p_name, p_rpc_func](
-            [[maybe_unused]] const client_info& p_client_info,
+            const client_info& p_client_info,
             const u32 p_packet_id,
             const msgpack::object& args)
         {
-            constexpr u32 args_count = args_meta::arg_count::value;
+            // constexpr u32 args_count = args_meta::arg_count::value;
 
             // #TODO fix implementation
-            // not the cleanest, client_id is retrieved server side. It is not serialized in client
+            // Not the cleanest, client_id is retrieved server side. It is not serialized in client
+            // We remove the client_id argument from input arguments (unpacked from client side call / buffer)
+            // and is then manually passed in when invoking server side
             using serialized_args = typename meta::tuple_remove_first_type<args_type_t>::type;
             serialized_args args_obj{};
             // #TODO validate argument count is correct
@@ -104,11 +108,13 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
             option<msgpack::object> func_response_data_buffer = std::nullopt;
             if constexpr (!meta::is_void_return_type<FuncT>())
             {
+                // invoke and capture return value for non-void return
                 const auto func_response = meta::invoke_func(
                     p_rpc_func,
                     std::tuple_cat(std::make_tuple(p_client_info), args_obj)
                 );
 
+                // pack into msgpack::object for the return response
                 auto func_response_buffer = util::as_buffer(func_response);
                 const auto func_response_handle = msgpack::unpack(
                     func_response_buffer.data(),
@@ -119,6 +125,7 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
             }
             else
             {
+                // invoke void function
                 meta::invoke_func(
                     p_rpc_func,
                     std::tuple_cat(std::make_tuple(p_client_info), args_obj)

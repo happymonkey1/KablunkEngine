@@ -100,7 +100,7 @@ auto network_client::disconnect() noexcept -> void
 
 auto network_client::send_raw_authentication_check(
     const authentication_type p_auth_type /*= authentication_type::kb_sig_v1*/
-) const noexcept -> void
+) noexcept -> void
 {
     KB_CORE_ASSERT(
         m_account_credentials.validate(),
@@ -296,7 +296,7 @@ auto network_client::create_rpc_promise(u32 p_packet_index) noexcept -> rpc_futu
     return it.first->second.get_future();
 }
 
-auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) const noexcept -> bool
+auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable) noexcept -> bool
 {
     const auto result = m_interface->SendMessageToConnection(
         m_connection,
@@ -316,6 +316,7 @@ auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliab
         return false;
     }
 
+    ++m_packet_counter;
     return true;
 }
 
