@@ -26,7 +26,15 @@ public:
         disconnected,
         connected,
         connecting,
-        failed_to_connect
+        failed_to_connect,
+        failed_to_authenticate
+    };
+
+    // whether a call should be blocking or non-blocking
+    enum class network_blocking_t
+    {
+        blocking,
+        non_blocking
     };
 
     /* callback function definitions */
@@ -43,25 +51,44 @@ public:
         client_disconnected_callback_func_t m_client_disconnected_callback_func = nullptr;
     };
 
-    using packet_underlying_t = std::underlying_type_t<packet_type>;
+    using packet_underlying_t = std::underlying_type_t<internal_packet_type>;
 
-    using promise_t = std::promise<void>;
-    using future_t = std::future<void>;
+    using promise_void_t = std::promise<void>;
+    using future_void_t = std::future<void>;
+
+    using rpc_success_t = rpc_dispatcher::response_success_t;
+    using rpc_error_t = rpc_dispatcher::response_error_t;
+    using rpc_promise_t = std::promise<network_result<rpc_success_t, rpc_error_t>>;
+    using rpc_future_t = std::future<network_result<rpc_success_t, rpc_error_t>>;
 
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
-
+    inline static constexpr std::chrono::milliseconds k_rpc_timeout_ms = std::chrono::milliseconds{ 500 };
 public:
     network_client() noexcept = default;
     ~network_client() noexcept;
 
     network_client(const network_client&) noexcept = delete;
 
-    /* client management */
-    auto connect_to_server(const std::string& p_server_address) noexcept -> void;
+    /* factory create function */
+    [[nodiscard]] static auto create(
+        std::string p_service_name,
+        callback_info&& p_callback_info,
+        std::optional<account_credentials> p_account_credentials
+    ) noexcept -> std::unique_ptr<network_client>;
 
-    auto connect_to_server(const std::string& p_server_ip, const u32 p_port) -> void
+    /* client management */
+    [[nodiscard]] auto connect_to_server(
+        const std::string& p_server_address,
+        network_blocking_t p_connection_blocking = network_blocking_t::blocking
+    ) noexcept -> connection_status_t;
+
+    [[nodiscard]] auto connect_to_server(
+        const std::string& p_server_ip,
+        const u32 p_port,
+        const network_blocking_t p_connection_blocking = network_blocking_t::blocking
+    ) noexcept -> connection_status_t
     {
-        connect_to_server(fmt::format("{}:{}", p_server_ip, p_port));
+        return connect_to_server(fmt::format("{}:{}", p_server_ip, p_port), p_connection_blocking);
     }
 
     // blocking call to wait until the client successfully connects to the server
@@ -78,9 +105,9 @@ public:
 
     auto disconnect() noexcept -> void;
     // check whether the network thread is running
-    auto is_running() const noexcept -> bool { return m_running; }
-    auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
-    auto get_client_id() const noexcept -> client_id_t { return m_client_id; }
+    [[nodiscard]] auto is_running() const noexcept -> bool { return m_running; }
+    [[nodiscard]] auto get_connection_status() const noexcept -> connection_status_t { return m_connection_status; }
+    [[nodiscard]] auto get_client_id() const noexcept -> client_id_t { return m_client_id; }
 
     auto set_account_credentials(account_credentials&& p_account_credentials) noexcept -> void
     {
@@ -99,18 +126,27 @@ public:
         m_packet_handler_dispatcher.bind(p_packet_type, p_handler);
     }
 
-    // serialize arguments and send an rpc request
+    // serialize arguments and send a non-blocking (fire and forget) rpc request
+    // rpc calls that require a response should use an async method instead or an explicit rpc packet handler
     template <typename... Args>
-    auto call_rpc(const std::string& p_rpc_name, Args&&... p_args) noexcept -> void;
+    auto call_raw_rpc(const std::string& p_rpc_name, Args&&... p_args) noexcept -> void;
+
+    template <typename... Args>
+    [[nodiscard]] auto call_async_rpc(
+        const std::string& p_rpc_name,
+        Args&&... p_args
+    ) noexcept -> rpc_future_t;
+
+    template <typename... Args>
+    [[nodiscard]] auto call_blocking_rpc(
+        const std::string& p_rpc_name,
+        Args&&... p_args
+    ) noexcept -> network_result<rpc_success_t, rpc_error_t>;
 
     [[nodiscard]] auto send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliable = true) const noexcept -> bool;
 
-    /* factory create function */
-    [[nodiscard]] static auto create(
-        std::string p_service_name,
-        callback_info&& p_callback_info,
-        std::optional<account_credentials> p_account_credentials
-    ) noexcept -> std::unique_ptr<network_client>;
+    // return the number of dispatched async or blocking rpc calls that are waiting for their promise to be resolved
+    [[nodiscard]] auto get_rpc_promise_count() const noexcept -> size_t { return m_rpc_promise_map.size(); }
 
     /* overloaded operators */
     auto operator=(const network_client&) noexcept -> network_client& = delete;
@@ -130,7 +166,7 @@ private:
         SteamNetConnectionStatusChangedCallback_t* p_info
     ) noexcept -> void;
 
-    // main network loop, runs until shutdown is called or `network_client` is destroyed
+    // main network loop, runs until disconnect is called or `network_client` is destroyed
     auto network_loop() noexcept -> void;
 
     // poll incoming messages on network thread
@@ -138,24 +174,24 @@ private:
     // poll connection changes on network thread
     auto poll_connection_state_changes() noexcept -> void;
 
+    // callback for steam game networking socket errors
     auto on_fatal_error(const std::string& p_message) noexcept -> void;
 
     // internal handler which is run before user on_client_connected_callback
     auto on_client_connected() noexcept -> void;
 
-    // send non-blocking authentication packet
+    // dispatch (fire and forget) non-blocking authentication packet
     auto send_raw_authentication_check(
         authentication_type p_auth_type = authentication_type::kb_sig_v1
     ) const noexcept -> void;
 
     // send a non-blocking authentication packet
-    [[nodiscard]] auto send_async_authentication_check(
+    auto send_async_authentication_check(
         const authentication_type p_auth_type = authentication_type::kb_sig_v1
-    ) noexcept -> future_t
+    ) noexcept -> void
     {
         m_auth_check_promise = std::promise<void>{};
         send_raw_authentication_check(p_auth_type);
-        return m_auth_check_promise.get_future();
     }
 
     // internal handler which is run before user provided `on_data_received_callback_func`
@@ -164,15 +200,18 @@ private:
     // helper to dispatch internal handler for a specific packet type that is received
     auto dispatch_handler_by_packet_type(
         underlying_packet_type_t p_packet_type,
-        const msgpack::object& p_data_object
+        const msgpack::object& p_packet_data
     ) noexcept -> void;
 
     // internal handler for authentication response
     auto handle_auth_response(const msgpack::object& p_data_object) noexcept -> void;
 
+    // internal handler for rpc response
+    auto handle_rpc_response(const msgpack::object& p_rpc_response) noexcept -> void;
+
     // creates and internally stores a promise
     // returns a future for the corresponding raw network call
-    [[nodiscard]] auto create_raw_network_call_future(u32 p_packet_index) noexcept -> future_t;
+    [[nodiscard]] auto create_rpc_promise(u32 p_packet_index) noexcept -> rpc_future_t;
 
 private:
     std::thread m_network_thread{};
@@ -199,8 +238,8 @@ private:
     std::promise<void> m_connection_promise{};
     // authentication check status for blocking
     std::promise<void> m_auth_check_promise{};
-    // hold promises for async network calls
-    unordered_flat_map<u32, promise_t> m_raw_network_call_promise_map{};
+    // hold promises for async rpc calls
+    unordered_flat_map<u32, rpc_promise_t> m_rpc_promise_map{};
     // -----------------------------------------------------------------
 
     u32 m_client_id = 0;
@@ -263,7 +302,7 @@ auto network_client::wait_for_authentication_check(
 
 // serialize arguments and send an rpc request
 template <typename... Args>
-auto network_client::call_rpc(
+auto network_client::call_raw_rpc(
     const std::string& p_rpc_name,
     Args&&... p_args
 ) noexcept -> void
@@ -279,8 +318,8 @@ auto network_client::call_rpc(
     const auto args_obj_handle = msgpack::unpack(args_buffer.data(), args_buffer.size());
 
     const rpc_request request{
-        .m_type = static_cast<packet_underlying_t>(packet_type::kb_rpc_call),
-        .m_id = m_packet_counter,
+        .m_type = static_cast<packet_underlying_t>(internal_packet_type::kb_rpc_call),
+        .m_request_id = m_packet_counter,
         .m_name = p_rpc_name,
         .m_arguments = args_obj_handle.get()
     };
@@ -295,6 +334,41 @@ auto network_client::call_rpc(
     // send request over network
     if (send_packed_buffer(std::move(rpc_buffer)))
         ++m_packet_counter;
+}
+
+template <typename ... Args>
+auto network_client::call_async_rpc(
+    const std::string& p_rpc_name,
+    Args&&... p_args
+) noexcept -> rpc_future_t
+{
+    auto future = create_rpc_promise(m_packet_counter);
+    call_raw_rpc(p_rpc_name, std::forward<Args>(p_args)...);
+    return future;
+}
+
+template <typename ... Args>
+auto network_client::call_blocking_rpc(
+    const std::string& p_rpc_name,
+    Args&&... p_args
+) noexcept -> network_result<rpc_success_t, rpc_error_t>
+{
+    auto future = create_rpc_promise(m_packet_counter);
+    call_raw_rpc(p_rpc_name, std::forward<Args>(p_args)...);
+    auto fut_status = future.wait_for(std::chrono::duration_cast<std::chrono::milliseconds>(k_rpc_timeout_ms));
+
+    switch (fut_status)
+    {
+    case std::future_status::ready:
+        break;
+    case std::future_status::deferred: [[fallthrough]];
+    case std::future_status::timeout:
+        return network_result<rpc_success_t, rpc_error_t>{
+            static_cast<underlying_error_code_type_t>(internal_error_code_t::kb_timeout)
+        };
+    }
+
+    return future.get();
 }
 
 } // end namespace kb::network

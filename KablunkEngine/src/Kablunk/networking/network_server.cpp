@@ -68,6 +68,7 @@ auto network_server::start() noexcept -> void
 
     init_game_networking_sockets_lib();
 
+#if 0
     KB_CORE_ASSERT(
         m_client_connected_callback_func,
         "[network::network_server]: client connected callback is not set!"
@@ -80,6 +81,7 @@ auto network_server::start() noexcept -> void
         m_data_received_callback_func,
         "[network::network_server]: data received callback is not set!"
     );
+#endif
 
     m_network_thread = std::thread([this] { network_loop(); });
 }
@@ -142,37 +144,39 @@ auto network_server::send(
     );
 }
 
-auto network_server::handle_client_authentication(
+auto network_server::client_authentication_handler(
     client_info& p_client_info,
     const msgpack::object& p_auth_data_object
-) noexcept -> void
+) noexcept -> option<internal_error_code_t>
 {
     if (p_client_info.m_authenticated)
-        return;
+        return internal_error_code_t::kb_not_authorized;
 
-    const auto data_buffer_res = util::convert_object<authentication_check_data>(p_auth_data_object);
+    const auto data_buffer_res = util::convert_object<authentication_request_data>(p_auth_data_object);
     if (!data_buffer_res)
     {
         KB_CORE_WARN(
             "[network_server]: Tried authentication client '{}' but packet data was not invalid",
             p_client_info.m_client_id
         );
-        return;
+        return internal_error_code_t::kb_packet_validation_error;
     }
 
-    const auto auth_data = *data_buffer_res;
+    const auto& auth_data = *data_buffer_res;
     const bool auth_check = check_client_auth_packet(p_client_info, auth_data);
 
     // disconnect client if they fail the auth check
     if (!auth_check)
     {
         kick_client(p_client_info.m_client_id);
-        return;
+        return std::nullopt;
     }
 
     p_client_info.m_authenticated = auth_check;
     p_client_info.m_account_credentials = auth_data.m_account_credentials;
     send_authentication_response_to_client(p_client_info, auth_data.m_request_id);
+
+    return std::nullopt;
 }
 
 auto network_server::on_data_received(
@@ -204,6 +208,8 @@ auto network_server::on_data_received(
     // all kb packets must send their packet type id first
     const auto packet_type = object.via.array.ptr[0].as<underlying_packet_type_t>();
 
+    // #TODO response_id should be required
+
     // check packet type for kb internal handlers and dispatch
     // specific unhandled packets are early return, values above `kb_reserved` are dispatched to
     // user callback
@@ -219,17 +225,26 @@ auto network_server::dispatch_handler_by_packet_type(
     // invoke internal handlers
     switch (p_packet_type)
     {
-    case static_cast<underlying_packet_type_t>(packet_type::none):
+    case static_cast<underlying_packet_type_t>(internal_packet_type::none):
     {
         KB_CORE_WARN("[network_server::on_data_received]: Invalid packet type 0!");
         break;
     }
-    case static_cast<underlying_packet_type_t>(packet_type::kb_auth_check):
+    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_check):
     {
-        handle_client_authentication(p_client_info, p_data_object);
+        const auto result = client_authentication_handler(p_client_info, p_data_object);
+        if (result)
+        {
+            send_internal_error_response(
+                p_client_info.m_client_id,
+                0, // #TODO correct response_id
+                *result
+            );
+        }
+
         break;
     }
-    case static_cast<underlying_packet_type_t>(packet_type::kb_auth_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_response):
     {
         KB_CORE_WARN(
             "[network_server::on_data_received]: Unexpected packet type {} from client {}",
@@ -238,16 +253,40 @@ auto network_server::dispatch_handler_by_packet_type(
         );
         break;
     }
-    case static_cast<underlying_packet_type_t>(packet_type::kb_rpc_call):
+    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_call):
     {
         // #TODO handle response
         const auto rpc_response = m_rpc_dispatcher.dispatch(
             p_client_info,
             p_data_object
         );
+
+        if (std::holds_alternative<rpc_dispatcher::response_error_t>(rpc_response))
+        {
+            const auto error_code = std::get<rpc_dispatcher::response_error_t>(rpc_response);
+            send_error_response(
+                p_client_info.m_client_id,
+                0, // #TODO retrieve request_id from incoming packet,
+                error_code
+            );
+        }
+        else if (std::holds_alternative<rpc_dispatcher::response_success_t>(rpc_response))
+        {
+            const auto opt_response_data = std::get<rpc_dispatcher::response_success_t>(rpc_response);
+
+            send_structured_data_to_client(
+                p_client_info.m_client_id,
+                opt_response_data
+            );
+        }
+        else
+        {
+            KB_CORE_ASSERT(false, "[network_server]: Unhandled variant in rpc response!");
+        }
+
         break;
     }
-    case static_cast<underlying_packet_type_t>(packet_type::kb_rpc_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_response):
     {
         KB_CORE_WARN(
             "[network_server::on_data_received]: Unexpected packet type {} from client {}",
@@ -258,14 +297,24 @@ auto network_server::dispatch_handler_by_packet_type(
     }
     default:
     {
-        if (p_packet_type > static_cast<underlying_packet_type_t>(packet_type::kb_reserved))
-            m_data_received_callback_func(p_client_info, p_data_object);
+        if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type::kb_reserved))
+        {
+            if (m_data_received_callback_func)
+                m_data_received_callback_func(p_client_info, p_data_object);
+        }
         else
         {
             KB_CORE_ERROR(
                 "[network_server::on_data_received]: Unhandled kb internal packet type {}",
                 p_packet_type
             );
+
+            send_internal_error_response(
+                p_client_info.m_client_id,
+                0, // #TODO retrieve request_id from incoming packet,
+                internal_error_code_t::kb_invalid_packet_type
+            );
+
             break;
         }
     }
@@ -277,9 +326,12 @@ auto network_server::dispatch_handler_by_packet_type(
 
 auto network_server::check_client_auth_packet(
     const client_info& p_client_info,
-    const authentication_check_data& p_auth_data
+    const authentication_request_data& p_auth_data
 ) const noexcept -> bool
 {
+    // authentication consists of comparing the hashes of the server name
+    // EXTREMELY basic authentication, but it is better than nothing
+
     const auto computed_hash = compute_auth_hash(
         p_auth_data.m_auth_version,
         std::string_view{ m_service_name }
@@ -326,7 +378,8 @@ auto network_server::disconnect_client(client_id_t p_client_id) noexcept -> void
     );
 
     // either ClosedByPeer or ProblemDetectedLocally - should be communicated to user callback
-    m_client_disconnected_callback_func(it_client->second);
+    if (m_client_disconnected_callback_func)
+        m_client_disconnected_callback_func(it_client->second);
 
     m_connected_clients.erase(it_client);
 }
@@ -337,7 +390,7 @@ auto network_server::send_authentication_response_to_client(
 ) const noexcept -> void
 {
     const auto auth_response = util::as_buffer(authentication_response_data{
-        .m_packet_type = static_cast<underlying_packet_type_t>(packet_type::kb_auth_response),
+        .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_response),
         // #TODO require version in create call and pass...
         .m_response_id = p_response_id,
         .m_service_version = "0.0.1",
@@ -644,7 +697,8 @@ auto network_server::on_connection_status_change(
         KB_CORE_INFO("[network::network_server]: Accepted connection from client '{}'", client.m_client_id);
 
         // user callback
-        m_client_connected_callback_func(client);
+        if (m_client_connected_callback_func)
+            m_client_connected_callback_func(client);
 
         break;
     }

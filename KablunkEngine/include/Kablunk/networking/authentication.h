@@ -21,11 +21,13 @@ enum class authentication_type : u32
 
 using underlying_auth_type_t = std::underlying_type_t<authentication_type>;
 
-struct authentication_check_data
+
+struct authentication_request_data
 {
     u16 m_packet_type = 0;
     u32 m_request_id = 0;
-    underlying_auth_type_t m_auth_version = static_cast<underlying_auth_type_t>(authentication_type::kb_sig_v1);
+    underlying_auth_type_t m_auth_version =
+        static_cast<underlying_auth_type_t>(authentication_type::kb_sig_v1);
     std::size_t m_auth_hash = 0;
     account_credentials m_account_credentials{};
 

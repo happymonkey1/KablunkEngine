@@ -46,6 +46,8 @@ auto kill_game_networking_sockets_lib() -> void
         s_instance_count >= 0,
         "[game_networking_sockets]: negative instance count?"
     );
+
+    s_initialized = false;
 }
 
 } // end namespace kb::network

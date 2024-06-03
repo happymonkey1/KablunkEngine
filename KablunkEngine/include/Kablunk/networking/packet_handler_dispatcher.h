@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Kablunk/networking/packet_type.h"
+#include "Kablunk/networking/internal_packet_type.h"
 #include "Kablunk/meta/func_traits.h"
 #include "Kablunk/meta/func_invoke.h"
 #include "Kablunk/networking/client_info.h"
@@ -8,6 +8,9 @@
 #include <msgpack.hpp>
 
 #include <memory>
+#include <variant>
+
+#include "Kablunk/networking/network_error.h"
 
 namespace kb::network
 { // start namespace kb::network
@@ -61,7 +64,6 @@ auto packet_handler_dispatcher<FuncT>::dispatch(
     const auto handler_it = m_handlers.find(p_packet_type);
     if (handler_it == m_handlers.end())
         return;
-    
 
     //KB_CORE_INFO("[packet_handler_dispatcher]: Dispatching handler for packet type '{}'", p_packet_type);
     handler_it->second(std::forward<Args>(p_args)...);
@@ -103,7 +105,7 @@ class server_packet_handler_dispatcher
 {
 public:
     using packet_handler_func_t = void(*)(client_info&, const msgpack::object&);
-
+    
 public:
     server_packet_handler_dispatcher() = default;
     ~server_packet_handler_dispatcher() = default;
@@ -116,6 +118,7 @@ public:
         m_dispatcher.bind(p_packet_type, p_handler);
     }
 
+    // #TODO should return an error code
     auto dispatch(
         const underlying_packet_type_t p_packet_type,
         client_info& p_client_info,

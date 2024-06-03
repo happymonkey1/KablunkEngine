@@ -7,11 +7,25 @@
 
 using namespace kb;
 
+const std::string service_name = "kablunk-engine-tests@test";
+
 auto sub(const network::client_info&, int x, int y) -> int
 {
-    KB_CORE_INFO("sub called!");
+    KB_CORE_INFO(
+        "[networking_test]: sub rpc called! {} - {} = {}",
+        x,
+        y,
+        x - y
+    );
     return x - y;
 }
+
+auto do_work_on_server_with_void_response(const network::client_info&, int) -> void
+{
+    KB_CORE_INFO("[networking_test]: do_wrok_on_server_with_void_response");
+}
+
+auto rpc_with_no_args()
 
 TEST_CASE("network initialization succeeds", "[networking]")
 {
@@ -54,8 +68,6 @@ TEST_CASE("network initialization succeeds", "[networking]")
             KB_CORE_INFO("[networking_test]: client's client disconnected callback called!");
         };
 
-    const std::string service_name = "kablunk-engine-tests@test";
-
     u32 port = 20420;
     auto server = network::network_server::create(
         port,
@@ -83,6 +95,7 @@ TEST_CASE("network initialization succeeds", "[networking]")
         "sub",
         &sub
     );
+    server->bind_rpc("do_work_on_server_with_void_response", &do_work_on_server_with_void_response);
     server->start();
 
     std::this_thread::sleep_for(
@@ -100,29 +113,99 @@ TEST_CASE("network initialization succeeds", "[networking]")
             .m_username = "KablunkEngineTests-username"
         }
     );
-    client->connect_to_server("127.0.0.1", port);
+    auto connection_status = client->connect_to_server(
+        "127.0.0.1",
+        port,
+        network::network_client::network_blocking_t::blocking
+    );
+    REQUIRE(connection_status == network::network_client::connection_status_t::connected);
+
+#if 0
     auto connection_status = client->wait_for_connection();
     REQUIRE(connection_status == network::network_client::connection_status_t::connected);
     auto auth_status = client->wait_for_authentication_check();
     REQUIRE(auth_status == std::future_status::ready);
-
-#if 0
-    // #TODO: use `wait_for_connection` function
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(k_delay_ms)
-    );
 #endif
 
-    client->call_rpc("add", 2, 3);
-    client->call_rpc("sub", 2, 3);
+    client->call_raw_rpc("add", 2, 3);
+    client->call_raw_rpc("sub", 2, 3);
 
-    // #TODO: require on response when that is implemented
+    // call blocking rpc and check return value
+    {
+        auto add_network_result = client->call_blocking_rpc("add", 3, 4);
+        REQUIRE(std::holds_alternative<network::network_client::rpc_success_t>(add_network_result));
+        auto add_rpc_result = std::get<network::network_client::rpc_success_t>(add_network_result);
+
+        REQUIRE(add_rpc_result.m_data_buffer);
+        auto add_result = network::util::convert_object<u32>(*add_rpc_result.m_data_buffer);
+        REQUIRE(add_result);
+        REQUIRE(*add_result == 7);
+    }
+
+    // call blocking rpc and check return value
+    {
+        auto sub_network_result = client->call_blocking_rpc("sub", 5, 2);
+        REQUIRE(std::holds_alternative<network::network_client::rpc_success_t>(sub_network_result));
+
+        auto sub_rpc_result = std::get<network::network_client::rpc_success_t>(sub_network_result);
+
+        REQUIRE(sub_rpc_result.m_data_buffer);
+        auto sub_result = network::util::convert_object<u32>(*sub_rpc_result.m_data_buffer);
+        REQUIRE(sub_result);
+        REQUIRE(*sub_result == 3);
+    }
+
+    {
+        auto rpc_result = client->call_blocking_rpc(
+            "do_work_on_server_with_void_response",
+            5
+        );
+        REQUIRE(std::holds_alternative<network::network_client::rpc_success_t>(rpc_result));
+        auto success_result = std::get<network::network_client::rpc_success_t>(rpc_result);
+        REQUIRE(!success_result.m_data_buffer.has_value());
+    }
+
     std::this_thread::sleep_for(
         std::chrono::milliseconds(k_delay_ms)
     );
-    //REQUIRE()
 
     client->disconnect();
 
+    server->stop();
+}
+
+TEST_CASE("server responds with error codes and does not crash", "[networking]")
+{
+    u32 port = 20420;
+    auto server = network::network_server::create(
+        port,
+        service_name,
+        {
+            .m_data_received_callback_func = nullptr,
+            .m_client_connected_callback_func = nullptr,
+            .m_client_disconnected_callback = nullptr
+        }
+    );
+    server->start();
+
+    auto client = network::network_client::create(
+        service_name,
+        {
+            .m_data_received_callback_func = nullptr,
+            .m_client_connected_callback_func = nullptr,
+            .m_client_disconnected_callback_func = nullptr,
+        },
+        network::account_credentials{
+            .m_username = "KablunkEngineTests-username"
+        }
+    );
+    auto connection_status = client->connect_to_server(
+        "127.0.0.1",
+        port,
+        network::network_client::network_blocking_t::blocking
+    );
+    REQUIRE(connection_status == network::network_client::connection_status_t::connected);
+
+    client->disconnect();
     server->stop();
 }
