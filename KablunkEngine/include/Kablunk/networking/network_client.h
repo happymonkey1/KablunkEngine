@@ -72,7 +72,7 @@ public:
     /* factory create function */
     [[nodiscard]] static auto create(
         std::string p_service_name,
-        callback_info&& p_callback_info,
+        const callback_info& p_callback_info,
         std::optional<account_credentials> p_account_credentials
     ) noexcept -> std::unique_ptr<network_client>;
 
@@ -166,7 +166,7 @@ public:
 private:
     network_client(
         std::string&& p_service_name,
-        callback_info p_callback_info,
+        const callback_info& p_callback_info,
         std::optional<account_credentials>&& p_account_credentials
     ) noexcept;
 
@@ -248,10 +248,7 @@ private:
     std::string m_service_name{};
 
     /* callbacks */
-    // #TODO why is this not the callback struct?
-    data_received_callback_func_t m_data_received_callback_func = nullptr;
-    client_connected_callback_func_t m_client_connected_callback_func = nullptr;
-    client_disconnected_callback_func_t m_client_disconnected_callback_func = nullptr;
+    callback_info m_callbacks{};
 
     std::string m_connection_debug_message{};
 

@@ -93,7 +93,7 @@ auto network_server::stop() noexcept -> void
     details::unregister_server_for_connection_callback(this);
 }
 
-auto network_server::kick_client(client_id_t p_client_id) noexcept -> void
+auto network_server::kick_client(client_id_t p_client_id) const noexcept -> void
 {
     KB_CORE_INFO("[network_server]: Kicking client '{}'", p_client_id);
     m_interface->CloseConnection(p_client_id, 0, "Kicked by host", false);
@@ -299,8 +299,8 @@ auto network_server::dispatch_handler_by_packet_type(
     {
         if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type::kb_reserved))
         {
-            if (m_data_received_callback_func)
-                m_data_received_callback_func(p_client_info, p_data_object);
+            if (m_callbacks.m_data_received_callback_func)
+                m_callbacks.m_data_received_callback_func(p_client_info, p_data_object);
         }
         else
         {
@@ -378,8 +378,8 @@ auto network_server::disconnect_client(client_id_t p_client_id) noexcept -> void
     );
 
     // either ClosedByPeer or ProblemDetectedLocally - should be communicated to user callback
-    if (m_client_disconnected_callback_func)
-        m_client_disconnected_callback_func(it_client->second);
+    if (m_callbacks.m_client_disconnected_callback_func)
+        m_callbacks.m_client_disconnected_callback_func(it_client->second);
 
     m_connected_clients.erase(it_client);
 }
@@ -420,35 +420,10 @@ auto network_server::send_packed_buffer_to_all_clients(
     }
 }
 
-auto network_server::send_packed_buffer_to_all_clients(
-    const ref<msgpack::sbuffer>& p_buffer_ref,
-    const client_id_t p_exclude_client,
-    const bool p_reliable
-) const noexcept -> void
-{
-    KB_CORE_ASSERT(
-        p_buffer_ref,
-        "[network::network_server]: Trying to send buffer to all clients but buffer is null?"
-    );
-
-    for (const auto& [client_id, client_info] : m_connected_clients)
-    {
-        if (client_id == p_exclude_client)
-            continue;
-
-        send(
-            client_id,
-            p_buffer_ref->data(),
-            p_buffer_ref->size(),
-            p_reliable
-        );
-    }
-}
-
 auto network_server::create(
     const i32 p_port,
     std::string p_service_name,
-    callback_info&& p_callbacks
+    const callback_info& p_callbacks
 ) noexcept -> std::unique_ptr<network_server>
 {
     KB_CORE_ASSERT(
@@ -459,7 +434,7 @@ auto network_server::create(
     return std::unique_ptr<network_server>(new network_server{
         p_port,
         std::move(p_service_name),
-        std::forward<callback_info>(p_callbacks)
+        p_callbacks
     });
 }
 
@@ -469,18 +444,14 @@ network_server::network_server(
     const callback_info& p_callbacks
 ) noexcept
     : m_port{ port }, m_service_name{ std::move(p_service_name) },
-    m_data_received_callback_func{ p_callbacks.m_data_received_callback_func },
-    m_client_connected_callback_func{ p_callbacks.m_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_callbacks.m_client_disconnected_callback }
+    m_callbacks{ p_callbacks }
 {
     details::register_server_for_connection_callback(this);
 }
 
 network_server::network_server(network_server&& p_other) noexcept
     : m_port{ p_other.m_port }, m_service_name{ std::move(p_other.m_service_name) },
-    m_data_received_callback_func{ p_other.m_data_received_callback_func },
-    m_client_connected_callback_func{ p_other.m_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_other.m_client_disconnected_callback_func },
+    m_callbacks{ p_other.m_callbacks },
     m_interface{ p_other.m_interface }
 {
     KB_CORE_ASSERT(
@@ -493,6 +464,7 @@ network_server::network_server(network_server&& p_other) noexcept
     p_other.m_interface = nullptr;
     p_other.m_listen_socket = 0u;
     p_other.m_poll_group = 0u;
+    p_other.m_callbacks = {};
 
     // #TODO move rpc stuff?
 }
@@ -697,8 +669,8 @@ auto network_server::on_connection_status_change(
         KB_CORE_INFO("[network::network_server]: Accepted connection from client '{}'", client.m_client_id);
 
         // user callback
-        if (m_client_connected_callback_func)
-            m_client_connected_callback_func(client);
+        if (m_callbacks.m_client_connected_callback_func)
+            m_callbacks.m_client_connected_callback_func(client);
 
         break;
     }
@@ -713,7 +685,7 @@ auto network_server::on_connection_status_change(
     }
 }
 
-auto network_server::poll_connection_state_changes() -> void
+auto network_server::poll_connection_state_changes() const -> void
 {
     m_interface->RunCallbacks();
 }

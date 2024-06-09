@@ -88,6 +88,7 @@ public:
         m_dispatcher.bind(p_packet_type, p_handler);
     }
 
+    // #TODO should return an error code
     auto dispatch(
         underlying_packet_type_t p_packet_type,
         const msgpack::object& p_packet_data
@@ -105,7 +106,7 @@ class server_packet_handler_dispatcher
 {
 public:
     using packet_handler_func_t = void(*)(client_info&, const msgpack::object&);
-    
+
 public:
     server_packet_handler_dispatcher() = default;
     ~server_packet_handler_dispatcher() = default;

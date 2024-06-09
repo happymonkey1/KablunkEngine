@@ -226,8 +226,8 @@ auto network_client::dispatch_handler_by_packet_type(
     {
         if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type::kb_reserved))
         {
-            if (m_data_received_callback_func)
-                m_data_received_callback_func(p_packet_data);
+            if (m_callbacks.m_data_received_callback_func)
+                m_callbacks.m_data_received_callback_func(p_packet_data);
         }
         else
         {
@@ -322,13 +322,13 @@ auto network_client::send_packed_buffer(msgpack::sbuffer p_buffer, bool p_reliab
 
 auto network_client::create(
     std::string p_service_name,
-    callback_info&& p_callback_info,
+    const callback_info& p_callback_info,
     std::optional<account_credentials> p_account_credentials
 ) noexcept -> std::unique_ptr<network_client>
 {
     auto client = std::unique_ptr<network_client>(new network_client{
         std::move(p_service_name),
-        std::forward<callback_info>(p_callback_info),
+        p_callback_info,
         std::move(p_account_credentials)
     });
     details::register_client_for_connection_callback(client.get());
@@ -337,13 +337,11 @@ auto network_client::create(
 
 network_client::network_client(
     std::string&& p_service_name,
-    callback_info p_callback_info,
+    const callback_info& p_callback_info,
     std::optional<account_credentials>&& p_account_credentials
 ) noexcept
     : m_service_name{ std::move(p_service_name) },
-    m_data_received_callback_func{ p_callback_info.m_data_received_callback_func },
-    m_client_connected_callback_func{ p_callback_info.m_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_callback_info.m_client_disconnected_callback_func },
+    m_callbacks{ p_callback_info },
     m_account_credentials{ p_account_credentials.has_value() ? *p_account_credentials : account_credentials{} }
 {
 #if 0
@@ -355,9 +353,7 @@ network_client::network_client(
 
 network_client::network_client(network_client&& p_other) noexcept
     : m_service_name{ std::move(p_other.m_service_name) },
-    m_data_received_callback_func{ p_other.m_data_received_callback_func },
-    m_client_connected_callback_func{ p_other.m_client_connected_callback_func },
-    m_client_disconnected_callback_func{ p_other.m_client_disconnected_callback_func },
+    m_callbacks{ p_other.m_callbacks },
     m_account_credentials{ std::move(p_other.m_account_credentials) }
 {
     p_other.m_running = false;
@@ -427,8 +423,8 @@ auto network_client::on_connection_status_changes(SteamNetConnectionStatusChange
         m_connection = k_HSteamNetConnection_Invalid;
         m_connection_status = connection_status_t::disconnected;
 
-        if (m_client_disconnected_callback_func)
-            m_client_disconnected_callback_func();
+        if (m_callbacks.m_client_disconnected_callback_func)
+            m_callbacks.m_client_disconnected_callback_func();
 
         break;
     }
@@ -556,8 +552,8 @@ auto network_client::on_client_connected() noexcept -> void
 {
     send_async_authentication_check();
 
-    if (m_client_connected_callback_func)
-        m_client_connected_callback_func();
+    if (m_callbacks.m_client_connected_callback_func)
+        m_callbacks.m_client_connected_callback_func();
 }
 
 } // end namespace kb::network

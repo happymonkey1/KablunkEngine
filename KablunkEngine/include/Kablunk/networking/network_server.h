@@ -41,7 +41,7 @@ public:
     {
         data_received_callback_func_t m_data_received_callback_func = nullptr;
         client_connected_callback_func_t m_client_connected_callback_func = nullptr;
-        client_disconnected_callback_func_t m_client_disconnected_callback = nullptr;
+        client_disconnected_callback_func_t m_client_disconnected_callback_func = nullptr;
     };
 
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
@@ -58,7 +58,7 @@ public:
         i32 p_port,
         std::string p_service_name,
         // struct that holds server callbacks
-        callback_info&& p_callbacks
+        const callback_info& p_callbacks
     ) noexcept -> std::unique_ptr<network_server>;
 
     /* server management */
@@ -68,7 +68,7 @@ public:
     // stop the server
     auto stop() noexcept -> void;
     // kick a specific client connection
-    auto kick_client(client_id_t p_client_id) noexcept -> void;
+    auto kick_client(client_id_t p_client_id) const noexcept -> void;
 
     [[nodiscard]] auto get_connected_clients() const noexcept ->
         const unordered_flat_map<client_id_t, client_info>&
@@ -117,42 +117,6 @@ public:
             p_reliable
         );
     }
-
-    // send a msgpack buffer to a specific client
-    auto send_packed_buffer_to_client(
-        client_id_t p_client_id,
-        const msgpack::sbuffer& p_buffer,
-        bool p_reliable = true
-    ) const noexcept -> void
-    {
-        send(p_client_id, p_buffer.data(), p_buffer.size(), p_reliable);
-    }
-
-    auto send_packed_buffer_to_client(
-        client_id_t p_client_id,
-        const ref<msgpack::sbuffer>& p_buffer_ref,
-        bool p_reliable = true
-    ) const noexcept -> void
-    {
-        KB_CORE_ASSERT(
-            p_buffer_ref,
-            "[network::network_server]: Trying to send buffer to client {} but buffer is null?",
-            p_client_id
-        );
-        send(p_client_id, p_buffer_ref->data(), p_buffer_ref->size(), p_reliable);
-    }
-
-    auto send_packed_buffer_to_all_clients(
-        msgpack::sbuffer p_buffer,
-        client_id_t p_exclude_client = 0u,
-        bool p_reliable = true
-    ) const noexcept -> void;
-
-    auto send_packed_buffer_to_all_clients(
-        const ref<msgpack::sbuffer>& p_buffer_ref,
-        client_id_t p_exclude_client = 0u,
-        bool p_reliable = true
-    ) const noexcept -> void;
 
     // send user provided error code response to a specific client
     template <concepts::UserErrorT ErrorT>
@@ -205,7 +169,7 @@ private:
     auto set_client_description(client_id_t p_connection, const std::string& p_description) const noexcept -> void;
     // poll for client connection changes
     // runs on the network thread
-    auto poll_connection_state_changes() -> void;
+    auto poll_connection_state_changes() const -> void;
 
     static auto connection_status_changed_callback(const SteamNetConnectionStatusChangedCallback_t* p_info) noexcept -> void;
     // callback for connection status changes
@@ -221,6 +185,23 @@ private:
         client_id_t p_client_id,
         const void* p_data,
         size_t p_size,
+        bool p_reliable = true
+    ) const noexcept -> void;
+
+    // send a msgpack buffer to a specific client
+    auto send_packed_buffer_to_client(
+        client_id_t p_client_id,
+        const msgpack::sbuffer& p_buffer,
+        bool p_reliable = true
+    ) const noexcept -> void
+    {
+        send(p_client_id, p_buffer.data(), p_buffer.size(), p_reliable);
+    }
+
+    // send a msgpack buffer to all client, with optional client to exclude
+    auto send_packed_buffer_to_all_clients(
+        msgpack::sbuffer p_buffer,
+        client_id_t p_exclude_client = 0u,
         bool p_reliable = true
     ) const noexcept -> void;
 
@@ -290,10 +271,7 @@ private:
     std::string m_service_name{};
 
     /* callbacks */
-    // #TODO why is this not the callback struct?
-    data_received_callback_func_t m_data_received_callback_func = nullptr;
-    client_connected_callback_func_t m_client_connected_callback_func = nullptr;
-    client_connected_callback_func_t m_client_disconnected_callback_func = nullptr;
+    callback_info m_callbacks{};
 
     bool m_running = false;
     unordered_flat_map<client_id_t, client_info> m_connected_clients;

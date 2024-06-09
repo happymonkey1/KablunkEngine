@@ -73,7 +73,7 @@ TEST_CASE("network initialization succeeds", "[networking]")
         {
             .m_data_received_callback_func = data_callback_func,
             .m_client_connected_callback_func = client_connected_func,
-            .m_client_disconnected_callback = client_disconnected_func
+            .m_client_disconnected_callback_func = client_disconnected_func
         }
     );
     server->bind_rpc(
@@ -181,7 +181,7 @@ TEST_CASE("server responds with error codes and does not crash", "[networking]")
         {
             .m_data_received_callback_func = nullptr,
             .m_client_connected_callback_func = nullptr,
-            .m_client_disconnected_callback = nullptr
+            .m_client_disconnected_callback_func = nullptr
         }
     );
     server->start();
