@@ -117,7 +117,7 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 
 	KB_CORE_INFO("Destroying VulkanFramebuffer '{0}'", m_specification.m_debug_name);
 	VkFramebuffer vk_frame_buffer = m_framebuffer;
-	VkRenderPass vk_render_pass = m_render_pass;
+	VkRenderPass vk_render_pass = m_vk_render_pass;
 	render::submit_resource_free([vk_frame_buffer, vk_render_pass]()
 		{
 			const auto device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -161,14 +161,18 @@ void vulkan_frame_buffer::resize(uint32_t width, uint32_t height, bool force_rec
     ref instance{ this };
 	render::submit([instance, width, height]() mutable
 		{
-			instance->m_width = static_cast<uint32_t>(std::ceil(static_cast<float>(width) * instance->m_specification.m_scale));
-			instance->m_height = static_cast<uint32_t>(std::ceil(static_cast<float>(height) * instance->m_specification.m_scale));
+			instance->m_width = static_cast<uint32_t>(
+                std::ceil(static_cast<float>(width) * instance->m_specification.m_scale)
+            );
+			instance->m_height = static_cast<uint32_t>(
+                std::ceil(static_cast<float>(height) * instance->m_specification.m_scale)
+            );
 			if (!instance->m_specification.m_swap_chain_target)
 				instance->RT_Invalidate();
 			else
 			{
-				VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapchain();
-				instance->m_render_pass = swapChain.GetRenderPass();
+				VulkanSwapChain& swap_chain = VulkanContext::Get()->GetSwapchain();
+				instance->m_vk_render_pass = swap_chain.get_vk_render_pass();
 
 				instance->m_clear_values.clear();
                 const auto& clear_color = instance->m_specification.m_clear_color;
@@ -483,7 +487,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 	render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
 	render_pass_info.pDependencies = dependencies.data();
 
-	if (vkCreateRenderPass(device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS)
+	if (vkCreateRenderPass(device, &render_pass_info, nullptr, &m_vk_render_pass) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create render pass");
 
 	std::vector<VkImageView> attachments(m_attachment_images.size());
@@ -520,7 +524,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 
 	VkFramebufferCreateInfo frame_buffer_create_info = {};
 	frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	frame_buffer_create_info.renderPass = m_render_pass;
+	frame_buffer_create_info.renderPass = m_vk_render_pass;
 	frame_buffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
 	frame_buffer_create_info.pAttachments = attachments.data();
 	frame_buffer_create_info.width = m_width;

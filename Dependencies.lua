@@ -39,6 +39,7 @@ IncludeDir["msdfgen"] = "%{wks.location}/KablunkEngine/vendor/msdf-atlas-gen/msd
 IncludeDir["tinyxml2"] = "%{wks.location}/KablunkEngine/vendor/tinyxml2"
 IncludeDir["freetype"] = "%{wks.location}/KablunkEngine/vendor/msdf-atlas-gen/msdfgen/freetype/include"
 IncludeDir["msgpack"] = "%{wks.location}/KablunkEngine/vendor/msgpack-c/include"
+IncludeDir["rapidjson"] = "%{wks.location}/KablunkEngine/vendor/rapidjson/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"

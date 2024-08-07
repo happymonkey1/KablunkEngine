@@ -326,7 +326,16 @@ namespace kb::asset
 			if (entry.is_directory())
 				process_directory(entry.path());
 			else
-				import_asset(entry.path());
+			{
+                const auto filename = entry.path().filename();
+                if (!filename.empty() && filename.c_str()[0] == '.')
+                {
+                    KB_CORE_WARN("[AssetManager]: Skipping hidden file '{}'", entry.path().string());
+                    continue;
+                }
+
+                import_asset(entry.path());
+			}
 		}
 	}
 

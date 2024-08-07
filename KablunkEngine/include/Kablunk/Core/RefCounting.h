@@ -6,15 +6,12 @@
 
 #include <atomic>
 #include <memory>
-#include <cassert>
-#include <iostream>
 #include <mutex>
-#include <unordered_set>
 #include <type_traits>
-#include <mono/metadata/class.h>
 
 #define KB_LIVE_REFERENCES 0
-#define KB_REF_MOVE_DEFINED 0
+#define KB_REF_MOVE_DEFINED 1
+
 
 namespace kb
 {
@@ -77,7 +74,7 @@ public:
             IncRef();
     }
 
-//#if KB_REF_MOVE_DEFINED
+#if KB_REF_MOVE_DEFINED
     constexpr ref(ref&& p_other) noexcept
         : m_ptr{ p_other.m_ptr }
 	{
@@ -85,7 +82,7 @@ public:
 
         p_other.m_ptr = nullptr;
 	}
-//#endif
+#endif
 
 	template <typename T2>
     explicit constexpr ref(const ref<T2>& other) noexcept
@@ -135,17 +132,17 @@ public:
 		return *this;
 	}
 
-//#if KB_REF_MOVE_DEFINED
+#if KB_REF_MOVE_DEFINED
     constexpr ref& operator=(ref&& p_other) noexcept
 	{
-        DecRef();
+        // DecRef();
 
         m_ptr = p_other.m_ptr;
         p_other.m_ptr = nullptr;
 
         return *this;
 	}
-//#endif
+#endif
 
 #if 0
 	template <typename T2>

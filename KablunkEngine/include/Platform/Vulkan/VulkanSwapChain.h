@@ -29,7 +29,7 @@ public:
 
 	uint32_t GetImageCount() const { return m_image_count; }
 
-	VkRenderPass GetRenderPass() { return m_render_pass; }
+	VkRenderPass get_vk_render_pass() { return m_render_pass; }
 
 	VkFramebuffer GetCurrentFramebuffer() { return GetFramebuffer(m_current_image_index); }
 	VkCommandBuffer GetCurrentDrawCommandBuffer() { return GetDrawCommandBuffer(m_current_buffer_index); }

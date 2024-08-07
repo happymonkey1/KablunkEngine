@@ -125,7 +125,7 @@ void VulkanImGuiLayer::OnAttach()
 			VulkanSwapChain& swap_chain = vulkan_context->GetSwapchain();
 			init_info.ImageCount = swap_chain.GetImageCount();
 			//init_info.CheckVkResultFn = Utils::VulkanCheckResult;
-			ImGui_ImplVulkan_Init(&init_info, swap_chain.GetRenderPass());
+			ImGui_ImplVulkan_Init(&init_info, swap_chain.get_vk_render_pass());
 
 			// Upload Fonts
 			{
@@ -232,7 +232,7 @@ void VulkanImGuiLayer::End()
 	VkRenderPassBeginInfo render_pass_begin_info = {};
 	render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	render_pass_begin_info.pNext = nullptr;
-	render_pass_begin_info.renderPass = swap_chain.GetRenderPass();
+	render_pass_begin_info.renderPass = swap_chain.get_vk_render_pass();
 	render_pass_begin_info.renderArea.offset.x = 0;
 	render_pass_begin_info.renderArea.offset.y = 0;
 	render_pass_begin_info.renderArea.extent.width = width;
@@ -245,7 +245,7 @@ void VulkanImGuiLayer::End()
 
 	VkCommandBufferInheritanceInfo inheritance_info = {};
 	inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-	inheritance_info.renderPass = swap_chain.GetRenderPass();
+	inheritance_info.renderPass = swap_chain.get_vk_render_pass();
 	inheritance_info.framebuffer = swap_chain.GetCurrentFramebuffer();
 
 	VkCommandBufferBeginInfo cmd_buf_info = {};

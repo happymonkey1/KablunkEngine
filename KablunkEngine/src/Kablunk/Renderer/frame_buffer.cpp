@@ -27,11 +27,15 @@ ref<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
     }
     }
 
-	frame_buffer_pool::Get()->Add(frame_buffer);
+	//frame_buffer_pool::Get()->Add(frame_buffer);
 	return frame_buffer;
 }
 
+#if 0
 frame_buffer_pool* frame_buffer_pool::s_instance = new frame_buffer_pool{};
+#else
+frame_buffer_pool* frame_buffer_pool::s_instance = nullptr;
+#endif
 
 frame_buffer_pool::frame_buffer_pool(uint32_t max_framebuffers /*= 32*/)
 {

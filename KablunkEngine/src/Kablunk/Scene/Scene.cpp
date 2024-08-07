@@ -626,7 +626,7 @@ namespace kb
 					continue;
 
 				if (already_rendered_entites.find(entity) == already_rendered_entites.end())
-					p_renderer_2d->draw_sprite({ entity, this });
+					p_renderer_2d->draw_entity({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();
@@ -803,7 +803,7 @@ namespace kb
 				SpriteRendererComponent& src = kb_entity.GetComponent<SpriteRendererComponent>();
 
 				if (src.Visible)
-					p_renderer_2d->draw_sprite({ entity, this });
+					p_renderer_2d->draw_entity({ entity, this });
 			}
 
 			auto circle_view = m_registry.view<TransformComponent, CircleRendererComponent>();

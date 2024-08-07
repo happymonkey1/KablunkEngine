@@ -244,6 +244,7 @@ public:
 	void on_imgui_render() const;
 
 	void set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer);
+    [[nodiscard]] auto get_target_frame_buffer() const noexcept -> const ref<render::frame_buffer>&;
 	void on_recreate_swapchain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
@@ -257,7 +258,7 @@ public:
     // ---draw commands-------------------------------------------------------------------------------------------------
 
 	// Entity
-	void draw_sprite(Entity entity) noexcept;
+	void draw_entity(Entity entity) noexcept;
 
 	// draw quad
 	inline void draw_quad(

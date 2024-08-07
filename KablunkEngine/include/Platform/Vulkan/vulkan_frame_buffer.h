@@ -48,7 +48,7 @@ public:
 
 	size_t GetColorAttachmentCount() const { return m_specification.m_swap_chain_target ? 1 : m_attachment_images.size(); }
 	bool HasDepthAttachment() const { return (bool)m_depth_attachment_image; }
-	VkRenderPass GetVkRenderPass() const { return m_render_pass; }
+	VkRenderPass GetVkRenderPass() const { return m_vk_render_pass; }
 	VkFramebuffer GetVkFramebuffer() const { return m_framebuffer; }
 	const std::vector<VkClearValue>& GetVkClearValues() const { return m_clear_values; }
 
@@ -74,7 +74,7 @@ private:
 	ref<Image2D> m_depth_attachment_image;
 
 	std::vector<VkClearValue> m_clear_values;
-	VkRenderPass m_render_pass = nullptr;
+	VkRenderPass m_vk_render_pass = nullptr;
 	VkFramebuffer m_framebuffer = nullptr;
 
 	std::vector<std::function<void(ref<frame_buffer>)>> m_resize_callbacks;

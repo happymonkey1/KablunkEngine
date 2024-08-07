@@ -46,7 +46,7 @@ public:
     auto set_texture_atlas(const ref<Texture2D>& p_texture) noexcept -> void { m_texture = p_texture; }
     [[nodiscard]] auto get_texture_atlas() const noexcept -> const ref<Texture2D>& { return m_texture; }
 
-    [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<texture_handle, virtual_texture_data_t>& { return m_uv_map; }
+    [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<raw_texture_handle, virtual_texture_data_t>& { return m_uv_map; }
 
     auto operator=(const texture_atlas&) noexcept -> texture_atlas& = delete;
 
@@ -72,7 +72,7 @@ private:
         owning_buffer m_image_data{};
         u32 m_width = 0;
         u32 m_height = 0;
-        texture_handle m_id;
+        raw_texture_handle m_id;
 
         [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
         {
@@ -99,7 +99,7 @@ private:
         owning_buffer& p_atlas_buffer
     ) noexcept -> void;
     [[nodiscard]] static auto load_image(const std::filesystem::path& p_path) noexcept -> image_data_t;
-    auto calculate_uv_offsets(texture_handle p_id, const rect_i32& p_rect) noexcept -> void;
+    auto calculate_uv_offsets(raw_texture_handle p_id, const rect_i32& p_rect) noexcept -> void;
     // free binary tree
     static auto delete_tree(node_t* p_root) noexcept -> void;
 
@@ -109,7 +109,7 @@ private:
     u32 m_atlas_dimension = k_default_atlas_size;
     u32 m_sprite_count = 0ul;
     ref<Texture2D> m_texture{};
-    unordered_flat_map<texture_handle, virtual_texture_data_t> m_uv_map{};
+    unordered_flat_map<raw_texture_handle, virtual_texture_data_t> m_uv_map{};
 };
 
 } // end namespace kb::render

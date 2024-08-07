@@ -41,4 +41,13 @@ struct tuple_remove_first_type<std::tuple<T, Types...>>
 {
     using type = std::tuple<Types...>;
 };
+
+template <typename>
+struct tuple_is_empty : std::false_type {};
+
+template <template <auto...> class T, auto... Ts>
+struct tuple_is_empty<T<Ts...>> : std::bool_constant<sizeof...(Ts) == 0U>
+{
+};
+
 }

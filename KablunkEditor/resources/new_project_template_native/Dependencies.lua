@@ -1,6 +1,7 @@
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 KablunkRootDirectory = os.getenv("KABLUNK_DIR")
 PROGRAM_FILES = os.getenv("ProgramW6432")
+BOOST_VERSION = "boost_1_84_0"
 
 IncludeDir = {}
 IncludeDir["stb_image"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/stb_image"
@@ -21,8 +22,24 @@ IncludeDir["cr"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/cr"
 IncludeDir["mono"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/mono/include"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 IncludeDir["VulkanSDK_LocalInclude"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/VulkanSDK/Include"
-IncludeDir["boost"] = "%{PROGRAM_FILES}/boost"
+IncludeDir["boost"] = "%{PROGRAM_FILES}/boost/%{BOOST_VERSION}"
 IncludeDir["miniaudio"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/miniaudio/include"
+IncludeDir["optick"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/optick/src"
+IncludeDir["tl_expected"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/expected/include"
+IncludeDir["robin_hood"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/robin-hood/include"
+IncludeDir["protobuf"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/protobuf/src"
+IncludeDir["absl"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/abseil-cpp/"
+-- external fmt lib because of MSVC 17.7 bug
+IncludeDir["fmt"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/fmt/include"
+IncludeDir["tracy"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/tracy/public"
+IncludeDir["GameNetworkingSockets"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/GameNetworkingSockets/include"
+IncludeDir["LuaJIT"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/LuaJIT/src"
+IncludeDir["Catch2"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/Catch2/extras"
+IncludeDir["msdf_atlas_gen"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/msdf-atlas-gen/msdf-atlas-gen"
+IncludeDir["msdfgen"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/msdf-atlas-gen/msdfgen"
+IncludeDir["tinyxml2"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/tinyxml2"
+IncludeDir["freetype"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/msdf-atlas-gen/msdfgen/freetype/include"
+IncludeDir["msgpack"] = "%{KablunkRootDirectory}/KablunkEngine/vendor/msgpack-c/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
@@ -48,6 +65,7 @@ Library["ShaderC_Utils_Release"] = "%{LibraryDir.VulkanSDK}/shaderc_util.lib"
 Library["SPIRV_Cross_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-core.lib"
 Library["SPIRV_Cross_GLSL_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-glsl.lib"
 Library["SPIRV_Tools"] = "%{LibraryDir.VulkanSDK}/SPIRV-Tools.lib"
+Library["LuaJIT"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/LuaJIT/src/lua51.lib"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 Library["Kablunk"] = "%{LibraryDir.KablunkSDK_Bin}/" .. outputdir .. "/KablunkEngine/KablunkEngine.lib"
@@ -56,3 +74,29 @@ Library["ImGui"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/imgui/bin/" ..
 Library["Box2d"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/box2d/bin/" .. outputdir .. "/Box2d/Box2d.lib"
 Library["Glad"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/Glad/bin/" .. outputdir .. "/Glad/Glad.lib"
 Library["yaml_cpp"] = "%{LibraryDir.KablunkSDK}/KablunkEngine/vendor/yaml-cpp/bin/" .. outputdir .. "/yaml-cpp/yaml-cpp.lib"
+
+function IncludeKablunkEngineDependencies()
+    externalincludedirs { IncludeDir }
+end
+
+function IncludeKablunkEngineLibs()
+    links { Library }
+end
+
+function KablunkEngineDefines()
+    defines {
+        "_CRT_SECURE_NO_WARNINGS",
+        "GLFW_INCLUDE_NONE",
+        "NOMINMAX",
+        "KB_BUILD_DLL",
+        "GLFW_DLL",
+        "GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
+        "GLM_FORCE_INTRINSICS",
+        "STEAMNETWORKINGSOCKETS_STATIC_LINK",
+        "MSDFGEN_PUBLIC=__declspec(dllimport)",
+        "MSDF_ATLAS_PUBLIC=__declspec(dllimport)",
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE",
+        "_DISABLE_VECTOR_ANNOTATION",
+        "_DISABLE_STRING_ANNOTATION",
+    }
+end

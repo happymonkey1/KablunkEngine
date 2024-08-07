@@ -60,7 +60,7 @@
 #		define KB_DEBUG_BREAK() raise(SIGTRAP)
 #	else
 #		error "Platform doesn't support debugbreak!"
-#	endif	
+#	endif
 #	define KB_ENABLE_ASSERTS
 #	define KB_PROFILE 0
 // #	define KB_TRACK_MEMORY

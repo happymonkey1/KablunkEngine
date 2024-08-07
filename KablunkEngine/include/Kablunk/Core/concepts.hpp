@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 // #TODO move to meta folder and move under kb::meta::concepts namespace
 namespace kb::concepts
 { // start namespace kb::concepts
@@ -12,5 +14,8 @@ concept NumericT = std::integral<T> || std::floating_point<T>;
 
 template<typename T>
 concept EnumT = std::is_enum_v<T>;
+
+template <typename T, typename... U>
+concept IsAnyOf = (std::same_as<T, U> || ...);
 
 } // end namespace kb::concepts

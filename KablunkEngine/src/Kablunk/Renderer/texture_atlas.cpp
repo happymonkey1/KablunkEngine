@@ -288,11 +288,11 @@ auto texture_atlas::load_image(const std::filesystem::path& p_path) noexcept -> 
         .m_image_data = image_buffer,
         .m_width = static_cast<u32>(width),
         .m_height = static_cast<u32>(height),
-        .m_id = texture_handle::into(std::string_view{ p_path.filename().string() }),
+        .m_id = raw_texture_handle::into(std::string_view{ p_path.filename().string() }),
     };
 }
 
-auto texture_atlas::calculate_uv_offsets(texture_handle p_id, const rect_i32& p_rect) noexcept -> void
+auto texture_atlas::calculate_uv_offsets(raw_texture_handle p_id, const rect_i32& p_rect) noexcept -> void
 {
     KB_ASSERT(
         !m_uv_map.contains(p_id),

@@ -691,6 +691,12 @@ void Renderer2D::set_target_frame_buffer(const ref<render::frame_buffer>& p_targ
     }
 }
 
+auto Renderer2D::get_target_frame_buffer() const noexcept -> const ref<render::frame_buffer>&
+{
+    // assumes that all render passes in `Renderer2D` targets the same frame buffer
+    return m_renderer_data.m_quad_pass->get_pipeline()->GetSpecification().m_target_frame_buffer;
+}
+
 void Renderer2D::on_recreate_swapchain()
 {
     KB_PROFILE_SCOPE;
@@ -735,7 +741,7 @@ void Renderer2D::set_swap_chain_target(bool p_swap_chain_target /* = true */)
 //   Draw Quad From Entity
 // =========================
 
-void Renderer2D::draw_sprite(Entity entity) noexcept
+void Renderer2D::draw_entity(Entity entity) noexcept
 {
     //KB_PROFILE_SCOPE;
 

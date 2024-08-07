@@ -30,19 +30,20 @@ public:
 	const AssetMetadata& get_metadata(const ref<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 	// get the absolute path for an asset using its metadata
 	std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const
-    { 
+    {
         if (metadata.filepath.is_absolute())
             return metadata.filepath;
 
         // #TODO internal engine path should not be hardcoded here...
-        return metadata.is_internal_asset ? m_active_project->get_project_directory() / "resources" / metadata.filepath 
-            : m_active_project->get_asset_directory_path() / metadata.filepath;
+        return metadata.is_internal_asset ?
+            m_active_project->get_project_directory() / "resources" / metadata.filepath :
+	        m_active_project->get_asset_directory_path() / metadata.filepath;
     }
 
 	// get the absolute path for a given path
-	std::filesystem::path get_absolute_path(const std::filesystem::path& path) const 
-    { 
-        return path.is_absolute() ? path : m_active_project->get_asset_directory_path() / path; 
+	std::filesystem::path get_absolute_path(const std::filesystem::path& path) const
+    {
+        return path.is_absolute() ? path : m_active_project->get_asset_directory_path() / path;
     }
 
     // get the relative path for a given path stored in some asset metadata
@@ -69,7 +70,7 @@ public:
 	template <typename T, typename... Args>
 	ref<T> create_asset(const std::string& filename, const std::filesystem::path& directory_path, Args&&... args)
 	{
-		static_assert(std::is_base_of<IAsset, T>::value, "create_asset() only works for types derived from IAsset!");
+		static_assert(std::is_base_of_v<IAsset, T>, "create_asset() only works for types derived from IAsset!");
 
 		AssetMetadata metadata{
 			uuid::generate(),
@@ -123,7 +124,7 @@ public:
 	template <typename T>
 	ref<T> get_asset(const asset_id_t& id)
 	{
-		static_assert(std::is_base_of<IAsset, T>::value, "get_asset() only works for types derived from IAsset!");
+		static_assert(std::is_base_of_v<IAsset, T>, "get_asset() only works for types derived from IAsset!");
 
 		if (is_memory_asset(id))
 			return m_memory_assets.at(id).As<T>();

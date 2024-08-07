@@ -56,30 +56,33 @@ auto vulkan_render_backend::init() noexcept -> void
 
     submit([frames_in_flight]() mutable
         {
+            constexpr size_t k_individual_pool_size = 1000ull;
             const VkDescriptorPoolSize vk_pool_sizes[] =
             {
-                { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-                { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+                { VK_DESCRIPTOR_TYPE_SAMPLER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, k_individual_pool_size },
+                { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, k_individual_pool_size }
             };
 
+            constexpr size_t k_pool_count = sizeof(vk_pool_sizes) / sizeof(VkDescriptorPoolSize);
             const VkDescriptorPoolCreateInfo vk_pool_info{
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-                .maxSets = 100000,
-                .poolSizeCount = sizeof(vk_pool_sizes) / sizeof(VkDescriptorPoolSize),
+                .maxSets = 2000ull,
+                .poolSizeCount = k_pool_count,
                 .pPoolSizes = vk_pool_sizes
             };
 
+            // per-frame renderer descriptor pools
             const auto vk_device = vk::get_current_vk_device();
             for (u32 i = 0; i < frames_in_flight; i++)
             {
@@ -89,6 +92,7 @@ auto vulkan_render_backend::init() noexcept -> void
                 s_renderer_data->m_descriptor_pool_allocation_count[i] = 0;
             }
 
+            // material specific descriptor pool
             KB_VK_CHECK_RESULT(
                 vkCreateDescriptorPool(vk_device, &vk_pool_info, nullptr, &s_renderer_data->m_material_descriptor_pool)
             );

@@ -17,7 +17,7 @@ namespace details
 template <size_t Extent, concepts::NumericT T>
 struct vec_storage
 {
-    T m_storage[Extent];
+    T m_data[Extent];
 };
     
 template <concepts::NumericT T = f32>
