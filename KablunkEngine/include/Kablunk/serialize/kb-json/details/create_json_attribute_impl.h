@@ -132,7 +132,7 @@ inline auto create_json_attribute(
 }
 
 // specialization for objects that already define a schema
-template <concepts::JsonSerializable T>
+template <concepts::JsonSerializableT T>
 auto create_json_attribute(std::string_view p_name, const T& p_value) noexcept -> json_attribute_type
 {
     return json_attribute_type{
@@ -147,7 +147,7 @@ auto create_json_attribute(std::string_view p_name, const T& p_value) noexcept -
 }
 
 
-template <concepts::JsonSerializable T>
+template <concepts::JsonSerializableT T>
 auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_value) noexcept -> json_attribute_type
 {
     const option<json_schema_document> element_schema = !p_value.empty() ?
@@ -187,7 +187,7 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
     };
 }
 
-template <concepts::JsonSerializable T>
+template <concepts::JsonSerializableT T>
 auto create_json_attribute(
     std::string_view p_name,
     const unordered_flat_map<std::string, T>& p_value
@@ -215,7 +215,7 @@ auto create_json_attribute(
             for (const auto& [key, value] : p_value)
             {
                 co_yield json_map_attribute_value_type_details{
-                    .m_key = key,
+                    .m_key = std::string_view{ key },
                     .m_value_ptr = static_cast<const void*>(&value),
                     .m_value_schema = value.get_json_schema(),
                 };
@@ -254,12 +254,12 @@ auto create_json_attribute(
             for (const auto& [key, value] : p_value)
             {
                 co_yield json_map_attribute_value_type_details{
-                    .m_key = key,
+                    .m_key = std::string_view{ key },
                     .m_value_ptr = static_cast<const void*>(&value),
                     .m_value_schema = std::nullopt,
                 };
             }
-            
+
             co_return;
         };
 

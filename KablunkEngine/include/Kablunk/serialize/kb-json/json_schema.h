@@ -3,11 +3,11 @@
 #include <variant>
 
 #include "Kablunk/Core/CoreTypes.h"
-
-#include <vector>
-
 #include "Kablunk/Core/coroutine/generator.h"
 #include "Kablunk/meta/tuple_traits.h"
+
+#include <vector>
+#include <string_view>
 
 namespace kb::serde::json
 { // start namespace kb::serde::json
@@ -66,7 +66,7 @@ struct json_vector_attribute_type_details
 struct json_map_attribute_value_type_details
 {
     // copy of the map's key
-    std::string m_key;
+    std::string_view m_key;
     // pointer to the map's value
     const void* m_value_ptr;
     // optional json attribute schema for the value
@@ -131,7 +131,7 @@ namespace concepts
 { // start namespace ::concepts
 
 template <typename T>
-concept JsonSerializable = requires(const T & p_type)
+concept JsonSerializableT = requires(const T & p_type)
 {
     { p_type.get_json_schema() } -> std::same_as<json_schema_document>;
 };

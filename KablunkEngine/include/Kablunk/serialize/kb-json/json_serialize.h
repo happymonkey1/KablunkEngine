@@ -10,7 +10,7 @@ namespace kb::serde::json
 ) noexcept -> std::string;
 
 // Serialize an object which already defines a json schema
-template <concepts::JsonSerializable T>
+template <concepts::JsonSerializableT T>
 [[nodiscard]] auto serialize(const T& p_data) noexcept -> std::string
 {
     return serialize_json_schema(p_data.get_json_schema());

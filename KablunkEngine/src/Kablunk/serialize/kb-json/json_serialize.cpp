@@ -196,7 +196,7 @@ auto get_rapidjson_value(
             // TODO: can we not copy key string here?
             json_map.AddMember(
                 rapidjson::Value{ rapidjson::kStringType }
-                    .SetString(key.c_str(), static_cast<u32>(key.size()), p_allocator)
+                    .SetString(key.data(), static_cast<u32>(key.size()), p_allocator)
                     .Move(),
                 get_rapidjson_value(value_json_attribute, p_allocator),
                 p_allocator
