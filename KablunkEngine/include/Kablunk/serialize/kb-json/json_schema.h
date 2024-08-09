@@ -131,10 +131,11 @@ concept JsonSerializable = requires(const T & p_type)
 };
 
 template <typename T>
-concept JsonTrivialT = requires
-{
-    std::same_as<typename meta::tuple_has_type<T, details::json_trivial_types>::value, std::true_type>;
-};
+concept JsonTrivialT = std::is_same_v<
+    typename meta::tuple_has_type<T, details::json_trivial_types>::type,
+    std::true_type
+>;
+
 
 } // end namespace ::concepts
 

@@ -19,7 +19,6 @@ auto get_rapidjson_value(
 {
     auto type = p_json_attribute.m_type;
     const void* data_ptr = p_json_attribute.m_data_ptr;
-    const size_t data_size = p_json_attribute.m_data_size;
 
     switch (type)
     {
@@ -34,9 +33,11 @@ auto get_rapidjson_value(
             "[json_attribute_type]: data pointer can not be null!"
         );
 
+        const auto* string_data_ptr = static_cast<const std::string*>(data_ptr);
+
         return rapidjson::Value{
-            static_cast<const char*>(data_ptr),
-            static_cast<u32>(data_size)
+            string_data_ptr->c_str(),
+            static_cast<u32>(string_data_ptr->size())
         };
     }
     case json_type_t::u32:

@@ -33,7 +33,6 @@ TEST_CASE("json serialization trivial", "[serde::json]")
     REQUIRE(serialized_json_str == expected_str);
 }
 
-#if 0
 TEST_CASE("json serialization vector of trivial", "[serde::json]")
 {
     struct vector_of_trivial
@@ -53,11 +52,10 @@ TEST_CASE("json serialization vector of trivial", "[serde::json]")
     const auto foo = vector_of_trivial{ { "hello", "world", "!" } };
 
     auto serialized_json_str = serde::json::serialize(foo);
-    constexpr std::string_view expected_str{ "{\"m_foo\":[{\"m_a\":\"hello world!\"}]}" };
+    constexpr std::string_view expected_str{ "{\"m_a\":[\"hello\",\"world\",\"!\"]}" };
     KB_CORE_INFO("[TEST]: serialized vector of object '{}'", serialized_json_str);
     REQUIRE(serialized_json_str == expected_str);
 }
-#endif
 
 TEST_CASE("json serialization vector of objects", "[serde::json]")
 {

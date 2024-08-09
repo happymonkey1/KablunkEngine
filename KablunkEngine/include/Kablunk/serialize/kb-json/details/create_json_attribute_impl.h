@@ -11,7 +11,7 @@ inline auto create_json_attribute(
     return {
         .m_type = json_type_t::string,
         .m_name = p_name.data(),
-        .m_data_ptr = p_value.c_str(),
+        .m_data_ptr = &p_value,
         .m_data_size = p_value.size(),
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
