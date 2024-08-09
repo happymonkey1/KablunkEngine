@@ -160,26 +160,20 @@ auto get_rapidjson_value(
 
         const auto& map_attribute_details = p_json_attribute.m_map_attribute_details.value();
 
-        auto forward_iter_gen = map_attribute_details.m_iter_func();
+        generator<json_map_attribute_value_type_details> forward_iter_gen =
+            map_attribute_details.m_iter_func();
         KB_CORE_ASSERT(
             forward_iter_gen,
             "[get_rapidjson_value]: iter_func can not be null!"
         );
 
-        size_t index = 0ull;
-
-        json_map_attribute_type_details::pair_t element_pair = std::nullopt;
-        do
+        size_t index = 0;
+        for (; index < map_attribute_details.m_element_count; ++index)
         {
-            element_pair = forward_iter_gen();
+            auto element_details = forward_iter_gen();
 
-            if (!element_pair)
-                break;
-
-            ++index;
-
-            auto key = element_pair.value().first;
-            auto value_ptr = element_pair.value().second;
+            const auto& key = element_details.m_key;
+            const void* value_ptr = element_details.m_value_ptr;
 
             const auto map_value_attribute_type = map_attribute_details.m_value_type;
             KB_CORE_ASSERT(
@@ -193,19 +187,21 @@ auto get_rapidjson_value(
                 .m_name = nullptr,
                 .m_data_ptr = value_ptr,
                 .m_data_size = map_attribute_details.m_value_element_size,
-                .m_object_attribute_schema = map_attribute_details.m_value_attribute_details,
+                .m_object_attribute_schema = element_details.m_value_schema,
                 // TODO: support vector or map sub-type
                 .m_vector_attribute_details = std::nullopt,
                 .m_map_attribute_details = std::nullopt,
             };
 
+            // TODO: can we not copy key string here?
             json_map.AddMember(
-                rapidjson::StringRef(key.c_str()),
+                rapidjson::Value{ rapidjson::kStringType }
+                    .SetString(key.c_str(), static_cast<u32>(key.size()), p_allocator)
+                    .Move(),
                 get_rapidjson_value(value_json_attribute, p_allocator),
                 p_allocator
             );
         }
-        while (element_pair);
 
         KB_CORE_ASSERT(
             index == map_attribute_details.m_element_count,

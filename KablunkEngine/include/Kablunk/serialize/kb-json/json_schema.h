@@ -63,11 +63,19 @@ struct json_vector_attribute_type_details
     option<json_schema_document> m_schema;
 };
 
+struct json_map_attribute_value_type_details
+{
+    // copy of the map's key
+    std::string m_key;
+    // pointer to the map's value
+    const void* m_value_ptr;
+    // optional json attribute schema for the value
+    option<json_schema_document> m_value_schema;
+};
+
 struct json_map_attribute_type_details
 {
-    // TODO: can this be a string_view instead?
-    using pair_t = option<std::pair<std::string, const void*>>;
-    using forward_iter_func_t = generator<pair_t>(*)();
+    using forward_iter_func_t = std::function<generator<json_map_attribute_value_type_details>()>;
 
     // key json type
     json_type_t m_key_type;
@@ -77,8 +85,6 @@ struct json_map_attribute_type_details
     size_t m_value_element_size;
     // number of elements in the associative map
     size_t m_element_count;
-    // optional attribute type details for object value types
-    option<json_schema_document> m_value_attribute_details;
     // function wrapper for a forward iterator that either returns an associative pair or empty optional
     forward_iter_func_t m_iter_func;
 };

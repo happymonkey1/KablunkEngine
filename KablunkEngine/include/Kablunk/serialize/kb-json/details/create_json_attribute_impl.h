@@ -168,7 +168,6 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
     };
 }
 
-// TODO: this is not working...
 template <concepts::JsonTrivialT T>
 auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_value) noexcept -> json_attribute_type
 {
@@ -188,28 +187,97 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
     };
 }
 
-#if 0
-// TODO: remove
-template <>
-auto create_json_attribute(std::string_view p_name, const std::vector<std::string>& p_value) noexcept -> json_attribute_type
+template <concepts::JsonSerializable T>
+auto create_json_attribute(
+    std::string_view p_name,
+    const unordered_flat_map<std::string, T>& p_value
+) noexcept -> json_attribute_type
 {
-    const option<json_schema_document> element_schema = !p_value.empty() ?
-        std::make_optional(p_value[0].get_json_schema()) : std::nullopt;
+    const option<json_schema_document> value_schema = !p_value.empty() ?
+        [&p_value]() -> option<json_schema_document>
+        {
+            // TODO: can we directly access an iterator (begin()) and retrieve one value,
+            //       instead of this weird loop...
+            option<json_schema_document> schema = std::nullopt;
+            for (const auto& [key, value] : p_value)
+            {
+                schema = value.get_json_schema();
+                break;
+            }
+
+            return schema;
+        }() : std::nullopt;
+
+    // TODO: I think this may be UB?
+    //       https://devblogs.microsoft.com/oldnewthing/20211103-00/?p=105870
+    auto iter_func = [&p_value]() noexcept -> generator<json_map_attribute_value_type_details>
+        {
+            for (const auto& [key, value] : p_value)
+            {
+                co_yield json_map_attribute_value_type_details{
+                    .m_key = key,
+                    .m_value_ptr = static_cast<const void*>(&value),
+                    .m_value_schema = value.get_json_schema(),
+                };
+            }
+
+            co_return;
+        };
+
     return json_attribute_type{
-        .m_type = json_type_t::vector,
+        .m_type = json_type_t::map,
         .m_name = p_name.data(),
-        .m_data_ptr = p_value.data(),
-        .m_data_size = sizeof(p_value.size() * sizeof(std::st)),
+        .m_data_ptr = &p_value,
+        .m_data_size = sizeof(p_value),
         .m_object_attribute_schema = std::nullopt,
-        .m_vector_attribute_details = std::make_optional(json_vector_attribute_type_details{
-            .m_element_size = sizeof(T),
+        .m_vector_attribute_details = std::nullopt,
+        .m_map_attribute_details = json_map_attribute_type_details{
+            .m_key_type = json_type_t::string,
+            .m_value_type = json_type_t::object,
+            .m_value_element_size = sizeof(T),
             .m_element_count = p_value.size(),
-            .m_type = get_trivial_json_type<T>(),
-            .m_schema = std::nullopt
-        }),
-        .m_map_attribute_details = std::nullopt,
+            .m_iter_func = iter_func
+        }
     };
 }
-#endif
+
+template <concepts::JsonTrivialT T>
+auto create_json_attribute(
+    std::string_view p_name,
+    const unordered_flat_map<std::string, T>& p_value
+) noexcept -> json_attribute_type
+{
+    // TODO: I think this may be UB?
+    //       https://devblogs.microsoft.com/oldnewthing/20211103-00/?p=105870
+    auto iter_func = [&p_value]() noexcept -> generator<json_map_attribute_value_type_details>
+        {
+            for (const auto& [key, value] : p_value)
+            {
+                co_yield json_map_attribute_value_type_details{
+                    .m_key = key,
+                    .m_value_ptr = static_cast<const void*>(&value),
+                    .m_value_schema = std::nullopt,
+                };
+            }
+            
+            co_return;
+        };
+
+    return json_attribute_type{
+        .m_type = json_type_t::map,
+        .m_name = p_name.data(),
+        .m_data_ptr = &p_value,
+        .m_data_size = sizeof(p_value),
+        .m_object_attribute_schema = std::nullopt,
+        .m_vector_attribute_details = std::nullopt,
+        .m_map_attribute_details = std::make_optional(json_map_attribute_type_details{
+            .m_key_type = json_type_t::string,
+            .m_value_type = get_trivial_json_type<T>(),
+            .m_value_element_size = sizeof(T),
+            .m_element_count = p_value.size(),
+            .m_iter_func = iter_func
+        }),
+    };
+}
 
 } // end namespace kb::serde::json

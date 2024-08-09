@@ -23,12 +23,12 @@ struct generator
 
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
+        void unhandled_exception() {}
 
-
-        template<std::convertible_to<T> From> // C++20 concept
+        template<std::convertible_to<T> From>
         std::suspend_always yield_value(From&& from) noexcept
         {
-            m_value = std::forward<From>(from); // caching the result in promise
+            m_value = std::forward<From>(from);
             return {};
         }
 
