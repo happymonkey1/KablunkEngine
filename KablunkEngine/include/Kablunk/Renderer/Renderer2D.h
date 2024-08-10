@@ -480,7 +480,7 @@ public:
         {
             texture_index = m_renderer_data.texture_slot_index;
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!")
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
         }
 
         return texture_index;

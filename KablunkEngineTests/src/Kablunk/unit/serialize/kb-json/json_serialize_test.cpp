@@ -7,6 +7,7 @@
 
 #include "Kablunk/serialize/kb-json/kb_json.h"
 #include <string_view>
+#include <cstddef>
 
 
 using namespace kb;

@@ -339,10 +339,12 @@ auto deserialize_value(
     
 }
 
-auto serialize_json_schema(const json_schema_document& p_json_schema) noexcept -> std::string
+auto details::serialize_json_schema(const json_schema_document& p_json_schema) noexcept -> std::string
 {
     rapidjson::Document json_document{};
     json_document.SetObject();
+    // Iterate attributes, translating to a corresponding rapidjson value
+    // then add to the document
     for (const json_attribute_type& json_attribute : p_json_schema.m_attributes)
     {
         json_document.AddMember(
@@ -360,7 +362,7 @@ auto serialize_json_schema(const json_schema_document& p_json_schema) noexcept -
     return output_buffer.GetString();
 }
 
-auto deserialize_json_schema(
+auto details::deserialize_json_schema(
     const std::string& p_json_string,
     const json_schema_document& p_json_schema,
     const size_t p_buffer_size
@@ -409,7 +411,12 @@ auto deserialize_json_schema(
 
         u8* cur_ptr = buffer_head_ptr + json_attribute.m_offset;
 
-        const auto emplaced_size = deserialize_value(json_attribute, std::move(rapidjson_value.value), cur_ptr);
+        // Value is directly deserialized into the data buffer
+        const auto emplaced_size = deserialize_value(
+            json_attribute,
+            std::move(rapidjson_value.value),
+            cur_ptr
+        );
         KB_CORE_ASSERT(
             emplaced_size == json_attribute.m_data_size,
             "[deserialize_json_schema]: Expected to emplace value with size {}, but is {} instead?",

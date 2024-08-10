@@ -196,18 +196,26 @@ namespace kb
                 const VkCommandBuffer command_buffer = instance->m_command_buffers[frame_index];
 				submit_info.pCommandBuffers = &command_buffer;
 
-				if (vkWaitForFences(vk_device, 1, &instance->m_wait_fences[frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!")
+                if (vkWaitForFences(vk_device, 1, &instance->m_wait_fences[frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+                    KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
 
 				if (vkResetFences(vk_device, 1, &instance->m_wait_fences[frame_index]) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan failed to reset fences!")
+					KB_CORE_ASSERT(false, "Vulkan failed to reset fences!");
 
 				if(vkQueueSubmit(device->GetGraphicsQueue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
-					KB_CORE_ASSERT(false, "Vulkan failed to submit queue")
+					KB_CORE_ASSERT(false, "Vulkan failed to submit queue");
 
 				// retrieve timestamp query results
-				vkGetQueryPoolResults(vk_device, instance->m_timestamp_query_pools[frame_index], 0, instance->m_timestamp_next_available_query,
-					instance->m_timestamp_next_available_query * sizeof(uint64_t), instance->m_timestamp_query_results[frame_index].data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+				vkGetQueryPoolResults(
+                    vk_device,
+                    instance->m_timestamp_query_pools[frame_index],
+                    0,
+                    instance->m_timestamp_next_available_query,
+					instance->m_timestamp_next_available_query * sizeof(uint64_t),
+                    instance->m_timestamp_query_results[frame_index].data(),
+                    sizeof(uint64_t),
+                    VK_QUERY_RESULT_64_BIT
+                );
 
 				for (uint32_t i = 0; i < instance->m_timestamp_next_available_query; i += 2)
 				{

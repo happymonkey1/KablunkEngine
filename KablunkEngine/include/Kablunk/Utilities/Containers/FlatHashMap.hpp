@@ -741,7 +741,7 @@ void flat_unordered_hash_map<K, V>::insert(const hash_map_pair_t& pair)
 	if (metadata.is_slot_occupied())
 	{
 #ifdef KB_DEBUG
-		KB_CORE_ASSERT(false, "tried inserting but key was already present")
+        KB_CORE_ASSERT(false, "tried inserting but key was already present");
 #else
 		KB_CORE_WARN("[flat_unordered_hash_map]: tried inserting but key was already present!");
 #endif
@@ -793,7 +793,7 @@ void flat_unordered_hash_map<K, V>::insert(hash_map_pair_t&& pair)
 	if (metadata.is_slot_occupied())
 	{
 #ifdef KB_DEBUG
-		KB_CORE_ASSERT(false, "tried inserting but key was already present")
+        KB_CORE_ASSERT(false, "tried inserting but key was already present");
 #else
 		KB_CORE_WARN("[flat_unordered_hash_map]: tried inserting but key was already present!");
 #endif
@@ -1155,7 +1155,7 @@ void flat_unordered_hash_map<K, V>::reserve(size_t new_size)
 {
 	KB_CORE_ASSERT(m_bucket, "bucket pointer is invalid, did you forget to construct the map?");
 
-	KB_CORE_ASSERT(m_max_elements < new_size, "cannot resize map to be smaller!")
+    KB_CORE_ASSERT(m_max_elements < new_size, "cannot resize map to be smaller!");
 
 	hash_map_pair_t* old_bucket = m_bucket;
 	metadata_t* old_metadata_bucket = m_metadata_bucket;

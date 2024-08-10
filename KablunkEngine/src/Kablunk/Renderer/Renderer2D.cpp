@@ -472,7 +472,7 @@ void Renderer2D::flush()
 {
     KB_PROFILE_SCOPE;
 
-	KB_CORE_ASSERT(m_renderer_data.Stats.batch_count < 1, "Multiple batches per frame not supported!")
+    KB_CORE_ASSERT(m_renderer_data.Stats.batch_count < 1, "Multiple batches per frame not supported!");
 
 	m_renderer_data.render_command_buffer->Begin();
 
@@ -1268,7 +1268,7 @@ auto Renderer2D::submit_quad_data(const owning_buffer& p_quad_buffer) noexcept -
     KB_CORE_ASSERT(
         m_renderer_data.quad_count + quad_count <= m_renderer_data.max_quads,
         "[Renderer2D]: quad buffer overflow!"
-    )
+    );
 
     if (m_renderer_data.quad_count + quad_count <= renderer_2d_data_t::max_quads)
     {
@@ -1285,7 +1285,7 @@ auto Renderer2D::submit_quad_data(const owning_buffer& p_quad_buffer) noexcept -
             KB_CORE_ASSERT(
                 quad_vertex_buffer_ptr < max_ptr,
                 "BUFFER OVERFLOW"
-            )
+            );
         }
     }
     else

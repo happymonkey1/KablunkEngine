@@ -105,7 +105,7 @@ auto network_client::send_raw_authentication_check(
     KB_CORE_ASSERT(
         m_account_credentials.validate(),
         "[network_client]: Account credentials failed local validation check"
-    )
+    );
 
     KB_CORE_INFO("[network_client]: Sending authentication check");
     const auto auth_type = static_cast<underlying_auth_type_t>(p_auth_type);

@@ -44,8 +44,8 @@ void font_asset::set_font_point(size_t new_font_point)
         static_cast<FT_UInt>(m_dpi_y)					        /* vertical device resolution    */
 	);
 
-	if (error)
-		KB_CORE_ASSERT(false, "[font_asset]: failed to change font point! error code '{}'", error)
+    if (error)
+        KB_CORE_ASSERT(false, "[font_asset]: failed to change font point! error code '{}'", error);
 }
 
 void font_asset::release()

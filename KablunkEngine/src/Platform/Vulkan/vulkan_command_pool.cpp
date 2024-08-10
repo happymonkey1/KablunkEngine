@@ -21,8 +21,8 @@ command_pool::command_pool()
         KB_CORE_ASSERT(false, "[vk::command_pool]: failed to create vulkan graphics command pool!");
 
     vk_command_pool_create_info.queueFamilyIndex = device->GetPhysicalDevice()->GetQueueFamilyIndices().m_compute_family.value();
-    if(vkCreateCommandPool(vk_device, &vk_command_pool_create_info, nullptr, &m_vk_compute_command_pool) != VK_SUCCESS)
-        KB_CORE_ASSERT(false, "[vk::command_pool]: failed to create vulkan compute command pool")
+    if (vkCreateCommandPool(vk_device, &vk_command_pool_create_info, nullptr, &m_vk_compute_command_pool) != VK_SUCCESS)
+        KB_CORE_ASSERT(false, "[vk::command_pool]: failed to create vulkan compute command pool");
 }
 
 command_pool::~command_pool()
@@ -50,15 +50,15 @@ VkCommandBuffer command_pool::allocate_command_buffer(bool p_begin, bool p_compu
     vk_command_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     vk_command_buffer_alloc_info.commandBufferCount = 1;
 
-    if(vkAllocateCommandBuffers(vk_device, &vk_command_buffer_alloc_info, &vk_command_buffer))
-        KB_CORE_ASSERT(false, "[vk::command_pool]: failed to allocate command buffer!")
+    if (vkAllocateCommandBuffers(vk_device, &vk_command_buffer_alloc_info, &vk_command_buffer))
+        KB_CORE_ASSERT(false, "[vk::command_pool]: failed to allocate command buffer!");
 
     if (p_begin)
     {
         VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
         vk_command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        if(vkBeginCommandBuffer(vk_command_buffer, &vk_command_buffer_begin_info) != VK_SUCCESS)
-            KB_CORE_ASSERT(false, "[vk::command_pool]: failed to begin command buffer!")
+        if (vkBeginCommandBuffer(vk_command_buffer, &vk_command_buffer_begin_info) != VK_SUCCESS)
+            KB_CORE_ASSERT(false, "[vk::command_pool]: failed to begin command buffer!");
     }
 
     return vk_command_buffer;
