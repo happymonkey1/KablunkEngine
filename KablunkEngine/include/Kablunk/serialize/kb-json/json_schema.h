@@ -49,6 +49,7 @@ struct json_schema_document
     // list of json attributes
     // TODO: should this be stack allocated?
     std::vector<json_attribute_type> m_attributes{};
+    size_t m_size{};
 };
 
 struct json_vector_attribute_type_details
@@ -99,6 +100,8 @@ struct json_attribute_type
     const void* m_data_ptr;
     // size of data buffer in bytes
     size_t m_data_size;
+    // member offset in bytes
+    size_t m_offset;
     // optional json document schema for object attributes
     option<json_schema_document> m_object_attribute_schema;
     // optional details for a vector attribute's element type
@@ -109,7 +112,7 @@ struct json_attribute_type
 
 // template to be specialized for trivial json serializable type
 template <typename T>
-constexpr auto get_trivial_json_type()->json_type_t;
+constexpr auto get_trivial_json_type() -> json_type_t;
 
 // TODO: should be able to do this solely based on whether `get_trivial_json_type` is specialized...
 namespace details
@@ -137,6 +140,9 @@ concept JsonSerializableT = requires(const T & p_type)
 };
 
 template <typename T>
+concept JsonSerializableAndTriviallyConstructableT = JsonSerializableT<T> && std::is_trivially_constructible_v<T>;
+
+template <typename T>
 concept JsonTrivialT = std::is_same_v<
     typename meta::tuple_has_type<T, details::json_trivial_types>::type,
     std::true_type
@@ -146,7 +152,11 @@ concept JsonTrivialT = std::is_same_v<
 } // end namespace ::concepts
 
 // public api for creating json attributes
-auto create_json_attribute(std::string_view p_name, const auto& p_value) noexcept -> json_attribute_type;
+auto create_json_attribute(
+    std::string_view p_name,
+    const auto& p_value,
+    size_t p_offset
+) noexcept -> json_attribute_type;
 
 } // end namespace kb::serde::json
 

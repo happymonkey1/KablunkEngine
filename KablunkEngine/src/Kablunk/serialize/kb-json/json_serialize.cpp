@@ -12,7 +12,7 @@ namespace kb::serde::json
 { // start namespace kb::serde::json
 
 
-auto get_rapidjson_value(
+auto serialize_value(
     const json_attribute_type& p_json_attribute,
     rapidjson::Document::AllocatorType& p_allocator
 ) noexcept -> rapidjson::Value
@@ -142,7 +142,7 @@ auto get_rapidjson_value(
             };
 
             json_array.PushBack(
-                get_rapidjson_value(array_element_attribute_type, p_allocator),
+                serialize_value(array_element_attribute_type, p_allocator),
                 p_allocator
             );
         }
@@ -198,7 +198,7 @@ auto get_rapidjson_value(
                 rapidjson::Value{ rapidjson::kStringType }
                     .SetString(key.data(), static_cast<u32>(key.size()), p_allocator)
                     .Move(),
-                get_rapidjson_value(value_json_attribute, p_allocator),
+                serialize_value(value_json_attribute, p_allocator),
                 p_allocator
             );
         }
@@ -236,7 +236,7 @@ auto get_rapidjson_value(
             // #TODO need to mutate data pointer here...
             json_object.AddMember(
                 rapidjson::StringRef(json_attribute.m_name),
-                get_rapidjson_value(json_attribute, p_allocator),
+                serialize_value(json_attribute, p_allocator),
                 p_allocator
             );
         }
@@ -255,6 +255,90 @@ auto get_rapidjson_value(
     }
 }
 
+auto deserialize_value(
+    const json_attribute_type& p_json_attribute,
+    rapidjson::Value p_rapidjson_value,
+    u8* p_dest_ptr
+) -> size_t
+{
+    const auto type = p_json_attribute.m_type;
+    const auto data_size = p_json_attribute.m_data_size;
+
+    switch (type)
+    {
+    case json_type_t::string:
+    {
+        new (p_dest_ptr) std::string{ p_rapidjson_value.GetString() };
+        return sizeof(std::string);
+    }
+    case json_type_t::u32:
+    {
+        new (p_dest_ptr) u32{ p_rapidjson_value.GetUint() };
+        return sizeof(u32);
+    }
+    case json_type_t::u64:
+    {
+        new (p_dest_ptr) u64{ p_rapidjson_value.GetUint64() };
+        return sizeof(u64);
+    }
+    case json_type_t::i32:
+    {
+        new (p_dest_ptr) i32{ p_rapidjson_value.GetInt() };
+        return sizeof(i32);
+    }
+    case json_type_t::i64:
+    {
+        new (p_dest_ptr) i64{ p_rapidjson_value.GetInt64() };
+        return sizeof(i64);
+    }
+    case json_type_t::f32:
+    {
+        new (p_dest_ptr) f32{ p_rapidjson_value.GetFloat() };
+        return sizeof(f32);
+    }
+    case json_type_t::f64:
+    {
+        new (p_dest_ptr) f64{ p_rapidjson_value.GetDouble() };
+        return sizeof(f64);
+    }
+    case json_type_t::boolean:
+    {
+        new (p_dest_ptr) bool{ p_rapidjson_value.GetBool() };
+        return sizeof(bool);
+    }
+    case json_type_t::vector:
+    {
+        KB_CORE_ASSERT(false, "not implemented!");
+        return 0;
+    }
+    case json_type_t::map:
+    {
+        KB_CORE_ASSERT(false, "not implemented!");
+        return 0;
+    }
+    case json_type_t::object:
+    {
+        KB_CORE_ASSERT(false, "not implemented!");
+        return 0;
+    }
+    case json_type_t::null:
+    {
+        KB_CORE_ASSERT(false, "[deserialize_value]: Trying to deserialize a null value?");
+        return 0;
+    }
+    default:
+    {
+        KB_CORE_ASSERT(
+            false,
+            "[deserialize_value]: Unhandled json_type_t '{}'",
+            to_underlying(type)
+        );
+        return 0;
+    }
+    }
+    
+}
+
 auto serialize_json_schema(const json_schema_document& p_json_schema) noexcept -> std::string
 {
     rapidjson::Document json_document{};
@@ -263,7 +347,7 @@ auto serialize_json_schema(const json_schema_document& p_json_schema) noexcept -
     {
         json_document.AddMember(
             rapidjson::StringRef(json_attribute.m_name),
-            get_rapidjson_value(json_attribute, json_document.GetAllocator()),
+            serialize_value(json_attribute, json_document.GetAllocator()),
             json_document.GetAllocator()
         );
     }
@@ -274,6 +358,69 @@ auto serialize_json_schema(const json_schema_document& p_json_schema) noexcept -
     json_document.Accept(writer);
 
     return output_buffer.GetString();
+}
+
+auto deserialize_json_schema(
+    const std::string& p_json_string,
+    const json_schema_document& p_json_schema,
+    const size_t p_buffer_size
+) noexcept -> owning_buffer
+{
+    rapidjson::Document json_document{};
+    json_document.Parse(p_json_string.c_str());
+
+    KB_CORE_ASSERT(
+        json_document.IsObject(),
+        "[deserialize_json_schema]: Failed to deserialize top level json object!"
+    );
+
+    // allocate a buffer for all attributes
+    owning_buffer data_buffer{ p_buffer_size };
+    u8* buffer_head_ptr = static_cast<u8*>(data_buffer.get());
+    size_t cur_size = 0;
+
+    // iterate each of the document values (and json_attributes) and emplace them into the buffer
+    size_t index = 0;
+    for (auto&& rapidjson_value : json_document.GetObj())
+    {
+        KB_CORE_ASSERT(
+            index < p_json_schema.m_attributes.size(),
+            "[deserialize_json_schema]: Trying to index out of attribute bounds!"
+        );
+        const auto& json_attribute = p_json_schema.m_attributes[index++];
+        auto&& name = std::string_view{ rapidjson_value.name.GetString() };
+
+#ifdef KB_DEBUG
+        {
+            std::string_view attribute_name{ json_attribute.m_name };
+            KB_CORE_ASSERT(
+                name == attribute_name,
+                "[deserialize_json_schema]: Expected attribute with name {}, found {} instead?",
+                attribute_name,
+                name
+            );
+        }
+#endif
+
+        KB_CORE_ASSERT(
+            cur_size + json_attribute.m_data_size <= p_buffer_size,
+            "[deserialize_json_schema]: Data buffer out of bounds?"
+        );
+
+        u8* cur_ptr = buffer_head_ptr + json_attribute.m_offset;
+
+        const auto emplaced_size = deserialize_value(json_attribute, std::move(rapidjson_value.value), cur_ptr);
+        KB_CORE_ASSERT(
+            emplaced_size == json_attribute.m_data_size,
+            "[deserialize_json_schema]: Expected to emplace value with size {}, but is {} instead?",
+            json_attribute.m_data_size,
+            emplaced_size
+        );
+
+        cur_size += json_attribute.m_data_size;
+    }
+
+    return data_buffer;
 }
 
 } // end namespace kb::serde::json

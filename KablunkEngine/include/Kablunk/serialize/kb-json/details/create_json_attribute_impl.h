@@ -5,14 +5,16 @@ namespace kb::serde::json
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const std::string& p_value
+    const std::string& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
         .m_type = json_type_t::string,
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
-        .m_data_size = p_value.size(),
+        .m_data_size = sizeof(std::string),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -21,7 +23,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const u32& p_value
+    const u32& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -29,6 +32,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(u32),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -37,7 +41,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const u64& p_value
+    const u64& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -45,6 +50,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(u64),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -53,7 +59,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const i32& p_value
+    const i32& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -61,6 +68,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(i32),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -69,7 +77,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const i64& p_value
+    const i64& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -77,6 +86,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(i64),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -85,7 +95,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const f32& p_value
+    const f32& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -93,6 +104,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(f32),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -101,7 +113,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const f64& p_value
+    const f64& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -109,6 +122,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(f64),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -117,7 +131,8 @@ inline auto create_json_attribute(
 
 inline auto create_json_attribute(
     std::string_view p_name,
-    const bool& p_value
+    const bool& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     return {
@@ -125,6 +140,7 @@ inline auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(bool),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -133,13 +149,18 @@ inline auto create_json_attribute(
 
 // specialization for objects that already define a schema
 template <concepts::JsonSerializableT T>
-auto create_json_attribute(std::string_view p_name, const T& p_value) noexcept -> json_attribute_type
+auto create_json_attribute(
+    std::string_view p_name,
+    const T& p_value,
+    const size_t p_offset
+) noexcept -> json_attribute_type
 {
     return json_attribute_type{
         .m_type = json_type_t::object,
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
+        .m_offset = p_offset,
         .m_object_attribute_schema = p_value.get_json_schema(),
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::nullopt,
@@ -148,7 +169,11 @@ auto create_json_attribute(std::string_view p_name, const T& p_value) noexcept -
 
 
 template <concepts::JsonSerializableT T>
-auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_value) noexcept -> json_attribute_type
+auto create_json_attribute(
+    std::string_view p_name,
+    const std::vector<T>& p_value,
+    const size_t p_offset
+) noexcept -> json_attribute_type
 {
     const option<json_schema_document> element_schema = !p_value.empty() ?
         std::make_optional(p_value[0].get_json_schema()) : std::nullopt;
@@ -157,6 +182,7 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
         .m_name = p_name.data(),
         .m_data_ptr = p_value.data(),
         .m_data_size = sizeof(p_value.size() * sizeof(T)),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::make_optional(json_vector_attribute_type_details{
             .m_element_size = sizeof(T),
@@ -169,13 +195,18 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
 }
 
 template <concepts::JsonTrivialT T>
-auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_value) noexcept -> json_attribute_type
+auto create_json_attribute(
+    std::string_view p_name,
+    const std::vector<T>& p_value,
+    const size_t p_offset
+) noexcept -> json_attribute_type
 {
     return json_attribute_type{
         .m_type = json_type_t::vector,
         .m_name = p_name.data(),
         .m_data_ptr = p_value.data(),
         .m_data_size = sizeof(p_value.size() * sizeof(T)),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::make_optional(json_vector_attribute_type_details{
             .m_element_size = sizeof(T),
@@ -190,7 +221,8 @@ auto create_json_attribute(std::string_view p_name, const std::vector<T>& p_valu
 template <concepts::JsonSerializableT T>
 auto create_json_attribute(
     std::string_view p_name,
-    const unordered_flat_map<std::string, T>& p_value
+    const unordered_flat_map<std::string, T>& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     const option<json_schema_document> value_schema = !p_value.empty() ?
@@ -229,6 +261,7 @@ auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = json_map_attribute_type_details{
@@ -244,7 +277,8 @@ auto create_json_attribute(
 template <concepts::JsonTrivialT T>
 auto create_json_attribute(
     std::string_view p_name,
-    const unordered_flat_map<std::string, T>& p_value
+    const unordered_flat_map<std::string, T>& p_value,
+    const size_t p_offset
 ) noexcept -> json_attribute_type
 {
     // TODO: I think this may be UB?
@@ -268,6 +302,7 @@ auto create_json_attribute(
         .m_name = p_name.data(),
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
+        .m_offset = p_offset,
         .m_object_attribute_schema = std::nullopt,
         .m_vector_attribute_details = std::nullopt,
         .m_map_attribute_details = std::make_optional(json_map_attribute_type_details{
