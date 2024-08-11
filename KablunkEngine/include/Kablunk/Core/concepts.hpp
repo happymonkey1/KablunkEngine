@@ -18,4 +18,7 @@ concept EnumT = std::is_enum_v<T>;
 template <typename T, typename... U>
 concept IsAnyOf = (std::same_as<T, U> || ...);
 
+template <typename T>
+concept IsClassT = std::is_class_v<T>;
+
 } // end namespace kb::concepts

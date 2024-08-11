@@ -11,7 +11,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::string,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(std::string),
         .m_offset = p_offset,
@@ -29,7 +29,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::u32,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(u32),
         .m_offset = p_offset,
@@ -47,7 +47,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::u64,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(u64),
         .m_offset = p_offset,
@@ -65,7 +65,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::i32,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(i32),
         .m_offset = p_offset,
@@ -83,7 +83,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::i64,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(i64),
         .m_offset = p_offset,
@@ -101,7 +101,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::f32,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(f32),
         .m_offset = p_offset,
@@ -119,7 +119,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::f64,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(f64),
         .m_offset = p_offset,
@@ -137,7 +137,7 @@ inline auto create_json_attribute(
 {
     return {
         .m_type = json_type_t::boolean,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(bool),
         .m_offset = p_offset,
@@ -157,7 +157,7 @@ auto create_json_attribute(
 {
     return json_attribute_type{
         .m_type = json_type_t::object,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
         .m_offset = p_offset,
@@ -179,7 +179,7 @@ auto create_json_attribute(
         std::make_optional(p_value[0].get_json_schema()) : std::nullopt;
     return json_attribute_type{
         .m_type = json_type_t::vector,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = p_value.data(),
         .m_data_size = sizeof(p_value.size() * sizeof(T)),
         .m_offset = p_offset,
@@ -203,7 +203,7 @@ auto create_json_attribute(
 {
     return json_attribute_type{
         .m_type = json_type_t::vector,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = p_value.data(),
         .m_data_size = sizeof(p_value.size() * sizeof(T)),
         .m_offset = p_offset,
@@ -258,7 +258,7 @@ auto create_json_attribute(
 
     return json_attribute_type{
         .m_type = json_type_t::map,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
         .m_offset = p_offset,
@@ -299,7 +299,7 @@ auto create_json_attribute(
 
     return json_attribute_type{
         .m_type = json_type_t::map,
-        .m_name = p_name.data(),
+        .m_name = p_name,
         .m_data_ptr = &p_value,
         .m_data_size = sizeof(p_value),
         .m_offset = p_offset,

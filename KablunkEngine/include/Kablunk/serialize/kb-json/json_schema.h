@@ -95,7 +95,7 @@ struct json_attribute_type
     // attribute type
     json_type_t m_type;
     // attribute name
-    const char* m_name;
+    std::string_view m_name;
     // pointer to buffer to data
     const void* m_data_ptr;
     // size of data buffer in bytes

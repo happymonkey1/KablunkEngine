@@ -84,6 +84,7 @@
 #	define KB_ASSERT(x, ...)      { if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } }
 #	define KB_CORE_ASSERT(x, ...) do { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } } while (0)
 #	define KB_ASSERT_NO_LOG(x)    { if (!(x)) KB_DEBUG_BREAK(); }
+#   define KB_STATIC_ASSERT(x, msg)    do { if (!(x)) static_assert(false, msg); } while (0)
 #else
 #	define KB_ASSERT(x, ...)		{ if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); } }
 #	define KB_CORE_ASSERT(x, ...)   { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); } } 

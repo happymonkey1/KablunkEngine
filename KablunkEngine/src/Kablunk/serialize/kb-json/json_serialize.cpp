@@ -132,7 +132,7 @@ auto serialize_value(
             // Define a json attribute to recursively pack vector attributes
             const json_attribute_type array_element_attribute_type{
                 .m_type = vec_attribute_details.m_type,
-                .m_name = nullptr,
+                .m_name = std::string_view{},
                 .m_data_ptr = element_ptr,
                 .m_data_size = vec_attribute_details.m_element_size,
                 .m_object_attribute_schema = vec_attribute_details.m_schema,
@@ -184,7 +184,7 @@ auto serialize_value(
 
             json_attribute_type value_json_attribute{
                 .m_type = map_attribute_details.m_value_type,
-                .m_name = nullptr,
+                .m_name = std::string_view{},
                 .m_data_ptr = value_ptr,
                 .m_data_size = map_attribute_details.m_value_element_size,
                 .m_object_attribute_schema = element_details.m_value_schema,
@@ -228,14 +228,9 @@ auto serialize_value(
 
         for (const auto& json_attribute : p_json_attribute.m_object_attribute_schema->m_attributes)
         {
-            KB_CORE_ASSERT(
-                json_attribute.m_name,
-                "[get_rapidjson_value]: attribute name can not be null for json_type_t::object!"
-            );
-
             // #TODO need to mutate data pointer here...
             json_object.AddMember(
-                rapidjson::StringRef(json_attribute.m_name),
+                rapidjson::StringRef(json_attribute.m_name.data()),
                 serialize_value(json_attribute, p_allocator),
                 p_allocator
             );
@@ -262,7 +257,6 @@ auto deserialize_value(
 ) -> size_t
 {
     const auto type = p_json_attribute.m_type;
-    const auto data_size = p_json_attribute.m_data_size;
 
     switch (type)
     {
@@ -318,8 +312,53 @@ auto deserialize_value(
     }
     case json_type_t::object:
     {
-        KB_CORE_ASSERT(false, "not implemented!");
-        return 0;
+        const auto json_object = p_rapidjson_value.GetObj();
+
+        KB_CORE_ASSERT(
+            p_json_attribute.m_object_attribute_schema.has_value(),
+            "[deserialize_value]: Json object must have a defined schema!"
+        );
+        const auto& object_json_schema = p_json_attribute.m_object_attribute_schema.value();
+
+        owning_buffer json_object_data_buffer{ object_json_schema.m_size };
+        const auto head_object_ptr = static_cast<u8*>(json_object_data_buffer.get());
+        size_t cur_size = 0ull;
+
+        size_t index = 0ull;
+        for (auto&& [rapidjson_value, allocator] : json_object)
+        {
+            KB_CORE_ASSERT(
+                index < object_json_schema.m_attributes.size(),
+                "[deserialize_value]: Index out of bounds of sub-object json attributes!"
+            );
+            const auto& json_attribute = object_json_schema.m_attributes[index++];
+
+            auto* member_ptr = head_object_ptr + json_attribute.m_offset;
+
+            KB_CORE_ASSERT(
+                cur_size + json_attribute.m_data_size <= object_json_schema.m_size,
+                "[deserialize_value]: Buffer overflow while trying to emplace sub-object member into data buffer!"
+            );
+
+            const auto emplaced_size = deserialize_value(
+                json_attribute,
+                std::move(rapidjson_value),
+                member_ptr
+            );
+
+            cur_size += emplaced_size;
+        }
+
+        KB_CORE_ASSERT(
+            cur_size == object_json_schema.m_size,
+            "[deserialize_value]: Emplaced size {} does not match object size {}?",
+            cur_size,
+            object_json_schema.m_size
+        );
+
+        std::memcpy(p_dest_ptr, head_object_ptr, object_json_schema.m_size);
+
+        return object_json_schema.m_size;
     }
     case json_type_t::null:
     {
@@ -336,19 +375,24 @@ auto deserialize_value(
         return 0;
     }
     }
-    
 }
 
 auto details::serialize_json_schema(const json_schema_document& p_json_schema) noexcept -> std::string
 {
     rapidjson::Document json_document{};
     json_document.SetObject();
+
     // Iterate attributes, translating to a corresponding rapidjson value
     // then add to the document
     for (const json_attribute_type& json_attribute : p_json_schema.m_attributes)
     {
+        KB_CORE_ASSERT(
+            !json_attribute.m_name.empty(),
+            "[serialize_value]: Attribute name can not be empty when serializing member!"
+        );
+
         json_document.AddMember(
-            rapidjson::StringRef(json_attribute.m_name),
+            rapidjson::StringRef(json_attribute.m_name.data()),
             serialize_value(json_attribute, json_document.GetAllocator()),
             json_document.GetAllocator()
         );
@@ -409,13 +453,13 @@ auto details::deserialize_json_schema(
             "[deserialize_json_schema]: Data buffer out of bounds?"
         );
 
-        u8* cur_ptr = buffer_head_ptr + json_attribute.m_offset;
+        u8* member_ptr = buffer_head_ptr + json_attribute.m_offset;
 
         // Value is directly deserialized into the data buffer
         const auto emplaced_size = deserialize_value(
             json_attribute,
             std::move(rapidjson_value.value),
-            cur_ptr
+            member_ptr
         );
         KB_CORE_ASSERT(
             emplaced_size == json_attribute.m_data_size,
