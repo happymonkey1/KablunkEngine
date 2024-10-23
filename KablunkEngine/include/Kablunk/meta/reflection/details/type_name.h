@@ -20,11 +20,11 @@ struct type_name
 
     constexpr static std::string_view name()
     {
-        size_t prefix_len = type_name<void>::fullname_intern().find("void");
-        size_t multiple = type_name<void>::fullname_intern().size() - type_name<int>::fullname_intern().size();
-        size_t dummy_len = type_name<void>::fullname_intern().size() - 4 * multiple;
-        size_t target_len = (fullname_intern().size() - dummy_len) / multiple;
-        std::string_view rv = fullname_intern().substr(prefix_len, target_len);
+        constexpr size_t prefix_len = type_name<void>::fullname_intern().find("void");
+        constexpr size_t multiple = type_name<void>::fullname_intern().size() - type_name<int>::fullname_intern().size();
+        constexpr size_t dummy_len = type_name<void>::fullname_intern().size() - 4 * multiple;
+        constexpr size_t target_len = (fullname_intern().size() - dummy_len) / multiple;
+        constexpr std::string_view rv = fullname_intern().substr(prefix_len, target_len);
         if (rv.rfind(' ') == rv.npos)
             return rv;
         return rv.substr(rv.rfind(' ') + 1);

@@ -12,7 +12,6 @@ namespace kb::meta::refl
 
 
 #define KB_REFLECT_CLASS_START(type) \
-    using reflected_class_type_t = type; \
     [[nodiscard]] static consteval auto get_reflected_class() noexcept -> decltype(auto) { \
         using clazz = type; \
         return ::kb::meta::refl::reflect_class( \

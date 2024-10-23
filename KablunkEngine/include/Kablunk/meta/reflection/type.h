@@ -89,7 +89,7 @@ namespace concepts
 { // start namespace ::concepts
 
 template <type_t ReflT>
-concept IsPrimitiveT = !std::same_as<details::primitive_type<ReflT>, void>;
+concept IsPrimitiveT = !std::same_as<details::primitive_type<to_underlying(ReflT)>, void>;
 
 } // end namespace ::concepts
 
@@ -141,10 +141,11 @@ public:
         return sizeof(details::reflected_typename<details::type_to_underlying_integral(m_type)>::type);
     }
 #else
+
     template <type_t ReflT>
     [[nodiscard]] static consteval auto get_size_of_type() -> decltype(auto)
     {
-        if constexpr (!std::same_as<typename details::primitive_type<to_underlying(ReflT)>, void>)
+        if constexpr (!std::same_as<typename details::primitive_type<to_underlying(ReflT)>::type, void>)
         {
             return sizeof(typename details::primitive_type<to_underlying(ReflT)>::type);
         }
