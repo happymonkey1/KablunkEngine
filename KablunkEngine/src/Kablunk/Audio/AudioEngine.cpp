@@ -91,7 +91,7 @@ namespace kb::audio
 		ma_engine_stop(&m_engine);
 	}
 
-	void AudioEngine::add_to_queue(ref<AudioAsset>& audio_asset, bool autoplay /*= false*/)
+	void AudioEngine::add_to_queue(arc<AudioAsset>& audio_asset, bool autoplay /*= false*/)
 	{
 		KB_CORE_ASSERT(audio_asset, "trying to queue null audio asset!");
 

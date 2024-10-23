@@ -16,7 +16,7 @@ namespace kb
 	// #FIXME almost all of the serialization code is garbage, just there for an MVP
 	// #TODO refactor to use reflection.
 
-	SceneSerializer::SceneSerializer(const ref<Scene>& scene)
+	SceneSerializer::SceneSerializer(const arc<Scene>& scene)
 		: m_scene{ scene }
 	{
 		

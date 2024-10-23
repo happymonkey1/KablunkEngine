@@ -23,7 +23,7 @@ VulkanImage2D::~VulkanImage2D()
 
 void VulkanImage2D::Invalidate()
 {
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->RT_Invalidate();
@@ -35,7 +35,7 @@ void VulkanImage2D::Release()
 	if (!m_info.image)
 		return;
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
 		{
 			const auto vk_device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -193,7 +193,7 @@ void VulkanImage2D::RT_Invalidate()
 
 void VulkanImage2D::CreatePerLayerImageViews()
 {
-    ref<VulkanImage2D> instance{ this };
+    arc<VulkanImage2D> instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->RT_CreatePerLayerImageViews();
@@ -270,7 +270,7 @@ VkImageView VulkanImage2D::GetMipImageView(uint32_t mip)
 {
 	if (!m_mip_image_views.contains(mip))
 	{
-        ref<VulkanImage2D> instance{ this };
+        arc<VulkanImage2D> instance{ this };
 		render::submit([instance, mip]() mutable
 			{
 				instance->RT_GetMipImageView(mip);
@@ -355,7 +355,7 @@ vulkan_image_view::~vulkan_image_view()
 
 auto vulkan_image_view::invalidate() noexcept -> void
 {
-    ref instance{ this };
+    arc instance{ this };
     render::submit([instance]() mutable
         {
             instance->rt_invalidate();

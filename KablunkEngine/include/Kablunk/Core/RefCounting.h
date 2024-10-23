@@ -54,20 +54,20 @@ concept is_ref_counted = std::is_base_of_v<RefCounted, T>;
 } // end namespace ::concepts
 
 template <typename T>
-class ref
+class arc
 {
 public:
-	constexpr ref() : m_ptr{ nullptr } {}
-    explicit constexpr ref(std::nullptr_t) : m_ptr { nullptr } {}
+	constexpr arc() : m_ptr{ nullptr } {}
+    explicit constexpr arc(std::nullptr_t) : m_ptr { nullptr } {}
 
-    explicit constexpr ref(T* ptr) : m_ptr{ ptr }
+    explicit constexpr arc(T* ptr) : m_ptr{ ptr }
 	{
 		static_assert(std::is_base_of_v<RefCounted, T>, "Class is not RefCounted!");
 
 		IncRef();
 	}
 
-    constexpr ref(const ref<T>& other) noexcept
+    constexpr arc(const arc<T>& other) noexcept
         : m_ptr{ other.m_ptr }
     {
         if (this != &other)
@@ -75,7 +75,7 @@ public:
     }
 
 #if KB_REF_MOVE_DEFINED
-    constexpr ref(ref&& p_other) noexcept
+    constexpr arc(arc&& p_other) noexcept
         : m_ptr{ p_other.m_ptr }
 	{
         static_assert(std::is_base_of_v<RefCounted, T>, "Class is not RefCounted!");
@@ -85,7 +85,7 @@ public:
 #endif
 
 	template <typename T2>
-    explicit constexpr ref(const ref<T2>& other) noexcept
+    explicit constexpr arc(const arc<T2>& other) noexcept
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
 
@@ -93,34 +93,34 @@ public:
 	}
 
 	template <typename T2>
-    explicit constexpr ref(ref<T2>&& other) noexcept
+    explicit constexpr arc(arc<T2>&& other) noexcept
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
 		other.m_ptr = nullptr;
 	}
 
-    constexpr static ref CopyWithoutIncrement(const ref& other) noexcept
+    constexpr static arc CopyWithoutIncrement(const arc& other) noexcept
 	{
-		ref new_ref = nullptr;
+		arc new_ref = nullptr;
 		new_ref->m_ptr = other->m_ptr;
 
 		return new_ref;
 	}
 
-    constexpr ~ref() noexcept
+    constexpr ~arc() noexcept
 	{
 		DecRef();
 	}
 
 
-    constexpr ref& operator=(std::nullptr_t) noexcept
+    constexpr arc& operator=(std::nullptr_t) noexcept
 	{
 		DecRef();
 		m_ptr = nullptr;
 		return *this;
 	}
 
-    constexpr ref& operator=(const ref& other) noexcept
+    constexpr arc& operator=(const arc& other) noexcept
 	{
         if (this == &other)
             return *this;
@@ -133,7 +133,7 @@ public:
 	}
 
 #if KB_REF_MOVE_DEFINED
-    constexpr ref& operator=(ref&& p_other) noexcept
+    constexpr arc& operator=(arc&& p_other) noexcept
 	{
         // DecRef();
 
@@ -146,7 +146,7 @@ public:
 
 #if 0
 	template <typename T2>
-    constexpr ref& operator=(const ref<T2>& other) noexcept
+    constexpr arc& operator=(const arc<T2>& other) noexcept
 	{
 		other.IncRef();
 		DecRef();
@@ -156,7 +156,7 @@ public:
 	}
 
 	template <typename T2>
-    constexpr ref& operator=(ref<T2>&& p_other) noexcept
+    constexpr arc& operator=(arc<T2>&& p_other) noexcept
 	{
 		DecRef();
 
@@ -186,29 +186,29 @@ public:
 	}
 
 	template <typename T2>
-    constexpr ref<T2> As() const noexcept
+    constexpr arc<T2> As() const noexcept
 	{
-		return ref<T2>(*this);
+		return arc<T2>(*this);
 	}
 
 	template <typename... Args>
-    constexpr static ref Create(Args&&... args) noexcept
+    constexpr static arc Create(Args&&... args) noexcept
 	{
-        return ref{ new T(std::forward<Args>(args)...) };
+        return arc{ new T(std::forward<Args>(args)...) };
 	}
 
 	// ptr comparison, not value
-    constexpr bool operator==(const ref other) const noexcept
+    constexpr bool operator==(const arc other) const noexcept
 	{
 		return m_ptr == other.m_ptr;
 	}
 
-    constexpr bool operator!=(const ref other) const noexcept
+    constexpr bool operator!=(const arc other) const noexcept
 	{
 		return !(*this == other);
 	}
 
-    constexpr bool Equals(const ref& other) const noexcept
+    constexpr bool Equals(const arc& other) const noexcept
 	{
 		if (!m_ptr || !other.m_ptr)
 			return false;
@@ -246,7 +246,7 @@ private:
 	}
 
 	template <typename T2>
-	friend class ref;
+	friend class arc;
 
 	template <typename T2>
 	friend class WeakRef;
@@ -259,9 +259,9 @@ class WeakRef
 {
 public:
 	WeakRef() = default;
-	//WeakRef(IntrusiveRef<T> ref) : m_ptr{ ref.get() } { }
-	WeakRef(const ref<T>& ref) : m_ptr{ ref.m_ptr } { }
-	WeakRef(ref<T>& ref) : m_ptr{ ref.m_ptr } { }
+	//WeakRef(IntrusiveRef<T> arc) : m_ptr{ arc.get() } { }
+	WeakRef(const arc<T>& ref) : m_ptr{ ref.m_ptr } { }
+	WeakRef(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
 	WeakRef(T* ptr) : m_ptr{ ptr } { }
 
 	~WeakRef() = default;
@@ -286,7 +286,7 @@ private:
 //   type alias
 // ==============
 
-// view for a intrusive ref counted pointer
+// view for a intrusive arc counted pointer
 template <typename T>
 using weak_ref = WeakRef<T>;
 

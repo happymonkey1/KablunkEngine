@@ -270,8 +270,6 @@ private:
     account_credentials m_account_credentials{};
 
     client_packet_handler_dispatcher m_packet_handler_dispatcher{};
-
-    friend class ref<network_client>;
 };
 
 // --- Implementation details -------------------------------------------------------------------

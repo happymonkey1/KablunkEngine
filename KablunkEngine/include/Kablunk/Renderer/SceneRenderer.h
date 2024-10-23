@@ -63,28 +63,28 @@ struct PointLightUB
 class SceneRenderer final : public RefCounted
 {
 public:
-	SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec = {});
+	SceneRenderer(const arc<Scene>& context, const SceneRendererSpecification& spec = {});
 	~SceneRenderer() override;
 
     // #TODO this should be private, if construct is only place that calls this
 	void init();
-	void set_scene(ref<Scene> context);
+	void set_scene(arc<Scene> context);
 
 	void begin_scene(const SceneRendererCamera& camera);
 	void end_scene();
 
-	void submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, ref<Material> override_material = {});
+	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<Material> override_material = {});
 
 	void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
 	bool is_multi_threaded() const { return m_use_threads; }
 
 	void set_viewport_size(uint32_t width, uint32_t height);
-	ref<render::render_pass> get_final_render_pass();
-	ref<render::render_pass> get_composite_render_pass() { return m_composite_pass; }
-    ref<render::frame_buffer> get_external_composite_frame_buffer() { return m_composite_pass->get_target_frame_buffer(); }
-	ref<Image2D> get_final_render_pass_image();
+	arc<render::render_pass> get_final_render_pass();
+	arc<render::render_pass> get_composite_render_pass() { return m_composite_pass; }
+    arc<render::frame_buffer> get_external_composite_frame_buffer() { return m_composite_pass->get_target_frame_buffer(); }
+	arc<Image2D> get_final_render_pass_image();
 
-	void on_imgui_render(const ref<Renderer2D>& p_renderer_2d);
+	void on_imgui_render(const arc<Renderer2D>& p_renderer_2d);
 
 	static void wait_for_threads();
 
@@ -98,7 +98,7 @@ private:
 	void geometry_pass();
 	void composite_pass();
 
-	void clear_pass(ref<render::render_pass> render_pass, bool explicit_clear = false);
+	void clear_pass(arc<render::render_pass> render_pass, bool explicit_clear = false);
 
 	// draw all ui elements presented to the scene renderer
 	void ui_pass();
@@ -107,19 +107,19 @@ private:
 	void two_dimensional_pass();
 
 private:
-	ref<Scene> m_context;
+	arc<Scene> m_context;
 	SceneRendererSpecification m_specification;
 
-	ref<RenderCommandBuffer> m_command_buffer;
+	arc<RenderCommandBuffer> m_command_buffer;
 
-	ref<render::render_pass> m_geometry_pass;
-	ref<render::render_pass> m_composite_pass;
+	arc<render::render_pass> m_geometry_pass;
+	arc<render::render_pass> m_composite_pass;
 
-	ref<Material> m_composite_material;
+	arc<Material> m_composite_material;
 
 #if 0
-	ref<render::render_pass> m_external_composite_render_pass;
-    ref<render::frame_buffer> m_external_composite_frame_buffer{};
+	arc<render::render_pass> m_external_composite_render_pass;
+    arc<render::frame_buffer> m_external_composite_frame_buffer{};
 #endif
 
 	struct GPUTimeQueryIndices
@@ -128,20 +128,20 @@ private:
 		uint32_t composite_pass_query;
 	};
 
-	ref<Texture2D> m_bloom_texture;
-	ref<Texture2D> m_bloom_dirt_texture;
+	arc<Texture2D> m_bloom_texture;
+	arc<Texture2D> m_bloom_dirt_texture;
 
 	struct TransformVertexData
 	{
 		glm::vec4 MRow[3];
 	};
 
-	ref<VertexBuffer> m_transform_buffer;
+	arc<VertexBuffer> m_transform_buffer;
 	TransformVertexData* m_transform_vertex_data = nullptr;
 
-    ref<UniformBufferSet> m_camera_uniform_buffer_set{};
-    ref<UniformBufferSet> m_point_lights_uniform_buffer_set{};
-	ref<StorageBufferSet> m_storage_buffer_set;
+    arc<UniformBufferSet> m_camera_uniform_buffer_set{};
+    arc<UniformBufferSet> m_point_lights_uniform_buffer_set{};
+	arc<StorageBufferSet> m_storage_buffer_set;
 
     PointLightUB* m_point_lights_ub = new PointLightUB{};
 
@@ -159,10 +159,10 @@ private:
 
 	struct DrawCommandData
 	{
-		ref<Mesh> Mesh;
+		arc<Mesh> Mesh;
 		uint32_t Submesh_index;
-		ref<MaterialTable> Material_table;
-		ref<Material> Override_material;
+		arc<MaterialTable> Material_table;
+		arc<Material> Override_material;
 
 		uint32_t Instance_count = 0;
 		uint32_t Instance_offset = 0;

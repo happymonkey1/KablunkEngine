@@ -73,7 +73,7 @@ vulkan_descriptor_set_manager::vulkan_descriptor_set_manager(descriptor_set_mana
 #if 0
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<UniformBuffer>& p_uniform_buffer
+    const arc<UniformBuffer>& p_uniform_buffer
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
@@ -93,7 +93,7 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<UniformBufferSet>& p_uniform_buffer_set
+    const arc<UniformBufferSet>& p_uniform_buffer_set
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
@@ -113,7 +113,7 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<StorageBuffer>& p_storage_buffer
+    const arc<StorageBuffer>& p_storage_buffer
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
@@ -133,7 +133,7 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<StorageBufferSet>& p_storage_buffer_set
+    const arc<StorageBufferSet>& p_storage_buffer_set
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
@@ -153,7 +153,7 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<Texture2D>& p_texture_2d,
+    const arc<Texture2D>& p_texture_2d,
     u32 p_index /*= 0*/
 ) noexcept -> vulkan_descriptor_set_manager&
 {
@@ -174,7 +174,7 @@ auto vulkan_descriptor_set_manager::set_input(
 
 auto vulkan_descriptor_set_manager::set_input(
     std::string_view p_name,
-    const ref<Image2D>& p_image_2d
+    const arc<Image2D>& p_image_2d
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
@@ -264,7 +264,7 @@ auto vulkan_descriptor_set_manager::validate() noexcept -> bool
                 return false;
             }
 
-            if (resource.m_type != render_pass_resource_type_t::image_2d && resource.m_input[0] == ref<RefCounted>{})
+            if (resource.m_type != render_pass_resource_type_t::image_2d && resource.m_input[0] == arc<RefCounted>{})
             {
                 log::core::error(
                     log::logger_tag_t::renderer,
@@ -453,7 +453,7 @@ auto vulkan_descriptor_set_manager::bake() noexcept -> void
                     auto image = input.m_input[0].As<render::render_resource>();
 
                     // defer if resource does not exist yet
-                    if (image == ref<VulkanImage2D>{})
+                    if (image == arc<VulkanImage2D>{})
                     {
                         m_invalidated_input_resources[set][binding] = input;
                         break;
@@ -606,7 +606,7 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                 for (size_t i = 0; i < input.m_input.size(); ++i)
                 {
                     auto vulkan_texture = input.m_input.at(i).As<VulkanTexture2D>();
-                    if (vulkan_texture == ref<VulkanTexture2D>{})
+                    if (vulkan_texture == arc<VulkanTexture2D>{})
                     {
                         // #TODO should be a missing texture
                         vulkan_texture = Application::Get().get_renderer_2d()->get_white_texture()

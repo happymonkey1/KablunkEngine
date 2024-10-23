@@ -49,15 +49,15 @@ public:
 	void init();
 	void shutdown();
 
-	void RegisterShaderDependency(ref<Shader> shader, ref<Pipeline> pipeline);
-	void register_shader_dependency(ref<Shader> p_shader, ref<compute_pipeline> p_compute_pipeline);
-	void RegisterShaderDependency(ref<Shader> shader, ref<Material> material);
+	void RegisterShaderDependency(arc<Shader> shader, arc<Pipeline> pipeline);
+	void register_shader_dependency(arc<Shader> p_shader, arc<compute_pipeline> p_compute_pipeline);
+	void RegisterShaderDependency(arc<Shader> shader, arc<Material> material);
 	void OnShaderReloaded(uint64_t hash);
 
 	uint32_t GetCurrentFrameIndex();
 
-	ref<ShaderLibrary> GetShaderLibrary();
-	ref<Shader> GetShader(const std::string& name);
+	arc<ShaderLibrary> GetShaderLibrary();
+	arc<Shader> GetShader(const std::string& name);
 
 	const RendererOptions& get_config() const noexcept { return m_options; }
 
@@ -105,14 +105,14 @@ public:
 private:
 	struct ShaderDependencies
 	{
-		std::vector<ref<Pipeline>> pipelines;
-		std::vector<ref<Material>> materials;
-        std::vector<ref<compute_pipeline>> compute_pipelines;
+		std::vector<arc<Pipeline>> pipelines;
+		std::vector<arc<Material>> materials;
+        std::vector<arc<compute_pipeline>> compute_pipelines;
 	};
 
 	kb::unordered_flat_map<uint64_t, ShaderDependencies> m_shader_dependencies;
 	RendererOptions m_options = { };
-	ref<ShaderLibrary> m_shader_library;
+	arc<ShaderLibrary> m_shader_library;
     // #TODO expose changing render backend at compile time...
     render_backend_t m_backend{};
 

@@ -26,37 +26,37 @@ vulkan_render_pass::vulkan_render_pass(const render_pass_specification& p_specif
     m_descriptor_set_manager = vulkan_descriptor_set_manager{ descriptor_set_manager_specification };
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<uniform_buffer> p_uniform_buffer) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<uniform_buffer> p_uniform_buffer) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_uniform_buffer);
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<UniformBufferSet> p_uniform_buffer_set) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<UniformBufferSet> p_uniform_buffer_set) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_uniform_buffer_set);
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<StorageBuffer> p_storage_buffer) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<StorageBuffer> p_storage_buffer) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_storage_buffer);
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<StorageBufferSet> p_storage_buffer_set) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<StorageBufferSet> p_storage_buffer_set) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_storage_buffer_set);
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<Texture2D> p_texture_2d) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<Texture2D> p_texture_2d) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_texture_2d);
 }
 
-void vulkan_render_pass::set_input(std::string_view p_name, ref<Image2D> p_image_2d) noexcept
+void vulkan_render_pass::set_input(std::string_view p_name, arc<Image2D> p_image_2d) noexcept
 {
     m_descriptor_set_manager.set_input(p_name, p_image_2d);
 }
 
-ref<Image2D> vulkan_render_pass::get_output_image(u32 p_index) noexcept
+arc<Image2D> vulkan_render_pass::get_output_image(u32 p_index) noexcept
 {
     auto frame_buffer = m_specification.m_pipeline->GetSpecification().m_target_frame_buffer;
 
@@ -68,17 +68,17 @@ ref<Image2D> vulkan_render_pass::get_output_image(u32 p_index) noexcept
             "[vulkan_render_pass]: vulkan_descriptor_set_manager can not find a valid attachment index '{}'",
             p_index
         );
-        return ref<Image2D>{};
+        return arc<Image2D>{};
     }
     if (p_index < frame_buffer->get_color_attachment_count())
         return frame_buffer->get_image(p_index);
     return frame_buffer->get_depth_image();
 }
 
-ref<Image2D> vulkan_render_pass::get_depth_output() noexcept
+arc<Image2D> vulkan_render_pass::get_depth_output() noexcept
 {
     auto frame_buffer = m_specification.m_pipeline->GetSpecification().m_target_frame_buffer;
-    return frame_buffer->has_depth_attachment() ? frame_buffer->get_depth_image() : ref<Image2D>{};
+    return frame_buffer->has_depth_attachment() ? frame_buffer->get_depth_image() : arc<Image2D>{};
 }
 
 u32 vulkan_render_pass::get_first_set_index() const
@@ -91,12 +91,12 @@ u32 vulkan_render_pass::get_first_set_index() const
     return *index;
 }
 
-ref<Pipeline> vulkan_render_pass::get_pipeline() const noexcept
+arc<Pipeline> vulkan_render_pass::get_pipeline() const noexcept
 {
     return m_specification.m_pipeline;
 }
 
-ref<frame_buffer> vulkan_render_pass::get_target_frame_buffer() const noexcept
+arc<frame_buffer> vulkan_render_pass::get_target_frame_buffer() const noexcept
 {
     return m_specification.m_pipeline->GetSpecification().m_target_frame_buffer;
 }

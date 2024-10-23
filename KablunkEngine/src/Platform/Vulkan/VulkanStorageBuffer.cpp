@@ -10,7 +10,7 @@ namespace kb
 VulkanStorageBuffer::VulkanStorageBuffer(size_t size, uint32_t binding)
 	: m_size{ size }, m_binding{ binding }
 {
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable { instance->RT_Invalidate(); });
 }
 
@@ -22,7 +22,7 @@ VulkanStorageBuffer::~VulkanStorageBuffer()
 void VulkanStorageBuffer::SetData(const void* data, size_t size, uint32_t offset /*= 0*/)
 {
 	memcpy(m_local_storage, data, size);
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance, size, offset]() mutable
 		{
 			instance->RT_SetData(instance->m_local_storage, size, offset);
@@ -43,7 +43,7 @@ void VulkanStorageBuffer::RT_SetData(const void* data, size_t size, uint32_t off
 void VulkanStorageBuffer::Resize(size_t new_size)
 {
 	m_size = new_size;
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable { instance->RT_Invalidate(); });
 }
 

@@ -6,16 +6,16 @@
 
 namespace kb::render
 { // start namespace kb::render
-ref<compute_pipeline> compute_pipeline::create(ref<Shader> p_compute_shader)
+arc<compute_pipeline> compute_pipeline::create(arc<Shader> p_compute_shader)
 {
     constexpr auto backend = Renderer::get_render_backend_type();
     switch (backend)
     {
     case render_backend_type_t::vulkan:
-        return static_cast<ref<compute_pipeline>>(ref<vk::compute_pipeline>::Create(p_compute_shader));
+        return static_cast<arc<compute_pipeline>>(arc<vk::compute_pipeline>::Create(p_compute_shader));
     default:
     {
-        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return ref<compute_pipeline>{};
+        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<compute_pipeline>{};
     }
     }
 }

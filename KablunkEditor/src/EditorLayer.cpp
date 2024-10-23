@@ -58,7 +58,7 @@ namespace kb
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
-        m_project_properties_panel{ ref<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
+        m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
 		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
 		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
@@ -76,12 +76,12 @@ namespace kb
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		m_editor_scene = ref<Scene>::Create();
+		m_editor_scene = arc<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene, SceneRendererSpecification{});
+		m_viewport_renderer = arc<SceneRenderer>::Create(m_active_scene, SceneRendererSpecification{});
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
@@ -929,7 +929,7 @@ namespace kb
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = ref<Scene>::Create();
+		m_editor_scene = arc<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
 		m_viewport_renderer->set_scene(m_active_scene);
@@ -971,7 +971,7 @@ namespace kb
 		}
 	}
 
-	void EditorLayer::SerializeScene(ref<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(arc<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -991,7 +991,7 @@ namespace kb
 	{
 		NewScene();
 
-		auto new_scene = ref<Scene>::Create();
+		auto new_scene = arc<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -1188,7 +1188,7 @@ namespace kb
 		if (ProjectManager::get().get_active())
 			CloseProject();
 
-		auto project = ref<Project>::Create();
+		auto project = arc<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
@@ -1241,12 +1241,12 @@ namespace kb
 		CSharpScriptEngine::SetSceneContext(nullptr);
 		NativeScriptEngine::get().set_scene(nullptr);
 
-		m_viewport_renderer->set_scene(ref<Scene>{});
-		m_scene_hierarchy_panel.SetContext(ref<Scene>{});
+		m_viewport_renderer->set_scene(arc<Scene>{});
+		m_scene_hierarchy_panel.SetContext(arc<Scene>{});
 		m_active_scene = nullptr;
 
 		if (unload)
-			ProjectManager::get().set_active(ref<Project>{});
+			ProjectManager::get().set_active(arc<Project>{});
 	}
 
 	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const

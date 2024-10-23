@@ -19,8 +19,8 @@ namespace kb
 class VulkanMaterial final : public Material
 {
 public:
-	VulkanMaterial(const ref<Shader>& shader, const std::string& name = "");
-	VulkanMaterial(ref<Material> material, const std::string& name = "");
+	VulkanMaterial(const arc<Shader>& shader, const std::string& name = "");
+	VulkanMaterial(arc<Material> material, const std::string& name = "");
     ~VulkanMaterial() override = default;
 
 	void Invalidate() override;
@@ -39,9 +39,9 @@ public:
 	void Set(const std::string& name, const glm::ivec4& value) override;
 	void Set(const std::string & name, const glm::mat3 & value) override;
 	void Set(const std::string & name, const glm::mat4 & value) override;
-	void Set(const std::string & name, const ref<Texture2D>& texture) override;
-	void Set(const std::string & name, const ref<Texture2D>& texture, uint32_t array_index) override;
-	void Set(const std::string & name, const ref<Image2D>& image) override;
+	void Set(const std::string & name, const arc<Texture2D>& texture) override;
+	void Set(const std::string & name, const arc<Texture2D>& texture, uint32_t array_index) override;
+	void Set(const std::string & name, const arc<Image2D>& image) override;
 
     // #TODO template this
 	bool& GetBool(const std::string& name) override;
@@ -53,8 +53,8 @@ public:
 	glm::vec4& GetVec4(const std::string & name) override;
 	glm::mat3& GetMat3(const std::string & name) override;
 	glm::mat4& GetMat4(const std::string & name) override;
-	ref<Texture2D> GetTexture2D(const std::string & name) override;
-	ref<Texture2D> TryGetTexture2D(const std::string & name) override;
+	arc<Texture2D> GetTexture2D(const std::string & name) override;
+	arc<Texture2D> TryGetTexture2D(const std::string & name) override;
 
 	template <typename T>
 	void Set(const std::string& name, const T& value)
@@ -76,13 +76,13 @@ public:
 	}
 
 	template<typename T>
-	ref<T> get_resource(const std::string& name)
+	arc<T> get_resource(const std::string& name)
 	{
         return m_descriptor_set_manager.get_input<T>(name);
 	}
 
 	template<typename T>
-	ref<T> try_get_resource(const std::string& name)
+	arc<T> try_get_resource(const std::string& name)
 	{
         return m_descriptor_set_manager.get_input<T>(name);
 	}
@@ -97,7 +97,7 @@ public:
 			m_material_flags &= ~(uint32_t)flag;
 	}
 
-	ref<Shader> GetShader() override { return m_shader.As<Shader>(); }
+	arc<Shader> GetShader() override { return m_shader.As<Shader>(); }
 	const std::string& GetName() const override { return m_name; }
 
 	owning_buffer& get_uniform_storage_buffer() { return m_uniform_storage_buffer; }
@@ -136,21 +136,21 @@ private:
 	void AllocateStorage();
 	void OnShaderReloaded();
 
-	void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture);
-	void SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index);
-	void SetVulkanDescriptor(const std::string& name, const ref<Image2D>& images);
-    void SetVulkanDescriptor(const std::string& p_name, const ref<image_view>& p_image);
+	void SetVulkanDescriptor(const std::string& name, const arc<Texture2D>& texture);
+	void SetVulkanDescriptor(const std::string& name, const arc<Texture2D>& texture, uint32_t array_index);
+	void SetVulkanDescriptor(const std::string& name, const arc<Image2D>& images);
+    void SetVulkanDescriptor(const std::string& p_name, const arc<image_view>& p_image);
 
 	const ShaderUniform* FindUniformDeclaration(const std::string& name);
 	const ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);
 private:
-    ref<VulkanShader> m_shader{};
+    arc<VulkanShader> m_shader{};
     std::string m_name{};
 
     render::vulkan_descriptor_set_manager m_descriptor_set_manager{};
     std::vector<VkDescriptorSet> m_material_descriptor_sets{};
 
-    std::map<u32, std::vector<ref<render::render_resource>>> m_material_descriptor_images{};
+    std::map<u32, std::vector<arc<render::render_resource>>> m_material_descriptor_images{};
     std::map<u32, VkWriteDescriptorSet> m_material_write_descriptors{};
 
     u32 m_material_flags = 0;

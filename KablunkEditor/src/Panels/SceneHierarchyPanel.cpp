@@ -46,13 +46,13 @@ namespace kb
 		}
 	}
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const ref<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const arc<Scene>& context)
 	{
 		SetContext(context);
 
 	}
 
-	void SceneHierarchyPanel::SetContext(const ref<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const arc<Scene>& context)
 	{
 		m_context = context;
 		m_selection_context = {};
@@ -377,7 +377,7 @@ namespace kb
 	}
 
 	template <typename ComponentT>
-	void DrawMaterialTable(ref<MaterialTable> mesh_material_table)
+	void DrawMaterialTable(arc<MaterialTable> mesh_material_table)
 	{
 		if (UI::BeginTreeNode("Materials"))
 		{
@@ -395,7 +395,7 @@ namespace kb
 				std::string id = fmt::format("{0}-{1}", label, i);
 				ImGui::PushID(id.c_str());
 
-				ref<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+				arc<MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
 				std::string mesh_material_name = mesh_material_asset->GetMaterial()->GetName();
 				if (mesh_material_name.empty())
 					mesh_material_name = "Unnamed Material";
@@ -731,8 +731,8 @@ namespace kb
 
 				UI::PropertyColorEdit4("Tint Color", component.Color);
 
-                const ref<Texture2D>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
-                ref<Texture2D> texture_asset = component.Texture != asset::null_asset_id ?
+                const arc<Texture2D>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+                arc<Texture2D> texture_asset = component.Texture != asset::null_asset_id ?
                     asset::get_asset<Texture2D>(component.Texture) : white_texture;
                 if (!texture_asset)
                 {
@@ -923,7 +923,7 @@ namespace kb
 				UI::Property("Filename:", component.Filepath.c_str());
 				UI::PopItemDisabled();
 
-				ref<Mesh> mesh = component.Mesh;
+				arc<Mesh> mesh = component.Mesh;
 				if (mesh)
 				{
 					for (uint32_t submesh_index : mesh->GetSubmeshes())

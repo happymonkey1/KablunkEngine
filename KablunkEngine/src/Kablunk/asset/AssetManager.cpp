@@ -13,22 +13,22 @@
 
 namespace kb::asset
 {
-	void AssetManager::init(ref<Project> p_active_project, bool p_load_internal_engine_assets /* = true */)
+	void AssetManager::init(arc<Project> p_active_project, bool p_load_internal_engine_assets /* = true */)
 	{
         KB_CORE_INFO("[asset_manager]: starting initialization");
 
         m_active_project = p_active_project;
 
-        ref instance{ this };
+        arc instance{ this };
 		// register asset serializers
 		// #TODO this manual process is prone to bugs since new assets must manually register their serializers
-        m_asset_serializers[AssetType::Texture] = ref<AssetSerializer>{
-            ref<TextureAssetSerializer>::Create(instance) };
-        m_asset_serializers[AssetType::Audio] = ref<AssetSerializer>{
-            ref<AudioAssetSerializer>::Create(instance)
+        m_asset_serializers[AssetType::Texture] = arc<AssetSerializer>{
+            arc<TextureAssetSerializer>::Create(instance) };
+        m_asset_serializers[AssetType::Audio] = arc<AssetSerializer>{
+            arc<AudioAssetSerializer>::Create(instance)
         };
-        m_asset_serializers[AssetType::Font] = ref<AssetSerializer>{
-            ref<font_asset_serializer>::Create(instance)
+        m_asset_serializers[AssetType::Font] = arc<AssetSerializer>{
+            arc<font_asset_serializer>::Create(instance)
         };
 
 		m_asset_registry.clear();
@@ -45,7 +45,7 @@ namespace kb::asset
             auto default_font_asset_id = import_engine_asset_metadata(relative_path);
             KB_CORE_ASSERT(default_font_asset_id != asset::null_asset_id, "[asset_manager]: tried loading default font, but asset_import returned null id?");
 
-            ref<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
+            arc<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
 
             // load into font registry
             std::filesystem::path absolute_path = m_active_project->get_asset_directory_path() / relative_path;
@@ -157,7 +157,7 @@ namespace kb::asset
             return false;
         }
 
-        ref<IAsset> asset;
+        arc<IAsset> asset;
         metadata.is_data_loaded = try_load_asset(metadata, asset);
         if (metadata.is_data_loaded)
         {
@@ -367,7 +367,7 @@ namespace kb::asset
 		return FileSystem::file_exists(m_active_project->get_asset_directory_path() / asset_metadata.filepath);
 	}
 
-	void AssetManager::serialize_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const
+	void AssetManager::serialize_asset(const AssetMetadata& metadata, arc<IAsset>& asset) const
 	{
 		auto it = m_asset_serializers.find(asset->get_static_type());
 		if (it != m_asset_serializers.end())
@@ -379,7 +379,7 @@ namespace kb::asset
 			KB_CORE_ASSERT(false, "asset serializer for type asset '{}', '{}' not found!", metadata.id, asset_type_to_string(metadata.type));
 	}
 
-	bool AssetManager::try_load_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const
+	bool AssetManager::try_load_asset(const AssetMetadata& metadata, arc<IAsset>& asset) const
 	{
 		auto it = m_asset_serializers.find(metadata.type);
 		if (it != m_asset_serializers.end())

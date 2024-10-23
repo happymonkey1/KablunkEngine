@@ -22,7 +22,7 @@ namespace kb
 	{
 		m_local_data = owning_buffer::Copy(data, size);
 		KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
-        ref<VulkanIndexBuffer> instance{ this };
+        arc<VulkanIndexBuffer> instance{ this };
 		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();

@@ -124,7 +124,7 @@ struct SpriteRendererComponent
 	SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	SpriteRendererComponent(glm::vec4 color) 
 		: Color{ color } { }
-	SpriteRendererComponent(const ref<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
+	SpriteRendererComponent(const arc<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
 		: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
 };
 
@@ -264,23 +264,23 @@ struct NativeScriptComponent
 
 struct MeshComponent
 {
-	ref<kb::Mesh> Mesh;
-	ref<kb::MaterialTable> Material_table = ref<kb::MaterialTable>::Create();
+	arc<kb::Mesh> Mesh;
+	arc<kb::MaterialTable> Material_table = arc<kb::MaterialTable>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
-	MeshComponent(const ref<kb::Mesh>& mesh)
+	MeshComponent(const arc<kb::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ ref<kb::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ arc<kb::MaterialTable>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{
 		if (!Filepath.empty())
 			Mesh.reset();
 
-		auto mesh_data = ref<MeshData>::Create(filepath, entity);
-		Mesh = ref<kb::Mesh>::Create(mesh_data);
+		auto mesh_data = arc<MeshData>::Create(filepath, entity);
+		Mesh = arc<kb::Mesh>::Create(mesh_data);
 
 		Filepath = filepath;
 	}

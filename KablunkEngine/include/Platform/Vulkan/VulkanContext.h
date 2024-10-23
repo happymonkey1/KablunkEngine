@@ -27,10 +27,10 @@ public:
 	void Shutdown() override;
 
 
-	static ref<VulkanContext> Get() { return s_context; }
+	static arc<VulkanContext> Get() { return s_context; }
 	static VkInstance GetInstance() { return s_instance; }
 
-	ref<VulkanDevice> GetDevice() { return m_device; }
+	arc<VulkanDevice> GetDevice() { return m_device; }
 	VulkanSwapChain& GetSwapchain() { return m_swap_chain; }
 private:
 	void CreateInstance();
@@ -81,13 +81,13 @@ private:
 	void SetupDebugMessageCallback();
 private:
 	// #TODO move
-	inline static ref<VulkanContext> s_context;
+	inline static arc<VulkanContext> s_context;
 	inline static VkInstance s_instance;
 
 	GLFWwindow* m_window_handle;
 
-	ref<VulkanPhysicalDevice> m_physical_device{};
-	ref<VulkanDevice> m_device{};
+	arc<VulkanPhysicalDevice> m_physical_device{};
+	arc<VulkanDevice> m_device{};
 
 	VulkanSwapChain m_swap_chain;
 

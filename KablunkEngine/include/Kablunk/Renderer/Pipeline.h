@@ -23,8 +23,8 @@ enum class PrimitiveTopology
 
 struct PipelineSpecification
 {
-	ref<Shader> shader;
-    ref<frame_buffer> m_target_frame_buffer{};
+	arc<Shader> shader;
+    arc<frame_buffer> m_target_frame_buffer{};
 	BufferLayout layout;
 	BufferLayout instance_layout;
 	PrimitiveTopology topology = PrimitiveTopology::Triangles;
@@ -45,9 +45,9 @@ public:
 	virtual const PipelineSpecification& GetSpecification() const = 0;
 
 	virtual void Invalidate() = 0;
-    virtual ref<Shader> get_shader() const noexcept = 0;
+    virtual arc<Shader> get_shader() const noexcept = 0;
 
-	static ref<Pipeline> Create(const PipelineSpecification& specification);
+	static arc<Pipeline> Create(const PipelineSpecification& specification);
 };
 } // end namespace kb::render
 

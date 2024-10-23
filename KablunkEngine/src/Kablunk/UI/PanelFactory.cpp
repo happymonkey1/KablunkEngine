@@ -20,7 +20,7 @@ namespace kb::ui
 			case panel_type_t::Blank:		panel = new Panel{ panel_create_info.position, panel_create_info.size }; break;
 			case panel_type_t::ImageButton:	
 			{
-				ref<Texture2D> image = panel_create_info.image ? 
+				arc<Texture2D> image = panel_create_info.image ? 
                     panel_create_info.image : 
                     Application::Get().get_renderer_2d()->get_white_texture();
 

@@ -43,8 +43,8 @@ public:
 
     [[nodiscard]] auto get_filepath() const noexcept -> const std::filesystem::path& { return m_filepath; }
 
-    auto set_texture_atlas(const ref<Texture2D>& p_texture) noexcept -> void { m_texture = p_texture; }
-    [[nodiscard]] auto get_texture_atlas() const noexcept -> const ref<Texture2D>& { return m_texture; }
+    auto set_texture_atlas(const arc<Texture2D>& p_texture) noexcept -> void { m_texture = p_texture; }
+    [[nodiscard]] auto get_texture_atlas() const noexcept -> const arc<Texture2D>& { return m_texture; }
 
     [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<raw_texture_handle, virtual_texture_data_t>& { return m_uv_map; }
 
@@ -108,7 +108,7 @@ private:
     // width and height of the atlas
     u32 m_atlas_dimension = k_default_atlas_size;
     u32 m_sprite_count = 0ul;
-    ref<Texture2D> m_texture{};
+    arc<Texture2D> m_texture{};
     unordered_flat_map<raw_texture_handle, virtual_texture_data_t> m_uv_map{};
 };
 

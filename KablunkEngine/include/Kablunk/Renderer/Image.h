@@ -118,13 +118,13 @@ public:
 class Image2D : public Image
 {
 public:
-	static ref<Image2D> Create(const ImageSpecification& specification, owning_buffer buffer);
-	static ref<Image2D> Create(const ImageSpecification& specification, const void* data = nullptr);
+	static arc<Image2D> Create(const ImageSpecification& specification, owning_buffer buffer);
+	static arc<Image2D> Create(const ImageSpecification& specification, const void* data = nullptr);
 };
 
 struct image_view_specification
 {
-    ref<Image2D> m_image{};
+    arc<Image2D> m_image{};
     u32 m_mip = 0;
     std::string m_debug_name{};
 };
@@ -134,7 +134,7 @@ class image_view : public render::render_resource
 public:
     ~image_view() override = default;
 
-    static auto create(const image_view_specification& p_specification) noexcept -> ref<image_view>;
+    static auto create(const image_view_specification& p_specification) noexcept -> arc<image_view>;
 };
 
 namespace Utils

@@ -10,7 +10,7 @@
 namespace kb
 { // start namespace kb
 
-void VulkanSwapChain::Init(VkInstance instance, const ref<VulkanDevice>& device)
+void VulkanSwapChain::Init(VkInstance instance, const arc<VulkanDevice>& device)
 {
 	m_instance = instance;
 	m_device = device;

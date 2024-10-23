@@ -14,7 +14,7 @@ namespace kb
 		m_local_storage = new uint8_t[p_size];
 
 #if 0
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance]() mutable
 			{
 				instance->rt_invalidate();
@@ -32,7 +32,7 @@ namespace kb
 	{
 		memcpy(m_local_storage, p_data, p_size);
 
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance, p_size, p_offset]() mutable
 			{
 				instance->rt_set_data(instance->m_local_storage, p_size, p_offset);

@@ -138,7 +138,7 @@ void VulkanShader::destroy()
 	if (m_has_destroyed)
 		return;
 
-    ref<VulkanShader> instance{ this };
+    arc<VulkanShader> instance{ this };
 	render::submit_resource_free([instance]()
 		{
             const VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -154,7 +154,7 @@ void VulkanShader::Reload(bool force_compile /*= false*/)
 {
     KB_PROFILE_SCOPE;
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([inst = instance, force_compile]() mutable
 	    {
 		    // Clear old shader data

@@ -121,8 +121,8 @@ public:
 	virtual const BufferLayout& GetLayout() const = 0;
 
 
-	static ref<VertexBuffer> Create(uint32_t size);
-	static ref<VertexBuffer> Create(const void* data, uint32_t size);
+	static arc<VertexBuffer> Create(uint32_t size);
+	static arc<VertexBuffer> Create(const void* data, uint32_t size);
 
 	virtual RendererID GetRendererID() const = 0;
 };
@@ -142,8 +142,8 @@ public:
 
 	virtual RendererID GetRendererID() const = 0;
 
-	static ref<IndexBuffer> Create(uint32_t count);
-	static ref<IndexBuffer> Create(const void* data, uint32_t count);
+	static arc<IndexBuffer> Create(uint32_t count);
+	static arc<IndexBuffer> Create(const void* data, uint32_t count);
 };
 } // end namespace kb
 

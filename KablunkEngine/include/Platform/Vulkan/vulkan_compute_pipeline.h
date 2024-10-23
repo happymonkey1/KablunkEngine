@@ -16,7 +16,7 @@ class compute_pipeline : public render::compute_pipeline
 {
 public:
     // overloaded constructor to construct a compute pipeline from a (compute) shader
-    compute_pipeline(kb::ref<kb::Shader> compute_shader);
+    compute_pipeline(kb::arc<kb::Shader> compute_shader);
 
     // execute the compute pipeline
     void execute(
@@ -31,10 +31,10 @@ public:
     // render::compute_pipeline interface
     // ==================================
 
-    virtual void begin(ref<RenderCommandBuffer> p_render_command_buffer = {}) override;
-    virtual void rt_begin(ref<RenderCommandBuffer> p_render_command_buffer = {}) override;
+    virtual void begin(arc<RenderCommandBuffer> p_render_command_buffer = {}) override;
+    virtual void rt_begin(arc<RenderCommandBuffer> p_render_command_buffer = {}) override;
     virtual void end() override;
-    virtual ref<Shader> get_shader() const override { return static_cast<ref<Shader>>(m_shader); }
+    virtual arc<Shader> get_shader() const override { return static_cast<arc<Shader>>(m_shader); }
 
     // ==================================
 
@@ -52,8 +52,8 @@ public:
 private:
     void rt_create_pipeline();
 private:
-    // ref to the underlying shader
-    ref<VulkanShader> m_shader;
+    // arc to the underlying shader
+    arc<VulkanShader> m_shader;
     // pipeline layout
     VkPipelineLayout m_vk_compute_pipeline_layout = nullptr;
     // pipeline cache

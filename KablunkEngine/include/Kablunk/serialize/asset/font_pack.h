@@ -16,9 +16,9 @@ public:
     ~font_pack() noexcept = default;
 
     // add a font to the font pack
-    auto add_font(const ref<render::font>& p_font_asset) noexcept -> void;
+    auto add_font(const arc<render::font>& p_font_asset) noexcept -> void;
     // retrieve all font assets from the font pack
-    [[nodiscard]] auto get_font_assets() const noexcept -> const std::vector<ref<render::font>>& { return m_font_pack.m_fonts; }
+    [[nodiscard]] auto get_font_assets() const noexcept -> const std::vector<arc<render::font>>& { return m_font_pack.m_fonts; }
 
     // load a serialized font asset pack into memory
     [[nodiscard]] static auto load(const std::filesystem::path& p_filepath) noexcept -> std::unique_ptr<font_pack>;
@@ -28,7 +28,7 @@ private:
     // serialize an individual font
     static auto serialize_font(
         u8*& p_cursor,
-        const ref<render::font>& p_font_asset
+        const arc<render::font>& p_font_asset
     ) noexcept -> void;
     // deserialize an individual font
     auto deserialize_font(

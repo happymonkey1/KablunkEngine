@@ -172,7 +172,7 @@ void Renderer2D::init(renderer_2d_specification_t spec)
 	frame_buffer_spec.m_blend_mode = render::frame_buffer_blend_mode_t::additive;
 	frame_buffer_spec.m_enable_blend = true;
 
-    ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(frame_buffer_spec);
+    arc<render::frame_buffer> frame_buffer = render::frame_buffer::create(frame_buffer_spec);
 
     // quad render pass
     {
@@ -403,12 +403,12 @@ void Renderer2D::shutdown()
     m_renderer_data.white_texture.reset();
 }
 
-auto Renderer2D::set_asset_manager(const ref<asset::AssetManager>& p_asset_manager) -> void
+auto Renderer2D::set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void
 {
     m_asset_manager = p_asset_manager;
 }
 
-ref<Texture2D> Renderer2D::get_white_texture()
+arc<Texture2D> Renderer2D::get_white_texture()
 {
 	return m_renderer_data.white_texture;
 }
@@ -421,7 +421,7 @@ void Renderer2D::begin_scene(const Camera& camera, const glm::mat4& transform, b
 	glm::mat4 view_proj = camera.GetProjection() * transform;
 
     // #TODO this needs to be fixed
-	ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
+	arc<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
 	render::submit([uniform_buffer_set, view_proj]() mutable
 		{
 			uniform_buffer_set->rt_get()->rt_set_data(&view_proj, sizeof(glm::mat4));
@@ -452,7 +452,7 @@ void Renderer2D::begin_scene(
     glm::mat4 view_proj = p_projection * p_transform;
 
     // #TODO this needs to be fixed
-    ref<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
+    arc<UniformBufferSet> uniform_buffer_set = m_renderer_data.m_camera_uniform_buffer_set;
     render::submit([uniform_buffer_set, view_proj]() mutable
         {
             uniform_buffer_set->rt_get()->rt_set_data(&view_proj, sizeof(glm::mat4));
@@ -659,7 +659,7 @@ void Renderer2D::on_imgui_render() const
 	ImGui::Text("2D Geometry Pass: %.3fms", m_renderer_data.render_command_buffer->GetExecutionGPUTime(current_frame_index, static_cast<uint32_t>(m_renderer_data.gpu_time_query.renderer_2D_query)));
 }
 
-void Renderer2D::set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer)
+void Renderer2D::set_target_frame_buffer(const arc<render::frame_buffer>& p_target_frame_buffer)
 {
     KB_PROFILE_SCOPE;
 
@@ -691,7 +691,7 @@ void Renderer2D::set_target_frame_buffer(const ref<render::frame_buffer>& p_targ
     }
 }
 
-auto Renderer2D::get_target_frame_buffer() const noexcept -> const ref<render::frame_buffer>&
+auto Renderer2D::get_target_frame_buffer() const noexcept -> const arc<render::frame_buffer>&
 {
     // assumes that all render passes in `Renderer2D` targets the same frame buffer
     return m_renderer_data.m_quad_pass->get_pipeline()->GetSpecification().m_target_frame_buffer;
@@ -749,7 +749,7 @@ void Renderer2D::draw_entity(Entity entity) noexcept
 
     auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
-    ref<Texture2D> texture = sprite_renderer_comp.Texture != asset::null_asset_id ?
+    arc<Texture2D> texture = sprite_renderer_comp.Texture != asset::null_asset_id ?
         m_asset_manager->get_asset<Texture2D>(sprite_renderer_comp.Texture) : m_renderer_data.white_texture;
 
     if (!texture)
@@ -768,7 +768,7 @@ void Renderer2D::draw_entity(Entity entity) noexcept
 //   Draw Quad with Texture
 // ==========================
 
-void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id) noexcept
+void Renderer2D::draw_quad(const glm::mat4& transform, const arc<Texture2D>& texture, float tiling_factor, const glm::vec4& tint_color, int32_t entity_id) noexcept
 {
     //KB_PROFILE_SCOPE;
 
@@ -813,7 +813,7 @@ void Renderer2D::draw_quad(const glm::mat4& transform, const ref<Texture2D>& tex
 
 void Renderer2D::draw_quad_from_texture_atlas(
     const glm::mat4& transform,
-    const ref<Texture2D>& texture,
+    const arc<Texture2D>& texture,
     const std::array<glm::vec2, 4>& texture_atlas_offsets,
     float tiling_factor,
     const glm::vec4& tint_color
@@ -865,7 +865,7 @@ void Renderer2D::draw_quad_from_texture_atlas(
 void Renderer2D::draw_quad_from_texture_atlas_no_mat(
     const glm::vec4& position,
     const glm::vec2& size,
-    const ref<Texture2D>& texture,
+    const arc<Texture2D>& texture,
     const std::array<glm::vec2, 4>& texture_atlas_offsets,
     float tiling_factor,
     const glm::vec4& tint_color
@@ -986,7 +986,7 @@ void Renderer2D::draw_text_string(
     const std::string& text,
     const glm::vec2& position,
     const glm::vec2& size,
-    const ref<render::font>& font_asset,
+    const arc<render::font>& font_asset,
     const glm::vec4& tint_color, /* = glm::vec4{1.0f}*/
     f32 p_max_width, /* = 0.f */
     f32 p_line_height_offset, /*= 0.f*/
@@ -1026,7 +1026,7 @@ void Renderer2D::draw_text_string(
     const std::string& text,
     const glm::vec3& position,
     const glm::vec2& size,
-    const ref<render::font>& font_asset,
+    const arc<render::font>& font_asset,
     const glm::vec4& tint_color, /* = glm::vec4{1.0f}*/
     f32 p_max_width, /*= 0.f*/
     f32 p_line_height_offset, /*= 0.f*/
@@ -1036,7 +1036,7 @@ void Renderer2D::draw_text_string(
     //KB_PROFILE_SCOPE;
 
 	// check for programmer error
-	KB_CORE_ASSERT(font_asset, "invalid font asset ref?");
+	KB_CORE_ASSERT(font_asset, "invalid font asset arc?");
 	KB_CORE_ASSERT(!font_asset->is_flag_set(asset::asset_flag_t::Invalid), "Invalid font asset passed to render2d?");
 
 	const auto& font_texture_atlas = font_asset->get_font_atlas();

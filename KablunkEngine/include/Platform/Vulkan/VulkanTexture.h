@@ -21,7 +21,7 @@ public:
 	~VulkanTexture2D() override;
 
 	void Resize(uint32_t width, uint32_t height) override;
-	ref<Image2D> GetImage() const override { return m_image; }
+	arc<Image2D> GetImage() const override { return m_image; }
 
 	ImageFormat GetFormat() const override { return m_format; }
 
@@ -58,7 +58,7 @@ private:
 	uint32_t m_width;
 	uint32_t m_height;
 
-	ref<Image2D> m_image;
+	arc<Image2D> m_image;
 
 	ImageFormat m_format;
 

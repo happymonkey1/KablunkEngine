@@ -23,15 +23,15 @@ public:
     asset_pack(const std::filesystem::path& p_path);
     ~asset_pack() override = default;
 
-    auto add_asset(ref<kb::asset::Asset> p_asset) -> void;
+    auto add_asset(arc<kb::asset::Asset> p_asset) -> void;
 
     auto serialize() -> void;
 
-    auto load_scene(kb::asset::asset_id_t p_scene_id) -> ref<Scene>;
+    auto load_scene(kb::asset::asset_id_t p_scene_id) -> arc<Scene>;
     auto load_asset(
         kb::asset::asset_id_t p_scene_id,
         kb::asset::asset_id_t p_asset_id
-    ) -> ref<kb::asset::Asset>;
+    ) -> arc<kb::asset::Asset>;
 
     // check whether a given asset id is valid
     inline auto is_asset_id_valid(kb::asset::asset_id_t p_asset_id) const -> bool
@@ -50,11 +50,11 @@ public:
     inline auto get_build_version() -> uint64_t { return m_asset_pack_file.m_file_header.m_build_version; }
 
     static auto create_from_project(
-        ref<Project> p_project,
+        arc<Project> p_project,
         std::atomic<float>& p_progress
-    ) -> ref<asset_pack>;
-    static auto load(const std::filesystem::path& p_path) -> ref<asset_pack>;
-    static auto load_into_project(ref<Project> p_project) -> ref<asset_pack>;
+    ) -> arc<asset_pack>;
+    static auto load(const std::filesystem::path& p_path) -> arc<asset_pack>;
+    static auto load_into_project(arc<Project> p_project) -> arc<asset_pack>;
 private:
     // path to the serialized asset pack file
     std::filesystem::path m_path{};

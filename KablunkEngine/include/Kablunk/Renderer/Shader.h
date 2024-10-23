@@ -96,7 +96,7 @@ public:
 	virtual const kb::unordered_flat_map<std::string, ShaderBuffer>& GetShaderBuffers() const = 0;
 	virtual const kb::unordered_flat_map<std::string, ShaderResourceDeclaration>& GetResources() const = 0;
 
-	static ref<Shader> Create(const std::string& filePath, bool force_compile = false);
+	static arc<Shader> Create(const std::string& filePath, bool force_compile = false);
 };
 
 class ShaderLibrary : public RefCounted
@@ -107,15 +107,15 @@ public:
 
 	void Destroy();
 
-	void Add(const ref<Shader>& shader);
-	void Add(const std::string& name, const ref<Shader>& shader);
-	ref<Shader> Load(const std::string& filepath);
-	ref<Shader> Load(const std::string& name, const std::string& filepath);
+	void Add(const arc<Shader>& shader);
+	void Add(const std::string& name, const arc<Shader>& shader);
+	arc<Shader> Load(const std::string& filepath);
+	arc<Shader> Load(const std::string& name, const std::string& filepath);
 
-	ref<Shader> Get(const std::string& name);
+	arc<Shader> Get(const std::string& name);
 
 	bool Exists(const std::string& name);
 private:
-	kb::unordered_flat_map<std::string, ref<Shader>> m_shaders;
+	kb::unordered_flat_map<std::string, arc<Shader>> m_shaders;
 };
 } // end namespace kb

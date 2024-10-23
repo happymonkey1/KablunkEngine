@@ -6,19 +6,19 @@
 
 namespace kb
 {
-ref<Shader> Shader::Create(const std::string& file_path, bool force_compile)
+arc<Shader> Shader::Create(const std::string& file_path, bool force_compile)
 {
 	switch (render::Renderer::get_render_backend_type())
 	{
 	case render::render_backend_type_t::vulkan:
-        return static_cast<ref<Shader>>(ref<VulkanShader>::Create(file_path, force_compile));
+        return static_cast<arc<Shader>>(arc<VulkanShader>::Create(file_path, force_compile));
 	default:
         KB_CORE_ASSERT(
             false,
             "[Shader::Create]: Unhandled render backend {}!",
             static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
         );
-	    return ref<Shader>{};
+	    return arc<Shader>{};
 	}
 }
 
@@ -36,33 +36,33 @@ void ShaderLibrary::Destroy()
 	m_shaders.clear();
 }
 
-void ShaderLibrary::Add(const std::string& name, const ref<Shader>& shader)
+void ShaderLibrary::Add(const std::string& name, const arc<Shader>& shader)
 {
 	KB_CORE_ASSERT(!Exists(name), "Shader already exists!");
 	m_shaders[name] = shader;
 }
 
-void ShaderLibrary::Add(const ref<Shader>& shader)
+void ShaderLibrary::Add(const arc<Shader>& shader)
 {
 	auto& name = shader->GetName();
 	Add(name, shader);
 }
 
-ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+arc<Shader> ShaderLibrary::Load(const std::string& filepath)
 {
     auto shader{ Shader::Create(filepath) };
 	Add(shader);
 	return shader;
 }
 
-ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+arc<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
 {
 	auto shader = Shader::Create(filepath);
 	Add(name, shader);
 	return shader;
 }
 
-ref<kb::Shader> ShaderLibrary::Get(const std::string& name)
+arc<kb::Shader> ShaderLibrary::Get(const std::string& name)
 {
 	KB_CORE_ASSERT(Exists(name), "Shader does not exist!");
 	return m_shaders[name];

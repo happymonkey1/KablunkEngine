@@ -45,7 +45,7 @@ public:
 	static void DumpStats();
 	static GPUMemoryStats GetStats();
 
-	static void Init(ref<VulkanDevice> device);
+	static void Init(arc<VulkanDevice> device);
 	static void Shutdown();
 
 	static VmaAllocator& GetVMAAllocator();

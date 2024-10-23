@@ -15,7 +15,7 @@ namespace kb
 	{
 	public:
 		MaterialAsset();
-		MaterialAsset(ref<Material> material);
+		MaterialAsset(arc<Material> material);
         ~MaterialAsset() override = default;
 
 		glm::vec3& GetAlbedoColor();
@@ -30,55 +30,55 @@ namespace kb
 		float GetEmission();
 		void SetEmission(float emission);
 
-		ref<Texture2D> GetAlbedoMap();
-		void SetAlbedoMap(ref<Texture2D> texture);
+		arc<Texture2D> GetAlbedoMap();
+		void SetAlbedoMap(arc<Texture2D> texture);
 		void ClearAlbedoMap();
 
-		ref<Texture2D> GetNormalMap();
-		void SetNormalMap(ref<Texture2D> texture);
+		arc<Texture2D> GetNormalMap();
+		void SetNormalMap(arc<Texture2D> texture);
 		bool IsUsingNormalMap();
 		void SetUseNormalMap(bool use_normal);
 		void ClearNormalMap();
 
-		ref<Texture2D> GetMetalnessMap();
-		void SetMetalnessMap(ref<Texture2D> texture);
+		arc<Texture2D> GetMetalnessMap();
+		void SetMetalnessMap(arc<Texture2D> texture);
 		void ClearMetalnessMap();
 
-		ref<Texture2D> GetRoughnessMap();
-		void SetRoughnessMap(ref<Texture2D> texture);
+		arc<Texture2D> GetRoughnessMap();
+		void SetRoughnessMap(arc<Texture2D> texture);
 		void ClearRoughnessMap();
 
-		ref<Material> GetMaterial() const { return m_material; }
+		arc<Material> GetMaterial() const { return m_material; }
 	private:
-		ref<Material> m_material;
+		arc<Material> m_material;
 	};
 
 	class MaterialTable : public RefCounted
 	{
 	public:
 		MaterialTable(uint32_t material_count = 1);
-		MaterialTable(ref<MaterialTable> other);
+		MaterialTable(arc<MaterialTable> other);
 		~MaterialTable() = default;
 
 		bool HasMaterial(uint32_t material_index) const { return m_materials.find(material_index) != m_materials.end(); }
-		void SetMaterial(uint32_t index, ref<MaterialAsset> material);
+		void SetMaterial(uint32_t index, arc<MaterialAsset> material);
 		void ClearMaterial(uint32_t index);
 
-		const ref<MaterialAsset>& GetMaterial(uint32_t index) const
+		const arc<MaterialAsset>& GetMaterial(uint32_t index) const
 		{
 			KB_CORE_ASSERT(HasMaterial(index), "Material not found in map!");
 			return m_materials.at(index);
 		}
 
-		std::map<uint32_t, ref<MaterialAsset>>& GetMaterials() { return m_materials; }
-		const std::map<uint32_t, ref<MaterialAsset>>& GetMaterials() const { return m_materials; }
+		std::map<uint32_t, arc<MaterialAsset>>& GetMaterials() { return m_materials; }
+		const std::map<uint32_t, arc<MaterialAsset>>& GetMaterials() const { return m_materials; }
 
 		uint32_t GetMaterialCount() const { return m_material_count; }
 		void SetMaterialCount(uint32_t new_count) { m_material_count = new_count; }
 
 		void Clear();
 	private:
-		std::map<uint32_t, ref<MaterialAsset>> m_materials;
+		std::map<uint32_t, arc<MaterialAsset>> m_materials;
 		uint32_t m_material_count;
 	};
 }

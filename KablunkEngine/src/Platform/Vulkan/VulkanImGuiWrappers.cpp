@@ -12,9 +12,9 @@
 
 namespace kb::UI
 {
-	ImTextureID GetTextureID(ref<Texture2D> texture)
+	ImTextureID GetTextureID(arc<Texture2D> texture)
 	{
-		ref<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+		arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
 		if (!image_info.imageView)
 		{
@@ -25,7 +25,7 @@ namespace kb::UI
 		return (ImTextureID)ImGui_ImplVulkan_AddTexture(image_info.sampler, image_info.imageView, image_info.imageLayout);
 	}
 
-	void Image(const ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	void Image(const arc<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{
 		const VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->get_vk_image_info();
 		auto image_info = image.As<VulkanImage2D>()->get_vk_image_info();
@@ -37,9 +37,9 @@ namespace kb::UI
 		ImGui::Image(texture_id, size, uv0, uv1, tint_col, border_col);
 	}
 
-	void Image(const ref<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	void Image(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 	{
-		ref<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+		arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
 		if (!image_info.imageView)
 			return;
@@ -48,9 +48,9 @@ namespace kb::UI
 		ImGui::Image(texture_id, size, uv0, uv1, tint_col, border_col);
 	}
 
-	bool ImageButton(const ref<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	bool ImageButton(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 	{
-		ref<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
+		arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
 		const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
 		if (!image_info.imageView)
 			return false;

@@ -19,7 +19,7 @@ class AssetManager : public RefCounted
 {
 public:
 	// initialization logic for the asset manager
-	void init(ref<Project> p_active_project, bool p_load_internal_engine_assets = true);
+	void init(arc<Project> p_active_project, bool p_load_internal_engine_assets = true);
 	// shutdown logic for the asset manager
 	void shutdown();
 	// get metadata from asset registry using asset id
@@ -27,7 +27,7 @@ public:
 	// get metadata from asset registry using filepath
 	const AssetMetadata& get_metadata(const std::filesystem::path& filepath) const;
 	// get metadata from asset registry using asset reference
-	const AssetMetadata& get_metadata(const ref<IAsset>& asset) const { return get_metadata(asset->get_id()); }
+	const AssetMetadata& get_metadata(const arc<IAsset>& asset) const { return get_metadata(asset->get_id()); }
 	// get the absolute path for an asset using its metadata
 	std::filesystem::path get_absolute_path(const AssetMetadata& metadata) const
     {
@@ -68,7 +68,7 @@ public:
 	const asset_id_t& find_asset_id_based_on_filepath(const std::filesystem::path& filepath) const;
 	// create a new asset
 	template <typename T, typename... Args>
-	ref<T> create_asset(const std::string& filename, const std::filesystem::path& directory_path, Args&&... args)
+	arc<T> create_asset(const std::string& filename, const std::filesystem::path& directory_path, Args&&... args)
 	{
 		static_assert(std::is_base_of_v<IAsset, T>, "create_asset() only works for types derived from IAsset!");
 
@@ -110,7 +110,7 @@ public:
 		// #TODO should we write registry to file every time?
 		write_registry_to_file();
 
-		ref<T> asset = ref<T>::Create(std::forward<Args>(args)...);
+		arc<T> asset = arc<T>::Create(std::forward<Args>(args)...);
 		asset->set_id(metadata.id);
         KB_CORE_ASSERT(asset, "[AssetManager]: Trying to emplace null asset into loaded asset registry?");
 		m_loaded_assets[metadata.id] = asset;
@@ -122,7 +122,7 @@ public:
 
 	// get an asset based off an asset id
 	template <typename T>
-	ref<T> get_asset(const asset_id_t& id)
+	arc<T> get_asset(const asset_id_t& id)
 	{
 		static_assert(std::is_base_of_v<IAsset, T>, "get_asset() only works for types derived from IAsset!");
 
@@ -133,17 +133,17 @@ public:
 		if (!metadata.is_valid())
 		{
 			KB_CORE_INFO("[AssetManager] Tried to get asset '{}' but metadata is invalid!", id);
-			return ref<T>{};
+			return arc<T>{};
 		}
 
 		// imported assets are not loaded by default, so try to load if we find one that hasn't been loaded
 		// #TODO async asset loading
-        ref<IAsset> asset{ nullptr };
+        arc<IAsset> asset{ nullptr };
 		if (!metadata.is_data_loaded)
 		{
 			metadata.is_data_loaded = try_load_asset(metadata, asset);
 			if (!metadata.is_data_loaded)
-				return ref<T>{};
+				return arc<T>{};
 
             KB_CORE_ASSERT(asset, "[asset_manager]: trying to emplace null asset into loaded asset registry?");
 			m_loaded_assets[id] = asset;
@@ -161,12 +161,12 @@ public:
 
 	// get an asset based on a filepath
 	template <typename T>
-	ref<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
+	arc<T> get_asset(const std::filesystem::path& filepath) { return get_asset<T>(find_asset_id_based_on_filepath(filepath)); }
 
     template <typename T>
-    auto scan_loaded_assets_by_type(asset_type_t p_asset_type) noexcept -> std::vector<ref<T>>
+    auto scan_loaded_assets_by_type(asset_type_t p_asset_type) noexcept -> std::vector<arc<T>>
 	{
-        std::vector<ref<T>> assets_found{};
+        std::vector<arc<T>> assets_found{};
         assets_found.reserve(64ull);
 	    for (const auto& [asset_id, asset] : m_loaded_assets)
 	    {
@@ -193,9 +193,9 @@ public:
 	// check whether the asset referenced by the id is a memory only asset
 	bool is_memory_asset(const asset_id_t& id) const { return m_memory_assets.find(id) != m_memory_assets.end(); }
 	// get the map of loaded assets
-	const kb::unordered_flat_map<asset_id_t, ref<IAsset>>& get_loaded_assets() const { return m_loaded_assets; }
+	const kb::unordered_flat_map<asset_id_t, arc<IAsset>>& get_loaded_assets() const { return m_loaded_assets; }
 	// get the map of memory only assets
-	const kb::unordered_flat_map<asset_id_t, ref<IAsset>>& get_memory_assets() const { return m_memory_assets; }
+	const kb::unordered_flat_map<asset_id_t, arc<IAsset>>& get_memory_assets() const { return m_memory_assets; }
 	// get the underlying asset registry
 	const AssetRegistry& get_asset_registry() const { return m_asset_registry; }
 	// check if the file exists on the filesystem
@@ -211,9 +211,9 @@ private:
 	void process_directory(const std::filesystem::path& directory_path);
 
 	// write asset data to disk
-	void serialize_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const;
+	void serialize_asset(const AssetMetadata& metadata, arc<IAsset>& asset) const;
 	// try load asset from disk
-	bool try_load_asset(const AssetMetadata& metadata, ref<IAsset>& asset) const;
+	bool try_load_asset(const AssetMetadata& metadata, arc<IAsset>& asset) const;
 
 	AssetMetadata& get_metadata_internal(const asset_id_t& id);
 
@@ -231,21 +231,21 @@ public:
 	inline static const std::filesystem::path s_asset_registry_path = "asset_registry.kbreg";
 
 private:
-    ref<Project> m_active_project{ nullptr };
+    arc<Project> m_active_project{ nullptr };
 	// asset registry that maps ids to metadata
 	AssetRegistry m_asset_registry;
 	// map of assets that are fully loaded
     // #TODO: pool by asset type for better cache locality
-	unordered_flat_map<asset_id_t, ref<IAsset>> m_loaded_assets;
+	unordered_flat_map<asset_id_t, arc<IAsset>> m_loaded_assets;
 	// map of assets loaded in memory
     // #TODO: pool by asset type for better cache locality
-	unordered_flat_map<asset_id_t, ref<IAsset>> m_memory_assets;
+	unordered_flat_map<asset_id_t, arc<IAsset>> m_memory_assets;
 	// #TODO filesystem changed callback
 
 	// null metadata for functions that return references
 	inline static AssetMetadata s_null_metadata{};
 	// map for serializers of specific asset types
-	unordered_flat_map<AssetType, ref<AssetSerializer>> m_asset_serializers;
+	unordered_flat_map<AssetType, arc<AssetSerializer>> m_asset_serializers;
 };
 
 // check whether a given filepath refers to the asset registry

@@ -30,52 +30,52 @@ public:
     static auto begin_frame() noexcept -> void;
     static auto end_frame() noexcept -> void;
     static auto begin_render_pass(
-        ref<RenderCommandBuffer> p_render_command_buffer,
-        ref<render_pass> p_render_pass,
+        arc<RenderCommandBuffer> p_render_command_buffer,
+        arc<render_pass> p_render_pass,
         bool p_explicit_clear
     ) noexcept -> void;
 
-    static auto end_render_pass(ref<RenderCommandBuffer> p_render_command_buffer) noexcept -> void;
+    static auto end_render_pass(arc<RenderCommandBuffer> p_render_command_buffer) noexcept -> void;
 
     static auto set_line_width(
-        ref<RenderCommandBuffer> render_command_buffer,
+        arc<RenderCommandBuffer> render_command_buffer,
         f32 line_width
     ) noexcept -> void;
 
     static auto submit_fullscreen_quad(
-        ref<RenderCommandBuffer> p_render_command_buffer,
-        ref<Pipeline> p_pipeline,
-        ref<Material> p_material
+        arc<RenderCommandBuffer> p_render_command_buffer,
+        arc<Pipeline> p_pipeline,
+        arc<Material> p_material
     ) noexcept -> void;
 
     // geometry rendering
 
     static auto render_geometry(
-        ref<RenderCommandBuffer> p_render_command_buffer,
-        ref<Pipeline> p_pipeline,
-        ref<Material> p_material,
-        ref<VertexBuffer> p_vertex_buffer,
-        ref<IndexBuffer> p_index_buffer,
+        arc<RenderCommandBuffer> p_render_command_buffer,
+        arc<Pipeline> p_pipeline,
+        arc<Material> p_material,
+        arc<VertexBuffer> p_vertex_buffer,
+        arc<IndexBuffer> p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void;
 
     static auto render_instanced_submesh(
-        ref<RenderCommandBuffer> p_render_command_buffer,
-        ref<Pipeline> p_pipeline,
-        ref<Mesh> p_mesh,
+        arc<RenderCommandBuffer> p_render_command_buffer,
+        arc<Pipeline> p_pipeline,
+        arc<Mesh> p_mesh,
         u32 p_index,
-        ref<MaterialTable> p_material_table,
-        ref<VertexBuffer> p_transform_buffer,
+        arc<MaterialTable> p_material_table,
+        arc<VertexBuffer> p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,
         u32 p_instance_count
     ) noexcept -> void;
 
     static auto copy_image(
-        ref<RenderCommandBuffer> p_render_command_buffer,
-        ref<Image2D> p_source_image,
-        ref<Image2D> p_destination_image
+        arc<RenderCommandBuffer> p_render_command_buffer,
+        arc<Image2D> p_source_image,
+        arc<Image2D> p_destination_image
     ) noexcept -> void;
 
     static auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet;

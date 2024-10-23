@@ -5,7 +5,7 @@
 namespace kb
 { // start namespace kb
 
-// ref for compile time constexpr hashing: https://stackoverflow.com/questions/2111667/compile-time-string-hashing
+// arc for compile time constexpr hashing: https://stackoverflow.com/questions/2111667/compile-time-string-hashing
 
 // CRC32 Table (zlib polynomial)
 // source: https://github.com/enthought/Python-2.7.3/blob/master/Modules/zlib/crc32.h

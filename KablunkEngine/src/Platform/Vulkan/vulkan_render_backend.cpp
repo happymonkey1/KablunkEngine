@@ -24,8 +24,8 @@ namespace kb::render
 
 struct vulkan_render_backend_data
 {
-    ref<VertexBuffer> m_quad_vertex_buffer{};
-    ref<IndexBuffer> m_quad_index_buffer{};
+    arc<VertexBuffer> m_quad_vertex_buffer{};
+    arc<IndexBuffer> m_quad_index_buffer{};
     VulkanShader::ShaderMaterialDescriptorSet m_quad_descriptor_set{};
 
     VkDescriptorSet m_active_descriptor_set = nullptr;
@@ -188,8 +188,8 @@ auto vulkan_render_backend::end_frame() noexcept -> void
 }
 
 auto vulkan_render_backend::begin_render_pass(
-    ref<RenderCommandBuffer> p_render_command_buffer,
-    ref<render_pass> p_render_pass,
+    arc<RenderCommandBuffer> p_render_command_buffer,
+    arc<render_pass> p_render_pass,
     bool p_explicit_clear
 ) noexcept -> void
 {
@@ -333,7 +333,7 @@ auto vulkan_render_backend::begin_render_pass(
 
             // #TODO set dynamic line width
 
-            ref<vulkan_render_pass> render_pass = p_render_pass.As<vulkan_render_pass>();
+            arc<vulkan_render_pass> render_pass = p_render_pass.As<vulkan_render_pass>();
             render_pass->rt_prepare();
             if (render_pass->has_descriptor_sets())
             {
@@ -354,7 +354,7 @@ auto vulkan_render_backend::begin_render_pass(
 }
 
 auto vulkan_render_backend::end_render_pass(
-    ref<RenderCommandBuffer> p_render_command_buffer
+    arc<RenderCommandBuffer> p_render_command_buffer
 ) noexcept -> void
 {
     submit([p_render_command_buffer]()
@@ -372,7 +372,7 @@ auto vulkan_render_backend::end_render_pass(
 }
 
 auto vulkan_render_backend::set_line_width(
-    ref<RenderCommandBuffer> render_command_buffer,
+    arc<RenderCommandBuffer> render_command_buffer,
     f32 line_width
 ) noexcept -> void
 {
@@ -385,14 +385,14 @@ auto vulkan_render_backend::set_line_width(
 }
 
 auto vulkan_render_backend::submit_fullscreen_quad(
-    ref<RenderCommandBuffer> p_render_command_buffer,
-    ref<Pipeline> p_pipeline,
-    ref<Material> p_material
+    arc<RenderCommandBuffer> p_render_command_buffer,
+    arc<Pipeline> p_pipeline,
+    arc<Material> p_material
 ) noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    ref<VulkanMaterial> vulkan_material = p_material.As<VulkanMaterial>();
+    arc<VulkanMaterial> vulkan_material = p_material.As<VulkanMaterial>();
     submit([p_render_command_buffer, p_pipeline, vulkan_material]() mutable
         {
             KB_PROFILE_SCOPE;
@@ -400,7 +400,7 @@ auto vulkan_render_backend::submit_fullscreen_quad(
             const u32 frame_index = rt_get_current_frame_index();
             const VkCommandBuffer vk_command_buffer = p_render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-            ref<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
+            arc<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
@@ -478,18 +478,18 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 }
 
 auto vulkan_render_backend::render_geometry(
-    ref<RenderCommandBuffer> p_render_command_buffer,
-    ref<Pipeline> p_pipeline,
-    ref<Material> p_material,
-    ref<VertexBuffer> p_vertex_buffer,
-    ref<IndexBuffer> p_index_buffer,
+    arc<RenderCommandBuffer> p_render_command_buffer,
+    arc<Pipeline> p_pipeline,
+    arc<Material> p_material,
+    arc<VertexBuffer> p_vertex_buffer,
+    arc<IndexBuffer> p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count
 ) noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    ref vulkan_material = p_material.As<VulkanMaterial>();
+    arc vulkan_material = p_material.As<VulkanMaterial>();
     if (p_index_count == 0)
         p_index_count = p_index_buffer->GetCount();
 
@@ -500,7 +500,7 @@ auto vulkan_render_backend::render_geometry(
             const u32 frame_index = rt_get_current_frame_index();
             const VkCommandBuffer command_buffer = p_render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-            ref<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
+            arc<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
@@ -572,12 +572,12 @@ auto vulkan_render_backend::render_geometry(
 }
 
 auto vulkan_render_backend::render_instanced_submesh(
-    ref<RenderCommandBuffer> p_render_command_buffer,
-    ref<Pipeline> p_pipeline,
-    ref<Mesh> p_mesh,
+    arc<RenderCommandBuffer> p_render_command_buffer,
+    arc<Pipeline> p_pipeline,
+    arc<Mesh> p_mesh,
     u32 p_index,
-    ref<MaterialTable> p_material_table,
-    ref<VertexBuffer> p_transform_buffer,
+    arc<MaterialTable> p_material_table,
+    arc<VertexBuffer> p_transform_buffer,
     u32 p_transform_offset,
     u32 p_bone_transforms_offset,
     u32 p_instance_count
@@ -594,19 +594,19 @@ auto vulkan_render_backend::render_instanced_submesh(
                 p_render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
             // retrieve mesh data vertex buffer and bind
-            ref<MeshData> mesh_data = p_mesh->GetMeshData();
-            ref<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+            arc<MeshData> mesh_data = p_mesh->GetMeshData();
+            arc<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
             const VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
             constexpr VkDeviceSize vertex_offsets[1] = { 0 };
             vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
             // retrieve mesh transform vertex buffer and bind
-            ref<VulkanVertexBuffer> vulkan_transform_buffer = p_transform_buffer.As<VulkanVertexBuffer>();
+            arc<VulkanVertexBuffer> vulkan_transform_buffer = p_transform_buffer.As<VulkanVertexBuffer>();
             const VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
             const VkDeviceSize transform_offsets[1] = { p_transform_offset };
             vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
-            ref<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+            arc<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
             const VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
             vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -614,12 +614,12 @@ auto vulkan_render_backend::render_instanced_submesh(
             const Submesh& submesh = mesh_asset_submeshes[p_index];
             const auto& mesh_material_table = p_mesh->GetMaterials();
             uint32_t material_count = mesh_material_table->GetMaterialCount();
-            ref<MaterialAsset> material = p_material_table->HasMaterial(submesh.Material_index) ?
+            arc<MaterialAsset> material = p_material_table->HasMaterial(submesh.Material_index) ?
                 p_material_table->GetMaterial(submesh.Material_index) :
                 mesh_material_table->GetMaterial(submesh.Material_index);
-            ref<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
+            arc<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
 
-            ref<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
+            arc<VulkanPipeline> vulkan_pipeline = p_pipeline.As<VulkanPipeline>();
             const VkPipeline vk_pipeline = vulkan_pipeline->get_vk_pipeline();
             const VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
             vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
@@ -678,9 +678,9 @@ auto vulkan_render_backend::render_instanced_submesh(
 }
 
 auto vulkan_render_backend::copy_image(
-    ref<RenderCommandBuffer> p_render_command_buffer,
-    ref<Image2D> p_source_image,
-    ref<Image2D> p_destination_image
+    arc<RenderCommandBuffer> p_render_command_buffer,
+    arc<Image2D> p_source_image,
+    arc<Image2D> p_destination_image
 ) noexcept -> void
 {
     KB_PROFILE_SCOPE;

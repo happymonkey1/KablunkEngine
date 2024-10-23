@@ -11,7 +11,7 @@
 namespace kb
 {
 	
-	ProjectSerializer::ProjectSerializer(const ref<Project>& project)
+	ProjectSerializer::ProjectSerializer(const arc<Project>& project)
 		: m_project{ project }
 	{
 

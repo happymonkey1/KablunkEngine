@@ -7,14 +7,14 @@
 
 namespace kb::render
 { // start namespace kb::render
-ref<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
+arc<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
 {
     constexpr auto backend = Renderer::get_render_backend_type();
-    ref<frame_buffer> frame_buffer{};
+    arc<frame_buffer> frame_buffer{};
     switch (backend)
     {
     case render::render_backend_type_t::vulkan:
-        frame_buffer = static_cast<ref<render::frame_buffer>>(ref<vulkan_frame_buffer>::Create(specs));
+        frame_buffer = static_cast<arc<render::frame_buffer>>(arc<vulkan_frame_buffer>::Create(specs));
         break;
     default:
     {
@@ -23,7 +23,7 @@ ref<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
             "[Framebuffer::Create]: Unhandled render backend {}!",
             static_cast<std::underlying_type_t<render::render_backend_type_t>>(backend)
         );
-        return ref<render::frame_buffer>{};
+        return arc<render::frame_buffer>{};
     }
     }
 
@@ -49,7 +49,7 @@ std::weak_ptr<frame_buffer> frame_buffer_pool::AllocateBuffer()
 	return {};
 }
 
-void frame_buffer_pool::Add(const ref<frame_buffer>& framebuffer)
+void frame_buffer_pool::Add(const arc<frame_buffer>& framebuffer)
 {
 	m_pool.push_back(framebuffer);
 }

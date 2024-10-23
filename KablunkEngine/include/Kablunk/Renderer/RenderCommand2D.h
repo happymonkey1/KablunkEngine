@@ -94,7 +94,7 @@ namespace kb::render2d
         const std::string& text,
         const glm::vec2& position,
         const glm::vec2& size,
-        const ref<render::font_asset_t>& font_asset,
+        const arc<render::font_asset_t>& font_asset,
         const glm::vec4& tint_color = glm::vec4{ 1.0f }
     )
     {
@@ -106,7 +106,7 @@ namespace kb::render2d
         const std::string& text,
         const glm::vec3& position,
         const glm::vec2& size,
-        const ref<render::font_asset_t>& font_asset,
+        const arc<render::font_asset_t>& font_asset,
         const glm::vec4& tint_color = glm::vec4{ 1.0f }
     )
     {

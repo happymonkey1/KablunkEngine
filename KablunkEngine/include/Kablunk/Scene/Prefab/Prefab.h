@@ -22,7 +22,7 @@ namespace kb
 		void on_native_script_component_destroy(entt::registry& registry, entt::entity entity);
 
 	private:
-		ref<Scene> m_scene_context;
+		arc<Scene> m_scene_context;
 		Entity m_entity;
 
 		friend class Scene;

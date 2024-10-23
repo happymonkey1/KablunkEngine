@@ -12,7 +12,7 @@ namespace kb
 	public:
 		TextureViewer();
 
-		virtual void set_asset(const ref<asset::IAsset>& asset) override { m_asset = asset.As<Texture2D>(); }
+		virtual void set_asset(const arc<asset::IAsset>& asset) override { m_asset = asset.As<Texture2D>(); }
 
 	private:
 		virtual void on_open() override;
@@ -20,7 +20,7 @@ namespace kb
 		virtual void render() override;
 
 	private:
-		ref<Texture2D> m_asset;
+		arc<Texture2D> m_asset;
 	};
 
 }

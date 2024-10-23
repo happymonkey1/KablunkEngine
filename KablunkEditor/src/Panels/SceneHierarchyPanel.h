@@ -14,9 +14,9 @@ namespace kb
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const ref<Scene>& context);
+		SceneHierarchyPanel(const arc<Scene>& context);
 
-		void SetContext(const ref<Scene>& context);
+		void SetContext(const arc<Scene>& context);
 		
 		void OnImGuiRender();
 		
@@ -31,7 +31,7 @@ namespace kb
 		void UI_DrawComponents(Entity entity);
 		void UI_RenameScenePopup();
 	private:
-		ref<Scene> m_context;
+		arc<Scene> m_context;
 		Entity m_selection_context;
 
 		// #TODO move to properties panel class

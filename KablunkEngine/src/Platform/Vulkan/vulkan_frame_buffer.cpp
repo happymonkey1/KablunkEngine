@@ -129,13 +129,13 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 	if (!m_specification.m_existing_frame_buffer)
 	{
 		uint32_t attachment_index = 0;
-		for (ref<Image2D>& image : m_attachment_images)
+		for (arc<Image2D>& image : m_attachment_images)
 		{
 			if (m_specification.m_existing_images.find(attachment_index) != m_specification.m_existing_images.end())
 				continue;
 
             // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
-			if (ref<VulkanImage2D> vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved ||
+			if (arc<VulkanImage2D> vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved ||
                 attachment_index == 0 && !vk_image->GetLayerImageView(0))
 			{
                 vk_image->Release();
@@ -158,7 +158,7 @@ void vulkan_frame_buffer::resize(uint32_t width, uint32_t height, bool force_rec
 	if (!force_recreate && (m_width == width && m_height == height))
 		return;
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance, width, height]() mutable
 		{
 			instance->m_width = static_cast<uint32_t>(
@@ -181,10 +181,10 @@ void vulkan_frame_buffer::resize(uint32_t width, uint32_t height, bool force_rec
 		});
 
 	for (auto& callback : m_resize_callbacks)
-		callback(ref<frame_buffer>{ this });
+		callback(arc<frame_buffer>{ this });
 }
 
-void vulkan_frame_buffer::add_resize_callback(const std::function<void(ref<frame_buffer>)>& func)
+void vulkan_frame_buffer::add_resize_callback(const std::function<void(arc<frame_buffer>)>& func)
 {
 	m_resize_callbacks.push_back(func);
 }
@@ -213,7 +213,7 @@ void vulkan_frame_buffer::clear_attachment(uint32_t attachment_index, int value)
 
 void vulkan_frame_buffer::Invalidate()
 {
-    ref<vulkan_frame_buffer> instance{ this };
+    arc<vulkan_frame_buffer> instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->RT_Invalidate();
@@ -242,13 +242,13 @@ void vulkan_frame_buffer::RT_Invalidate()
 		if (!m_specification.m_existing_frame_buffer)
 		{
 			uint32_t attachment_index = 0;
-			for (const ref<Image2D>& image : m_attachment_images)
+			for (const arc<Image2D>& image : m_attachment_images)
 			{
 				if (m_specification.m_existing_images.contains(attachment_index))
 					continue;
 
                 // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
-				if (ref vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved || attachment_index == 0 && !vk_image->GetLayerImageView(0))
+				if (arc vk_image = image.As<VulkanImage2D>(); !vk_image->GetSpecification().deinterleaved || attachment_index == 0 && !vk_image->GetLayerImageView(0))
 				{
                     vk_image->Release();
 				}
@@ -288,18 +288,18 @@ void vulkan_frame_buffer::RT_Invalidate()
 				m_depth_attachment_image = m_specification.m_existing_image;
 			else if (m_specification.m_existing_frame_buffer)
 			{
-				ref<vulkan_frame_buffer> existing_frame_buffer = m_specification.m_existing_frame_buffer.As<vulkan_frame_buffer>();
+				arc<vulkan_frame_buffer> existing_frame_buffer = m_specification.m_existing_frame_buffer.As<vulkan_frame_buffer>();
 				m_depth_attachment_image = existing_frame_buffer->get_depth_image();
 			}
 			else if (m_specification.m_existing_images.contains(attachment_index))
 			{
-				ref<Image2D> existing_image = m_specification.m_existing_images.at(attachment_index);
+				arc<Image2D> existing_image = m_specification.m_existing_images.at(attachment_index);
 				KB_CORE_ASSERT(Utils::IsDepthFormat(existing_image->GetSpecification().format), "Trying to attach non-depth image as depth attachment");
 				m_depth_attachment_image = existing_image;
 			}
 			else
 			{
-				ref<VulkanImage2D> depth_attachment_image = m_depth_attachment_image.As<VulkanImage2D>();
+				arc<VulkanImage2D> depth_attachment_image = m_depth_attachment_image.As<VulkanImage2D>();
 				auto& spec = depth_attachment_image->GetSpecification();
 				spec.width = m_width;
 				spec.height = m_height;
@@ -340,17 +340,17 @@ void vulkan_frame_buffer::RT_Invalidate()
 		{
 			//HZ_CORE_ASSERT(!m_Specification.ExistingImage, "Not supported for color attachments");
 
-			ref<VulkanImage2D> color_attachment;
+			arc<VulkanImage2D> color_attachment;
 			if (m_specification.m_existing_frame_buffer)
 			{
-				ref<vulkan_frame_buffer> existing_frame_buffer = 
+				arc<vulkan_frame_buffer> existing_frame_buffer = 
                     m_specification.m_existing_frame_buffer.As<vulkan_frame_buffer>();
-				ref<Image2D> existingImage = existing_frame_buffer->get_image(attachment_index);
+				arc<Image2D> existingImage = existing_frame_buffer->get_image(attachment_index);
 				color_attachment = m_attachment_images.emplace_back(existingImage).As<VulkanImage2D>();
 			}
 			else if (m_specification.m_existing_images.contains(attachment_index))
 			{
-				ref<Image2D> existing_image = m_specification.m_existing_images[attachment_index];
+				arc<Image2D> existing_image = m_specification.m_existing_images[attachment_index];
 				KB_CORE_ASSERT(!Utils::IsDepthFormat(existing_image->GetSpecification().format), "Trying to attach depth image as color attachment");
 				color_attachment = existing_image.As<VulkanImage2D>();
 				m_attachment_images[attachment_index] = existing_image;
@@ -370,7 +370,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 				}
 				else
 				{
-					ref<Image2D> image = m_attachment_images[attachment_index];
+					arc<Image2D> image = m_attachment_images[attachment_index];
 					ImageSpecification& spec = image->GetSpecification();
 					spec.width = m_width;
 					spec.height = m_height;
@@ -493,7 +493,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 	std::vector<VkImageView> attachments(m_attachment_images.size());
 	for (uint32_t i = 0; i < m_attachment_images.size(); i++)
 	{
-		ref<VulkanImage2D> image = m_attachment_images[i].As<VulkanImage2D>();
+		arc<VulkanImage2D> image = m_attachment_images[i].As<VulkanImage2D>();
 		if (image->GetSpecification().deinterleaved)
 		{
 			attachments[i] = image->GetLayerImageView(m_specification.m_existing_image_layers[i]);
@@ -508,7 +508,7 @@ void vulkan_frame_buffer::RT_Invalidate()
 
 	if (m_depth_attachment_image)
 	{
-		ref<VulkanImage2D> image = m_depth_attachment_image.As<VulkanImage2D>();
+		arc<VulkanImage2D> image = m_depth_attachment_image.As<VulkanImage2D>();
 		if (m_specification.m_existing_image)
 		{
 			KB_CORE_ASSERT(m_specification.m_existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");

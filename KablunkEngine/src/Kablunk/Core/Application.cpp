@@ -61,10 +61,10 @@ void Application::init()
 	// start rendering render one frame
 	m_render_thread.pump();
 
-    m_renderer_2d = ref<Renderer2D>::Create();
+    m_renderer_2d = arc<Renderer2D>::Create();
     m_renderer_2d->init();
 
-    //m_screen_space_renderer_2d = ref<Renderer2D>::Create();
+    //m_screen_space_renderer_2d = arc<Renderer2D>::Create();
     //m_screen_space_renderer_2d->init();
 
 	m_render_thread.pump();
@@ -296,7 +296,7 @@ void Application::draw_debug_statistics()
 #if 0
     // #TODO this should use "screen renderer" rather than world space renderer
 	const auto& font_manager_ = m_renderer_2d->get_font_manager();
-	ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
+	arc<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
 	if (!font_asset)
 	{
 		KB_CORE_WARN("trying to draw debug statistics with an null font asset!");

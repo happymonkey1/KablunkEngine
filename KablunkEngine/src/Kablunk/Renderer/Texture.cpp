@@ -6,12 +6,12 @@
 
 namespace kb
 {
-	ref<Texture2D> Texture2D::Create(ImageFormat format, uint32_t width, uint32_t height, const void* data)
+	arc<Texture2D> Texture2D::Create(ImageFormat format, uint32_t width, uint32_t height, const void* data)
 	{
         constexpr auto backend = render::Renderer::get_render_backend_type();
         if constexpr (backend == render::render_backend_type_t::vulkan)
         {
-            return static_cast<ref<Texture2D>>(ref<VulkanTexture2D>::Create(format, width, height, data));
+            return static_cast<arc<Texture2D>>(arc<VulkanTexture2D>::Create(format, width, height, data));
         }
         else
         {
@@ -20,16 +20,16 @@ namespace kb
                 "[Texture2D::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(backend)
             );
-            return ref<Texture2D>{};
+            return arc<Texture2D>{};
         }
 	}
 
-	ref<Texture2D> Texture2D::Create(const std::string& path)
+	arc<Texture2D> Texture2D::Create(const std::string& path)
 	{
         constexpr auto backend = render::Renderer::get_render_backend_type();
         if constexpr (backend == render::render_backend_type_t::vulkan)
         {
-            return static_cast<ref<Texture2D>>(ref<VulkanTexture2D>::Create(path));
+            return static_cast<arc<Texture2D>>(arc<VulkanTexture2D>::Create(path));
         }
         else
         {
@@ -38,7 +38,7 @@ namespace kb
                 "[Texture2D::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(backend)
             );
-            return ref<Texture2D>{};
+            return arc<Texture2D>{};
         }
 	}
 }

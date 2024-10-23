@@ -118,38 +118,38 @@ struct renderer_2d_data_t
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
-    using vertex_per_frame_buffer = std::vector<ref<VertexBuffer>>;
+    using vertex_per_frame_buffer = std::vector<arc<VertexBuffer>>;
 	std::vector<vertex_per_frame_buffer> quad_vertex_buffers;
-    ref<IndexBuffer> quad_index_buffer;
+    arc<IndexBuffer> quad_index_buffer;
 
 	// circle
 	std::vector<vertex_per_frame_buffer> circle_vertex_buffers;
 
 	// lines
 	std::vector<vertex_per_frame_buffer> line_vertex_buffers;
-    ref<IndexBuffer> line_index_buffer;
+    arc<IndexBuffer> line_index_buffer;
 
 	// ui quads
 	std::vector<vertex_per_frame_buffer> ui_quad_vertex_buffers;
-    ref<IndexBuffer> ui_quad_index_buffer;
+    arc<IndexBuffer> ui_quad_index_buffer;
 
 	// text
 	std::vector<vertex_per_frame_buffer> text_vertex_buffers;
-    ref<IndexBuffer> text_index_buffer;
+    arc<IndexBuffer> text_index_buffer;
 
 	// =======
 	// shaders
 	// =======
 
-    ref<Shader> quad_shader;
-    ref<Shader> circle_shader;
-    ref<Shader> line_shader;
-    ref<Shader> ui_shader;
-	ref<Shader> text_shader;
+    arc<Shader> quad_shader;
+    arc<Shader> circle_shader;
+    arc<Shader> line_shader;
+    arc<Shader> ui_shader;
+	arc<Shader> text_shader;
 
 	// =======
 
-    ref<Texture2D> white_texture;
+    arc<Texture2D> white_texture;
 
 	// Quads
     // base pointers act as a rudimentary, manually controlled ring buffer
@@ -189,28 +189,28 @@ struct renderer_2d_data_t
 	u32 text_texture_atlas_slot_index = 0;
 
 	// TODO: change to asset handle when implemented
-	std::array<ref<Texture2D>, max_texture_slots> texture_slots;
-	std::array<ref<Texture2D>, max_texture_slots> text_texture_atlas_slots;
+	std::array<arc<Texture2D>, max_texture_slots> texture_slots;
+	std::array<arc<Texture2D>, max_texture_slots> text_texture_atlas_slots;
 
-	ref<RenderCommandBuffer> render_command_buffer;
+	arc<RenderCommandBuffer> render_command_buffer;
 
 	render::font_manager m_font_manager;
 
     // --- render passes ------------------------
-    ref<render::render_pass> m_quad_pass;
-	ref<render::render_pass> m_circle_pass;
-    ref<render::render_pass> m_line_pass;
-    ref<render::render_pass> m_ui_pass;
-	ref<render::render_pass> m_text_pass;
+    arc<render::render_pass> m_quad_pass;
+	arc<render::render_pass> m_circle_pass;
+    arc<render::render_pass> m_line_pass;
+    arc<render::render_pass> m_ui_pass;
+	arc<render::render_pass> m_text_pass;
 
     // --- materials ----------------------------
-    ref<Material> quad_material;
-    ref<Material> circle_material;
-    ref<Material> line_material;
-    ref<Material> ui_material;
-	ref<Material> text_material;
+    arc<Material> quad_material;
+    arc<Material> circle_material;
+    arc<Material> line_material;
+    arc<Material> ui_material;
+	arc<Material> text_material;
 
-    ref<UniformBufferSet> m_camera_uniform_buffer_set;
+    arc<UniformBufferSet> m_camera_uniform_buffer_set;
 
 	renderer_2d_specification_t specification;
 
@@ -231,9 +231,9 @@ public:
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
 
-    auto set_asset_manager(const ref<asset::AssetManager>& p_asset_manager) -> void;
+    auto set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void;
 
-    ref<Texture2D> get_white_texture();
+    arc<Texture2D> get_white_texture();
 
 	void begin_scene(const Camera& camera, const glm::mat4& transform, bool p_explicit_clear = false);
 	void begin_scene(const EditorCamera& camera, bool p_explicit_clear = false);
@@ -243,8 +243,8 @@ public:
 
 	void on_imgui_render() const;
 
-	void set_target_frame_buffer(const ref<render::frame_buffer>& p_target_frame_buffer);
-    [[nodiscard]] auto get_target_frame_buffer() const noexcept -> const ref<render::frame_buffer>&;
+	void set_target_frame_buffer(const arc<render::frame_buffer>& p_target_frame_buffer);
+    [[nodiscard]] auto get_target_frame_buffer() const noexcept -> const arc<render::frame_buffer>&;
 	void on_recreate_swapchain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
@@ -264,7 +264,7 @@ public:
 	inline void draw_quad(
 		const glm::vec2& position,
 		const glm::vec2& size,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
@@ -278,7 +278,7 @@ public:
 	inline void draw_quad(
 		const glm::vec3& position,
 		const glm::vec2& size,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
 	) noexcept
@@ -295,7 +295,7 @@ public:
 	// #TODO figure out how to pass 64-bit integers to OpenGL, so we can support int64_t instead of int32_t
 	void draw_quad(
 		const glm::mat4& transform,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
 		float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4{ 1.0f },
 		int32_t entity_id = -1
@@ -305,7 +305,7 @@ public:
 	inline void draw_quad_from_texture_atlas(
 		const glm::vec2& position,
 		const glm::vec2& size,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
         const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
@@ -320,7 +320,7 @@ public:
 	inline void draw_quad_from_texture_atlas(
 		const glm::vec3& position,
 		const glm::vec2& size,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
         const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
@@ -344,7 +344,7 @@ public:
 	// draw quad from texture atlas
 	void draw_quad_from_texture_atlas(
 		const glm::mat4& transform,
-		const ref<Texture2D>& texture,
+		const arc<Texture2D>& texture,
         const std::array<glm::vec2, 4>& texture_atlas_offsets,
 		float tiling_factor = 1.0f,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f }
@@ -353,7 +353,7 @@ public:
     void draw_quad_from_texture_atlas_no_mat(
         const glm::vec4& position,
         const glm::vec2& size,
-        const ref<Texture2D>& texture,
+        const arc<Texture2D>& texture,
         const std::array<glm::vec2, 4>& texture_atlas_offsets,
         float tiling_factor = 1.0f,
         const glm::vec4& tint_color = glm::vec4{ 1.0f }
@@ -439,7 +439,7 @@ public:
 		const std::string& text,
 		const glm::vec2& position,
         const glm::vec2& p_size,
-		const ref<render::font>& font_asset,
+		const arc<render::font>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f },
         f32 p_max_width = 0.f,
         f32 p_line_height_offset = 0.f,
@@ -450,7 +450,7 @@ public:
 		const std::string& text,
 		const glm::vec3& position,
 		const glm::vec2& size,
-		const ref<render::font>& font_asset,
+		const arc<render::font>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f },
         f32 p_max_width = 0.f,
         f32 p_line_height_offset = 0.f,
@@ -460,8 +460,8 @@ public:
     // -----------------------------------------------------------------------------------------------------------------
 
     // add a texture which can be rendered during the current scene
-    // returns texture index (float) of slot occupied
-    [[nodiscard]] inline auto submit_texture(const ref<Texture2D>& p_texture) noexcept -> render::renderer_2d_texture_id
+    // returns texture index of slot occupied
+    [[nodiscard]] inline auto submit_texture(const arc<Texture2D>& p_texture) noexcept -> render::renderer_2d_texture_id
     {
         //KB_PROFILE_SCOPE;
 
@@ -509,7 +509,7 @@ private:
 
 private:
     renderer_2d_data_t m_renderer_data{};
-    ref<asset::AssetManager> m_asset_manager{};
+    arc<asset::AssetManager> m_asset_manager{};
     bool m_explicit_render_pass_clear = false;
 };
 

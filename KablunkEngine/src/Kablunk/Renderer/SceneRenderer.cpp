@@ -19,7 +19,7 @@ namespace kb
 {
 static std::vector<std::thread> s_thread_pool;
 
-SceneRenderer::SceneRenderer(const ref<Scene>& context, const SceneRendererSpecification& spec)
+SceneRenderer::SceneRenderer(const arc<Scene>& context, const SceneRendererSpecification& spec)
 	: m_context{ context }, m_specification{ spec }
 {
 	init();
@@ -59,7 +59,7 @@ void SceneRenderer::init()
         //geometry_frame_buffer_spec.m_transfer = true;
         geometry_frame_buffer_spec.m_clear_color_on_load = true;
         geometry_frame_buffer_spec.m_clear_depth_on_load = true;
-        ref<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
+        arc<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
 
         render::PipelineSpecification pipeline_spec{
             .shader = render::get_shader("Kablunk_diffuse_static"),
@@ -111,7 +111,7 @@ void SceneRenderer::init()
 
         auto composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer_spec);
 
-		ref<Shader> composite_shader = render::get_shader("scene_composite");
+		arc<Shader> composite_shader = render::get_shader("scene_composite");
 		m_composite_material = Material::Create(composite_shader);
 
         render::PipelineSpecification pipeline_spec{
@@ -174,7 +174,7 @@ void SceneRenderer::init()
 		external_composite_framebuffer_spec.m_existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetImage();
 		external_composite_framebuffer_spec.m_existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetDepthImage();
 
-		ref<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
+		arc<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
 
 		render_pass_specification render_pass_spec;
 		render_pass_spec.target_frame_buffer = framebuffer;
@@ -187,14 +187,14 @@ void SceneRenderer::init()
 	m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
-    ref<SceneRenderer> instance{ this };
+    arc<SceneRenderer> instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->m_resources_created = true;
 		});
 }
 
-void SceneRenderer::set_scene(ref<Scene> context)
+void SceneRenderer::set_scene(arc<Scene> context)
 {
 	//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 	m_context = context;
@@ -248,7 +248,7 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 		camera_position
 	};
 
-    ref<SceneRenderer> instance{ this };
+    arc<SceneRenderer> instance{ this };
 	render::submit([instance, camera_data]() mutable
 		{
 			instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
@@ -290,7 +290,7 @@ void SceneRenderer::end_scene()
 
 	if (m_use_threads)
 	{
-        ref<SceneRenderer> instance{ this };
+        arc<SceneRenderer> instance{ this };
 		s_thread_pool.emplace_back(([instance]() mutable
 			{
 				instance->flush_draw_list();
@@ -307,7 +307,7 @@ void SceneRenderer::end_scene()
 	m_active = false;
 }
 
-void SceneRenderer::submit_mesh(ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, ref<Material> override_material/* = nullptr */)
+void SceneRenderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<Material> override_material/* = nullptr */)
 {
     KB_PROFILE_SCOPE;
 
@@ -335,23 +335,23 @@ void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	}
 }
 
-ref<render::render_pass> SceneRenderer::get_final_render_pass()
+arc<render::render_pass> SceneRenderer::get_final_render_pass()
 {
 	return m_composite_pass;
 }
 
-ref<Image2D> SceneRenderer::get_final_render_pass_image()
+arc<Image2D> SceneRenderer::get_final_render_pass_image()
 {
     KB_PROFILE_SCOPE;
 
 	if (!m_resources_created)
-		return ref<Image2D>{};
+		return arc<Image2D>{};
 
 	auto image = m_composite_pass->get_output_image(0);
 	return image;
 }
 
-void SceneRenderer::on_imgui_render(const ref<Renderer2D>& p_renderer_2d)
+void SceneRenderer::on_imgui_render(const arc<Renderer2D>& p_renderer_2d)
 {
     KB_PROFILE_SCOPE;
 
@@ -458,7 +458,7 @@ void SceneRenderer::clear_pass()
 	render::end_render_pass(m_command_buffer);
 }
 
-void SceneRenderer::clear_pass(ref<render::render_pass> render_pass, bool explicit_clear /*= false*/)
+void SceneRenderer::clear_pass(arc<render::render_pass> render_pass, bool explicit_clear /*= false*/)
 {
 	KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->get_specification().m_debug_name);
 	render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);

@@ -17,7 +17,7 @@ public:
     ~font() noexcept override = default;
 
     // get a mutable reference to the underlying texture atlas
-    auto get_font_atlas() const noexcept -> ref<Texture2D> { return m_texture_atlas; }
+    auto get_font_atlas() const noexcept -> arc<Texture2D> { return m_texture_atlas; }
     // get an immutable pointer to the glyph metrics
     auto get_msdf_metrics() const noexcept -> const msdf_metrics* { KB_CORE_ASSERT(m_msdf_metrics, "[font]: msdf metrics is null?"); return m_msdf_metrics.get(); }
 
@@ -31,7 +31,7 @@ private:
     // debug name
     std::string m_name{};
     // underlying texture
-    ref<Texture2D> m_texture_atlas{};
+    arc<Texture2D> m_texture_atlas{};
     // glyph metrics
     std::unique_ptr<msdf_metrics> m_msdf_metrics{};
 };

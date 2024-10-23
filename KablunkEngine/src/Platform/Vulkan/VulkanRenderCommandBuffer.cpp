@@ -124,7 +124,7 @@ namespace kb
 	{
 		m_timestamp_next_available_query = 2;
 
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance]() mutable
 			{
                 const uint32_t frame_index = render::rt_get_current_frame_index();
@@ -160,7 +160,7 @@ namespace kb
 
 	void VulkanRenderCommandBuffer::End()
 	{
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance]() mutable
 			{
                 const uint32_t frame_index = render::rt_get_current_frame_index();
@@ -182,7 +182,7 @@ namespace kb
 		if (m_owned_by_swapchain)
 			return;
 
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance]() mutable
 			{
 				auto device = VulkanContext::Get()->GetDevice();
@@ -233,7 +233,7 @@ namespace kb
 	{
 		uint64_t query_index = m_timestamp_next_available_query;
 		m_timestamp_next_available_query += 2;
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();
@@ -247,7 +247,7 @@ namespace kb
 
 	void VulkanRenderCommandBuffer::EndTimestampQuery(uint64_t query_index)
 	{
-        ref instance{ this };
+        arc instance{ this };
 		render::submit([instance, query_index]()
 			{
 				uint32_t frame_index = render::rt_get_current_frame_index();

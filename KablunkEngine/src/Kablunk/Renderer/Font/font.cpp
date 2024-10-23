@@ -117,7 +117,7 @@ static auto create_and_cache_atlas(
     const std::vector<msdf_atlas::GlyphGeometry>& p_glyphs,
     const msdf_atlas::FontGeometry& p_font_geometry,
     const font_config& p_font_config
-) noexcept -> ref<Texture2D>
+) noexcept -> arc<Texture2D>
 {
     msdf_atlas::ImmediateAtlasGenerator<S, N, GenFuncT, msdf_atlas::BitmapAtlasStorage<T, N>> generator{ p_font_config.m_width, p_font_config.m_height };
     generator.setAttributes(p_font_config.m_generator_attributes);
@@ -138,7 +138,7 @@ static auto create_and_cache_atlas(
 static auto create_atlas(
     const atlas_header p_atlas_header,
     const void* p_pixel_data
-) noexcept -> ref<Texture2D>
+) noexcept -> arc<Texture2D>
 {
     return Texture2D::Create(ImageFormat::RGBA32F, p_atlas_header.m_width, p_atlas_header.m_height, p_pixel_data);
 }
@@ -324,7 +324,7 @@ auto font::generate_atlas(owning_buffer&& p_font_data_buffer) noexcept -> void
     else
     {
         constexpr bool use_floating_point = true;
-        ref<Texture2D> texture_atlas{};
+        arc<Texture2D> texture_atlas{};
         switch (config.m_image_type)
         {
         case msdf_atlas::ImageType::MSDF:

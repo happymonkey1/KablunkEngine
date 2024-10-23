@@ -6,9 +6,9 @@
 
 namespace kb
 {
-	ref<VertexArray> VertexArray::Create()
+	arc<VertexArray> VertexArray::Create()
 	{
         KB_CORE_ASSERT(false, "Deprecated");
-        return ref<VertexArray>{};
+        return arc<VertexArray>{};
 	}
 }

@@ -10,7 +10,7 @@ namespace kb
 	class ProjectPropertiesPanel
 	{
 	public:
-		ProjectPropertiesPanel(const ref<Project>& project);
+		ProjectPropertiesPanel(const arc<Project>& project);
 		~ProjectPropertiesPanel() = default;
 
 		void OnImGuiRender(bool& show);
@@ -19,7 +19,7 @@ namespace kb
 		void UI_GeneralSettings();
 
 	private:
-		ref<Project> m_project;
+		arc<Project> m_project;
 		std::string m_default_scene;
 	};
 

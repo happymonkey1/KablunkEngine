@@ -9,17 +9,17 @@
 namespace kb::render
 { // start namespace kb::render
 
-ref<render_pass> render_pass::create(const render_pass_specification& specification) noexcept
+arc<render_pass> render_pass::create(const render_pass_specification& specification) noexcept
 {
     constexpr auto backend = Renderer::get_render_backend_type();
     if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<ref<render_pass>>(ref<vulkan_render_pass>::Create(specification));
+        return static_cast<arc<render_pass>>(arc<vulkan_render_pass>::Create(specification));
     }
     else
     {
         KB_CORE_ASSERT(false, "Unhandled render_backend_type!");
-        return ref<render_pass>{};
+        return arc<render_pass>{};
     }
 }
 

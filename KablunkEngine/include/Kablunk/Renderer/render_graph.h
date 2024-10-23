@@ -16,7 +16,7 @@ public:
     render_graph(render_graph&&) noexcept = delete;
 
     auto add_render_pass(
-        const ref<render_pass>& p_render_pass
+        const arc<render_pass>& p_render_pass
     ) noexcept -> render_graph&;
 
     // build the render graph, filtering out nodes that do not contribute, then call render callbacks

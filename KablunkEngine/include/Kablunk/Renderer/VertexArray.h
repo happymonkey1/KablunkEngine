@@ -17,13 +17,13 @@ namespace kb
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void AddVertexBuffer(const ref<VertexBuffer>& vertexBuffer) = 0;
-		virtual void SetIndexBuffer(const ref<IndexBuffer>& indexBuffer) = 0;
+		virtual void AddVertexBuffer(const arc<VertexBuffer>& vertexBuffer) = 0;
+		virtual void SetIndexBuffer(const arc<IndexBuffer>& indexBuffer) = 0;
 
-		virtual const std::vector<ref<VertexBuffer>>& GetVertexBuffers() const = 0;
-		virtual const ref<IndexBuffer>& GetIndexBuffer() const = 0;
+		virtual const std::vector<arc<VertexBuffer>>& GetVertexBuffers() const = 0;
+		virtual const arc<IndexBuffer>& GetIndexBuffer() const = 0;
 
-		[[deprecated]] static ref<VertexArray> Create();
+		[[deprecated]] static arc<VertexArray> Create();
 	};
 }
 

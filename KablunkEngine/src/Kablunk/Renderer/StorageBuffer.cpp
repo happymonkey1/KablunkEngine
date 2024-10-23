@@ -10,17 +10,17 @@
 
 namespace kb
 { // start namespace kb
-ref<StorageBuffer> StorageBuffer::Create(size_t size, uint32_t binding)
+arc<StorageBuffer> StorageBuffer::Create(size_t size, uint32_t binding)
 {
     constexpr auto backend = render::Renderer::get_render_backend_type();
     if constexpr (backend == render::render_backend_type_t::vulkan)
     {
-        return static_cast<ref<StorageBuffer>>(ref<VulkanStorageBuffer>::Create(size, binding));
+        return static_cast<arc<StorageBuffer>>(arc<VulkanStorageBuffer>::Create(size, binding));
     }
     else
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");
-        return ref<StorageBuffer>{};
+        return arc<StorageBuffer>{};
     }
 }
 } // end namespace kb

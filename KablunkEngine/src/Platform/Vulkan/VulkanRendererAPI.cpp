@@ -35,8 +35,8 @@ namespace kb
 
 struct VulkanRendererData
 {
-	ref<VertexBuffer> quad_vertex_buffer;
-	ref<IndexBuffer> quad_index_buffer;
+	arc<VertexBuffer> quad_vertex_buffer;
+	arc<IndexBuffer> quad_index_buffer;
 
 	std::vector<VkDescriptorPool> descriptor_pools;
 	std::vector<uint32_t> descriptor_pool_allocation_count;
@@ -203,12 +203,12 @@ void VulkanRendererAPI::Clear()
 
 }
 
-void VulkanRendererAPI::DrawIndexed(const ref<VertexArray>& vertexArray, uint32_t indexCount /*= 0*/)
+void VulkanRendererAPI::DrawIndexed(const arc<VertexArray>& vertexArray, uint32_t indexCount /*= 0*/)
 {
 
 }
 
-void VulkanRendererAPI::ClearImage(ref<RenderCommandBuffer> command_buffer, ref<Image2D> image)
+void VulkanRendererAPI::ClearImage(arc<RenderCommandBuffer> command_buffer, arc<Image2D> image)
 {
     KB_PROFILE_SCOPE;
 	render::submit([command_buffer, image = image.As<VulkanImage2D>()]
@@ -227,7 +227,7 @@ void VulkanRendererAPI::ClearImage(ref<RenderCommandBuffer> command_buffer, ref<
 		});
 }
 
-void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
+void VulkanRendererAPI::RenderMesh(arc<RenderCommandBuffer> render_command_buffer, arc<Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, arc<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count)
 {
     KB_PROFILE_SCOPE;
 
@@ -239,19 +239,19 @@ void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffe
 			VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			// retrieve mesh data vertex buffer and bind
-			ref<MeshData> mesh_data = mesh->GetMeshData();
-			ref<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+			arc<MeshData> mesh_data = mesh->GetMeshData();
+			arc<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
 			VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
 			VkDeviceSize vertex_offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
 			// retrieve mesh transform vertex buffer and bind
-			ref<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+			arc<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 			VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
 			VkDeviceSize transform_offsets[1] = { transform_offset };
 			vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
-			ref<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+			arc<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
 			VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -259,12 +259,12 @@ void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffe
 			const Submesh& submesh = mesh_asset_submeshes[submesh_index];
 			const auto& mesh_material_table = mesh->GetMaterials();
 			uint32_t material_count = mesh_material_table->GetMaterialCount();
-			ref<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? 
+			arc<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? 
 				material_table->GetMaterial(submesh.Material_index) : mesh_material_table->GetMaterial(submesh.Material_index);
-			ref<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
+			arc<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
 			RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 			VkPipeline pipeline = vulkan_pipeline->get_vk_pipeline();
 			VkPipelineLayout pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
 			vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -306,14 +306,14 @@ void VulkanRendererAPI::RenderMesh(ref<RenderCommandBuffer> render_command_buffe
 }
 
 void VulkanRendererAPI::RenderMeshWithMaterial(
-    ref<RenderCommandBuffer> render_command_buffer,
-    ref<Pipeline> pipeline,
-    ref<UniformBufferSet> uniform_buffer_set,
-    ref<StorageBufferSet> storage_buffer_set,
-    ref<Mesh> mesh,
+    arc<RenderCommandBuffer> render_command_buffer,
+    arc<Pipeline> pipeline,
+    arc<UniformBufferSet> uniform_buffer_set,
+    arc<StorageBufferSet> storage_buffer_set,
+    arc<Mesh> mesh,
     uint32_t submesh_index,
-    ref<Material> material,
-    ref<VertexBuffer> transform_buffer,
+    arc<Material> material,
+    arc<VertexBuffer> transform_buffer,
     uint32_t transform_offset,
     uint32_t instance_count,
     owning_buffer additional_uniforms
@@ -332,7 +332,7 @@ void VulkanRendererAPI::RenderMeshWithMaterial(
 		push_constant_buffer.Write(additional_uniforms.get(), additional_uniforms.size());
 	}
 
-	ref<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+	arc<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 	render::submit([render_command_buffer,
         pipeline,
         uniform_buffer_set,
@@ -351,24 +351,24 @@ void VulkanRendererAPI::RenderMeshWithMaterial(
 			const uint32_t frame_index = render::rt_get_current_frame_index();
 			const VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-			ref<MeshData> mesh_data = mesh->GetMeshData();
-			ref<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+			arc<MeshData> mesh_data = mesh->GetMeshData();
+			arc<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
 			const VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
 			const VkDeviceSize vertex_offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
-			ref<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+			arc<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 			const VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
 			const VkDeviceSize transform_offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
-			ref<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+			arc<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
 			const VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
 			//RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 			const VkPipeline vk_pipeline = vulkan_pipeline->get_vk_pipeline();
             const VkPipelineLayout pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
 			vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
@@ -408,14 +408,14 @@ void VulkanRendererAPI::RenderMeshWithMaterial(
 }
 
 void VulkanRendererAPI::render_instanced_submesh(
-	ref<RenderCommandBuffer> render_command_buffer,
-	ref<Pipeline> pipeline,
-	ref<UniformBufferSet> uniform_buffer_set,
-	ref<StorageBufferSet> storage_buffer_set,
-	ref<Mesh> mesh,
+	arc<RenderCommandBuffer> render_command_buffer,
+	arc<Pipeline> pipeline,
+	arc<UniformBufferSet> uniform_buffer_set,
+	arc<StorageBufferSet> storage_buffer_set,
+	arc<Mesh> mesh,
 	uint32_t submesh_index,
-	ref<MaterialTable> material_table,
-	ref<VertexBuffer> transform_buffer,
+	arc<MaterialTable> material_table,
+	arc<VertexBuffer> transform_buffer,
 	uint32_t transform_offset,
 	uint32_t instance_count
 )
@@ -430,19 +430,19 @@ void VulkanRendererAPI::render_instanced_submesh(
 			VkCommandBuffer vk_command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			// retrieve mesh data vertex buffer and bind
-			ref<MeshData> mesh_data = mesh->GetMeshData();
-			ref<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
+			arc<MeshData> mesh_data = mesh->GetMeshData();
+			arc<VulkanVertexBuffer> vertex_buffer = mesh_data->GetVertexBuffer().As<VulkanVertexBuffer>();
 			VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
 			VkDeviceSize vertex_offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
 			// retrieve mesh transform vertex buffer and bind
-			ref<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
+			arc<VulkanVertexBuffer> vulkan_transform_buffer = transform_buffer.As<VulkanVertexBuffer>();
 			VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
 			VkDeviceSize transform_offsets[1] = { transform_offset };
 			vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
-			ref<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
+			arc<VulkanIndexBuffer> index_buffer = mesh_data->GetIndexBuffer().As<VulkanIndexBuffer>();
 			VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -450,11 +450,11 @@ void VulkanRendererAPI::render_instanced_submesh(
 			const Submesh& submesh = mesh_asset_submeshes[submesh_index];
 			const auto& mesh_material_table = mesh->GetMaterials();
 			uint32_t material_count = mesh_material_table->GetMaterialCount();
-			ref<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? material_table->GetMaterial(submesh.Material_index) : mesh_material_table->GetMaterial(submesh.Material_index);
-			ref<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
+			arc<MaterialAsset> material = material_table->HasMaterial(submesh.Material_index) ? material_table->GetMaterial(submesh.Material_index) : mesh_material_table->GetMaterial(submesh.Material_index);
+			arc<VulkanMaterial> vulkan_material = material->GetMaterial().As<VulkanMaterial>();
 			RT_UpdateMaterialForRendering(vulkan_material, uniform_buffer_set, storage_buffer_set);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 			VkPipeline pipeline = vulkan_pipeline->get_vk_pipeline();
 			VkPipelineLayout pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
 			vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -490,11 +490,11 @@ void VulkanRendererAPI::render_instanced_submesh(
 	);
 }
 
-void VulkanRendererAPI::SubmitFullscreenQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material)
+void VulkanRendererAPI::SubmitFullscreenQuad(arc<RenderCommandBuffer> render_command_buffer, arc<Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Material> material)
 {
     KB_PROFILE_SCOPE;
 
-	ref<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+	arc<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 	render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material]() mutable
 		{
             KB_PROFILE_SCOPE;
@@ -502,7 +502,7 @@ void VulkanRendererAPI::SubmitFullscreenQuad(ref<RenderCommandBuffer> render_com
 			const u32 frame_index = render::rt_get_current_frame_index();
             const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
@@ -543,11 +543,11 @@ void VulkanRendererAPI::SubmitFullscreenQuad(ref<RenderCommandBuffer> render_com
 
 }
 
-void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform)
+void VulkanRendererAPI::RenderQuad(arc<RenderCommandBuffer> render_command_buffer, arc<Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Material> material, const glm::mat4& transform)
 {
     KB_PROFILE_SCOPE;
 
-	ref<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+	arc<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 	render::submit([render_command_buffer, pipeline, uniform_buffer_set, storage_buffer_set, vulkan_material, transform]() mutable
 		{
             KB_PROFILE_SCOPE;
@@ -555,18 +555,18 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
             const u32 frame_index = render::rt_get_current_frame_index();
             const VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
             const VkPipelineLayout vk_pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
 
-			ref<VulkanVertexBuffer> vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
+			arc<VulkanVertexBuffer> vulkan_vertex_buffer = s_renderer_data->quad_vertex_buffer.As<VulkanVertexBuffer>();
             const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
 			// WTF is this for?
             constexpr VkDeviceSize offsets[1] = { 0 };
 
 			vkCmdBindVertexBuffers(vk_cmd_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
-			ref<VulkanIndexBuffer> vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
+			arc<VulkanIndexBuffer> vulkan_index_buffer = s_renderer_data->quad_index_buffer.As<VulkanIndexBuffer>();
             const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
 			vkCmdBindIndexBuffer(vk_cmd_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -595,19 +595,19 @@ void VulkanRendererAPI::RenderQuad(ref<RenderCommandBuffer> render_command_buffe
 }
 
 void VulkanRendererAPI::RenderGeometry(
-    ref<RenderCommandBuffer> render_command_buffer,
-    ref<Pipeline> pipeline,
-    ref<UniformBufferSet> uniform_buffer_set,
-    ref<StorageBufferSet> storage_buffer_set,
-    ref<Material> material,
-    ref<VertexBuffer> vertex_buffer,
-    ref<IndexBuffer> index_buffer,
+    arc<RenderCommandBuffer> render_command_buffer,
+    arc<Pipeline> pipeline,
+    arc<UniformBufferSet> uniform_buffer_set,
+    arc<StorageBufferSet> storage_buffer_set,
+    arc<Material> material,
+    arc<VertexBuffer> vertex_buffer,
+    arc<IndexBuffer> index_buffer,
     const glm::mat4& transform,
     uint32_t index_count /*= 0*/)
 {
     KB_PROFILE_SCOPE;
 
-	ref<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
+	arc<VulkanMaterial> vulkan_material = material.As<VulkanMaterial>();
 	if (index_count == 0)
 		index_count = index_buffer->GetCount();
 
@@ -618,7 +618,7 @@ void VulkanRendererAPI::RenderGeometry(
             const u32 frame_index = render::rt_get_current_frame_index();
             const VkCommandBuffer command_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
-			ref<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
+			arc<VulkanPipeline> vulkan_pipeline = pipeline.As<VulkanPipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
@@ -651,7 +651,7 @@ void VulkanRendererAPI::RenderGeometry(
 		});
 }
 
-void VulkanRendererAPI::SetLineWidth(ref<RenderCommandBuffer> render_command_buffer, float line_width)
+void VulkanRendererAPI::SetLineWidth(arc<RenderCommandBuffer> render_command_buffer, float line_width)
 {
 	render::submit([width = line_width, render_cmd_buffer = render_command_buffer]()
 	{
@@ -667,7 +667,7 @@ void VulkanRendererAPI::WaitAndRender()
 	render::get_render_command_queue().execute();
 }
 
-const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateUniformBufferWriteDescriptors(ref<UniformBufferSet> uniform_buffer_set, ref<VulkanMaterial> material)
+const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateUniformBufferWriteDescriptors(arc<UniformBufferSet> uniform_buffer_set, arc<VulkanMaterial> material)
 {
     KB_PROFILE_SCOPE;
 
@@ -683,7 +683,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 	}
 
 	const u32 frames_in_flight = render::get_frames_in_flight();
-	ref<VulkanShader> shader = material->GetShader().As<VulkanShader>();
+	arc<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 	if (shader->HasDescriptorSet(0))
 	{
 		const auto& shader_descriptor_sets = shader->GetShaderDescriptorSets();
@@ -696,7 +696,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 				for (u32 frame = 0; frame < frames_in_flight; ++frame)
 				{
 					// set = 0 for now
-					ref uniform_buffer = uniform_buffer_set->Get(binding, 0, frame).As<vulkan_uniform_buffer>();
+					arc uniform_buffer = uniform_buffer_set->Get(binding, 0, frame).As<vulkan_uniform_buffer>();
 
 					VkWriteDescriptorSet write_descriptor_set = {};
 					write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -713,7 +713,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 	return s_renderer_data->uniform_buffer_write_descriptor_cache[uniform_buffer_set.get()][shader_hash];
 }
 
-const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateStorageBufferWriteDescriptors(ref<StorageBufferSet> storage_buffer_set, ref<VulkanMaterial> material)
+const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_RetrieveOrCreateStorageBufferWriteDescriptors(arc<StorageBufferSet> storage_buffer_set, arc<VulkanMaterial> material)
 {
     KB_PROFILE_SCOPE;
 
@@ -729,7 +729,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 	}
 
 	const u32 frames_in_flight = render::get_frames_in_flight();
-	ref<VulkanShader> shader = material->GetShader().As<VulkanShader>();
+	arc<VulkanShader> shader = material->GetShader().As<VulkanShader>();
 	if (shader->HasDescriptorSet(0))
 	{
 		const auto& shader_descriptor_set = shader->GetShaderDescriptorSets();
@@ -741,7 +741,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 				write_descriptor.resize(frames_in_flight);
 				for (u32 frame = 0; frame < frames_in_flight; ++frame)
 				{
-					ref storage_buffer = storage_buffer_set->Get(binding, 0, frame).As<VulkanStorageBuffer>(); // set = 0 for now
+					arc storage_buffer = storage_buffer_set->Get(binding, 0, frame).As<VulkanStorageBuffer>(); // set = 0 for now
 
 					VkWriteDescriptorSet write_descriptor_set = {};
 					write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -758,7 +758,7 @@ const std::vector<std::vector<VkWriteDescriptorSet>>& VulkanRendererAPI::RT_Retr
 	return s_renderer_data->storage_buffer_write_descriptor_cache[storage_buffer_set.get()][shader_hash];
 }
 
-void VulkanRendererAPI::RT_UpdateMaterialForRendering(ref<VulkanMaterial> vulkan_material, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set)
+void VulkanRendererAPI::RT_UpdateMaterialForRendering(arc<VulkanMaterial> vulkan_material, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set)
 {
     KB_PROFILE_SCOPE;
 
@@ -812,7 +812,7 @@ auto VulkanRendererAPI::rt_allocate_material_descriptor_set(
     return vk_descriptor_set;
 }
 
-void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_buffer, const ref<RenderPass>& render_pass, bool explicit_clear)
+void VulkanRendererAPI::BeginRenderPass(arc<RenderCommandBuffer> render_command_buffer, const arc<RenderPass>& render_pass, bool explicit_clear)
 {
     KB_PROFILE_SCOPE;
 
@@ -824,7 +824,7 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
             const VkCommandBuffer cmd_buffer = render_command_buffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frame_index);
 
 			const auto& framebuffer = render_pass->GetSpecification().target_frame_buffer;
-			ref<VulkanFramebuffer> vulkan_framebuffer = framebuffer.As<VulkanFramebuffer>();
+			arc<VulkanFramebuffer> vulkan_framebuffer = framebuffer.As<VulkanFramebuffer>();
 			const auto& framebuffer_spec = vulkan_framebuffer->GetSpecification();
 
             u32 width = framebuffer_spec.width;
@@ -939,7 +939,7 @@ void VulkanRendererAPI::BeginRenderPass(ref<RenderCommandBuffer> render_command_
 		});
 }
 
-void VulkanRendererAPI::EndRenderPass(ref<RenderCommandBuffer> render_command_buffer)
+void VulkanRendererAPI::EndRenderPass(arc<RenderCommandBuffer> render_command_buffer)
 {
     KB_PROFILE_SCOPE;
 

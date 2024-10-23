@@ -31,7 +31,7 @@ VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t he
 	//	spec.usage = ImageUsage::Storage;
 	m_image = Image2D::Create(spec);
 
-    ref<VulkanTexture2D> instance{ this };
+    arc<VulkanTexture2D> instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->Invalidate();
@@ -59,7 +59,7 @@ VulkanTexture2D::VulkanTexture2D(const std::string& path)
 	m_image = Image2D::Create(spec);
 
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->Invalidate();
@@ -79,7 +79,7 @@ void VulkanTexture2D::Resize(uint32_t width, uint32_t height)
 	m_width = width;
 	m_height = height;
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->Invalidate();
@@ -95,7 +95,7 @@ void VulkanTexture2D::SetData(void* data, uint32_t size)
 {
     m_image_data = owning_buffer::Copy(data, size);
 
-    ref instance{ this };
+    arc instance{ this };
     render::submit([instance]() mutable
         {
             instance->Invalidate();
@@ -128,7 +128,7 @@ void VulkanTexture2D::Invalidate()
 	if (!m_image_data)
 		image_spec.usage = ImageUsage::Storage;
 
-	ref<VulkanImage2D> image = m_image.As<VulkanImage2D>();
+	arc<VulkanImage2D> image = m_image.As<VulkanImage2D>();
 	image->RT_Invalidate();
 
 	auto& info = image->get_vk_image_info();

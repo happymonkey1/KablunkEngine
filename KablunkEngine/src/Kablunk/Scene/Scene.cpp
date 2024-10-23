@@ -68,9 +68,9 @@ namespace kb
 			delete m_primary_camera_entity;
 	}
 
-	ref<Scene> Scene::Create()
+	arc<Scene> Scene::Create()
 	{
-		return ref<Scene>::Create(DEFAULT_SCENE_NAME);
+		return arc<Scene>::Create(DEFAULT_SCENE_NAME);
 	}
 
 	b2BodyType KablunkRigidBody2DToBox2DType(RigidBody2DComponent::RigidBodyType type)
@@ -112,9 +112,9 @@ namespace kb
 			return false;
 	}
 
-	ref<Scene> Scene::Copy(ref<Scene> src_scene)
+	arc<Scene> Scene::Copy(arc<Scene> src_scene)
 	{
-		ref<Scene> dest_scene = ref<Scene>::Create();
+		arc<Scene> dest_scene = arc<Scene>::Create();
 		KB_CORE_INFO("copying source scene '{0}' into '{1}'", src_scene->m_scene_id, dest_scene->m_scene_id);
 		dest_scene->m_name = src_scene->m_name;
 
@@ -504,7 +504,7 @@ namespace kb
 		}
 	}
 
-	void Scene::OnRenderRuntime(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
+	void Scene::OnRenderRuntime(arc<SceneRenderer> scene_renderer, arc<Renderer2D> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
 	{
 		Camera*		main_camera{ nullptr };
 		glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
@@ -661,8 +661,8 @@ namespace kb
                     auto& text_comp = text_entity.GetComponent<TextComponent>();
 
                     KB_CORE_ASSERT(false, "need to re-implement!");
-                    ref<render::font_asset_t> font_asset{};
-                    //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+                    arc<render::font_asset_t> font_asset{};
+                    //arc<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                     /*if (font_asset)
                     {
@@ -737,7 +737,7 @@ namespace kb
 	{
 	}
 
-	void Scene::OnRenderEditor(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera)
+	void Scene::OnRenderEditor(arc<SceneRenderer> scene_renderer, arc<Renderer2D> p_renderer_2d, EditorCamera& camera)
 	{
 		// Lights
 		// #TODO move to scene renderer?
@@ -838,8 +838,8 @@ namespace kb
                 auto& text_comp = text_entity.GetComponent<TextComponent>();
 
                 KB_CORE_ASSERT(false, "need to re-implement");
-                ref<render::font_asset_t> font_asset{};
-                //ref<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
+                arc<render::font_asset_t> font_asset{};
+                //arc<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 /*if (font_asset)
                 {

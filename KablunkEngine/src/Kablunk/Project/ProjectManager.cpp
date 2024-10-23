@@ -15,13 +15,13 @@ void ProjectManager::shutdown()
 	if (m_active_project)
     {
 		Singleton<asset::AssetManager>::get().shutdown();
-        Application::Get().get_renderer_2d()->set_asset_manager(ref<asset::AssetManager>{});
+        Application::Get().get_renderer_2d()->set_asset_manager(arc<asset::AssetManager>{});
     }
 
 	m_active_project = nullptr;
 }
 
-void ProjectManager::set_active(const ref<Project>& project)
+void ProjectManager::set_active(const arc<Project>& project)
 {
 	if (m_active_project)
 	{
@@ -32,7 +32,7 @@ void ProjectManager::set_active(const ref<Project>& project)
 	if (m_active_project)
 	{
 		Singleton<asset::AssetManager>::get().init(m_active_project);
-        Application::Get().get_renderer_2d()->set_asset_manager(ref{ &Singleton<asset::AssetManager>::get() });
+        Application::Get().get_renderer_2d()->set_asset_manager(arc{ &Singleton<asset::AssetManager>::get() });
 	}
 }
 }

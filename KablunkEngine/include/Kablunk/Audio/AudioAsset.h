@@ -23,7 +23,7 @@ namespace kb::audio
 		~AudioAsset() = default;
 
 		// factory to create audio assets using a passed in config
-		static ref<AudioAsset> create(const audio_asset_config& config);
+		static arc<AudioAsset> create(const audio_asset_config& config);
 		// get whether the sound was loaded
 		bool loaded() const { return m_loaded; }
 		// start playing the sound

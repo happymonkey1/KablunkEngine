@@ -165,7 +165,7 @@ auto virtual_texture_registry::load(
 
 auto virtual_texture_registry::get_texture_2d_by_raw_handle(
     const raw_texture_handle p_handle
-) const noexcept -> const ref<Texture2D>&
+) const noexcept -> const arc<Texture2D>&
 {
     return m_raw_textures.contains(p_handle) ?
         m_raw_textures.at(p_handle) :
@@ -174,7 +174,7 @@ auto virtual_texture_registry::get_texture_2d_by_raw_handle(
 
 auto virtual_texture_registry::get_texture_2d_by_virtual_handle(
     const virtual_texture_handle p_handle
-) const noexcept -> const ref<Texture2D>&
+) const noexcept -> const arc<Texture2D>&
 {
     return m_virtual_to_raw_handle_map.contains(p_handle) ?
         get_texture_2d_by_raw_handle(m_virtual_to_raw_handle_map.at(p_handle)) :

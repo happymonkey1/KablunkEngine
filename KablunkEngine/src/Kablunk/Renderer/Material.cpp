@@ -8,30 +8,30 @@
 
 namespace kb
 { // start namespace kb
-ref<Material> Material::Create(const ref<Shader>& shader, const std::string& name /* = "" */)
+arc<Material> Material::Create(const arc<Shader>& shader, const std::string& name /* = "" */)
 {
     constexpr auto backend = render::Renderer::get_render_backend_type();
     switch (backend)
     {
     case render::render_backend_type_t::vulkan:
-        return static_cast<ref<Material>>(ref<VulkanMaterial>::Create(shader, name));
+        return static_cast<arc<Material>>(arc<VulkanMaterial>::Create(shader, name));
     default:
     {
-        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return ref<Material>{};
+        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<Material>{};
     }
     }
 }
 
-ref<Material> Material::Copy(const ref<Material>& material, const std::string& name /* = "" */)
+arc<Material> Material::Copy(const arc<Material>& material, const std::string& name /* = "" */)
 {
     constexpr auto backend = render::Renderer::get_render_backend_type();
     switch (backend)
     {
     case render::render_backend_type_t::vulkan:
-        return static_cast<ref<Material>>(ref<VulkanMaterial>::Create(material, name));
+        return static_cast<arc<Material>>(arc<VulkanMaterial>::Create(material, name));
     default:
     {
-        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return ref<Material>{};
+        KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<Material>{};
     }
     }
 }

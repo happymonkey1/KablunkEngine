@@ -30,7 +30,7 @@ inline auto calculate_text_bounds(
     const std::string& p_text,
     const glm::vec2& p_pos,
     const f32 p_font_point,
-    const ref<font>& p_font_asset,
+    const arc<font>& p_font_asset,
     const f32 p_max_width = 0.f,
     const f32 p_line_height_offset = 0.f,
     const f32 p_kerning_offset = 0.f,

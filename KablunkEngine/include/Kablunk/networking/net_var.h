@@ -26,7 +26,7 @@ public:
         const uuid_t& p_uuid,
         T p_data,
         std::string p_name,
-        const ref<network_server>& p_network_server
+        const arc<network_server>& p_network_server
     )
         : m_uuid{ p_uuid }, m_data{ p_data }, m_name{ std::move(p_name) }, m_network_server{ p_network_server }
     {
@@ -42,7 +42,7 @@ private:
     uuid_t m_uuid{};
     T m_data{};
     std::string m_name{};
-    ref<network_server> m_network_server{};
+    arc<network_server> m_network_server{};
 };
 
 } // end namespace kb::network

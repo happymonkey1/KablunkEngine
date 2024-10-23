@@ -21,19 +21,19 @@ public:
 	const render_pass_specification& get_specification() const override { return m_specification; }
 
     // #TODO concept template like vulkan_descriptor_set_manager...
-    void set_input(std::string_view p_name, ref<uniform_buffer> p_uniform_buffer) noexcept override;
-    void set_input(std::string_view p_name, ref<UniformBufferSet> p_uniform_buffer_set) noexcept override;
-    void set_input(std::string_view p_name, ref<StorageBuffer> p_storage_buffer) noexcept override;
-    void set_input(std::string_view p_name, ref<StorageBufferSet> p_storage_buffer_set) noexcept override;
-    void set_input(std::string_view p_name, ref<Texture2D> p_texture_2d) noexcept override;
-    void set_input(std::string_view p_name, ref<Image2D> p_image_2d) noexcept override;
+    void set_input(std::string_view p_name, arc<uniform_buffer> p_uniform_buffer) noexcept override;
+    void set_input(std::string_view p_name, arc<UniformBufferSet> p_uniform_buffer_set) noexcept override;
+    void set_input(std::string_view p_name, arc<StorageBuffer> p_storage_buffer) noexcept override;
+    void set_input(std::string_view p_name, arc<StorageBufferSet> p_storage_buffer_set) noexcept override;
+    void set_input(std::string_view p_name, arc<Texture2D> p_texture_2d) noexcept override;
+    void set_input(std::string_view p_name, arc<Image2D> p_image_2d) noexcept override;
 
     // Returns either a valid color attachment, depth attachment, or null
-    ref<Image2D> get_output_image(u32 p_index) noexcept override;
-    ref<Image2D> get_depth_output() noexcept override;
+    arc<Image2D> get_output_image(u32 p_index) noexcept override;
+    arc<Image2D> get_depth_output() noexcept override;
     u32 get_first_set_index() const override;
-    ref<Pipeline> get_pipeline() const noexcept override;
-    ref<frame_buffer> get_target_frame_buffer() const noexcept override;
+    arc<Pipeline> get_pipeline() const noexcept override;
+    arc<frame_buffer> get_target_frame_buffer() const noexcept override;
 
     [[nodiscard]] bool validate() noexcept override;
     void bake() noexcept override;

@@ -9,13 +9,13 @@ namespace kb
 	class ProjectSerializer
 	{
 	public:
-		ProjectSerializer(const ref<Project>& project);
+		ProjectSerializer(const arc<Project>& project);
 
 		void Serialize(const std::string& filepath);
 		bool Deserialize(const std::string& filepath);
 
 	private:
-		ref<Project> m_project;
+		arc<Project> m_project;
 	};
 }
 

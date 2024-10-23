@@ -38,7 +38,7 @@ public:
     ~Texture2D() override = default;
 
 	virtual void Resize(uint32_t width, uint32_t height) = 0;
-	virtual ref<Image2D> GetImage() const = 0;
+	virtual arc<Image2D> GetImage() const = 0;
 
 	virtual ImageFormat GetFormat() const = 0;
 	virtual uint32_t GetWidth() const = 0;
@@ -53,8 +53,8 @@ public:
 	// static method to get the asset type of the class
 	static asset::AssetType get_static_type() { return asset::AssetType::Texture; }
 
-	static ref<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr);
-    static ref<Texture2D> Create(const std::string& path);
+	static arc<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr);
+    static arc<Texture2D> Create(const std::string& path);
 private:
 	virtual void Invalidate() = 0;
 };

@@ -79,87 +79,87 @@ enum class render_pass_input_type_t : u16
 struct render_pass_input
 {
     render_pass_resource_type_t m_type = render_pass_resource_type_t::none;
-    std::vector<ref<RefCounted>> m_input{};
+    std::vector<arc<RefCounted>> m_input{};
 
     render_pass_input() noexcept = default;
     ~render_pass_input() noexcept = default;
 
-    explicit render_pass_input(const ref<uniform_buffer>& p_uniform_buffer) noexcept
+    explicit render_pass_input(const arc<uniform_buffer>& p_uniform_buffer) noexcept
         : m_type{ render_pass_resource_type_t::uniform_buffer },
         m_input{ std::vector(1, p_uniform_buffer.As<RefCounted>()) }
     {
     }
 
-    explicit render_pass_input(const ref<UniformBufferSet>& p_uniform_buffer_set) noexcept
+    explicit render_pass_input(const arc<UniformBufferSet>& p_uniform_buffer_set) noexcept
         : m_type{ render_pass_resource_type_t::uniform_buffer_set },
         m_input{ std::vector(1, p_uniform_buffer_set.As<RefCounted>()) }
     {
     }
 
-    explicit render_pass_input(const ref<StorageBuffer>& p_storage_buffer) noexcept
+    explicit render_pass_input(const arc<StorageBuffer>& p_storage_buffer) noexcept
         : m_type{ render_pass_resource_type_t::storage_buffer },
         m_input{ std::vector(1, p_storage_buffer.As<RefCounted>()) }
     {
     }
 
-    explicit render_pass_input(const ref<StorageBufferSet>& p_storage_buffer_set) noexcept
+    explicit render_pass_input(const arc<StorageBufferSet>& p_storage_buffer_set) noexcept
         : m_type{ render_pass_resource_type_t::storage_buffer_set },
         m_input{ std::vector(1, p_storage_buffer_set.As<RefCounted>()) }
     {
     }
 
-    explicit render_pass_input(const ref<Texture2D>& p_texture) noexcept
+    explicit render_pass_input(const arc<Texture2D>& p_texture) noexcept
         : m_type{ render_pass_resource_type_t::texture_2d },
         m_input{ std::vector(1, p_texture.As<RefCounted>()) }
     {
     }
 
-    explicit render_pass_input(const ref<Image2D>& p_image) noexcept
+    explicit render_pass_input(const arc<Image2D>& p_image) noexcept
         : m_type{ render_pass_resource_type_t::image_2d },
         m_input{ std::vector(1, p_image.As<RefCounted>()) }
     {
     }
 
-    auto set(const ref<uniform_buffer>& p_uniform_buffer, u32 p_index = 0) noexcept -> void
+    auto set(const arc<uniform_buffer>& p_uniform_buffer, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::uniform_buffer;
-        m_input[p_index] = ref<RefCounted>{ p_uniform_buffer };
+        m_input[p_index] = arc<RefCounted>{ p_uniform_buffer };
     }
 
-    auto set(const ref<UniformBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
+    auto set(const arc<UniformBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::uniform_buffer_set;
-        m_input[p_index] = ref<RefCounted>{ p_storage_buffer_set };
+        m_input[p_index] = arc<RefCounted>{ p_storage_buffer_set };
     }
 
-    auto set(const ref<StorageBuffer>& p_storage_buffer, u32 p_index = 0) noexcept -> void
+    auto set(const arc<StorageBuffer>& p_storage_buffer, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::storage_buffer;
-        m_input[p_index] = ref<RefCounted>{ p_storage_buffer };
+        m_input[p_index] = arc<RefCounted>{ p_storage_buffer };
     }
 
-    auto set(const ref<StorageBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
+    auto set(const arc<StorageBufferSet>& p_storage_buffer_set, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::storage_buffer_set;
-        m_input[p_index] = ref<RefCounted>{ p_storage_buffer_set };
+        m_input[p_index] = arc<RefCounted>{ p_storage_buffer_set };
     }
 
-    auto set(const ref<Texture2D>& p_texture, u32 p_index = 0) noexcept -> void
+    auto set(const arc<Texture2D>& p_texture, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::texture_2d;
-        m_input[p_index] = ref<RefCounted>{ p_texture };
+        m_input[p_index] = arc<RefCounted>{ p_texture };
     }
 
-    auto set(const ref<Image2D>& p_image, u32 p_index = 0) noexcept -> void
+    auto set(const arc<Image2D>& p_image, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::image_2d;
-        m_input[p_index] = ref<RefCounted>{ p_image };
+        m_input[p_index] = arc<RefCounted>{ p_image };
     }
 
-    auto set(const ref<image_view>& p_image, u32 p_index = 0) noexcept -> void
+    auto set(const arc<image_view>& p_image, u32 p_index = 0) noexcept -> void
     {
         m_type = render_pass_resource_type_t::image_2d;
-        m_input[p_index] = ref<RefCounted>{ p_image };
+        m_input[p_index] = arc<RefCounted>{ p_image };
     }
 };
 
@@ -225,7 +225,7 @@ struct render_pass_input_declaration
 
 struct descriptor_set_manager_specification
 {
-    ref<VulkanShader> m_shader{};
+    arc<VulkanShader> m_shader{};
     std::string m_debug_name{};
 
     u32 m_start_set = 0;
@@ -282,7 +282,7 @@ public:
     template <concepts::RenderPassInputT T>
     auto set_input(
         std::string_view p_name,
-        const ref<T>& p_resource,
+        const arc<T>& p_resource,
         const u32 p_index = 0
     ) noexcept -> vulkan_descriptor_set_manager&
     {
@@ -290,7 +290,7 @@ public:
     }
 
     template <typename T>
-    ref<T> get_input(std::string_view p_name);
+    arc<T> get_input(std::string_view p_name);
 
     // check if descriptor set at (set, binding) is invalidated
     auto is_invalidated(u32 p_set, u32 p_binding) const noexcept -> bool;
@@ -330,7 +330,7 @@ private:
     template <typename T>
     auto set_input_impl(
         std::string_view p_name,
-        const ref<T>& p_resource,
+        const arc<T>& p_resource,
         u32 p_index = 0
     ) noexcept -> vulkan_descriptor_set_manager&;
 
@@ -360,7 +360,7 @@ private:
 template <>
 inline auto vulkan_descriptor_set_manager::set_input_impl(
     std::string_view p_name,
-    const ref<Texture2D>& p_resource,
+    const arc<Texture2D>& p_resource,
     [[maybe_unused]] u32 p_index /* = 0 */
 ) noexcept -> vulkan_descriptor_set_manager&
 {
@@ -382,7 +382,7 @@ inline auto vulkan_descriptor_set_manager::set_input_impl(
 template <typename T>
 auto vulkan_descriptor_set_manager::set_input_impl(
     std::string_view p_name,
-    const ref<T>& p_resource,
+    const arc<T>& p_resource,
     [[maybe_unused]] const u32 p_index /* = 0 */
 ) noexcept -> vulkan_descriptor_set_manager&
 {
@@ -402,14 +402,14 @@ auto vulkan_descriptor_set_manager::set_input_impl(
 }
 
 template <typename T>
-ref<T> vulkan_descriptor_set_manager::get_input(std::string_view p_name)
+arc<T> vulkan_descriptor_set_manager::get_input(std::string_view p_name)
 {
     if (const auto* decl = get_input_declaration(p_name))
         if (const auto set = m_input_resources.find(decl->m_binding); set != m_input_resources.end())
             if (const auto resource = set->second.find(decl->m_binding); resource != set->second.end())
                 return resource->second.m_input[0].As<T>();
 
-    return ref<T>{};
+    return arc<T>{};
 }
 
 } // end namespace kb::render

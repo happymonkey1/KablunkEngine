@@ -11,7 +11,7 @@ font_pack::font_pack(std::filesystem::path p_filepath)
     init_reserve_space();
 }
 
-auto font_pack::add_font(const ref<render::font>& p_font_asset) noexcept -> void
+auto font_pack::add_font(const arc<render::font>& p_font_asset) noexcept -> void
 {
     const auto asset_id = p_font_asset->get_id();
 
@@ -85,7 +85,7 @@ auto font_pack::save() const noexcept -> void
             m_font_pack.m_fonts.begin(),
             m_font_pack.m_fonts.end(),
             0ull,
-            [](size_t p_val, const ref<render::font>& p_font_asset) -> size_t
+            [](size_t p_val, const arc<render::font>& p_font_asset) -> size_t
             {
                 const auto& font_atlas = p_font_asset->get_font_atlas();
                 return p_val + Utils::GetImageMemorySize(font_atlas->GetFormat(), font_atlas->GetWidth(), font_atlas->GetHeight());
@@ -116,7 +116,7 @@ auto font_pack::save() const noexcept -> void
 
 auto font_pack::serialize_font(
     u8*& p_cursor,
-    const ref<render::font>& p_font_asset
+    const arc<render::font>& p_font_asset
 ) noexcept -> void
 {
     const auto& font_atlas = p_font_asset->get_font_atlas();
@@ -176,7 +176,7 @@ auto font_pack::deserialize_font(
         atlas_size
     };
 
-    auto font = ref<render::font>::Create(atlas_header.m_font_name, std::move(atlas_buffer));
+    auto font = arc<render::font>::Create(atlas_header.m_font_name, std::move(atlas_buffer));
     m_font_pack.m_fonts.emplace_back(font);
     KB_CORE_ASSERT(m_font_pack.m_fonts.size() == p_atlas_index + 1, "[font_pack]: Index is not aligned with font array size?");
 

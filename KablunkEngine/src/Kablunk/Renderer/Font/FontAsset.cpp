@@ -20,9 +20,9 @@ font_asset::~font_asset()
 	release();
 }
 
-ref<font_asset> font_asset::create(const font_asset_create_info_t& create_info)
+arc<font_asset> font_asset::create(const font_asset_create_info_t& create_info)
 {
-    auto font_asset = ref<font_asset_t>::Create(create_info);
+    auto font_asset = arc<font_asset_t>::Create(create_info);
 
 	// try load font into memory
 	if (create_info.m_load_memory && font_asset->load_ft_face_from_file(create_info))

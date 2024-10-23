@@ -19,7 +19,7 @@ namespace kb
 	//extern const std::filesystem::path g_asset_path = "assets";
 	//extern const std::filesystem::path g_resources_path = "resources";
 
-	ContentBrowserPanel::ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel)
+	ContentBrowserPanel::ContentBrowserPanel(const arc<AssetEditorPanel>& asset_editor_panel)
 		: m_current_directory{ ProjectManager::get().get_active() ? ProjectManager::get().get_active()->get_asset_directory_path() : "" }, m_asset_editor_panel{ asset_editor_panel }
 	{
 		m_directory_icon = Texture2D::Create("resources/content_browser/icons/directoryicon.png");
@@ -174,7 +174,7 @@ namespace kb
 						}
 						else
 						{
-							ref<asset::IAsset> asset;
+							arc<asset::IAsset> asset;
 							if (!asset::asset_exists(relative_path))
 							{
 								// #TODO i don't like that the content browser has to handle this...

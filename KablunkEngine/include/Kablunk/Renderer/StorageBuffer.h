@@ -18,7 +18,7 @@ namespace kb
 
 		virtual uint32_t GetBinding() = 0;
 
-		static ref<StorageBuffer> Create(size_t size, uint32_t binding);
+		static arc<StorageBuffer> Create(size_t size, uint32_t binding);
 	};
 
 }

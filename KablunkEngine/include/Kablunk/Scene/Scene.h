@@ -50,8 +50,8 @@ namespace kb
 		Scene(const std::string& name = DEFAULT_SCENE_NAME);
 		~Scene();
 
-		static ref<Scene> Create();
-		static ref<Scene> Copy(ref<Scene> src_scene);
+		static arc<Scene> Create();
+		static arc<Scene> Copy(arc<Scene> src_scene);
 		static WeakRef<Scene> GetScene(uuid::uuid64 scene_id);
 
 		Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
@@ -63,10 +63,10 @@ namespace kb
 		void OnStopRuntime();
 
 		void OnUpdateRuntime(Timestep ts);
-		void OnRenderRuntime(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera* camera = nullptr);
+		void OnRenderRuntime(arc<SceneRenderer> scene_renderer, arc<Renderer2D> p_renderer_2d, EditorCamera* camera = nullptr);
 		void OnEventRuntime(Event& e);
 		void OnUpdateEditor(Timestep ts);
-		void OnRenderEditor(ref<SceneRenderer> scene_renderer, ref<Renderer2D> p_renderer_2d, EditorCamera& camera);
+		void OnRenderEditor(arc<SceneRenderer> scene_renderer, arc<Renderer2D> p_renderer_2d, EditorCamera& camera);
 		void OnEventEditor(Event& e);
 		void OnViewportResize(uint32_t x, uint32_t y);
 

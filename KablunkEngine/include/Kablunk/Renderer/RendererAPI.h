@@ -41,40 +41,40 @@ namespace kb
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 		virtual void Clear() = 0;
 
-		virtual void DrawIndexed(const ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
-		virtual void ClearImage(ref<RenderCommandBuffer> commandBuffer, ref<Image2D> image) = 0;
+		virtual void DrawIndexed(const arc<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+		virtual void ClearImage(arc<RenderCommandBuffer> commandBuffer, arc<Image2D> image) = 0;
 		virtual void SetWireframeMode(bool draw_wireframe) = 0;
 
 		// ======
 		// Meshes
 		// ======
 
-		virtual void RenderMesh(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<MaterialTable> material_table, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) = 0;
+		virtual void RenderMesh(arc<RenderCommandBuffer> render_command_buffer, arc<render::Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, arc<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count) = 0;
 
-		virtual void RenderMeshWithMaterial(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Mesh> mesh, uint32_t submesh_index, ref<Material> material, ref<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, owning_buffer additional_uniforms) = 0;
+		virtual void RenderMeshWithMaterial(arc<RenderCommandBuffer> render_command_buffer, arc<render::Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Mesh> mesh, uint32_t submesh_index, arc<Material> material, arc<VertexBuffer> transform_buffer, uint32_t transform_offset, uint32_t instance_count, owning_buffer additional_uniforms) = 0;
 
 		virtual void render_instanced_submesh(
-			ref<RenderCommandBuffer> render_command_buffer,
-			ref<render::Pipeline> pipeline,
-			ref<UniformBufferSet> uniform_buffer_set,
-			ref<StorageBufferSet> storage_buffer_set,
-			ref<Mesh> mesh,
+			arc<RenderCommandBuffer> render_command_buffer,
+			arc<render::Pipeline> pipeline,
+			arc<UniformBufferSet> uniform_buffer_set,
+			arc<StorageBufferSet> storage_buffer_set,
+			arc<Mesh> mesh,
 			uint32_t submesh_index,
-			ref<MaterialTable> material_table,
-			ref<VertexBuffer> transform_buffer,
+			arc<MaterialTable> material_table,
+			arc<VertexBuffer> transform_buffer,
 			uint32_t transform_offset,
 			uint32_t instance_count
 		) = 0;
 
-		virtual void SubmitFullscreenQuad(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material) = 0;
+		virtual void SubmitFullscreenQuad(arc<RenderCommandBuffer> render_command_buffer, arc<render::Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Material> material) = 0;
 		
-		virtual void RenderQuad(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, const glm::mat4& transform) = 0;
-		virtual void RenderGeometry(ref<RenderCommandBuffer> render_command_buffer, ref<render::Pipeline> pipeline, ref<UniformBufferSet> uniform_buffer_set, ref<StorageBufferSet> storage_buffer_set, ref<Material> material, ref<VertexBuffer> vertex_buffer, ref<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) = 0;
+		virtual void RenderQuad(arc<RenderCommandBuffer> render_command_buffer, arc<render::Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Material> material, const glm::mat4& transform) = 0;
+		virtual void RenderGeometry(arc<RenderCommandBuffer> render_command_buffer, arc<render::Pipeline> pipeline, arc<UniformBufferSet> uniform_buffer_set, arc<StorageBufferSet> storage_buffer_set, arc<Material> material, arc<VertexBuffer> vertex_buffer, arc<IndexBuffer> index_buffer, const glm::mat4& transform, uint32_t index_count = 0) = 0;
 
-		virtual void SetLineWidth(ref<RenderCommandBuffer> render_command_buffer, float line_width) = 0;
+		virtual void SetLineWidth(arc<RenderCommandBuffer> render_command_buffer, float line_width) = 0;
 
-		virtual void BeginRenderPass(ref<RenderCommandBuffer> render_command_buffer, const ref<render::render_pass>& render_pass, bool explicit_clear = false) = 0;
-		virtual void EndRenderPass(ref<RenderCommandBuffer> render_command_buffer) = 0;
+		virtual void BeginRenderPass(arc<RenderCommandBuffer> render_command_buffer, const arc<render::render_pass>& render_pass, bool explicit_clear = false) = 0;
+		virtual void EndRenderPass(arc<RenderCommandBuffer> render_command_buffer) = 0;
 
 		virtual void WaitAndRender() = 0;
 

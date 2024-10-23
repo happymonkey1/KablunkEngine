@@ -20,7 +20,7 @@ public:
 	const PipelineSpecification& GetSpecification() const override { return m_specification; }
 
 	void Invalidate() override;
-    ref<Shader> get_shader() const noexcept override { return m_specification.shader; }
+    arc<Shader> get_shader() const noexcept override { return m_specification.shader; }
 
 	void RT_Invalidate();
 

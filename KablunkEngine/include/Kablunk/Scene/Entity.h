@@ -72,7 +72,7 @@ namespace kb
 	private:
 		EntityHandle m_entity_handle{ null_entity };
 		
-		// TODO: replace with weak ref in the future
+		// TODO: replace with weak arc in the future
 		Scene* m_scene{ nullptr };
 
 		friend class CSharpScriptEngine;

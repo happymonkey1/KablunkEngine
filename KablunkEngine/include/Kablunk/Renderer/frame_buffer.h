@@ -80,13 +80,13 @@ struct frame_buffer_specification
     // flag to set attachment images with transfer bits set
     bool m_transfer = false;
     // ?
-	ref<Image2D> m_existing_image;
+	arc<Image2D> m_existing_image;
     // set existing image layers
 	std::vector<uint32_t> m_existing_image_layers;
     // set existing attachment image(s)
-	std::map<uint32_t, ref<Image2D>> m_existing_images;
+	std::map<uint32_t, arc<Image2D>> m_existing_images;
     // target an existing frame buffer
-	ref<frame_buffer> m_existing_frame_buffer;
+	arc<frame_buffer> m_existing_frame_buffer;
     // debug name of the frame buffer
 	std::string m_debug_name;
 };
@@ -97,7 +97,7 @@ public:
 	~frame_buffer() override = default;
 
 	virtual void resize(uint32_t width, uint32_t height, bool force_recreate = false) = 0;
-	virtual void add_resize_callback(const std::function<void(ref<frame_buffer>)>& func) = 0;
+	virtual void add_resize_callback(const std::function<void(arc<frame_buffer>)>& func) = 0;
 
 	[[deprecated]] virtual void bind() const = 0;
     [[deprecated]] virtual void unbind() const = 0;
@@ -108,8 +108,8 @@ public:
 	virtual uint32_t get_height() const = 0;
 	virtual RendererID get_renderer_id() const = 0;
 
-	virtual ref<Image2D> get_image(uint32_t attachment_index = 0) const = 0;
-	virtual ref<Image2D> get_depth_image() const = 0;
+	virtual arc<Image2D> get_image(uint32_t attachment_index = 0) const = 0;
+	virtual arc<Image2D> get_depth_image() const = 0;
 	// #TODO clean up api because this is currently hard coded for reading an int from the buffer
     [[deprecated]] virtual int read_pixel(uint32_t attachment_index, int x, int y) = 0;
 
@@ -120,7 +120,7 @@ public:
     [[nodiscard]] virtual u32 get_color_attachment_count() const noexcept = 0;
     [[nodiscard]] virtual bool has_depth_attachment() const noexcept = 0;
 
-	static ref<frame_buffer> create(const frame_buffer_specification& specs);
+	static arc<frame_buffer> create(const frame_buffer_specification& specs);
 };
 
 // why tf did I write this?
@@ -131,14 +131,14 @@ public:
 	~frame_buffer_pool();
 
 	std::weak_ptr<frame_buffer> AllocateBuffer();
-	void Add(const ref<frame_buffer>& framebuffer);
+	void Add(const arc<frame_buffer>& framebuffer);
 
-	std::vector<ref<frame_buffer>>& GetAll() { return m_pool; }
-	const std::vector<ref<frame_buffer>> &GetAll() const { return m_pool; }
+	std::vector<arc<frame_buffer>>& GetAll() { return m_pool; }
+	const std::vector<arc<frame_buffer>> &GetAll() const { return m_pool; }
 
 	inline static frame_buffer_pool* Get() { return s_instance; }
 private:
-	std::vector<ref<frame_buffer>> m_pool;
+	std::vector<arc<frame_buffer>> m_pool;
 
 	static frame_buffer_pool* s_instance;
 };

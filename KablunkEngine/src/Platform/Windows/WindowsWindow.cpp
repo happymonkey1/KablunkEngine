@@ -123,7 +123,7 @@ void WindowsWindow::Init(const WindowProps& props)
     // #TODO can we abstract and not have render backend specifics here...
 	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
 	{
-		ref<VulkanContext> context = m_context.As<VulkanContext>();
+		arc<VulkanContext> context = m_context.As<VulkanContext>();
 		//vk_context->GetSwapchain().Init(vk_context->GetInstance(), vk_context->GetDevice());
 		context->GetSwapchain().InitSurface(m_window);
 
@@ -426,7 +426,7 @@ void WindowsWindow::swap_buffers()
 }
 
 cursor_handle WindowsWindow::create_cursor(
-    ref<Texture2D>& p_texture,
+    arc<Texture2D>& p_texture,
     const glm::ivec2& p_hot_spot
 ) noexcept
 {

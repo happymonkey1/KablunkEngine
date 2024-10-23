@@ -13,7 +13,7 @@ namespace kb
 		virtual void SwapBuffers() = 0;
 		virtual void Shutdown() = 0;
 
-		static ref<GraphicsContext> Create(void* window);
+		static arc<GraphicsContext> Create(void* window);
 	};
 }
 

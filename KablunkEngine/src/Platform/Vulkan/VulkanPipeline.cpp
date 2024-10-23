@@ -50,7 +50,7 @@ VulkanPipeline::VulkanPipeline(const PipelineSpecification& specification)
 	KB_CORE_ASSERT(specification.shader, "no shader set!");
 	KB_CORE_ASSERT(specification.m_target_frame_buffer, "no frame buffer set!");
 
-    register_shader_dependency(specification.shader, ref<Pipeline>{ this });
+    register_shader_dependency(specification.shader, arc<Pipeline>{ this });
 
     VulkanPipeline::Invalidate();
 }
@@ -73,7 +73,7 @@ VulkanPipeline::~VulkanPipeline()
 
 void VulkanPipeline::Invalidate()
 {
-    ref instance{ this };
+    arc instance{ this };
 	submit([instance]() mutable
 		{
 			instance->RT_Invalidate();

@@ -9,17 +9,17 @@
 
 namespace kb::render
 { // start namespace kb::render
-ref<Pipeline> Pipeline::Create(const PipelineSpecification& specification)
+arc<Pipeline> Pipeline::Create(const PipelineSpecification& specification)
 {
     constexpr auto backend = Renderer::get_render_backend_type();
     if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<ref<Pipeline>>(ref<VulkanPipeline>::Create(specification));
+        return static_cast<arc<Pipeline>>(arc<VulkanPipeline>::Create(specification));
     }
     else
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");
-        return ref<Pipeline>{};
+        return arc<Pipeline>{};
     }
 }
 } // start namespace kb::render

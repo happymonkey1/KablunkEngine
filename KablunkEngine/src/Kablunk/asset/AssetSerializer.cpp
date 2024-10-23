@@ -21,7 +21,7 @@ namespace kb::asset
 // TextureAssetSerializer
 // ======================
 
-bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
+bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
 	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
 	asset->set_id(metadata.id);
@@ -41,12 +41,12 @@ bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IA
 // ====================
 
 
-void AudioAssetSerializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
+void AudioAssetSerializer::serialize(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     KB_CORE_WARN("[AudioAssetSerializer]: serialize() not implemented!");
 }
 
-bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
+bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     const audio::audio_asset_config config{ m_asset_manager->get_absolute_path(metadata).string() };
 
@@ -66,12 +66,12 @@ bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, ref<IAss
 // font_asset_serializer
 // =====================
 
-void font_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
+void font_asset_serializer::serialize(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     KB_CORE_WARN("[font_asset_serializer]: serialize() not implemented!");
 }
 
-bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
+bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     const render::font_asset_create_info font_create_info{
         // path to font asset
@@ -90,10 +90,10 @@ bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAs
         true
     };
 
-    asset = ref<IAsset>{ render::font_asset_t::create(font_create_info) };
+    asset = arc<IAsset>{ render::font_asset_t::create(font_create_info) };
     if (asset)
     {
-        ref<render::font_asset_t> font_asset = asset.As<render::font_asset_t>();
+        arc<render::font_asset_t> font_asset = asset.As<render::font_asset_t>();
         font_asset->set_id(metadata.id);
     }
     else
@@ -108,12 +108,12 @@ bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAs
 // lua_asset_serializer
 // =====================
 
-void lua_asset_serializer::serialize(const AssetMetadata& metadata, ref<IAsset>& asset) const
+void lua_asset_serializer::serialize(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     KB_CORE_WARN("[lua_asset_serializer]: serialize() not implemented!");
 }
 
-bool lua_asset_serializer::try_load_data(const AssetMetadata& metadata, ref<IAsset>& asset) const
+bool lua_asset_serializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
     KB_CORE_ASSERT(false, "not implemented!");
 

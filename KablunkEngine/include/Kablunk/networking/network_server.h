@@ -284,8 +284,6 @@ private:
     rpc_dispatcher m_rpc_dispatcher{};
     // dispatcher for user provided packet callbacks
     server_packet_handler_dispatcher m_packet_handler_dispatcher{};
-
-    friend class ref<network_server>;
 };
 
 } // end namespace kb::network

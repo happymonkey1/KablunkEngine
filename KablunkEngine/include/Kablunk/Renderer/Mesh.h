@@ -144,15 +144,15 @@ namespace kb
 
 		const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 		const std::vector<Index>& GetIndicies() const { return m_indices; }
-		ref<Shader> GetShader() { return m_mesh_shader; }
-		ref<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
-		ref<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
+		arc<Shader> GetShader() { return m_mesh_shader; }
+		arc<VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
+		arc<IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
 
-		std::vector<ref<Material>>& GetMaterials() { return m_materials; }
-		const std::vector<ref<Material>> GetMaterials() const { return m_materials; }
+		std::vector<arc<Material>>& GetMaterials() { return m_materials; }
+		const std::vector<arc<Material>> GetMaterials() const { return m_materials; }
 
-		const std::vector<ref<Texture2D>> GetTextures() const { return m_textures; }
-		const std::vector<ref<Texture2D>> GetNormalMaps() const { return m_normal_map; }
+		const std::vector<arc<Texture2D>> GetTextures() const { return m_textures; }
+		const std::vector<arc<Texture2D>> GetNormalMaps() const { return m_normal_map; }
 		const std::string& GetFilepath() const { return m_filepath; }
 
 		void SetSubmeshes(const std::vector<Submesh>& submeshes);
@@ -175,8 +175,8 @@ namespace kb
 	private:
 		box<Assimp::Importer> m_importer;
 
-		ref<VertexBuffer> m_vertex_buffer;
-		ref<IndexBuffer> m_index_buffer;
+		arc<VertexBuffer> m_vertex_buffer;
+		arc<IndexBuffer> m_index_buffer;
 
 		std::vector<Vertex> m_static_vertices;
 		std::vector<AnimatedVertex> m_animated_vertices;
@@ -192,10 +192,10 @@ namespace kb
 
 		glm::mat4 m_inverse_transform{ 1.0f };
 
-		ref<Shader> m_mesh_shader;
-		std::vector<ref<Texture2D>> m_textures;
-		std::vector<ref<Texture2D>> m_normal_map;
-		std::vector<ref<Material>> m_materials;
+		arc<Shader> m_mesh_shader;
+		std::vector<arc<Texture2D>> m_textures;
+		std::vector<arc<Texture2D>> m_normal_map;
+		std::vector<arc<Material>> m_materials;
 		
 		kb::unordered_flat_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
 
@@ -215,9 +215,9 @@ namespace kb
 	class Mesh : public RefCounted
 	{
 	public:
-		Mesh(ref<MeshData> mesh_data);
-		Mesh(const ref<Mesh>& other);
-		Mesh(ref<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
+		Mesh(arc<MeshData> mesh_data);
+		Mesh(const arc<Mesh>& other);
+		Mesh(arc<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
 		virtual ~Mesh();
 
 		void OnUpdate(Timestep ts);
@@ -227,24 +227,24 @@ namespace kb
 
 		void SetSubmeshes(const std::vector<uint32_t>& submeshes);
 
-		ref<MeshData> GetMeshData() { return m_mesh_data; }
-		ref<MeshData> GetMeshData() const { return m_mesh_data; }
-		void SetMeshData(ref<MeshData> mesh_data) { m_mesh_data = mesh_data; }
+		arc<MeshData> GetMeshData() { return m_mesh_data; }
+		arc<MeshData> GetMeshData() const { return m_mesh_data; }
+		void SetMeshData(arc<MeshData> mesh_data) { m_mesh_data = mesh_data; }
 
-		ref<MaterialTable>& GetMaterials() { return m_material_table; }
-		const ref<MaterialTable>& GetMaterials() const { return m_material_table; }
+		arc<MaterialTable>& GetMaterials() { return m_material_table; }
+		const arc<MaterialTable>& GetMaterials() const { return m_material_table; }
 	private:
-		ref<MeshData> m_mesh_data;
+		arc<MeshData> m_mesh_data;
 		std::vector<uint32_t> m_submeshes;
 
-		ref<MaterialTable> m_material_table;
+		arc<MaterialTable> m_material_table;
 	};
 
 	// #TODO move elsewhere
 	class MeshFactory
 	{
 	public:
-		static ref<Mesh> CreateCube(float side_length, Entity entity);
+		static arc<Mesh> CreateCube(float side_length, Entity entity);
 	};
 }
 

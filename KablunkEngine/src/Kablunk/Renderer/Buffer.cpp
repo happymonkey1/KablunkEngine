@@ -8,12 +8,12 @@
 
 namespace kb
 {
-	ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	arc<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
 		switch (render::Renderer::get_render_backend_type())
 		{
 		case render::render_backend_type_t::vulkan:
-            return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(size));
+            return static_cast<arc<VertexBuffer>>(arc<VulkanVertexBuffer>::Create(size));
         default:
         {
             KB_CORE_ASSERT(
@@ -21,17 +21,17 @@ namespace kb
                 "[VertexBuffer::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
             );
-            return ref<VertexBuffer>{};
+            return arc<VertexBuffer>{};
         }
 		}
 	}
 
-	ref<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
+	arc<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
 	{
         switch (render::Renderer::get_render_backend_type())
         {
         case render::render_backend_type_t::vulkan:
-            return static_cast<ref<VertexBuffer>>(ref<VulkanVertexBuffer>::Create(data, size));
+            return static_cast<arc<VertexBuffer>>(arc<VulkanVertexBuffer>::Create(data, size));
         default:
         {
             KB_CORE_ASSERT(
@@ -39,17 +39,17 @@ namespace kb
                 "[VertexBuffer::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
             );
-            return ref<VertexBuffer>{};
+            return arc<VertexBuffer>{};
         }
         }
 	}
 
-	ref<IndexBuffer> IndexBuffer::Create(uint32_t count)
+	arc<IndexBuffer> IndexBuffer::Create(uint32_t count)
 	{
         switch (render::Renderer::get_render_backend_type())
         {
         case render::render_backend_type_t::vulkan:
-            return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(count));
+            return static_cast<arc<IndexBuffer>>(arc<VulkanIndexBuffer>::Create(count));
         default:
         {
             KB_CORE_ASSERT(
@@ -57,17 +57,17 @@ namespace kb
                 "[IndexBuffer::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
             );
-            return ref<IndexBuffer>{};
+            return arc<IndexBuffer>{};
         }
         }
 	}
 
-	ref<IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
+	arc<IndexBuffer> IndexBuffer::Create(const void* data, uint32_t count)
 	{
         switch (render::Renderer::get_render_backend_type())
         {
         case render::render_backend_type_t::vulkan:
-            return static_cast<ref<IndexBuffer>>(ref<VulkanIndexBuffer>::Create(data, count));
+            return static_cast<arc<IndexBuffer>>(arc<VulkanIndexBuffer>::Create(data, count));
         default:
         {
             KB_CORE_ASSERT(
@@ -75,7 +75,7 @@ namespace kb
                 "[IndexBuffer::Create]: Unhandled render backend {}",
                 static_cast<std::underlying_type_t<render::render_backend_type_t>>(render::Renderer::get_render_backend_type())
             );
-            return ref<IndexBuffer>{};
+            return arc<IndexBuffer>{};
         }
         }
 	}

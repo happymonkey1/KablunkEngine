@@ -15,22 +15,22 @@
 namespace kb
 {
 VulkanMaterial::VulkanMaterial(
-    const ref<Shader>& shader,
+    const arc<Shader>& shader,
     const std::string& name /*= ""*/
 )
 	: m_shader{ shader.As<VulkanShader>() }, m_name{ !name.empty() ? name : shader->GetName() }
 {
 	Init();
-	render::register_shader_dependency(shader, ref<Material>{ this });
+	render::register_shader_dependency(shader, arc<Material>{ this });
 }
 
-VulkanMaterial::VulkanMaterial(ref<Material> material, const std::string& name /*= ""*/)
+VulkanMaterial::VulkanMaterial(arc<Material> material, const std::string& name /*= ""*/)
 	: m_shader{ material->GetShader() }, m_name{ name }
 {
 	if (name.empty())
 		m_name = material->GetName();
 
-	render::register_shader_dependency(m_shader.As<Shader>(), ref<Material>{ this });
+	render::register_shader_dependency(m_shader.As<Shader>(), arc<Material>{ this });
 
 	auto vulkan_material = material.As<VulkanMaterial>();
 	m_uniform_storage_buffer = owning_buffer::Copy(
@@ -122,13 +122,13 @@ void VulkanMaterial::Invalidate()
         for (const auto& [binding, vk_write_descriptor] : write_descriptors)
         {
             m_material_write_descriptors[binding] = vk_write_descriptor;
-            m_material_descriptor_images[binding] = std::vector<ref<render::render_resource>>(vk_write_descriptor.descriptorCount);
+            m_material_descriptor_images[binding] = std::vector<arc<render::render_resource>>(vk_write_descriptor.descriptorCount);
 
             if (vk_write_descriptor.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
             {
                 for (size_t i = 0; i < vk_write_descriptor.descriptorCount; ++i)
                 {
-                    m_material_descriptor_images[binding][i] = ref<render::render_resource>{
+                    m_material_descriptor_images[binding][i] = arc<render::render_resource>{
                         white_texture->GetImage()
                     };
                 }
@@ -210,17 +210,17 @@ void VulkanMaterial::Set(const std::string& name, const glm::mat4& value)
 	Set<glm::mat4>(name, value);
 }
 
-void VulkanMaterial::Set(const std::string& name, const ref<Texture2D>& texture)
+void VulkanMaterial::Set(const std::string& name, const arc<Texture2D>& texture)
 {
 	SetVulkanDescriptor(name, texture);
 }
 
-void VulkanMaterial::Set(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index)
+void VulkanMaterial::Set(const std::string& name, const arc<Texture2D>& texture, uint32_t array_index)
 {
 	SetVulkanDescriptor(name, texture, array_index);
 }
 
-void VulkanMaterial::Set(const std::string& name, const ref<Image2D>& image)
+void VulkanMaterial::Set(const std::string& name, const arc<Image2D>& image)
 {
 	SetVulkanDescriptor(name, image);
 }
@@ -246,7 +246,7 @@ void VulkanMaterial::OnShaderReloaded()
 	// #TODO implement
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture)
+void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const arc<Texture2D>& texture)
 {
     m_descriptor_set_manager.set_input(
         std::string_view{ name },
@@ -254,7 +254,7 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Text
     );
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Texture2D>& texture, uint32_t array_index)
+void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const arc<Texture2D>& texture, uint32_t array_index)
 {
     m_descriptor_set_manager.set_input(
         std::string_view{ name },
@@ -263,7 +263,7 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Text
     );
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Image2D>& image)
+void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const arc<Image2D>& image)
 {
     m_descriptor_set_manager.set_input(
         std::string_view{ name },
@@ -271,7 +271,7 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const ref<Imag
     );
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& p_name, const ref<image_view>& p_image)
+void VulkanMaterial::SetVulkanDescriptor(const std::string& p_name, const arc<image_view>& p_image)
 {
     m_descriptor_set_manager.set_input(
         std::string_view{ p_name },
@@ -352,20 +352,20 @@ glm::mat4& VulkanMaterial::GetMat4(const std::string& name)
 	return Get<glm::mat4>(name);
 }
 
-ref<Texture2D> VulkanMaterial::GetTexture2D(const std::string& name)
+arc<Texture2D> VulkanMaterial::GetTexture2D(const std::string& name)
 {
     KB_CORE_ASSERT(false, "disabled!");
 
 	//return get_resource<Texture2D>(name);
-    return ref<Texture2D>{};
+    return arc<Texture2D>{};
 }
 
-ref<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
+arc<Texture2D> VulkanMaterial::TryGetTexture2D(const std::string& name)
 {
     KB_CORE_ASSERT(false, "disabled!");
 
     //return get_resource<Texture2D>(name);
-    return ref<Texture2D>{};
+    return arc<Texture2D>{};
 }
 
 }

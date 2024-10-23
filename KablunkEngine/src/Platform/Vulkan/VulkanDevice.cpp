@@ -283,7 +283,7 @@ namespace kb
     //   VulkanDevice
     // ================
 
-	VulkanDevice::VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features)
+	VulkanDevice::VulkanDevice(const arc<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features)
         : m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_compute_queue{ nullptr }, m_vk_graphics_queue{ nullptr }
 	{
 		auto context = VulkanContext::Get();
@@ -395,21 +395,21 @@ namespace kb
 
 	}
 
-    ref<kb::vk::command_pool> VulkanDevice::get_thread_local_command_pool()
+    arc<kb::vk::command_pool> VulkanDevice::get_thread_local_command_pool()
     {
         auto thread_id = std::this_thread::get_id();
         KB_CORE_ASSERT(m_command_pools.contains(thread_id), "[VulkanDevice]: could not find a local thread pool!");
         return m_command_pools.at(thread_id);
     }
 
-    ref<kb::vk::command_pool> VulkanDevice::get_or_create_thread_local_command_pool()
+    arc<kb::vk::command_pool> VulkanDevice::get_or_create_thread_local_command_pool()
     {
         auto thread_id = std::this_thread::get_id();
         auto it = m_command_pools.find(thread_id);
         if (it != m_command_pools.end())
             return it->second;
 
-        ref<kb::vk::command_pool> command_pool = ref<kb::vk::command_pool>::Create();
+        arc<kb::vk::command_pool> command_pool = arc<kb::vk::command_pool>::Create();
         m_command_pools[thread_id] = command_pool;
 
         return command_pool;

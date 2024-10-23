@@ -16,16 +16,16 @@ public:
     virtual ~compute_pipeline() = 0;
 
     // begin pass for the compute pipeline
-    virtual void begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
+    virtual void begin(kb::arc<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
     // begin pass on the render thread for the compute pipeline
-    virtual void rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
+    virtual void rt_begin(kb::arc<kb::RenderCommandBuffer> p_render_command_buffer = {}) = 0;
     // end pass for the compute pipeline
     virtual void end() = 0;
 
-    virtual kb::ref<kb::Shader> get_shader() const = 0;
+    virtual kb::arc<kb::Shader> get_shader() const = 0;
 
     // factory create method for a compute pipeline
-    static kb::ref<compute_pipeline> create(kb::ref<kb::Shader> p_compute_shader);
+    static kb::arc<compute_pipeline> create(kb::arc<kb::Shader> p_compute_shader);
 };
 
 } // end namespace kb::render

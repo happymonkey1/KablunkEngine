@@ -9,17 +9,17 @@ namespace kb::vk
 
 static VkFence s_vk_compute_fence = nullptr;
 
-compute_pipeline::compute_pipeline(kb::ref<kb::Shader> compute_shader)
+compute_pipeline::compute_pipeline(kb::arc<kb::Shader> compute_shader)
     : m_shader{ compute_shader.As<kb::VulkanShader>() }
 {
     render::submit(
-        [instance = kb::ref{ this }]() mutable
+        [instance = kb::arc{ this }]() mutable
         {
             instance->rt_create_pipeline();
         }
     );
 
-    register_shader_dependency(compute_shader, ref<render::compute_pipeline>{ this });
+    register_shader_dependency(compute_shader, arc<render::compute_pipeline>{ this });
 }
 
 void compute_pipeline::execute(VkDescriptorSet* p_descriptor_sets, uint32_t p_descriptor_set_count, uint32_t p_group_count_x, uint32_t p_group_count_y, uint32_t p_group_count_z)
@@ -83,7 +83,7 @@ void compute_pipeline::execute(VkDescriptorSet* p_descriptor_sets, uint32_t p_de
     vkWaitForFences(vk_device, 1, &s_vk_compute_fence, VK_TRUE, UINT64_MAX);
 }
 
-void compute_pipeline::begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
+void compute_pipeline::begin(kb::arc<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
 {
     KB_CORE_ASSERT(!m_vk_active_command_buffer, "[vk::compute_pipeline]: trying to start a new pipeline while there is already an active one?");
 
@@ -103,7 +103,7 @@ void compute_pipeline::begin(kb::ref<kb::RenderCommandBuffer> p_render_command_b
     vkCmdBindPipeline(m_vk_active_command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_vk_compute_pipeline);
 }
 
-void compute_pipeline::rt_begin(kb::ref<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
+void compute_pipeline::rt_begin(kb::arc<kb::RenderCommandBuffer> p_render_command_buffer /*= nullptr*/)
 {
     KB_CORE_ASSERT(!m_vk_active_command_buffer, "[vk::compute_pipeline]: trying to begin a new pipeline while there is already an active one?");
 
@@ -185,7 +185,7 @@ void compute_pipeline::set_push_constants(kb::owning_buffer p_constants)
 void compute_pipeline::create_pipeline()
 {
     kb::render::submit(
-        [instance = kb::ref{ this }]() mutable
+        [instance = kb::arc{ this }]() mutable
         {
             instance->rt_create_pipeline();
         }

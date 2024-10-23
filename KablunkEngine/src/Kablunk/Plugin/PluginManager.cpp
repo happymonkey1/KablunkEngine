@@ -38,7 +38,7 @@ namespace kb
 				return reload_plugin(plugin_name, plugin_path, plugin_type);
 		}
 
-		auto pair = m_plugins.emplace(plugin_name, ref<Plugin>::Create(plugin_name, plugin_path, plugin_type));
+		auto pair = m_plugins.emplace(plugin_name, arc<Plugin>::Create(plugin_name, plugin_path, plugin_type));
 		auto plugin = WeakRef<Plugin>(m_plugins[plugin_name].get());
 
 		if (!plugin || !plugin->is_loaded())
@@ -67,7 +67,7 @@ namespace kb
 
 		get_plugin(plugin_name)->unload();
 
-		m_plugins[plugin_name] = ref<Plugin>::Create(plugin_name, plugin_path, plugin_type);
+		m_plugins[plugin_name] = arc<Plugin>::Create(plugin_name, plugin_path, plugin_type);
 
 		WeakRef<Plugin> plugin = get_plugin(plugin_name);
 		plugin->init();

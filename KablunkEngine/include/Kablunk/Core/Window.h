@@ -65,7 +65,7 @@ public:
 
 	virtual void swap_buffers() = 0;
 
-    virtual cursor_handle create_cursor(ref<Texture2D>& p_texture, const glm::ivec2& p_hot_spot) noexcept = 0;
+    virtual cursor_handle create_cursor(arc<Texture2D>& p_texture, const glm::ivec2& p_hot_spot) noexcept = 0;
     virtual void set_cursor(cursor_handle p_cursor_handle) noexcept = 0;
     // set cursor back to OS specific default cursor
     virtual void set_default_cursor() noexcept = 0;

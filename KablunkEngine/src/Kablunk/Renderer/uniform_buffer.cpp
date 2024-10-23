@@ -9,17 +9,17 @@
 
 namespace kb
 { // start namespace kb
-ref<uniform_buffer> uniform_buffer::create(u32 p_size)
+arc<uniform_buffer> uniform_buffer::create(u32 p_size)
 {
     constexpr auto backend = render::Renderer::get_render_backend_type();
     if constexpr (backend == render::render_backend_type_t::vulkan)
     {
-        return static_cast<ref<uniform_buffer>>(ref<vulkan_uniform_buffer>::Create(p_size));
+        return static_cast<arc<uniform_buffer>>(arc<vulkan_uniform_buffer>::Create(p_size));
     }
     else
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");
-        return ref<uniform_buffer>{};
+        return arc<uniform_buffer>{};
     }
 }
 } // end namespace kb

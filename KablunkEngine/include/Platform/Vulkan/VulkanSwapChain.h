@@ -18,7 +18,7 @@ public:
 	VulkanSwapChain() = default;
     ~VulkanSwapChain() = default;
 
-	void Init(VkInstance instance, const ref<VulkanDevice>& device);
+	void Init(VkInstance instance, const arc<VulkanDevice>& device);
 	void InitSurface(GLFWwindow* window_handle);
 	void Create(uint32_t* width, uint32_t* height, bool vsync);
 
@@ -66,7 +66,7 @@ private:
 	void CreateDepthStencil();
 private:
 	VkInstance m_instance;
-	ref<VulkanDevice> m_device;
+	arc<VulkanDevice> m_device;
 	bool m_vsync = false;
 
 	VkSwapchainKHR m_swapchain = nullptr;

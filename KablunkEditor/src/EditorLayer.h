@@ -43,7 +43,7 @@ namespace kb
 		void NewScene();
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(ref<Scene> scene, const std::filesystem::path& path);
+		void SerializeScene(arc<Scene> scene, const std::filesystem::path& path);
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
 
@@ -64,12 +64,12 @@ namespace kb
 		std::pair<glm::vec3, glm::vec3> RayCast(const EditorCamera& camera, float mx, float my);
 	private:
 
-		ref<Scene> m_active_scene;
-		ref<Scene> m_editor_scene;
-		ref<Scene> m_runtime_scene;
+		arc<Scene> m_active_scene;
+		arc<Scene> m_editor_scene;
+		arc<Scene> m_runtime_scene;
 
-		ref<SceneRenderer> m_viewport_renderer;
-        ref<Renderer2D> m_renderer_2d;
+		arc<SceneRenderer> m_viewport_renderer;
+        arc<Renderer2D> m_renderer_2d;
 		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;
@@ -93,7 +93,7 @@ namespace kb
 
 		// Panels
 		SceneHierarchyPanel m_scene_hierarchy_panel;
-		ref<AssetEditorPanel> m_asset_editor_panel;
+		arc<AssetEditorPanel> m_asset_editor_panel;
 		ContentBrowserPanel m_content_browser_panel;
 		ProjectPropertiesPanel m_project_properties_panel;
 		AssetRegistryPanel m_asset_registry_panel;
@@ -101,7 +101,7 @@ namespace kb
 		bool m_show_memory_statistics_window = false;
 
 		// Resources
-		ref<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
+		arc<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
 
 		enum class SceneState
 		{

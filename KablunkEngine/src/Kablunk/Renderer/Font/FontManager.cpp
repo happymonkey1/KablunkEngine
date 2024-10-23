@@ -24,7 +24,7 @@ void font_manager::shutdown()
 }
 
 void font_manager::add_font_file_to_library(
-    ref<font_asset_t> font_asset,
+    arc<font_asset_t> font_asset,
     const std::filesystem::path& p_absolute_filepath
 )
 {
@@ -76,17 +76,17 @@ void font_manager::add_font_file_to_library(
     KB_CORE_INFO("[font_manager]: added '{}' to the font asset registry", p_absolute_filepath.string());
 }
 
-void font_manager::remove_font_file_from_library(ref<font_asset_t> font_asset)
+void font_manager::remove_font_file_from_library(arc<font_asset_t> font_asset)
 {
 	KB_CORE_ASSERT(false, "not implemented!");
 }
 
-ref<kb::render::font_asset_t> font_manager::get_font_asset(asset::asset_id_t p_font_asset_id) const
+arc<kb::render::font_asset_t> font_manager::get_font_asset(asset::asset_id_t p_font_asset_id) const
 {
-	return m_font_cache.contains(p_font_asset_id) ? m_font_cache.at(p_font_asset_id) : ref<font_asset>{};
+	return m_font_cache.contains(p_font_asset_id) ? m_font_cache.at(p_font_asset_id) : arc<font_asset>{};
 }
 
-bool font_manager::has_font_cached(ref<font_asset_t> font_asset) const
+bool font_manager::has_font_cached(arc<font_asset_t> font_asset) const
 {
 	KB_CORE_ASSERT(font_asset, "null font asset?");
 

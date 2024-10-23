@@ -19,7 +19,7 @@ public:
     lua_engine(lua_engine&&) noexcept = default;
     ~lua_engine() noexcept;
 
-    lua_engine(const ref<asset::AssetManager>& p_asset_manager) noexcept
+    lua_engine(const arc<asset::AssetManager>& p_asset_manager) noexcept
         : m_lua_state{ nullptr }, m_asset_manager{ p_asset_manager }
     { }
 
@@ -48,9 +48,9 @@ private:
 
 private:
     lua_State* m_lua_state = nullptr;
-    ref<asset::AssetManager> m_asset_manager{};
+    arc<asset::AssetManager> m_asset_manager{};
     // cache of lua assets that have been loaded into the engine
-    std::vector<ref<lua_asset>> m_lua_scripts{};
+    std::vector<arc<lua_asset>> m_lua_scripts{};
 };
 
 } // end namespace kb

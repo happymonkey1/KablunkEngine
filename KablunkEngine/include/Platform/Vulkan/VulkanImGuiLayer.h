@@ -23,7 +23,7 @@ namespace kb
 		virtual void Begin() override;
 		virtual void End() override;
 	private:
-		ref<RenderCommandBuffer> m_render_command_buffer;
+		arc<RenderCommandBuffer> m_render_command_buffer;
 	};
 }
 

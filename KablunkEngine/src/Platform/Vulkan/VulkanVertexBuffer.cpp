@@ -15,10 +15,10 @@ VulkanVertexBuffer::VulkanVertexBuffer(const void* data, uint32_t size, VertexBu
 
 	KB_CORE_ASSERT(m_local_data.size() == m_size, "sizes do not match!");
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
-			ref<VulkanDevice> device = VulkanContext::Get()->GetDevice();
+			arc<VulkanDevice> device = VulkanContext::Get()->GetDevice();
 			VulkanAllocator allocator{ "VertexBuffer" };
 
 			// create staging buffer
@@ -70,7 +70,7 @@ VulkanVertexBuffer::VulkanVertexBuffer(uint32_t size, VertexBufferUsage usage /*
 {
 	m_local_data.Allocate(size);
 
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			VkDevice device = VulkanContext::Get()->GetDevice()->GetVkDevice();
@@ -123,7 +123,7 @@ void VulkanVertexBuffer::SetData(
         static_cast<const u8*>(data) + offset,
         size
     );
-    ref instance{ this };
+    arc instance{ this };
 	render::submit([instance, size, offset]() mutable {
 			instance->RT_SetData(instance->m_local_data.get(), size, offset);
 		});

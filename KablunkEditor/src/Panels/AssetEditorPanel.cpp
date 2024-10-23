@@ -119,7 +119,7 @@ namespace kb
 			editor->on_imgui_render();
 	}
 
-	void AssetEditorPanel::open_editor(const ref<asset::IAsset>& asset)
+	void AssetEditorPanel::open_editor(const arc<asset::IAsset>& asset)
 	{
 		if (!asset)
 			return;

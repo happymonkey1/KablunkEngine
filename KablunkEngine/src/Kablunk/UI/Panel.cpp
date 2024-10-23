@@ -111,9 +111,9 @@ namespace kb::ui
 		if (!m_visible)
 			return;
 
-        ref<Renderer2D> renderer_2d = Application::Get().get_renderer_2d();
+        arc<Renderer2D> renderer_2d = Application::Get().get_renderer_2d();
 
-		ref<Texture2D> white_texture = renderer_2d->get_white_texture();
+		arc<Texture2D> white_texture = renderer_2d->get_white_texture();
 		glm::vec3 pos_relative = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
 		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
 

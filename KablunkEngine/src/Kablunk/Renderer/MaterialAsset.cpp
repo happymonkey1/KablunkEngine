@@ -43,7 +43,7 @@ MaterialAsset::MaterialAsset()
 
 }
 
-MaterialAsset::MaterialAsset(ref<Material> material)
+MaterialAsset::MaterialAsset(arc<Material> material)
 {
 	m_material = Material::Copy(material);
 }
@@ -88,12 +88,12 @@ void MaterialAsset::SetEmission(float emission)
 	m_material->Set(s_emission_uniform_str, emission);
 }
 
-kb::ref<kb::Texture2D> MaterialAsset::GetAlbedoMap()
+kb::arc<kb::Texture2D> MaterialAsset::GetAlbedoMap()
 {
 	return m_material->TryGetTexture2D(s_albedo_map_uniform_str);
 }
 
-void MaterialAsset::SetAlbedoMap(ref<Texture2D> texture)
+void MaterialAsset::SetAlbedoMap(arc<Texture2D> texture)
 {
 	m_material->Set(s_albedo_map_uniform_str, texture);
 }
@@ -103,12 +103,12 @@ void MaterialAsset::ClearAlbedoMap()
 	m_material->Set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::ref<kb::Texture2D> MaterialAsset::GetNormalMap()
+kb::arc<kb::Texture2D> MaterialAsset::GetNormalMap()
 {
 	return m_material->TryGetTexture2D(s_normal_map_uniform_str);
 }
 
-void MaterialAsset::SetNormalMap(ref<Texture2D> texture)
+void MaterialAsset::SetNormalMap(arc<Texture2D> texture)
 {
 	m_material->Set(s_normal_map_uniform_str, texture);
 }
@@ -128,12 +128,12 @@ void MaterialAsset::ClearNormalMap()
 	m_material->Set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::ref<kb::Texture2D> MaterialAsset::GetMetalnessMap()
+kb::arc<kb::Texture2D> MaterialAsset::GetMetalnessMap()
 {
 	return m_material->TryGetTexture2D(s_metalness_map_uniform_str);
 }
 
-void MaterialAsset::SetMetalnessMap(ref<Texture2D> texture)
+void MaterialAsset::SetMetalnessMap(arc<Texture2D> texture)
 {
 	m_material->Set(s_metalness_map_uniform_str, texture);
 }
@@ -143,12 +143,12 @@ void MaterialAsset::ClearMetalnessMap()
 	m_material->Set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::ref<kb::Texture2D> MaterialAsset::GetRoughnessMap()
+kb::arc<kb::Texture2D> MaterialAsset::GetRoughnessMap()
 {
 	return m_material->TryGetTexture2D(s_roughness_map_uniform_str);
 }
 
-void MaterialAsset::SetRoughnessMap(ref<Texture2D> texture)
+void MaterialAsset::SetRoughnessMap(arc<Texture2D> texture)
 {
 	m_material->Set(s_roughness_map_uniform_str, texture);
 }
@@ -164,14 +164,14 @@ MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)
 
 }
 
-MaterialTable::MaterialTable(ref<MaterialTable> other)
+MaterialTable::MaterialTable(arc<MaterialTable> other)
 {
 	const auto& other_materials = other->GetMaterials();
 	for (auto [index, material_asset] : other_materials)
 		SetMaterial(index, material_asset);
 }
 
-void MaterialTable::SetMaterial(uint32_t index, ref<MaterialAsset> material)
+void MaterialTable::SetMaterial(uint32_t index, arc<MaterialAsset> material)
 {
 	m_materials[index] = material;
 	if (index >= m_material_count)

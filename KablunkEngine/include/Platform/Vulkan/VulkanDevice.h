@@ -75,7 +75,7 @@ private:
 class VulkanDevice final : public RefCounted
 {
 public:
-	VulkanDevice(const ref<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
+	VulkanDevice(const arc<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
 	~VulkanDevice() override;
 
 	void Destroy();
@@ -89,23 +89,23 @@ public:
 
 	VkCommandBuffer CreateSecondaryCommandBuffer();
 
-	ref<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
+	arc<VulkanPhysicalDevice> GetPhysicalDevice() { return m_physical_device; }
 	VkPhysicalDevice GetVkPhysicalDevice() { return m_physical_device->GetVkDevice(); }
 	VkDevice GetVkDevice() const { return m_vk_device; }
 
 private:
-    ref<vk::command_pool> get_thread_local_command_pool();
-    ref<vk::command_pool> get_or_create_thread_local_command_pool();
+    arc<vk::command_pool> get_thread_local_command_pool();
+    arc<vk::command_pool> get_or_create_thread_local_command_pool();
 
 private:
 	VkDevice m_vk_device;
-	ref<VulkanPhysicalDevice> m_physical_device;
+	arc<VulkanPhysicalDevice> m_physical_device;
 	VkPhysicalDeviceFeatures m_enabled_features;
 
 	VkQueue m_vk_graphics_queue;
     VkQueue m_vk_compute_queue;
 
-    std::map<std::thread::id, ref<vk::command_pool>> m_command_pools;
+    std::map<std::thread::id, arc<vk::command_pool>> m_command_pools;
 
 	bool m_destroyed = false;
 };
