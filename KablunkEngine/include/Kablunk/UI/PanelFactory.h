@@ -6,27 +6,27 @@
 #include "Kablunk/Utilities/EnumIterator.hpp"
 
 // forward declarations
-namespace kb
+namespace kb::render::backend
 {
-	class Texture2D;
+class texture_2d;
 }
 
 namespace kb::ui
 {
 
-	struct panel_create_info_t
-	{
-		glm::vec2 position = glm::vec2{ 0.0f };
-		glm::vec2 size = glm::vec2{ 0.5f, 0.5f };
-		arc<Texture2D> image = {};
-	};
+struct panel_create_info_t
+{
+	glm::vec2 position = glm::vec2{ 0.0f };
+	glm::vec2 size = glm::vec2{ 0.5f, 0.5f };
+	arc<render::backend::texture_2d> image = {};
+};
 
-	class PanelFactory
-	{
-	public:
-		static IPanel* create_panel(panel_type_t panel_type, const panel_create_info_t& panel_create_info);
-		static IPanel* copy_panel(IPanel* panel);
-	};
+class PanelFactory
+{
+public:
+	static IPanel* create_panel(panel_type_t panel_type, const panel_create_info_t& panel_create_info);
+	static IPanel* copy_panel(IPanel* panel);
+};
 
 }
 

@@ -7,8 +7,8 @@
 // #TODO remove when Application singleton is refactored
 #include "Kablunk/Core/Application.h"
 
-namespace kb
-{ // start namespace kb
+namespace kb::render
+{ // start namespace kb::render
 
 static const std::string s_albedo_color_uniform_str = "u_MaterialUniforms.AlbedoColor";
 static const std::string s_use_normal_map_uniform_str = "u_MaterialUniforms.UseNormalMap";
@@ -24,7 +24,7 @@ static const std::string s_roughness_map_uniform_str = "u_RoughnessTexture";
 
 MaterialAsset::MaterialAsset()
 {
-	m_material = Material::Create(render::get_shader_library()->Get("Kablunk_pbr_static"));
+	m_material = backend::material::create(get_shader_library()->Get("Kablunk_pbr_static"));
 
 	// Set defaults
 	SetAlbedoColor(glm::vec3(0.8f));
@@ -43,119 +43,119 @@ MaterialAsset::MaterialAsset()
 
 }
 
-MaterialAsset::MaterialAsset(arc<Material> material)
+MaterialAsset::MaterialAsset(arc<backend::material> material)
 {
-	m_material = Material::Copy(material);
+	m_material = backend::material::copy(material);
 }
 
 glm::vec3& MaterialAsset::GetAlbedoColor()
 {
-	return m_material->GetVec3(s_albedo_color_uniform_str);
+	return m_material->get_vec3(s_albedo_color_uniform_str);
 }
 
 void MaterialAsset::SetAlbedoColor(const glm::vec3& albedo)
 {
-	m_material->Set(s_albedo_color_uniform_str, albedo);
+	m_material->set(s_albedo_color_uniform_str, albedo);
 }
 
 float& MaterialAsset::GetMetalness()
 {
-	return m_material->GetFloat(s_metalness_uniform_str);
+	return m_material->get_float(s_metalness_uniform_str);
 }
 
 void MaterialAsset::SetMetalness(float metalness)
 {
-	m_material->Set(s_metalness_uniform_str, metalness);
+	m_material->set(s_metalness_uniform_str, metalness);
 }
 
 float& MaterialAsset::GetRoughness()
 {
-	return m_material->GetFloat(s_roughness_uniform_str);
+	return m_material->get_float(s_roughness_uniform_str);
 }
 
 void MaterialAsset::SetRoughness(float roughness)
 {
-	m_material->Set(s_roughness_uniform_str, roughness);
+	m_material->set(s_roughness_uniform_str, roughness);
 }
 
 float MaterialAsset::GetEmission()
 {
-	return m_material->GetFloat(s_emission_uniform_str);
+	return m_material->get_float(s_emission_uniform_str);
 }
 
 void MaterialAsset::SetEmission(float emission)
 {
-	m_material->Set(s_emission_uniform_str, emission);
+	m_material->set(s_emission_uniform_str, emission);
 }
 
-kb::arc<kb::Texture2D> MaterialAsset::GetAlbedoMap()
+arc<backend::texture_2d> MaterialAsset::GetAlbedoMap()
 {
-	return m_material->TryGetTexture2D(s_albedo_map_uniform_str);
+	return m_material->try_get_texture_2d(s_albedo_map_uniform_str);
 }
 
-void MaterialAsset::SetAlbedoMap(arc<Texture2D> texture)
+void MaterialAsset::SetAlbedoMap(arc<backend::texture_2d> texture)
 {
-	m_material->Set(s_albedo_map_uniform_str, texture);
+	m_material->set(s_albedo_map_uniform_str, texture);
 }
 
 void MaterialAsset::ClearAlbedoMap()
 {
-	m_material->Set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::arc<kb::Texture2D> MaterialAsset::GetNormalMap()
+arc<backend::texture_2d> MaterialAsset::GetNormalMap()
 {
-	return m_material->TryGetTexture2D(s_normal_map_uniform_str);
+	return m_material->try_get_texture_2d(s_normal_map_uniform_str);
 }
 
-void MaterialAsset::SetNormalMap(arc<Texture2D> texture)
+void MaterialAsset::SetNormalMap(arc<backend::texture_2d> texture)
 {
-	m_material->Set(s_normal_map_uniform_str, texture);
+	m_material->set(s_normal_map_uniform_str, texture);
 }
 
 bool MaterialAsset::IsUsingNormalMap()
 {
-	return m_material->GetBool(s_use_normal_map_uniform_str);
+	return m_material->get_bool(s_use_normal_map_uniform_str);
 }
 
 void MaterialAsset::SetUseNormalMap(bool use_normal)
 {
-	m_material->Set(s_use_normal_map_uniform_str, use_normal);
+	m_material->set(s_use_normal_map_uniform_str, use_normal);
 }
 
 void MaterialAsset::ClearNormalMap()
 {
-	m_material->Set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::arc<kb::Texture2D> MaterialAsset::GetMetalnessMap()
+arc<backend::texture_2d> MaterialAsset::GetMetalnessMap()
 {
-	return m_material->TryGetTexture2D(s_metalness_map_uniform_str);
+	return m_material->try_get_texture_2d(s_metalness_map_uniform_str);
 }
 
-void MaterialAsset::SetMetalnessMap(arc<Texture2D> texture)
+void MaterialAsset::SetMetalnessMap(arc<backend::texture_2d> texture)
 {
-	m_material->Set(s_metalness_map_uniform_str, texture);
+	m_material->set(s_metalness_map_uniform_str, texture);
 }
 
 void MaterialAsset::ClearMetalnessMap()
 {
-	m_material->Set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
-kb::arc<kb::Texture2D> MaterialAsset::GetRoughnessMap()
+arc<backend::texture_2d> MaterialAsset::GetRoughnessMap()
 {
-	return m_material->TryGetTexture2D(s_roughness_map_uniform_str);
+	return m_material->try_get_texture_2d(s_roughness_map_uniform_str);
 }
 
-void MaterialAsset::SetRoughnessMap(arc<Texture2D> texture)
+void MaterialAsset::SetRoughnessMap(arc<backend::texture_2d> texture)
 {
-	m_material->Set(s_roughness_map_uniform_str, texture);
+	m_material->set(s_roughness_map_uniform_str, texture);
 }
 
 void MaterialAsset::ClearRoughnessMap()
 {
-	m_material->Set(s_roughness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_roughness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
 }
 
 MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)

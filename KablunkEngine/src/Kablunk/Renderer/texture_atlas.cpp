@@ -196,7 +196,7 @@ auto texture_atlas::create_texture_atlas(
     );
     KB_CLIENT_TRACE("[render::texture_atlas]: done saving");
 
-    atlas_image_buf.Release();
+    atlas_image_buf.release();
 }
 
 auto texture_atlas::add_image_to_atlas(
@@ -271,9 +271,9 @@ auto texture_atlas::load_image(const std::filesystem::path& p_path) noexcept -> 
     {
         data = stbi_load(path_str.c_str(), &width, &height, &channels, 4);
         std::size_t size = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4ull;
-        image_buffer.Allocate(size);
+        image_buffer.allocate(size);
 
-        image_buffer.Write(data, size, 0);
+        image_buffer.write(data, size, 0);
     }
 
     stbi_image_free(data);

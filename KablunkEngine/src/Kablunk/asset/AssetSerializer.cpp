@@ -6,9 +6,8 @@
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Core/Application.h"
 
-#include "Kablunk/Renderer/RenderCommand2D.h"
 
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Audio/AudioAsset.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
 #include "Kablunk/lua/lua_asset.h"
@@ -23,10 +22,10 @@ namespace kb::asset
 
 bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
-	asset = Texture2D::Create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
+	asset = render::backend::texture_2d::create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
 	asset->set_id(metadata.id);
 
-    const bool success = asset.As<Texture2D>()->loaded();
+    const bool success = asset.As<render::backend::texture_2d>()->loaded();
 	if (!success)
 		asset->set_flag(AssetFlag::Invalid, true);
 

@@ -7,25 +7,27 @@
 
 #include "Kablunk/Scene/Scene.h"
 
-#include "Kablunk/Renderer/Image.h"
-#include "Kablunk/Renderer/render_pass.h"
-#include "Kablunk/Renderer/Pipeline.h"
-#include "Kablunk/Renderer/RenderCommandBuffer.h"
-#include "Kablunk/Renderer/Material.h"
-#include "Kablunk/Renderer/UniformBufferSet.h"
-#include "Kablunk/Renderer/StorageBufferSet.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
-#include "Kablunk/Renderer/Mesh.h"
-
-namespace kb
-{
-class Renderer2D;
+#include "Kablunk/renderer/backend/image.h"
+#include "Kablunk/renderer/backend/render_pass.h"
+#include "Kablunk/renderer/backend/pipeline.h"
+#include "Kablunk/renderer/backend/render_command_buffer.h"
+#include "Kablunk/renderer/backend/material.h"
+#include "Kablunk/renderer/backend/uniform_buffer_set.h"
+#include "Kablunk/renderer/backend/storage_buffer_set.h"
+#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/Mesh.h"
 
 // forward declaration
-namespace ui
+namespace kb::ui
 {
-	class IPanel;
+class IPanel;
 }
+
+namespace kb::render
+{ // start namespace kb::render
+
+// forward declaration
+class renderer_2d;
 
 struct SceneRendererSpecification
 {
@@ -54,7 +56,7 @@ struct SceneRendererData
 
 struct PointLightUB
 {
-    static constexpr const size_t k_point_light_buffer_size = 128ull;
+    static constexpr size_t k_point_light_buffer_size = 128ull;
     uint32_t count{ 0 };
     vec3_packed padding{};
     PointLight point_lights[k_point_light_buffer_size]{};
@@ -73,18 +75,18 @@ public:
 	void begin_scene(const SceneRendererCamera& camera);
 	void end_scene();
 
-	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<Material> override_material = {});
+	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<backend::material> override_material = {});
 
 	void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
 	bool is_multi_threaded() const { return m_use_threads; }
 
 	void set_viewport_size(uint32_t width, uint32_t height);
-	arc<render::render_pass> get_final_render_pass();
-	arc<render::render_pass> get_composite_render_pass() { return m_composite_pass; }
-    arc<render::frame_buffer> get_external_composite_frame_buffer() { return m_composite_pass->get_target_frame_buffer(); }
-	arc<Image2D> get_final_render_pass_image();
+	arc<backend::render_pass> get_final_render_pass();
+	arc<backend::render_pass> get_composite_render_pass() { return m_composite_pass; }
+    arc<backend::frame_buffer> get_external_composite_frame_buffer() { return m_composite_pass->get_target_frame_buffer(); }
+	arc<backend::image_2d> get_final_render_pass_image();
 
-	void on_imgui_render(const arc<Renderer2D>& p_renderer_2d);
+	void on_imgui_render(const arc<renderer_2d>& p_renderer_2d);
 
 	static void wait_for_threads();
 
@@ -98,7 +100,7 @@ private:
 	void geometry_pass();
 	void composite_pass();
 
-	void clear_pass(arc<render::render_pass> render_pass, bool explicit_clear = false);
+	void clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear = false);
 
 	// draw all ui elements presented to the scene renderer
 	void ui_pass();
@@ -110,12 +112,12 @@ private:
 	arc<Scene> m_context;
 	SceneRendererSpecification m_specification;
 
-	arc<RenderCommandBuffer> m_command_buffer;
+	arc<backend::render_command_buffer> m_command_buffer;
 
-	arc<render::render_pass> m_geometry_pass;
-	arc<render::render_pass> m_composite_pass;
+	arc<backend::render_pass> m_geometry_pass;
+	arc<backend::render_pass> m_composite_pass;
 
-	arc<Material> m_composite_material;
+	arc<backend::material> m_composite_material;
 
 #if 0
 	arc<render::render_pass> m_external_composite_render_pass;
@@ -128,20 +130,20 @@ private:
 		uint32_t composite_pass_query;
 	};
 
-	arc<Texture2D> m_bloom_texture;
-	arc<Texture2D> m_bloom_dirt_texture;
+	arc<backend::texture_2d> m_bloom_texture;
+	arc<backend::texture_2d> m_bloom_dirt_texture;
 
 	struct TransformVertexData
 	{
 		glm::vec4 MRow[3];
 	};
 
-	arc<VertexBuffer> m_transform_buffer;
+	arc<backend::VertexBuffer> m_transform_buffer;
 	TransformVertexData* m_transform_vertex_data = nullptr;
 
-    arc<UniformBufferSet> m_camera_uniform_buffer_set{};
-    arc<UniformBufferSet> m_point_lights_uniform_buffer_set{};
-	arc<StorageBufferSet> m_storage_buffer_set;
+    arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};
+    arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
+	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
     PointLightUB* m_point_lights_ub = new PointLightUB{};
 
@@ -162,7 +164,7 @@ private:
 		arc<Mesh> Mesh;
 		uint32_t Submesh_index;
 		arc<MaterialTable> Material_table;
-		arc<Material> Override_material;
+		arc<backend::material> Override_material;
 
 		uint32_t Instance_count = 0;
 		uint32_t Instance_offset = 0;
@@ -196,6 +198,7 @@ private:
 
 	friend class VulkanRenderer2D;
 };
-}
+
+} // end namespace kb::render
 
 #endif

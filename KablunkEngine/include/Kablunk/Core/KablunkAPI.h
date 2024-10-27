@@ -34,12 +34,15 @@
 #if defined(_MSC_VER) // MSVC
 #   define KB_NOT_NULL _Notnull_
 #   define KB_FORCE_INLINE __forceinline
+#   define KB_TRIVIAL_ABI
 #elif defined(__clang__) // CLANG
 #   define KB_NOT_NULL _Nonnull
 #   define KB_FORCE_INLINE [[clang::always_inline]]
+#   define KB_TRIVIAL_ABI [[clang::trivial_abi]]
 #elif defined(__GNUC__) // GCC
 #   define KB_NOT_NULL __attribute__((nonnull))
 #   define KB_FORCE_INLINE __attribute((always_inline))
+#   define KB_TRIVIAL_ABI
 #else
 #   error "Failed to detect compiler!"
 #endif

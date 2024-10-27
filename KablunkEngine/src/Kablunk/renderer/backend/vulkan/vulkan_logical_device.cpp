@@ -1,0 +1,415 @@
+#include "kablunkpch.h"
+
+#include "kablunk/renderer/backend/vulkan/vulkan_logical_device.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
+
+namespace kb::render::backend::vk
+{ // start namespace kb::render::backend::vk
+
+vulkan_physical_device::vulkan_physical_device()
+{
+	auto vk_instance = vulkan_context::get_vk_instance();
+
+	uint32_t device_count = 0;
+	vkEnumeratePhysicalDevices(vk_instance, &device_count, nullptr);
+
+	if (device_count == 0)
+		KB_CORE_ASSERT(false, "Vulkan found no physical devices!");
+
+	std::vector<VkPhysicalDevice> devices(device_count);
+	vkEnumeratePhysicalDevices(vk_instance, &device_count, devices.data());
+
+	for (const auto& device : devices)
+	{
+		if (IsPhysicalDeviceSuitable(device))
+		{
+			// #TODO select best device
+			m_device = device;
+			break;
+		}
+	}
+
+	if (m_device == VK_NULL_HANDLE)
+	{
+		KB_CORE_ASSERT(false, "Vulkan found no suitable physical device!");
+	}
+	else
+	{
+		KB_CORE_INFO("Vulkan selected device {0}", (const char*)m_properties.deviceName);
+	}
+
+	m_queue_family_indices = FindQueueFamilies(m_device);
+    CreateQueueInfos();
+
+	auto supported_extensions = FindSupportedExtensions(m_device);
+	std::vector<const char*> supported_extensions_named;
+	supported_extensions_named.reserve(supported_extensions.size());
+	for (const auto& extension : supported_extensions)
+		supported_extensions_named.emplace_back(extension.extensionName);
+	m_supported_extensions = supported_extensions_named;
+
+	m_depth_format = FindDepthFormat();
+}
+
+void vulkan_physical_device::FindPresentingIndices(VkSurfaceKHR surface)
+{
+	// query if device has presenting support. Iterate to find which queues support present
+	std::vector<VkBool32> supports_present(m_queue_family_properties.size());
+	uint32_t queue_family_index = 0;
+	for (const auto& queue_family : m_queue_family_properties)
+	{
+		vkGetPhysicalDeviceSurfaceSupportKHR(
+            m_device,
+            queue_family_index,
+            surface,
+            &supports_present[queue_family_index]
+        );
+
+		queue_family_index++;
+	}
+
+	uint32_t graphics_queue_index = UINT32_MAX;
+	uint32_t present_queue_index = UINT32_MAX;
+	for (uint32_t i = 0; i < m_queue_family_properties.size(); i++)
+	{
+		if ((m_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
+		{
+			if (graphics_queue_index == UINT32_MAX)
+			{
+				graphics_queue_index = i;
+			}
+
+			if (supports_present[i] == VK_TRUE)
+			{
+				graphics_queue_index = i;
+				present_queue_index = i;
+				break;
+			}
+		}
+	}
+
+	if (present_queue_index == UINT32_MAX)
+	{
+		// If there's no queue that supports both present and graphics
+		// try to find a separate present queue
+		for (uint32_t i = 0; i < m_queue_family_properties.size(); ++i)
+		{
+			if (supports_present[i] == VK_TRUE)
+			{
+				present_queue_index = i;
+				break;
+			}
+		}
+	}
+
+	KB_CORE_ASSERT(present_queue_index != UINT32_MAX, "no present queue found!");
+	KB_CORE_ASSERT(graphics_queue_index != UINT32_MAX, "no graphics queue found!");
+
+	m_queue_family_indices.Graphics_family = graphics_queue_index;
+	m_queue_family_indices.Present_family = present_queue_index;
+}
+
+queue_family_indices_t vulkan_physical_device::FindQueueFamilies(VkPhysicalDevice device)
+{
+	queue_family_indices_t queue_family_indices;
+	uint32_t queue_family_count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+
+	m_queue_family_properties = std::vector<VkQueueFamilyProperties>(queue_family_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, m_queue_family_properties.data());
+
+	int i = 0;
+	for (const auto& queue_family : m_queue_family_properties)
+	{
+		if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			queue_family_indices.Graphics_family = i;
+        else if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)
+            queue_family_indices.m_compute_family = i;
+        else if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)
+            queue_family_indices.m_transfer_family = i;
+
+		if (queue_family_indices.HasGraphics() && queue_family_indices.has_compute() && queue_family_indices.has_trasfer())
+			break;
+
+		i++;
+	}
+
+	return queue_family_indices;
+}
+
+bool vulkan_physical_device::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
+{
+    const auto indices = FindQueueFamilies(device);
+	VkPhysicalDeviceProperties device_properties{};
+	VkPhysicalDeviceFeatures device_features{};
+
+	vkGetPhysicalDeviceProperties(device, &device_properties);
+	vkGetPhysicalDeviceFeatures(device, &device_features);
+
+	// #TODO score each device and pick best
+
+    const bool suitable = device_properties.deviceType == 
+        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader &&
+        indices.HasGraphics() && CheckDeviseExtensionSupport(device);
+
+	if (suitable)
+		m_properties = device_properties;
+
+	return suitable;
+}
+
+std::vector<VkExtensionProperties> vulkan_physical_device::FindSupportedExtensions(VkPhysicalDevice device)
+{
+	uint32_t extension_count = 0;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+	if (extension_count > 0)
+	{
+		std::vector<VkExtensionProperties> extensions(extension_count);
+		if (vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data()) != VK_SUCCESS)
+			KB_CORE_ASSERT(false, "Vulkan unable to find extensions!");
+
+		KB_CORE_TRACE("Physical device has {0} extensions!", extension_count);
+
+		return extensions;
+	}
+
+	KB_CORE_WARN("Physical device has 0 extensions!");
+	return {};
+}
+
+VkFormat vulkan_physical_device::FindDepthFormat() const
+{
+    const std::vector<VkFormat> depth_formats = {
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D32_SFLOAT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM
+	};
+
+	for (auto& format : depth_formats)
+	{
+		VkFormatProperties format_props;
+		vkGetPhysicalDeviceFormatProperties(m_device, format, &format_props);
+		// Format must support depth stencil attachment for optimal tiling
+		if (format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+			return format;
+	}
+
+    KB_CORE_ASSERT(false, "[VulkanPhysicalDevice]: Could not find optimal depth format for device!");
+	return VK_FORMAT_UNDEFINED;
+}
+
+void vulkan_physical_device::CreateQueueInfos()
+{
+    constexpr float k_default_queue_priority = 0.0f;
+    constexpr int32_t requested_queue_type = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+
+    // graphics queue
+    if (requested_queue_type & VK_QUEUE_GRAPHICS_BIT)
+    {
+        VkDeviceQueueCreateInfo queueInfo{};
+        queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueInfo.queueFamilyIndex = m_queue_family_indices.Graphics_family.value();
+        queueInfo.queueCount = 1;
+        queueInfo.pQueuePriorities = &k_default_queue_priority;
+        m_queue_create_infos.push_back(queueInfo);
+    }
+
+    // dedicated compute queue
+    if (requested_queue_type & VK_QUEUE_COMPUTE_BIT)
+    {
+        if (m_queue_family_indices.m_compute_family != m_queue_family_indices.Graphics_family)
+        {
+            // If compute family index differs, we need an additional queue create info for the compute queue
+            VkDeviceQueueCreateInfo queueInfo{};
+            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueInfo.queueFamilyIndex = m_queue_family_indices.m_compute_family.value();
+            queueInfo.queueCount = 1;
+            queueInfo.pQueuePriorities = &k_default_queue_priority;
+            m_queue_create_infos.push_back(queueInfo);
+        }
+    }
+
+    // dedicated transfer queue
+    if (requested_queue_type & VK_QUEUE_TRANSFER_BIT)
+    {
+        if ((m_queue_family_indices.m_transfer_family != m_queue_family_indices.Graphics_family) 
+            && (m_queue_family_indices.m_transfer_family != m_queue_family_indices.m_compute_family))
+        {
+            // If compute family index differs, we need an additional queue create info for the compute queue
+            VkDeviceQueueCreateInfo queueInfo{};
+            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueInfo.queueFamilyIndex = m_queue_family_indices.m_transfer_family.value();
+            queueInfo.queueCount = 1;
+            queueInfo.pQueuePriorities = &k_default_queue_priority;
+            m_queue_create_infos.push_back(queueInfo);
+        }
+    }
+}
+
+bool vulkan_physical_device::CheckDeviseExtensionSupport(VkPhysicalDevice device)
+{
+    const auto supported_extensions = FindSupportedExtensions(device);
+	std::vector<const char*> supported_extensions_named;
+	supported_extensions_named.reserve(supported_extensions.size());
+	for (const auto& extension : supported_extensions)
+		supported_extensions_named.emplace_back(extension.extensionName);
+
+	for (const auto& extension : m_required_extensions)
+	{
+		bool found = false;
+		for (const auto& supported : supported_extensions_named)
+		{
+			if (strcmp(supported, extension) == 0)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			return false;
+	}
+
+
+	return true;
+}
+
+// ================
+//   VulkanDevice
+// ================
+
+vulkan_logical_device::vulkan_logical_device(const arc<vulkan_physical_device>& physical_device, VkPhysicalDeviceFeatures enabled_features)
+    : m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_compute_queue{ nullptr }, m_vk_graphics_queue{ nullptr }
+{
+	auto context = vulkan_context::get();
+	float queue_priority = 1.0f;
+	const auto& device_extensions = m_physical_device->GetRequiredExtensions();
+
+#if 0
+	// #TODO move to VulkanPhysicalDevice
+	VkDeviceQueueCreateInfo queue_create_info{};
+	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queue_create_info.queueFamilyIndex = m_physical_device->GetQueueFamilyIndices().Graphics_family.value();
+	queue_create_info.queueCount = 1;
+	queue_create_info.pQueuePriorities = &queue_priority;
+#endif
+
+	// setup logical device
+	VkDeviceCreateInfo create_info{};
+	create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	create_info.pQueueCreateInfos = physical_device->m_queue_create_infos.data();
+	create_info.queueCreateInfoCount = static_cast<uint32_t>(physical_device->m_queue_create_infos.size());
+	create_info.pEnabledFeatures = &m_enabled_features;
+
+
+	if (context->m_enable_validation_layers)
+	{
+		create_info.enabledLayerCount = static_cast<uint32_t>(context->m_validation_layers.size());
+		create_info.ppEnabledLayerNames = context->m_validation_layers.data();
+	}
+	else
+		create_info.enabledLayerCount = 0;
+
+	if (!device_extensions.empty())
+	{
+		create_info.enabledExtensionCount = static_cast<uint32_t>(device_extensions.size());
+		create_info.ppEnabledExtensionNames = device_extensions.data();
+	}
+	else
+		create_info.enabledExtensionCount = 0;
+
+	// create logical device
+	if (vkCreateDevice(m_physical_device->GetVkDevice(), &create_info, nullptr, &m_vk_device) != VK_SUCCESS)
+		KB_CORE_ASSERT(false, "Failed to create logical device!");
+
+#if 0
+	VkCommandPoolCreateInfo cmd_pool_info{};
+	cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	KB_CORE_ASSERT(m_physical_device->GetQueueFamilyIndices().HasGraphics(), "no complete queue family!");
+	cmd_pool_info.queueFamilyIndex = m_physical_device->GetQueueFamilyIndices().Graphics_family.value();
+    cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    if (vkCreateCommandPool(m_vk_device, &cmd_pool_info, nullptr, &m_command_pool) != VK_SUCCESS)
+        KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
+#endif
+
+    // call vulkan api to get a graphics queue
+	vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().Graphics_family.value(), 0, &m_vk_graphics_queue);
+    // call vulkan api to get a compute queue
+    vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().m_compute_family.value(), 0, &m_vk_compute_queue);
+}
+
+vulkan_logical_device::~vulkan_logical_device()
+{
+	if (!m_destroyed)
+		Destroy();
+}
+
+void vulkan_logical_device::Destroy()
+{
+	if (m_destroyed)
+		return;
+
+	m_command_pools.clear();
+
+	vkDeviceWaitIdle(m_vk_device);
+	vkDestroyDevice(m_vk_device, nullptr);
+    KB_CORE_INFO("[VulkanDevice]: destroyed vk device!");
+
+	m_destroyed = true;
+}
+
+VkCommandBuffer vulkan_logical_device::get_vk_command_buffer(bool begin, bool p_compute /*= false*/)
+{
+    return get_or_create_thread_local_command_pool()->allocate_command_buffer(begin, p_compute);
+}
+
+void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer)
+{
+    get_thread_local_command_pool()->flush_command_buffer(command_buffer);
+}
+
+void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, command_buffer_type_t p_command_buffer_type)
+{
+    get_thread_local_command_pool()->flush_command_buffer(command_buffer, queue, p_command_buffer_type);
+}
+
+VkCommandBuffer vulkan_logical_device::create_secondary_command_buffer()
+{
+	VkCommandBuffer cmd_buffer;
+
+	VkCommandBufferAllocateInfo cmd_buffer_alloc_info{};
+	cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmd_buffer_alloc_info.commandPool = get_or_create_thread_local_command_pool()->get_vk_graphics_command_pool();
+	cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	cmd_buffer_alloc_info.commandBufferCount = 1;
+
+	if (vkAllocateCommandBuffers(m_vk_device, &cmd_buffer_alloc_info, &cmd_buffer) != VK_SUCCESS)
+		KB_CORE_ASSERT(false, "[VulkanDevice]: failed to allocate secondary buffer!");
+	return cmd_buffer;
+
+}
+
+arc<command_pool> vulkan_logical_device::get_thread_local_command_pool()
+{
+    const auto thread_id = std::this_thread::get_id();
+    KB_CORE_ASSERT(m_command_pools.contains(thread_id), "[VulkanDevice]: could not find a local thread pool!");
+    return m_command_pools.at(thread_id);
+}
+
+arc<command_pool> vulkan_logical_device::get_or_create_thread_local_command_pool()
+{
+    const auto thread_id = std::this_thread::get_id();
+    const auto it = m_command_pools.find(thread_id);
+    if (it != m_command_pools.end())
+        return it->second;
+
+    arc<command_pool> command_pool = arc<vk::command_pool>::Create();
+    m_command_pools[thread_id] = command_pool;
+
+    return command_pool;
+}
+
+} // end namespace kb::render::backend::vk

@@ -5,7 +5,6 @@
 #include "Kablunk/Asset/AssetSerializer.h"
 
 #include "Kablunk/Renderer/Font/FontManager.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
 
 #include "Kablunk/Core/Application.h"
 

@@ -5,9 +5,9 @@
 #include "Kablunk/Events/Event.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/renderer_2d.h"
 
-#include "Platform/Vulkan/VulkanContext.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #include "Kablunk/Core/Timers.h"
 #include "Kablunk/Plugin/PluginManager.h"
@@ -61,7 +61,7 @@ void Application::init()
 	// start rendering render one frame
 	m_render_thread.pump();
 
-    m_renderer_2d = arc<Renderer2D>::Create();
+    m_renderer_2d = arc<render::renderer_2d>::Create();
     m_renderer_2d->init();
 
     //m_screen_space_renderer_2d = arc<Renderer2D>::Create();
@@ -103,9 +103,6 @@ void Application::shutdown()
 
 	m_thread_pool.Shutdown();
 	//CSharpScriptEngine::Shutdown();
-
-	// clear the framebuffer pool
-	render::frame_buffer_pool::Get()->GetAll().clear();
 
 	m_render_thread.terminate();
 
@@ -231,7 +228,7 @@ void Application::Run()
 
 			// #TODO(Sean) not renderer agnostic
 			// start swapchain presentation on render thread
-			render::submit([&]() { VulkanContext::Get()->GetSwapchain().BeginFrame(); });
+			render::submit([&]() { render::backend::vk::vulkan_context::get()->get_swap_chain()->BeginFrame(); });
 
 			render::begin_frame();
 			{

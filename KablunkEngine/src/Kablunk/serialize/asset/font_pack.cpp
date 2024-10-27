@@ -28,8 +28,8 @@ auto font_pack::add_font(const arc<render::font>& p_font_asset) noexcept -> void
     m_font_pack.m_font_atlas_headers.emplace_back(
         font_atlas_header{
             .m_image_type = 0,
-            .m_width = font_atlas->GetWidth(),
-            .m_height = font_atlas->GetHeight(),
+            .m_width = font_atlas->get_width(),
+            .m_height = font_atlas->get_height(),
             .m_checksum = 0,
         }
     );
@@ -88,7 +88,7 @@ auto font_pack::save() const noexcept -> void
             [](size_t p_val, const arc<render::font>& p_font_asset) -> size_t
             {
                 const auto& font_atlas = p_font_asset->get_font_atlas();
-                return p_val + Utils::GetImageMemorySize(font_atlas->GetFormat(), font_atlas->GetWidth(), font_atlas->GetHeight());
+                return p_val + render::backend::util::GetImageMemorySize(font_atlas->get_format(), font_atlas->get_width(), font_atlas->get_height());
             }
         );
 
@@ -125,9 +125,9 @@ auto font_pack::serialize_font(
     const auto& atlas_data_buffer = font_atlas->get_buffer();
 
     *header_ptr = font_atlas_header{
-        .m_image_type = static_cast<u32>(font_atlas->GetFormat()),
-        .m_width = font_atlas->GetWidth(),
-        .m_height = font_atlas->GetHeight(),
+        .m_image_type = static_cast<u32>(font_atlas->get_format()),
+        .m_width = font_atlas->get_width(),
+        .m_height = font_atlas->get_height(),
         .m_font_name = { 0 },
         .m_checksum = compute_md5_hash(atlas_data_buffer.get(), atlas_data_buffer.size())
     };
@@ -158,9 +158,9 @@ auto font_pack::deserialize_font(
     const auto& atlas_header = m_font_pack.m_font_atlas_headers.at(p_atlas_index);
     p_cursor += sizeof(font_atlas_header);
 
-    KB_CORE_ASSERT(atlas_header_ptr->m_image_type < static_cast<u32>(ImageFormat::END), "[font_pack]: Invalid font atlas image type {}", atlas_header_ptr->m_image_type);
-    const auto image_format = static_cast<ImageFormat>(atlas_header.m_image_type);
-    const auto atlas_size = Utils::GetImageMemorySize(image_format, atlas_header.m_width, atlas_header.m_height);
+    KB_CORE_ASSERT(atlas_header_ptr->m_image_type < static_cast<u32>(render::backend::image_format_t::END), "[font_pack]: Invalid font atlas image type {}", atlas_header_ptr->m_image_type);
+    const auto image_format = static_cast<render::backend::image_format_t>(atlas_header.m_image_type);
+    const auto atlas_size = render::backend::util::GetImageMemorySize(image_format, atlas_header.m_width, atlas_header.m_height);
 
     // check md5 hashes match
     const auto& header_md5 = atlas_header.m_checksum;

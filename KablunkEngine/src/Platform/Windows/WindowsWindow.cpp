@@ -8,7 +8,7 @@
 
 #include "Kablunk/Renderer/RendererAPI.h"
 
-#include "Platform/Vulkan/VulkanContext.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -60,7 +60,7 @@ void WindowsWindow::Init(const WindowProps& props)
         KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
 
 		// Hint to glfw that this will be rendered with Vulkan
-		if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
+		if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// #TODO resizing at runtime
@@ -117,19 +117,14 @@ void WindowsWindow::Init(const WindowProps& props)
             KB_CORE_INFO("[WindowsWindow]: GLFW reporting monitor DPI as ({}, {})", m_data.m_current_dpi.x, m_data.m_current_dpi.y);
         }
 	}
-	m_context = GraphicsContext::Create(m_window);
-	m_context->Init();
 
-    // #TODO can we abstract and not have render backend specifics here...
-	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
-	{
-		arc<VulkanContext> context = m_context.As<VulkanContext>();
-		//vk_context->GetSwapchain().Init(vk_context->GetInstance(), vk_context->GetDevice());
-		context->GetSwapchain().InitSurface(m_window);
-
-		uint32_t width = m_data.Width, height = m_data.Height;
-		context->GetSwapchain().Create(&width, &height, m_data.VSync);
-	}
+    // TODO: Window should not own the context
+    {
+        m_context = render::backend::graphics_context::create(m_window);
+        m_context->init();
+        m_context->get_swap_chain()->init_surface(m_window);
+        m_context->get_swap_chain()->create(&m_data.Width, &m_data.Height, m_data.VSync);
+    }
 
 	KB_CORE_INFO("Context created!");
 
@@ -239,13 +234,13 @@ void WindowsWindow::Shutdown()
 {
     KB_PROFILE_SCOPE;
 
-	if (render::Renderer::get_render_backend_type() == render::render_backend_type_t::vulkan)
+	if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
 	{
 		// #TODO dynamic_cast bad!
-		VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
+		auto* vk_context = dynamic_cast<render::backend::vk::vulkan_context*>(m_context.get());
 
-		vk_context->GetSwapchain().Destroy();
-        vk_context->GetDevice()->Destroy();
+		vk_context->get_swap_chain()->Destroy();
+        vk_context->get_device()->Destroy();
 	}
 
 	//m_context->Shutdown();
@@ -280,7 +275,7 @@ void WindowsWindow::OnUpdate()
 {
     KB_PROFILE_SCOPE;
 
-    m_context->SwapBuffers();
+    m_context->swap_buffers();
 }
 
 
@@ -422,11 +417,11 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 void WindowsWindow::swap_buffers()
 {
 	// #TODO this is not renderer agnostic
-	VulkanContext::Get()->GetSwapchain().Present();
+	render::backend::vk::vulkan_context::get()->get_swap_chain()->Present();
 }
 
 cursor_handle WindowsWindow::create_cursor(
-    arc<Texture2D>& p_texture,
+    arc<render::backend::texture_2d>& p_texture,
     const glm::ivec2& p_hot_spot
 ) noexcept
 {
@@ -439,9 +434,9 @@ cursor_handle WindowsWindow::create_cursor(
     );
 
     const GLFWimage image{
-        .width = static_cast<i32>(p_texture->GetWidth()),
-        .height = static_cast<i32>(p_texture->GetHeight()),
-        .pixels = static_cast<unsigned char*>(p_texture->GetWriteableBuffer().get())
+        .width = static_cast<i32>(p_texture->get_width()),
+        .height = static_cast<i32>(p_texture->get_height()),
+        .pixels = static_cast<unsigned char*>(p_texture->get_writeable_buffer().get())
     };
 
     const auto glfw_cursor = glfwCreateCursor(&image, p_hot_spot.x, p_hot_spot.y);

@@ -216,7 +216,7 @@ void font_asset::create_texture_atlas()
     }
 
 	// store pixel data in texture
-	m_texture_atlas = Texture2D::Create(ImageFormat::RGBA, tex_width, tex_height, rgba_array);
+	m_texture_atlas = backend::texture_2d::create(backend::image_format_t::RGBA, tex_width, tex_height, rgba_array);
 
 	delete[] pixel_data;
     delete[] rgba_array;

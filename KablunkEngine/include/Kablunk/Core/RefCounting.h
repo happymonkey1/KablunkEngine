@@ -12,7 +12,6 @@
 #define KB_LIVE_REFERENCES 0
 #define KB_REF_MOVE_DEFINED 1
 
-
 namespace kb
 {
 
@@ -22,23 +21,31 @@ namespace kb
 //       3. compile time option / multiple types for single vs multi-threaded to remove un-necessary atomic operations
 //       example / reference implementation for refactor https://github.com/gershnik/intrusive_shared_ptr/
 
+// Forward declaration
+template <typename T>
+class arc;
+
 class RefCounted
 {
 public:
     RefCounted() = default;
-	// #NOTE guarantee that RefCounted has a vtable, so that memory does not become misaligned (by 8 bytes) when downcasting
-	virtual ~RefCounted() = default;
 
 	KB_FORCE_INLINE auto inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
 	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release) - 1; }
+
+protected:
+    virtual ~RefCounted() = default;
+
 private:
     mutable std::atomic<u32> m_ref_count{ 0 };
+
+    template <typename T>
+    friend class arc;
 };
 
 namespace Internal
 { // start namespace ::Internal
     inline static std::mutex s_ref_move_construct_mutex;
-
 
 	void AddToLiveReferences(void* instance);
 	void RemoveFromLiveReferences(void* instance);
@@ -54,7 +61,7 @@ concept is_ref_counted = std::is_base_of_v<RefCounted, T>;
 } // end namespace ::concepts
 
 template <typename T>
-class arc
+class KB_TRIVIAL_ABI arc
 {
 public:
 	constexpr arc() : m_ptr{ nullptr } {}
@@ -67,7 +74,7 @@ public:
 		IncRef();
 	}
 
-    constexpr arc(const arc<T>& other) noexcept
+    constexpr arc(const arc& other) noexcept
         : m_ptr{ other.m_ptr }
     {
         if (this != &other)

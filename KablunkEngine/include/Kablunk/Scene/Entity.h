@@ -77,7 +77,7 @@ namespace kb
 
 		friend class CSharpScriptEngine;
 		friend class Prefab;
-		friend class Renderer2D;
+		friend class render::renderer_2d;
 	};
 
 	template <typename T>

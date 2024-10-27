@@ -68,8 +68,8 @@ namespace kb
 		arc<Scene> m_editor_scene;
 		arc<Scene> m_runtime_scene;
 
-		arc<SceneRenderer> m_viewport_renderer;
-        arc<Renderer2D> m_renderer_2d;
+		arc<render::SceneRenderer> m_viewport_renderer;
+        arc<render::renderer_2d> m_renderer_2d;
 		std::filesystem::path m_editor_scene_path;
 
 		EditorCamera m_editor_camera;
@@ -101,7 +101,7 @@ namespace kb
 		bool m_show_memory_statistics_window = false;
 
 		// Resources
-		arc<Texture2D> m_icon_play, m_icon_stop, m_icon_pause;
+		arc<render::backend::texture_2d> m_icon_play, m_icon_stop, m_icon_pause;
 
 		enum class SceneState
 		{

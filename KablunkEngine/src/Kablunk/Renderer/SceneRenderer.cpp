@@ -3,11 +3,11 @@
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/renderer_2d.h"
 
 #include "Kablunk/Scene/Entity.h"
 
-#include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
 
 #include "Kablunk/UI/IPanel.h"
 
@@ -15,8 +15,9 @@
 
 #include "Kablunk/Core/Application.h"
 
-namespace kb
-{
+namespace kb::render
+{ // start namespace kb::render
+
 static std::vector<std::thread> s_thread_pool;
 
 SceneRenderer::SceneRenderer(const arc<Scene>& context, const SceneRendererSpecification& spec)
@@ -35,48 +36,48 @@ void SceneRenderer::init()
     KB_PROFILE_SCOPE;
 
 	if (m_specification.swap_chain_target)
-		m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
+		m_command_buffer = backend::render_command_buffer::create_from_swap_chain("SceneRenderer");
 	else
-		m_command_buffer = RenderCommandBuffer::Create(0, "SceneRenderer");
+		m_command_buffer = backend::render_command_buffer::create(0, "SceneRenderer");
 
 
-	m_bloom_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
-	m_bloom_dirt_texture = Texture2D::Create(ImageFormat::RGBA, 1, 1);
+	m_bloom_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
+	m_bloom_dirt_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
 
 	uint32_t frames_in_flight = render::get_frames_in_flight();
-    m_camera_uniform_buffer_set = UniformBufferSet::create(sizeof(CameraDataUB), frames_in_flight);
-    m_point_lights_uniform_buffer_set = UniformBufferSet::create(sizeof(PointLightUB), frames_in_flight);
+    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(CameraDataUB), frames_in_flight);
+    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(PointLightUB), frames_in_flight);
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
     // Geometry
 	{
-        render::frame_buffer_specification geometry_frame_buffer_spec{};
-        geometry_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+        backend::frame_buffer_specification geometry_frame_buffer_spec{};
+        geometry_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
         geometry_frame_buffer_spec.m_debug_name = "Geometry";
         //geometry_frame_buffer_spec.m_transfer = true;
         geometry_frame_buffer_spec.m_clear_color_on_load = true;
         geometry_frame_buffer_spec.m_clear_depth_on_load = true;
-        arc<render::frame_buffer> frame_buffer = render::frame_buffer::create(geometry_frame_buffer_spec);
+        arc<backend::frame_buffer> frame_buffer = backend::frame_buffer::create(geometry_frame_buffer_spec);
 
-        render::PipelineSpecification pipeline_spec{
+        backend::pipeline_specification_t pipeline_spec{
             .shader = render::get_shader("Kablunk_diffuse_static"),
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { ShaderDataType::Float3, "a_Position" },
-                { ShaderDataType::Float3, "a_Normal" },
-                { ShaderDataType::Float3, "a_Tangent" },
-                { ShaderDataType::Float3, "a_Binormal" },
-                { ShaderDataType::Float2, "a_TexCoord" }
+                { backend::ShaderDataType::Float3, "a_Position" },
+                { backend::ShaderDataType::Float3, "a_Normal" },
+                { backend::ShaderDataType::Float3, "a_Tangent" },
+                { backend::ShaderDataType::Float3, "a_Binormal" },
+                { backend::ShaderDataType::Float2, "a_TexCoord" }
             },
             .instance_layout = {
-                { ShaderDataType::Float4, "a_MRow0" },
-                { ShaderDataType::Float4, "a_MRow1" },
-                { ShaderDataType::Float4, "a_MRow2" },
+                { backend::ShaderDataType::Float4, "a_MRow0" },
+                { backend::ShaderDataType::Float4, "a_MRow1" },
+                { backend::ShaderDataType::Float4, "a_MRow2" },
             },
-            .topology = render::PrimitiveTopology::Triangles,
+            .topology = backend::primitive_topology_t::triangles,
             .backface_culling = false,
             .depth_test = false,
             .depth_write = false,
@@ -84,12 +85,12 @@ void SceneRenderer::init()
             .debug_name = "scene_renderer::pipeline::geometry"
 		};
 
-        render::render_pass_specification geo_render_pass_spec{
-            .m_pipeline = render::Pipeline::Create(pipeline_spec),
+        backend::render_pass_specification geo_render_pass_spec{
+            .m_pipeline = backend::pipeline::create(pipeline_spec),
             .m_debug_name = "scene_renderer::render_pass::geometry"
         };
 
-        m_geometry_pass = render::render_pass::create(geo_render_pass_spec);
+        m_geometry_pass = backend::render_pass::create(geo_render_pass_spec);
 
         m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
         m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
@@ -100,8 +101,8 @@ void SceneRenderer::init()
 
 	// Composite
 	{
-        render::frame_buffer_specification composite_frame_buffer_spec{};
-        composite_frame_buffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
+        backend::frame_buffer_specification composite_frame_buffer_spec{};
+        composite_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         composite_frame_buffer_spec.m_samples = 1;
         composite_frame_buffer_spec.m_clear_color_on_load = false;
         composite_frame_buffer_spec.m_clear_depth_on_load = false;
@@ -109,20 +110,20 @@ void SceneRenderer::init()
         composite_frame_buffer_spec.m_clear_color = { 0.1f, 0.1, 0.1f, 1.0f };
         composite_frame_buffer_spec.m_debug_name = "scene_renderer::frame_buffer::scene_composite";
 
-        auto composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer_spec);
+        auto composite_frame_buffer = backend::frame_buffer::create(composite_frame_buffer_spec);
 
-		arc<Shader> composite_shader = render::get_shader("scene_composite");
-		m_composite_material = Material::Create(composite_shader);
+		arc<backend::shader> composite_shader = render::get_shader("scene_composite");
+		m_composite_material = backend::material::create(composite_shader);
 
-        render::PipelineSpecification pipeline_spec{
+        backend::pipeline_specification_t pipeline_spec{
             .shader = composite_shader,
             .m_target_frame_buffer = composite_frame_buffer,
             .layout = {
-                { ShaderDataType::Float3, "a_Position" },
-                { ShaderDataType::Float2, "a_TexCoord" }
+                { backend::ShaderDataType::Float3, "a_Position" },
+                { backend::ShaderDataType::Float2, "a_TexCoord" }
             },
             .instance_layout = {},
-            .topology = render::PrimitiveTopology::Triangles,
+            .topology = backend::primitive_topology_t::triangles,
             .backface_culling = false,
             .depth_test = false,
             .depth_write = false,
@@ -130,11 +131,11 @@ void SceneRenderer::init()
             .debug_name = "scene_renderer::pipeline::scene_composite"
         };
 
-        render::render_pass_specification composite_render_pass{
-            .m_pipeline = render::Pipeline::Create(pipeline_spec),
+        backend::render_pass_specification composite_render_pass{
+            .m_pipeline = backend::pipeline::create(pipeline_spec),
             .m_debug_name = "scene_renderer::render_pass::scene_composite"
         };
-        m_composite_pass = render::render_pass::create(composite_render_pass);
+        m_composite_pass = backend::render_pass::create(composite_render_pass);
 
         m_composite_pass->set_input("u_Texture", m_geometry_pass->get_output_image(0));
         const auto& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
@@ -184,7 +185,7 @@ void SceneRenderer::init()
 	}
 
     constexpr size_t transform_buffer_count = 1024;
-	m_transform_buffer = VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
+	m_transform_buffer = backend::VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
 	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
     arc<SceneRenderer> instance{ this };
@@ -229,7 +230,7 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 		m_needs_resize = false;
 
 		if (m_specification.swap_chain_target)
-			m_command_buffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
+			m_command_buffer = backend::render_command_buffer::create_from_swap_chain("SceneRenderer");
 	}
 
 	const auto& scene_camera = m_scene_data.camera;
@@ -307,7 +308,7 @@ void SceneRenderer::end_scene()
 	m_active = false;
 }
 
-void SceneRenderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<Material> override_material/* = nullptr */)
+void SceneRenderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<backend::material> override_material/* = nullptr */)
 {
     KB_PROFILE_SCOPE;
 
@@ -335,32 +336,32 @@ void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	}
 }
 
-arc<render::render_pass> SceneRenderer::get_final_render_pass()
+arc<backend::render_pass> SceneRenderer::get_final_render_pass()
 {
 	return m_composite_pass;
 }
 
-arc<Image2D> SceneRenderer::get_final_render_pass_image()
+arc<backend::image_2d> SceneRenderer::get_final_render_pass_image()
 {
     KB_PROFILE_SCOPE;
 
 	if (!m_resources_created)
-		return arc<Image2D>{};
+		return arc<backend::image_2d>{};
 
 	auto image = m_composite_pass->get_output_image(0);
 	return image;
 }
 
-void SceneRenderer::on_imgui_render(const arc<Renderer2D>& p_renderer_2d)
+void SceneRenderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
 {
     KB_PROFILE_SCOPE;
 
 	ImGui::Begin("Render Statistics");
 
-	uint32_t current_frame_index = render::rt_get_current_frame_index();
-	ImGui::Text("GPU time: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index));
-	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
-	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->GetExecutionGPUTime(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
+	uint32_t current_frame_index = rt_get_current_frame_index();
+	ImGui::Text("GPU time: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index));
+	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
+	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
 
     p_renderer_2d->on_imgui_render();
 
@@ -386,7 +387,7 @@ void SceneRenderer::flush_draw_list()
 {
     KB_PROFILE_SCOPE;
 
-	m_command_buffer->Begin();
+	m_command_buffer->begin();
 	if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
 	{
 		// do pre-render tasks
@@ -403,8 +404,8 @@ void SceneRenderer::flush_draw_list()
 		clear_pass();
 	}
 
-	m_command_buffer->End();
-	m_command_buffer->Submit();
+	m_command_buffer->end();
+	m_command_buffer->submit();
 
 	m_scene_data = {};
 	m_draw_list = {};
@@ -458,7 +459,7 @@ void SceneRenderer::clear_pass()
 	render::end_render_pass(m_command_buffer);
 }
 
-void SceneRenderer::clear_pass(arc<render::render_pass> render_pass, bool explicit_clear /*= false*/)
+void SceneRenderer::clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear /*= false*/)
 {
 	KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->get_specification().m_debug_name);
 	render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
@@ -491,7 +492,7 @@ void SceneRenderer::geometry_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
+	m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
 	render::begin_render_pass(m_command_buffer, m_geometry_pass);
 
 	// submit transform data
@@ -524,39 +525,39 @@ void SceneRenderer::geometry_pass()
 	}
 
 	render::end_render_pass(m_command_buffer);
-	m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.geometry_pass_query);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.geometry_pass_query);
 }
 
 void SceneRenderer::composite_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->BeginTimestampQuery());
+	m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
 	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 
 	constexpr float exposure = 1.0f; // #TODO dynamic based off camera
 	constexpr bool bloom_enabled = false; // #TODO dynamic
 	auto frame_buffer = m_geometry_pass->get_target_frame_buffer();
 
-	m_composite_material->Set("u_Uniforms.Exposure", exposure);
+	m_composite_material->set("u_Uniforms.Exposure", exposure);
 	if (bloom_enabled)
 	{
 		KB_CORE_ASSERT(false, "not implemented!");
-		m_composite_material->Set("u_Uniforms.BloomIntensity", 1.0f);
-		m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 1.0f);
+		m_composite_material->set("u_Uniforms.BloomIntensity", 1.0f);
+		m_composite_material->set("u_Uniforms.BloomDirtIntensity", 1.0f);
 	}
 	else
 	{
-		m_composite_material->Set("u_Uniforms.BloomIntensity", 0.0f);
-		m_composite_material->Set("u_Uniforms.BloomDirtIntensity", 0.0f);
+		m_composite_material->set("u_Uniforms.BloomIntensity", 0.0f);
+		m_composite_material->set("u_Uniforms.BloomDirtIntensity", 0.0f);
 	}
 
     const float saturation = 1.0f;
     const float contrast = 1.0f;
     const float brightness = 0.0f;
-    m_composite_material->Set("u_Uniforms.Saturation", saturation);
-    m_composite_material->Set("u_Uniforms.Contrast", contrast);
-    m_composite_material->Set("u_Uniforms.Brightness", brightness);
+    m_composite_material->set("u_Uniforms.Saturation", saturation);
+    m_composite_material->set("u_Uniforms.Contrast", contrast);
+    m_composite_material->set("u_Uniforms.Brightness", brightness);
 
 	//m_composite_material->Set("u_Texture", frame_buffer->GetImage());
 	//m_composite_material->Set("u_BloomTexture", m_bloom_texture);
@@ -570,7 +571,7 @@ void SceneRenderer::composite_pass()
     );
 
 	render::end_render_pass(m_command_buffer);
-	m_command_buffer->EndTimestampQuery(m_gpu_time_query_indices.composite_pass_query);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.composite_pass_query);
 }
 
-}
+} // end namespace kb::render

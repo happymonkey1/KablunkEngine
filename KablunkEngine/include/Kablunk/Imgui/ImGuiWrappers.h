@@ -2,7 +2,7 @@
 #define KABLUNK_IMGUI_IMGUI_WRAPPERS_H
 
 #include "Kablunk/Core/Logger.h"
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 
 #include "imgui.h"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
@@ -146,10 +146,10 @@ namespace kb::UI
 		ImGui::Columns(2);
 	}
 
-	ImTextureID GetTextureID(arc<Texture2D> texture);
-	void Image(const arc<Image2D>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	void Image(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+	ImTextureID GetTextureID(arc<render::backend::texture_2d> texture);
+	void Image(const arc<render::backend::image_2d>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	void Image(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+	bool ImageButton(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 	// Use BeginProperties() before and EndProperties() after!
 	static bool Property(const char* label, std::string& value)
@@ -402,7 +402,7 @@ namespace kb::UI
 			});
 	}
 
-	static bool PropertyImageButton(const char* label, arc<Texture2D> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
+	static bool PropertyImageButton(const char* label, arc<render::backend::texture_2d> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
 	{
 		ShiftCursorY(size.y / 4.0f);
 		return Internal::CreateProperty(label, [&](const char* id_buffer)
@@ -487,7 +487,7 @@ namespace kb::UI
 
 	
 	// Button Images
-	static void DrawButtonImage(const arc<Texture2D>& imageNormal, const arc<Texture2D>& imageHovered, const arc<Texture2D>& imagePressed,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImVec2 rectMin, ImVec2 rectMax)
 	{
@@ -500,21 +500,21 @@ namespace kb::UI
 			drawList->AddImage(GetTextureID(imageNormal), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintNormal);
 	};
 
-	static void DrawButtonImage(const arc<Texture2D>& imageNormal, const arc<Texture2D>& imageHovered, const arc<Texture2D>& imagePressed,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImRect rectangle)
 	{
 		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
 	};
 
-	static void DrawButtonImage(const arc<Texture2D>& image,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImVec2 rectMin, ImVec2 rectMax)
 	{
 		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectMin, rectMax);
 	};
 
-	static void DrawButtonImage(const arc<Texture2D>& image,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
 		ImRect rectangle)
 	{
@@ -522,13 +522,13 @@ namespace kb::UI
 	};
 
 
-	static void DrawButtonImage(const arc<Texture2D>& imageNormal, const arc<Texture2D>& imageHovered, const arc<Texture2D>& imagePressed,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
 	{
 		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 	};
 
-	static void DrawButtonImage(const arc<Texture2D>& image,
+	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
 		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
 	{
 		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());

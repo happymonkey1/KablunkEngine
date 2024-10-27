@@ -110,7 +110,7 @@ public:
 		// #TODO should we write registry to file every time?
 		write_registry_to_file();
 
-		arc<T> asset = arc<T>::Create(std::forward<Args>(args)...);
+		arc<T> asset = arc<T>::create(std::forward<Args>(args)...);
 		asset->set_id(metadata.id);
         KB_CORE_ASSERT(asset, "[AssetManager]: Trying to emplace null asset into loaded asset registry?");
 		m_loaded_assets[metadata.id] = asset;

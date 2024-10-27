@@ -3,7 +3,7 @@
 #include "Kablunk/Core/Window.h"
 
 
-#include "Kablunk/Renderer/GraphicsContext.h"
+#include "Kablunk/renderer/backend/graphics_context.h"
 #include "GLFW/glfw3.h"
 
 struct GLFWwindow;
@@ -45,7 +45,7 @@ public:
 
 	virtual void swap_buffers() override;
 
-    cursor_handle create_cursor(arc<Texture2D>& p_texture, const glm::ivec2& p_hot_spot) noexcept override;
+    cursor_handle create_cursor(arc<render::backend::texture_2d>& p_texture, const glm::ivec2& p_hot_spot) noexcept override;
     void set_cursor(cursor_handle p_cursor_handle) noexcept override;
     void set_default_cursor() noexcept override;
 
@@ -56,7 +56,7 @@ private:
     static auto compute_dpi(const glm::vec2& p_monitor_resolution, const glm::vec2& p_monitor_dimensions) noexcept -> glm::vec2;
 private:
 	GLFWwindow* m_window;
-	arc<GraphicsContext> m_context;
+	arc<render::backend::graphics_context> m_context;
 
 	struct WindowData {
 		std::string Title;

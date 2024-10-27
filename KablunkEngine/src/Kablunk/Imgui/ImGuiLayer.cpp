@@ -2,13 +2,10 @@
 #include "Kablunk/Imgui/ImGuiLayer.h"
 
 #include "imgui.h"
-#include "Kablunk/Renderer/Renderer.h"
 
-#include "Platform/Vulkan/VulkanImGuiLayer.h"
-
-#include "Kablunk/Renderer/RendererAPI.h"
-#include "Kablunk/Renderer/render_backend.h"
-
+#include "Kablunk/renderer/Renderer.h"
+#include "Kablunk/renderer/backend/vulkan/vulkan_imgui_layer.h"
+#include "Kablunk/renderer/backend/backend_type.h"
 
 namespace kb 
 { // start namespace kb
@@ -40,14 +37,13 @@ void ImGuiLayer::SetDarkTheme()
 	style.Colors[ImGuiCol_TabUnfocusedActive]	= { 0.200f, 0.205f, 0.210f, 1.0f };
 }
 
-
 ImGuiLayer* ImGuiLayer::Create()
 {
     constexpr auto backend = render::Renderer::get_render_backend_type();
     switch (backend)
     {
-    case render::render_backend_type_t::vulkan:
-        return new VulkanImGuiLayer{};
+    case render::backend::render_backend_type_t::vulkan:
+        return new render::backend::vk::vulkan_imgui_layer{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return nullptr;

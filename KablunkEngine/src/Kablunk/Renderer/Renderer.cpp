@@ -1,13 +1,8 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-#include "Platform/Vulkan/VulkanShader.h"
-
-#include "Platform/Vulkan/VulkanContext.h"
-
-#include "Kablunk/Renderer/RendererAPI.h"
-
-#include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Timers.h"
@@ -20,9 +15,9 @@ void Renderer::init()
 
 	// initialize render command queues
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
-		m_command_queues[i] = render_command_queue{};
+		m_command_queues[i] = backend::render_command_queue{};
 
-	m_shader_library = arc<ShaderLibrary>::Create();
+	m_shader_library = arc<shader_library>::Create();
 
 	// ==========
 	// 3d shaders
@@ -66,50 +61,53 @@ void Renderer::shutdown()
 			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
 }
 
-arc<ShaderLibrary> Renderer::GetShaderLibrary()
+arc<shader_library> Renderer::GetShaderLibrary()
 {
 	return m_shader_library;
 }
 
-arc<Shader> Renderer::GetShader(const std::string& shader_name)
+arc<backend::shader> Renderer::GetShader(const std::string& p_shader_name)
 {
-	return m_shader_library->Get(shader_name);
+	return m_shader_library->Get(p_shader_name);
 }
 
-void Renderer::RegisterShaderDependency(arc<Shader> shader, arc<Pipeline> pipeline)
+void Renderer::register_shader_dependency(arc<backend::shader> p_shader, arc<backend::pipeline> p_pipeline)
 {
-	m_shader_dependencies[shader->GetHash()].pipelines.push_back(pipeline);
+	m_shader_dependencies[p_shader->get_hash()].pipelines.push_back(p_pipeline);
 }
 
-void Renderer::RegisterShaderDependency(arc<Shader> shader, arc<Material> material)
+void Renderer::register_shader_dependency(arc<backend::shader> p_shader, arc<backend::material> p_material)
 {
-	m_shader_dependencies[shader->GetHash()].materials.push_back(material);
+	m_shader_dependencies[p_shader->get_hash()].materials.push_back(p_material);
 }
 
-void Renderer::register_shader_dependency(arc<Shader> p_shader, arc<compute_pipeline> p_compute_pipeline)
+void Renderer::register_shader_dependency(
+    arc<backend::shader> p_shader,
+    arc<backend::compute_pipeline> p_compute_pipeline
+)
 {
-    m_shader_dependencies[p_shader->GetHash()].compute_pipelines.push_back(p_compute_pipeline);
+    m_shader_dependencies[p_shader->get_hash()].compute_pipelines.push_back(p_compute_pipeline);
 }
 
-void Renderer::OnShaderReloaded(uint64_t hash)
+void Renderer::on_shader_reloaded(const uint64_t p_hash)
 {
-	if (m_shader_dependencies.find(hash) != m_shader_dependencies.end())
+	if (m_shader_dependencies.find(p_hash) != m_shader_dependencies.end())
 	{
-		for (auto& material : m_shader_dependencies[hash].materials)
-			material->Invalidate();
+		for (auto& material : m_shader_dependencies[p_hash].materials)
+			material->invalidate();
 
-		for (auto& pipeline : m_shader_dependencies[hash].pipelines)
-			pipeline->Invalidate();
+		for (auto& pipeline : m_shader_dependencies[p_hash].pipelines)
+			pipeline->invalidate();
 	}
 }
 
-uint32_t Renderer::GetCurrentFrameIndex()
+uint32_t Renderer::get_current_frame_index()
 {
     constexpr auto backend = get_render_backend_type();
     switch (backend)
     {
-    case render_backend_type_t::vulkan:
-        return VulkanContext::Get()->GetSwapchain().GetCurrentBufferIndex();
+    case backend::render_backend_type_t::vulkan:
+        return backend::vk::vulkan_context::get()->get_swap_chain()->GetCurrentBufferIndex();
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");
@@ -126,13 +124,13 @@ void Renderer::wait_and_render(render_thread* rendering_thread)
     auto& thread_performance_timers = Application::Get().get_thread_performance_timings_mut();
 
 	{
-        timer render_thread_wait_timer{};
+        const timer render_thread_wait_timer{};
 		rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
         thread_performance_timers.render_thread_wait_time = render_thread_wait_timer.get_elapsed_ms();
 	}
 
 	// execute command queue
-    timer render_thread_work_timer{};
+    const timer render_thread_work_timer{};
 	m_command_queues[get_render_command_queue_index()].execute();
 	rendering_thread->set(thread_state_t::idle);
     thread_performance_timers.render_thread_work_time = render_thread_work_timer.get_elapsed_ms();

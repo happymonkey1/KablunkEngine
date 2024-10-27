@@ -165,7 +165,7 @@ auto virtual_texture_registry::load(
 
 auto virtual_texture_registry::get_texture_2d_by_raw_handle(
     const raw_texture_handle p_handle
-) const noexcept -> const arc<Texture2D>&
+) const noexcept -> const arc<render::backend::texture_2d>&
 {
     return m_raw_textures.contains(p_handle) ?
         m_raw_textures.at(p_handle) :
@@ -174,7 +174,7 @@ auto virtual_texture_registry::get_texture_2d_by_raw_handle(
 
 auto virtual_texture_registry::get_texture_2d_by_virtual_handle(
     const virtual_texture_handle p_handle
-) const noexcept -> const arc<Texture2D>&
+) const noexcept -> const arc<render::backend::texture_2d>&
 {
     return m_virtual_to_raw_handle_map.contains(p_handle) ?
         get_texture_2d_by_raw_handle(m_virtual_to_raw_handle_map.at(p_handle)) :
@@ -226,7 +226,7 @@ auto virtual_texture_registry::import_texture_from_disk(
 
     m_raw_textures.emplace(
         new_texture_handle,
-        Texture2D::Create(path_str)
+        render::backend::texture_2d::create(path_str)
     );
 
     m_texture_metadata_map.emplace(
@@ -256,7 +256,7 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
     );
 
     m_missing_texture_data = {
-        .m_raw_texture = Texture2D::Create(path_str),
+        .m_raw_texture = render::backend::texture_2d::create(path_str),
         .m_virtual_texture = render::virtual_texture{
             .m_handle = missing_texture_virtual_handle,
             .m_uvs = {
@@ -288,8 +288,8 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
         }
     );
 
-    const auto texture_memory_allocated = m_missing_texture_data.m_raw_texture->GetWidth() *
-        m_missing_texture_data.m_raw_texture->GetHeight() * 4ul * 4ul;
+    const auto texture_memory_allocated = m_missing_texture_data.m_raw_texture->get_width() *
+        m_missing_texture_data.m_raw_texture->get_height() * 4ul * 4ul;
     m_debug_statistics.m_raw_texture_memory_allocated += texture_memory_allocated;
     m_debug_statistics.m_internal_memory_allocated += m_texture_metadata_map.at(missing_texture_raw_handle).get_allocated_bytes();
 }

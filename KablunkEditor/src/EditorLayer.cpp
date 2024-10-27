@@ -22,7 +22,7 @@
 
 #include "Kablunk/Plugin/PluginManager.h"
 
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/renderer_2d.h"
 
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
@@ -60,9 +60,9 @@ namespace kb
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
         m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
-		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
-		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
+		m_icon_play = render::backend::texture_2d::create("Resources/icons/play_icon.png");
+		m_icon_stop = render::backend::texture_2d::create("Resources/icons/stop_icon.png");
+		m_icon_pause = render::backend::texture_2d::create("Resources/icons/pause_icon.png");
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
@@ -81,7 +81,7 @@ namespace kb
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = arc<SceneRenderer>::Create(m_active_scene, SceneRendererSpecification{});
+		m_viewport_renderer = arc<render::SceneRenderer>::Create(m_active_scene, render::SceneRendererSpecification{});
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
@@ -155,7 +155,7 @@ namespace kb
 
 		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
-		SceneRenderer::wait_for_threads();
+		render::SceneRenderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -237,7 +237,7 @@ namespace kb
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			renderer_2d_stats_t stats = m_renderer_2d->get_stats();
+            auto stats = m_renderer_2d->get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -638,7 +638,7 @@ namespace kb
 		if (m_scene_state != SceneState::Edit)
 			play_stop_icon = m_icon_stop;
 
-		const float size = std::min(static_cast<float>(play_stop_icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
+		const float size = std::min(static_cast<float>(play_stop_icon->get_height()), ImGui::GetWindowHeight() - 4.0f);
 		const float icon_padding = 0.0f;
 		// #TODO offset so buttons are centered
 		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));

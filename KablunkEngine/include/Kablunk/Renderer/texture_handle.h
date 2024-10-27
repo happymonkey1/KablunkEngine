@@ -103,7 +103,7 @@ struct std::hash<kb::raw_texture_handle>
 {
     std::size_t operator()(const kb::raw_texture_handle& p_item_handle) const noexcept
     {
-        return static_cast<std::uint64_t>(p_item_handle);
+        return static_cast<std::size_t>(p_item_handle);
     }
 };
 
@@ -116,7 +116,7 @@ struct std::hash<kb::virtual_texture_handle>
 {
     std::size_t operator()(const kb::virtual_texture_handle& p_item_handle) const noexcept
     {
-        return static_cast<std::uint64_t>(p_item_handle);
+        return static_cast<std::size_t>(p_item_handle);
     }
 };
 

@@ -1,14 +1,15 @@
 #pragma once
-#include "Kablunk/Renderer/RendererAPI.h"
-#include "Kablunk/Renderer/render_command_queue.h"
-#include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Material.h"
-#include "Kablunk/Renderer/Pipeline.h"
-#include "Kablunk/Renderer/UniformBufferSet.h"
-#include "Kablunk/Renderer/StorageBufferSet.h"
-#include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
-#include "Kablunk/Renderer/compute_pipeline.h"
+#include "Kablunk/renderer/RendererAPI.h"
+#include "Kablunk/renderer/backend/render_command_queue.h"
+#include "Kablunk/renderer/Renderer.h"
+#include "Kablunk/renderer/shader_library.h"
+#include "Kablunk/renderer/backend/material.h"
+#include "Kablunk/renderer/backend/pipeline.h"
+#include "Kablunk/renderer/backend/uniform_buffer_set.h"
+#include "Kablunk/renderer/backend/storage_buffer_set.h"
+#include "Kablunk/renderer/Mesh.h"
+#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/backend/compute_pipeline.h"
 
 #include <mutex>
 
@@ -64,8 +65,8 @@ inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend
 
 // begin render pass
 inline void begin_render_pass(
-    const arc<RenderCommandBuffer>& p_render_command_buffer,
-    const arc<render_pass>& p_render_pass,
+    const arc<backend::render_command_buffer>& p_render_command_buffer,
+    const arc<backend::render_pass>& p_render_pass,
     bool explicit_clear = false
 ) noexcept
 {
@@ -73,41 +74,41 @@ inline void begin_render_pass(
         .begin_render_pass(p_render_command_buffer, p_render_pass, explicit_clear);
 }
 
-inline void end_render_pass(const arc<RenderCommandBuffer>& p_render_command_buffer) noexcept
+inline void end_render_pass(const arc<backend::render_command_buffer>& p_render_command_buffer) noexcept
 {
 	Singleton<Renderer>::get().get_render_backend().end_render_pass(p_render_command_buffer);
 }
 
 // return a reference to the shader library
-inline arc<ShaderLibrary> get_shader_library() noexcept
+inline arc<shader_library> get_shader_library() noexcept
 {
 	return Singleton<Renderer>::get().GetShaderLibrary();
 }
 
 // get a specific shader by name
-inline arc<Shader> get_shader(const std::string& name) noexcept
+inline arc<backend::shader> get_shader(const std::string& name) noexcept
 {
 	return Singleton<Renderer>::get().GetShader(name);
 }
 
-inline void register_shader_dependency(arc<Shader> shader, arc<Material> material) noexcept
+inline void register_shader_dependency(arc<backend::shader> shader, arc<backend::material> material) noexcept
 {
-	Singleton<Renderer>::get().RegisterShaderDependency(shader, material);
+	Singleton<Renderer>::get().register_shader_dependency(shader, material);
 }
 
-inline void register_shader_dependency(arc<Shader> shader, arc<Pipeline> pipeline) noexcept
+inline void register_shader_dependency(arc<backend::shader> shader, arc<backend::pipeline> pipeline) noexcept
 {
-	Singleton<Renderer>::get().RegisterShaderDependency(shader, pipeline);
+	Singleton<Renderer>::get().register_shader_dependency(shader, pipeline);
 }
 
-inline void register_shader_dependency(arc<Shader> p_shader, arc<compute_pipeline> p_compute_pipeline) noexcept
+inline void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::compute_pipeline> p_compute_pipeline) noexcept
 {
     Singleton<Renderer>::get().register_shader_dependency(p_shader, p_compute_pipeline);
 }
 
 inline void on_shader_reloaded(uint64_t hash) noexcept
 {
-	Singleton<Renderer>::get().OnShaderReloaded(hash);
+	Singleton<Renderer>::get().on_shader_reloaded(hash);
 }
 
 // run submitted commands
@@ -295,11 +296,11 @@ inline void render_geometry(
 
 // render raw geometry
 inline void render_geometry(
-    const arc<RenderCommandBuffer>& p_render_command_buffer,
-    const arc<Pipeline>& p_pipeline,
-    const arc<Material>& p_material,
-    const arc<VertexBuffer>& p_vertex_buffer,
-    const arc<IndexBuffer>& p_index_buffer,
+    const arc<backend::render_command_buffer>& p_render_command_buffer,
+    const arc<backend::pipeline>& p_pipeline,
+    const arc<backend::material>& p_material,
+    const arc<backend::VertexBuffer>& p_vertex_buffer,
+    const arc<backend::IndexBuffer>& p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count = 0
 ) noexcept
@@ -316,9 +317,9 @@ inline void render_geometry(
 }
 
 inline void submit_fullscreen_quad(
-    const arc<RenderCommandBuffer>& p_render_command_buffer,
-    const arc<Pipeline>& p_pipeline,
-    const arc<Material>& p_material
+    const arc<backend::render_command_buffer>& p_render_command_buffer,
+    const arc<backend::pipeline>& p_pipeline,
+    const arc<backend::material>& p_material
 ) noexcept
 {
     Singleton<Renderer>::get().get_render_backend().submit_fullscreen_quad(
@@ -332,7 +333,7 @@ inline void submit_fullscreen_quad(
 // utility
 // =======
 
-inline void set_line_width(const arc<RenderCommandBuffer>& p_render_command_buffer, f32 p_line_width) noexcept
+inline void set_line_width(const arc<backend::render_command_buffer>& p_render_command_buffer, f32 p_line_width) noexcept
 {
 	Singleton<Renderer>::get().get_render_backend().set_line_width(p_render_command_buffer, p_line_width);
 }
@@ -349,12 +350,12 @@ u32 get_current_frame_index() noexcept;
 // get current index into the frame being rendered by the swapchain (which owns the render thread)
 u32 rt_get_current_frame_index() noexcept;
 
-inline render_command_queue& get_render_resource_release_queue(uint32_t index) noexcept
+inline backend::render_command_queue& get_render_resource_release_queue(uint32_t index) noexcept
 {
 	return Singleton<Renderer>::get().get_resource_free_queue(index);
 }
 
-inline render_command_queue& get_render_command_queue() noexcept
+inline backend::render_command_queue& get_render_command_queue() noexcept
 {
 	return Singleton<Renderer>::get().get_render_command_queue();
 }

@@ -22,7 +22,7 @@ public:
 	constexpr owning_buffer(const size_t size) noexcept
         : m_data{ nullptr }, m_size{ size }
     {
-        Allocate(size);
+        allocate(size);
     }
 
 	constexpr owning_buffer(const owning_buffer& other) noexcept
@@ -31,7 +31,7 @@ public:
         if (!other.m_data)
             return;
 
-        Allocate(m_size);
+        allocate(m_size);
         if (m_data && other.m_data)
         {
             for (size_t i = 0; i < m_size; ++i)
@@ -49,8 +49,14 @@ public:
 
 	constexpr ~owning_buffer() noexcept
 	{
-		Release();
+		release();
 	}
+
+    
+    inline static constexpr owning_buffer copy(const void* data, size_t size)
+    {
+        return owning_buffer{ data, size };
+    }
 
 	inline constexpr owning_buffer& operator=(const owning_buffer& other) noexcept
 	{
@@ -60,7 +66,7 @@ public:
 		if (other.m_data != nullptr)
 		{
 			m_size = other.m_size;
-			Allocate(m_size);
+			allocate(m_size);
 			if (m_data && other.m_data)
 			{
                 for (size_t i = 0; i < m_size; ++i)
@@ -83,13 +89,8 @@ public:
 		return *this;
 	}
 
-	inline static constexpr owning_buffer Copy(const void* data, size_t size)
-	{
-		return owning_buffer{ data, size };
-	}
-
 	// size in bytes
-	inline constexpr void Allocate(const size_t size) noexcept
+	inline constexpr void allocate(const size_t size) noexcept
 	{
 		if (m_data)
 		{
@@ -108,7 +109,8 @@ public:
 		m_size = size;
 	}
 
-	inline constexpr void Release() noexcept
+    // free allocated memory
+	inline constexpr void release() noexcept
 	{
         if (!m_data)
             return;
@@ -130,13 +132,13 @@ public:
 	}
 
 	template <typename T>
-	constexpr T& Read(uint32_t offset) noexcept
+	constexpr T& read(uint32_t offset) noexcept
 	{
 		KB_CORE_ASSERT(offset + sizeof(T) <= m_size, "trying to access memory out of bounds!");
 		return *reinterpret_cast<T*>(m_data + offset);
 	}
 
-	inline constexpr void Write(const void* data, const size_t size, const size_t offset = 0) noexcept
+	inline constexpr void write(const void* data, const size_t size, const size_t offset = 0) noexcept
 	{
 		KB_CORE_ASSERT(offset + size <= m_size, "owning_buffer overflow!");
         for (size_t i = 0; i < size; ++i)

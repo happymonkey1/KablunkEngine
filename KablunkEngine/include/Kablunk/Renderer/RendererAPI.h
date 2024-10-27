@@ -1,16 +1,16 @@
 #pragma once
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Renderer/Image.h"
-#include "Kablunk/Renderer/RenderCommandBuffer.h"
-#include "Kablunk/Renderer/VertexArray.h"
-#include "Kablunk/Renderer/StorageBufferSet.h"
-#include "Kablunk/Renderer/UniformBufferSet.h"
-#include "Kablunk/Renderer/Pipeline.h"
-#include "Kablunk/Renderer/Material.h"
-#include "Kablunk/Renderer/render_pass.h"
-#include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+
+#include "Kablunk/renderer/backend/image.h"
+#include "Kablunk/renderer/backend/render_command_buffer.h"
+#include "Kablunk/renderer/backend/storage_buffer_set.h"
+#include "Kablunk/renderer/backend/uniform_buffer_set.h"
+#include "Kablunk/renderer/backend/pipeline.h"
+#include "Kablunk/renderer/backend/material.h"
+#include "Kablunk/renderer/backend/render_pass.h"
+#include "Kablunk/renderer/Mesh.h"
+#include "Kablunk/renderer/MaterialAsset.h"
 
 #include <glm/glm.hpp>
 

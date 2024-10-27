@@ -46,12 +46,12 @@ namespace kb
 		std::vector<std::filesystem::directory_entry> m_directory_entries{};
 		mutable std::shared_mutex m_mutex;
 
-		arc<Texture2D> m_directory_icon;
-		arc<Texture2D> m_file_icon;
-		arc<Texture2D> m_back_button;
-		arc<Texture2D> m_forward_button;
-		arc<Texture2D> m_refresh_button;
-		arc<Texture2D> m_asset_icon;
+		arc<render::backend::texture_2d> m_directory_icon;
+		arc<render::backend::texture_2d> m_file_icon;
+		arc<render::backend::texture_2d> m_back_button;
+		arc<render::backend::texture_2d> m_forward_button;
+		arc<render::backend::texture_2d> m_refresh_button;
+		arc<render::backend::texture_2d> m_asset_icon;
 
 		arc<AssetEditorPanel> m_asset_editor_panel;
 

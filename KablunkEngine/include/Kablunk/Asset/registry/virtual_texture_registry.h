@@ -3,7 +3,7 @@
 #include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Renderer/virtual_texture.h"
 #include "Kablunk/Renderer/texture_handle.h"
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 
 #include <filesystem>
 #include <rapidjson/document.h>
@@ -128,10 +128,10 @@ public:
 
     [[nodiscard]] auto get_texture_2d_by_raw_handle(
         raw_texture_handle p_handle
-    ) const noexcept -> const arc<Texture2D>&;
+    ) const noexcept -> const arc<render::backend::texture_2d>&;
     [[nodiscard]] auto get_texture_2d_by_virtual_handle(
         virtual_texture_handle p_handle
-    ) const noexcept -> const arc<Texture2D>&;
+    ) const noexcept -> const arc<render::backend::texture_2d>&;
 
     [[nodiscard]] auto get_virtual_texture(
         virtual_texture_handle p_handle
@@ -158,7 +158,7 @@ public:
     [[nodiscard]] auto get_debug_statistics() const noexcept -> debug_statistics;
 
     // returns an immutable reference to the underlying raw texture map
-    [[nodiscard]] auto get_raw_texture_map() const noexcept -> const unordered_flat_map<raw_texture_handle, arc<Texture2D>>&
+    [[nodiscard]] auto get_raw_texture_map() const noexcept -> const unordered_flat_map<raw_texture_handle, arc<render::backend::texture_2d>>&
     {
         return m_raw_textures;
     }
@@ -209,7 +209,7 @@ private:
 
 private:
     // map of raw textures
-    unordered_flat_map<raw_texture_handle, arc<Texture2D>> m_raw_textures{};
+    unordered_flat_map<raw_texture_handle, arc<render::backend::texture_2d>> m_raw_textures{};
     // map of texture metadata
     unordered_flat_map<raw_texture_handle, texture_metadata> m_texture_metadata_map{};
     // map of virtual texture handle to raw texture handle
@@ -221,7 +221,7 @@ private:
     struct missing_texture_data
     {
         // raw missing texture data
-        arc<Texture2D> m_raw_texture{};
+        arc<render::backend::texture_2d> m_raw_texture{};
         // virtual texture data
         render::virtual_texture m_virtual_texture{};
         // raw texture handle

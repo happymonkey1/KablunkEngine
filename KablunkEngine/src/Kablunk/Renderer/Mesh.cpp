@@ -2,7 +2,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/Shader.h"
+#include "Kablunk/Renderer/backend/shader.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "Kablunk/Scene/Entity.h"
 
@@ -22,8 +22,8 @@
 
 #include <filesystem>
 
-namespace kb
-{
+namespace kb::render
+{ // start namespace kb::render
 static constexpr const uint32_t s_mesh_import_flags =
 	aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 
@@ -187,10 +187,9 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 				}
 			}
 		}
-		
 	}
 
-	arc<Texture2D> white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+	auto white_texture = Application::Get().get_renderer_2d()->get_white_texture();
 #if 0
     if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 	{
@@ -388,22 +387,22 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 #endif
 		{
-			auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
-			mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
-			mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-			mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
+			auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
+			mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
+			mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+			mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
 			m_materials.push_back(mat);
 		}
 	}
 
 
 	if (m_is_animated)
-		m_vertex_buffer = VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
+		m_vertex_buffer = backend::VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
 	else
-		m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
+		m_vertex_buffer = backend::VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
 	
 
-	m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+	m_index_buffer = backend::IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 }
 
 MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
@@ -417,20 +416,20 @@ MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index
 	submesh.Material_index = 0;
 	m_sub_meshes.push_back(submesh);
 
-	m_vertex_buffer = VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
+	m_vertex_buffer = backend::VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 	KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
-	m_index_buffer = IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+	m_index_buffer = backend::IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 
 #if 0
 	if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 	{
 #endif
 		m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
-		auto mat = Material::Create(m_mesh_shader, "Kablunk-PhongDefault");
-		mat->Set("u_MaterialUniforms.AmbientStrength", 0.3f);
-		mat->Set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-		mat->Set("u_MaterialUniforms.SpecularStrength", 0.5f);
+		auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
+		mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
+		mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+		mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
 		m_materials.push_back(mat);
 
 #if 0
@@ -706,4 +705,4 @@ arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 
 	return arc<Mesh>::Create(arc<MeshData>::Create(verts, indices, glm::mat4{ 1.0f }));
 }
-}
+} // end namespace kb::render

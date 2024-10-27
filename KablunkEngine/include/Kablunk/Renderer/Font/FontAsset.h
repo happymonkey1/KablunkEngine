@@ -5,7 +5,7 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Asset/Asset.h"
 
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -67,7 +67,7 @@ public:
 	// font points are a physical distance, representing 1/72th of an inch
 	void set_font_point(size_t new_font_point);
 	// get the texture atlas
-	auto get_texture_atlas() const -> const arc<Texture2D>& { return m_texture_atlas; }
+	auto get_texture_atlas() const -> const arc<backend::texture_2d>& { return m_texture_atlas; }
 	// release resources owned by the asset
 	void release();
 	// get the glpyh rendering info map
@@ -96,7 +96,7 @@ private:
     size_t m_dpi_y = 96ull;
 	// reference to the texture atlas
 	// for now, the font asset "owns" the texture atlas, should this be stored in a cache on the font manager instead?
-	arc<Texture2D> m_texture_atlas;
+	arc<backend::texture_2d> m_texture_atlas;
 	// glyph rendering info
 	// maps chars to their rendering info
 	kb::unordered_flat_map<char, glyph_info_t> m_glyph_info_map;
