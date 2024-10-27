@@ -38,6 +38,9 @@ void Renderer::init()
 	// compile shaders that were submitted
 	Application::Get().get_render_thread().pump();
 
+    // Initialize graphics context
+   //  m_context->init();
+    // Initialize rendering backend
     m_backend.init();
 }
 
@@ -101,13 +104,13 @@ void Renderer::on_shader_reloaded(const uint64_t p_hash)
 	}
 }
 
-uint32_t Renderer::get_current_frame_index()
+uint32_t Renderer::get_current_frame_index() const noexcept
 {
     constexpr auto backend = get_render_backend_type();
     switch (backend)
     {
     case backend::render_backend_type_t::vulkan:
-        return backend::vk::vulkan_context::get()->get_swap_chain()->GetCurrentBufferIndex();
+        return m_context->get_swap_chain()->get_current_buffer_index();
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");

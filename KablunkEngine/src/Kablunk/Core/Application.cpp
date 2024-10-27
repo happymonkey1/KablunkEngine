@@ -228,7 +228,7 @@ void Application::Run()
 
 			// #TODO(Sean) not renderer agnostic
 			// start swapchain presentation on render thread
-			render::submit([&]() { render::backend::vk::vulkan_context::get()->get_swap_chain()->BeginFrame(); });
+			render::submit([&]() { render::backend::vk::vulkan_context::get()->get_swap_chain()->begin_frame(); });
 
 			render::begin_frame();
 			{

@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Kablunk/Renderer/backend/backend_type.h"
+#include "Kablunk/renderer/backend/graphics_context.h"
 #include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
 namespace kb
@@ -59,7 +60,7 @@ public:
 	void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::material> p_material);
 	void on_shader_reloaded(uint64_t p_hash);
 
-    static uint32_t get_current_frame_index();
+    uint32_t get_current_frame_index() const noexcept;
 
 	arc<shader_library> GetShaderLibrary();
 	arc<backend::shader> GetShader(const std::string& name);
@@ -172,6 +173,8 @@ private:
 	arc<shader_library> m_shader_library;
     // #TODO expose changing render backend at compile time...
     render_backend_t m_backend{};
+
+    arc<backend::graphics_context> m_context;
 
 	// store the viewport's os screen position within the application
 	// used for calculating screen to world space in the editor

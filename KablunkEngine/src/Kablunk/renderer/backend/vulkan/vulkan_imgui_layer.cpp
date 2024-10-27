@@ -123,9 +123,9 @@ void vulkan_imgui_layer::OnAttach()
 			init_info.Allocator = nullptr;
 			init_info.MinImageCount = 2;
 			const auto& swap_chain = vulkan_context->get_vulkan_swap_chain();
-			init_info.ImageCount = swap_chain.get_image_count();
+			init_info.ImageCount = swap_chain->get_image_count();
 			//init_info.CheckVkResultFn = Utils::VulkanCheckResult;
-			ImGui_ImplVulkan_Init(&init_info, swap_chain.get_vk_render_pass());
+			ImGui_ImplVulkan_Init(&init_info, swap_chain->get_vk_render_pass());
 
 			// Upload Fonts
 			{
@@ -214,38 +214,38 @@ void vulkan_imgui_layer::End()
 	clear_values[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
 	clear_values[1].depthStencil = { 1.0f, 0 };
 
-	const u32 width = swap_chain.get_width();
-    const u32 height = swap_chain.get_height();
+	const u32 width = swap_chain->get_width();
+    const u32 height = swap_chain->get_height();
 
-    const u32 command_buffer_index = swap_chain.get_current_buffer_index();
+    const u32 command_buffer_index = swap_chain->get_current_buffer_index();
 
 	VkCommandBufferBeginInfo draw_cmd_buffer_info = {};
 	draw_cmd_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	draw_cmd_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	draw_cmd_buffer_info.pNext = nullptr;
 
-	const VkCommandBuffer draw_command_buffer = swap_chain.get_current_vk_draw_command_buffer();
+	const VkCommandBuffer draw_command_buffer = swap_chain->get_current_vk_draw_command_buffer();
 	if (vkBeginCommandBuffer(draw_command_buffer, &draw_cmd_buffer_info) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "VulkanImGuiLayer failed to create draw command buffer!");
 
 	VkRenderPassBeginInfo render_pass_begin_info = {};
 	render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	render_pass_begin_info.pNext = nullptr;
-	render_pass_begin_info.renderPass = swap_chain.get_vk_render_pass();
+	render_pass_begin_info.renderPass = swap_chain->get_vk_render_pass();
 	render_pass_begin_info.renderArea.offset.x = 0;
 	render_pass_begin_info.renderArea.offset.y = 0;
 	render_pass_begin_info.renderArea.extent.width = width;
 	render_pass_begin_info.renderArea.extent.height = height;
 	render_pass_begin_info.clearValueCount = 2; // Color + depth
 	render_pass_begin_info.pClearValues = clear_values;
-	render_pass_begin_info.framebuffer = swap_chain.get_current_vk_framebuffer();
+	render_pass_begin_info.framebuffer = swap_chain->get_current_vk_framebuffer();
 
 	vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 	VkCommandBufferInheritanceInfo inheritance_info = {};
 	inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-	inheritance_info.renderPass = swap_chain.get_vk_render_pass();
-	inheritance_info.framebuffer = swap_chain.get_current_vk_framebuffer();
+	inheritance_info.renderPass = swap_chain->get_vk_render_pass();
+	inheritance_info.framebuffer = swap_chain->get_current_vk_framebuffer();
 
 	VkCommandBufferBeginInfo cmd_buf_info = {};
 	cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

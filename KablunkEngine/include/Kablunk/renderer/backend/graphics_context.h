@@ -18,7 +18,8 @@ public:
 	virtual void swap_buffers() = 0;
 	virtual void shutdown() = 0;
 
-    virtual arc<swap_chain>& get_swap_chain() noexcept = 0;
+    virtual const swap_chain* get_swap_chain() const noexcept = 0;
+    virtual swap_chain* get_swap_chain() noexcept = 0;
 
 	static arc<graphics_context> create(void* window);
 };

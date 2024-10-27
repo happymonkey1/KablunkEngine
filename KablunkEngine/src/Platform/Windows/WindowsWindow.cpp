@@ -238,7 +238,7 @@ void WindowsWindow::Shutdown()
 		// #TODO dynamic_cast bad!
 		auto* vk_context = dynamic_cast<render::backend::vk::vulkan_context*>(m_context.get());
 
-		vk_context->get_swap_chain()->Destroy();
+		vk_context->get_swap_chain()->destroy();
         vk_context->get_device()->Destroy();
 	}
 
@@ -416,7 +416,7 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 void WindowsWindow::swap_buffers()
 {
 	// #TODO this is not renderer agnostic
-	render::backend::vk::vulkan_context::get()->get_swap_chain()->Present();
+	render::backend::vk::vulkan_context::get()->get_swap_chain()->present();
 }
 
 cursor_handle WindowsWindow::create_cursor(

@@ -166,7 +166,7 @@ auto vulkan_render_backend::begin_frame() noexcept -> void
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_frame");
             const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
             const auto& swap_chain = vulkan_context::get()->get_swap_chain();
-            const auto buffer_index = swap_chain->GetCurrentBufferIndex();
+            const auto buffer_index = swap_chain->get_current_buffer_index();
 
             vkResetDescriptorPool(
                 vk_device,
@@ -227,9 +227,9 @@ auto vulkan_render_backend::begin_render_pass(
             render_pass_begin_info.renderArea.extent.height = height;
             if (frame_buffer_spec.m_swap_chain_target)
             {
-                auto& swap_chain = vulkan_context::get()->get_swap_chain();
-                width = swap_chain->GetWidth();
-                height = swap_chain->GetHeight();
+                const auto* swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
+                width = swap_chain->get_width();
+                height = swap_chain->get_height();
                 render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 render_pass_begin_info.pNext = nullptr;
                 render_pass_begin_info.renderPass = vulkan_frame_buffer->get_vk_render_pass();
@@ -237,7 +237,7 @@ auto vulkan_render_backend::begin_render_pass(
                 render_pass_begin_info.renderArea.offset.y = 0;
                 render_pass_begin_info.renderArea.extent.width = width;
                 render_pass_begin_info.renderArea.extent.height = height;
-                render_pass_begin_info.framebuffer = swap_chain.As<vulkan_swap_chain>()->GetCurrentFramebuffer();
+                render_pass_begin_info.framebuffer = swap_chain->get_current_vk_framebuffer();
                 KB_CORE_ASSERT(render_pass_begin_info.framebuffer, "render pass swap chain framebuffer is null?");
 
                 viewport.x = 0.0f;

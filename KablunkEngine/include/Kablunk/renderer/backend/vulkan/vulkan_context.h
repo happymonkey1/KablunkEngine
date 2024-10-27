@@ -35,19 +35,22 @@ public:
 
 
 	static arc<vulkan_context> get() { return s_context; }
-	static VkInstance get_vk_instance() { return s_instance; }
+	static auto get_vk_instance() noexcept -> VkInstance { return s_instance; }
 
 	arc<vulkan_logical_device> get_device() { return m_device; }
 
-    // Retrieve a mutable reference to the swap chain
-	arc<swap_chain>& get_swap_chain() noexcept override
-	{
-	    return reinterpret_cast<arc<swap_chain>&>(m_swap_chain);
-	}
+    // Retrieve a non-owning, immutable pointer to the swap chain
+    const swap_chain* get_swap_chain() const noexcept override { return m_swap_chain.get();  }
 
-    const vulkan_swap_chain& get_vulkan_swap_chain() const noexcept { return *m_swap_chain; }
-    vulkan_swap_chain& get_vulkan_swap_chain() noexcept { return *m_swap_chain; }
-    
+    // Retrieve a non-owning, mutable pointer to the swap chain
+	swap_chain* get_swap_chain() noexcept override { return m_swap_chain.get(); }
+
+    // Retrieve a non-owning, immutable pointer to the swap chain
+    const vulkan_swap_chain* get_vulkan_swap_chain() const noexcept { return m_swap_chain.get(); }
+
+    // Retrieve a non-owning, mutable pointer to the swap chain
+    vulkan_swap_chain* get_vulkan_swap_chain() noexcept { return m_swap_chain.get(); }
+
 private:
 	void create_instance();
 	bool check_validation_layer_support();
@@ -95,6 +98,7 @@ private:
 	}
 
 	void SetupDebugMessageCallback();
+
 private:
 	// #TODO move
 	inline static arc<vulkan_context> s_context;
