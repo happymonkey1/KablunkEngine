@@ -20,7 +20,7 @@ Required Libraries/Binaries (should be installed by setup.py)
 - Boost 1.84.0
   - **Must** be installed under `C:/Program Files/boost/boost_1_84_0/`
 - MSVC developer command prompt must be on system path
-  - Add `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\`
+  - Example: `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\`
 - Catch2 Test adaptor for Visual Studio (Windows)
 
 ## Features
@@ -36,17 +36,29 @@ Required Libraries/Binaries (should be installed by setup.py)
 - [x] Extendable event system
 - [x] Datastructures & Algorithms (allocators, map, priority queue, simple runtime c++ parser, etc.)
 - [x] DLL memory sharing / IPC
+- [x] Text renderer
+- [x] Networking Abstraction
 
 ## In progress
 
-- [ ] Text renderer
 - [ ] In-house UI
 - [ ] Reflection
 - [ ] Audio
 - [ ] Build system
-- [ ] Networking Abstraction
 - [ ] Runtime c++ hot reloading
 - [ ] PBR renderer
+- [ ] Lua scripting
+- [ ] Texture atlas and automatic texture packing
+
+## Planned
+
+- [ ] DirectX 12 Support
+- [ ] Non-Windows Platform Support
+  - [ ] MacOS
+  - [ ] Linux
+  - [ ] Mobile
+  - [ ] Web
+- [ ] Mod support
 
 ## Roadmap
 
