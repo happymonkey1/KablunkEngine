@@ -172,8 +172,7 @@ void vulkan_frame_buffer::resize(uint32_t width, uint32_t height, bool force_rec
 				instance->rt_invalidate();
 			else
 			{
-				auto& swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
-				instance->m_vk_render_pass = swap_chain->get_vk_render_pass();
+				instance->m_vk_render_pass = vulkan_context::get()->get_vulkan_swap_chain().get_vk_render_pass();
 
 				instance->m_clear_values.clear();
                 const auto& clear_color = instance->m_specification.m_clear_color;

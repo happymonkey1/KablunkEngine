@@ -19,7 +19,7 @@ class vulkan_swap_chain : public swap_chain
 {
 public:
 	vulkan_swap_chain() = default;
-    ~vulkan_swap_chain() override = default;
+    ~vulkan_swap_chain() noexcept override = default;
 
 	void Init(VkInstance instance, const arc<vulkan_logical_device>& device);
 	void init_surface(GLFWwindow* window_handle) noexcept override;

@@ -2,7 +2,7 @@
 #ifndef KABLUNK_RENDERER_BACKEND_SWAP_CHAIN_H
 #define KABLUNK_RENDERER_BACKEND_SWAP_CHAIN_H
 
-#include "Kablunk/Core/RefCounting.h"
+#include <memory>
 
 // Forward declaration
 struct GLFWwindow;
@@ -20,9 +20,9 @@ struct swap_chain_create_info_t
 class swap_chain : public RefCounted
 {
 public:
-    virtual ~swap_chain() noexcept = default;
+    ~swap_chain() noexcept override = default;
 
-    static auto create() noexcept -> arc<swap_chain>;
+    static auto create() noexcept -> std::unique_ptr<swap_chain>;
 
     // Initialize rendering surface (window) for the given rendering API
     virtual void init_surface(GLFWwindow* p_window) noexcept = 0;

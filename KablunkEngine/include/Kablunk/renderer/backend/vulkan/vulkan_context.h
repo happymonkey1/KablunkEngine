@@ -45,8 +45,8 @@ public:
 	    return reinterpret_cast<arc<swap_chain>&>(m_swap_chain);
 	}
 
-    const arc<vulkan_swap_chain>& get_vulkan_swap_chain() const noexcept { return m_swap_chain; }
-    arc<vulkan_swap_chain>& get_vulkan_swap_chain() noexcept { return m_swap_chain; }
+    const vulkan_swap_chain& get_vulkan_swap_chain() const noexcept { return *m_swap_chain; }
+    vulkan_swap_chain& get_vulkan_swap_chain() noexcept { return *m_swap_chain; }
     
 private:
 	void create_instance();
@@ -105,7 +105,7 @@ private:
 	arc<vulkan_physical_device> m_physical_device{};
 	arc<vulkan_logical_device> m_device{};
 
-	arc<vulkan_swap_chain> m_swap_chain;
+	std::unique_ptr<vulkan_swap_chain> m_swap_chain;
 
 	VkPipelineCache m_pipeline_cache;
 

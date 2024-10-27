@@ -77,7 +77,7 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(const std::string& de
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
         auto& command_buffer = m_command_buffers.at(i);
-        command_buffer = vulkan_context::get()->get_vulkan_swap_chain()->GetDrawCommandBuffer(i);
+        command_buffer = vulkan_context::get()->get_vulkan_swap_chain().GetDrawCommandBuffer(i);
     }
 
 	VkQueryPoolCreateInfo query_pool_create_info = {};
@@ -138,7 +138,7 @@ void vulkan_render_command_buffer::begin()
 			if (instance->m_owned_by_swapchain)
 			{
 				auto& swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
-				vk_command_buffer = swap_chain->GetDrawCommandBuffer(frame_index);
+				vk_command_buffer = swap_chain.GetDrawCommandBuffer(frame_index);
                 instance->m_command_buffers[frame_index] = vk_command_buffer;
 			}
 			else

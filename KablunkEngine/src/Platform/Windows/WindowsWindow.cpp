@@ -50,11 +50,10 @@ void WindowsWindow::Init(const WindowProps& props)
     m_data.Width = props.Width;
     m_data.Height = props.Height;
 	m_data.Fullscreen = props.Fullscreen;
-    
-    KB_CORE_INFO("Creating Window {0} ({1}x{2}), fullscreen={3}", props.Title, props.Width, props.Height, props.Fullscreen);
-    
 
-    if (s_glfw_window_count == 0) 
+    KB_CORE_INFO("Creating Window {0} ({1}x{2}), fullscreen={3}", props.Title, props.Width, props.Height, props.Fullscreen);
+
+    if (s_glfw_window_count == 0)
 	{
 		int success = glfwInit();
         KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");

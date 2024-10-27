@@ -35,7 +35,7 @@ void vulkan_context::init()
 	m_device = arc<vulkan_logical_device>::Create(m_physical_device, enabled_features);
 	vulkan_allocator::Init(get_device());
 
-	m_swap_chain = static_cast<arc<vulkan_swap_chain>>(swap_chain::create());
+	m_swap_chain = std::make_unique<vulkan_swap_chain>();
 	m_swap_chain->Init(s_instance, m_device);
 
 
