@@ -17,11 +17,9 @@ struct swap_chain_create_info_t
     bool m_vsync = false;
 };
 
-class swap_chain : public RefCounted
+class swap_chain
 {
 public:
-    ~swap_chain() noexcept override = default;
-
     // Factory create function
     static auto create() noexcept -> std::unique_ptr<swap_chain>;
 

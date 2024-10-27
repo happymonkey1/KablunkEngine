@@ -1,6 +1,6 @@
 #pragma once
-#ifndef KABLUNK_RENDERER_BACKEND_VULKAN_SWAPCHAIN_H
-#define KABLUNK_RENDERER_BACKEND_VULKAN_SWAPCHAIN_H
+#ifndef KABLUNK_RENDERER_BACKEND_VULKAN_SWAP_CHAIN_H
+#define KABLUNK_RENDERER_BACKEND_VULKAN_SWAP_CHAIN_H
 
 #include "Kablunk/Core/Core.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_logical_device.h"
@@ -19,7 +19,7 @@ class vulkan_swap_chain : public swap_chain
 {
 public:
 	vulkan_swap_chain() = default;
-    ~vulkan_swap_chain() noexcept override = default;
+    ~vulkan_swap_chain() noexcept = default;
 
 	void init(VkInstance instance, const arc<vulkan_logical_device>& device);
 	void init_surface(GLFWwindow* window_handle) noexcept override;
