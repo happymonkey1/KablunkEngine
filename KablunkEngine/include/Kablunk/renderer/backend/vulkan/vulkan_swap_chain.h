@@ -21,52 +21,52 @@ public:
 	vulkan_swap_chain() = default;
     ~vulkan_swap_chain() noexcept override = default;
 
-	void Init(VkInstance instance, const arc<vulkan_logical_device>& device);
+	void init(VkInstance instance, const arc<vulkan_logical_device>& device);
 	void init_surface(GLFWwindow* window_handle) noexcept override;
 	void create(uint32_t* width, uint32_t* height, bool vsync) noexcept override;
 
-	void OnResize(uint32_t width, uint32_t height) noexcept override;
+	void on_resize(uint32_t width, uint32_t height) noexcept override;
 
-	void BeginFrame() noexcept override;
-	void Present() noexcept override;
+	void begin_frame() noexcept override;
+	void present() noexcept override;
 
-	uint32_t GetImageCount() const { return m_image_count; }
+	uint32_t get_image_count() const { return m_image_count; }
 
 	VkRenderPass get_vk_render_pass() const { return m_render_pass; }
 
-	VkFramebuffer GetCurrentFramebuffer() const { return GetFramebuffer(m_current_image_index); }
-	VkCommandBuffer GetCurrentDrawCommandBuffer() const { return GetDrawCommandBuffer(m_current_buffer_index); }
+	VkFramebuffer get_current_vk_framebuffer() const { return get_vk_framebuffer(m_current_image_index); }
+	VkCommandBuffer get_current_vk_draw_command_buffer() const { return get_vk_draw_command_buffer(m_current_buffer_index); }
 
-	VkFormat GetColorFormat() const { return m_color_format; }
+	VkFormat get_vk_color_format() const { return m_color_format; }
 
-	u32 GetCurrentBufferIndex() const noexcept override { return m_current_buffer_index; }
+	u32 get_current_buffer_index() const noexcept override { return m_current_buffer_index; }
 
-	VkFramebuffer GetFramebuffer(uint32_t index) const
+	VkFramebuffer get_vk_framebuffer(uint32_t index) const
     {
 		KB_CORE_ASSERT(index < m_framebuffers.size(), "index out of bounds");
 		return m_framebuffers[index];
 	}
 
-	VkCommandBuffer GetDrawCommandBuffer(uint32_t index) const
+	VkCommandBuffer get_vk_draw_command_buffer(uint32_t index) const
     {
 		KB_CORE_ASSERT(index < m_command_buffers.size(), "index out of bounds");
 		return m_command_buffers[index].m_command_buffer;
 	}
 
-	VkSemaphore GetRenderCompleteSemaphore() const { return m_semaphores.render_complete; }
+	VkSemaphore get_render_complete_semaphore() const { return m_semaphores.render_complete; }
 
-	void Destroy() noexcept override;
+	void destroy() noexcept override;
 
-	u32 GetWidth() const noexcept override { return m_width; }
-	u32 GetHeight() const noexcept override { return m_height; }
+	u32 get_width() const noexcept override { return m_width; }
+	u32 get_height() const noexcept override { return m_height; }
 private:
-	VkResult AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index);
-	VkResult QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE) const;
+	VkResult acquire_next_image(VkSemaphore present_complete_sem, uint32_t* image_index);
+	VkResult queue_present(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE) const;
 
-	void FindImageFormatAndColorSpace();
+	void find_image_format_and_color_space();
 
-	void CreateFramebuffer();
-	void CreateDepthStencil();
+	void create_framebuffer();
+	void create_depth_stencil();
 private:
 	VkInstance m_instance;
 	arc<vulkan_logical_device> m_device;

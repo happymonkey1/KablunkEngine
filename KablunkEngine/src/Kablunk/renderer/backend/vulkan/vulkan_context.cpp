@@ -36,7 +36,7 @@ void vulkan_context::init()
 	vulkan_allocator::Init(get_device());
 
 	m_swap_chain = std::make_unique<vulkan_swap_chain>();
-	m_swap_chain->Init(s_instance, m_device);
+	m_swap_chain->init(s_instance, m_device);
 
 
 	// Pipeline Cache
@@ -48,7 +48,7 @@ void vulkan_context::init()
 
 void vulkan_context::swap_buffers()
 {
-	m_swap_chain->Present();
+	m_swap_chain->present();
 }
 
 void vulkan_context::create_instance()

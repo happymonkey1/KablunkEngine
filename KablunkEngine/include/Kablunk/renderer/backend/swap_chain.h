@@ -22,6 +22,7 @@ class swap_chain : public RefCounted
 public:
     ~swap_chain() noexcept override = default;
 
+    // Factory create function
     static auto create() noexcept -> std::unique_ptr<swap_chain>;
 
     // Initialize rendering surface (window) for the given rendering API
@@ -31,25 +32,25 @@ public:
     virtual void create(u32* p_width, u32* p_height, bool p_vsync) noexcept = 0;
 
     // Callback for when window resizes
-    virtual void OnResize(u32 width, u32 height) = 0;
+    virtual void on_resize(u32 width, u32 height) = 0;
 
     // Per-frame initialization for the swap chain
-    virtual void BeginFrame() noexcept = 0;
+    virtual void begin_frame() noexcept = 0;
 
     // Presentation logic (submit rendered frame to display adaptor)
-    virtual void Present() noexcept = 0;
+    virtual void present() noexcept = 0;
 
     // Return the current frame buffer index for the swap chain
-    virtual u32 GetCurrentBufferIndex() const noexcept = 0;
+    virtual u32 get_current_buffer_index() const noexcept = 0;
 
     // Retrieve the width of the presentation context
-    virtual u32 GetWidth() const noexcept = 0;
+    virtual u32 get_width() const noexcept = 0;
 
     // Retrieve the height of the presentation context
-    virtual u32 GetHeight() const noexcept = 0;
+    virtual u32 get_height() const noexcept = 0;
 
     // Destroy the swap chain and release any allocated memory
-    virtual void Destroy() noexcept = 0;
+    virtual void destroy() noexcept = 0;
 };
 
 } // end namespace kb::render::backend

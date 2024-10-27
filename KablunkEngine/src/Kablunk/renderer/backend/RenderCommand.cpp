@@ -11,7 +11,7 @@ namespace kb::render
 
 u32 rt_get_current_frame_index() noexcept
 {
-	return backend::vk::vulkan_context::get()->get_vulkan_swap_chain().GetCurrentBufferIndex();
+	return backend::vk::vulkan_context::get()->get_vulkan_swap_chain().get_current_buffer_index();
 }
 
 u32 get_current_frame_index() noexcept

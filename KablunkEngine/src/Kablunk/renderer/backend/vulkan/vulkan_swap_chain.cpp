@@ -10,7 +10,7 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-void vulkan_swap_chain::Init(VkInstance instance, const arc<vulkan_logical_device>& device)
+void vulkan_swap_chain::init(VkInstance instance, const arc<vulkan_logical_device>& device)
 {
 	m_instance = instance;
 	m_device = device;
@@ -25,7 +25,7 @@ void vulkan_swap_chain::init_surface(GLFWwindow* window_handle) noexcept
 
 	m_device->get_physical_device()->FindPresentingIndices(m_surface);
 
-	FindImageFormatAndColorSpace();
+	find_image_format_and_color_space();
 }
 
 void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) noexcept
@@ -328,10 +328,10 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 	if (vkCreateRenderPass(m_device->get_vk_device(), &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create render pass!");
 
-	CreateFramebuffer();
+	create_framebuffer();
 }
 
-void vulkan_swap_chain::OnResize(uint32_t width, uint32_t height) noexcept
+void vulkan_swap_chain::on_resize(uint32_t width, uint32_t height) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -345,12 +345,12 @@ void vulkan_swap_chain::OnResize(uint32_t width, uint32_t height) noexcept
 	//for (auto& framebuffer : m_framebuffers)
 	//	vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-	CreateFramebuffer();
+	create_framebuffer();
 
 	vkDeviceWaitIdle(device);
 }
 
-void vulkan_swap_chain::BeginFrame() noexcept
+void vulkan_swap_chain::begin_frame() noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -370,11 +370,11 @@ void vulkan_swap_chain::BeginFrame() noexcept
 	if (vkResetCommandPool(m_device->get_vk_device(), m_command_buffers[m_current_buffer_index].m_command_pool, 0))
 		KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 
-	if (AcquireNextImage(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
+	if (acquire_next_image(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
 		KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
 }
 
-void vulkan_swap_chain::Present() noexcept
+void vulkan_swap_chain::present() noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -429,7 +429,7 @@ void vulkan_swap_chain::Present() noexcept
 #endif
 	if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-        OnResize(m_width, m_height);
+        on_resize(m_width, m_height);
         return;
 	}
 
@@ -440,7 +440,7 @@ void vulkan_swap_chain::Present() noexcept
     }
 }
 
-void vulkan_swap_chain::Destroy() noexcept
+void vulkan_swap_chain::destroy() noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -495,7 +495,7 @@ void vulkan_swap_chain::Destroy() noexcept
     m_instance = nullptr;
 }
 
-VkResult vulkan_swap_chain::AcquireNextImage(VkSemaphore present_complete_sem, uint32_t* image_index)
+VkResult vulkan_swap_chain::acquire_next_image(VkSemaphore present_complete_sem, uint32_t* image_index)
 {
     KB_PROFILE_SCOPE;
 
@@ -510,7 +510,7 @@ VkResult vulkan_swap_chain::AcquireNextImage(VkSemaphore present_complete_sem, u
     );
 }
 
-VkResult vulkan_swap_chain::QueuePresent(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem) const
+VkResult vulkan_swap_chain::queue_present(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem) const
 {
     KB_PROFILE_SCOPE;
 
@@ -528,7 +528,7 @@ VkResult vulkan_swap_chain::QueuePresent(VkQueue queue, uint32_t image_index, Vk
 }
 
 
-void vulkan_swap_chain::FindImageFormatAndColorSpace()
+void vulkan_swap_chain::find_image_format_and_color_space()
 {
     const VkPhysicalDevice physical_device = m_device->get_vk_physical_device();
 
@@ -588,7 +588,7 @@ void vulkan_swap_chain::FindImageFormatAndColorSpace()
 	}
 }
 
-void vulkan_swap_chain::CreateFramebuffer()
+void vulkan_swap_chain::create_framebuffer()
 {
     KB_PROFILE_SCOPE;
 
@@ -621,7 +621,7 @@ void vulkan_swap_chain::CreateFramebuffer()
 	}
 }
 
-void vulkan_swap_chain::CreateDepthStencil()
+void vulkan_swap_chain::create_depth_stencil()
 {
     KB_PROFILE_SCOPE;
 
