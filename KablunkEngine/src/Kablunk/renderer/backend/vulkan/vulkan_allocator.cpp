@@ -112,7 +112,7 @@ void vulkan_allocator::Init(arc<vulkan_logical_device> device)
 	alloc_info.vulkanApiVersion = VK_API_VERSION_1_2;
 	alloc_info.physicalDevice = device->get_physical_device()->GetVkDevice();
 	alloc_info.device = device->get_vk_device();
-	alloc_info.instance = vulkan_context::get_vk_instance();
+    alloc_info.instance = device->get_vk_instance();
 
 	vmaCreateAllocator(&alloc_info, &s_data->allocator);
 }

@@ -3,8 +3,8 @@
 #include "Kablunk/Core/Window.h"
 
 
-#include "Kablunk/renderer/backend/graphics_context.h"
-#include "GLFW/glfw3.h"
+#include "Kablunk/renderer/backend/swap_chain.h"
+#include "kablunk/vendor/glfw/glfw.h"
 
 struct GLFWwindow;
 
@@ -15,48 +15,49 @@ class WindowsWindow : public Window
 public:
     static constexpr size_t k_max_cursors = 16ull;
 public:
-	WindowsWindow(const WindowProps& props);
-	virtual ~WindowsWindow();
+	WindowsWindow(const WindowProps& props, render::backend::swap_chain* p_swap_chain);
+	~WindowsWindow() override;
 
-	virtual void PollEvents() override;
-	virtual void OnUpdate() override;
+	void PollEvents() override;
+	void OnUpdate() override;
 
-	virtual unsigned int GetWidth() const override { return m_data.Width; }
-	virtual unsigned int GetHeight()	const override { return m_data.Height; }
-	virtual glm::vec2 GetDimensions() const override { return { m_data.Width, m_data.Height }; }
-    virtual const glm::vec2& get_current_dpi() const noexcept override;
+	unsigned int GetWidth() const override { return m_data.Width; }
+	unsigned int GetHeight()	const override { return m_data.Height; }
+	glm::vec2 GetDimensions() const override { return { m_data.Width, m_data.Height }; }
+    const glm::vec2& get_current_dpi() const noexcept override;
 
-	virtual void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
-	virtual void SetVsync(bool enabled) override;
-	virtual bool IsVsync() const override;
+	void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
+	void SetVsync(bool enabled) override;
+	bool IsVsync() const override;
 
-	virtual bool is_fullscreen() const override
+	bool is_fullscreen() const override
 	{
 	    return m_data.Fullscreen;
 	}
 
-	virtual void SetWindowTitle(const std::string& title) override;
+	void SetWindowTitle(const std::string& title) override;
 
-	virtual void* GetNativeWindow() const { return m_window; }
-
+	void* GetNativeWindow() const override { return m_window; }
 
 	// change the "window" mode (i.e. windowed, fullscreen, borderless fullscreen)
-	virtual void set_window_mode(window_mode_t mode) override;
+	void set_window_mode(window_mode_t mode) override;
 
-	virtual void swap_buffers() override;
+	void swap_buffers() override;
 
     cursor_handle create_cursor(arc<render::backend::texture_2d>& p_texture, const glm::ivec2& p_hot_spot) noexcept override;
     void set_cursor(cursor_handle p_cursor_handle) noexcept override;
     void set_default_cursor() noexcept override;
 
 private:
-	virtual void Init(const WindowProps& props);
+	virtual void Init(const WindowProps& props, render::backend::swap_chain* p_swap_chain);
 	virtual void Shutdown();
 
     static auto compute_dpi(const glm::vec2& p_monitor_resolution, const glm::vec2& p_monitor_dimensions) noexcept -> glm::vec2;
 private:
 	GLFWwindow* m_window;
-	arc<render::backend::graphics_context> m_context;
+
+    // Non-owning pointer to the swap chain
+    render::backend::swap_chain* m_swap_chain;
 
 	struct WindowData {
 		std::string Title;

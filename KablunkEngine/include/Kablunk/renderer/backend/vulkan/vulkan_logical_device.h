@@ -33,10 +33,10 @@ struct queue_family_indices_t
 class vulkan_physical_device final : public RefCounted
 {
 public:
-	vulkan_physical_device();
+	vulkan_physical_device(VkInstance p_vk_instance);
     ~vulkan_physical_device() override = default;
 
-	VkPhysicalDevice GetVkDevice() { return m_device; }
+	VkPhysicalDevice GetVkDevice() const { return m_device; }
 	const queue_family_indices_t& GetQueueFamilyIndices() const { return m_queue_family_indices; }
 
 	const VkPhysicalDeviceProperties& GetProperties() const { return m_properties; }
@@ -76,10 +76,16 @@ private:
 class vulkan_logical_device final : public RefCounted
 {
 public:
-	vulkan_logical_device(const arc<vulkan_physical_device>& physical_device, VkPhysicalDeviceFeatures enabled_features);
+	vulkan_logical_device(
+        VkInstance p_vk_instance,
+        const arc<vulkan_physical_device>& physical_device,
+        VkPhysicalDeviceFeatures enabled_features
+    );
 	~vulkan_logical_device() override;
 
 	void Destroy();
+
+    auto get_vk_instance() const noexcept -> VkInstance { return m_vk_instance; }
 
 	VkQueue get_vk_graphics_queue() const { return m_vk_graphics_queue; }
     VkQueue get_vk_compute_queue() const { return m_vk_compute_queue; }
@@ -90,7 +96,8 @@ public:
 
 	VkCommandBuffer create_secondary_command_buffer();
 
-	arc<vulkan_physical_device> get_physical_device() { return m_physical_device; }
+	const arc<vulkan_physical_device>& get_physical_device() const noexcept { return m_physical_device; }
+    auto get_physical_device() noexcept -> arc<vulkan_physical_device>& { return m_physical_device; }
 	VkPhysicalDevice get_vk_physical_device() { return m_physical_device->GetVkDevice(); }
 	VkDevice get_vk_device() const { return m_vk_device; }
 
@@ -99,6 +106,7 @@ private:
     arc<command_pool> get_or_create_thread_local_command_pool();
 
 private:
+    VkInstance m_vk_instance;
 	VkDevice m_vk_device;
 	arc<vulkan_physical_device> m_physical_device;
 	VkPhysicalDeviceFeatures m_enabled_features;

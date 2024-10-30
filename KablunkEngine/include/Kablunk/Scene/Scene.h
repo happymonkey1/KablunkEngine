@@ -56,7 +56,7 @@ public:
 
 	static arc<Scene> Create();
 	static arc<Scene> Copy(arc<Scene> src_scene);
-	static WeakRef<Scene> GetScene(uuid::uuid64 scene_id);
+	static weak_arc<Scene> GetScene(uuid::uuid64 scene_id);
 
 	Entity CreateEntity(const std::string& name = "", uuid::uuid64 id = uuid::nil_uuid);
 	void DestroyEntity(Entity entity);

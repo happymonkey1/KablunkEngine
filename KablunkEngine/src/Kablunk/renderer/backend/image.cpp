@@ -12,7 +12,13 @@ arc<image_2d> image_2d::create(const image_specification_t& specification, ownin
     constexpr auto backend = Renderer::get_render_backend_type();
     if constexpr (backend == backend::render_backend_type_t::vulkan)
     {
-        return static_cast<arc<image_2d>>(arc<backend::vk::vulkan_image_2d>::Create(specification));
+        // TODO: singleton bad
+        const auto& context = Singleton<Renderer>::get().get_graphics_context();
+        auto device = context.as<vk::vulkan_context>()->get_device();
+        return static_cast<arc<image_2d>>(arc<vk::vulkan_image_2d>::Create(
+            specification,
+            weak_arc{ device }
+        ));
     }
     else
     {
@@ -24,9 +30,12 @@ arc<image_2d> image_2d::create(const image_specification_t& specification, ownin
 arc<image_2d> image_2d::create(const image_specification_t& specification, const void* data /*= nullptr*/)
 {
     constexpr auto backend = Renderer::get_render_backend_type();
-    if constexpr (backend == backend::render_backend_type_t::vulkan)
+    if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<arc<image_2d>>(arc<backend::vk::vulkan_image_2d>::Create(specification));
+        // TODO: singleton bad
+        const auto& context = Singleton<Renderer>::get().get_graphics_context();
+        auto device = context.as<vk::vulkan_context>()->get_device();
+        return static_cast<arc<image_2d>>(arc<vk::vulkan_image_2d>::Create(specification, weak_arc{ device }));
     }
     else
     {
@@ -38,9 +47,12 @@ arc<image_2d> image_2d::create(const image_specification_t& specification, const
 auto image_view::create(const image_view_specification& p_specification) noexcept -> arc<image_view>
 {
     constexpr auto backend = Renderer::get_render_backend_type();
-    if constexpr (backend == backend::render_backend_type_t::vulkan)
+    if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<arc<image_view>>(arc<backend::vk::vulkan_image_view>::Create(p_specification));
+        // TODO: singleton bad
+        const auto& context = Singleton<Renderer>::get().get_graphics_context();
+        auto device = context.as<vk::vulkan_context>()->get_device();
+        return static_cast<arc<image_view>>(arc<vk::vulkan_image_view>::Create(p_specification, weak_arc{ device }));
     }
     else
     {

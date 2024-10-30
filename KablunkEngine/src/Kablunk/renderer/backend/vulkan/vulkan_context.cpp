@@ -1,9 +1,10 @@
 #include "kablunkpch.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
+
+#include "kablunk/vendor/glfw/glfw.h"
 
 #include <vector>
 
@@ -11,19 +12,26 @@ namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
 vulkan_context::vulkan_context(GLFWwindow* window_handle)
-	: m_window_handle{ window_handle }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }, m_pipeline_cache{ nullptr }
+	: m_window_handle{ window_handle }, m_pipeline_cache{ nullptr }, m_validation_layers{ "VK_LAYER_KHRONOS_validation" }
 {
-	s_context = arc<vulkan_context>(this);
+    KB_CORE_ASSERT(!s_context, "[vulkan_context]: Vulkan context is already initialized!");
+
+    if (!s_context)
+    {
+        s_context = this;
+    }
+
+    init();
 }
 
-void vulkan_context::init()
+void vulkan_context::init() noexcept
 {
 	KB_CORE_INFO("Initializing Vulkan Context!");
-	create_instance();
+    create_instance();
 
 	SetupDebugMessageCallback();
 
-	m_physical_device = arc<vulkan_physical_device>::Create();
+	m_physical_device = arc<vulkan_physical_device>::Create(m_vk_instance);
 
 	VkPhysicalDeviceFeatures enabled_features{};
 	enabled_features.samplerAnisotropy = true;
@@ -32,12 +40,15 @@ void vulkan_context::init()
 	enabled_features.pipelineStatisticsQuery = true;
 	enabled_features.independentBlend = VK_TRUE;
 
-	m_device = arc<vulkan_logical_device>::Create(m_physical_device, enabled_features);
+	m_device = arc<vulkan_logical_device>::Create(
+        m_vk_instance,
+        m_physical_device,
+        enabled_features
+    );
 	vulkan_allocator::Init(get_device());
 
 	m_swap_chain = std::make_unique<vulkan_swap_chain>();
-	m_swap_chain->init(s_instance, m_device);
-
+	m_swap_chain->init(m_vk_instance, m_device);
 
 	// Pipeline Cache
 	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
@@ -53,6 +64,9 @@ void vulkan_context::swap_buffers()
 
 void vulkan_context::create_instance()
 {
+    KB_CORE_ASSERT(glfwInit(), "COULD NOT INITIALIZE GLFW");
+    KB_CORE_ASSERT(glfwVulkanSupported(), "[vulkan_context]: GLFW can not load Vulkan!");
+
 	KB_CORE_INFO("Creating Vulkan instance!");
 
 	VkApplicationInfo app_info{};
@@ -78,7 +92,7 @@ void vulkan_context::create_instance()
 	else
 		create_info.enabledLayerCount = 0;
 
-	if (vkCreateInstance(&create_info, nullptr, &s_instance) != VK_SUCCESS)
+	if (vkCreateInstance(&create_info, nullptr, &m_vk_instance) != VK_SUCCESS)
 	{
 		KB_CORE_ERROR("failed to create Vulkan instance!");
 		return;
@@ -94,8 +108,6 @@ void vulkan_context::create_instance()
 	for (const auto& extension : extensions)
 		KB_CORE_INFO("  {0}", extension.extensionName);
 
-	// #TODO validate that required extensions by Vulkan are present in GLFW
-
 	if (m_enable_validation_layers && !check_validation_layer_support())
 	{
 		KB_CORE_ERROR("validation layers requested but not found!");
@@ -103,7 +115,7 @@ void vulkan_context::create_instance()
 	}
 }
 
-bool vulkan_context::check_validation_layer_support()
+bool vulkan_context::check_validation_layer_support() const
 {
 	uint32_t layer_count;
 	vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
@@ -133,10 +145,12 @@ bool vulkan_context::check_validation_layer_support()
 
 std::vector<const char*> vulkan_context::get_required_extensions()
 {
+    glfwInitVulkanLoader(vkGetInstanceProcAddr);
 	uint32_t glfw_extension_count = 0;
 	const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
 
-	std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
+	std::vector extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
+    
 
 	if (m_enable_validation_layers)
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -157,32 +171,32 @@ void vulkan_context::SetupDebugMessageCallback()
 	create_info.pfnUserCallback = DebugCallback;
 	create_info.pUserData = nullptr;
 
-	if (CreateDebugUtilsMessengerExtension(s_instance, &create_info, nullptr, &m_debug_messenger) != VK_SUCCESS)
+	if (CreateDebugUtilsMessengerExtension(m_vk_instance, &create_info, nullptr, &m_debug_messenger) != VK_SUCCESS)
 	{
 		KB_CORE_ERROR("Failed to create Debug Messenger!");
 		return;
 	}
 }
 
-void vulkan_context::shutdown()
+void vulkan_context::destroy() noexcept
 {
-	if (!s_instance)
-		return;
+    if (!m_vk_instance)
+        return;
 
-	KB_CORE_INFO("Shutting down Vulkan instance");
+    KB_CORE_INFO("Destroying Vulkan instance");
 
-	//m_swap_chain.Destroy();
+    m_swap_chain->destroy();
+    m_device->Destroy();
 
-	// device needs to reference the vulkan context to be destroyed
-	// device destruction is now destroyed with the window, before this context
-	// is destroyed
-	//m_device->Destroy();
+    if (m_enable_validation_layers)
+        DestroyDebugUtilsMessengerEXT(m_vk_instance, m_debug_messenger, nullptr);
 
-	if (m_enable_validation_layers)
-		DestroyDebugUtilsMessengerEXT(s_instance, m_debug_messenger, nullptr);
+    vkDestroyInstance(m_vk_instance, nullptr);
+    m_vk_instance = nullptr;
 
-	vkDestroyInstance(s_instance, nullptr);
-	s_instance = nullptr;
+    s_context = nullptr;
+
+    KB_CORE_INFO("Finished destroying Vulkan instance");
 }
 
 } // end namespace kb::render::backend::vk

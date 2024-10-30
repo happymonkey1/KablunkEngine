@@ -17,28 +17,39 @@ namespace kb::render::backend::vk
 class vulkan_vertex_buffer final : public VertexBuffer
 {
 public:
-	vulkan_vertex_buffer(const void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
-	vulkan_vertex_buffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
-	virtual ~vulkan_vertex_buffer() override;
+	vulkan_vertex_buffer(
+        weak_arc<vulkan_logical_device> p_device,
+        const void* data,
+        uint32_t size,
+        VertexBufferUsage usage = VertexBufferUsage::Static
+    );
 
-	virtual void Bind() const override;
-	virtual void Unbind() const override;
+	vulkan_vertex_buffer(
+        weak_arc<vulkan_logical_device> p_device,
+        uint32_t size,
+        VertexBufferUsage usage = VertexBufferUsage::Dynamic
+    );
+	~vulkan_vertex_buffer() override;
 
-	virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
-	virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+	void Bind() const override;
+	void Unbind() const override;
+
+	void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+	void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 
 	VkBuffer GetVkBuffer() const { return m_vk_buffer; }
 
-	virtual void SetLayout(const BufferLayout& layout) override;
-	virtual const BufferLayout& GetLayout() const override;
+	void SetLayout(const BufferLayout& layout) override;
+	const BufferLayout& GetLayout() const override;
 
-	virtual RendererID GetRendererID() const override;
+	RendererID GetRendererID() const override;
 private:
 	uint32_t m_size = 0;
-	owning_buffer m_local_data;
+	owning_buffer m_local_data{};
+    weak_arc<vulkan_logical_device> m_device = nullptr;
 
 	VkBuffer m_vk_buffer = nullptr;
-	VmaAllocation m_memory_allocation;
+	VmaAllocation m_memory_allocation{};
 };
 
 } // end namespace kb::render::backend::vk

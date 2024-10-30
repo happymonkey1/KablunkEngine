@@ -50,7 +50,7 @@ namespace kb
 		static bool ReloadAssembly(const std::filesystem::path& path);
 
 		static void SetSceneContext(Scene* scene);
-		static const WeakRef<Scene>& GetCurrentSceneContext();
+		static const weak_arc<Scene>& GetCurrentSceneContext();
 
 		static void CopyEntityScriptData(uuid::uuid64 dst, uuid::uuid64 src);
 

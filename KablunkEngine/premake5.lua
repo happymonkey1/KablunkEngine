@@ -43,6 +43,7 @@ defines {
 	"NOMINMAX",
 	"KB_BUILD_DLL",
 	"GLFW_DLL",
+	"GLFW_INCLUDE_VULKAN",
 	"GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
 	"GLM_FORCE_INTRINSICS",
 	"STEAMNETWORKINGSOCKETS_STATIC_LINK",
@@ -57,7 +58,7 @@ includedirs {
 	"include",
 	"src",
 	"%{IncludeDir.GLFW}",
-	"%{IncludeDir.Glad}",
+	-- "%{IncludeDir.Glad}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.glm}",
 	"%{IncludeDir.stb_image}",
@@ -94,14 +95,15 @@ includedirs {
 }
 
 links {
-	--"GLFW",
-	"Glad",
+	"vulkan-1.dll",
+
+	--
+	-- "Glad",
 	"ImGui",
 	"yaml-cpp",
 	"spdlog",
 	"FreeType",
 	"Box2d",
-	"opengl32.lib",
 	"optick",
 	"absl",
 	"protobuf",
@@ -114,8 +116,11 @@ links {
 	"tinyxml2",
 
 	"%{Library.Vulkan}",
+	"GLFW",
+
 	"%{Library.LuaJIT}",
 	-- "%{Library.VulkanUtils}",
+
 }
 
 prebuildcommands {

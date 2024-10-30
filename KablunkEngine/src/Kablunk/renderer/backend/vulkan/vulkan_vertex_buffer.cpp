@@ -7,8 +7,13 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-vulkan_vertex_buffer::vulkan_vertex_buffer(const void* data, uint32_t size, VertexBufferUsage usage /*= VertexBufferUsage::Static*/)
-	: m_size{ size }
+vulkan_vertex_buffer::vulkan_vertex_buffer(
+    const weak_arc<vulkan_logical_device> p_device,
+    const void* data,
+    const u32 size,
+    VertexBufferUsage usage /*= VertexBufferUsage::Static*/
+)
+	: m_size{ size }, m_device{ p_device }
 {
 	m_local_data = owning_buffer::copy(data, size);
 
@@ -17,7 +22,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(const void* data, uint32_t size, Vert
     arc instance{ this };
 	render::submit([instance]() mutable
 		{
-			auto device = vulkan_context::get()->get_device();
+			auto device = instance->m_device;
 			vulkan_allocator allocator{ "VertexBuffer" };
 
 			// create staging buffer
@@ -31,7 +36,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(const void* data, uint32_t size, Vert
             const VmaAllocation staging_buffer_allocation = allocator.AllocateBuffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
 			// copy data to staging buffer (cpu)
-			uint8_t* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
+			u8* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
 			memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
 			KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{}'", instance->m_local_data.size());
 			allocator.UnmapMemory(staging_buffer_allocation);
@@ -64,15 +69,19 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(const void* data, uint32_t size, Vert
 		});
 }
 
-vulkan_vertex_buffer::vulkan_vertex_buffer(uint32_t size, VertexBufferUsage usage /*= VertexBufferUsage::Dynamic*/)
-	: m_size{ size }, m_memory_allocation{ nullptr }
+vulkan_vertex_buffer::vulkan_vertex_buffer(
+    const weak_arc<vulkan_logical_device> p_device,
+    const u32 size,
+    VertexBufferUsage usage /*= VertexBufferUsage::Dynamic*/
+)
+	: m_size{ size }, m_device{ p_device }, m_memory_allocation{ nullptr }
 {
 	m_local_data.allocate(size);
 
     arc instance{ this };
 	render::submit([instance]() mutable
 		{
-			VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
+			VkDevice device = instance->m_device->get_vk_device();
 			vulkan_allocator allocator{ "VertexBuffer" };
 
 			VkBufferCreateInfo vertex_buffer_create_info{};
@@ -109,8 +118,8 @@ void vulkan_vertex_buffer::Unbind() const
 
 void vulkan_vertex_buffer::SetData(
     const void* data,
-    uint32_t size,
-    uint32_t offset /*= 0*/
+    u32 size,
+    u32 offset /*= 0*/
 )
 {
     KB_CORE_ASSERT(
@@ -130,8 +139,8 @@ void vulkan_vertex_buffer::SetData(
 
 void vulkan_vertex_buffer::RT_SetData(
     const void* data,
-    uint32_t size,
-    uint32_t offset /*= 0*/
+    u32 size,
+    u32 offset /*= 0*/
 )
 {
 	vulkan_allocator allocator{ "VertexBuffer" };

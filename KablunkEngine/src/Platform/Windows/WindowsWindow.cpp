@@ -10,8 +10,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "kablunk/vendor/glfw/glfw.h"
 
 #include "Kablunk/Core/Application.h"
 
@@ -20,32 +19,29 @@ namespace kb
 
 static uint8_t s_glfw_window_count = 0;
 
-static void GLFWErrorCallback(int error, const char* desc) 
+static void GLFWErrorCallback(int error, const char* desc)
 {
     KB_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
 }
 
-box<Window> Window::Create(const WindowProps& props) 
-{
-    return create_box<WindowsWindow>(props);
-}
-
-WindowsWindow::WindowsWindow(const WindowProps& props)
+WindowsWindow::WindowsWindow(const WindowProps& props, render::backend::swap_chain* p_swap_chain_ptr)
 {
     KB_PROFILE_SCOPE;
 
-    Init(props);
+    WindowsWindow::Init(props, p_swap_chain_ptr);
 }
 
 WindowsWindow::~WindowsWindow()
 {
     KB_PROFILE_SCOPE;
 
-    Shutdown();
+    WindowsWindow::Shutdown();
 }
 
-void WindowsWindow::Init(const WindowProps& props)
+void WindowsWindow::Init(const WindowProps& props, render::backend::swap_chain* p_swap_chain_ptr)
 {
+    m_swap_chain = p_swap_chain_ptr;
+
     m_data.Title = props.Title;
     m_data.Width = props.Width;
     m_data.Height = props.Height;
@@ -55,9 +51,6 @@ void WindowsWindow::Init(const WindowProps& props)
 
     if (s_glfw_window_count == 0)
 	{
-		int success = glfwInit();
-        KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
-
 		// Hint to glfw that this will be rendered with Vulkan
 		if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
 		{
@@ -117,13 +110,8 @@ void WindowsWindow::Init(const WindowProps& props)
         }
 	}
 
-    // TODO: Window should not own the context
-    {
-        m_context = render::backend::graphics_context::create(m_window);
-        m_context->init();
-        m_context->get_swap_chain()->init_surface(m_window);
-        m_context->get_swap_chain()->create(&m_data.Width, &m_data.Height, m_data.VSync);
-    }
+    m_swap_chain->init_surface(m_window);
+    m_swap_chain->create(&m_data.Width, &m_data.Height, m_data.VSync);
 
 	KB_CORE_INFO("Context created!");
 
@@ -233,17 +221,6 @@ void WindowsWindow::Shutdown()
 {
     KB_PROFILE_SCOPE;
 
-	if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
-	{
-		// #TODO dynamic_cast bad!
-		auto* vk_context = dynamic_cast<render::backend::vk::vulkan_context*>(m_context.get());
-
-		vk_context->get_swap_chain()->destroy();
-        vk_context->get_device()->Destroy();
-	}
-
-	//m_context->Shutdown();
-
     glfwDestroyWindow(m_window);
 	--s_glfw_window_count;
 
@@ -274,7 +251,7 @@ void WindowsWindow::OnUpdate()
 {
     KB_PROFILE_SCOPE;
 
-    m_context->swap_buffers();
+    m_swap_chain->present();
 }
 
 
@@ -415,8 +392,7 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 
 void WindowsWindow::swap_buffers()
 {
-	// #TODO this is not renderer agnostic
-	render::backend::vk::vulkan_context::get()->get_swap_chain()->present();
+	m_swap_chain->present();
 }
 
 cursor_handle WindowsWindow::create_cursor(

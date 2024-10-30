@@ -22,11 +22,6 @@ namespace kb::render::backend::vk
 
 static std::vector<VkCommandBuffer> s_imgui_command_buffers;
 
-vulkan_imgui_layer::vulkan_imgui_layer()
-{
-
-}
-
 vulkan_imgui_layer::vulkan_imgui_layer(const std::string& name)
 {
 	m_DebugName = name;
@@ -81,8 +76,8 @@ void vulkan_imgui_layer::OnAttach()
 			Application& app = Application::Get();
 			GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-			auto vulkan_context = vulkan_context::get();
-			auto device = vulkan_context->get_device()->get_vk_device();
+            auto vulkan_device = vulkan_context::get()->get_device();
+			auto vk_device = vulkan_device->get_vk_device();
 
 			VkDescriptorPool descriptorPool;
 
@@ -107,22 +102,22 @@ void vulkan_imgui_layer::OnAttach()
 			pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
 			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 			pool_info.pPoolSizes = pool_sizes;
-			if (vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool) != VK_SUCCESS)
+			if (vkCreateDescriptorPool(vk_device, &pool_info, nullptr, &descriptorPool) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "ImGui Vulkan impl failed to create descriptor pool!");
 
 			// Setup Platform/Renderer bindings
 			ImGui_ImplGlfw_InitForVulkan(window, true);
 			ImGui_ImplVulkan_InitInfo init_info = {};
-			init_info.Instance = vulkan_context::get_vk_instance();
-			init_info.PhysicalDevice = vulkan_context->get_device()->get_vk_physical_device();
-			init_info.Device = device;
-			init_info.QueueFamily = vulkan_context->get_device()->get_physical_device()->GetQueueFamilyIndices().Graphics_family.value();
-			init_info.Queue = vulkan_context->get_device()->get_vk_graphics_queue();
+			init_info.Instance = vulkan_context::get()->get_vk_instance();
+			init_info.PhysicalDevice = vulkan_device->get_vk_physical_device();
+			init_info.Device = vk_device;
+			init_info.QueueFamily = vulkan_device->get_physical_device()->GetQueueFamilyIndices().Graphics_family.value();
+			init_info.Queue = vulkan_device->get_vk_graphics_queue();
 			init_info.PipelineCache = nullptr;
 			init_info.DescriptorPool = descriptorPool;
 			init_info.Allocator = nullptr;
 			init_info.MinImageCount = 2;
-			const auto& swap_chain = vulkan_context->get_vulkan_swap_chain();
+			const auto& swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
 			init_info.ImageCount = swap_chain->get_image_count();
 			//init_info.CheckVkResultFn = Utils::VulkanCheckResult;
 			ImGui_ImplVulkan_Init(&init_info, swap_chain->get_vk_render_pass());
@@ -131,11 +126,11 @@ void vulkan_imgui_layer::OnAttach()
 			{
 				// Use any command queue
 
-				const VkCommandBuffer vk_command_buffer = vulkan_context->get_device()->get_vk_command_buffer(true);
+				const VkCommandBuffer vk_command_buffer = vulkan_device->get_vk_command_buffer(true);
 				ImGui_ImplVulkan_CreateFontsTexture(vk_command_buffer);
-				vulkan_context->get_device()->flush_command_buffer(vk_command_buffer);
+				vulkan_device->flush_command_buffer(vk_command_buffer);
 
-				if (vkDeviceWaitIdle(device) != VK_SUCCESS)
+				if (vkDeviceWaitIdle(vk_device) != VK_SUCCESS)
 					KB_CORE_ASSERT(false, "VulkanImGuiLayer failed to wait!");
 
 				ImGui_ImplVulkan_DestroyFontUploadObjects();
@@ -144,7 +139,7 @@ void vulkan_imgui_layer::OnAttach()
 			const uint32_t frames_in_flight = render::get_frames_in_flight();
 			s_imgui_command_buffers.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; ++i)
-				s_imgui_command_buffers[i] = vulkan_context->get_device()->create_secondary_command_buffer();
+				s_imgui_command_buffers[i] = vulkan_device->create_secondary_command_buffer();
 		});
 
 }
@@ -152,11 +147,10 @@ void vulkan_imgui_layer::OnAttach()
 void vulkan_imgui_layer::OnDetach()
 {
     KB_PROFILE_SCOPE;
-	render::submit([]()
+    const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
+	render::submit([vk_device]()
 		{
-            const auto device = vulkan_context::get()->get_device()->get_vk_device();
-
-			if (vkDeviceWaitIdle(device) != VK_SUCCESS)
+			if (vkDeviceWaitIdle(vk_device) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "VulkanImGuiLayer failed to wait!");
 
 			ImGui_ImplVulkan_Shutdown();
@@ -208,7 +202,7 @@ void vulkan_imgui_layer::End()
 
 	ImGui::Render();
 
-	const auto& swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
+	const auto swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
 
 	VkClearValue clear_values[2];
 	clear_values[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };

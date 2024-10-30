@@ -10,10 +10,11 @@
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
-static std::map<VkImage, WeakRef<vulkan_image_2d>> s_image_refs;
 
-vulkan_image_2d::vulkan_image_2d(image_specification_t spec)
-	: m_specification{ spec }, m_descriptor_image_info{}
+static std::map<VkImage, weak_arc<vulkan_image_2d>> s_image_refs;
+
+vulkan_image_2d::vulkan_image_2d(image_specification_t spec, weak_arc<vulkan_logical_device> p_device)
+    : m_specification{ std::move(spec) }, m_device{ p_device }, m_descriptor_image_info{}
 {
 }
 
@@ -37,9 +38,9 @@ void vulkan_image_2d::release()
 		return;
 
     arc instance{ this };
-	render::submit_resource_free([info = m_info, layer_views = m_per_layer_image_views]() mutable
+	render::submit_resource_free([device = m_device, info = m_info, layer_views = m_per_layer_image_views]() mutable
 		{
-			const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
+			const auto vk_device = device->get_vk_device();
             KB_CORE_INFO("[VulkanImage2D]: destroying image view {}", static_cast<void*>(info.image_view));
 			vkDestroyImageView(vk_device, info.image_view, nullptr);
             KB_CORE_INFO("[VulkanImage2D]: destroying sampler {}", static_cast<void*>(info.sampler));
@@ -76,7 +77,7 @@ void vulkan_image_2d::RT_Invalidate()
 	// Try release first if necessary
 	release();
 
-	VkDevice vk_device = vulkan_context::get()->get_device()->get_vk_device();
+	VkDevice vk_device = m_device->get_vk_device();
 	vulkan_allocator allocator{ "VulkanImage2D" };
 
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: this (probably) shouldn't be implied
@@ -163,7 +164,7 @@ void vulkan_image_2d::RT_Invalidate()
 	if (m_specification.usage == image_usage_t::Storage)
 	{
 		// Transition image to GENERAL layout
-		VkCommandBuffer command_buffer = vulkan_context::get()->get_device()->get_vk_command_buffer(true);
+		VkCommandBuffer command_buffer = m_device->get_vk_command_buffer(true);
 
 		VkImageSubresourceRange subresource_range = {};
 		subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -183,7 +184,7 @@ void vulkan_image_2d::RT_Invalidate()
 			subresource_range
         );
 
-        vulkan_context::get()->get_device()->flush_command_buffer(command_buffer);
+        m_device->flush_command_buffer(command_buffer);
 	}
 
 	UpdateDescriptor();
@@ -206,7 +207,7 @@ void vulkan_image_2d::RT_CreatePerLayerImageViews()
 {
 	KB_CORE_ASSERT(m_specification.layers > 1, "cannot create per layer image views because there is only one layer!");
 
-    const VkDevice vk_device = vulkan_context::get()->get_device()->get_vk_device();
+    const VkDevice vk_device = m_device->get_vk_device();
 
 	VkImageAspectFlags aspect_mask = render::backend::util::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8)
@@ -236,7 +237,7 @@ void vulkan_image_2d::RT_CreatePerLayerImageViews()
 
 void vulkan_image_2d::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices)
 {
-    const VkDevice vk_device = vulkan_context::get()->get_device()->get_vk_device();
+    const VkDevice vk_device = m_device->get_vk_device();
 
 	VkImageAspectFlags aspect_mask = render::backend::util::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8)
@@ -287,7 +288,7 @@ VkImageView vulkan_image_2d::RT_GetMipImageView(uint32_t mip)
 {
 	if (!m_mip_image_views.contains(mip))
 	{
-        const VkDevice vk_device = vulkan_context::get()->get_device()->get_vk_device();
+        const VkDevice vk_device = m_device->get_vk_device();
 
 		VkImageAspectFlags aspect_mask = render::backend::util::IsDepthFormat(m_specification.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (m_specification.format == image_format_t::DEPTH24STENCIL8)
@@ -330,23 +331,23 @@ void vulkan_image_2d::UpdateDescriptor()
 	m_descriptor_image_info.sampler = m_info.sampler;
 }
 
-const std::map<VkImage, WeakRef<vulkan_image_2d>>& vulkan_image_2d::GetImageRefs() const
+const std::map<VkImage, weak_arc<vulkan_image_2d>>& vulkan_image_2d::GetImageRefs() const
 {
 	return s_image_refs;
 }
 
 // --- vulkan_image_view -----------------------------
 
-vulkan_image_view::vulkan_image_view(image_view_specification p_specification)
-    : m_specification{ std::move(p_specification) }
+vulkan_image_view::vulkan_image_view(image_view_specification p_specification, weak_arc<vulkan_logical_device> p_device)
+    : m_specification{ std::move(p_specification) }, m_device{ p_device }
 {
 }
 
 vulkan_image_view::~vulkan_image_view()
 {
-    render::submit_resource_free([image_view = m_vk_image_view]() mutable
+    render::submit_resource_free([device = m_device, image_view = m_vk_image_view]() mutable
         {
-            const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
+            const auto vk_device = device->get_vk_device();
             vkDestroyImageView(vk_device, image_view, nullptr);
         });
 
@@ -391,7 +392,7 @@ auto vulkan_image_view::rt_invalidate() noexcept -> void
         },
     };
 
-    const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
+    const auto vk_device = m_device->get_vk_device();
     KB_VK_CHECK_RESULT(
         vkCreateImageView(
             vk_device,
@@ -407,4 +408,4 @@ auto vulkan_image_view::rt_invalidate() noexcept -> void
 
 // ---------------------------------------------------
 
-} // end namespace kb
+} // end namespace kb::render::backend::vk

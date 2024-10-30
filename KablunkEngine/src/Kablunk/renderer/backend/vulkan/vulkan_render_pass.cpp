@@ -58,7 +58,7 @@ void vulkan_render_pass::set_input(std::string_view p_name, arc<image_2d> p_imag
 
 arc<image_2d> vulkan_render_pass::get_output_image(u32 p_index) noexcept
 {
-    auto frame_buffer = m_specification.m_pipeline->get_specification().m_target_frame_buffer;
+    const auto& frame_buffer = m_specification.m_pipeline->get_specification().m_target_frame_buffer;
 
     // invalid attachment index
     if (p_index > frame_buffer->get_color_attachment_count() + 1)

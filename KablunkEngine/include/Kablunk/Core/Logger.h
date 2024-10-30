@@ -298,7 +298,7 @@ auto log_message(
 		case logger_level_t::warn:		logger->warn(formatted_message); break;
 		case logger_level_t::error:		logger->error(formatted_message); break;
 		case logger_level_t::critical:	logger->critical(formatted_message); break;
-        case logger_level_t::NONE:      assert(false, "Invalid logger level!");
+        case logger_level_t::NONE:      assert(false, "Invalid logger level!"); break;
 		default:
             assert(false, "Undefined logger level!");
 	}

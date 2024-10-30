@@ -17,7 +17,7 @@
 
 #include "Kablunk/Audio/AudioCommand.h"
 
-#include <GLFW/glfw3.h>
+#include "Kablunk/vendor/glfw/glfw.h"
 
 namespace kb
 {
@@ -48,15 +48,22 @@ void Application::init()
 
 	m_render_thread.run();
 
-	{
-		m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height, m_specification.Fullscreen });
-		m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
-		m_window->SetVsync(m_specification.Vsync);
-	}
+    render::init();
 
+    const WindowProps window_create_info{
+        m_specification.Name,
+        m_specification.Width,
+        m_specification.height,
+        m_specification.Fullscreen
+    };
+	m_window = Window::Create(
+        Singleton<render::Renderer>::get().get_graphics_context()->get_swap_chain(),
+        window_create_info
+    );
+	m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
+	m_window->SetVsync(m_specification.Vsync);
 
 	audio::init_audio_engine();
-	render::init();
 	KB_CORE_INFO("Finished initializing renderer!");
 	// start rendering render one frame
 	m_render_thread.pump();
@@ -228,7 +235,7 @@ void Application::Run()
 
 			// #TODO(Sean) not renderer agnostic
 			// start swapchain presentation on render thread
-			render::submit([&]() { render::backend::vk::vulkan_context::get()->get_swap_chain()->begin_frame(); });
+			render::submit([&]() { Singleton<render::Renderer>::get().get_graphics_context()->get_swap_chain()->begin_frame(); });
 
 			render::begin_frame();
 			{

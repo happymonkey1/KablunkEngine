@@ -28,7 +28,7 @@ namespace kb::Scripts
 
 	static inline auto GetEntity(uint64_t entity_id)
 	{
-		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		weak_arc<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "No active scene!");
 
 		const auto& entity_map = context->GetEntityMap();
@@ -66,7 +66,7 @@ namespace kb::Scripts
 
 	MonoArray* Kablunk_Scene_GetEntities()
 	{
-		kb::WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		kb::weak_arc<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "no scene set!");
 		const auto& entity_map = context->GetEntityMap();
 
@@ -103,7 +103,7 @@ namespace kb::Scripts
 
 	uint64_t Kablunk_Entity_CreateEntity()
 	{
-		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		weak_arc<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		return context->CreateEntity("New C# Entity").GetUUID();
 	}
 
@@ -212,7 +212,7 @@ namespace kb::Scripts
 
 	void Kablunk_CameraComponent_ScreenToWorldPosition(glm::vec2* screen_pos, glm::vec3* out_position)
 	{
-		WeakRef<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
+		weak_arc<Scene> context = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(context, "no context set!");
 
 		auto entity = context->GetPrimaryCameraEntity();

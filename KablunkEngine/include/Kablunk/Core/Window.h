@@ -13,7 +13,16 @@
 namespace kb
 { // start namespace kb
 
-struct WindowProps {
+// Forward declaration
+namespace render::backend
+{
+
+class swap_chain;
+
+}
+
+struct WindowProps
+{
 	std::string Title;
 	uint32_t Width;
 	uint32_t Height;
@@ -70,7 +79,10 @@ public:
     // set cursor back to OS specific default cursor
     virtual void set_default_cursor() noexcept = 0;
 
-	static box<Window> Create(const WindowProps& props = WindowProps());
+	static box<Window> Create(
+        render::backend::swap_chain* p_swap_chain_ptr,
+        WindowProps p_props = WindowProps{}
+    );
 };
 
 } // end namespace kb

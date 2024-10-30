@@ -9,6 +9,8 @@
 #include <mutex>
 #include <type_traits>
 
+#include "Kablunk/Core/RefCounting.h"
+
 #define KB_LIVE_REFERENCES 0
 #define KB_REF_MOVE_DEFINED 1
 
@@ -256,46 +258,46 @@ private:
 	friend class arc;
 
 	template <typename T2>
-	friend class WeakRef;
+	friend class weak_arc;
 
 	mutable T* m_ptr;
 };
 
 template <typename T>
-class WeakRef
+class KB_TRIVIAL_ABI weak_arc
 {
 public:
-	WeakRef() = default;
+	constexpr weak_arc() = default;
 	//WeakRef(IntrusiveRef<T> arc) : m_ptr{ arc.get() } { }
-	WeakRef(const arc<T>& ref) : m_ptr{ ref.m_ptr } { }
-	WeakRef(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
-	WeakRef(T* ptr) : m_ptr{ ptr } { }
+	constexpr weak_arc(const arc<T>& ref) : m_ptr{ ref.m_ptr } { }
+	constexpr weak_arc(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
+	constexpr weak_arc(T* ptr) : m_ptr{ ptr } { }
 
-	~WeakRef() = default;
+	constexpr ~weak_arc() noexcept = default;
 
 #if KB_LIVE_REFERENCES
 	bool Valid() const { return m_ptr ? Internal::IsLive(m_ptr) : false; }
 #else
-    auto Valid() const -> bool { return m_ptr; }
+    constexpr auto Valid() const noexcept -> bool { return m_ptr; }
 #endif
 
-	T* operator->() { return m_ptr; }
-	T& operator*() { return *m_ptr; }
-	operator bool() const { return Valid(); }
+    constexpr const T* operator->() const noexcept { return m_ptr; }
+	constexpr T* operator->() noexcept { return m_ptr; }
+    constexpr const T& operator*() const noexcept { return *m_ptr; }
+	constexpr T& operator*() noexcept { return *m_ptr; }
+	constexpr operator bool() const noexcept { return Valid(); }
+
+    template <typename T2>
+    constexpr auto as() const noexcept -> weak_arc<T2>
+	{
+        return weak_arc<T2>{ static_cast<T2*>(m_ptr) };
+	}
 
     // get the raw pointer
-	T* get() { return m_ptr; }
+	constexpr T* get() noexcept { return m_ptr; }
 private:
 	T* m_ptr = nullptr;
 };
-
-// ==============
-//   type alias
-// ==============
-
-// view for a intrusive arc counted pointer
-template <typename T>
-using weak_ref = WeakRef<T>;
 
 // ==============
 }

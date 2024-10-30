@@ -53,7 +53,12 @@ inline VkFormat VulkanImageFormat(image_format_t format)
     case image_format_t::RGBA16F:         return VK_FORMAT_R16G16B16A16_SFLOAT;
     case image_format_t::RGBA32F:         return VK_FORMAT_R32G32B32A32_SFLOAT;
     case image_format_t::DEPTH32F:        return VK_FORMAT_D32_SFLOAT;
-    case image_format_t::DEPTH24STENCIL8: return vulkan_context::get()->get_device()->get_physical_device()->GetDepthFormat();
+    case image_format_t::DEPTH24STENCIL8:
+    {
+        const auto& graphics_context = Singleton<Renderer>::get().get_graphics_context();
+        const auto vulkan_context = graphics_context.as<vk::vulkan_context>();
+        return vulkan_context->get_device()->get_physical_device()->GetDepthFormat();
+    }
     }
     KB_CORE_ASSERT(false, "Unknown ImageFormat!");
     return VK_FORMAT_UNDEFINED;

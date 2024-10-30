@@ -531,11 +531,13 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
 {
     KB_PROFILE_SCOPE_NAMED("vulkan_descriptor_set_manager::rt_invalidate_and_update");
 
+#if 0
     log::core::trace(
         log::logger_tag_t::renderer,
         "[Render pass {}] invalidating and updating resources",
         m_specification.m_debug_name
     );
+#endif
 
     const auto frame_index = rt_get_current_frame_index();
 

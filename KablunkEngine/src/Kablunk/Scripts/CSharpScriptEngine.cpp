@@ -96,7 +96,7 @@ namespace Internal
 static MonoDomain* s_current_mono_domain = nullptr;
 static MonoDomain* s_new_mono_domain = nullptr;
 static std::string s_core_assembly_path;
-static WeakRef<Scene> s_scene_context = nullptr;
+static weak_arc<Scene> s_scene_context = nullptr;
 
 static EntityInstanceMap s_entity_instance_map;
 
@@ -431,7 +431,7 @@ bool CSharpScriptEngine::ReloadAssembly(const std::filesystem::path& path)
 
 	if (!s_entity_instance_map.empty())
 	{
-		WeakRef<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
+		weak_arc<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(scene, "[C#-ScriptEngine] No active scene");
 		if (auto entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
 		{
@@ -455,7 +455,7 @@ void CSharpScriptEngine::SetSceneContext(Scene* scene)
 	s_scene_context = scene;
 }
 
-const WeakRef<Scene>& CSharpScriptEngine::GetCurrentSceneContext()
+const weak_arc<Scene>& CSharpScriptEngine::GetCurrentSceneContext()
 {
 	return s_scene_context;
 }
@@ -715,7 +715,7 @@ void CSharpScriptEngine::OnImGuiRender()
 		bool opened = ImGui::TreeNode((void*)(uint64_t)sceneID, "Scene (%llx)", sceneID);
 		if (opened)
 		{
-			WeakRef<Scene> scene = Scene::GetScene(sceneID);
+			weak_arc<Scene> scene = Scene::GetScene(sceneID);
 			for (auto& [entityID, entityInstanceData] : entityMap)
 			{
 				Entity entity = scene->GetEntityMap().at(entityID);

@@ -2,6 +2,7 @@
 #ifndef KABLUNK_RENDERER_BACKEND_VULKAN_INDEX_BUFFER_H
 #define KABLUNK_RENDERER_BACKEND_VULKAN_INDEX_BUFFER_H
 
+#include "Kablunk/Core/CoreTypes.h"
 #include "Kablunk/Core/owning_buffer.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
@@ -16,26 +17,25 @@ namespace kb::render::backend::vk
 class vulkan_index_buffer final : public IndexBuffer
 {
 public:
-	vulkan_index_buffer(uint32_t size);
-	vulkan_index_buffer(const void* data, uint32_t size = 0);
-	virtual ~vulkan_index_buffer() override;
+	vulkan_index_buffer(u32 size);
+	vulkan_index_buffer(const void* data, u32 size = 0);
+	~vulkan_index_buffer() override;
 
-	virtual void Bind() const override;
-	virtual void Unbind() const override;
+	void Bind() const override;
+	void Unbind() const override;
 
-	virtual void SetData(const void* buffer, uint32_t size, uint32_t offset = 0);
+	void SetData(const void* buffer, u32 size, u32 offset = 0) override;
 
-	virtual const uint32_t GetCount() const { return m_size / sizeof(uint32_t); };
-	virtual uint32_t GetSize() const { return m_size; }
+    u32 GetCount() const noexcept override { return m_size / sizeof(u32); };
+	u32 GetSize() const noexcept override { return m_size; }
 
-	virtual RendererID GetRendererID() const override;
+	RendererID GetRendererID() const override;
 
-	VkBuffer GetVkBuffer() { return m_vk_buffer; }
+	VkBuffer GetVkBuffer() const noexcept { return m_vk_buffer; }
 private:
 	VkBuffer m_vk_buffer = nullptr;
 	owning_buffer m_local_data;
-	uint32_t m_size = 0;
-
+    u32 m_size = 0;
 	VmaAllocation m_vk_allocation = nullptr;
 };
 

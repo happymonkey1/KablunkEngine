@@ -29,39 +29,44 @@ namespace kb
 {
 #ifndef KB_SINGLETON_INTERNAL_IMPL
 #	ifndef KB_DISTRIBUTION
-		template <typename T>
-		using Singleton = boost::interprocess::ipcdetail::intermodule_singleton<T>;
+	template <typename T>
+	using Singleton = boost::interprocess::ipcdetail::intermodule_singleton<T>;
 #	else
-		template <typename T>
-		class Singleton
-		{
-		public:
-			static T& get() { return boost::serialization::singleton<T>::get_instance(); }
-		};
-#	endif
-
-#else
-
-	// #TODO compile time check to make sure constructor is private
 	template <typename T>
 	class Singleton
 	{
 	public:
-		Singleton() = delete;
-		Singleton(const Singleton&) = delete;
-		Singleton(Singleton&&) = delete;
-
-		// return a pointer to the singleton of this class
-        inline static auto get() -> T&
-        {
-            static T* instance = nullptr;
-            if (!instance)
-                instance = new T{};
-
-            return *instance;
-        }
+		static T& get() { return boost::serialization::singleton<T>::get_instance(); }
 	};
-	 
+#	endif
+
+#else
+
+// #TODO compile time check to make sure constructor is private
+template <typename T>
+class Singleton
+{
+public:
+	Singleton() = delete;
+    ~Singleton() noexcept = delete;
+	Singleton(const Singleton&) noexcept = delete;
+    auto operator=(const Singleton&) noexcept -> Singleton& = delete;
+	Singleton(Singleton&&) noexcept = delete;
+    auto operator=(Singleton&&) noexcept -> Singleton& = delete;
+
+	// Retrieves (or create and returns) a mutable reference to the singleton class
+    static auto get() noexcept -> T&
+    {
+        if (!m_instance)
+            m_instance = new T{};
+
+        return *m_instance;
+    }
+    
+private:
+    inline static T* m_instance = nullptr;
+};
+
 #   define SINGLETON_CONSTRUCTOR(T) T::T() { }
 #   define SINGLETON_FRIEND(T) friend class Singleton<T>;
 #	define SINGLETON_GET_FUNC(T) static inline T& get() { return Singleton<T>::get(); }

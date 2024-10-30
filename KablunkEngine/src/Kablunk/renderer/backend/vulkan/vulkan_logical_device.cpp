@@ -6,18 +6,16 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-vulkan_physical_device::vulkan_physical_device()
+vulkan_physical_device::vulkan_physical_device(VkInstance p_vk_instance)
 {
-	auto vk_instance = vulkan_context::get_vk_instance();
-
 	uint32_t device_count = 0;
-	vkEnumeratePhysicalDevices(vk_instance, &device_count, nullptr);
+	vkEnumeratePhysicalDevices(p_vk_instance, &device_count, nullptr);
 
 	if (device_count == 0)
 		KB_CORE_ASSERT(false, "Vulkan found no physical devices!");
 
 	std::vector<VkPhysicalDevice> devices(device_count);
-	vkEnumeratePhysicalDevices(vk_instance, &device_count, devices.data());
+	vkEnumeratePhysicalDevices(p_vk_instance, &device_count, devices.data());
 
 	for (const auto& device : devices)
 	{
@@ -41,7 +39,7 @@ vulkan_physical_device::vulkan_physical_device()
 	m_queue_family_indices = FindQueueFamilies(m_device);
     CreateQueueInfos();
 
-	auto supported_extensions = FindSupportedExtensions(m_device);
+	const auto supported_extensions = FindSupportedExtensions(m_device);
 	std::vector<const char*> supported_extensions_named;
 	supported_extensions_named.reserve(supported_extensions.size());
 	for (const auto& extension : supported_extensions)
@@ -280,8 +278,12 @@ bool vulkan_physical_device::CheckDeviseExtensionSupport(VkPhysicalDevice device
 //   VulkanDevice
 // ================
 
-vulkan_logical_device::vulkan_logical_device(const arc<vulkan_physical_device>& physical_device, VkPhysicalDeviceFeatures enabled_features)
-    : m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_compute_queue{ nullptr }, m_vk_graphics_queue{ nullptr }
+vulkan_logical_device::vulkan_logical_device(
+    VkInstance p_vk_instance,
+    const arc<vulkan_physical_device>& physical_device,
+    VkPhysicalDeviceFeatures enabled_features
+)
+    : m_vk_instance{ p_vk_instance }, m_physical_device{ physical_device }, m_enabled_features{ enabled_features }, m_vk_graphics_queue{ nullptr }, m_vk_compute_queue{ nullptr }
 {
 	auto context = vulkan_context::get();
 	float queue_priority = 1.0f;

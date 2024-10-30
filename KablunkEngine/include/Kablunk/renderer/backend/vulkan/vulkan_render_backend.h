@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Kablunk/Renderer/backend/render_backend.h"
+#include "Kablunk/renderer/backend/render_backend.h"
+#include "Kablunk/renderer/backend/graphics_context.h"
 
 #include <glm/glm.hpp>
+
 
 // forward declarations
 struct VkDescriptorSetAllocateInfo;
@@ -21,39 +23,44 @@ public:
     ~vulkan_render_backend() noexcept = default;
 
     vulkan_render_backend(const vulkan_render_backend&) noexcept = delete;
+    auto operator=(const vulkan_render_backend&) noexcept -> vulkan_render_backend & = delete;
     vulkan_render_backend(vulkan_render_backend&&) noexcept = delete;
+    auto operator=(vulkan_render_backend&&) noexcept -> vulkan_render_backend & = delete;
 
     static auto init() noexcept -> void;
     static auto shutdown() noexcept -> void;
-    static auto begin_frame() noexcept -> void;
+    static auto begin_frame(
+        weak_arc<graphics_context> p_context
+    ) noexcept -> void;
     static auto end_frame() noexcept -> void;
     static auto begin_render_pass(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<render_pass> p_render_pass,
+        weak_arc<graphics_context> p_graphics_context,
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<render_pass>& p_render_pass,
         bool p_explicit_clear
     ) noexcept -> void;
 
-    static auto end_render_pass(arc<render_command_buffer> p_render_command_buffer) noexcept -> void;
+    static auto end_render_pass(const arc<render_command_buffer>& p_render_command_buffer) noexcept -> void;
 
     static auto set_line_width(
-        arc<render_command_buffer> render_command_buffer,
+        const arc<render_command_buffer>& p_render_command_buffer,
         f32 line_width
     ) noexcept -> void;
 
     static auto submit_fullscreen_quad(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<pipeline> p_pipeline,
-        arc<material> p_material
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<material>& p_material
     ) noexcept -> void;
 
     // geometry rendering
 
     static auto render_geometry(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<pipeline> p_pipeline,
-        arc<material> p_material,
-        arc<VertexBuffer> p_vertex_buffer,
-        arc<IndexBuffer> p_index_buffer,
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<material>& p_material,
+        const arc<VertexBuffer>& p_vertex_buffer,
+        const arc<IndexBuffer>& p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void;
@@ -76,13 +83,13 @@ public:
         arc<image_2d> p_destination_image
     ) noexcept -> void;
 
-    static auto rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet;
-    static auto rt_allocate_material_descriptor_set(
+    static auto rt_allocate_descriptor_set(
         VkDescriptorSetAllocateInfo& p_alloc_info
     ) noexcept -> VkDescriptorSet;
-
-    auto operator=(const vulkan_render_backend&) noexcept -> vulkan_render_backend& = delete;
-    auto operator=(vulkan_render_backend&&) noexcept -> vulkan_render_backend& = delete;
+    static auto rt_allocate_material_descriptor_set(
+        weak_arc<graphics_context> p_context,
+        VkDescriptorSetAllocateInfo& p_alloc_info
+    ) noexcept -> VkDescriptorSet;
 };
 
 } // end namespace kb::render::backend::vk

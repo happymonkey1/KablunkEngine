@@ -10,9 +10,9 @@ namespace kb::render::backend
 arc<render_pass> render_pass::create(const render_pass_specification& specification) noexcept
 {
     constexpr auto backend = Renderer::get_render_backend_type();
-    if constexpr (backend == backend::render_backend_type_t::vulkan)
+    if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<arc<render_pass>>(arc<backend::vk::vulkan_render_pass>::Create(specification));
+        return static_cast<arc<render_pass>>(arc<vk::vulkan_render_pass>::Create(specification));
     }
     else
     {

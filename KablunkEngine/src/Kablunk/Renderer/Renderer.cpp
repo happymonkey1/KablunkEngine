@@ -39,7 +39,7 @@ void Renderer::init()
 	Application::Get().get_render_thread().pump();
 
     // Initialize graphics context
-   //  m_context->init();
+    m_context = backend::graphics_context::create(nullptr);
     // Initialize rendering backend
     m_backend.init();
 }
@@ -56,12 +56,11 @@ void Renderer::shutdown()
 
 	m_backend.shutdown();
 
-	// shutdown vulkan context
-	//VulkanContext::Get()->Shutdown();
-
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
         if (!m_command_queues[i].is_empty())
 			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
+
+    m_context->destroy();
 }
 
 arc<shader_library> Renderer::GetShaderLibrary()

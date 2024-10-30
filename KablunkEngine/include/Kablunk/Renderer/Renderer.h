@@ -41,44 +41,54 @@ struct renderer_options_t
 class Renderer
 {
 public:
-	// type alias for main render thread function
-	using render_thread_func_t = void(*)(Renderer*, render_thread*);
+    // type alias for main render thread function
+    using render_thread_func_t = void(*)(Renderer*, render_thread*);
 
     // #TODO expose compile time backend switch
     inline static constexpr backend::render_backend_type_t k_render_backend_type = backend::render_backend_type_t::vulkan;
     using underlying_render_backend_t = backend::vk::vulkan_render_backend;
     using render_backend_t = backend::render_backend<underlying_render_backend_t>;
+
 public:
-	void init();
-	void shutdown();
+    void init();
+    void shutdown();
 
     // register a shader dependency to a pipeline
-	void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::pipeline> p_pipeline);
+    void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::pipeline> p_pipeline);
     // register a shader dependency to a compute pipeline
-	void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::compute_pipeline> p_compute_pipeline);
+    void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::compute_pipeline> p_compute_pipeline);
     // register a shader dependency to a material
-	void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::material> p_material);
-	void on_shader_reloaded(uint64_t p_hash);
+    void register_shader_dependency(arc<backend::shader> p_shader, arc<backend::material> p_material);
+    void on_shader_reloaded(uint64_t p_hash);
 
     uint32_t get_current_frame_index() const noexcept;
 
-	arc<shader_library> GetShaderLibrary();
-	arc<backend::shader> GetShader(const std::string& name);
+    arc<shader_library> GetShaderLibrary();
+    arc<backend::shader> GetShader(const std::string& name);
 
-	const renderer_options_t& get_config() const noexcept { return m_options; }
+    const renderer_options_t& get_config() const noexcept { return m_options; }
 
-	// \brief get the viewport's os screen position within the application
-	const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }
-	// \brief get the viewport's size
-	const glm::vec2& get_viewport_size() const { return m_viewport_size; }
+    // \brief get the viewport's os screen position within the application
+    const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }
+    // \brief get the viewport's size
+    const glm::vec2& get_viewport_size() const { return m_viewport_size; }
 
     static constexpr auto get_render_backend_type() noexcept -> backend::render_backend_type_t
-	{
-	    return k_render_backend_type;
-	}
+    {
+        return k_render_backend_type;
+    }
 
     auto get_render_backend() const noexcept -> const render_backend_t& { return m_backend; }
     auto get_render_backend() noexcept -> render_backend_t& { return m_backend; }
+
+    // Retrieves a weak arc to the graphics context
+    auto get_graphics_context() const noexcept -> weak_arc<backend::graphics_context>
+    {
+        return m_context;
+    }
+
+    // Retrieves a mutable reference arc to the graphics context
+    auto get_graphics_context() noexcept -> weak_arc<backend::graphics_context> { return m_context; }
 
 	// ==============
 	// multithreading

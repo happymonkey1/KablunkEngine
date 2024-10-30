@@ -35,7 +35,8 @@ public:
     // Per-frame initialization for the swap chain
     virtual void begin_frame() noexcept = 0;
 
-    // Presentation logic (submit rendered frame to display adaptor)
+    // Presentation logic (submit rendered frame to display adaptor).
+    // Swaps presentation buffers in double or triple buffer mode.
     virtual void present() noexcept = 0;
 
     // Return the current frame buffer index for the swap chain

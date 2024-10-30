@@ -12,7 +12,16 @@ arc<texture_2d> texture_2d::create(image_format_t format, uint32_t width, uint32
     constexpr auto backend = Renderer::get_render_backend_type();
     if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<arc<texture_2d>>(arc<vk::vulkan_texture_2d>::Create(format, width, height, data));
+        // TODO: singleton bad
+        const auto context = Singleton<Renderer>::get().get_graphics_context();
+        const auto device = context.as<vk::vulkan_context>()->get_device();
+        return static_cast<arc<texture_2d>>(arc<vk::vulkan_texture_2d>::Create(
+            device,
+            format,
+            width,
+            height,
+            data
+        ));
     }
     else
     {
@@ -30,7 +39,10 @@ arc<texture_2d> texture_2d::create(const std::string& path)
     constexpr auto backend = Renderer::get_render_backend_type();
     if constexpr (backend == render_backend_type_t::vulkan)
     {
-        return static_cast<arc<texture_2d>>(arc<vk::vulkan_texture_2d>::Create(path));
+        // TODO: singleton bad
+        const auto context = Singleton<Renderer>::get().get_graphics_context();
+        const auto device = context.as<vk::vulkan_context>()->get_device();
+        return static_cast<arc<texture_2d>>(arc<vk::vulkan_texture_2d>::Create(device, path));
     }
     else
     {

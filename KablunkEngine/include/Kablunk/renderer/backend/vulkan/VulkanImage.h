@@ -25,7 +25,7 @@ struct VulkanImageInfo
 class vulkan_image_2d final : public image_2d
 {
 public:
-	vulkan_image_2d(image_specification_t spec);
+	vulkan_image_2d(image_specification_t spec, weak_arc<vulkan_logical_device> p_device);
 	~vulkan_image_2d() override;
 
 	void invalidate() override;
@@ -41,7 +41,7 @@ public:
 
 	void RT_Invalidate();
 
-	const std::map<VkImage, WeakRef<vulkan_image_2d>>& GetImageRefs() const;
+	const std::map<VkImage, weak_arc<vulkan_image_2d>>& GetImageRefs() const;
 
 	void create_per_layer_image_views() override;
 	void RT_CreatePerLayerImageViews();
@@ -75,6 +75,7 @@ public:
 
 private:
 	image_specification_t m_specification;
+    weak_arc<vulkan_logical_device> m_device;
 	VulkanImageInfo m_info;
 
 	VkDescriptorImageInfo m_descriptor_image_info;
@@ -88,7 +89,7 @@ private:
 class vulkan_image_view final : public image_view
 {
 public:
-    vulkan_image_view(image_view_specification p_specification);
+    vulkan_image_view(image_view_specification p_specification, weak_arc<vulkan_logical_device> p_device);
     ~vulkan_image_view() override;
 
     auto invalidate() noexcept -> void;
@@ -107,6 +108,7 @@ public:
     }
 private:
     image_view_specification m_specification{};
+    weak_arc<vulkan_logical_device> m_device{};
     VkImageView m_vk_image_view{};
     VkDescriptorImageInfo m_vk_descriptor_image_info{};
 };

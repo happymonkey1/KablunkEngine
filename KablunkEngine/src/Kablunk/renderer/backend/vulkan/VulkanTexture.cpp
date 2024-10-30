@@ -13,9 +13,16 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-vulkan_texture_2d::vulkan_texture_2d(image_format_t format, uint32_t width, uint32_t height, const void* data)
+vulkan_texture_2d::vulkan_texture_2d(
+    weak_arc<vulkan_logical_device> p_device,
+    image_format_t format,
+    uint32_t width,
+    uint32_t height,
+    const void* data
+)
 	: m_width{ width }, m_height{ height }, m_format{ format },
-    m_hash{ std::hash<std::string>{}(fmt::format("{}", data)) }
+    m_hash{ std::hash<std::string>{}(fmt::format("{}", data)) },
+    m_device{ p_device }
 {
 	const size_t size = backend::util::GetImageMemorySize(format, width, height);
 
@@ -41,8 +48,9 @@ vulkan_texture_2d::vulkan_texture_2d(image_format_t format, uint32_t width, uint
 	m_loaded = true;
 }
 
-vulkan_texture_2d::vulkan_texture_2d(const std::string& path)
-	: m_filepath{ path }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) }
+vulkan_texture_2d::vulkan_texture_2d(weak_arc<vulkan_logical_device> p_device, std::string path)
+	: m_filepath{ std::move(path) }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) },
+    m_device{ p_device }
 {
     KB_CORE_INFO("[VulkanTexture2D]: Creating texture for '{}'", path);
 
@@ -114,8 +122,7 @@ bool vulkan_texture_2d::operator==(const texture_2d& other) const
 
 void vulkan_texture_2d::invalidate()
 {
-	auto device = vulkan_context::get()->get_device();
-	auto vk_device = device->get_vk_device();
+	auto vk_device = m_device->get_vk_device();
 
 	m_image->release();
 
@@ -164,7 +171,7 @@ void vulkan_texture_2d::invalidate()
 		KB_CORE_INFO("VulkanTexture2D mapping gpu memory of size '{0}'", size);
 		allocator.UnmapMemory(staging_buffer_allocation);
 
-		VkCommandBuffer copy_cmd = device->get_vk_command_buffer(true);
+		VkCommandBuffer copy_cmd = m_device->get_vk_command_buffer(true);
 
 		// Image memory barriers for the texture image
 
@@ -238,20 +245,20 @@ void vulkan_texture_2d::invalidate()
 			subresource_range
 		);
 
-		device->flush_command_buffer(copy_cmd);
+		m_device->flush_command_buffer(copy_cmd);
 
 		allocator.DestroyBuffer(staging_buffer, staging_buffer_allocation);
 	}
 	else
 	{
 		// #TODO mipmap levels, final image layout
-		VkCommandBuffer transition_cmd_buffer = device->get_vk_command_buffer(true);
+		VkCommandBuffer transition_cmd_buffer = m_device->get_vk_command_buffer(true);
 		VkImageSubresourceRange subresourceRange = {};
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.layerCount = 1;
 		subresourceRange.levelCount = 1; // #TODO mipmap levels
         util::SetImageLayout(transition_cmd_buffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, image->get_vk_image_info_descriptor().imageLayout, subresourceRange);
-		device->flush_command_buffer(transition_cmd_buffer);
+        m_device->flush_command_buffer(transition_cmd_buffer);
 	}
 
 	// create texture sampler

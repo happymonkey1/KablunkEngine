@@ -82,8 +82,8 @@ public:
 		CalculateOffsetsAndStride();
 	}
 
-	inline const std::vector<BufferElement>& GetElements() const { return m_Elements; }
-	inline uint32_t GetStride() const { return m_Stride; }
+	const std::vector<BufferElement>& GetElements() const { return m_Elements; }
+	u32 GetStride() const { return m_Stride; }
 
 	std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
 	std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
@@ -115,15 +115,15 @@ public:
 	virtual void Bind() const = 0;
 	virtual void Unbind() const = 0;
 
-	virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
-	virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
+	virtual void SetData(const void* data, u32 size, u32 offset = 0) = 0;
+	virtual void RT_SetData(const void* data, u32 size, u32 offset = 0) = 0;
 
 	virtual void SetLayout(const BufferLayout& layout) = 0;
 	virtual const BufferLayout& GetLayout() const = 0;
 
 
-	static arc<VertexBuffer> Create(uint32_t size);
-	static arc<VertexBuffer> Create(const void* data, uint32_t size);
+	static arc<VertexBuffer> Create(u32 size);
+	static arc<VertexBuffer> Create(const void* data, u32 size);
 
 	virtual RendererID GetRendererID() const = 0;
 };
@@ -136,15 +136,15 @@ public:
 	virtual void Bind() const = 0;
 	virtual void Unbind() const = 0;
 
-	virtual void SetData(const void* buffer, uint32_t size, uint32_t offset = 0) = 0;
+	virtual void SetData(const void* buffer, u32 size, u32 offset = 0) = 0;
 
-	virtual const uint32_t GetCount() const = 0;
-	virtual uint32_t GetSize() const = 0;
+	virtual u32 GetCount() const = 0;
+	virtual u32 GetSize() const = 0;
 
 	virtual RendererID GetRendererID() const = 0;
 
-	static arc<IndexBuffer> Create(uint32_t count);
-	static arc<IndexBuffer> Create(const void* data, uint32_t count);
+	static arc<IndexBuffer> Create(u32 count);
+	static arc<IndexBuffer> Create(const void* data, u32 count);
 };
 
 } // end namespace kb::render::backend

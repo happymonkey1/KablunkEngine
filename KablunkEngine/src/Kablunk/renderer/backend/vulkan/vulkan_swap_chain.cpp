@@ -5,7 +5,7 @@
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/RenderCommand.h"
 
-#include <GLFW/glfw3.h>
+#include "kablunk/vendor/glfw/glfw.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -18,8 +18,7 @@ void vulkan_swap_chain::init(VkInstance instance, const arc<vulkan_logical_devic
 
 void vulkan_swap_chain::init_surface(GLFWwindow* window_handle) noexcept
 {
-	VkPhysicalDevice vk_physical_device = m_device->get_vk_physical_device();
-
+    
 	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_surface) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
 

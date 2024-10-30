@@ -4,7 +4,11 @@
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/backend/pipeline.h"
 #include "Kablunk/Renderer/backend/material.h"
-#include "Kablunk/Renderer/RendererAPI.h"
+#include "Kablunk/Renderer/backend/render_pass.h"
+#include "Kablunk/renderer/backend/render_command_buffer.h"
+#include "Kablunk/renderer/backend/graphics_context.h"
+#include "Kablunk/renderer/Mesh.h"
+
 
 namespace kb::render::backend
 { // start namespace kb::render::backend
@@ -15,43 +19,44 @@ struct render_backend
     auto init() noexcept -> void { backend()->init(); }
     auto shutdown() noexcept -> void { backend()->shutdown(); }
 
-    auto begin_frame() noexcept -> void { backend()->begin_frame(); }
+    auto begin_frame(weak_arc<graphics_context> p_context) noexcept -> void { backend()->begin_frame(p_context); }
     auto end_frame() noexcept -> void { backend()->end_frame(); }
 
     auto begin_render_pass(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<render_pass> p_render_pass,
+        weak_arc<graphics_context> p_context,
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<render_pass>& p_render_pass,
         bool p_explicit_clear = false
     ) noexcept -> void
     {
-        backend()->begin_render_pass(p_render_command_buffer, p_render_pass, p_explicit_clear);
+        backend()->begin_render_pass(p_context, p_render_command_buffer, p_render_pass, p_explicit_clear);
     }
 
-    auto end_render_pass(arc<render_command_buffer> p_render_command_buffer) noexcept -> void
+    auto end_render_pass(const arc<render_command_buffer>& p_render_command_buffer) noexcept -> void
     {
         backend()->end_render_pass(p_render_command_buffer);
     }
 
-    auto set_line_width(arc<render_command_buffer> p_render_command_buffer, f32 p_line_width) noexcept -> void
+    auto set_line_width(const arc<render_command_buffer>& p_render_command_buffer, f32 p_line_width) noexcept -> void
     {
         backend()->set_line_width(p_render_command_buffer, p_line_width);
     }
 
     auto submit_fullscreen_quad(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<pipeline> p_pipeline,
-        arc<material> p_material
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<material>& p_material
     ) noexcept -> void
     {
         backend()->submit_fullscreen_quad(p_render_command_buffer, p_pipeline, p_material);
     }
 
     auto render_geometry(
-        arc<render_command_buffer> p_render_command_buffer,
-        arc<pipeline> p_pipeline,
-        arc<material> p_material,
-        arc<VertexBuffer> p_vertex_buffer,
-        arc<IndexBuffer> p_index_buffer,
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<material>& p_material,
+        const arc<VertexBuffer>& p_vertex_buffer,
+        const arc<IndexBuffer>& p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void
@@ -103,6 +108,13 @@ struct render_backend
 
     auto backend() noexcept -> RenderBackend* { return static_cast<RenderBackend*>(this); }
     auto backend() const noexcept -> RenderBackend* { return static_cast<RenderBackend*>(this); }
+
+protected:
+    // Non-owning (owned by renderer) pointer to graphics context
+    graphics_context* m_context = nullptr;
+
+private:
+    friend class ::kb::render::Renderer;
 };
 
 } // end namespace kb::render

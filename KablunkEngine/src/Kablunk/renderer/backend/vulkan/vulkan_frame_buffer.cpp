@@ -121,7 +121,7 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 	VkRenderPass vk_render_pass = m_vk_render_pass;
 	render::submit_resource_free([vk_frame_buffer, vk_render_pass]()
 		{
-			const auto device = vulkan_context::get()->get_device()->get_vk_device();
+			const auto device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
 			vkDestroyFramebuffer(device, vk_frame_buffer, nullptr);
 			vkDestroyRenderPass(device, vk_render_pass, nullptr);
 		});

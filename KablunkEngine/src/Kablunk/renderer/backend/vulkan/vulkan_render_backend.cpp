@@ -159,13 +159,16 @@ auto vulkan_render_backend::shutdown() noexcept -> void
     s_renderer_data.reset();
 }
 
-auto vulkan_render_backend::begin_frame() noexcept -> void
+auto vulkan_render_backend::begin_frame(
+    weak_arc<graphics_context> p_context
+) noexcept -> void
 {
-    submit([]()
+    const auto vulkan_context = p_context.as<vk::vulkan_context>();
+    submit([vulkan_context]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_frame");
-            const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
-            const auto& swap_chain = vulkan_context::get()->get_swap_chain();
+            const auto vk_device = vulkan_context->get_device()->get_vk_device();
+            const auto* swap_chain = vulkan_context->get_swap_chain();
             const auto buffer_index = swap_chain->get_current_buffer_index();
 
             vkResetDescriptorPool(
@@ -188,25 +191,28 @@ auto vulkan_render_backend::end_frame() noexcept -> void
 }
 
 auto vulkan_render_backend::begin_render_pass(
-    arc<render_command_buffer> p_render_command_buffer,
-    arc<render_pass> p_render_pass,
+    weak_arc<graphics_context> p_graphics_context,
+    const arc<render_command_buffer>& p_render_command_buffer,
+    const arc<render_pass>& p_render_pass,
     bool p_explicit_clear
 ) noexcept -> void
 {
-    submit([p_render_command_buffer, p_render_pass, p_explicit_clear]()
+    submit([graphics_context = p_graphics_context, render_command_buffer = p_render_command_buffer, render_pass = p_render_pass, p_explicit_clear]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_render_pass");
             log::core::trace(
                 log::logger_tag_t::renderer,
                 "vulkan_render_backend::begin_render_pass {}",
-                p_render_pass->get_specification().m_debug_name
+                render_pass->get_specification().m_debug_name
             );
+
+            const auto vulkan_context = graphics_context.as<vk::vulkan_context>();
 
 
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer vk_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->get_active_command_buffer();
+            const VkCommandBuffer vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_active_command_buffer();
 
-            const auto frame_buffer = p_render_pass->get_target_frame_buffer();
+            const auto frame_buffer = render_pass->get_target_frame_buffer();
             const auto vulkan_frame_buffer = frame_buffer.As<vk::vulkan_frame_buffer>();
             const auto& frame_buffer_spec = vulkan_frame_buffer->get_specification();
 
@@ -227,7 +233,7 @@ auto vulkan_render_backend::begin_render_pass(
             render_pass_begin_info.renderArea.extent.height = height;
             if (frame_buffer_spec.m_swap_chain_target)
             {
-                const auto* swap_chain = vulkan_context::get()->get_vulkan_swap_chain();
+                const auto* swap_chain = vulkan_context->get_vulkan_swap_chain();
                 width = swap_chain->get_width();
                 height = swap_chain->get_height();
                 render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -327,17 +333,17 @@ auto vulkan_render_backend::begin_render_pass(
             vkCmdSetScissor(vk_command_buffer, 0, 1, &scissor);
 
             // bind vulkan pipeline
-            auto pipeline = p_render_pass->get_specification().m_pipeline.As<vulkan_pipeline>();
+            auto pipeline = render_pass->get_specification().m_pipeline.As<vulkan_pipeline>();
             const auto vk_pipeline = pipeline->get_vk_pipeline();
             vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
             // #TODO set dynamic line width
 
-            arc<vulkan_render_pass> render_pass = p_render_pass.As<vulkan_render_pass>();
-            render_pass->rt_prepare();
-            if (render_pass->has_descriptor_sets())
+            auto vulkan_render_pass = render_pass.As<vk::vulkan_render_pass>();
+            vulkan_render_pass->rt_prepare();
+            if (vulkan_render_pass->has_descriptor_sets())
             {
-                const auto& descriptor_sets = render_pass->get_descriptor_sets(frame_index);
+                const auto& descriptor_sets = vulkan_render_pass->get_descriptor_sets(frame_index);
                 vkCmdBindDescriptorSets(
                     vk_command_buffer,
                     VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -354,17 +360,17 @@ auto vulkan_render_backend::begin_render_pass(
 }
 
 auto vulkan_render_backend::end_render_pass(
-    arc<render_command_buffer> p_render_command_buffer
+    const arc<render_command_buffer>& p_render_command_buffer
 ) noexcept -> void
 {
-    submit([p_render_command_buffer]()
+    submit([render_command_buffer = p_render_command_buffer]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::end_render_pass");
             log::core::trace(
                 log::logger_tag_t::renderer,
                 "vulkan_render_backend::end_render_pass"
             );
-            const auto vk_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->get_active_command_buffer();
+            const auto vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_active_command_buffer();
 
             vkCmdEndRenderPass(vk_command_buffer);
         }
@@ -372,35 +378,35 @@ auto vulkan_render_backend::end_render_pass(
 }
 
 auto vulkan_render_backend::set_line_width(
-    arc<render_command_buffer> render_command_buffer,
+    const arc<render_command_buffer>& p_render_command_buffer,
     f32 line_width
 ) noexcept -> void
 {
-    submit([width = line_width, render_cmd_buffer = render_command_buffer]()
+    submit([width = line_width, render_command_buffer = p_render_command_buffer]()
         {
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer vk_cmd_buffer = render_cmd_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+            const VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
             vkCmdSetLineWidth(vk_cmd_buffer, width);
         });
 }
 
 auto vulkan_render_backend::submit_fullscreen_quad(
-    arc<render_command_buffer> p_render_command_buffer,
-    arc<pipeline> p_pipeline,
-    arc<material> p_material
+    const arc<render_command_buffer>& p_render_command_buffer,
+    const arc<pipeline>& p_pipeline,
+    const arc<material>& p_material
 ) noexcept -> void
 {
     KB_PROFILE_SCOPE;
 
-    arc<vulkan_material> vulkan_material = p_material.As<vk::vulkan_material>();
-    submit([p_render_command_buffer, p_pipeline, vulkan_material]() mutable
+    auto vulkan_material = p_material.As<vk::vulkan_material>();
+    submit([render_command_buffer = p_render_command_buffer, pipeline = p_pipeline, vulkan_material]() mutable
         {
             KB_PROFILE_SCOPE;
 
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer vk_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+            const VkCommandBuffer vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
 
-            arc<vulkan_pipeline> vulkan_pipeline = p_pipeline.As<vk::vulkan_pipeline>();
+            arc<vulkan_pipeline> vulkan_pipeline = pipeline.As<vk::vulkan_pipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
@@ -478,11 +484,11 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 }
 
 auto vulkan_render_backend::render_geometry(
-    arc<render_command_buffer> p_render_command_buffer,
-    arc<pipeline> p_pipeline,
-    arc<material> p_material,
-    arc<VertexBuffer> p_vertex_buffer,
-    arc<IndexBuffer> p_index_buffer,
+    const arc<render_command_buffer>& p_render_command_buffer,
+    const arc<pipeline>& p_pipeline,
+    const arc<material>& p_material,
+    const arc<VertexBuffer>& p_vertex_buffer,
+    const arc<IndexBuffer>& p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count
 ) noexcept -> void
@@ -493,24 +499,24 @@ auto vulkan_render_backend::render_geometry(
     if (p_index_count == 0)
         p_index_count = p_index_buffer->GetCount();
 
-    submit([p_render_command_buffer, p_pipeline, vulkan_material, p_vertex_buffer, p_index_buffer, p_transform, p_index_count]() mutable
+    auto vulkan_pipeline = p_pipeline.As<vk::vulkan_pipeline>();
+    auto vulkan_vertex_buffer = p_vertex_buffer.As<vk::vulkan_vertex_buffer>();
+    auto vulkan_index_buffer = p_index_buffer.As<vk::vulkan_index_buffer>();
+
+    submit([render_command_buffer = p_render_command_buffer, vulkan_pipeline, vulkan_material, vulkan_vertex_buffer, vulkan_index_buffer, p_transform, p_index_count]() mutable
         {
             KB_PROFILE_SCOPE;
 
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
-
-            arc<vulkan_pipeline> vulkan_pipeline = p_pipeline.As<vk::vulkan_pipeline>();
+            const VkCommandBuffer command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
-            auto vulkan_geometry_vertex_buffer = p_vertex_buffer.As<vulkan_vertex_buffer>();
-            const VkBuffer vk_vertex_buffer = vulkan_geometry_vertex_buffer->GetVkBuffer();
+            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
             constexpr VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
-            auto vulkan_geometry_index_buffer = p_index_buffer.As<vulkan_index_buffer>();
-            const VkBuffer vk_index_buffer = vulkan_geometry_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
             vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
             const VkDescriptorSet vk_descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
@@ -914,12 +920,14 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
 }
 
 auto vulkan_render_backend::rt_allocate_material_descriptor_set(
-    VkDescriptorSetAllocateInfo& p_alloc_info) noexcept -> VkDescriptorSet
+    weak_arc<graphics_context> p_context,
+    VkDescriptorSetAllocateInfo& p_alloc_info
+) noexcept -> VkDescriptorSet
 {
     KB_PROFILE_SCOPE;
 
     p_alloc_info.descriptorPool = s_renderer_data->m_material_descriptor_pool;
-    const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
+    const auto vk_device = p_context.as<vulkan_context>()->get_device()->get_vk_device();
     VkDescriptorSet vk_descriptor_set;
     const auto res = vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set);
     if (res != VK_SUCCESS)

@@ -7,7 +7,8 @@
 
 #include "Kablunk/Imgui/ImGuiGlobalContext.h"
 
-#include <GLFW/glfw3.h>
+#include "Kablunk/vendor/glfw/glfw.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 

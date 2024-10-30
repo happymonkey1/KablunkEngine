@@ -58,7 +58,11 @@ inline void shutdown() noexcept
 }
 
 // begin rendering frame
-inline void begin_frame() noexcept { Singleton<Renderer>::get().get_render_backend().begin_frame(); }
+inline void begin_frame() noexcept
+{
+    auto& renderer = Singleton<Renderer>::get();
+    renderer.get_render_backend().begin_frame(renderer.get_graphics_context());
+}
 
 // end renderering frame
 inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend().end_frame(); }
@@ -70,8 +74,14 @@ inline void begin_render_pass(
     bool explicit_clear = false
 ) noexcept
 {
-	Singleton<Renderer>::get().get_render_backend()
-        .begin_render_pass(p_render_command_buffer, p_render_pass, explicit_clear);
+    auto& renderer = Singleton<Renderer>::get();
+	renderer.get_render_backend()
+        .begin_render_pass(
+            renderer.get_graphics_context(),
+            p_render_command_buffer,
+            p_render_pass,
+            explicit_clear
+        );
 }
 
 inline void end_render_pass(const arc<backend::render_command_buffer>& p_render_command_buffer) noexcept

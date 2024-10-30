@@ -17,8 +17,14 @@ namespace kb::render::backend::vk
 class vulkan_texture_2d final : public texture_2d
 {
 public:
-	vulkan_texture_2d(image_format_t format, uint32_t width, uint32_t height, const void* data);
-	vulkan_texture_2d(const std::string& path);
+	vulkan_texture_2d(
+        weak_arc<vulkan_logical_device> p_device,
+        image_format_t format,
+        uint32_t width,
+        uint32_t height,
+        const void* data
+    );
+	vulkan_texture_2d(weak_arc<vulkan_logical_device> p_device, std::string path);
 	~vulkan_texture_2d() override;
 
 	void resize(uint32_t width, uint32_t height) override;
@@ -59,7 +65,8 @@ private:
 	uint32_t m_width;
 	uint32_t m_height;
 
-	arc<image_2d> m_image;
+    weak_arc<vulkan_logical_device> m_device = nullptr;
+	arc<image_2d> m_image{};
 
 	image_format_t m_format;
 
