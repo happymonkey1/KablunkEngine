@@ -5,10 +5,10 @@
 #include "Kablunk/Core/Application.h"
 
 #include "Kablunk/renderer/renderer.h"
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
 

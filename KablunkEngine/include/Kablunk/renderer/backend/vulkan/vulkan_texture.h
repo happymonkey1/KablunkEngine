@@ -7,7 +7,7 @@
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/backend/image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 
 #include <vulkan/vulkan.h>
 

@@ -4,7 +4,7 @@
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_render_command_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_index_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_vertex_buffer.h"

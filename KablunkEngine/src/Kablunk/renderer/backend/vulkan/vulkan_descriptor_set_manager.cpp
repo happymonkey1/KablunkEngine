@@ -7,7 +7,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_storage_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_storage_buffer_set.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer_set.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"

@@ -4,7 +4,7 @@
 
 #include "Kablunk/renderer/backend/compute_pipeline.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_render_command_buffer.h"
 
 #include <vulkan/vulkan.h>

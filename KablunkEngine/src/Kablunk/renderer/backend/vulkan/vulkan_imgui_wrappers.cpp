@@ -4,7 +4,7 @@
 
 #include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Imgui/ImGuiWrappers.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 
 #include <examples/imgui_impl_vulkan_with_textures.h>
 

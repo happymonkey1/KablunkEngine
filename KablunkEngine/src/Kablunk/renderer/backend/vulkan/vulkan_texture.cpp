@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 #include "Kablunk/renderer/backend/vulkan/vulkan_utils.h"

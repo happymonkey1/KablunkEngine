@@ -4,7 +4,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_swap_chain.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 
 #include "Kablunk/Core/Application.h"

@@ -2,7 +2,7 @@
 #include "Kablunk/Renderer/backend/texture.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "kablunk/renderer/backend/vulkan/VulkanTexture.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 
 namespace kb::render::backend
 { // start namespace kb::render::backend

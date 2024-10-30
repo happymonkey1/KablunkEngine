@@ -1,6 +1,6 @@
 #include "kablunkpch.h"
 
-#include "kablunk/renderer/backend/vulkan/VulkanImage.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 
 #include "Kablunk/Renderer/RenderCommand.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
