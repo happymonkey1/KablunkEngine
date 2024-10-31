@@ -2,7 +2,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_storage_buffer.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "Kablunk/Core/Logger.h"
 
 namespace kb::render::backend::vk
@@ -33,10 +33,10 @@ void vulkan_storage_buffer::set_data(const void* data, size_t size, uint32_t off
 void vulkan_storage_buffer::rt_set_data(const void* data, size_t size, uint32_t offset /*= 0*/)
 {
 	vulkan_allocator allocator("VulkanStorageBuffer");
-	uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_memory_allocation);
+	uint8_t* data_ptr = allocator.map_memory<uint8_t>(m_vk_memory_allocation);
 	memcpy(data_ptr, (uint8_t*)data + offset, size);
 	KB_CORE_INFO("VulkanStorageBuffer mapping gpu memory of size '{0}'", size);
-	allocator.UnmapMemory(m_vk_memory_allocation);
+	allocator.unmap_memory(m_vk_memory_allocation);
 
 	delete[] m_local_storage;
 }
@@ -56,7 +56,7 @@ void vulkan_storage_buffer::Release()
 	render::submit_resource_free([vk_buffer = m_vk_buffer, vk_mem_alloc = m_vk_memory_allocation]()
 		{
 			vulkan_allocator alloc{ "StorageBuffer" };
-			alloc.DestroyBuffer(vk_buffer, vk_mem_alloc);
+			alloc.destroy_buffer(vk_buffer, vk_mem_alloc);
 		});
 
 	m_vk_buffer = nullptr;
@@ -73,7 +73,7 @@ void vulkan_storage_buffer::RT_Invalidate()
 	buffer_info.size = m_size;
 
 	vulkan_allocator allocator("StorageBuffer");
-	m_vk_memory_allocation = allocator.AllocateBuffer(buffer_info, VMA_MEMORY_USAGE_GPU_ONLY, m_vk_buffer);
+	m_vk_memory_allocation = allocator.allocate_buffer(buffer_info, VMA_MEMORY_USAGE_GPU_ONLY, m_vk_buffer);
 
 	m_vk_descriptor_info.buffer = m_vk_buffer;
 	m_vk_descriptor_info.offset = 0;

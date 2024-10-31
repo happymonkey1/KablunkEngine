@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_storage_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_storage_buffer_set.h"

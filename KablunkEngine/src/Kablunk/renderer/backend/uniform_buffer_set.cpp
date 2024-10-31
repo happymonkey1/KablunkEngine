@@ -3,7 +3,6 @@
 #include "Kablunk/Renderer/backend/uniform_buffer_set.h"
 
 #include "Kablunk/renderer/Renderer.h"
-#include "Kablunk/renderer/RendererAPI.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer_set.h"
 
 namespace kb::render::backend

@@ -1,6 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Core/render_thread.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #ifdef KB_PLATFORM_WINDOWS
 #	include <Windows.h>

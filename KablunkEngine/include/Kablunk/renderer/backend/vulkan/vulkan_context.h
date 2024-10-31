@@ -6,7 +6,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_logical_device.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_swap_chain.h"
 
-#include "Kablunk/renderer/RenderCommand.h"
+#include "kablunk/renderer/render_command.h"
 
 #include <vulkan/vulkan.h>
 

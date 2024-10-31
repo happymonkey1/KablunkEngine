@@ -1,20 +1,17 @@
 #include "kablunkpch.h"
 
-#include <vulkan/vulkan.h>
 
 #include "kablunk/renderer/backend/vulkan/vulkan_imgui_layer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "Kablunk/Core/Application.h"
-#include "Kablunk/Events/KeyEvent.h"
-#include "Kablunk/Events/MouseEvent.h"
 
 #include <examples/imgui_impl_vulkan_with_textures.h>
 #include <backends/imgui_impl_glfw.h>
 
-
+#include <vulkan/vulkan.h>
 #include <ImGuizmo.h>
 
 namespace kb::render::backend::vk

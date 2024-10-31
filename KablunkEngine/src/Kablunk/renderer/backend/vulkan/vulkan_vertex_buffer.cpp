@@ -2,7 +2,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_vertex_buffer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "Kablunk/renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -11,7 +11,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
     const weak_arc<vulkan_logical_device> p_device,
     const void* data,
     const u32 size,
-    VertexBufferUsage usage /*= VertexBufferUsage::Static*/
+    vertex_buffer_usage_t usage /*= VertexBufferUsage::Static*/
 )
 	: m_size{ size }, m_device{ p_device }
 {
@@ -33,20 +33,20 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 			staging_buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 			VkBuffer staging_buffer;
-            const VmaAllocation staging_buffer_allocation = allocator.AllocateBuffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
+            const VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
 			// copy data to staging buffer (cpu)
-			u8* dest_data = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
+			u8* dest_data = allocator.map_memory<uint8_t>(staging_buffer_allocation);
 			memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
 			KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{}'", instance->m_local_data.size());
-			allocator.UnmapMemory(staging_buffer_allocation);
+			allocator.unmap_memory(staging_buffer_allocation);
 
 			// Create vertex buffer info
 			VkBufferCreateInfo vertex_buffer_create_info{};
 			vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			vertex_buffer_create_info.size = instance->m_size;
 			vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-			instance->m_memory_allocation = allocator.AllocateBuffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
+			instance->m_memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
 
 			// setup vk command to copy data from staging (cpu) to vertex buffer on gpu
             const VkCommandBuffer copy_cmd = device->get_vk_command_buffer(true);
@@ -65,14 +65,14 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 			device->flush_command_buffer(copy_cmd);
 
 			KB_CORE_INFO("VertexBuffer destroying staging buffer!");
-			allocator.DestroyBuffer(staging_buffer, staging_buffer_allocation);
+			allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 		});
 }
 
 vulkan_vertex_buffer::vulkan_vertex_buffer(
     const weak_arc<vulkan_logical_device> p_device,
     const u32 size,
-    VertexBufferUsage usage /*= VertexBufferUsage::Dynamic*/
+    vertex_buffer_usage_t usage /*= VertexBufferUsage::Dynamic*/
 )
 	: m_size{ size }, m_device{ p_device }, m_memory_allocation{ nullptr }
 {
@@ -89,7 +89,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 			vertex_buffer_create_info.size = instance->m_size;
 			vertex_buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-			instance->m_memory_allocation = allocator.AllocateBuffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->m_vk_buffer);
+			instance->m_memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->m_vk_buffer);
 		});
 }
 
@@ -100,23 +100,23 @@ vulkan_vertex_buffer::~vulkan_vertex_buffer()
 	render::submit([buffer, allocation]() mutable
 		{
 			vulkan_allocator allocator{ "VertexBuffer" };
-			allocator.DestroyBuffer(buffer, allocation);
+			allocator.destroy_buffer(buffer, allocation);
 		});
 
 	m_local_data.release();
 }
 
-void vulkan_vertex_buffer::Bind() const
+void vulkan_vertex_buffer::bind() const
 {
 	KB_CORE_WARN("VulkanVertexBuffer does not bind!");
 }
 
-void vulkan_vertex_buffer::Unbind() const
+void vulkan_vertex_buffer::unbind() const
 {
 	KB_CORE_WARN("VulkanVertexBuffer does not unbind!");
 }
 
-void vulkan_vertex_buffer::SetData(
+void vulkan_vertex_buffer::set_data(
     const void* data,
     u32 size,
     u32 offset /*= 0*/
@@ -133,35 +133,35 @@ void vulkan_vertex_buffer::SetData(
     );
     arc instance{ this };
 	render::submit([instance, size, offset]() mutable {
-			instance->RT_SetData(instance->m_local_data.get(), size, offset);
+			instance->rt_set_data(instance->m_local_data.get(), size, offset);
 		});
 }
 
-void vulkan_vertex_buffer::RT_SetData(
+void vulkan_vertex_buffer::rt_set_data(
     const void* data,
     u32 size,
     u32 offset /*= 0*/
 )
 {
 	vulkan_allocator allocator{ "VertexBuffer" };
-	auto* data_ptr = allocator.MapMemory<u8>(m_memory_allocation);
+	auto* data_ptr = allocator.map_memory<u8>(m_memory_allocation);
 	memcpy(data_ptr, static_cast<const u8*>(data) + offset, size);
-	allocator.UnmapMemory(m_memory_allocation);
+	allocator.unmap_memory(m_memory_allocation);
 }
 
-void vulkan_vertex_buffer::SetLayout(const BufferLayout& layout)
+void vulkan_vertex_buffer::set_layout(const buffer_layout& layout)
 {
 	KB_CORE_WARN("VulkanVertexBuffer does not implement layouts");
 }
 
-const BufferLayout& vulkan_vertex_buffer::GetLayout() const
+const buffer_layout& vulkan_vertex_buffer::get_layout() const
 {
 	KB_CORE_WARN("VulkanVertexBuffer does not implement layouts");
 	KB_CORE_ASSERT(false, "[VulkanVertexBuffer]: does not implement layouts");
 	return {};
 }
 
-RendererID vulkan_vertex_buffer::GetRendererID() const
+RendererID vulkan_vertex_buffer::get_renderer_id() const
 {
 	KB_CORE_WARN("VulkanVertexBuffer does not implement rendererID");
 	return 0;

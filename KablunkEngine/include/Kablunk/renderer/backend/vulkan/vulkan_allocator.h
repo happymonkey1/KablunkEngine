@@ -27,33 +27,33 @@ public:
 	vulkan_allocator(const std::string& tag);
 	~vulkan_allocator();
 
-	VmaAllocation AllocateBuffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer);
-	VmaAllocation AllocateImage(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image);
+	VmaAllocation allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer);
+	VmaAllocation allocate_image(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image);
 
-	void Free(VmaAllocation allocation);
-	void DestroyImage(VkImage image, VmaAllocation allocation);
-	void DestroyBuffer(VkBuffer buffer, VmaAllocation allocation);
+	void free(VmaAllocation allocation);
+	void destroy_image(VkImage image, VmaAllocation allocation);
+	void destroy_buffer(VkBuffer buffer, VmaAllocation allocation);
 
 	template <typename T>
-	T* MapMemory(VmaAllocation allocation)
+	T* map_memory(VmaAllocation allocation)
 	{
 		T* mapped_mem;
-		vmaMapMemory(vulkan_allocator::GetVMAAllocator(), allocation, (void**)&mapped_mem);
+		vmaMapMemory(vulkan_allocator::get_vma_allocator(), allocation, (void**)&mapped_mem);
 		return mapped_mem;
 	}
 
-	void UnmapMemory(VmaAllocation allocation);
+	void unmap_memory(VmaAllocation allocation);
 
-	static void DumpStats();
-	static GPUMemoryStats GetStats();
+	static void dump_stats();
+	static GPUMemoryStats get_stats();
 
-	static void Init(arc<vulkan_logical_device> device);
-	static void Shutdown();
+	static void init(arc<vulkan_logical_device> device);
+	static void shutdown();
 
-	static VmaAllocator& GetVMAAllocator();
+	static VmaAllocator& get_vma_allocator();
+
 private:
 	std::string m_tag;
-
 };
 
 } // end namespace kb::render::backend::vk

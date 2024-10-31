@@ -1,7 +1,6 @@
 #include "kablunkpch.h"
 
 #include "Kablunk/renderer/backend/compute_pipeline.h"
-#include "Kablunk/renderer/RendererAPI.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_compute_pipeline.h"
 
 namespace kb::render::backend

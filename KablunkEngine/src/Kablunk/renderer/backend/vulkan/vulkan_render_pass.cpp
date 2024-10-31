@@ -3,7 +3,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_render_pass.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk

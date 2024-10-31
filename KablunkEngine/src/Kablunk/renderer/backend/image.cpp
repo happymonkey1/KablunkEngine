@@ -3,7 +3,6 @@
 #include "Kablunk/Renderer/backend/image.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
-#include "Kablunk/Renderer/RendererAPI.h"
 
 namespace kb::render::backend
 { // start namespace kb::render::backend

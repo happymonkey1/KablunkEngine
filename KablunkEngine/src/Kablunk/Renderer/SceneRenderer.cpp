@@ -2,7 +2,7 @@
 
 #include "Kablunk/Renderer/SceneRenderer.h"
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "Kablunk/Renderer/renderer_2d.h"
 
 #include "Kablunk/Scene/Entity.h"
@@ -66,16 +66,16 @@ void SceneRenderer::init()
             .shader = render::get_shader("Kablunk_diffuse_static"),
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_Position" },
-                { backend::ShaderDataType::Float3, "a_Normal" },
-                { backend::ShaderDataType::Float3, "a_Tangent" },
-                { backend::ShaderDataType::Float3, "a_Binormal" },
-                { backend::ShaderDataType::Float2, "a_TexCoord" }
+                { backend::shader_data_type_t::Float3, "a_Position" },
+                { backend::shader_data_type_t::Float3, "a_Normal" },
+                { backend::shader_data_type_t::Float3, "a_Tangent" },
+                { backend::shader_data_type_t::Float3, "a_Binormal" },
+                { backend::shader_data_type_t::Float2, "a_TexCoord" }
             },
             .instance_layout = {
-                { backend::ShaderDataType::Float4, "a_MRow0" },
-                { backend::ShaderDataType::Float4, "a_MRow1" },
-                { backend::ShaderDataType::Float4, "a_MRow2" },
+                { backend::shader_data_type_t::Float4, "a_MRow0" },
+                { backend::shader_data_type_t::Float4, "a_MRow1" },
+                { backend::shader_data_type_t::Float4, "a_MRow2" },
             },
             .topology = backend::primitive_topology_t::triangles,
             .backface_culling = false,
@@ -119,8 +119,8 @@ void SceneRenderer::init()
             .shader = composite_shader,
             .m_target_frame_buffer = composite_frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_Position" },
-                { backend::ShaderDataType::Float2, "a_TexCoord" }
+                { backend::shader_data_type_t::Float3, "a_Position" },
+                { backend::shader_data_type_t::Float2, "a_TexCoord" }
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -185,7 +185,7 @@ void SceneRenderer::init()
 	}
 
     constexpr size_t transform_buffer_count = 1024;
-	m_transform_buffer = backend::VertexBuffer::Create(sizeof(TransformVertexData) * transform_buffer_count);
+	m_transform_buffer = backend::vertex_buffer::create(sizeof(TransformVertexData) * transform_buffer_count);
 	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
     arc<SceneRenderer> instance{ this };
@@ -496,7 +496,7 @@ void SceneRenderer::geometry_pass()
 	render::begin_render_pass(m_command_buffer, m_geometry_pass);
 
 	// submit transform data
-	m_transform_buffer->SetData(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
+	m_transform_buffer->set_data(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
 	/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
 		{
 			transform_buffer->rt_set_data(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));

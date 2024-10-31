@@ -5,13 +5,12 @@
 
 #include "Kablunk/Asset/AssetManager.h"
 
-#include "Kablunk/renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "Kablunk/renderer/backend/uniform_buffer.h"
 #include "Kablunk/renderer/Renderer.h"
 #include "Kablunk/renderer/renderer_2d_utils.h"
 
 #include "Kablunk/Scene/Components.h"
-#include "Kablunk/Renderer/RendererAPI.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
@@ -61,7 +60,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
 		m_renderer_data.quad_vertex_buffers[0].emplace_back(
-            backend::VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(QuadVertex))
+            backend::vertex_buffer::create(renderer_2d_data_t::max_vertices * sizeof(QuadVertex))
         );
 		m_renderer_data.quad_vertex_buffer_base_ptrs[0].emplace_back(new QuadVertex[renderer_2d_data_t::max_vertices]);
 	}
@@ -82,7 +81,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
 		offset += 4;
 	}
 
-	m_renderer_data.quad_index_buffer = backend::IndexBuffer::Create(quad_indices, renderer_2d_data_t::max_indices * 4ull);
+	m_renderer_data.quad_index_buffer = backend::index_buffer::create(quad_indices, renderer_2d_data_t::max_indices * 4ull);
 	delete[] quad_indices;
 
 	// =======
@@ -97,7 +96,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
     m_renderer_data.circle_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
 	for (size_t i = 0; i < frames_in_flight; ++i)
 	{
-        m_renderer_data.circle_vertex_buffers[0].emplace_back(backend::VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(CircleVertex)));
+        m_renderer_data.circle_vertex_buffers[0].emplace_back(backend::vertex_buffer::create(renderer_2d_data_t::max_vertices * sizeof(CircleVertex)));
         m_renderer_data.circle_vertex_buffer_base_ptrs[0].emplace_back(new CircleVertex[renderer_2d_data_t::max_vertices]);
 	}
 
@@ -113,7 +112,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
     m_renderer_data.line_vertex_buffer_base_ptrs[0].reserve(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
-        m_renderer_data.line_vertex_buffers[0].emplace_back(backend::VertexBuffer::Create(
+        m_renderer_data.line_vertex_buffers[0].emplace_back(backend::vertex_buffer::create(
             renderer_2d_data_t::max_vertices * sizeof(LineVertex))
         );
         m_renderer_data.line_vertex_buffer_base_ptrs[0].emplace_back(new LineVertex[renderer_2d_data_t::max_vertices]);
@@ -132,7 +131,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
         m_renderer_data.text_vertex_buffers[0].emplace_back(
-            backend::VertexBuffer::Create(renderer_2d_data_t::max_vertices * sizeof(text_vertex_t))
+            backend::vertex_buffer::create(renderer_2d_data_t::max_vertices * sizeof(text_vertex_t))
         );
         m_renderer_data.text_vertex_buffer_base_ptrs[0].emplace_back(
             new text_vertex_t[renderer_2d_data_t::max_vertices]
@@ -181,11 +180,11 @@ void renderer_2d::init(renderer_2d_specification_t spec)
             .shader = m_renderer_data.quad_shader,
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                {backend::ShaderDataType::Float3, "a_Position" },
-                {backend::ShaderDataType::Float4, "a_Color" },
-                {backend::ShaderDataType::Float2, "a_TexCoord" },
-                {backend::ShaderDataType::Float, "a_TexIndex" },
-                {backend::ShaderDataType::Float, "a_TilingFactor" },
+                {backend::shader_data_type_t::Float3, "a_Position" },
+                {backend::shader_data_type_t::Float4, "a_Color" },
+                {backend::shader_data_type_t::Float2, "a_TexCoord" },
+                {backend::shader_data_type_t::Float, "a_TexIndex" },
+                {backend::shader_data_type_t::Float, "a_TilingFactor" },
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -213,11 +212,11 @@ void renderer_2d::init(renderer_2d_specification_t spec)
             .shader = m_renderer_data.ui_shader,
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_Position" },
-                { backend::ShaderDataType::Float4, "a_Color" },
-                { backend::ShaderDataType::Float2, "a_TexCoord" },
-                { backend::ShaderDataType::Float, "a_TexIndex" },
-                { backend::ShaderDataType::Float, "a_TilingFactor" },
+                { backend::shader_data_type_t::Float3, "a_Position" },
+                { backend::shader_data_type_t::Float4, "a_Color" },
+                { backend::shader_data_type_t::Float2, "a_TexCoord" },
+                { backend::shader_data_type_t::Float, "a_TexIndex" },
+                { backend::shader_data_type_t::Float, "a_TilingFactor" },
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -245,13 +244,13 @@ void renderer_2d::init(renderer_2d_specification_t spec)
             .shader = m_renderer_data.circle_shader,
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_WorldPosition" },
-                { backend::ShaderDataType::Float3, "a_LocalPosition" },
-                { backend::ShaderDataType::Float4, "a_Color"},
-                { backend::ShaderDataType::Float, "a_Radius" },
-                { backend::ShaderDataType::Float, "a_Thickness" },
-                { backend::ShaderDataType::Float, "a_Fade" },
-                { backend::ShaderDataType::Int, "a_EntityID" },
+                { backend::shader_data_type_t::Float3, "a_WorldPosition" },
+                { backend::shader_data_type_t::Float3, "a_LocalPosition" },
+                { backend::shader_data_type_t::Float4, "a_Color"},
+                { backend::shader_data_type_t::Float, "a_Radius" },
+                { backend::shader_data_type_t::Float, "a_Thickness" },
+                { backend::shader_data_type_t::Float, "a_Fade" },
+                { backend::shader_data_type_t::Int, "a_EntityID" },
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -279,8 +278,8 @@ void renderer_2d::init(renderer_2d_specification_t spec)
             .shader = m_renderer_data.line_shader,
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_Position" },
-                { backend::ShaderDataType::Float4, "a_Color" }
+                { backend::shader_data_type_t::Float3, "a_Position" },
+                { backend::shader_data_type_t::Float4, "a_Color" }
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -304,7 +303,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
 		for (uint32_t i = 0; i < renderer_2d_data_t::max_line_indices; ++i)
 			line_indices[i] = i;
 
-		m_renderer_data.line_index_buffer = backend::IndexBuffer::Create(
+		m_renderer_data.line_index_buffer = backend::index_buffer::create(
             line_indices,
             renderer_2d_data_t::max_line_indices * 4ull
         );
@@ -317,10 +316,10 @@ void renderer_2d::init(renderer_2d_specification_t spec)
             .shader = m_renderer_data.text_shader,
             .m_target_frame_buffer = frame_buffer,
             .layout = {
-                { backend::ShaderDataType::Float3, "a_Position" },
-                { backend::ShaderDataType::Float4, "a_Color" },
-                { backend::ShaderDataType::Float2, "a_TexCoord" },
-                { backend::ShaderDataType::Float, "a_TexIndex" },
+                { backend::shader_data_type_t::Float3, "a_Position" },
+                { backend::shader_data_type_t::Float4, "a_Color" },
+                { backend::shader_data_type_t::Float2, "a_TexCoord" },
+                { backend::shader_data_type_t::Float, "a_TexIndex" },
             },
             .instance_layout = {},
             .topology = backend::primitive_topology_t::triangles,
@@ -497,7 +496,7 @@ void renderer_2d::flush()
                 (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
 
             auto& quad_vertex_buffer = m_renderer_data.quad_vertex_buffers[i][frame_index];
-            quad_vertex_buffer->SetData(quad_vertex_buffer_base_ptr, data_size);
+            quad_vertex_buffer->set_data(quad_vertex_buffer_base_ptr, data_size);
 
             render::begin_render_pass(
                 m_renderer_data.render_command_buffer,
@@ -551,7 +550,7 @@ void renderer_2d::flush()
                 (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
 
             auto& circle_vertex_buffer = m_renderer_data.circle_vertex_buffers[i][frame_index];
-            circle_vertex_buffer->SetData(circle_vertex_base_buffer_ptr, data_size);
+            circle_vertex_buffer->set_data(circle_vertex_base_buffer_ptr, data_size);
 
             render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_circle_pass, clear_pass);
             const auto& circle_pipeline = m_renderer_data.m_circle_pass->get_pipeline();
@@ -583,7 +582,7 @@ void renderer_2d::flush()
                 (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
 
             auto& line_vertex_buffer = m_renderer_data.line_vertex_buffers[i][frame_index];
-            line_vertex_buffer->SetData(line_vertex_buffer_base_ptr, data_size);
+            line_vertex_buffer->set_data(line_vertex_buffer_base_ptr, data_size);
 
             render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_line_pass, clear_pass);
             render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.line_width);
@@ -616,7 +615,7 @@ void renderer_2d::flush()
                 (renderer_2d_data_t::max_indices * i) : renderer_2d_data_t::max_indices;
 
             auto& text_vertex_buffer = m_renderer_data.text_vertex_buffers[i][frame_index];
-            text_vertex_buffer->SetData(text_vertex_buffer_base_ptr, data_size);
+            text_vertex_buffer->set_data(text_vertex_buffer_base_ptr, data_size);
 
             // Set Textures
             auto& textures = m_renderer_data.text_texture_atlas_slots;
@@ -1469,7 +1468,7 @@ auto renderer_2d::add_quad_buffer() noexcept -> void
     constexpr size_t buffer_size = renderer_2d_data_t::max_vertices * sizeof(QuadVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
-        new_vertex_buffer.emplace_back(backend::VertexBuffer::Create(buffer_size));
+        new_vertex_buffer.emplace_back(backend::vertex_buffer::create(buffer_size));
         new_vertex_buffer_base.emplace_back(new QuadVertex[buffer_size]);
     }
 }
@@ -1490,7 +1489,7 @@ auto renderer_2d::add_circle_buffer() noexcept -> void
     constexpr size_t buffer_size = renderer_2d_data_t::max_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
-        new_vertex_buffer.emplace_back(backend::VertexBuffer::Create(buffer_size));
+        new_vertex_buffer.emplace_back(backend::vertex_buffer::create(buffer_size));
         new_vertex_buffer_base.emplace_back(new CircleVertex[buffer_size]);
     }
 }
@@ -1511,7 +1510,7 @@ auto renderer_2d::add_line_buffer() noexcept -> void
     constexpr size_t buffer_size = renderer_2d_data_t::max_line_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
-        new_vertex_buffer.emplace_back(backend::VertexBuffer::Create(buffer_size));
+        new_vertex_buffer.emplace_back(backend::vertex_buffer::create(buffer_size));
         new_vertex_buffer_base.emplace_back(new LineVertex[buffer_size]);
     }
 }
@@ -1532,7 +1531,7 @@ auto renderer_2d::add_text_buffer() noexcept -> void
     constexpr size_t buffer_size = renderer_2d_data_t::max_vertices * sizeof(CircleVertex);
     for (u32 i = 0; i < frames_in_flight; ++i)
     {
-        new_vertex_buffer.emplace_back(backend::VertexBuffer::Create(buffer_size));
+        new_vertex_buffer.emplace_back(backend::vertex_buffer::create(buffer_size));
         new_vertex_buffer_base.emplace_back(new text_vertex_t[buffer_size]);
     }
 }

@@ -45,7 +45,7 @@ void vulkan_context::init() noexcept
         m_physical_device,
         enabled_features
     );
-	vulkan_allocator::Init(get_device());
+	vulkan_allocator::init(get_device());
 
 	m_swap_chain = std::make_unique<vulkan_swap_chain>();
 	m_swap_chain->init(m_vk_instance, m_device);

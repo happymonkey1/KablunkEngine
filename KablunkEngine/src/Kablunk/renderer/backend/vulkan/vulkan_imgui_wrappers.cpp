@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Imgui/ImGuiWrappers.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 

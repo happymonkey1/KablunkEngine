@@ -110,24 +110,24 @@ struct renderer_2d_data_t
 	glm::vec4 quad_vertex_positions[4] = {};
 
 	// quads
-    using vertex_per_frame_buffer = std::vector<arc<backend::VertexBuffer>>;
+    using vertex_per_frame_buffer = std::vector<arc<backend::vertex_buffer>>;
 	std::vector<vertex_per_frame_buffer> quad_vertex_buffers;
-    arc<backend::IndexBuffer> quad_index_buffer;
+    arc<backend::index_buffer> quad_index_buffer;
 
 	// circle
 	std::vector<vertex_per_frame_buffer> circle_vertex_buffers;
 
 	// lines
 	std::vector<vertex_per_frame_buffer> line_vertex_buffers;
-    arc<backend::IndexBuffer> line_index_buffer;
+    arc<backend::index_buffer> line_index_buffer;
 
 	// ui quads
 	std::vector<vertex_per_frame_buffer> ui_quad_vertex_buffers;
-    arc<backend::IndexBuffer> ui_quad_index_buffer;
+    arc<backend::index_buffer> ui_quad_index_buffer;
 
 	// text
 	std::vector<vertex_per_frame_buffer> text_vertex_buffers;
-    arc<backend::IndexBuffer> text_index_buffer;
+    arc<backend::index_buffer> text_index_buffer;
 
 	// =======
 	// shaders

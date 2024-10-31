@@ -3,10 +3,8 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_pipeline.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_frame_buffer.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_frame_buffer.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -27,18 +25,18 @@ static VkPrimitiveTopology KbPrimitiveTopologyToVkPrimitiveTopology(primitive_to
 	}
 }
 
-static VkFormat KbShaderDataTypeToVulkanFormat(ShaderDataType type)
+static VkFormat KbShaderDataTypeToVulkanFormat(shader_data_type_t type)
 {
 	switch (type)
 	{
-	case ShaderDataType::Int:		return VK_FORMAT_R32_SINT;
-	case ShaderDataType::Int2:		return VK_FORMAT_R32G32_SINT;
-	case ShaderDataType::Int3:		return VK_FORMAT_R32G32B32_SINT;
-	case ShaderDataType::Int4:		return VK_FORMAT_R32G32B32A32_SINT;
-	case ShaderDataType::Float:     return VK_FORMAT_R32_SFLOAT;
-	case ShaderDataType::Float2:    return VK_FORMAT_R32G32_SFLOAT;
-	case ShaderDataType::Float3:    return VK_FORMAT_R32G32B32_SFLOAT;
-	case ShaderDataType::Float4:    return VK_FORMAT_R32G32B32A32_SFLOAT;
+	case shader_data_type_t::Int:		return VK_FORMAT_R32_SINT;
+	case shader_data_type_t::Int2:		return VK_FORMAT_R32G32_SINT;
+	case shader_data_type_t::Int3:		return VK_FORMAT_R32G32B32_SINT;
+	case shader_data_type_t::Int4:		return VK_FORMAT_R32G32B32A32_SINT;
+	case shader_data_type_t::Float:     return VK_FORMAT_R32_SFLOAT;
+	case shader_data_type_t::Float2:    return VK_FORMAT_R32G32_SFLOAT;
+	case shader_data_type_t::Float3:    return VK_FORMAT_R32G32B32_SFLOAT;
+	case shader_data_type_t::Float4:    return VK_FORMAT_R32G32B32A32_SFLOAT;
 	default:						KB_CORE_ASSERT(false, "Unknown ShaderDataType"); return VK_FORMAT_UNDEFINED;
 	}
 }
@@ -282,8 +280,8 @@ void vulkan_pipeline::RT_Invalidate()
 	multisample_state.pSampleMask = nullptr;
 
 	// Vertex input descriptor
-	BufferLayout& layout = m_specification.layout;
-	BufferLayout& instance_layout = m_specification.instance_layout;
+	buffer_layout& layout = m_specification.layout;
+	buffer_layout& instance_layout = m_specification.instance_layout;
 
 	std::vector<VkVertexInputBindingDescription> vertex_input_binding_desc;
 

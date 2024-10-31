@@ -2,7 +2,7 @@
 
 #include "Kablunk/Renderer/MaterialAsset.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 // #TODO remove when Application singleton is refactored
 #include "Kablunk/Core/Application.h"

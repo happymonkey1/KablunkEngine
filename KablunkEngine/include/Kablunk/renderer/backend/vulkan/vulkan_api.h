@@ -15,6 +15,4 @@ auto get_descriptor_set_alloc_info(
 auto create_sampler(const VkSamplerCreateInfo& p_sampler_create_info) noexcept -> VkSampler;
 auto destroy_sampler(VkSampler p_sampler) noexcept -> void;
 
-auto get_current_vk_device() noexcept -> VkDevice;
-
 } // end namespace kb::render::backend::vk

@@ -3,7 +3,6 @@
 #define KABLUNK_RENDERER_BACKEND_VULKAN_RENDER_API_H
 
 #include "Kablunk/Core/RefCounting.h"
-#include "Kablunk/Renderer/RendererAPI.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_render_pass.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_material.h"

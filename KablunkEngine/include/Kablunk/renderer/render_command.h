@@ -1,5 +1,5 @@
 #pragma once
-#include "Kablunk/renderer/RendererAPI.h"
+
 #include "Kablunk/renderer/backend/render_command_queue.h"
 #include "Kablunk/renderer/Renderer.h"
 #include "Kablunk/renderer/shader_library.h"
@@ -309,8 +309,8 @@ inline void render_geometry(
     const arc<backend::render_command_buffer>& p_render_command_buffer,
     const arc<backend::pipeline>& p_pipeline,
     const arc<backend::material>& p_material,
-    const arc<backend::VertexBuffer>& p_vertex_buffer,
-    const arc<backend::IndexBuffer>& p_index_buffer,
+    const arc<backend::vertex_buffer>& p_vertex_buffer,
+    const arc<backend::index_buffer>& p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count = 0
 ) noexcept

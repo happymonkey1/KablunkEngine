@@ -1,5 +1,5 @@
 #include "kablunkpch.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_swap_chain.h" // #TODO temporary while there is no swap chain abstraction

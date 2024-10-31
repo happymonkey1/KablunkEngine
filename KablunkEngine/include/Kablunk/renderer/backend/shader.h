@@ -2,7 +2,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/RefCounting.h"
-#include "Kablunk/Renderer/RendererTypes.h"
+#include "kablunk/renderer/renderer_types.h"
 #include "Kablunk/Renderer/backend/shader_resource_declaration.h"
 
 #include <glm/glm.hpp>

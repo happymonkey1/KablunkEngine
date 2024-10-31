@@ -2,52 +2,52 @@
 #define KABLUNK_RENDERER_BACKEND_BUFFER_H
 
 #include "Kablunk/Core/Core.h"
-#include "Kablunk/Renderer/RendererTypes.h"
+#include "kablunk/renderer/renderer_types.h"
 
 namespace kb::render::backend
 { // start namespace kb::render::backend
 
-enum class VertexBufferUsage
+enum class vertex_buffer_usage_t
 {
 	Static = 0, Dynamic
 };
 
-enum class ShaderDataType
+enum class shader_data_type_t
 {
 	None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
 };
 
-static uint32_t ShaderDataTypeSize(ShaderDataType type)
+static uint32_t get_shader_data_type_size(shader_data_type_t type)
 {
 	switch (type)
 	{
-	case ShaderDataType::Float:    return 4;
-	case ShaderDataType::Float2:   return 2 * 4;
-	case ShaderDataType::Float3:   return 3 * 4;
-	case ShaderDataType::Float4:   return 4 * 4;
-	case ShaderDataType::Mat3:     return 3*3*3;
-	case ShaderDataType::Mat4:     return 4*4*4;
-	case ShaderDataType::Int:      return 4;
-	case ShaderDataType::Int2:     return 2 * 4;
-	case ShaderDataType::Int3:     return 3 * 4;
-	case ShaderDataType::Int4:     return 4 * 4;
-	case ShaderDataType::Bool:     return 1;
+	case shader_data_type_t::Float:    return 4;
+	case shader_data_type_t::Float2:   return 2 * 4;
+	case shader_data_type_t::Float3:   return 3 * 4;
+	case shader_data_type_t::Float4:   return 4 * 4;
+	case shader_data_type_t::Mat3:     return 3*3*3;
+	case shader_data_type_t::Mat4:     return 4*4*4;
+	case shader_data_type_t::Int:      return 4;
+	case shader_data_type_t::Int2:     return 2 * 4;
+	case shader_data_type_t::Int3:     return 3 * 4;
+	case shader_data_type_t::Int4:     return 4 * 4;
+	case shader_data_type_t::Bool:     return 1;
 	default:     KB_CORE_ERROR("Unknown ShaderDataType!"); return 0;
 	}
 }
 
-struct BufferElement
+struct buffer_element
 {
 	std::string Name;
-	ShaderDataType Type;
+	shader_data_type_t Type;
 	uint32_t Size;
 	size_t Offset;
 	bool Normalized;
 
-	BufferElement() = default;
+	buffer_element() = default;
 
-	BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
-		: Name{ name }, Type{ type }, Size{ ShaderDataTypeSize(type) }, Offset{ 0 }, Normalized{ normalized }
+	buffer_element(shader_data_type_t type, const std::string& name, bool normalized = false)
+		: Name{ name }, Type{ type }, Size{ get_shader_data_type_size(type) }, Offset{ 0 }, Normalized{ normalized }
 	{
 	}
 
@@ -55,96 +55,98 @@ struct BufferElement
 	{
 		switch (Type)
 		{
-		case ShaderDataType::Float:    return 1;
-		case ShaderDataType::Float2:   return 2;
-		case ShaderDataType::Float3:   return 3;
-		case ShaderDataType::Float4:   return 4;
-		case ShaderDataType::Mat3:     return 3 * 3;
-		case ShaderDataType::Mat4:     return 4 * 4;
-		case ShaderDataType::Int:      return 1;
-		case ShaderDataType::Int2:     return 2;
-		case ShaderDataType::Int3:     return 3;
-		case ShaderDataType::Int4:     return 4;
-		case ShaderDataType::Bool:     return 1;
+		case shader_data_type_t::Float:    return 1;
+		case shader_data_type_t::Float2:   return 2;
+		case shader_data_type_t::Float3:   return 3;
+		case shader_data_type_t::Float4:   return 4;
+		case shader_data_type_t::Mat3:     return 3 * 3;
+		case shader_data_type_t::Mat4:     return 4 * 4;
+		case shader_data_type_t::Int:      return 1;
+		case shader_data_type_t::Int2:     return 2;
+		case shader_data_type_t::Int3:     return 3;
+		case shader_data_type_t::Int4:     return 4;
+		case shader_data_type_t::Bool:     return 1;
 		default:     KB_CORE_ERROR("Unknown ShaderDataType!"); return 0;
 		}
 	}
 };
 
-class BufferLayout
+class buffer_layout
 {
 public:
-	BufferLayout() { KB_CORE_WARN("Default BufferLayout constructor not implemented!"); }
+    buffer_layout() = default;
 
-	BufferLayout(const std::initializer_list<BufferElement>& elements) 
-		: m_Elements{ elements }
+	buffer_layout(const std::initializer_list<buffer_element>& elements) 
+		: m_elements{ elements }
 	{
-		CalculateOffsetsAndStride();
+		calculate_offsets_and_stride();
 	}
 
-	const std::vector<BufferElement>& GetElements() const { return m_Elements; }
-	u32 GetStride() const { return m_Stride; }
+    ~buffer_layout() noexcept = default;
 
-	std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
-	std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
-	std::vector<BufferElement>::const_iterator begin() const { return m_Elements.begin(); }
-	std::vector<BufferElement>::const_iterator end() const { return m_Elements.end(); }
+	const std::vector<buffer_element>& get_elements() const { return m_elements; }
+	u32 get_stride() const { return m_stride; }
+
+	std::vector<buffer_element>::iterator begin() { return m_elements.begin(); }
+	std::vector<buffer_element>::iterator end() { return m_elements.end(); }
+	std::vector<buffer_element>::const_iterator begin() const { return m_elements.begin(); }
+	std::vector<buffer_element>::const_iterator end() const { return m_elements.end(); }
 
 private:
-	void CalculateOffsetsAndStride()
+	void calculate_offsets_and_stride()
 	{
 		size_t offset = 0;
-		m_Stride = 0;
-		for (auto& element : m_Elements)
+		m_stride = 0;
+		for (auto& element : m_elements)
 		{
 			element.Offset = offset;
 			offset += element.Size;
-			m_Stride += element.Size;
+			m_stride += element.Size;
 		}
 	}
 
-	std::vector<BufferElement> m_Elements;
-	uint32_t m_Stride = 0;
+	std::vector<buffer_element> m_elements;
+	uint32_t m_stride = 0;
 };
 
-class VertexBuffer : public RefCounted
+class vertex_buffer : public RefCounted
 {
 public:
-    ~VertexBuffer() override = default;
+    ~vertex_buffer() override = default;
 
-	virtual void Bind() const = 0;
-	virtual void Unbind() const = 0;
+	virtual void bind() const = 0;
+	virtual void unbind() const = 0;
 
-	virtual void SetData(const void* data, u32 size, u32 offset = 0) = 0;
-	virtual void RT_SetData(const void* data, u32 size, u32 offset = 0) = 0;
+	virtual void set_data(const void* data, u32 size, u32 offset = 0) = 0;
+	virtual void rt_set_data(const void* data, u32 size, u32 offset = 0) = 0;
 
-	virtual void SetLayout(const BufferLayout& layout) = 0;
-	virtual const BufferLayout& GetLayout() const = 0;
+	virtual void set_layout(const buffer_layout& layout) = 0;
+	virtual const buffer_layout& get_layout() const = 0;
 
 
-	static arc<VertexBuffer> Create(u32 size);
-	static arc<VertexBuffer> Create(const void* data, u32 size);
+	static arc<vertex_buffer> create(u32 size);
+	static arc<vertex_buffer> create(const void* data, u32 size);
 
-	virtual RendererID GetRendererID() const = 0;
+	virtual RendererID get_renderer_id() const = 0;
 };
 
-class IndexBuffer : public RefCounted
+class index_buffer : public RefCounted
 {
 public:
-    ~IndexBuffer() override = default;
+    ~index_buffer() override = default;
 
-	virtual void Bind() const = 0;
-	virtual void Unbind() const = 0;
+	virtual void bind() const = 0;
+	virtual void unbind() const = 0;
 
-	virtual void SetData(const void* buffer, u32 size, u32 offset = 0) = 0;
+	virtual void set_data(const void* buffer, u32 size, u32 offset = 0) = 0;
 
-	virtual u32 GetCount() const = 0;
-	virtual u32 GetSize() const = 0;
+	virtual u32 get_count() const = 0;
+	virtual u32 get_size() const = 0;
 
-	virtual RendererID GetRendererID() const = 0;
+	virtual RendererID get_renderer_id() const = 0;
 
-	static arc<IndexBuffer> Create(u32 count);
-	static arc<IndexBuffer> Create(const void* data, u32 count);
+	static arc<index_buffer> create(u32 count);
+	static arc<index_buffer> create(const void* data, u32 count);
 };
 
 } // end namespace kb::render::backend

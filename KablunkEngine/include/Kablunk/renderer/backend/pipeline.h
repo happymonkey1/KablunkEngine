@@ -25,8 +25,8 @@ struct pipeline_specification_t
 {
 	arc<shader> shader;
     arc<frame_buffer> m_target_frame_buffer{};
-	BufferLayout layout;
-	BufferLayout instance_layout;
+	buffer_layout layout;
+	buffer_layout instance_layout;
 	primitive_topology_t topology = primitive_topology_t::triangles;
 	bool backface_culling = true;
 	bool depth_test = true;

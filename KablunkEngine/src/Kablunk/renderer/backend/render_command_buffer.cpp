@@ -1,6 +1,5 @@
 #include "kablunkpch.h"
 
-#include "Kablunk/Renderer/RendererAPI.h"
 #include "Kablunk/Renderer/backend/render_command_buffer.h"
 
 #include "Kablunk/Renderer/Renderer.h"

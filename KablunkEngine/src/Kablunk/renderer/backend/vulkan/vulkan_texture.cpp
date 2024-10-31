@@ -6,7 +6,7 @@
 #include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 #include "Kablunk/renderer/backend/vulkan/vulkan_utils.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include <stb_image.h>
 
@@ -158,18 +158,18 @@ void vulkan_texture_2d::invalidate()
 		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.AllocateBuffer(
+		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(
             buffer_create_info,
             VMA_MEMORY_USAGE_CPU_TO_GPU,
             staging_buffer
         );
 
 		// Copy data to staging buffer
-		uint8_t* dest_ptr = allocator.MapMemory<uint8_t>(staging_buffer_allocation);
+		uint8_t* dest_ptr = allocator.map_memory<uint8_t>(staging_buffer_allocation);
 		KB_CORE_ASSERT(m_image_data.get(), "image data is nullptr!");
 		memcpy(dest_ptr, m_image_data.get(), size);
 		KB_CORE_INFO("VulkanTexture2D mapping gpu memory of size '{0}'", size);
-		allocator.UnmapMemory(staging_buffer_allocation);
+		allocator.unmap_memory(staging_buffer_allocation);
 
 		VkCommandBuffer copy_cmd = m_device->get_vk_command_buffer(true);
 
@@ -247,7 +247,7 @@ void vulkan_texture_2d::invalidate()
 
 		m_device->flush_command_buffer(copy_cmd);
 
-		allocator.DestroyBuffer(staging_buffer, staging_buffer_allocation);
+		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 	}
 	else
 	{

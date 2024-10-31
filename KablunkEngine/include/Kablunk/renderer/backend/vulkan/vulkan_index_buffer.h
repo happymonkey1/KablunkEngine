@@ -14,22 +14,22 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-class vulkan_index_buffer final : public IndexBuffer
+class vulkan_index_buffer final : public index_buffer
 {
 public:
 	vulkan_index_buffer(u32 size);
 	vulkan_index_buffer(const void* data, u32 size = 0);
 	~vulkan_index_buffer() override;
 
-	void Bind() const override;
-	void Unbind() const override;
+	void bind() const override;
+	void unbind() const override;
 
-	void SetData(const void* buffer, u32 size, u32 offset = 0) override;
+	void set_data(const void* buffer, u32 size, u32 offset = 0) override;
 
-    u32 GetCount() const noexcept override { return m_size / sizeof(u32); };
-	u32 GetSize() const noexcept override { return m_size; }
+    u32 get_count() const noexcept override { return m_size / sizeof(u32); };
+	u32 get_size() const noexcept override { return m_size; }
 
-	RendererID GetRendererID() const override;
+	RendererID get_renderer_id() const override;
 
 	VkBuffer GetVkBuffer() const noexcept { return m_vk_buffer; }
 private:

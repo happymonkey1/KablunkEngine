@@ -59,8 +59,8 @@ public:
         const arc<render_command_buffer>& p_render_command_buffer,
         const arc<pipeline>& p_pipeline,
         const arc<material>& p_material,
-        const arc<VertexBuffer>& p_vertex_buffer,
-        const arc<IndexBuffer>& p_index_buffer,
+        const arc<vertex_buffer>& p_vertex_buffer,
+        const arc<index_buffer>& p_index_buffer,
         const glm::mat4& p_transform,
         uint32_t p_index_count = 0
     ) noexcept -> void;
@@ -71,7 +71,7 @@ public:
         arc<Mesh> p_mesh,
         u32 p_index,
         arc<MaterialTable> p_material_table,
-        arc<VertexBuffer> p_transform_buffer,
+        arc<vertex_buffer> p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,
         u32 p_instance_count

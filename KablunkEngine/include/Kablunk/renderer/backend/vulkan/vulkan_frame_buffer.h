@@ -2,7 +2,6 @@
 #ifndef KABLUNK_RENDERER_BACKEND_VULKAN_FRAMEBUFFER_H
 #define KABLUNK_RENDERER_BACKEND_VULKAN_FRAMEBUFFER_H
 
-#include "Kablunk/renderer/RendererTypes.h"
 #include "Kablunk/renderer/backend/frame_buffer.h"
 #include "Kablunk/renderer/backend/image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"

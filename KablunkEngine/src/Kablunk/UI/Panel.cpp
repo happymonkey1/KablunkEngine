@@ -5,7 +5,7 @@
 #include "Kablunk/Core/Application.h"
 
 #include "Kablunk/Renderer/SceneRenderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "Kablunk/Events/MouseEvent.h"
 

@@ -18,7 +18,7 @@
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "kablunk/renderer/render_command.h"
 
 #include "Kablunk/Project/ProjectManager.h"
 

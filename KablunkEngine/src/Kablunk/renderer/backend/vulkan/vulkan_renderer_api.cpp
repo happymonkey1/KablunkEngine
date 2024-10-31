@@ -17,7 +17,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer_set.h"
 
 #include "Kablunk/Renderer/SceneRenderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"

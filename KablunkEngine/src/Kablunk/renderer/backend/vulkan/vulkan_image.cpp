@@ -2,7 +2,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_core.h"
@@ -55,7 +55,7 @@ void vulkan_image_2d::release()
 				}
 			}
 			vulkan_allocator allocator{ "VulkanImage2D" };
-			allocator.DestroyImage(info.image, info.memory_allcation);
+			allocator.destroy_image(info.image, info.memory_allcation);
 			s_image_refs.erase(info.image);
 		});
 
@@ -115,7 +115,7 @@ void vulkan_image_2d::RT_Invalidate()
 	image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	image_create_info.usage = usage;
-	m_info.memory_allcation = allocator.AllocateImage(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_info.image);
+	m_info.memory_allcation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_info.image);
 
 	s_image_refs[m_info.image] = this;
 

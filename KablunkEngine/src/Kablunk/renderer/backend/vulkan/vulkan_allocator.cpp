@@ -26,7 +26,7 @@ vulkan_allocator::~vulkan_allocator()
 
 }
 
-VmaAllocation vulkan_allocator::AllocateBuffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer)
+VmaAllocation vulkan_allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer)
 {
 	VmaAllocationCreateInfo alloc_create_info{};
 	alloc_create_info.usage = usage;
@@ -50,7 +50,7 @@ VmaAllocation vulkan_allocator::AllocateBuffer(VkBufferCreateInfo buffer_create_
 	return allocation;
 }
 
-VmaAllocation vulkan_allocator::AllocateImage(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image)
+VmaAllocation vulkan_allocator::allocate_image(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image)
 {
 	VmaAllocationCreateInfo alloc_create_info{};
 	alloc_create_info.usage = usage;
@@ -67,12 +67,12 @@ VmaAllocation vulkan_allocator::AllocateImage(const VkImageCreateInfo& image_cre
 	return allocation;
 }
 
-void vulkan_allocator::Free(VmaAllocation allocation)
+void vulkan_allocator::free(VmaAllocation allocation)
 {
 	vmaFreeMemory(s_data->allocator, allocation);
 }
 
-void vulkan_allocator::DestroyImage(VkImage image, VmaAllocation allocation)
+void vulkan_allocator::destroy_image(VkImage image, VmaAllocation allocation)
 {
 	KB_CORE_ASSERT(image, "trying to destroy image that is nullptr");
 	KB_CORE_ASSERT(allocation, "trying to destroy allocation that is nullptr");
@@ -80,30 +80,30 @@ void vulkan_allocator::DestroyImage(VkImage image, VmaAllocation allocation)
 	vmaDestroyImage(s_data->allocator, image, allocation);
 }
 
-void vulkan_allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation allocation)
+void vulkan_allocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
 {
 	KB_CORE_ASSERT(buffer, "trying to destroy image that is nullptr");
 	KB_CORE_ASSERT(allocation, "trying to destroy allocation that is nullptr");
 	vmaDestroyBuffer(s_data->allocator, buffer, allocation);
 }
 
-void vulkan_allocator::UnmapMemory(VmaAllocation allocation)
+void vulkan_allocator::unmap_memory(VmaAllocation allocation)
 {
 	vmaUnmapMemory(s_data->allocator, allocation);
 }
 
-void vulkan_allocator::DumpStats()
+void vulkan_allocator::dump_stats()
 {
 	KB_CORE_ERROR("VulkanAllocation DumpStats not implemented!");
 }
 
-GPUMemoryStats vulkan_allocator::GetStats()
+GPUMemoryStats vulkan_allocator::get_stats()
 {
 	KB_CORE_ERROR("VulkanAllocator GetStats not implemented!");
 	return { 0, 0 };
 }
 
-void vulkan_allocator::Init(arc<vulkan_logical_device> device)
+void vulkan_allocator::init(arc<vulkan_logical_device> device)
 {
 	KB_CORE_INFO("Initializing VulkanAllocator!");
 	s_data = new vulkan_allocator_data{};
@@ -117,7 +117,7 @@ void vulkan_allocator::Init(arc<vulkan_logical_device> device)
 	vmaCreateAllocator(&alloc_info, &s_data->allocator);
 }
 
-void vulkan_allocator::Shutdown()
+void vulkan_allocator::shutdown()
 {
 	vmaDestroyAllocator(s_data->allocator);
 
@@ -125,7 +125,7 @@ void vulkan_allocator::Shutdown()
 	s_data = nullptr;
 }
 
-VmaAllocator& vulkan_allocator::GetVMAAllocator()
+VmaAllocator& vulkan_allocator::get_vma_allocator()
 {
 	return s_data->allocator;
 }

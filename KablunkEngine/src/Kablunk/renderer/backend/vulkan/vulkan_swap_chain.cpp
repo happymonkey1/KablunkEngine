@@ -3,7 +3,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_swap_chain.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "kablunk/vendor/glfw/glfw.h"
 
@@ -18,7 +18,6 @@ void vulkan_swap_chain::init(VkInstance instance, const arc<vulkan_logical_devic
 
 void vulkan_swap_chain::init_surface(GLFWwindow* window_handle) noexcept
 {
-    
 	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_surface) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
 
@@ -640,7 +639,7 @@ void vulkan_swap_chain::create_depth_stencil()
 	image_create_info.pQueueFamilyIndices = nullptr;
 
 	vulkan_allocator allocator{ "Swapchain Depth Stencil" };
-	m_depth_stencil.memory_allocation = allocator.AllocateImage(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_depth_stencil.image);
+	m_depth_stencil.memory_allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_depth_stencil.image);
 
 	VkImageViewCreateInfo image_view_create_info;
 	image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

@@ -1,7 +1,7 @@
 #include "kablunkpch.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer_set.h"
-#include "Kablunk/renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "Kablunk/Core/Core.h"
 
 namespace kb::render::backend::vk

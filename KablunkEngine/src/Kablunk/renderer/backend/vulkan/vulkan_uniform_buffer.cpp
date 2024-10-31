@@ -1,9 +1,7 @@
 #include "kablunkpch.h"
 
-
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer.h"
-
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -42,10 +40,10 @@ void vulkan_uniform_buffer::set_data(const void* p_data, uint32_t p_size, uint32
 void vulkan_uniform_buffer::rt_set_data(const void* p_data, uint32_t p_size, uint32_t p_offset /*= 0*/)
 {
 	vulkan_allocator allocator{ "UniformBuffer" };
-	uint8_t* data_ptr = allocator.MapMemory<uint8_t>(m_vk_allocation);
+	uint8_t* data_ptr = allocator.map_memory<uint8_t>(m_vk_allocation);
     // can this be memmove?
 	memcpy(data_ptr, static_cast<const uint8_t*>(p_data) + p_offset, p_size);
-	allocator.UnmapMemory(m_vk_allocation);
+	allocator.unmap_memory(m_vk_allocation);
 }
 
 void vulkan_uniform_buffer::rt_invalidate()
@@ -58,7 +56,7 @@ void vulkan_uniform_buffer::rt_invalidate()
 	buffer_create_info.size = m_size;
 
 	vulkan_allocator allocator{ "UniformBuffer" };
-	m_vk_allocation = allocator.AllocateBuffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, m_buffer);
+	m_vk_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, m_buffer);
 
 	m_descriptor_info.buffer = m_buffer;
 	m_descriptor_info.offset = 0;
@@ -73,7 +71,7 @@ void vulkan_uniform_buffer::release()
 	render::submit_resource_free([buffer = m_buffer, mem_alloc = m_vk_allocation]()
 		{
 			vulkan_allocator allocator{ "UniformBuffer" };
-			allocator.DestroyBuffer(buffer, mem_alloc);
+			allocator.destroy_buffer(buffer, mem_alloc);
 		});
 
 	m_buffer = nullptr;

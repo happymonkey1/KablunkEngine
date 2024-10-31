@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/backend/image.h"
-#include "Kablunk/Renderer/RendererTypes.h"
+#include "kablunk/renderer/renderer_types.h"
 
 #include "Kablunk/Asset/Asset.h"
 

@@ -14,35 +14,35 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-class vulkan_vertex_buffer final : public VertexBuffer
+class vulkan_vertex_buffer final : public vertex_buffer
 {
 public:
 	vulkan_vertex_buffer(
         weak_arc<vulkan_logical_device> p_device,
         const void* data,
         uint32_t size,
-        VertexBufferUsage usage = VertexBufferUsage::Static
+        vertex_buffer_usage_t usage = vertex_buffer_usage_t::Static
     );
 
 	vulkan_vertex_buffer(
         weak_arc<vulkan_logical_device> p_device,
         uint32_t size,
-        VertexBufferUsage usage = VertexBufferUsage::Dynamic
+        vertex_buffer_usage_t usage = vertex_buffer_usage_t::Dynamic
     );
 	~vulkan_vertex_buffer() override;
 
-	void Bind() const override;
-	void Unbind() const override;
+	void bind() const override;
+	void unbind() const override;
 
-	void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
-	void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+	void set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
+	void rt_set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
 
 	VkBuffer GetVkBuffer() const { return m_vk_buffer; }
 
-	void SetLayout(const BufferLayout& layout) override;
-	const BufferLayout& GetLayout() const override;
+	void set_layout(const buffer_layout& layout) override;
+	const buffer_layout& get_layout() const override;
 
-	RendererID GetRendererID() const override;
+	RendererID get_renderer_id() const override;
 private:
 	uint32_t m_size = 0;
 	owning_buffer m_local_data{};

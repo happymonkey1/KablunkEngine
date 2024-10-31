@@ -2,7 +2,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_core.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
@@ -24,8 +24,8 @@ namespace kb::render::backend::vk
 
 struct vulkan_render_backend_data
 {
-    arc<VertexBuffer> m_quad_vertex_buffer{};
-    arc<IndexBuffer> m_quad_index_buffer{};
+    arc<vertex_buffer> m_quad_vertex_buffer{};
+    arc<index_buffer> m_quad_index_buffer{};
     vulkan_shader::ShaderMaterialDescriptorSet m_quad_descriptor_set{};
 
     VkDescriptorSet m_active_descriptor_set = nullptr;
@@ -83,7 +83,7 @@ auto vulkan_render_backend::init() noexcept -> void
             };
 
             // per-frame renderer descriptor pools
-            const auto vk_device = get_current_vk_device();
+            const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
             for (u32 i = 0; i < frames_in_flight; i++)
             {
                 KB_VK_CHECK_RESULT(
@@ -121,14 +121,14 @@ auto vulkan_render_backend::init() noexcept -> void
         log::logger_tag_t::renderer,
         "Creating fullscreen quad vertex buffer"
     );
-    s_renderer_data->m_quad_vertex_buffer = VertexBuffer::Create(quad_data, 4 * sizeof(QuadVertex));
+    s_renderer_data->m_quad_vertex_buffer = vertex_buffer::create(quad_data, 4 * sizeof(QuadVertex));
     constexpr u32 indices[6] = { 0, 1, 2, 2, 3, 0, };
 
     log::core::info(
         log::logger_tag_t::renderer,
         "Creating fullscreen quad index buffer"
     );
-    s_renderer_data->m_quad_index_buffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
+    s_renderer_data->m_quad_index_buffer = index_buffer::create(indices, 6 * sizeof(uint32_t));
 }
 
 auto vulkan_render_backend::shutdown() noexcept -> void
@@ -138,7 +138,7 @@ auto vulkan_render_backend::shutdown() noexcept -> void
         log::logger_tag_t::renderer,
         "Shutting down Vulkan render backend"
     );
-    const auto vk_device = get_current_vk_device();
+    const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
     vkDeviceWaitIdle(vk_device);
 
     for (const auto& vk_descriptor_pool : s_renderer_data->m_descriptor_pools)
@@ -474,7 +474,7 @@ auto vulkan_render_backend::submit_fullscreen_quad(
 
             vkCmdDrawIndexed(
                 vk_command_buffer,
-                s_renderer_data->m_quad_index_buffer->GetCount(),
+                s_renderer_data->m_quad_index_buffer->get_count(),
                 1,
                 0,
                 0,
@@ -487,8 +487,8 @@ auto vulkan_render_backend::render_geometry(
     const arc<render_command_buffer>& p_render_command_buffer,
     const arc<pipeline>& p_pipeline,
     const arc<material>& p_material,
-    const arc<VertexBuffer>& p_vertex_buffer,
-    const arc<IndexBuffer>& p_index_buffer,
+    const arc<vertex_buffer>& p_vertex_buffer,
+    const arc<index_buffer>& p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count
 ) noexcept -> void
@@ -497,7 +497,7 @@ auto vulkan_render_backend::render_geometry(
 
     arc vulkan_material = p_material.As<vk::vulkan_material>();
     if (p_index_count == 0)
-        p_index_count = p_index_buffer->GetCount();
+        p_index_count = p_index_buffer->get_count();
 
     auto vulkan_pipeline = p_pipeline.As<vk::vulkan_pipeline>();
     auto vulkan_vertex_buffer = p_vertex_buffer.As<vk::vulkan_vertex_buffer>();
@@ -583,7 +583,7 @@ auto vulkan_render_backend::render_instanced_submesh(
     arc<Mesh> p_mesh,
     u32 p_index,
     arc<MaterialTable> p_material_table,
-    arc<VertexBuffer> p_transform_buffer,
+    arc<vertex_buffer> p_transform_buffer,
     u32 p_transform_offset,
     u32 p_bone_transforms_offset,
     u32 p_instance_count
@@ -869,7 +869,7 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
 
     const auto buffer_index = rt_get_current_frame_index();
     p_alloc_info.descriptorPool = s_renderer_data->m_descriptor_pools[buffer_index];
-    const auto vk_device = vk::get_current_vk_device();
+    const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
     VkDescriptorSet vk_descriptor_set;
     const auto res = vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set);
     if (res != VK_SUCCESS)

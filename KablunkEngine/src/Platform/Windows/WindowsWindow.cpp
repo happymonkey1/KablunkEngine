@@ -6,8 +6,6 @@
 #include "Kablunk/Events/MouseEvent.h"
 #include "Kablunk/Events/ApplicationEvent.h"
 
-#include "Kablunk/Renderer/RendererAPI.h"
-
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #include "kablunk/vendor/glfw/glfw.h"

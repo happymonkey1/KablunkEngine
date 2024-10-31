@@ -138,7 +138,7 @@ private:
 		glm::vec4 MRow[3];
 	};
 
-	arc<backend::VertexBuffer> m_transform_buffer;
+	arc<backend::vertex_buffer> m_transform_buffer;
 	TransformVertexData* m_transform_vertex_data = nullptr;
 
     arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};

@@ -17,11 +17,11 @@ public:
 	virtual void Bind() const = 0;
 	virtual void Unbind() const = 0;
 
-	virtual void AddVertexBuffer(const arc<VertexBuffer>& vertexBuffer) = 0;
-	virtual void SetIndexBuffer(const arc<IndexBuffer>& indexBuffer) = 0;
+	virtual void AddVertexBuffer(const arc<vertex_buffer>& vertexBuffer) = 0;
+	virtual void SetIndexBuffer(const arc<index_buffer>& indexBuffer) = 0;
 
-	virtual const std::vector<arc<VertexBuffer>>& GetVertexBuffers() const = 0;
-	virtual const arc<IndexBuffer>& GetIndexBuffer() const = 0;
+	virtual const std::vector<arc<vertex_buffer>>& GetVertexBuffers() const = 0;
+	virtual const arc<index_buffer>& GetIndexBuffer() const = 0;
 
 	[[deprecated]] static arc<VertexArray> Create();
 };

@@ -2,8 +2,7 @@
 
 #include "Kablunk/Renderer/backend/storage_buffer.h"
 
-#include "Kablunk/renderer/Renderer.h"
-#include "Kablunk/renderer/RendererAPI.h"
+#include "Kablunk/renderer/renderer.h"
 #include "Kablunk/renderer/backend/backend_type.h"
 #include "Kablunk/renderer/backend/vulkan/vulkan_storage_buffer.h"
 

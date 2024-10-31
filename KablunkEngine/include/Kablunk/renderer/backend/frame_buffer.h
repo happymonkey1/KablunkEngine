@@ -3,7 +3,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/renderer/backend/image.h"
-#include "Kablunk/renderer/RendererTypes.h"
+#include "kablunk/renderer/renderer_types.h"
 #include "Kablunk/renderer/backend/texture.h"
 #include <map>
 
@@ -59,11 +59,11 @@ struct frame_buffer_specification
     // scale of the frame buffer
 	float m_scale = 1.0f;
     // set width and heigth of the frame buffer
-	uint32_t m_width = 0, m_height = 0;
+	u32 m_width = 0, m_height = 0;
     // frame buffer attachment specification (color, depth, etc.)
 	frame_buffer_attachment_specification m_attachments;
     // ?
-	uint32_t m_samples = 1;
+    u32 m_samples = 1;
     // clear color of the frame buffer
 	glm::vec4 m_clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
     // flag to set the frame buffer to clear during the beginning of a render pass
@@ -83,9 +83,9 @@ struct frame_buffer_specification
     // ?
 	arc<image_2d> m_existing_image;
     // set existing image layers
-	std::vector<uint32_t> m_existing_image_layers;
+	std::vector<u32> m_existing_image_layers;
     // set existing attachment image(s)
-	std::map<uint32_t, arc<image_2d>> m_existing_images;
+	std::map<u32, arc<image_2d>> m_existing_images;
     // target an existing frame buffer
 	arc<frame_buffer> m_existing_frame_buffer;
     // debug name of the frame buffer
@@ -97,23 +97,23 @@ class frame_buffer : public RefCounted
 public:
 	~frame_buffer() override = default;
 
-	virtual void resize(uint32_t width, uint32_t height, bool force_recreate = false) = 0;
+	virtual void resize(u32 width, u32 height, bool force_recreate = false) = 0;
 	virtual void add_resize_callback(const std::function<void(arc<frame_buffer>)>& func) = 0;
 
 	[[deprecated]] virtual void bind() const = 0;
     [[deprecated]] virtual void unbind() const = 0;
 
-    [[deprecated]] virtual void bind_texture(uint32_t attachment_index = 0, uint32_t slot = 0) const = 0;
+    [[deprecated]] virtual void bind_texture(u32 attachment_index = 0, u32 slot = 0) const = 0;
 
-	[[nodiscard]] virtual uint32_t get_width() const = 0;
-	[[nodiscard]] virtual uint32_t get_height() const = 0;
+	[[nodiscard]] virtual u32 get_width() const = 0;
+	[[nodiscard]] virtual u32 get_height() const = 0;
 
-	[[nodiscard]] virtual arc<image_2d> get_image(uint32_t attachment_index = 0) const = 0;
+	[[nodiscard]] virtual arc<image_2d> get_image(u32 attachment_index = 0) const = 0;
 	[[nodiscard]] virtual arc<image_2d> get_depth_image() const = 0;
 	// #TODO clean up api because this is currently hard coded for reading an int from the buffer
-    [[deprecated]] virtual int read_pixel(uint32_t attachment_index, int x, int y) = 0;
+    [[deprecated]] virtual int read_pixel(u32 attachment_index, int x, int y) = 0;
 
-    [[deprecated]] virtual void clear_attachment(uint32_t attachment_index, int value) = 0;
+    [[deprecated]] virtual void clear_attachment(u32 attachment_index, int value) = 0;
 
 	[[nodiscard]] virtual const frame_buffer_specification& get_specification() const = 0;
 

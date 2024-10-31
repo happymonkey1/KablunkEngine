@@ -31,7 +31,7 @@
 // ---Renderer-----------------------------------
 #include "Kablunk/renderer/Renderer.h"
 #include "Kablunk/renderer/renderer_2d.h"
-#include "Kablunk/renderer/RenderCommand.h"
+#include "Kablunk\renderer\render_command.h"
 
 #include "Kablunk/renderer/backend/shader.h"
 #include "Kablunk/renderer/backend/frame_buffer.h"

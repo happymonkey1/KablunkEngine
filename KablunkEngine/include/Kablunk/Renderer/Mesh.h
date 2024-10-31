@@ -145,8 +145,8 @@ public:
 	const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
 	const std::vector<Index>& GetIndicies() const { return m_indices; }
 	arc<backend::shader> GetShader() { return m_mesh_shader; }
-	arc<backend::VertexBuffer> GetVertexBuffer() const { return m_vertex_buffer; }
-	arc<backend::IndexBuffer> GetIndexBuffer() const { return m_index_buffer; }
+	arc<backend::vertex_buffer> GetVertexBuffer() const { return m_vertex_buffer; }
+	arc<backend::index_buffer> GetIndexBuffer() const { return m_index_buffer; }
 
 	std::vector<arc<backend::material>>& GetMaterials() { return m_materials; }
 	const std::vector<arc<backend::material>>& GetMaterials() const { return m_materials; }
@@ -175,8 +175,8 @@ private:
 private:
 	box<Assimp::Importer> m_importer;
 
-	arc<backend::VertexBuffer> m_vertex_buffer;
-	arc<backend::IndexBuffer> m_index_buffer;
+	arc<backend::vertex_buffer> m_vertex_buffer;
+	arc<backend::index_buffer> m_index_buffer;
 
 	std::vector<Vertex> m_static_vertices;
 	std::vector<AnimatedVertex> m_animated_vertices;

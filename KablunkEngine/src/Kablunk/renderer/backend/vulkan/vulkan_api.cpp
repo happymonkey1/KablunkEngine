@@ -6,6 +6,11 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
+auto get_current_vk_device() noexcept -> VkDevice
+{
+    return vulkan_context::get()->get_device()->get_vk_device();
+}
+
 auto get_descriptor_set_alloc_info(
     const VkDescriptorSetLayout* p_layouts,
     u32 p_count,
@@ -37,11 +42,6 @@ auto destroy_sampler(VkSampler p_sampler) noexcept -> void
     vkDestroySampler(get_current_vk_device(), p_sampler, nullptr);
 
     // #TODO track de-allocation
-}
-
-auto get_current_vk_device() noexcept -> VkDevice
-{
-    return vulkan_context::get()->get_device()->get_vk_device();
 }
 
 } // end namespace kb::render::backend::vk

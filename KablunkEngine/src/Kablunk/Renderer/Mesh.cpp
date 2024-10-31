@@ -2,8 +2,7 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/backend/shader.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 #include "Kablunk/Scene/Entity.h"
 
 #include <assimp/scene.h>
@@ -24,7 +23,7 @@
 
 namespace kb::render
 { // start namespace kb::render
-static constexpr const uint32_t s_mesh_import_flags =
+static constexpr u32 s_mesh_import_flags =
 	aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 
 namespace Utils
@@ -397,12 +396,12 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 
 
 	if (m_is_animated)
-		m_vertex_buffer = backend::VertexBuffer::Create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
+		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
 	else
-		m_vertex_buffer = backend::VertexBuffer::Create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
+		m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
 	
 
-	m_index_buffer = backend::IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+	m_index_buffer = backend::index_buffer::create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 }
 
 MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
@@ -416,10 +415,10 @@ MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index
 	submesh.Material_index = 0;
 	m_sub_meshes.push_back(submesh);
 
-	m_vertex_buffer = backend::VertexBuffer::Create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
+	m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
 
 	KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
-	m_index_buffer = backend::IndexBuffer::Create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+	m_index_buffer = backend::index_buffer::create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
 
 #if 0
 	if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
