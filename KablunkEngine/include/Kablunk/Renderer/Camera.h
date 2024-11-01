@@ -6,15 +6,16 @@
 
 namespace kb
 {
-class Camera
+
+class camera
 {
 public:
-	Camera() = default;
+	camera() = default;
 
-	Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
+	camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
     : m_projection{ projection }, m_unreversed_projection{ unreversed_projection } { }
 
-	virtual ~Camera() = default;
+	virtual ~camera() = default;
 
 	const glm::mat4& GetProjection() const { return m_projection; }
 	const glm::mat4& GetUnreversedProjection() const { return m_unreversed_projection; }
@@ -23,6 +24,7 @@ protected:
 	// Needed for ImGuizmo
 	glm::mat4 m_unreversed_projection{ 1.0f };
 };
+
 }
 
 #endif

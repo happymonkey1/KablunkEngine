@@ -35,13 +35,12 @@
 
 #include "Kablunk/renderer/backend/shader.h"
 #include "Kablunk/renderer/backend/frame_buffer.h"
-#include "Kablunk/renderer/VertexArray.h"
 #include "Kablunk/renderer/backend/buffer.h"
 #include "Kablunk/renderer/backend/texture.h"
-#include "Kablunk/renderer/SceneRenderer.h"
+#include "Kablunk/renderer/scene_renderer.h"
 
 
-#include "Kablunk/renderer/Camera.h"
+#include "Kablunk/renderer/camera.h"
 // ----------------------------------------------
 
 

@@ -8,7 +8,6 @@
 #include "Kablunk/Renderer/backend/buffer.h"
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/backend/shader.h"
-#include "Kablunk/Renderer/VertexArray.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
 #include "Kablunk/Math/vec.hpp"
 

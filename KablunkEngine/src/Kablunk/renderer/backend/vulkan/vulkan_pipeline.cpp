@@ -287,19 +287,19 @@ void vulkan_pipeline::RT_Invalidate()
 
 	VkVertexInputBindingDescription& vertex_input_binding = vertex_input_binding_desc.emplace_back();
 	vertex_input_binding.binding = 0;
-	vertex_input_binding.stride = layout.GetStride();
+	vertex_input_binding.stride = layout.get_stride();
 	vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	if (!instance_layout.GetElements().empty())
+	if (!instance_layout.get_elements().empty())
 	{
 		VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_desc.emplace_back();
 		instance_input_binding.binding = 1;
-		instance_input_binding.stride = instance_layout.GetStride();
+		instance_input_binding.stride = instance_layout.get_stride();
 		instance_input_binding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 	}
 
 	// Input attribute bindings describe shader attribute locations and memory layouts
-	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.GetElements().size() + instance_layout.GetElements().size());
+	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(layout.get_elements().size() + instance_layout.get_elements().size());
 
 	uint32_t location = 0;
 	for (const auto& element : layout)

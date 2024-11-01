@@ -44,7 +44,7 @@ struct CameraDataUB
 
 struct SceneRendererCamera
 {
-	Camera camera;
+	camera camera;
 	glm::mat4 view_mat;
 };
 
@@ -62,11 +62,11 @@ struct PointLightUB
     PointLight point_lights[k_point_light_buffer_size]{};
 };
 
-class SceneRenderer final : public RefCounted
+class scene_renderer final : public RefCounted
 {
 public:
-	SceneRenderer(const arc<Scene>& context, const SceneRendererSpecification& spec = {});
-	~SceneRenderer() override;
+	scene_renderer(const arc<Scene>& context, const SceneRendererSpecification& spec = {});
+	~scene_renderer() override;
 
     // #TODO this should be private, if construct is only place that calls this
 	void init();

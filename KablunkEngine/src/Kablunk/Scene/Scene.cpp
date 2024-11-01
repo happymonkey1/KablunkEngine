@@ -5,7 +5,7 @@
 #include "Kablunk/Scene/Entity.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/scene_renderer.h"
 #include "Kablunk/Renderer/Font/FontAsset.h"
 #include "Kablunk/Renderer/renderer_2d.h"
 
@@ -505,9 +505,9 @@ void Scene::OnUpdateRuntime(Timestep ts)
 	}
 }
 
-void Scene::OnRenderRuntime(arc<render::SceneRenderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
+void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera* editor_cam /*= nullptr*/)
 {
-	Camera*		main_camera{ nullptr };
+	camera*		main_camera{ nullptr };
 	glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
 	glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
 
@@ -591,7 +591,7 @@ void Scene::OnRenderRuntime(arc<render::SceneRenderer> scene_renderer, arc<rende
 	scene_renderer->end_scene();
 
 	if (scene_renderer->is_multi_threaded())
-		render::SceneRenderer::wait_for_threads();
+		render::scene_renderer::wait_for_threads();
 
 	// #TODO move to SceneRenderer2D
 	if (scene_renderer->get_final_render_pass_image())
@@ -738,7 +738,7 @@ void Scene::OnUpdateEditor(Timestep ts)
 {
 }
 
-void Scene::OnRenderEditor(arc<render::SceneRenderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera& camera)
+void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera& camera)
 {
 	// Lights
 	// #TODO move to scene renderer?
@@ -787,7 +787,7 @@ void Scene::OnRenderEditor(arc<render::SceneRenderer> scene_renderer, arc<render
 	}
 	scene_renderer->end_scene();
 	if (scene_renderer->is_multi_threaded())
-		render::SceneRenderer::wait_for_threads();
+		render::scene_renderer::wait_for_threads();
 
 	// Renderer2D
 	// #TODO move to scene renderer

@@ -4,7 +4,7 @@
 // #TODO remove when singleton reference to application is refactored
 #include "Kablunk/Core/Application.h"
 
-#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/scene_renderer.h"
 #include "Kablunk/renderer/render_command.h"
 
 #include "Kablunk/Events/MouseEvent.h"

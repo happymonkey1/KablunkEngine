@@ -413,7 +413,7 @@ arc<backend::texture_2d> renderer_2d::get_white_texture()
 	return m_renderer_data.white_texture;
 }
 
-void renderer_2d::begin_scene(const Camera& camera, const glm::mat4& transform, bool p_explicit_clear /* = false */)
+void renderer_2d::begin_scene(const camera& camera, const glm::mat4& transform, bool p_explicit_clear /* = false */)
 {
     KB_PROFILE_SCOPE;
     m_explicit_render_pass_clear = p_explicit_clear;

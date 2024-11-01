@@ -1,6 +1,6 @@
 #include "kablunkpch.h"
 
-#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/scene_renderer.h"
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/renderer/render_command.h"
 #include "Kablunk/Renderer/renderer_2d.h"
@@ -20,18 +20,18 @@ namespace kb::render
 
 static std::vector<std::thread> s_thread_pool;
 
-SceneRenderer::SceneRenderer(const arc<Scene>& context, const SceneRendererSpecification& spec)
+scene_renderer::scene_renderer(const arc<Scene>& context, const SceneRendererSpecification& spec)
 	: m_context{ context }, m_specification{ spec }
 {
 	init();
 }
 
-SceneRenderer::~SceneRenderer()
+scene_renderer::~scene_renderer()
 {
     delete m_point_lights_ub;
 }
 
-void SceneRenderer::init()
+void scene_renderer::init()
 {
     KB_PROFILE_SCOPE;
 
@@ -188,20 +188,20 @@ void SceneRenderer::init()
 	m_transform_buffer = backend::vertex_buffer::create(sizeof(TransformVertexData) * transform_buffer_count);
 	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
 
-    arc<SceneRenderer> instance{ this };
+    arc<scene_renderer> instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->m_resources_created = true;
 		});
 }
 
-void SceneRenderer::set_scene(arc<Scene> context)
+void scene_renderer::set_scene(arc<Scene> context)
 {
 	//KB_CORE_ASSERT(context, "Scene context is nullptr!");
 	m_context = context;
 }
 
-void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
+void scene_renderer::begin_scene(const SceneRendererCamera& camera)
 {
     KB_PROFILE_SCOPE;
 
@@ -249,7 +249,7 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 		camera_position
 	};
 
-    arc<SceneRenderer> instance{ this };
+    arc<scene_renderer> instance{ this };
 	render::submit([instance, camera_data]() mutable
 		{
 			instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
@@ -285,13 +285,13 @@ void SceneRenderer::begin_scene(const SceneRendererCamera& camera)
 	);
 }
 
-void SceneRenderer::end_scene()
+void scene_renderer::end_scene()
 {
     KB_PROFILE_SCOPE;
 
 	if (m_use_threads)
 	{
-        arc<SceneRenderer> instance{ this };
+        arc<scene_renderer> instance{ this };
 		s_thread_pool.emplace_back(([instance]() mutable
 			{
 				instance->flush_draw_list();
@@ -308,7 +308,7 @@ void SceneRenderer::end_scene()
 	m_active = false;
 }
 
-void SceneRenderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<backend::material> override_material/* = nullptr */)
+void scene_renderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<backend::material> override_material/* = nullptr */)
 {
     KB_PROFILE_SCOPE;
 
@@ -326,7 +326,7 @@ void SceneRenderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<Mate
 	m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 }
 
-void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
+void scene_renderer::set_viewport_size(uint32_t width, uint32_t height)
 {
 	if (m_viewport_width != width || m_viewport_height != height)
 	{
@@ -336,12 +336,12 @@ void SceneRenderer::set_viewport_size(uint32_t width, uint32_t height)
 	}
 }
 
-arc<backend::render_pass> SceneRenderer::get_final_render_pass()
+arc<backend::render_pass> scene_renderer::get_final_render_pass()
 {
 	return m_composite_pass;
 }
 
-arc<backend::image_2d> SceneRenderer::get_final_render_pass_image()
+arc<backend::image_2d> scene_renderer::get_final_render_pass_image()
 {
     KB_PROFILE_SCOPE;
 
@@ -352,7 +352,7 @@ arc<backend::image_2d> SceneRenderer::get_final_render_pass_image()
 	return image;
 }
 
-void SceneRenderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
+void scene_renderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
 {
     KB_PROFILE_SCOPE;
 
@@ -368,7 +368,7 @@ void SceneRenderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
 	ImGui::End();
 }
 
-void SceneRenderer::wait_for_threads()
+void scene_renderer::wait_for_threads()
 {
     KB_PROFILE_SCOPE;
 
@@ -378,12 +378,12 @@ void SceneRenderer::wait_for_threads()
 	s_thread_pool.clear();
 }
 
-void SceneRenderer::submit_ui_panel(ui::IPanel* panel)
+void scene_renderer::submit_ui_panel(ui::IPanel* panel)
 {
 	m_ui_panels_list.push_back(panel);
 }
 
-void SceneRenderer::flush_draw_list()
+void scene_renderer::flush_draw_list()
 {
     KB_PROFILE_SCOPE;
 
@@ -411,7 +411,7 @@ void SceneRenderer::flush_draw_list()
 	m_draw_list = {};
 }
 
-void SceneRenderer::flush_2d_draw_list()
+void scene_renderer::flush_2d_draw_list()
 {
     // disabled when refactoring renderer2d singleton
     // #TODO refactor
@@ -448,25 +448,25 @@ void SceneRenderer::flush_2d_draw_list()
 	m_ui_panels_list.clear();
 }
 
-void SceneRenderer::pre_render()
+void scene_renderer::pre_render()
 {
 	// #TODO
 }
 
-void SceneRenderer::clear_pass()
+void scene_renderer::clear_pass()
 {
 	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 	render::end_render_pass(m_command_buffer);
 }
 
-void SceneRenderer::clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear /*= false*/)
+void scene_renderer::clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear /*= false*/)
 {
 	KB_CORE_INFO("Clear pass being called for renderpass '{0}'", render_pass->get_specification().m_debug_name);
 	render::begin_render_pass(m_command_buffer, render_pass, explicit_clear);
 	render::end_render_pass(m_command_buffer);
 }
 
-void SceneRenderer::ui_pass()
+void scene_renderer::ui_pass()
 {
 	if (m_ui_panels_list.empty())
 		return;
@@ -475,7 +475,7 @@ void SceneRenderer::ui_pass()
 		panel->on_render(m_scene_data.camera);
 }
 
-void SceneRenderer::two_dimensional_pass()
+void scene_renderer::two_dimensional_pass()
 {
     // disabled when refactoring renderer2d singleton
     // #TODO refactor
@@ -488,7 +488,7 @@ void SceneRenderer::two_dimensional_pass()
 
 }
 
-void SceneRenderer::geometry_pass()
+void scene_renderer::geometry_pass()
 {
     KB_PROFILE_SCOPE;
 
@@ -528,7 +528,7 @@ void SceneRenderer::geometry_pass()
 	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.geometry_pass_query);
 }
 
-void SceneRenderer::composite_pass()
+void scene_renderer::composite_pass()
 {
     KB_PROFILE_SCOPE;
 

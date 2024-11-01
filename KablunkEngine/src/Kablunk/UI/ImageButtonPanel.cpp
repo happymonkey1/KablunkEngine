@@ -2,7 +2,7 @@
 #include "Kablunk/UI/ImageButtonPanel.h"
 
 #include "Kablunk/Renderer/backend/texture.h"
-#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/Renderer/scene_renderer.h"
 
 namespace kb::ui
 {

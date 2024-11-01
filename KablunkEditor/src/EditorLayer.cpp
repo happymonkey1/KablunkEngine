@@ -81,7 +81,7 @@ namespace kb
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = arc<render::SceneRenderer>::Create(m_active_scene, render::SceneRendererSpecification{});
+		m_viewport_renderer = arc<render::scene_renderer>::Create(m_active_scene, render::SceneRendererSpecification{});
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
@@ -155,7 +155,7 @@ namespace kb
 
 		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
-		render::SceneRenderer::wait_for_threads();
+		render::scene_renderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -1300,7 +1300,7 @@ namespace kb
 		if (m_show_physics_colliders)
 		{
 			
-			Camera* camera = nullptr;
+			camera* camera = nullptr;
 			glm::mat4 transform = glm::mat4{ 1.0f };
 
 			switch (m_scene_state)

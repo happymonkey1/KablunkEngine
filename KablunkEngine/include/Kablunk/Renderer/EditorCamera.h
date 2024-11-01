@@ -1,7 +1,7 @@
 #ifndef KABLUNK_RENDERER_EDITOR_CAMERA_H
 #define KABLUNK_RENDERER_EDITOR_CAMERA_H
 
-#include "Camera.h"
+#include "camera.h"
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Events/Event.h"
 #include "Kablunk/Events/MouseEvent.h"
@@ -18,7 +18,7 @@ namespace kb
 		NONE
 	};
 
-	class EditorCamera : public Camera
+	class EditorCamera : public camera
 	{
 	public:
 		EditorCamera() = default;

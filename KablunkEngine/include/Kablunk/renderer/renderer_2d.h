@@ -11,8 +11,8 @@
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/OrthographicCamera.h"
 #include "Kablunk/renderer/EditorCamera.h"
-#include "Kablunk/renderer/Camera.h"
-#include "Kablunk/renderer/SceneRenderer.h"
+#include "Kablunk/renderer/camera.h"
+#include "Kablunk/renderer/scene_renderer.h"
 #include "Kablunk/renderer/backend/shader.h"
 #include "Kablunk/renderer/backend/buffer.h"
 #include "Kablunk/renderer/Font/FontManager.h"
@@ -227,7 +227,7 @@ public:
 
     arc<backend::texture_2d> get_white_texture();
 
-	void begin_scene(const Camera& camera, const glm::mat4& transform, bool p_explicit_clear = false);
+	void begin_scene(const camera& camera, const glm::mat4& transform, bool p_explicit_clear = false);
 	void begin_scene(const EditorCamera& camera, bool p_explicit_clear = false);
     void begin_scene(const glm::mat4& p_projection, const glm::mat4& p_transform, bool p_explicit_clear = false);
 	void end_scene();

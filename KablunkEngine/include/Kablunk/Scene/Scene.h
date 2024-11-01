@@ -20,7 +20,7 @@ struct TransformComponent;
 namespace render
 {
 // forward declarations
-class SceneRenderer;
+class scene_renderer;
 class renderer_2d;
 
 }
@@ -67,10 +67,10 @@ public:
 	void OnStopRuntime();
 
 	void OnUpdateRuntime(Timestep ts);
-	void OnRenderRuntime(arc<render::SceneRenderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera* camera = nullptr);
+	void OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera* camera = nullptr);
 	void OnEventRuntime(Event& e);
 	void OnUpdateEditor(Timestep ts);
-	void OnRenderEditor(arc<render::SceneRenderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera& camera);
+	void OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<render::renderer_2d> p_renderer_2d, EditorCamera& camera);
 	void OnEventEditor(Event& e);
 	void OnViewportResize(uint32_t x, uint32_t y);
 
@@ -149,7 +149,7 @@ private:
 	friend class Entity;
 	friend class SceneSerializer;
 	friend class SceneHierarchyPanel;
-	friend class render::SceneRenderer;
+	friend class render::scene_renderer;
 	friend class Prefab;
 };
 

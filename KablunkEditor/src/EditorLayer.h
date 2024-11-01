@@ -68,7 +68,7 @@ namespace kb
 		arc<Scene> m_editor_scene;
 		arc<Scene> m_runtime_scene;
 
-		arc<render::SceneRenderer> m_viewport_renderer;
+		arc<render::scene_renderer> m_viewport_renderer;
         arc<render::renderer_2d> m_renderer_2d;
 		std::filesystem::path m_editor_scene_path;
 
