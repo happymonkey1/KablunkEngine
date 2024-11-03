@@ -3,7 +3,6 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 
 #include "Kablunk/renderer/render_command.h"
-#include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_core.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_utils.h"
@@ -11,9 +10,9 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-static std::map<VkImage, weak_arc<vulkan_image_2d>> s_image_refs;
+static std::map<VkImage, weak_ptr<vulkan_image_2d>> s_image_refs;
 
-vulkan_image_2d::vulkan_image_2d(image_specification_t spec, weak_arc<vulkan_logical_device> p_device)
+vulkan_image_2d::vulkan_image_2d(image_specification_t spec, weak_ptr<vulkan_logical_device> p_device)
     : m_specification{ std::move(spec) }, m_device{ p_device }, m_descriptor_image_info{}
 {
 }
@@ -243,6 +242,15 @@ void vulkan_image_2d::RT_CreatePerSpecificLayerImageViews(const std::vector<uint
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8)
 		aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
+#ifdef KB_DEBUG
+
+    const bool is_aspect_depth_set = (aspect_mask & VK_IMAGE_ASPECT_DEPTH_BIT) == VK_IMAGE_ASPECT_DEPTH_BIT;
+    const bool is_aspect_stencil_set = (aspect_mask & VK_IMAGE_ASPECT_STENCIL_BIT) == VK_IMAGE_ASPECT_STENCIL_BIT;
+
+    KB_CORE_ASSERT(is_aspect_depth_set && is_aspect_stencil_set == false, "[vulkan_image_2d]: Aspect depth and stencil should not both be set!");
+
+#endif
+
 	const VkFormat vk_format = util::VulkanImageFormat(m_specification.format);
 
 	//HZ_CORE_ASSERT(m_PerLayerImageViews.size() == m_Specification.Layers);
@@ -320,7 +328,7 @@ VkImageView vulkan_image_2d::RT_GetMipImageView(uint32_t mip)
 void vulkan_image_2d::UpdateDescriptor()
 {
     KB_CORE_INFO("[VulkanImage2D]: Updating descriptor {}", static_cast<const void*>(&m_descriptor_image_info));
-	if (m_specification.format == image_format_t::DEPTH24STENCIL8 || m_specification.format == image_format_t::DEPTH32F)
+	if (m_specification.format == image_format_t::DEPTH24STENCIL8 || m_specification.format == image_format_t::DEPTH32F || m_specification.format == image_format_t::DEPTH32FSTENCIL8UINT)
 		m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	else if (m_specification.usage == image_usage_t::Storage)
 		m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -331,14 +339,14 @@ void vulkan_image_2d::UpdateDescriptor()
 	m_descriptor_image_info.sampler = m_info.sampler;
 }
 
-const std::map<VkImage, weak_arc<vulkan_image_2d>>& vulkan_image_2d::GetImageRefs() const
+const std::map<VkImage, weak_ptr<vulkan_image_2d>>& vulkan_image_2d::GetImageRefs() const
 {
 	return s_image_refs;
 }
 
 // --- vulkan_image_view -----------------------------
 
-vulkan_image_view::vulkan_image_view(image_view_specification p_specification, weak_arc<vulkan_logical_device> p_device)
+vulkan_image_view::vulkan_image_view(image_view_specification p_specification, weak_ptr<vulkan_logical_device> p_device)
     : m_specification{ std::move(p_specification) }, m_device{ p_device }
 {
 }

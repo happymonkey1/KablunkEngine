@@ -8,15 +8,19 @@
 namespace kb::render::backend
 { // start namespace kb::render::backend
 
-arc<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
+arc<frame_buffer> frame_buffer::create(const frame_buffer_specification_t& specs)
 {
     constexpr auto backend = Renderer::get_render_backend_type();
-    arc<frame_buffer> frame_buffer{};
     switch (backend)
     {
     case render_backend_type_t::vulkan:
-        frame_buffer = static_cast<arc<backend::frame_buffer>>(arc<vk::vulkan_frame_buffer>::Create(specs));
-        break;
+    {
+        const auto context = Singleton<Renderer>::get().get_graphics_context().as<vk::vulkan_context>();
+        return static_cast<arc<frame_buffer>>(arc<vk::vulkan_frame_buffer>::Create(
+            context->get_device()->get_vk_device(),
+            specs
+        ));
+    }
     default:
     {
         KB_CORE_ASSERT(
@@ -27,8 +31,6 @@ arc<frame_buffer> frame_buffer::create(const frame_buffer_specification& specs)
         return arc<backend::frame_buffer>{};
     }
     }
-
-	return frame_buffer;
 }
 
 } // end namespace kb::render::backend

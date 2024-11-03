@@ -18,14 +18,14 @@ class vulkan_vertex_buffer final : public vertex_buffer
 {
 public:
 	vulkan_vertex_buffer(
-        weak_arc<vulkan_logical_device> p_device,
+        weak_ptr<vulkan_logical_device> p_device,
         const void* data,
         uint32_t size,
         vertex_buffer_usage_t usage = vertex_buffer_usage_t::Static
     );
 
 	vulkan_vertex_buffer(
-        weak_arc<vulkan_logical_device> p_device,
+        weak_ptr<vulkan_logical_device> p_device,
         uint32_t size,
         vertex_buffer_usage_t usage = vertex_buffer_usage_t::Dynamic
     );
@@ -46,7 +46,7 @@ public:
 private:
 	uint32_t m_size = 0;
 	owning_buffer m_local_data{};
-    weak_arc<vulkan_logical_device> m_device = nullptr;
+    weak_ptr<vulkan_logical_device> m_device = nullptr;
 
 	VkBuffer m_vk_buffer = nullptr;
 	VmaAllocation m_memory_allocation{};

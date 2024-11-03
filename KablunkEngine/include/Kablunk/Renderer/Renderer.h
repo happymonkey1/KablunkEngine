@@ -82,13 +82,13 @@ public:
     auto get_render_backend() noexcept -> render_backend_t& { return m_backend; }
 
     // Retrieves a weak arc to the graphics context
-    auto get_graphics_context() const noexcept -> weak_arc<backend::graphics_context>
+    auto get_graphics_context() const noexcept -> weak_ptr<backend::graphics_context>
     {
         return m_context;
     }
 
     // Retrieves a mutable reference arc to the graphics context
-    auto get_graphics_context() noexcept -> weak_arc<backend::graphics_context> { return m_context; }
+    auto get_graphics_context() noexcept -> weak_ptr<backend::graphics_context> { return m_context; }
 
 	// ==============
 	// multithreading

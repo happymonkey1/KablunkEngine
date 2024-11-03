@@ -49,6 +49,8 @@ void SetImageLayout(
     VkPipelineStageFlags dst_stage_mask
 )
 {
+    KB_CORE_ASSERT(new_image_layout != VK_IMAGE_LAYOUT_UNDEFINED, "[vulkan_utils]: SetImageLayout trying to set image {} image layout to 'VK_IMAGE_LAYOUT_UNDEFINED'", static_cast<const void*>(image));
+
     // Create an image barrier object
     VkImageMemoryBarrier image_memory_barrier = {};
     image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

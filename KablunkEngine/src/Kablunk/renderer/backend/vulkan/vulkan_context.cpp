@@ -186,7 +186,7 @@ void vulkan_context::destroy() noexcept
     KB_CORE_INFO("Destroying Vulkan instance");
 
     m_swap_chain->destroy();
-    m_device->Destroy();
+    m_device->destroy();
 
     if (m_enable_validation_layers)
         DestroyDebugUtilsMessengerEXT(m_vk_instance, m_debug_messenger, nullptr);

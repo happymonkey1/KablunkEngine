@@ -23,14 +23,14 @@ public:
 
 	void init(VkInstance instance, const arc<vulkan_logical_device>& device);
 	void init_surface(GLFWwindow* window_handle) noexcept override;
-	void create(uint32_t* width, uint32_t* height, bool vsync) noexcept override;
+	void create(u32* width, u32* height, bool vsync) noexcept override;
 
-	void on_resize(uint32_t width, uint32_t height) noexcept override;
+	void on_resize(u32 width, u32 height) noexcept override;
 
 	void begin_frame() noexcept override;
 	void present() noexcept override;
 
-	uint32_t get_image_count() const { return m_image_count; }
+    u32 get_image_count() const { return m_image_count; }
 
 	VkRenderPass get_vk_render_pass() const { return m_render_pass; }
 
@@ -41,13 +41,13 @@ public:
 
 	u32 get_current_buffer_index() const noexcept override { return m_current_buffer_index; }
 
-	VkFramebuffer get_vk_framebuffer(uint32_t index) const
+	VkFramebuffer get_vk_framebuffer(u32 index) const
     {
 		KB_CORE_ASSERT(index < m_framebuffers.size(), "index out of bounds");
 		return m_framebuffers[index];
 	}
 
-	VkCommandBuffer get_vk_draw_command_buffer(uint32_t index) const
+	VkCommandBuffer get_vk_draw_command_buffer(u32 index) const
     {
 		KB_CORE_ASSERT(index < m_command_buffers.size(), "index out of bounds");
 		return m_command_buffers[index].m_command_buffer;
@@ -59,21 +59,23 @@ public:
 
 	u32 get_width() const noexcept override { return m_width; }
 	u32 get_height() const noexcept override { return m_height; }
+
 private:
-	VkResult acquire_next_image(VkSemaphore present_complete_sem, uint32_t* image_index);
-	VkResult queue_present(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem = VK_NULL_HANDLE) const;
+	VkResult acquire_next_image(VkSemaphore present_complete_sem, u32* image_index);
+	VkResult queue_present(VkQueue queue, u32 image_index, VkSemaphore wait_sem = VK_NULL_HANDLE) const;
 
 	void find_image_format_and_color_space();
 
 	void create_framebuffer();
 	void create_depth_stencil();
+
 private:
 	VkInstance m_instance;
 	arc<vulkan_logical_device> m_device;
 	bool m_vsync = false;
 
 	VkSwapchainKHR m_swapchain = nullptr;
-	uint32_t m_image_count = 0;
+	u32 m_image_count = 0;
 	std::vector<VkImage> m_images;
 
 	struct SwapChainBufferData
@@ -119,11 +121,11 @@ private:
 	std::vector<VkFence> m_wait_fences;
 
 	VkRenderPass m_render_pass;
-	uint32_t m_current_buffer_index = 0;
-	uint32_t m_current_image_index = 0;
+    u32 m_current_buffer_index = 0;
+    u32 m_current_image_index = 0;
 
-	uint32_t m_queue_node_index = UINT32_MAX;
-	uint32_t m_width = 0, m_height = 0;
+    u32 m_queue_node_index = UINT32_MAX;
+    u32 m_width = 0, m_height = 0;
 
 	VkSurfaceKHR m_surface;
 

@@ -22,16 +22,17 @@ public:
 private:
 	void rt_invalidate();
 	void release();
+
 private:
-	VkBuffer m_buffer;
+	VkBuffer m_buffer = nullptr;
 	VkDescriptorBufferInfo m_descriptor_info{};
 	VmaAllocation m_vk_allocation = nullptr;
 
     u32 m_size = 0;
-	std::string m_name;
+	std::string m_name{};
 	VkShaderStageFlagBits m_shader_stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 
-	uint8_t* m_local_storage;
+	uint8_t* m_local_storage = nullptr;
 };
 } // end namespace kb::render::backend::vk
 

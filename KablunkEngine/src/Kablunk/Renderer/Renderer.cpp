@@ -17,6 +17,9 @@ void Renderer::init()
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
 		m_command_queues[i] = backend::render_command_queue{};
 
+    // Initialize graphics context
+    m_context = backend::graphics_context::create(nullptr);
+
 	m_shader_library = arc<shader_library>::Create();
 
 	// ==========
@@ -38,8 +41,6 @@ void Renderer::init()
 	// compile shaders that were submitted
 	Application::Get().get_render_thread().pump();
 
-    // Initialize graphics context
-    m_context = backend::graphics_context::create(nullptr);
     // Initialize rendering backend
     m_backend.init();
 }

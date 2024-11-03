@@ -19,7 +19,7 @@ vulkan_physical_device::vulkan_physical_device(VkInstance p_vk_instance)
 
 	for (const auto& device : devices)
 	{
-		if (IsPhysicalDeviceSuitable(device))
+		if (is_physical_device_suitable(device))
 		{
 			// #TODO select best device
 			m_device = device;
@@ -36,20 +36,20 @@ vulkan_physical_device::vulkan_physical_device(VkInstance p_vk_instance)
 		KB_CORE_INFO("Vulkan selected device {0}", (const char*)m_properties.deviceName);
 	}
 
-	m_queue_family_indices = FindQueueFamilies(m_device);
-    CreateQueueInfos();
+	m_queue_family_indices = find_queue_families(m_device);
+    create_queue_infos();
 
-	const auto supported_extensions = FindSupportedExtensions(m_device);
+	const auto supported_extensions = find_supported_extensions(m_device);
 	std::vector<const char*> supported_extensions_named;
 	supported_extensions_named.reserve(supported_extensions.size());
 	for (const auto& extension : supported_extensions)
 		supported_extensions_named.emplace_back(extension.extensionName);
 	m_supported_extensions = supported_extensions_named;
 
-	m_depth_format = FindDepthFormat();
+	m_depth_format = find_depth_format();
 }
 
-void vulkan_physical_device::FindPresentingIndices(VkSurfaceKHR surface)
+void vulkan_physical_device::find_presenting_indices(VkSurfaceKHR surface)
 {
 	// query if device has presenting support. Iterate to find which queues support present
 	std::vector<VkBool32> supports_present(m_queue_family_properties.size());
@@ -107,7 +107,7 @@ void vulkan_physical_device::FindPresentingIndices(VkSurfaceKHR surface)
 	m_queue_family_indices.Present_family = present_queue_index;
 }
 
-queue_family_indices_t vulkan_physical_device::FindQueueFamilies(VkPhysicalDevice device)
+queue_family_indices_t vulkan_physical_device::find_queue_families(VkPhysicalDevice device)
 {
 	queue_family_indices_t queue_family_indices;
 	uint32_t queue_family_count = 0;
@@ -126,7 +126,7 @@ queue_family_indices_t vulkan_physical_device::FindQueueFamilies(VkPhysicalDevic
         else if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)
             queue_family_indices.m_transfer_family = i;
 
-		if (queue_family_indices.HasGraphics() && queue_family_indices.has_compute() && queue_family_indices.has_trasfer())
+		if (queue_family_indices.HasGraphics() && queue_family_indices.has_compute() && queue_family_indices.has_transfer())
 			break;
 
 		i++;
@@ -135,9 +135,9 @@ queue_family_indices_t vulkan_physical_device::FindQueueFamilies(VkPhysicalDevic
 	return queue_family_indices;
 }
 
-bool vulkan_physical_device::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
+bool vulkan_physical_device::is_physical_device_suitable(VkPhysicalDevice device)
 {
-    const auto indices = FindQueueFamilies(device);
+    const auto indices = find_queue_families(device);
 	VkPhysicalDeviceProperties device_properties{};
 	VkPhysicalDeviceFeatures device_features{};
 
@@ -148,7 +148,7 @@ bool vulkan_physical_device::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
 
     const bool suitable = device_properties.deviceType == 
         VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader &&
-        indices.HasGraphics() && CheckDeviseExtensionSupport(device);
+        indices.HasGraphics() && check_device_extension_support(device);
 
 	if (suitable)
 		m_properties = device_properties;
@@ -156,7 +156,7 @@ bool vulkan_physical_device::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
 	return suitable;
 }
 
-std::vector<VkExtensionProperties> vulkan_physical_device::FindSupportedExtensions(VkPhysicalDevice device)
+std::vector<VkExtensionProperties> vulkan_physical_device::find_supported_extensions(VkPhysicalDevice device)
 {
 	uint32_t extension_count = 0;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
@@ -175,7 +175,7 @@ std::vector<VkExtensionProperties> vulkan_physical_device::FindSupportedExtensio
 	return {};
 }
 
-VkFormat vulkan_physical_device::FindDepthFormat() const
+VkFormat vulkan_physical_device::find_depth_format() const
 {
     const std::vector<VkFormat> depth_formats = {
 		VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -198,7 +198,7 @@ VkFormat vulkan_physical_device::FindDepthFormat() const
 	return VK_FORMAT_UNDEFINED;
 }
 
-void vulkan_physical_device::CreateQueueInfos()
+void vulkan_physical_device::create_queue_infos()
 {
     constexpr float k_default_queue_priority = 0.0f;
     constexpr int32_t requested_queue_type = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
@@ -246,9 +246,9 @@ void vulkan_physical_device::CreateQueueInfos()
     }
 }
 
-bool vulkan_physical_device::CheckDeviseExtensionSupport(VkPhysicalDevice device)
+bool vulkan_physical_device::check_device_extension_support(VkPhysicalDevice device)
 {
-    const auto supported_extensions = FindSupportedExtensions(device);
+    const auto supported_extensions = find_supported_extensions(device);
 	std::vector<const char*> supported_extensions_named;
 	supported_extensions_named.reserve(supported_extensions.size());
 	for (const auto& extension : supported_extensions)
@@ -287,7 +287,7 @@ vulkan_logical_device::vulkan_logical_device(
 {
 	auto context = vulkan_context::get();
 	float queue_priority = 1.0f;
-	const auto& device_extensions = m_physical_device->GetRequiredExtensions();
+	const auto& device_extensions = m_physical_device->get_required_extensions();
 
 #if 0
 	// #TODO move to VulkanPhysicalDevice
@@ -323,7 +323,7 @@ vulkan_logical_device::vulkan_logical_device(
 		create_info.enabledExtensionCount = 0;
 
 	// create logical device
-	if (vkCreateDevice(m_physical_device->GetVkDevice(), &create_info, nullptr, &m_vk_device) != VK_SUCCESS)
+	if (vkCreateDevice(m_physical_device->get_vk_physical_device(), &create_info, nullptr, &m_vk_device) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create logical device!");
 
 #if 0
@@ -338,23 +338,23 @@ vulkan_logical_device::vulkan_logical_device(
 #endif
 
     // call vulkan api to get a graphics queue
-	vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().Graphics_family.value(), 0, &m_vk_graphics_queue);
+	vkGetDeviceQueue(m_vk_device, m_physical_device->get_queue_family_indices().Graphics_family.value(), 0, &m_vk_graphics_queue);
     // call vulkan api to get a compute queue
-    vkGetDeviceQueue(m_vk_device, m_physical_device->GetQueueFamilyIndices().m_compute_family.value(), 0, &m_vk_compute_queue);
+    vkGetDeviceQueue(m_vk_device, m_physical_device->get_queue_family_indices().m_compute_family.value(), 0, &m_vk_compute_queue);
 }
 
 vulkan_logical_device::~vulkan_logical_device()
 {
 	if (!m_destroyed)
-		Destroy();
+		destroy();
 }
 
-void vulkan_logical_device::Destroy()
+void vulkan_logical_device::destroy()
 {
 	if (m_destroyed)
 		return;
 
-	m_command_pools.clear();
+    m_command_pools.clear();
 
 	vkDeviceWaitIdle(m_vk_device);
 	vkDestroyDevice(m_vk_device, nullptr);
@@ -365,17 +365,17 @@ void vulkan_logical_device::Destroy()
 
 VkCommandBuffer vulkan_logical_device::get_vk_command_buffer(bool begin, bool p_compute /*= false*/)
 {
-    return get_or_create_thread_local_command_pool()->allocate_command_buffer(begin, p_compute);
+    return get_or_create_thread_local_command_pool().allocate_command_buffer(begin, p_compute);
 }
 
-void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer)
+void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer) const
 {
-    get_thread_local_command_pool()->flush_command_buffer(command_buffer);
+    get_thread_local_command_pool().flush_command_buffer(command_buffer, m_vk_graphics_queue, command_buffer_type_t::graphics);
 }
 
-void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, command_buffer_type_t p_command_buffer_type)
+void vulkan_logical_device::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, command_buffer_type_t p_command_buffer_type) const
 {
-    get_thread_local_command_pool()->flush_command_buffer(command_buffer, queue, p_command_buffer_type);
+    get_thread_local_command_pool().flush_command_buffer(command_buffer, queue, p_command_buffer_type);
 }
 
 VkCommandBuffer vulkan_logical_device::create_secondary_command_buffer()
@@ -384,7 +384,7 @@ VkCommandBuffer vulkan_logical_device::create_secondary_command_buffer()
 
 	VkCommandBufferAllocateInfo cmd_buffer_alloc_info{};
 	cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmd_buffer_alloc_info.commandPool = get_or_create_thread_local_command_pool()->get_vk_graphics_command_pool();
+	cmd_buffer_alloc_info.commandPool = get_or_create_thread_local_command_pool().get_vk_graphics_command_pool();
 	cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	cmd_buffer_alloc_info.commandBufferCount = 1;
 
@@ -394,24 +394,28 @@ VkCommandBuffer vulkan_logical_device::create_secondary_command_buffer()
 
 }
 
-arc<command_pool> vulkan_logical_device::get_thread_local_command_pool()
+const vulkan_command_pool& vulkan_logical_device::get_thread_local_command_pool() const
 {
     const auto thread_id = std::this_thread::get_id();
     KB_CORE_ASSERT(m_command_pools.contains(thread_id), "[VulkanDevice]: could not find a local thread pool!");
     return m_command_pools.at(thread_id);
 }
 
-arc<command_pool> vulkan_logical_device::get_or_create_thread_local_command_pool()
+const vulkan_command_pool& vulkan_logical_device::get_or_create_thread_local_command_pool()
 {
     const auto thread_id = std::this_thread::get_id();
     const auto it = m_command_pools.find(thread_id);
     if (it != m_command_pools.end())
         return it->second;
 
-    arc<command_pool> command_pool = arc<vk::command_pool>::Create();
-    m_command_pools[thread_id] = command_pool;
+    const u32 graphics_family_index = m_physical_device->get_queue_family_indices().Graphics_family.value();
+    const u32 compute_family_index = m_physical_device->get_queue_family_indices().m_compute_family.value();
+    m_command_pools.emplace(
+        thread_id,
+        vulkan_command_pool{ m_vk_device, graphics_family_index, compute_family_index }
+    );
 
-    return command_pool;
+    return m_command_pools.at(thread_id);
 }
 
 } // end namespace kb::render::backend::vk

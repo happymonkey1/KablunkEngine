@@ -3,7 +3,6 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
-#include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 #include "Kablunk/renderer/backend/vulkan/vulkan_utils.h"
 
 #include "Kablunk/renderer/render_command.h"
@@ -14,7 +13,7 @@ namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
 vulkan_texture_2d::vulkan_texture_2d(
-    weak_arc<vulkan_logical_device> p_device,
+    weak_ptr<vulkan_logical_device> p_device,
     image_format_t format,
     uint32_t width,
     uint32_t height,
@@ -48,7 +47,7 @@ vulkan_texture_2d::vulkan_texture_2d(
 	m_loaded = true;
 }
 
-vulkan_texture_2d::vulkan_texture_2d(weak_arc<vulkan_logical_device> p_device, std::string path)
+vulkan_texture_2d::vulkan_texture_2d(weak_ptr<vulkan_logical_device> p_device, std::string path)
 	: m_filepath{ std::move(path) }, m_hash{ static_cast<uint64_t>(std::hash<std::string>{}(m_filepath)) },
     m_device{ p_device }
 {

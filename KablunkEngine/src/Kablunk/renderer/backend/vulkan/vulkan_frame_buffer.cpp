@@ -1,11 +1,8 @@
 #include "kablunkpch.h"
 
 #include "kablunk/renderer/backend/vulkan/vulkan_frame_buffer.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_swap_chain.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_context.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_allocator.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
-#include "kablunk/renderer/backend/vulkan/VulkanRenderer.h"
 
 #include "Kablunk/Core/Application.h"
 
@@ -18,7 +15,7 @@ namespace kb::render::backend::vk
 namespace utils
 { // start namespace ::utils
 inline auto get_vk_attachment_load_op(
-    const frame_buffer_specification& p_specification,
+    const frame_buffer_specification_t& p_specification,
     const frame_buffer_texture_specification& p_texture_specification
 ) noexcept -> VkAttachmentLoadOp
 {
@@ -43,8 +40,8 @@ inline auto get_vk_attachment_load_op(
 }
 } // end namespace ::utils
 
-vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
-	: m_specification{std::move(spec)}
+vulkan_frame_buffer::vulkan_frame_buffer(const VkDevice p_vk_device, frame_buffer_specification_t spec)
+	: m_specification{std::move(spec)}, m_vk_device{ p_vk_device }
 {
 	if (m_specification.m_width == 0 || m_specification.m_height == 0)
 	{
@@ -60,7 +57,7 @@ vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
 	// Create images
     if (!m_specification.m_existing_frame_buffer)
     {
-        uint32_t attachment_index = 0;
+        u32 attachment_index = 0;
         for (auto& attachment_specification : m_specification.m_attachments.Attachments)
 		{
 			if (m_specification.m_existing_image)
@@ -86,8 +83,8 @@ vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
 				image_specification_t image_create_spec;
                 image_create_spec.format = attachment_specification.format;
                 image_create_spec.usage = image_usage_t::Attachment;
-                image_create_spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.m_scale));
-                image_create_spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.m_scale));
+                image_create_spec.width = static_cast<u32>(std::ceil(static_cast<float>(m_width) * m_specification.m_scale));
+                image_create_spec.height = static_cast<u32>(std::ceil(static_cast<float>(m_height) * m_specification.m_scale));
                 image_create_spec.m_transfer = m_specification.m_transfer;
                 image_create_spec.debug_name = fmt::format("{0}-DepthAttachment{1}", m_specification.m_debug_name.empty() ? "Unnamed FB" : m_specification.m_debug_name, attachment_index);
 				m_depth_attachment_image = image_2d::create(image_create_spec);
@@ -97,8 +94,8 @@ vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
 				image_specification_t image_create_spec;
                 image_create_spec.format = attachment_specification.format;
                 image_create_spec.usage = image_usage_t::Attachment;
-                image_create_spec.width = static_cast<uint32_t>(std::ceil(static_cast<float>(m_width) * m_specification.m_scale));
-                image_create_spec.height = static_cast<uint32_t>(std::ceil(static_cast<float>(m_height) * m_specification.m_scale));
+                image_create_spec.width = static_cast<u32>(std::ceil(static_cast<float>(m_width) * m_specification.m_scale));
+                image_create_spec.height = static_cast<u32>(std::ceil(static_cast<float>(m_height) * m_specification.m_scale));
                 image_create_spec.m_transfer = m_specification.m_transfer;
                 image_create_spec.debug_name = fmt::format("{0}-ColorAttachment{1}", m_specification.m_debug_name.empty() ? "Unnamed FB" : m_specification.m_debug_name, attachment_index);
 				m_attachment_images.emplace_back(image_2d::create(image_create_spec));
@@ -113,11 +110,11 @@ vulkan_frame_buffer::vulkan_frame_buffer(frame_buffer_specification spec)
 
 vulkan_frame_buffer::~vulkan_frame_buffer()
 {
-	if (!m_framebuffer)
+	if (!m_vk_frame_buffer)
 		return;
 
 	KB_CORE_INFO("Destroying VulkanFramebuffer '{0}'", m_specification.m_debug_name);
-	VkFramebuffer vk_frame_buffer = m_framebuffer;
+	VkFramebuffer vk_frame_buffer = m_vk_frame_buffer;
 	VkRenderPass vk_render_pass = m_vk_render_pass;
 	render::submit_resource_free([vk_frame_buffer, vk_render_pass]()
 		{
@@ -129,13 +126,13 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 	// Only destroy images we own
 	if (!m_specification.m_existing_frame_buffer)
 	{
-		uint32_t attachment_index = 0;
+        u32 attachment_index = 0;
 		for (arc<image_2d>& image : m_attachment_images)
 		{
-			if (m_specification.m_existing_images.find(attachment_index) != m_specification.m_existing_images.end())
+			if (m_specification.m_existing_images.contains(attachment_index))
 				continue;
 
-            // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
+            // Only destroy de-interleaved image once and prevent clearing layer views on second frame buffer invalidation
 			if (arc<vulkan_image_2d> vk_image = image.As<vulkan_image_2d>(); !vk_image->get_specification().deinterleaved ||
                 attachment_index == 0 && !vk_image->GetLayerImageView(0))
 			{
@@ -148,31 +145,32 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 		if (m_depth_attachment_image)
 		{
 			// Do we own the depth image?
-			if (!m_specification.m_existing_images.contains(static_cast<uint32_t>(m_specification.m_attachments.Attachments.size()) - 1))
+			if (!m_specification.m_existing_images.contains(static_cast<u32>(m_specification.m_attachments.Attachments.size()) - 1))
 				m_depth_attachment_image->release();
 		}
 	}
 }
 
-void vulkan_frame_buffer::resize(uint32_t width, uint32_t height, bool force_recreate /*= false*/)
+void vulkan_frame_buffer::resize(u32 p_width, u32 p_height, bool p_force_recreate /*= false*/)
 {
-	if (!force_recreate && (m_width == width && m_height == height))
+	if (!p_force_recreate && (m_width == p_width && m_height == p_height))
 		return;
 
     arc instance{ this };
-	render::submit([instance, width, height]() mutable
+	render::submit([instance, p_width, p_height]() mutable
 		{
-			instance->m_width = static_cast<uint32_t>(
-                std::ceil(static_cast<float>(width) * instance->m_specification.m_scale)
+			instance->m_width = static_cast<u32>(
+                std::ceil(static_cast<float>(p_width) * instance->m_specification.m_scale)
             );
-			instance->m_height = static_cast<uint32_t>(
-                std::ceil(static_cast<float>(height) * instance->m_specification.m_scale)
+			instance->m_height = static_cast<u32>(
+                std::ceil(static_cast<float>(p_height) * instance->m_specification.m_scale)
             );
 			if (!instance->m_specification.m_swap_chain_target)
 				instance->rt_invalidate();
 			else
 			{
-				instance->m_vk_render_pass = vulkan_context::get()->get_vulkan_swap_chain()->get_vk_render_pass();
+                const auto context = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>();
+				instance->m_vk_render_pass = context->get_vulkan_swap_chain()->get_vk_render_pass();
 
 				instance->m_clear_values.clear();
                 const auto& clear_color = instance->m_specification.m_clear_color;
@@ -189,7 +187,7 @@ void vulkan_frame_buffer::add_resize_callback(const std::function<void(arc<frame
 	m_resize_callbacks.push_back(func);
 }
 
-int vulkan_frame_buffer::read_pixel(uint32_t attachment_index, int x, int y)
+int vulkan_frame_buffer::read_pixel(u32 p_attachment_index, int p_x, int p_y)
 {
 	KB_CORE_ASSERT(false, "Not implemented in Vulkan!");
 	return 0;
@@ -206,14 +204,14 @@ int vulkan_frame_buffer::read_pixel(uint32_t attachment_index, int x, int y)
 #endif
 }
 
-void vulkan_frame_buffer::clear_attachment(uint32_t attachment_index, int value)
+void vulkan_frame_buffer::clear_attachment(u32 p_attachment_index, int p_value)
 {
 	// attachments in swapchain are automatically cleared
 }
 
 void vulkan_frame_buffer::invalidate()
 {
-    arc<vulkan_frame_buffer> instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->rt_invalidate();
@@ -225,29 +223,27 @@ void vulkan_frame_buffer::rt_invalidate()
     log::core::trace(
         log::logger_tag_t::framebuffer,
         "[vulkan_frame_buffer]: RT_Invalidate for frame buffer {}",
-        static_cast<const void*>(&m_framebuffer)
+        static_cast<const void*>(&m_vk_frame_buffer)
     );
-	VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
 
-	if (m_framebuffer)
+	if (m_vk_frame_buffer)
 	{
-		VkFramebuffer vk_frame_buffer = m_framebuffer;
-		render::submit_resource_free([vk_frame_buffer]()
+		const VkFramebuffer vk_frame_buffer = m_vk_frame_buffer;
+		render::submit_resource_free([vk_device = m_vk_device, vk_frame_buffer]()
 			{
-				const auto device = vulkan_context::get()->get_device()->get_vk_device();
-				vkDestroyFramebuffer(device, vk_frame_buffer, nullptr);
+				vkDestroyFramebuffer(vk_device, vk_frame_buffer, nullptr);
 			});
 
 		// Don't free the images if we don't own them
 		if (!m_specification.m_existing_frame_buffer)
 		{
-			uint32_t attachment_index = 0;
+            u32 attachment_index = 0;
 			for (const arc<image_2d>& image : m_attachment_images)
 			{
 				if (m_specification.m_existing_images.contains(attachment_index))
 					continue;
 
-                // Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
+                // Only destroy de-interleaved image once and prevent clearing layer views on second frame buffer invalidation
 				if (arc vk_image = image.As<vulkan_image_2d>(); !vk_image->get_specification().deinterleaved || attachment_index == 0 && !vk_image->GetLayerImageView(0))
 				{
                     vk_image->release();
@@ -259,13 +255,13 @@ void vulkan_frame_buffer::rt_invalidate()
 			if (m_depth_attachment_image)
 			{
 				// Do we own the depth image?
-				if (!m_specification.m_existing_images.contains(static_cast<uint32_t>(m_specification.m_attachments.Attachments.size()) - 1))
+				if (!m_specification.m_existing_images.contains(static_cast<u32>(m_specification.m_attachments.Attachments.size()) - 1))
 					m_depth_attachment_image->release();
 			}
 		}
 	}
 
-	vulkan_allocator allocator{ "Framebuffer" };
+	// vulkan_allocator allocator{ "Framebuffer" };
 
 	std::vector<VkAttachmentDescription> attachment_descriptions;
 
@@ -279,7 +275,7 @@ void vulkan_frame_buffer::rt_invalidate()
 	if (m_specification.m_existing_frame_buffer)
 		m_attachment_images.clear();
 
-	uint32_t attachment_index = 0;
+    u32 attachment_index = 0;
 	for (const auto& attachment_spec : m_specification.m_attachments.Attachments)
 	{
 		if (backend::util::IsDepthFormat(attachment_spec.format))
@@ -379,7 +375,7 @@ void vulkan_frame_buffer::rt_invalidate()
                         color_attachment->RT_Invalidate(); // Create immediately
                     else if (color_attachment->get_specification().layers == 1)
                         color_attachment->RT_Invalidate();
-					else if (attachment_index == 0 && m_specification.m_existing_image_layers[0] == 0)// Only invalidate the first layer from only the first framebuffer
+					else if (attachment_index == 0 && m_specification.m_existing_image_layers[0] == 0)// Only invalidate the first layer from only the first frame buffer
 					{
 						color_attachment->RT_Invalidate(); // Create immediately
 						color_attachment->RT_CreatePerSpecificLayerImageViews(m_specification.m_existing_image_layers);
@@ -418,7 +414,7 @@ void vulkan_frame_buffer::rt_invalidate()
 
 	VkSubpassDescription subpass_description = {};
 	subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass_description.colorAttachmentCount = static_cast<uint32_t>(color_attachment_references.size());
+	subpass_description.colorAttachmentCount = static_cast<u32>(color_attachment_references.size());
 	subpass_description.pColorAttachments = color_attachment_references.data();
 	if (m_depth_attachment_image)
 		subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
@@ -430,68 +426,68 @@ void vulkan_frame_buffer::rt_invalidate()
 	if (!m_attachment_images.empty())
 	{
 		{
-			VkSubpassDependency& depedency = dependencies.emplace_back();
-			depedency.srcSubpass = VK_SUBPASS_EXTERNAL;
-			depedency.dstSubpass = 0;
-			depedency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			depedency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			depedency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			depedency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 
 		{
-			VkSubpassDependency& depedency = dependencies.emplace_back();
-			depedency.srcSubpass = 0;
-			depedency.dstSubpass = VK_SUBPASS_EXTERNAL;
-			depedency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			depedency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			depedency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			depedency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = 0;
+			dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 	}
 
 	if (m_depth_attachment_image)
 	{
 		{
-			VkSubpassDependency& depedency = dependencies.emplace_back();
-			depedency.srcSubpass = VK_SUBPASS_EXTERNAL;
-			depedency.dstSubpass = 0;
-			depedency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			depedency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			depedency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			depedency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 
 		{
-			VkSubpassDependency& depedency = dependencies.emplace_back();
-			depedency.srcSubpass = 0;
-			depedency.dstSubpass = VK_SUBPASS_EXTERNAL;
-			depedency.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-			depedency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			depedency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			depedency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = 0;
+			dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 	}
 
 	// Create the actual render pass
 	VkRenderPassCreateInfo render_pass_info = {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	render_pass_info.attachmentCount = static_cast<uint32_t>(attachment_descriptions.size());
+	render_pass_info.attachmentCount = static_cast<u32>(attachment_descriptions.size());
 	render_pass_info.pAttachments = attachment_descriptions.data();
 	render_pass_info.subpassCount = 1;
 	render_pass_info.pSubpasses = &subpass_description;
-	render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
+	render_pass_info.dependencyCount = static_cast<u32>(dependencies.size());
 	render_pass_info.pDependencies = dependencies.data();
 
-	if (vkCreateRenderPass(device, &render_pass_info, nullptr, &m_vk_render_pass) != VK_SUCCESS)
+	if (vkCreateRenderPass(m_vk_device, &render_pass_info, nullptr, &m_vk_render_pass) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create render pass");
 
 	std::vector<VkImageView> attachments(m_attachment_images.size());
-	for (uint32_t i = 0; i < m_attachment_images.size(); i++)
+	for (u32 i = 0; i < m_attachment_images.size(); i++)
 	{
 		arc<vulkan_image_2d> image = m_attachment_images[i].As<vulkan_image_2d>();
 		if (image->get_specification().deinterleaved)
@@ -525,13 +521,13 @@ void vulkan_frame_buffer::rt_invalidate()
 	VkFramebufferCreateInfo frame_buffer_create_info = {};
 	frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	frame_buffer_create_info.renderPass = m_vk_render_pass;
-	frame_buffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+	frame_buffer_create_info.attachmentCount = static_cast<u32>(attachments.size());
 	frame_buffer_create_info.pAttachments = attachments.data();
 	frame_buffer_create_info.width = m_width;
 	frame_buffer_create_info.height = m_height;
 	frame_buffer_create_info.layers = 1;
 
-	if (vkCreateFramebuffer(device, &frame_buffer_create_info, nullptr, &m_framebuffer) != VK_SUCCESS)
+	if (vkCreateFramebuffer(m_vk_device, &frame_buffer_create_info, nullptr, &m_vk_frame_buffer) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create frame buffer!");
 }
 

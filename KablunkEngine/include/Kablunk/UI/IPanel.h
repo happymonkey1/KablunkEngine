@@ -16,7 +16,7 @@
 namespace kb::render
 { // start namespace kb::render
 
-struct SceneRendererCamera;
+struct scene_renderer_camera_t;
 
 } // end namespace kb::render
 
@@ -114,7 +114,7 @@ public:
 
 	// rendering code for the panel
 	// must be called inside of a render2d scene
-	virtual void on_render(const render::SceneRendererCamera& scene_camera) = 0;
+	virtual void on_render(const render::scene_renderer_camera_t& scene_camera) = 0;
 
 	// destroy this panel and all its children
 	virtual void destroy() = 0;

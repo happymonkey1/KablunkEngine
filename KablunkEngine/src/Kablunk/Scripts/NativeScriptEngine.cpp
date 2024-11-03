@@ -33,15 +33,15 @@ namespace kb
 		return m_get_script_from_registry(name);
 	}
 
-	void NativeScriptEngine::set_scene(weak_arc<Scene> scene)
+	void NativeScriptEngine::set_scene(weak_ptr<Scene> scene)
 	{
 		m_current_scene = scene.get();
 	}
 
-	weak_arc<Scene> NativeScriptEngine::get_scene()
+	weak_ptr<Scene> NativeScriptEngine::get_scene()
 	{
 		KB_CORE_ASSERT(m_current_scene, "scene is not set!");
-		return weak_arc<Scene>(m_current_scene);
+		return weak_ptr<Scene>(m_current_scene);
 	}
 
 }

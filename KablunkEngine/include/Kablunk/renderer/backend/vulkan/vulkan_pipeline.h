@@ -13,7 +13,7 @@ namespace kb::render::backend::vk
 class vulkan_pipeline final : public pipeline
 {
 public:
-	vulkan_pipeline(const pipeline_specification_t& specification);
+	vulkan_pipeline(VkDevice p_vk_device, const pipeline_specification_t& specification);
 	~vulkan_pipeline() override;
 
 	pipeline_specification_t& get_specification() override { return m_specification; }
@@ -28,6 +28,7 @@ public:
 	VkPipelineLayout get_vk_pipeline_layout() const { return m_vk_pipeline_layout; }
 
 private:
+    VkDevice m_vk_device = nullptr;
 	pipeline_specification_t m_specification;
 
 	VkPipeline m_vk_pipeline = nullptr;

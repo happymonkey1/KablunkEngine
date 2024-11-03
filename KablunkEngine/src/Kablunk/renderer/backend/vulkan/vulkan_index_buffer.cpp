@@ -21,7 +21,7 @@ vulkan_index_buffer::vulkan_index_buffer(const void* data, uint32_t size /*= 0*/
 {
 	m_local_data = owning_buffer::copy(data, size);
 	KB_CORE_ASSERT(m_size == m_local_data.size(), "sizes do not match!");
-    arc<vulkan_index_buffer> instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			auto device = vulkan_context::get()->get_device();
@@ -35,7 +35,7 @@ vulkan_index_buffer::vulkan_index_buffer(const void* data, uint32_t size /*= 0*/
 			staging_buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 			VkBuffer staging_buffer;
-			VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
+            const VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
 			// copy data to staging buffer (cpu)
 			uint8_t* dest_ptr = allocator.map_memory<uint8_t>(staging_buffer_allocation);

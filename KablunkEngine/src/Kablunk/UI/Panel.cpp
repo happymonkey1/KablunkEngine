@@ -102,7 +102,7 @@ namespace kb::ui
 		}
 	}
 
-	void Panel::on_render(const render::SceneRendererCamera& scene_camera)
+	void Panel::on_render(const render::scene_renderer_camera_t& scene_camera)
 	{
 		// #TODO assert that this is called from within a render2d scene
 		// KB_CORE_ASSERT(render2d::is_scene_rendering(), "did you forget to call render2d::begin_scene(...)?");

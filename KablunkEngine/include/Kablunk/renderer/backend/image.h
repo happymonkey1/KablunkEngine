@@ -15,25 +15,26 @@ namespace kb::render::backend
 enum class image_format_t
 {
 	None = 0,
-	RED32I,
-	RED32F,
-	RGB,
-	RGBA,
-	RGBA16F,
-	RGBA32F,
-	RG16F,
-	RG32F,
+	RED32I = 1,
+	RED32F = 2,
+	RGB = 3,
+	RGBA = 4,
+	RGBA16F = 5,
+	RGBA32F = 6,
+	RG16F = 7,
+	RG32F = 8,
 
-	SRGB,
+	SRGB = 9,
 
-	DEPTH32F,
-	DEPTH24STENCIL8,
+	DEPTH32F = 10,
+	DEPTH24STENCIL8 = 11,
+    DEPTH32FSTENCIL8UINT = 12,
+
+    // internal use only
+    END = 13,
 
 	// Defaults
 	Depth = DEPTH24STENCIL8,
-
-    // internal use only
-    END,
 };
 
 enum class image_usage_t
@@ -169,7 +170,7 @@ inline u32 GetImageMemorySize(image_format_t format, u32 width, u32 height)
 
 inline bool IsDepthFormat(image_format_t format)
 {
-    if (format == image_format_t::DEPTH24STENCIL8 || format == image_format_t::DEPTH32F)
+    if (format == image_format_t::DEPTH24STENCIL8 || format == image_format_t::DEPTH32F || format == image_format_t::DEPTH32FSTENCIL8UINT)
         return true;
 
     return false;

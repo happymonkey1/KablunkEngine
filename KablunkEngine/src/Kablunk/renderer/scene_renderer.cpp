@@ -20,7 +20,7 @@ namespace kb::render
 
 static std::vector<std::thread> s_thread_pool;
 
-scene_renderer::scene_renderer(const arc<Scene>& context, const SceneRendererSpecification& spec)
+scene_renderer::scene_renderer(const arc<Scene>& context, const scene_renderer_specification_t& spec)
 	: m_context{ context }, m_specification{ spec }
 {
 	init();
@@ -45,14 +45,14 @@ void scene_renderer::init()
 	m_bloom_dirt_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
 
 	uint32_t frames_in_flight = render::get_frames_in_flight();
-    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(CameraDataUB), frames_in_flight);
-    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(PointLightUB), frames_in_flight);
+    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);
+    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(point_light_ub_t), frames_in_flight);
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
     // Geometry
 	{
-        backend::frame_buffer_specification geometry_frame_buffer_spec{};
+        backend::frame_buffer_specification_t geometry_frame_buffer_spec{};
         geometry_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
@@ -101,7 +101,7 @@ void scene_renderer::init()
 
 	// Composite
 	{
-        backend::frame_buffer_specification composite_frame_buffer_spec{};
+        backend::frame_buffer_specification_t composite_frame_buffer_spec{};
         composite_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         composite_frame_buffer_spec.m_samples = 1;
         composite_frame_buffer_spec.m_clear_color_on_load = false;
@@ -201,7 +201,7 @@ void scene_renderer::set_scene(arc<Scene> context)
 	m_context = context;
 }
 
-void scene_renderer::begin_scene(const SceneRendererCamera& camera)
+void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 {
     KB_PROFILE_SCOPE;
 
@@ -242,7 +242,7 @@ void scene_renderer::begin_scene(const SceneRendererCamera& camera)
 	const auto inverse_view_projection = glm::inverse(view_projection);
 
 	// Set camera uniform buffer
-	CameraDataUB camera_data = {
+	camera_data_ub_t camera_data = {
 		view_projection,
 		scene_camera.camera.GetProjection(),
 		scene_camera.view_mat,

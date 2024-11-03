@@ -108,7 +108,7 @@ void vulkan_imgui_layer::OnAttach()
 			init_info.Instance = vulkan_context::get()->get_vk_instance();
 			init_info.PhysicalDevice = vulkan_device->get_vk_physical_device();
 			init_info.Device = vk_device;
-			init_info.QueueFamily = vulkan_device->get_physical_device()->GetQueueFamilyIndices().Graphics_family.value();
+			init_info.QueueFamily = vulkan_device->get_physical_device()->get_queue_family_indices().Graphics_family.value();
 			init_info.Queue = vulkan_device->get_vk_graphics_queue();
 			init_info.PipelineCache = nullptr;
 			init_info.DescriptorPool = descriptorPool;

@@ -7,6 +7,8 @@
 
 #include "kablunk/vendor/glfw/glfw.h"
 
+#define COLOR_AND_DEPTH_ATTACHMENTS 0
+
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
@@ -21,12 +23,12 @@ void vulkan_swap_chain::init_surface(GLFWwindow* window_handle) noexcept
 	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_surface) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
 
-	m_device->get_physical_device()->FindPresentingIndices(m_surface);
+	m_device->get_physical_device()->find_presenting_indices(m_surface);
 
 	find_image_format_and_color_space();
 }
 
-void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) noexcept
+void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -42,7 +44,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 	if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, m_surface, &surface_cap) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface capabilties!");
 
-	uint32_t present_mode_count = 0;
+    u32 present_mode_count = 0;
 	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, m_surface, &present_mode_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface present mode count!");
 
@@ -87,7 +89,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
     }
 
 	// determine number of images
-	uint32_t desired_number_of_swap_images = surface_cap.minImageCount + 1;
+    u32 desired_number_of_swap_images = surface_cap.minImageCount + 1;
 	if ((surface_cap.maxImageCount > 0) && (desired_number_of_swap_images > surface_cap.maxImageCount))
 		desired_number_of_swap_images = surface_cap.maxImageCount;
 
@@ -152,7 +154,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
         log::core::trace(log::logger_tag_t::renderer, "[VulkanSwapChain]: Destroying old image views");
 #endif
 
-		for (uint32_t i = 0; i < m_image_count; ++i)
+		for (u32 i = 0; i < m_image_count; ++i)
 			vkDestroyImageView(device, m_buffers[i].view, nullptr);
 
         log::core::trace(log::logger_tag_t::renderer, "[VulkanSwapChain]: Destroying old swap chain");
@@ -168,7 +170,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 
 	// Get swap chain buffers that contain image and view
 	m_buffers.resize(m_image_count);
-	for (uint32_t i = 0; i < m_image_count; ++i)
+	for (u32 i = 0; i < m_image_count; ++i)
 	{
 		VkImageViewCreateInfo color_attachment_view_create_info{};
 		color_attachment_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -203,11 +205,11 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
         for (auto& swap_chain_command_buffer : m_command_buffers)
             vkDestroyCommandPool(device, swap_chain_command_buffer.m_command_pool, nullptr);
 
-	    KB_CORE_ASSERT(m_device->get_physical_device()->GetQueueFamilyIndices().Graphics_family.has_value(), "graphics family queue has no index set!");
+	    KB_CORE_ASSERT(m_device->get_physical_device()->get_queue_family_indices().Graphics_family.has_value(), "graphics family queue has no index set!");
 
 	    VkCommandPoolCreateInfo cmd_pool_info{};
 	    cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	    cmd_pool_info.queueFamilyIndex = m_device->get_physical_device()->GetQueueFamilyIndices().Graphics_family.value(); // #TODO could be wrong value
+	    cmd_pool_info.queueFamilyIndex = m_device->get_physical_device()->get_queue_family_indices().Graphics_family.value(); // #TODO could be wrong value
 	    cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 	    VkCommandBufferAllocateInfo cmd_buf_allocate_info{};
@@ -215,7 +217,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 	    cmd_buf_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	    cmd_buf_allocate_info.commandBufferCount = 1;
 
-	    uint32_t count = m_image_count;
+        u32 count = m_image_count;
         m_command_buffers.resize(count);
         for (auto& swap_chain_command_buffer : m_command_buffers)
         {
@@ -265,41 +267,58 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 	//CreateDepthStencil();
 
 	// render pass
-	VkFormat depth_format = m_device->get_physical_device()->GetDepthFormat();
+	const VkFormat depth_format = m_device->get_physical_device()->get_vk_depth_format();
 
+#if COLOR_AND_DEPTH_ATTACHMENTS
 	std::array<VkAttachmentDescription, 2> attachments{};
-	// Color attachment
-	attachments[0].format = m_color_format;
-	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	// Depth attachment
-	attachments[1].format = depth_format;
-	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    // Color attachment
+    attachments[0].format = m_color_format;
+    attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+    attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    // Depth attachment
+    attachments[1].format = depth_format;
+    attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+    attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+#endif
+    VkAttachmentDescription vk_color_attachment_description{};
+    vk_color_attachment_description.format = m_color_format;
+    vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+    vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    vk_color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    vk_color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    vk_color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    vk_color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 	VkAttachmentReference color_reference = {};
 	color_reference.attachment = 0;
 	color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+#if COLOR_AND_DEPTH_ATTACHMENTS
 	VkAttachmentReference depth_reference = {};
 	depth_reference.attachment = 1;
 	depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+#endif
 
 	VkSubpassDescription subpass_description = {};
 	subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass_description.colorAttachmentCount = 1;
 	subpass_description.pColorAttachments = &color_reference;
-	//subpass_description.pDepthStencilAttachment = &depth_reference;
+#if COLOR_AND_DEPTH_ATTACHMENTS
+	subpass_description.pDepthStencilAttachment = &depth_reference;
+#endif
 	subpass_description.inputAttachmentCount = 0;
 	subpass_description.pInputAttachments = nullptr;
 	subpass_description.preserveAttachmentCount = 0;
@@ -316,8 +335,8 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 
 	VkRenderPassCreateInfo render_pass_info = {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	render_pass_info.attachmentCount = 1; // static_cast<uint32_t>(attachments.size());
-	render_pass_info.pAttachments = attachments.data();
+	render_pass_info.attachmentCount = 1; // static_cast<u32>(attachments.size());
+	render_pass_info.pAttachments = &vk_color_attachment_description;
 	render_pass_info.subpassCount = 1;
 	render_pass_info.pSubpasses = &subpass_description;
 	render_pass_info.dependencyCount = 1;
@@ -329,7 +348,7 @@ void vulkan_swap_chain::create(uint32_t* width, uint32_t* height, bool vsync) no
 	create_framebuffer();
 }
 
-void vulkan_swap_chain::on_resize(uint32_t width, uint32_t height) noexcept
+void vulkan_swap_chain::on_resize(u32 width, u32 height) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -446,7 +465,7 @@ void vulkan_swap_chain::destroy() noexcept
 
 	if (m_swapchain)
 	{
-		for (uint32_t i = 0; i < m_image_count; ++i)
+		for (u32 i = 0; i < m_image_count; ++i)
 		{
             KB_CORE_INFO("[VulkanSwapChain]: destroying image view {}", static_cast<void*>(m_buffers[i].view));
             vkDestroyImageView(device, m_buffers[i].view, nullptr);
@@ -493,7 +512,7 @@ void vulkan_swap_chain::destroy() noexcept
     m_instance = nullptr;
 }
 
-VkResult vulkan_swap_chain::acquire_next_image(VkSemaphore present_complete_sem, uint32_t* image_index)
+VkResult vulkan_swap_chain::acquire_next_image(VkSemaphore present_complete_sem, u32* image_index)
 {
     KB_PROFILE_SCOPE;
 
@@ -508,7 +527,7 @@ VkResult vulkan_swap_chain::acquire_next_image(VkSemaphore present_complete_sem,
     );
 }
 
-VkResult vulkan_swap_chain::queue_present(VkQueue queue, uint32_t image_index, VkSemaphore wait_sem) const
+VkResult vulkan_swap_chain::queue_present(VkQueue queue, u32 image_index, VkSemaphore wait_sem) const
 {
     KB_PROFILE_SCOPE;
 
@@ -530,7 +549,7 @@ void vulkan_swap_chain::find_image_format_and_color_space()
 {
     const VkPhysicalDevice physical_device = m_device->get_vk_physical_device();
 
-	uint32_t format_count = 0;
+    u32 format_count = 0;
 	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan could not find image format count!");
 
@@ -610,7 +629,7 @@ void vulkan_swap_chain::create_framebuffer()
         KB_CORE_ERROR("[VulkanSwapChain]: creating framebuffer ({}, {}) which is not to spec!", m_width, m_height);
 
 	m_framebuffers.resize(m_image_count);
-	for (uint32_t i = 0; i < m_image_count; ++i)
+	for (u32 i = 0; i < m_image_count; ++i)
 	{
         frame_buffer_create_info.pAttachments = &m_buffers[i].view;
 
@@ -624,7 +643,7 @@ void vulkan_swap_chain::create_depth_stencil()
     KB_PROFILE_SCOPE;
 
 	const VkDevice device = m_device->get_vk_device();
-	const VkFormat depth_format = m_device->get_physical_device()->GetDepthFormat();
+	const VkFormat depth_format = m_device->get_physical_device()->get_vk_depth_format();
 
 	VkImageCreateInfo image_create_info{};
 	image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

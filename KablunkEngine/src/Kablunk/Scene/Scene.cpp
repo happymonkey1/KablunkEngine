@@ -160,10 +160,10 @@ arc<Scene> Scene::Copy(arc<Scene> src_scene)
 	return dest_scene;
 }
 
-weak_arc<Scene> Scene::GetScene(uuid::uuid64 scene_id)
+weak_ptr<Scene> Scene::GetScene(uuid::uuid64 scene_id)
 {
 	if (s_active_scenes.find(scene_id) != s_active_scenes.end())
-		return weak_arc<Scene>(s_active_scenes.at(scene_id));
+		return weak_ptr<Scene>(s_active_scenes.at(scene_id));
 	else
 	{
 		KB_CORE_ERROR("Could not find scene '{0}' in active scenes!", scene_id);

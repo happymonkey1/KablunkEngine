@@ -20,8 +20,13 @@ arc<render_command_buffer> render_command_buffer::create(uint32_t count /*= 0*/,
             .get_graphics_context()
             .as<vk::vulkan_context>();
         const auto device = context->get_device();
+        const u32 graphics_family_queue_index = device->get_physical_device()
+            ->get_queue_family_indices()
+            .Graphics_family
+            .value();
         return static_cast<arc<render_command_buffer>>(arc<vk::vulkan_render_command_buffer>::Create(
-            device,
+            device->get_vk_device(),
+            graphics_family_queue_index,
             count,
             debug_name
         ));
@@ -40,14 +45,15 @@ arc<render_command_buffer> render_command_buffer::create_from_swap_chain(const s
     {
     case render_backend_type_t::vulkan:
     {
-        const auto context = Singleton<Renderer>::get()
+        auto context = Singleton<Renderer>::get()
             .get_graphics_context()
             .as<vk::vulkan_context>();
         const auto device = context->get_device();
+        auto vulkan_swap_chain = weak_ptr{ context->get_vulkan_swap_chain() };
         return static_cast<arc<render_command_buffer>>(arc<vk::vulkan_render_command_buffer>::Create(
-            device,
-            debug_name,
-            true
+            device->get_vk_device(),
+            vulkan_swap_chain,
+            debug_name
         ));
     }
     default:

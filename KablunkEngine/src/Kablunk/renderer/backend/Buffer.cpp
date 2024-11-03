@@ -20,7 +20,7 @@ arc<vertex_buffer> vertex_buffer::create(uint32_t size)
         const auto context = Singleton<Renderer>::get().get_graphics_context();
         const auto device = context.as<vk::vulkan_context>()->get_device();
         return static_cast<arc<vertex_buffer>>(arc<vk::vulkan_vertex_buffer>::Create(
-            weak_arc{ device },
+            weak_ptr{ device },
             size
         ));
 	}
@@ -46,7 +46,7 @@ arc<vertex_buffer> vertex_buffer::create(const void* data, uint32_t size)
         const auto context = Singleton<Renderer>::get().get_graphics_context();
         const auto device = context.as<vk::vulkan_context>()->get_device();
         return static_cast<arc<vertex_buffer>>(arc<vk::vulkan_vertex_buffer>::Create(
-            weak_arc{ device },
+            weak_ptr{ device },
             data,
             size
         ));

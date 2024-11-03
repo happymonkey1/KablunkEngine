@@ -49,8 +49,7 @@ public:
         u32 size = 0;
 	};
 
-
-	vulkan_shader(const std::string& path, bool force_compile);
+	vulkan_shader(VkDevice p_vk_device, const std::string& path, bool force_compile);
     ~vulkan_shader() override = default;
 
 	void destroy() override;
@@ -151,6 +150,7 @@ private:
 	std::string m_file_path;
 	std::string m_name;
     size_t m_hash;
+    VkDevice m_vk_device = nullptr;
 
 	std::vector<ShaderDescriptorSet> m_shader_descriptor_sets;
 	std::vector<vk_push_constant_range_t> m_push_constant_ranges;

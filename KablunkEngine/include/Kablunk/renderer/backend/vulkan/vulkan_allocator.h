@@ -12,12 +12,12 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-struct GPUMemoryStats
+struct gpu_memory_stats_t
 {
 	uint64_t used = 0;
 	uint64_t free = 0;
 
-	uint64_t GetCurrentUsageBytes() { return used - free; }
+	uint64_t get_current_usage_bytes() { return used - free; }
 };
 
 class vulkan_allocator
@@ -45,7 +45,7 @@ public:
 	void unmap_memory(VmaAllocation allocation);
 
 	static void dump_stats();
-	static GPUMemoryStats get_stats();
+	static gpu_memory_stats_t get_stats();
 
 	static void init(arc<vulkan_logical_device> device);
 	static void shutdown();

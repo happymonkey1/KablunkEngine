@@ -1,23 +1,14 @@
 #include "kablunkpch.h"
 
-#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_uniform_buffer.h"
+#include "kablunk/renderer/render_command.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
-vulkan_uniform_buffer::vulkan_uniform_buffer(uint32_t p_size)
-	: m_size{ p_size }
+vulkan_uniform_buffer::vulkan_uniform_buffer(const u32 p_size)
+	: m_size{ p_size }, m_local_storage{ new u8[p_size] }
 {
-	m_local_storage = new uint8_t[p_size];
-
-#if 0
-    arc instance{ this };
-	render::submit([instance]() mutable
-		{
-			instance->rt_invalidate();
-		});
-#endif
     rt_invalidate();
 }
 
@@ -26,7 +17,7 @@ vulkan_uniform_buffer::~vulkan_uniform_buffer()
 	release();
 }
 
-void vulkan_uniform_buffer::set_data(const void* p_data, uint32_t p_size, uint32_t p_offset /*= 0*/)
+void vulkan_uniform_buffer::set_data(const void* p_data, const u32 p_size, const u32 p_offset /*= 0*/)
 {
 	memcpy(m_local_storage, p_data, p_size);
 
@@ -37,12 +28,12 @@ void vulkan_uniform_buffer::set_data(const void* p_data, uint32_t p_size, uint32
 		});
 }
 
-void vulkan_uniform_buffer::rt_set_data(const void* p_data, uint32_t p_size, uint32_t p_offset /*= 0*/)
+void vulkan_uniform_buffer::rt_set_data(const void* p_data, const u32 p_size, const u32 p_offset /*= 0*/)
 {
 	vulkan_allocator allocator{ "UniformBuffer" };
-	uint8_t* data_ptr = allocator.map_memory<uint8_t>(m_vk_allocation);
+    auto* data_ptr = allocator.map_memory<u8>(m_vk_allocation);
     // can this be memmove?
-	memcpy(data_ptr, static_cast<const uint8_t*>(p_data) + p_offset, p_size);
+	memcpy(data_ptr, static_cast<const u8*>(p_data) + p_offset, p_size);
 	allocator.unmap_memory(m_vk_allocation);
 }
 

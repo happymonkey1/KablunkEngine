@@ -29,7 +29,7 @@ public:
     // #TODO template this
 	void set(const std::string & name, float value) override;
 	void set(const std::string & name, int value) override;
-	void set(const std::string & name, uint32_t value) override;
+	void set(const std::string & name, u32 value) override;
 	void set(const std::string & name, bool value) override;
 	void set(const std::string & name, const glm::vec2 & value) override;
 	void set(const std::string & name, const glm::vec3 & value) override;
@@ -40,14 +40,14 @@ public:
 	void set(const std::string & name, const glm::mat3 & value) override;
 	void set(const std::string & name, const glm::mat4 & value) override;
 	void set(const std::string & name, const arc<texture_2d>& texture) override;
-	void set(const std::string & name, const arc<texture_2d>& texture, uint32_t array_index) override;
+	void set(const std::string & name, const arc<texture_2d>& texture, u32 array_index) override;
 	void set(const std::string & name, const arc<image_2d>& image) override;
 
     // #TODO template this
 	bool& get_bool(const std::string& name) override;
 	float& get_float(const std::string & name) override;
 	int& get_int(const std::string & name) override;
-	uint32_t& get_uint(const std::string & name) override;
+    u32& get_uint(const std::string & name) override;
 	glm::vec2& get_vec2(const std::string & name) override;
 	glm::vec3& get_vec3(const std::string & name) override;
 	glm::vec4& get_vec4(const std::string & name) override;
@@ -87,14 +87,14 @@ public:
         return m_descriptor_set_manager.get_input<T>(name);
 	}
 
-	uint32_t get_flags() const override { return m_material_flags; }
-	bool get_flag(MaterialFlag flag) const override { return (uint32_t)flag & m_material_flags; }
+    u32 get_flags() const override { return m_material_flags; }
+	bool get_flag(MaterialFlag flag) const override { return (u32)flag & m_material_flags; }
 	void set_flag(MaterialFlag flag, bool value = true) override
 	{
 		if (value)
-			m_material_flags |= (uint32_t)flag;
+			m_material_flags |= (u32)flag;
 		else
-			m_material_flags &= ~(uint32_t)flag;
+			m_material_flags &= ~(u32)flag;
 	}
 
 	arc<shader> get_shader() override { return m_shader.As<shader>(); }
@@ -105,7 +105,7 @@ public:
 
     // retrieves the descriptor set for the frame, invalidating and updating descriptor set
     // if there are changes
-	auto get_vk_descriptor_set(uint32_t frame_index) noexcept -> VkDescriptorSet
+	auto get_vk_descriptor_set(u32 frame_index) noexcept -> VkDescriptorSet
 	{
         const auto index_opt = m_descriptor_set_manager.get_first_set_index();
         if (!index_opt)
@@ -137,7 +137,7 @@ private:
 	void OnShaderReloaded();
 
 	void SetVulkanDescriptor(const std::string& name, const arc<texture_2d>& texture);
-	void SetVulkanDescriptor(const std::string& name, const arc<texture_2d>& texture, uint32_t array_index);
+	void SetVulkanDescriptor(const std::string& name, const arc<texture_2d>& texture, u32 array_index);
 	void SetVulkanDescriptor(const std::string& name, const arc<image_2d>& images);
     void SetVulkanDescriptor(const std::string& p_name, const arc<image_view>& p_image);
 

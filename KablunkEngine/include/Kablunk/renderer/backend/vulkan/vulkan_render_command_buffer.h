@@ -3,6 +3,8 @@
 #define KABLUNK_RENDERER_BACKEND_VULKAN_RENDER_COMMAND_BUFFER_H
 
 #include "Kablunk/renderer/backend/render_command_buffer.h"
+#include "Kablunk/renderer/backend/vulkan/vulkan_logical_device.h"
+#include "Kablunk/renderer/backend/vulkan/vulkan_swap_chain.h"
 
 #include "Kablunk/Core/Core.h"
 
@@ -11,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "Kablunk/renderer/backend/vulkan/vulkan_logical_device.h"
+
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -19,14 +21,15 @@ class vulkan_render_command_buffer final : public render_command_buffer
 {
 public:
 	vulkan_render_command_buffer(
-        weak_arc<vulkan_logical_device> p_device,
-        u32 p_count = 0,
-        std::string p_debug_name = ""
+        VkDevice p_vk_device,
+        u32 p_graphics_queue_family_index,
+        u32 p_count,
+        std::string p_debug_name
     );
 	vulkan_render_command_buffer(
-        weak_arc<vulkan_logical_device> p_device,
-        std::string p_debug_name,
-        bool p_swap_chain
+        VkDevice p_vk_device,
+        weak_ptr<vulkan_swap_chain> p_swap_chain,
+        std::string p_debug_name
     );
 	~vulkan_render_command_buffer() override;
 
@@ -55,7 +58,7 @@ public:
 
 private:
 	std::string m_debug_name;
-    weak_arc<vulkan_logical_device> m_device = nullptr;
+    VkDevice m_vk_device = nullptr;
 
 	VkCommandPool m_command_pool = nullptr;
 	std::vector<VkCommandBuffer> m_command_buffers;
@@ -69,7 +72,7 @@ private:
 
 	std::vector<VkQueryPool> m_timestamp_query_pools;
 	std::vector<std::vector<u64>> m_timestamp_query_results;
-	std::vector<std::vector<float>> m_execution_gpu_times;
+	std::vector<std::vector<f32>> m_execution_gpu_times;
 };
 } // end namespace kb::render::backend::vk
 

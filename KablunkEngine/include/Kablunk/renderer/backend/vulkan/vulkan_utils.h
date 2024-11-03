@@ -57,8 +57,9 @@ inline VkFormat VulkanImageFormat(image_format_t format)
     {
         const auto& graphics_context = Singleton<Renderer>::get().get_graphics_context();
         const auto vulkan_context = graphics_context.as<vk::vulkan_context>();
-        return vulkan_context->get_device()->get_physical_device()->GetDepthFormat();
+        return vulkan_context->get_device()->get_physical_device()->get_vk_depth_format();
     }
+    case image_format_t::DEPTH32FSTENCIL8UINT: return VK_FORMAT_D32_SFLOAT_S8_UINT;
     }
     KB_CORE_ASSERT(false, "Unknown ImageFormat!");
     return VK_FORMAT_UNDEFINED;

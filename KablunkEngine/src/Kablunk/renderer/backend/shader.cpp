@@ -2,6 +2,7 @@
 #include "Kablunk/Renderer/backend/shader.h"
 
 #include "Kablunk/Renderer/Renderer.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
 
 namespace kb::render::backend
@@ -9,10 +10,17 @@ namespace kb::render::backend
 
 arc<shader> shader::create(const std::string& file_path, bool p_force_compile)
 {
-	switch (render::Renderer::get_render_backend_type())
+	switch (Renderer::get_render_backend_type())
 	{
-	case backend::render_backend_type_t::vulkan:
-        return static_cast<arc<shader>>(arc<backend::vk::vulkan_shader>::Create(file_path, p_force_compile));
+	case render_backend_type_t::vulkan:
+	{
+        const auto context = Singleton<Renderer>::get().get_graphics_context().as<vk::vulkan_context>();
+        return static_cast<arc<shader>>(arc<vk::vulkan_shader>::Create(
+            context->get_device()->get_vk_device(),
+            file_path,
+            p_force_compile
+        ));
+	}
 	default:
         KB_CORE_ASSERT(
             false,

@@ -7,7 +7,6 @@
 #include "Kablunk/renderer/renderer.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_image.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
@@ -49,8 +48,8 @@ void vulkan_material::Init()
 {
 	AllocateStorage();
 
-	m_material_flags |= static_cast<uint32_t>(MaterialFlag::DepthTest);
-	m_material_flags |= static_cast<uint32_t>(MaterialFlag::Blend);
+	m_material_flags |= static_cast<u32>(MaterialFlag::DepthTest);
+	m_material_flags |= static_cast<u32>(MaterialFlag::Blend);
 
     const descriptor_set_manager_specification spec{
         .m_shader = m_shader,
@@ -95,10 +94,7 @@ void vulkan_material::invalidate()
         const auto frames_in_flight = render::get_frames_in_flight();
         for (u32 i = 0; i < frames_in_flight; ++i)
         {
-            const auto& vulkan_render_backend = Singleton<render::Renderer>::get()
-                .get_render_backend()
-                .backend();
-            m_material_descriptor_sets[i] = vulkan_render_backend->rt_allocate_descriptor_set(
+            m_material_descriptor_sets[i] = vulkan_render_backend::rt_allocate_descriptor_set(
                 descriptor_set_allocate_info
             );
         }
@@ -161,9 +157,9 @@ void vulkan_material::set(const std::string& name, int value)
 	Set<int>(name, value);
 }
 
-void vulkan_material::set(const std::string& name, uint32_t value)
+void vulkan_material::set(const std::string& name, u32 value)
 {
-	Set<uint32_t>(name, value);
+	Set<u32>(name, value);
 }
 
 void vulkan_material::set(const std::string& name, bool value)
@@ -216,7 +212,7 @@ void vulkan_material::set(const std::string& name, const arc<texture_2d>& textur
 	SetVulkanDescriptor(name, texture);
 }
 
-void vulkan_material::set(const std::string& name, const arc<texture_2d>& texture, uint32_t array_index)
+void vulkan_material::set(const std::string& name, const arc<texture_2d>& texture, u32 array_index)
 {
 	SetVulkanDescriptor(name, texture, array_index);
 }
@@ -233,7 +229,7 @@ void vulkan_material::AllocateStorage()
 
 	if (!shader_buffers.empty())
 	{
-		uint32_t size = 0;
+		u32 size = 0;
 		for (const auto& [name, shader_buffer] : shader_buffers)
 			size += shader_buffer.size;
 
@@ -255,7 +251,7 @@ void vulkan_material::SetVulkanDescriptor(const std::string& name, const arc<tex
     );
 }
 
-void vulkan_material::SetVulkanDescriptor(const std::string& name, const arc<texture_2d>& texture, uint32_t array_index)
+void vulkan_material::SetVulkanDescriptor(const std::string& name, const arc<texture_2d>& texture, u32 array_index)
 {
     m_descriptor_set_manager.set_input(
         std::string_view{ name },
@@ -323,9 +319,9 @@ int& vulkan_material::get_int(const std::string& name)
 	return Get<int>(name);
 }
 
-uint32_t& vulkan_material::get_uint(const std::string& name)
+u32& vulkan_material::get_uint(const std::string& name)
 {
-	return Get<uint32_t>(name);
+	return Get<u32>(name);
 }
 
 glm::vec2& vulkan_material::get_vec2(const std::string& name)

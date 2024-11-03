@@ -8,7 +8,7 @@ namespace kb::render::backend::vk
 
 auto get_current_vk_device() noexcept -> VkDevice
 {
-    return vulkan_context::get()->get_device()->get_vk_device();
+    return Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
 }
 
 auto get_descriptor_set_alloc_info(

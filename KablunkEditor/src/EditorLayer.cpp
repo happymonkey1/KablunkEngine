@@ -81,7 +81,7 @@ namespace kb
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = arc<render::scene_renderer>::Create(m_active_scene, render::SceneRendererSpecification{});
+		m_viewport_renderer = arc<render::scene_renderer>::Create(m_active_scene, render::scene_renderer_specification_t{});
         m_renderer_2d = Application::Get().get_renderer_2d();
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);

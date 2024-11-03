@@ -54,7 +54,7 @@ struct frame_buffer_attachment_specification
 };
 
 // Properties struct
-struct frame_buffer_specification
+struct frame_buffer_specification_t
 {
     // scale of the frame buffer
 	float m_scale = 1.0f;
@@ -115,12 +115,12 @@ public:
 
     [[deprecated]] virtual void clear_attachment(u32 attachment_index, int value) = 0;
 
-	[[nodiscard]] virtual const frame_buffer_specification& get_specification() const = 0;
+	[[nodiscard]] virtual const frame_buffer_specification_t& get_specification() const = 0;
 
     [[nodiscard]] virtual u32 get_color_attachment_count() const noexcept = 0;
     [[nodiscard]] virtual bool has_depth_attachment() const noexcept = 0;
 
-	[[nodiscard]] static arc<frame_buffer> create(const frame_buffer_specification& specs);
+	[[nodiscard]] static arc<frame_buffer> create(const frame_buffer_specification_t& specs);
 };
 
 

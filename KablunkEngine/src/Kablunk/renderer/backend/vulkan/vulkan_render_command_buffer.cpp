@@ -9,21 +9,21 @@ namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
 vulkan_render_command_buffer::vulkan_render_command_buffer(
-    weak_arc<vulkan_logical_device> p_device,
+    const VkDevice p_vk_device,
+    const u32 p_graphics_queue_family_index,
     uint32_t p_count /*= 0*/,
     std::string p_debug_name /*= ""*/
 )
-	: m_debug_name{ std::move(p_debug_name) }, m_device{ p_device }
+	: m_debug_name{ std::move(p_debug_name) }, m_vk_device{ p_vk_device }
 {
 	uint32_t frames_in_flight = render::get_frames_in_flight();
 
 	VkCommandPoolCreateInfo cmd_pool_create_info{};
 	cmd_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmd_pool_create_info.queueFamilyIndex = m_device->get_physical_device()->GetQueueFamilyIndices().Graphics_family.value();
+	cmd_pool_create_info.queueFamilyIndex = p_graphics_queue_family_index;
 	cmd_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-    const auto vk_device = m_device->get_vk_device();
-	if (vkCreateCommandPool(vk_device, &cmd_pool_create_info, nullptr, &m_command_pool) != VK_SUCCESS)
+	if (vkCreateCommandPool(m_vk_device, &cmd_pool_create_info, nullptr, &m_command_pool) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create command pool!");
 
 	VkCommandBufferAllocateInfo cmd_buffer_allocation_info{};
@@ -36,7 +36,7 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(
 
 	cmd_buffer_allocation_info.commandBufferCount = p_count;
 	m_command_buffers.resize(p_count);
-	if (vkAllocateCommandBuffers(vk_device, &cmd_buffer_allocation_info, m_command_buffers.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(m_vk_device, &cmd_buffer_allocation_info, m_command_buffers.data()) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to allocate command buffers");
 
 	VkFenceCreateInfo fence_create_info{};
@@ -44,7 +44,7 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(
 	fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 	m_wait_fences.resize(frames_in_flight);
 	for (auto& fence : m_wait_fences)
-		if (vkCreateFence(vk_device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
+		if (vkCreateFence(m_vk_device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create fence!");
 
 	// Timestamp queries
@@ -58,7 +58,7 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(
 	query_pool_create_info.queryCount = m_timestamp_query_count;
 	m_timestamp_query_pools.resize(frames_in_flight);
 	for (auto& timestamp_query_pool : m_timestamp_query_pools)
-		if (vkCreateQueryPool(vk_device, &query_pool_create_info, nullptr, &timestamp_query_pool) != VK_SUCCESS)
+		if (vkCreateQueryPool(m_vk_device, &query_pool_create_info, nullptr, &timestamp_query_pool) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create query pool!");
 
 	m_timestamp_query_results.resize(frames_in_flight);
@@ -73,20 +73,19 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(
 }
 
 vulkan_render_command_buffer::vulkan_render_command_buffer(
-    weak_arc<vulkan_logical_device> p_device,
-    std::string p_debug_name,
-    bool p_swap_chain
+    const VkDevice p_vk_device,
+    const weak_ptr<vulkan_swap_chain> p_swap_chain,
+    std::string p_debug_name
 )
-    : m_debug_name{ std::move(p_debug_name) }, m_device{p_device}, m_owned_by_swapchain{true}
+    : m_debug_name{ std::move(p_debug_name) }, m_vk_device{ p_vk_device }, m_owned_by_swapchain{ true }
 {
-    const auto vk_device = m_device->get_vk_device();
     const u32 frames_in_flight = render::get_frames_in_flight();
 
 	m_command_buffers.resize(frames_in_flight);
     for (size_t i = 0; i < frames_in_flight; ++i)
     {
         auto& command_buffer = m_command_buffers.at(i);
-        command_buffer = vulkan_context::get()->get_vulkan_swap_chain()->get_vk_draw_command_buffer(i);
+        command_buffer = p_swap_chain->get_vk_draw_command_buffer(static_cast<u32>(i));
     }
 
 	VkQueryPoolCreateInfo query_pool_create_info = {};
@@ -101,7 +100,7 @@ vulkan_render_command_buffer::vulkan_render_command_buffer(
 	query_pool_create_info.queryCount = m_timestamp_query_count;
 	m_timestamp_query_pools.resize(frames_in_flight);
 	for (auto& timestamp_query_pool : m_timestamp_query_pools)
-		if (vkCreateQueryPool(vk_device, &query_pool_create_info, nullptr, &timestamp_query_pool) != VK_SUCCESS)
+		if (vkCreateQueryPool(m_vk_device, &query_pool_create_info, nullptr, &timestamp_query_pool) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create query pool!");
 
 	m_timestamp_query_results.resize(frames_in_flight);
@@ -121,8 +120,7 @@ vulkan_render_command_buffer::~vulkan_render_command_buffer()
 		return;
 
 	VkCommandPool command_pool = m_command_pool;
-    const auto vk_device = m_device->get_vk_device();
-	render::submit_resource_free([command_pool, vk_device]()
+	render::submit_resource_free([command_pool, vk_device = m_vk_device]()
 		{
             KB_CORE_INFO("Destroying command pool {}", static_cast<void*>(command_pool));
 			vkDestroyCommandPool(vk_device, command_pool, nullptr);
@@ -182,7 +180,6 @@ void vulkan_render_command_buffer::end()
 
             instance->m_active_command_buffer = nullptr;
 		});
-
 }
 
 void vulkan_render_command_buffer::submit()
@@ -191,11 +188,8 @@ void vulkan_render_command_buffer::submit()
 		return;
 
     arc instance{ this };
-	render::submit([instance]() mutable
+	render::submit([instance, vk_device = m_vk_device]() mutable
 		{
-            weak_arc device = instance->m_device;
-            const VkDevice vk_device = device->get_vk_device();
-
             const u32 frame_index = render::rt_get_current_frame_index();
 
 			VkSubmitInfo submit_info{};
@@ -210,7 +204,12 @@ void vulkan_render_command_buffer::submit()
 			if (vkResetFences(vk_device, 1, &instance->m_wait_fences[frame_index]) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to reset fences!");
 
-			if(vkQueueSubmit(device->get_vk_graphics_queue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
+            const auto& vulkan_device = Singleton<Renderer>::get()
+                .get_graphics_context()
+                .as<vulkan_context>()
+                ->get_device();
+            
+			if(vkQueueSubmit(vulkan_device->get_vk_graphics_queue(), 1, &submit_info, instance->m_wait_fences[frame_index]) != VK_SUCCESS)
 				KB_CORE_ASSERT(false, "Vulkan failed to submit queue");
 
 			// retrieve timestamp query results
@@ -229,7 +228,7 @@ void vulkan_render_command_buffer::submit()
 			{
 				const u64 start_time = instance->m_timestamp_query_results[frame_index][i];
 				const u64 end_time = instance->m_timestamp_query_results[frame_index][i + 1];
-				const f32 ns_time = end_time > start_time ? (end_time - start_time) * device->get_physical_device()->GetLimits().timestampPeriod : 0.0f;
+				const f32 ns_time = end_time > start_time ? (end_time - start_time) * vulkan_device->get_physical_device()->get_vk_device_limits().timestampPeriod : 0.0f;
 				instance->m_execution_gpu_times[frame_index][i / 2] = ns_time * 0.000001f; // time in ms
 			}
 

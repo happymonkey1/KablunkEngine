@@ -8,7 +8,7 @@ namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
 vulkan_vertex_buffer::vulkan_vertex_buffer(
-    const weak_arc<vulkan_logical_device> p_device,
+    const weak_ptr<vulkan_logical_device> p_device,
     const void* data,
     const u32 size,
     vertex_buffer_usage_t usage /*= VertexBufferUsage::Static*/
@@ -22,7 +22,6 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
     arc instance{ this };
 	render::submit([instance]() mutable
 		{
-			auto device = instance->m_device;
 			vulkan_allocator allocator{ "VertexBuffer" };
 
 			// create staging buffer
@@ -36,7 +35,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
             const VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(staging_buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
 			// copy data to staging buffer (cpu)
-			u8* dest_data = allocator.map_memory<uint8_t>(staging_buffer_allocation);
+			u8* dest_data = allocator.map_memory<u8>(staging_buffer_allocation);
 			memcpy(dest_data, instance->m_local_data.get(), instance->m_local_data.size());
 			KB_CORE_INFO("VulkanVertexBuffer mapping staging memory of size '{}'", instance->m_local_data.size());
 			allocator.unmap_memory(staging_buffer_allocation);
@@ -49,10 +48,13 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 			instance->m_memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_vk_buffer);
 
 			// setup vk command to copy data from staging (cpu) to vertex buffer on gpu
-            const VkCommandBuffer copy_cmd = device->get_vk_command_buffer(true);
+            const VkCommandBuffer copy_cmd = instance->m_device->get_vk_command_buffer(true);
 
-			VkBufferCopy copy_region{};
-			copy_region.size = instance->m_local_data.size();
+			const VkBufferCopy copy_region{
+			    .srcOffset = 0,
+			    .dstOffset = 0,
+			    .size = instance->m_local_data.size()
+			};
 			vkCmdCopyBuffer(
                 copy_cmd,
                 staging_buffer,
@@ -62,7 +64,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
             );
 
 			KB_CORE_INFO("VertexBuffer about to flush command queue!");
-			device->flush_command_buffer(copy_cmd);
+            instance->m_device->flush_command_buffer(copy_cmd);
 
 			KB_CORE_INFO("VertexBuffer destroying staging buffer!");
 			allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
@@ -70,7 +72,7 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 }
 
 vulkan_vertex_buffer::vulkan_vertex_buffer(
-    const weak_arc<vulkan_logical_device> p_device,
+    const weak_ptr<vulkan_logical_device> p_device,
     const u32 size,
     vertex_buffer_usage_t usage /*= VertexBufferUsage::Dynamic*/
 )
@@ -81,7 +83,6 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
     arc instance{ this };
 	render::submit([instance]() mutable
 		{
-			VkDevice device = instance->m_device->get_vk_device();
 			vulkan_allocator allocator{ "VertexBuffer" };
 
 			VkBufferCreateInfo vertex_buffer_create_info{};

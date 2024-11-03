@@ -26,15 +26,19 @@ vulkan_allocator::~vulkan_allocator()
 
 }
 
-VmaAllocation vulkan_allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer)
+VmaAllocation vulkan_allocator::allocate_buffer(
+    VkBufferCreateInfo p_buffer_create_info,
+    const VmaMemoryUsage p_usage,
+    VkBuffer& p_out_buffer
+)
 {
 	VmaAllocationCreateInfo alloc_create_info{};
-	alloc_create_info.usage = usage;
+	alloc_create_info.usage = p_usage;
 	alloc_create_info.pool = nullptr;
 	alloc_create_info.memoryTypeBits = 0;
 
 	VmaAllocation allocation;
-	VkResult res = vmaCreateBuffer(s_data->allocator, &buffer_create_info, &alloc_create_info, &out_buffer, &allocation, nullptr);
+    const VkResult res = vmaCreateBuffer(s_data->allocator, &p_buffer_create_info, &alloc_create_info, &p_out_buffer, &allocation, nullptr);
 	if (res != VK_SUCCESS)
 	{
 		KB_CORE_ERROR("VulkanAllocator failed to create buffer!");
@@ -97,7 +101,7 @@ void vulkan_allocator::dump_stats()
 	KB_CORE_ERROR("VulkanAllocation DumpStats not implemented!");
 }
 
-GPUMemoryStats vulkan_allocator::get_stats()
+gpu_memory_stats_t vulkan_allocator::get_stats()
 {
 	KB_CORE_ERROR("VulkanAllocator GetStats not implemented!");
 	return { 0, 0 };
@@ -110,7 +114,7 @@ void vulkan_allocator::init(arc<vulkan_logical_device> device)
 
 	VmaAllocatorCreateInfo alloc_info{};
 	alloc_info.vulkanApiVersion = VK_API_VERSION_1_2;
-	alloc_info.physicalDevice = device->get_physical_device()->GetVkDevice();
+	alloc_info.physicalDevice = device->get_physical_device()->get_vk_physical_device();
 	alloc_info.device = device->get_vk_device();
     alloc_info.instance = device->get_vk_instance();
 

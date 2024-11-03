@@ -42,8 +42,8 @@ static VkFormat KbShaderDataTypeToVulkanFormat(shader_data_type_t type)
 }
 }
 
-vulkan_pipeline::vulkan_pipeline(const pipeline_specification_t& specification)
-	: m_specification{ specification }
+vulkan_pipeline::vulkan_pipeline(const VkDevice p_vk_device, const pipeline_specification_t& specification)
+    : m_vk_device{ p_vk_device }, m_specification{ specification }
 {
 	KB_CORE_ASSERT(specification.shader, "no shader set!");
 	KB_CORE_ASSERT(specification.m_target_frame_buffer, "no frame buffer set!");
@@ -56,15 +56,15 @@ vulkan_pipeline::vulkan_pipeline(const pipeline_specification_t& specification)
 vulkan_pipeline::~vulkan_pipeline()
 {
 	submit_resource_free([
+        device = m_vk_device,
         pipeline = m_vk_pipeline,
         pipeline_layout = m_vk_pipeline_layout,
         pipeline_cache = m_vk_pipeline_cache
     ]()
 		{
-			const auto vk_device = vulkan_context::get()->get_device()->get_vk_device();
-			vkDestroyPipeline(vk_device, pipeline, nullptr);
-            vkDestroyPipelineCache(vk_device, pipeline_cache, nullptr);
-			vkDestroyPipelineLayout(vk_device, pipeline_layout, nullptr);
+			vkDestroyPipeline(device, pipeline, nullptr);
+            vkDestroyPipelineCache(device, pipeline_cache, nullptr);
+			vkDestroyPipelineLayout(device, pipeline_layout, nullptr);
 		}
 	);
 }
@@ -80,7 +80,6 @@ void vulkan_pipeline::invalidate()
 
 void vulkan_pipeline::RT_Invalidate()
 {
-	VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
 	auto shader = m_specification.shader.As<vulkan_shader>();
     auto frame_buffer = m_specification.m_target_frame_buffer.As<vulkan_frame_buffer>();
 
@@ -109,7 +108,7 @@ void vulkan_pipeline::RT_Invalidate()
 	pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(vulkan_push_constant_ranges.size());
 	pipeline_layout_create_info.pPushConstantRanges = vulkan_push_constant_ranges.data();
 
-	if (vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &m_vk_pipeline_layout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(m_vk_device, &pipeline_layout_create_info, nullptr, &m_vk_pipeline_layout) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create pipeline layout!");
 #ifdef KB_DEBUG
     log::core::trace(
@@ -348,11 +347,11 @@ void vulkan_pipeline::RT_Invalidate()
 	// what is a pipeline cache?
 	VkPipelineCacheCreateInfo pipeline_cache_create_info = {};
 	pipeline_cache_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	if (vkCreatePipelineCache(device, &pipeline_cache_create_info, nullptr, &m_vk_pipeline_cache) != VK_SUCCESS)
+	if (vkCreatePipelineCache(m_vk_device, &pipeline_cache_create_info, nullptr, &m_vk_pipeline_cache) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create Pipeline Cache!");
 
 	// Create rendering pipeline using the specified states
-	if (vkCreateGraphicsPipelines(device, m_vk_pipeline_cache, 1, &pipeline_create_info, nullptr, &m_vk_pipeline) != VK_SUCCESS)
+	if (vkCreateGraphicsPipelines(m_vk_device, m_vk_pipeline_cache, 1, &pipeline_create_info, nullptr, &m_vk_pipeline) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create pipeline!");
 
 #ifdef KB_DEBUG

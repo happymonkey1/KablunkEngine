@@ -19,11 +19,11 @@ struct render_backend
     auto init() noexcept -> void { backend()->init(); }
     auto shutdown() noexcept -> void { backend()->shutdown(); }
 
-    auto begin_frame(weak_arc<graphics_context> p_context) noexcept -> void { backend()->begin_frame(p_context); }
+    auto begin_frame(weak_ptr<graphics_context> p_context) noexcept -> void { backend()->begin_frame(p_context); }
     auto end_frame() noexcept -> void { backend()->end_frame(); }
 
     auto begin_render_pass(
-        weak_arc<graphics_context> p_context,
+        weak_ptr<graphics_context> p_context,
         const arc<render_command_buffer>& p_render_command_buffer,
         const arc<render_pass>& p_render_pass,
         bool p_explicit_clear = false

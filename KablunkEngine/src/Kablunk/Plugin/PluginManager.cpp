@@ -24,7 +24,7 @@ namespace kb
 		
 	}
 
-	weak_arc<Plugin> PluginManager::load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type, bool force_reload /*= false*/) noexcept
+	weak_ptr<Plugin> PluginManager::load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type, bool force_reload /*= false*/) noexcept
 	{
 		if (is_plugin_loaded(plugin_name))
 		{
@@ -39,7 +39,7 @@ namespace kb
 		}
 
 		auto pair = m_plugins.emplace(plugin_name, arc<Plugin>::Create(plugin_name, plugin_path, plugin_type));
-		auto plugin = weak_arc<Plugin>(m_plugins[plugin_name].get());
+		auto plugin = weak_ptr<Plugin>(m_plugins[plugin_name].get());
 
 		if (!plugin || !plugin->is_loaded())
 		{
@@ -53,7 +53,7 @@ namespace kb
 		return plugin;
 	}
 
-	weak_arc<Plugin> PluginManager::try_load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
+	weak_ptr<Plugin> PluginManager::try_load_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
 	{
 		if (is_plugin_loaded(plugin_name))
 			return get_plugin(plugin_name);
@@ -61,7 +61,7 @@ namespace kb
 		return load_plugin(plugin_name, plugin_path, plugin_type);
 	}
 
-	weak_arc<Plugin> PluginManager::reload_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
+	weak_ptr<Plugin> PluginManager::reload_plugin(const std::string& plugin_name, const std::filesystem::path& plugin_path, PluginType plugin_type) noexcept
 	{
 		KB_CORE_ASSERT(is_plugin_loaded(plugin_name), "Trying to reload {}, which is not loaded!", plugin_name);
 
@@ -69,7 +69,7 @@ namespace kb
 
 		m_plugins[plugin_name] = arc<Plugin>::Create(plugin_name, plugin_path, plugin_type);
 
-		weak_arc<Plugin> plugin = get_plugin(plugin_name);
+		weak_ptr<Plugin> plugin = get_plugin(plugin_name);
 		plugin->init();
 
 		return plugin;
@@ -86,10 +86,10 @@ namespace kb
 		m_plugins.erase(plugin_name);
 	}
 
-	weak_arc<Plugin> PluginManager::get_plugin(const std::string& plugin_name) const noexcept
+	weak_ptr<Plugin> PluginManager::get_plugin(const std::string& plugin_name) const noexcept
 	{
 		KB_CORE_ASSERT(is_plugin_loaded(plugin_name), "Plugin is not loaded!");
-		weak_arc<Plugin> plugin = m_plugins.at(plugin_name);
+		weak_ptr<Plugin> plugin = m_plugins.at(plugin_name);
 
 		KB_CORE_ASSERT(plugin, "Plugin is not valid!");
 		return plugin;

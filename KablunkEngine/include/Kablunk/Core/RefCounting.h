@@ -258,22 +258,22 @@ private:
 	friend class arc;
 
 	template <typename T2>
-	friend class weak_arc;
+	friend class weak_ptr;
 
 	mutable T* m_ptr;
 };
 
 template <typename T>
-class KB_TRIVIAL_ABI weak_arc
+class KB_TRIVIAL_ABI weak_ptr
 {
 public:
-	constexpr weak_arc() = default;
+	constexpr weak_ptr() = default;
 	//WeakRef(IntrusiveRef<T> arc) : m_ptr{ arc.get() } { }
-	constexpr weak_arc(const arc<T>& ref) : m_ptr{ ref.m_ptr } { }
-	constexpr weak_arc(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
-	constexpr weak_arc(T* ptr) : m_ptr{ ptr } { }
+	constexpr weak_ptr(const arc<T>& ref) : m_ptr{ ref.m_ptr } { }
+	constexpr weak_ptr(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
+	constexpr weak_ptr(T* ptr) : m_ptr{ ptr } { }
 
-	constexpr ~weak_arc() noexcept = default;
+	constexpr ~weak_ptr() noexcept = default;
 
 #if KB_LIVE_REFERENCES
 	bool Valid() const { return m_ptr ? Internal::IsLive(m_ptr) : false; }
@@ -288,9 +288,9 @@ public:
 	constexpr operator bool() const noexcept { return Valid(); }
 
     template <typename T2>
-    constexpr auto as() const noexcept -> weak_arc<T2>
+    constexpr auto as() const noexcept -> weak_ptr<T2>
 	{
-        return weak_arc<T2>{ static_cast<T2*>(m_ptr) };
+        return weak_ptr<T2>{ static_cast<T2*>(m_ptr) };
 	}
 
     // get the raw pointer

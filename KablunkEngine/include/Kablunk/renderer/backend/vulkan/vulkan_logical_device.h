@@ -26,7 +26,7 @@ struct queue_family_indices_t
 	bool HasGraphics() const { return Graphics_family.has_value(); }
 	bool IsComplete() const { return Graphics_family.has_value() && Present_family.has_value() && m_compute_family.has_value() && m_transfer_family.has_value(); }
     bool has_compute() const { return m_compute_family.has_value(); }
-    bool has_trasfer() const { return m_transfer_family.has_value(); }
+    bool has_transfer() const { return m_transfer_family.has_value(); }
 };
 
 // Physical Device
@@ -36,22 +36,22 @@ public:
 	vulkan_physical_device(VkInstance p_vk_instance);
     ~vulkan_physical_device() override = default;
 
-	VkPhysicalDevice GetVkDevice() const { return m_device; }
-	const queue_family_indices_t& GetQueueFamilyIndices() const { return m_queue_family_indices; }
+	VkPhysicalDevice get_vk_physical_device() const { return m_device; }
+	const queue_family_indices_t& get_queue_family_indices() const { return m_queue_family_indices; }
 
-	const VkPhysicalDeviceProperties& GetProperties() const { return m_properties; }
-	const VkPhysicalDeviceLimits& GetLimits() const { return m_properties.limits; }
-	const VkPhysicalDeviceFeatures& GetFeatures() const { return m_features; }
-	const std::vector<const char*>& GetRequiredExtensions() const { return m_required_extensions; }
-	VkFormat GetDepthFormat() const { return m_depth_format; }
+	const VkPhysicalDeviceProperties& get_vk_device_properties() const { return m_properties; }
+	const VkPhysicalDeviceLimits& get_vk_device_limits() const { return m_properties.limits; }
+	const VkPhysicalDeviceFeatures& get_vk_device_features() const { return m_features; }
+	const std::vector<const char*>& get_required_extensions() const { return m_required_extensions; }
+	VkFormat get_vk_depth_format() const { return m_depth_format; }
 private:
-	void FindPresentingIndices(VkSurfaceKHR surface);
-	queue_family_indices_t FindQueueFamilies(VkPhysicalDevice device);
-	bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
-	bool CheckDeviseExtensionSupport(VkPhysicalDevice device);
-	std::vector<VkExtensionProperties> FindSupportedExtensions(VkPhysicalDevice device);
-	VkFormat FindDepthFormat() const;
-    void CreateQueueInfos();
+	void find_presenting_indices(VkSurfaceKHR surface);
+	queue_family_indices_t find_queue_families(VkPhysicalDevice device);
+	bool is_physical_device_suitable(VkPhysicalDevice device);
+	bool check_device_extension_support(VkPhysicalDevice device);
+	std::vector<VkExtensionProperties> find_supported_extensions(VkPhysicalDevice device);
+	VkFormat find_depth_format() const;
+    void create_queue_infos();
 private:
 	VkPhysicalDevice m_device = nullptr;
 
@@ -83,7 +83,7 @@ public:
     );
 	~vulkan_logical_device() override;
 
-	void Destroy();
+	void destroy();
 
     auto get_vk_instance() const noexcept -> VkInstance { return m_vk_instance; }
 
@@ -91,19 +91,19 @@ public:
     VkQueue get_vk_compute_queue() const { return m_vk_compute_queue; }
 
 	VkCommandBuffer get_vk_command_buffer(bool begin, bool p_compute = false);
-	void flush_command_buffer(VkCommandBuffer command_buffer);
-	void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, command_buffer_type_t p_command_buffer_type);
+	void flush_command_buffer(VkCommandBuffer command_buffer) const;
+	void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, command_buffer_type_t p_command_buffer_type) const;
 
 	VkCommandBuffer create_secondary_command_buffer();
 
 	const arc<vulkan_physical_device>& get_physical_device() const noexcept { return m_physical_device; }
     auto get_physical_device() noexcept -> arc<vulkan_physical_device>& { return m_physical_device; }
-	VkPhysicalDevice get_vk_physical_device() { return m_physical_device->GetVkDevice(); }
+	VkPhysicalDevice get_vk_physical_device() { return m_physical_device->get_vk_physical_device(); }
 	VkDevice get_vk_device() const { return m_vk_device; }
 
 private:
-    arc<command_pool> get_thread_local_command_pool();
-    arc<command_pool> get_or_create_thread_local_command_pool();
+    const vulkan_command_pool& get_thread_local_command_pool() const;
+    const vulkan_command_pool& get_or_create_thread_local_command_pool();
 
 private:
     VkInstance m_vk_instance;
@@ -114,7 +114,7 @@ private:
 	VkQueue m_vk_graphics_queue;
     VkQueue m_vk_compute_queue;
 
-    std::map<std::thread::id, arc<command_pool>> m_command_pools;
+    std::map<std::thread::id, vulkan_command_pool> m_command_pools;
 
 	bool m_destroyed = false;
 };

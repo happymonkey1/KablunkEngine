@@ -163,7 +163,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
     //m_renderer_data.m_camera_uniform_buffer_set->Create(, 0);
 
 	// Create framebuffer
-    backend::frame_buffer_specification frame_buffer_spec{};
+    backend::frame_buffer_specification_t frame_buffer_spec{};
 	frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
 	frame_buffer_spec.m_samples = 1;
 	frame_buffer_spec.m_clear_color_on_load = false;

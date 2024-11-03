@@ -160,7 +160,7 @@ auto vulkan_render_backend::shutdown() noexcept -> void
 }
 
 auto vulkan_render_backend::begin_frame(
-    weak_arc<graphics_context> p_context
+    weak_ptr<graphics_context> p_context
 ) noexcept -> void
 {
     const auto vulkan_context = p_context.as<vk::vulkan_context>();
@@ -191,7 +191,7 @@ auto vulkan_render_backend::end_frame() noexcept -> void
 }
 
 auto vulkan_render_backend::begin_render_pass(
-    weak_arc<graphics_context> p_graphics_context,
+    weak_ptr<graphics_context> p_graphics_context,
     const arc<render_command_buffer>& p_render_command_buffer,
     const arc<render_pass>& p_render_pass,
     bool p_explicit_clear
@@ -262,7 +262,7 @@ auto vulkan_render_backend::begin_render_pass(
                 render_pass_begin_info.renderArea.offset.y = 0;
                 render_pass_begin_info.renderArea.extent.width = width;
                 render_pass_begin_info.renderArea.extent.height = height;
-                render_pass_begin_info.framebuffer = vulkan_frame_buffer->get_vk_framebuffer();
+                render_pass_begin_info.framebuffer = vulkan_frame_buffer->get_vk_frame_buffer();
                 KB_CORE_ASSERT(render_pass_begin_info.framebuffer, "render pass framebuffer is null?");
 
                 viewport.x = 0.0f;
@@ -271,7 +271,7 @@ auto vulkan_render_backend::begin_render_pass(
                 viewport.height = static_cast<f32>(height);
             }
 
-            const auto& clear_values = vulkan_frame_buffer->GetVkClearValues();
+            const auto& clear_values = vulkan_frame_buffer->get_vk_clear_values();
             render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
             render_pass_begin_info.pClearValues = clear_values.data();
 
@@ -920,7 +920,7 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
 }
 
 auto vulkan_render_backend::rt_allocate_material_descriptor_set(
-    weak_arc<graphics_context> p_context,
+    weak_ptr<graphics_context> p_context,
     VkDescriptorSetAllocateInfo& p_alloc_info
 ) noexcept -> VkDescriptorSet
 {

@@ -29,12 +29,12 @@ namespace kb::render
 // forward declaration
 class renderer_2d;
 
-struct SceneRendererSpecification
+struct scene_renderer_specification_t
 {
 	bool swap_chain_target = false;
 };
 
-struct CameraDataUB
+struct camera_data_ub_t
 {
 	glm::mat4 view_projection;
 	glm::mat4 projection;
@@ -42,19 +42,19 @@ struct CameraDataUB
 	vec3_packed position;
 };
 
-struct SceneRendererCamera
+struct scene_renderer_camera_t
 {
 	camera camera;
 	glm::mat4 view_mat;
 };
 
-struct SceneRendererData
+struct scene_renderer_data_t
 {
-	SceneRendererCamera camera;
+	scene_renderer_camera_t camera;
 	LightEnvironmentData light_environment;
 };
 
-struct PointLightUB
+struct point_light_ub_t
 {
     static constexpr size_t k_point_light_buffer_size = 128ull;
     uint32_t count{ 0 };
@@ -65,14 +65,14 @@ struct PointLightUB
 class scene_renderer final : public RefCounted
 {
 public:
-	scene_renderer(const arc<Scene>& context, const SceneRendererSpecification& spec = {});
+	scene_renderer(const arc<Scene>& context, const scene_renderer_specification_t& spec = {});
 	~scene_renderer() override;
 
     // #TODO this should be private, if construct is only place that calls this
 	void init();
 	void set_scene(arc<Scene> context);
 
-	void begin_scene(const SceneRendererCamera& camera);
+	void begin_scene(const scene_renderer_camera_t& camera);
 	void end_scene();
 
 	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<backend::material> override_material = {});
@@ -110,7 +110,7 @@ private:
 
 private:
 	arc<Scene> m_context;
-	SceneRendererSpecification m_specification;
+	scene_renderer_specification_t m_specification;
 
 	arc<backend::render_command_buffer> m_command_buffer;
 
@@ -145,7 +145,7 @@ private:
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
 	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
-    PointLightUB* m_point_lights_ub = new PointLightUB{};
+    point_light_ub_t* m_point_lights_ub = new point_light_ub_t{};
 
 	GPUTimeQueryIndices m_gpu_time_query_indices;
 
@@ -157,7 +157,7 @@ private:
 	// flag for flushing scene data on a separate "job" thread
 	bool m_use_threads = false;
 
-	SceneRendererData m_scene_data;
+	scene_renderer_data_t m_scene_data;
 
 	struct DrawCommandData
 	{

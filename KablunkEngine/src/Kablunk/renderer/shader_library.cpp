@@ -29,7 +29,7 @@ void shader_library::Add(const arc<backend::shader>& shader)
 
 arc<backend::shader> shader_library::Load(const std::string& filepath)
 {
-    auto shader{backend::shader::create(filepath) };
+    auto shader{ backend::shader::create(filepath) };
     Add(shader);
     return shader;
 }

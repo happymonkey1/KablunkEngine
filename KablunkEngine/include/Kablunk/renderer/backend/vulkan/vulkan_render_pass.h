@@ -3,10 +3,9 @@
 #define KABLUNK_RENDERER_BACKEND_VULKAN_RENDER_PASS_H
 
 #include "Kablunk/renderer/backend/render_pass.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_descriptor_set_manager.h"
 
 #include <vulkan/vulkan.h>
-
-#include "kablunk/renderer/backend/vulkan/vulkan_descriptor_set_manager.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::backend::vk

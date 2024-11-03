@@ -1,6 +1,5 @@
 #include "kablunkpch.h"
 
-#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
 
@@ -113,8 +112,8 @@ static kb::unordered_flat_map<uint32_t, kb::unordered_flat_map<uint32_t, vulkan_
 static kb::unordered_flat_map<uint32_t, kb::unordered_flat_map<uint32_t, vulkan_shader::vk_storage_buffer_t*>> s_storage_buffers;
 
 
-vulkan_shader::vulkan_shader(const std::string& path, bool force_compile)
-	: m_file_path{ path }, m_hash{ 0 }
+vulkan_shader::vulkan_shader(VkDevice p_vk_device, const std::string& path, bool force_compile)
+	: m_file_path{ path }, m_hash{ 0 }, m_vk_device{ p_vk_device }
 {
     KB_PROFILE_SCOPE;
 
@@ -139,11 +138,11 @@ void vulkan_shader::destroy()
 		return;
 
     arc<vulkan_shader> instance{ this };
-	render::submit_resource_free([instance]()
+    const auto vk_device = m_vk_device;
+	render::submit_resource_free([instance, vk_device]()
 		{
-            const VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
 			for (const auto& pipeline_create_info : instance->m_pipeline_shader_stage_create_infos)
-				vkDestroyShaderModule(device, pipeline_create_info.module, nullptr);
+				vkDestroyShaderModule(vk_device, pipeline_create_info.module, nullptr);
 		}
 	);
 
@@ -290,8 +289,6 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 
 	ShaderMaterialDescriptorSet result;
 
-    const VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
-
 	// #TODO Move this to the centralized renderer
 	VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
 	descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -300,7 +297,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	descriptor_pool_create_info.pPoolSizes = m_type_counts.at(set).data();
 	descriptor_pool_create_info.maxSets = 1;
 
-	if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &result.pool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(m_vk_device, &descriptor_pool_create_info, nullptr, &result.pool) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "failed to create descriptor pool info!");
 
 	VkDescriptorSetAllocateInfo alloc_info = {};
@@ -310,7 +307,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
 	result.descriptor_sets.emplace_back();
-	if (vkAllocateDescriptorSets(device, &alloc_info, result.descriptor_sets.data()) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(m_vk_device, &alloc_info, result.descriptor_sets.data()) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to allocate descriptor sets!");
 
 	return result;
@@ -321,8 +318,6 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
     KB_PROFILE_SCOPE;
 
 	ShaderMaterialDescriptorSet result;
-
-    const VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
 
 	unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> pool_sizes;
 	for (uint32_t descriptor_set = 0; descriptor_set < m_shader_descriptor_sets.size(); descriptor_set++)
@@ -371,7 +366,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	descriptor_pool_create_info.pPoolSizes = pool_sizes.at(set).data();
 	descriptor_pool_create_info.maxSets = number_of_sets;
 
-	if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &result.pool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(m_vk_device, &descriptor_pool_create_info, nullptr, &result.pool) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create descriptor pool!");
 
 	result.descriptor_sets.resize(number_of_sets);
@@ -384,7 +379,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
-		if (vkAllocateDescriptorSets(device, &alloc_info, &result.descriptor_sets[i]) != VK_SUCCESS)
+		if (vkAllocateDescriptorSets(m_vk_device, &alloc_info, &result.descriptor_sets[i]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to allocate descriptor sets!");
 	}
 	return result;
@@ -513,8 +508,6 @@ void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSt
 {
     KB_PROFILE_SCOPE;
 
-    const VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
-
 	m_pipeline_shader_stage_create_infos.clear();
 	for (auto [stage, data] : shader_data)
 	{
@@ -526,7 +519,7 @@ void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSt
 		module_create_info.pCode = data.data();
 
 		VkShaderModule shader_module;
-		if (vkCreateShaderModule(device, &module_create_info, nullptr, &shader_module) != VK_SUCCESS)
+		if (vkCreateShaderModule(m_vk_device, &module_create_info, nullptr, &shader_module) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create shader module!");
 
 		VkPipelineShaderStageCreateInfo& shader_stage = m_pipeline_shader_stage_create_infos.emplace_back();
@@ -736,8 +729,6 @@ void vulkan_shader::CreateDescriptors()
 {
     KB_PROFILE_SCOPE;
 
-    const VkDevice device = vulkan_context::get()->get_device()->get_vk_device();
-
 	m_type_counts.clear();
 	for (uint32_t set = 0; set < m_shader_descriptor_sets.size(); ++set)
 	{
@@ -882,7 +873,7 @@ void vulkan_shader::CreateDescriptors()
 			m_descriptor_set_layouts.resize(set + 1);
 
         if (vkCreateDescriptorSetLayout(
-            device,
+            m_vk_device,
             &descriptor_layout_create_info,
             nullptr,
             &m_descriptor_set_layouts.at(set)

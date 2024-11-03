@@ -30,11 +30,11 @@ public:
     static auto init() noexcept -> void;
     static auto shutdown() noexcept -> void;
     static auto begin_frame(
-        weak_arc<graphics_context> p_context
+        weak_ptr<graphics_context> p_context
     ) noexcept -> void;
     static auto end_frame() noexcept -> void;
     static auto begin_render_pass(
-        weak_arc<graphics_context> p_graphics_context,
+        weak_ptr<graphics_context> p_graphics_context,
         const arc<render_command_buffer>& p_render_command_buffer,
         const arc<render_pass>& p_render_pass,
         bool p_explicit_clear
@@ -87,7 +87,7 @@ public:
         VkDescriptorSetAllocateInfo& p_alloc_info
     ) noexcept -> VkDescriptorSet;
     static auto rt_allocate_material_descriptor_set(
-        weak_arc<graphics_context> p_context,
+        weak_ptr<graphics_context> p_context,
         VkDescriptorSetAllocateInfo& p_alloc_info
     ) noexcept -> VkDescriptorSet;
 };

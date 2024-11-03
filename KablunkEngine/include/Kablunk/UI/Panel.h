@@ -86,7 +86,7 @@ namespace kb::ui
 
 		virtual void on_update(Timestep ts) override;
 
-		virtual void on_render(const render::SceneRendererCamera& scene_camera) override;
+		virtual void on_render(const render::scene_renderer_camera_t& scene_camera) override;
 
 		// ======
 		// events

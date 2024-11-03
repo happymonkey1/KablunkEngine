@@ -9,7 +9,7 @@ namespace kb
 
 	void NativeScript::Destroy()
 	{
-		weak_arc<Scene> scene = NativeScriptEngine::get().get_scene();
+		weak_ptr<Scene> scene = NativeScriptEngine::get().get_scene();
 
 		KB_CORE_ASSERT(scene, "scene not set!");
 
