@@ -27,7 +27,7 @@ public:
 	vulkan_allocator(const std::string& tag);
 	~vulkan_allocator();
 
-	VmaAllocation allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer);
+	VmaAllocation allocate_buffer(VkBufferCreateInfo p_buffer_create_info, VmaMemoryUsage p_usage, VkBuffer& p_out_buffer);
 	VmaAllocation allocate_image(const VkImageCreateInfo& image_create_info, VmaMemoryUsage usage, VkImage& out_image);
 
 	void free(VmaAllocation allocation);

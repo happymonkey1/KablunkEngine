@@ -8,7 +8,7 @@
 namespace kb::render
 { // start namespace kb::render
 
-struct virtual_texture
+struct virtual_texture_t
 {
     // virtual texture id
     virtual_texture_handle m_handle{};

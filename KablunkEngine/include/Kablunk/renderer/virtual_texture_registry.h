@@ -9,8 +9,8 @@
 #include <rapidjson/document.h>
 
 
-namespace kb::asset
-{ // start namespace kb::asset
+namespace kb::render
+{ // start namespace kb::render
 
 // source texture type
 enum class raw_texture_asset_type_t
@@ -50,6 +50,7 @@ struct virtual_texture_specification
 enum class serialization_type_t
 {
     none = 0,
+    yaml,
     json,
     bin,
 };
@@ -60,7 +61,7 @@ struct virtual_texture_registry_specification
     // flag for whether initialization should happen during construction
     bool m_initialize_on_construct = false;
     // serialization type (binary should be used for best performance in distribution builds)
-    serialization_type_t m_serialization_type = serialization_type_t::json;
+    serialization_type_t m_serialization_type = serialization_type_t::yaml;
 };
 
 struct texture_metadata
@@ -117,25 +118,25 @@ public:
     // save the registry to a cache document
     auto save(
         const std::filesystem::path& p_cache_dir,
-        serialization_type_t p_serialization_type = serialization_type_t::json
+        serialization_type_t p_serialization_type = serialization_type_t::yaml
     ) const noexcept -> void;
 
     // load a cached version (cache document) of the registry
     auto load(
         const std::filesystem::path& p_cache_dir,
-        serialization_type_t p_serialization_type = serialization_type_t::json
+        serialization_type_t p_serialization_type = serialization_type_t::yaml
     ) noexcept -> void;
 
     [[nodiscard]] auto get_texture_2d_by_raw_handle(
         raw_texture_handle p_handle
-    ) const noexcept -> const arc<render::backend::texture_2d>&;
+    ) const noexcept -> const arc<backend::texture_2d>&;
     [[nodiscard]] auto get_texture_2d_by_virtual_handle(
         virtual_texture_handle p_handle
-    ) const noexcept -> const arc<render::backend::texture_2d>&;
+    ) const noexcept -> const arc<backend::texture_2d>&;
 
     [[nodiscard]] auto get_virtual_texture(
         virtual_texture_handle p_handle
-    ) const noexcept -> const render::virtual_texture&;
+    ) const noexcept -> const virtual_texture_t&;
 
     [[nodiscard]] auto has_virtual_texture(const virtual_texture_handle p_handle) const noexcept -> bool
     {
@@ -144,7 +145,7 @@ public:
     }
 
     // scan virtual textures and check if there are any matches on `p_handle`
-    [[nodiscard]] auto find_virtual_texture_by_raw_handle(const raw_texture_handle p_handle) const noexcept -> option<render::virtual_texture>
+    [[nodiscard]] auto find_virtual_texture_by_raw_handle(const raw_texture_handle p_handle) const noexcept -> option<virtual_texture_t>
     {
         for (const auto& [virtual_handle, raw_handle] : m_virtual_to_raw_handle_map)
         {
@@ -158,14 +159,14 @@ public:
     [[nodiscard]] auto get_debug_statistics() const noexcept -> debug_statistics;
 
     // returns an immutable reference to the underlying raw texture map
-    [[nodiscard]] auto get_raw_texture_map() const noexcept -> const unordered_flat_map<raw_texture_handle, arc<render::backend::texture_2d>>&
+    [[nodiscard]] auto get_raw_texture_map() const noexcept -> const unordered_flat_map<raw_texture_handle, arc<backend::texture_2d>>&
     {
         return m_raw_textures;
     }
 
     // returns an immutable reference to the underlying virtual texture map
     [[nodiscard]] auto get_virtual_texture_map() const noexcept ->
-        const unordered_flat_map<virtual_texture_handle, render::virtual_texture>&
+        const unordered_flat_map<virtual_texture_handle, virtual_texture_t>&
     {
         return m_virtual_textures;
     }
@@ -209,21 +210,21 @@ private:
 
 private:
     // map of raw textures
-    unordered_flat_map<raw_texture_handle, arc<render::backend::texture_2d>> m_raw_textures{};
+    unordered_flat_map<raw_texture_handle, arc<backend::texture_2d>> m_raw_textures{};
     // map of texture metadata
     unordered_flat_map<raw_texture_handle, texture_metadata> m_texture_metadata_map{};
     // map of virtual texture handle to raw texture handle
     unordered_flat_map<virtual_texture_handle, raw_texture_handle> m_virtual_to_raw_handle_map{};
     // map of virtual texture
-    unordered_flat_map<virtual_texture_handle, render::virtual_texture> m_virtual_textures{};
+    unordered_flat_map<virtual_texture_handle, virtual_texture_t> m_virtual_textures{};
 
     // missing texture
     struct missing_texture_data
     {
         // raw missing texture data
-        arc<render::backend::texture_2d> m_raw_texture{};
+        arc<backend::texture_2d> m_raw_texture{};
         // virtual texture data
-        render::virtual_texture m_virtual_texture{};
+        virtual_texture_t m_virtual_texture{};
         // raw texture handle
         raw_texture_handle m_raw_texture_handle{};
     } m_missing_texture_data{};
@@ -232,4 +233,4 @@ private:
     debug_statistics m_debug_statistics{};
 };
 
-} // end namespace kb::asset
+} // end namespace kb::render

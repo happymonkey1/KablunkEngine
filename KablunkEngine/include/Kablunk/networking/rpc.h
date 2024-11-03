@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Kablunk/networking/internal_packet_type.h"
+#include "Kablunk/networking/internal_packet_type_t.h"
 
 #include <msgpack.hpp>
 

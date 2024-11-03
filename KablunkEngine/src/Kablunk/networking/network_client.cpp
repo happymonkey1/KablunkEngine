@@ -111,7 +111,7 @@ auto network_client::send_raw_authentication_check(
     const auto auth_type = static_cast<underlying_auth_type_t>(p_auth_type);
     auto auth_check_buffer = util::as_buffer(
         authentication_request_data{
-            .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_check),
+            .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_check),
             .m_request_id = m_packet_counter,
             .m_auth_version = auth_type,
             .m_auth_hash = compute_auth_hash(auth_type, m_service_name),
@@ -174,32 +174,32 @@ auto network_client::dispatch_handler_by_packet_type(
     // dispatch internal handlers
     switch (p_packet_type)
     {
-    case static_cast<underlying_packet_type_t>(internal_packet_type::none):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::none):
     {
         KB_CORE_WARN("[network_client]: Invalid packet type 0!");
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_check):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_check):
     {
         KB_CORE_WARN("[network_client]: Recieved network check request from server?");
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_response):
     {
         handle_auth_response(p_packet_data);
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_call):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_call):
     {
         KB_CORE_WARN("[network_client]: Recieved rpc call on client?");
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_response):
     {
         handle_rpc_response(p_packet_data);
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_error_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_error_response):
     {
         const auto error_response_data = util::convert_object<network::error_response_data>(p_packet_data);
         if (!error_response_data)
@@ -224,7 +224,7 @@ auto network_client::dispatch_handler_by_packet_type(
     }
     default:
     {
-        if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type::kb_reserved))
+        if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_reserved))
         {
             if (m_callbacks.m_data_received_callback_func)
                 m_callbacks.m_data_received_callback_func(p_packet_data);

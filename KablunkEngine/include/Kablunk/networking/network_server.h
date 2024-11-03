@@ -141,7 +141,7 @@ public:
         send_structured_data_to_client(
             p_client_id,
             error_response_data{
-                .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type::kb_error_response),
+                .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_error_response),
                 .m_response_id = p_response_id,
                 .m_error_code = error_code
             },
@@ -216,7 +216,7 @@ private:
         send_structured_data_to_client(
             p_client_id,
             error_response_data{
-                .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type::kb_error_response),
+                .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_error_response),
                 .m_response_id = p_response_id,
                 .m_error_code = static_cast<underlying_error_code_type_t>(p_error_code),
             },

@@ -51,7 +51,7 @@ public:
         client_disconnected_callback_func_t m_client_disconnected_callback_func = nullptr;
     };
 
-    using packet_underlying_t = std::underlying_type_t<internal_packet_type>;
+    using packet_underlying_t = std::underlying_type_t<internal_packet_type_t>;
 
     using promise_void_t = std::promise<void>;
     using future_void_t = std::future<void>;
@@ -63,6 +63,7 @@ public:
 
     inline static constexpr std::size_t k_network_thread_sleep_ms = 10ull;
     inline static constexpr std::chrono::milliseconds k_rpc_timeout_ms = std::chrono::milliseconds{ 500 };
+
 public:
     network_client() noexcept = default;
     ~network_client() noexcept;
@@ -342,7 +343,7 @@ auto network_client::call_raw_rpc(
     const auto args_obj_handle = msgpack::unpack(args_buffer.data(), args_buffer.size());
 
     const rpc_request request{
-        .m_type = static_cast<packet_underlying_t>(internal_packet_type::kb_rpc_call),
+        .m_type = static_cast<packet_underlying_t>(internal_packet_type_t::kb_rpc_call),
         .m_request_id = m_packet_counter,
         .m_name = p_rpc_name,
         .m_arguments = args_obj_handle.get()

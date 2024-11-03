@@ -225,12 +225,12 @@ auto network_server::dispatch_handler_by_packet_type(
     // invoke internal handlers
     switch (p_packet_type)
     {
-    case static_cast<underlying_packet_type_t>(internal_packet_type::none):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::none):
     {
         KB_CORE_WARN("[network_server::on_data_received]: Invalid packet type 0!");
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_check):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_check):
     {
         const auto result = client_authentication_handler(p_client_info, p_data_object);
         if (result)
@@ -244,7 +244,7 @@ auto network_server::dispatch_handler_by_packet_type(
 
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_response):
     {
         KB_CORE_WARN(
             "[network_server::on_data_received]: Unexpected packet type {} from client {}",
@@ -253,7 +253,7 @@ auto network_server::dispatch_handler_by_packet_type(
         );
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_call):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_call):
     {
         // #TODO handle response
         const auto rpc_response = m_rpc_dispatcher.dispatch(
@@ -286,7 +286,7 @@ auto network_server::dispatch_handler_by_packet_type(
 
         break;
     }
-    case static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_response):
+    case static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_response):
     {
         KB_CORE_WARN(
             "[network_server::on_data_received]: Unexpected packet type {} from client {}",
@@ -297,7 +297,7 @@ auto network_server::dispatch_handler_by_packet_type(
     }
     default:
     {
-        if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type::kb_reserved))
+        if (p_packet_type > static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_reserved))
         {
             if (m_callbacks.m_data_received_callback_func)
                 m_callbacks.m_data_received_callback_func(p_client_info, p_data_object);
@@ -390,7 +390,7 @@ auto network_server::send_authentication_response_to_client(
 ) const noexcept -> void
 {
     const auto auth_response = util::as_buffer(authentication_response_data{
-        .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type::kb_auth_response),
+        .m_packet_type = static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_auth_response),
         // #TODO require version in create call and pass...
         .m_response_id = p_response_id,
         .m_service_version = "0.0.1",

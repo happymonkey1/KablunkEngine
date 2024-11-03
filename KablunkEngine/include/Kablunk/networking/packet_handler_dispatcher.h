@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Kablunk/networking/internal_packet_type.h"
+#include "Kablunk/networking/internal_packet_type_t.h"
 #include "Kablunk/meta/func_traits.h"
 #include "Kablunk/meta/func_invoke.h"
 #include "Kablunk/networking/client_info.h"

@@ -23,7 +23,7 @@ class rpc_dispatcher
 {
 public:
     // underlying integral type of `packet_type`
-    using packet_underlying_t = std::underlying_type_t<internal_packet_type>;
+    using packet_underlying_t = std::underlying_type_t<internal_packet_type_t>;
     // error code response for an rpc call
     using response_error_t = underlying_error_code_type_t;
     // successful rpc response for an rpc call
@@ -133,7 +133,7 @@ auto rpc_dispatcher::bind_to_msgpack_buffer(
             }
 
             return rpc_response{
-                .m_type = static_cast<packet_underlying_t>(internal_packet_type::kb_rpc_response),
+                .m_type = static_cast<packet_underlying_t>(internal_packet_type_t::kb_rpc_response),
                 .m_response_id = p_packet_id,
                 .m_name = p_name,
                 .m_data_buffer = func_response_data_buffer
@@ -166,9 +166,9 @@ inline auto rpc_dispatcher::dispatch(
 
     auto&& packet_type = request.m_type;
     KB_CORE_ASSERT(
-        packet_type == static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_call),
+        packet_type == static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_call),
         "[network_server]: rpc call packet type is not '{}'?",
-        static_cast<underlying_packet_type_t>(internal_packet_type::kb_rpc_call)
+        static_cast<underlying_packet_type_t>(internal_packet_type_t::kb_rpc_call)
     );
 
     auto&& request_id = request.m_request_id;

@@ -7,7 +7,7 @@ namespace kb::network
 
 // enum def for engine defined packets
 // DO NOT OVERRIDE VALUES
-enum class internal_packet_type : u16
+enum class internal_packet_type_t : u16
 {
     none = 0x0000,
     // check that we are connecting to the correct service
@@ -29,6 +29,6 @@ enum class internal_packet_type : u16
     kb_reserved = 0x00FF,
 };
 
-using underlying_packet_type_t = std::underlying_type_t<internal_packet_type>;
+using underlying_packet_type_t = std::underlying_type_t<internal_packet_type_t>;
 
 } // end namespace kb::network

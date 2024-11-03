@@ -1,6 +1,6 @@
 #include "kablunkpch.h"
 
-#include "Kablunk/Asset/registry/virtual_texture_registry.h"
+#include "Kablunk/renderer/virtual_texture_registry.h"
 #include "Kablunk/serialize/kb-json/json_util.h"
 
 #include <rapidjson/rapidjson.h>
@@ -11,30 +11,30 @@
 
 #include <charconv>
 
-namespace kb::asset
-{ // start namespace kb::asset
+namespace kb::render
+{ // start namespace kb::render
 
 
 auto virtual_texture_registry::create(
     const virtual_texture_registry_specification& p_specification
 ) -> std::unique_ptr<virtual_texture_registry>
 {
-    auto virtual_texture_manager = std::make_unique<virtual_texture_registry>();
+    auto virtual_texture_registry = std::make_unique<render::virtual_texture_registry>();
 
     constexpr auto internal_memory_allocated = sizeof(virtual_texture_registry);
-    virtual_texture_manager->m_debug_statistics.m_internal_memory_allocated += internal_memory_allocated;
+    virtual_texture_registry->m_debug_statistics.m_internal_memory_allocated += internal_memory_allocated;
 
-    virtual_texture_manager->import_missing_texture();
+    virtual_texture_registry->import_missing_texture();
 
     if (p_specification.m_initialize_on_construct)
     {
-        virtual_texture_manager->load(
+        virtual_texture_registry->load(
             p_specification.m_cache_path,
             p_specification.m_serialization_type
         );
     }
 
-    return std::move(virtual_texture_manager);
+    return std::move(virtual_texture_registry);
 }
 
 auto virtual_texture_registry::import(
@@ -183,7 +183,7 @@ auto virtual_texture_registry::get_texture_2d_by_virtual_handle(
 
 auto virtual_texture_registry::get_virtual_texture(
     const virtual_texture_handle p_handle
-) const noexcept -> const render::virtual_texture&
+) const noexcept -> const render::virtual_texture_t&
 {
     return m_virtual_textures.contains(p_handle) ?
         m_virtual_textures.at(p_handle) :
@@ -192,7 +192,7 @@ auto virtual_texture_registry::get_virtual_texture(
 
 auto virtual_texture_registry::get_debug_statistics() const noexcept -> debug_statistics
 {
-    const auto virtual_texture_mem_alloc = m_virtual_textures.size() * sizeof(render::virtual_texture);
+    const auto virtual_texture_mem_alloc = m_virtual_textures.size() * sizeof(render::virtual_texture_t);
     const auto total_mem_alloc = m_debug_statistics.m_internal_memory_allocated +
         m_debug_statistics.m_internal_memory_allocated +
         m_debug_statistics.m_raw_texture_memory_allocated +
@@ -257,7 +257,7 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
 
     m_missing_texture_data = {
         .m_raw_texture = render::backend::texture_2d::create(path_str),
-        .m_virtual_texture = render::virtual_texture{
+        .m_virtual_texture = render::virtual_texture_t{
             .m_handle = missing_texture_virtual_handle,
             .m_uvs = {
                 vec2_packed{ 0.f, 0.f },
@@ -320,7 +320,7 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
 
         m_virtual_textures.emplace(
             virtual_handle,
-            render::virtual_texture{
+            render::virtual_texture_t{
                 .m_handle = virtual_handle,
                 .m_uvs = {
                     vec2_packed{ 0.f, 0.f },
@@ -694,7 +694,7 @@ auto virtual_texture_registry::deserialize_registry_data_from_json_version_1(
 
                 m_texture_metadata_map.emplace(
                     raw_handle,
-                    asset::texture_metadata{
+                    render::texture_metadata{
                         .m_path = std::move(texture_path),
                     }
                 );
@@ -822,7 +822,7 @@ auto virtual_texture_registry::deserialize_registry_data_from_json_version_1(
             // add virtual texture data to map
             m_virtual_textures.emplace(
                 virtual_handle,
-                render::virtual_texture{
+                render::virtual_texture_t{
                     .m_handle = virtual_handle,
                     .m_uvs = uvs
                 }
@@ -903,4 +903,4 @@ auto virtual_texture_registry::deserialize_registry_data_from_json_version_1(
     }
 }
 
-} // end namespace kb::asset
+} // end namespace kb::render
