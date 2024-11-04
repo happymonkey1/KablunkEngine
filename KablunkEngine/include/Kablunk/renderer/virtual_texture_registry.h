@@ -1,13 +1,21 @@
 #pragma once
 
 #include "Kablunk/Core/CoreTypes.h"
-#include "Kablunk/Renderer/virtual_texture.h"
-#include "Kablunk/Renderer/texture_handle.h"
-#include "Kablunk/Renderer/backend/texture.h"
+#include "Kablunk/renderer/virtual_texture.h"
+#include "Kablunk/renderer/texture_handle.h"
+#include "Kablunk/renderer/backend/texture.h"
+#include "Kablunk/renderer/virtual_texture_registry_serializer.h"
 
 #include <filesystem>
-#include <rapidjson/document.h>
 
+namespace kb::serialize
+{ // start namespace kb::serialize
+
+// Forward declarations
+class virtual_texture_registry_json_serializer;
+class virtual_texture_registry_yaml_serializer;
+
+} // end namespace kb::serialize
 
 namespace kb::render
 { // start namespace kb::render
@@ -46,24 +54,6 @@ struct virtual_texture_specification
     // value does not matter if the texture import type is not atlas (`!raw_texture_asset_type_t::texture_atlas`)
     glm::vec2 m_sprite_unpacker_dimensions{};
 };
-
-enum class serialization_type_t
-{
-    none = 0,
-    yaml,
-    json,
-    bin,
-};
-
-struct virtual_texture_registry_specification
-{
-    std::filesystem::path m_cache_path = "assets/cache/";
-    // flag for whether initialization should happen during construction
-    bool m_initialize_on_construct = false;
-    // serialization type (binary should be used for best performance in distribution builds)
-    serialization_type_t m_serialization_type = serialization_type_t::yaml;
-};
-
 struct texture_metadata
 {
     std::string m_path{};
@@ -96,36 +86,32 @@ public:
         u64 m_total_virtual_textures = 0;
     };
 
-    inline static constexpr const char* k_registry_cache_filename = "virtual_texture_registry.kbreg.json";
-    inline static constexpr size_t k_registry_cache_json_latest_version = 1;
-    inline static constexpr const char* k_registry_cache_document_type = "kb::virtual_texture_registry";
     inline static constexpr const char* k_missing_texture_file_path = "resources/textures/missing_texture.png";
     inline static constexpr const char* k_missing_texture_krn_cstr = "kb::texture::missing_texture";
 
 public:
-    virtual_texture_registry() = default;
-    ~virtual_texture_registry() = default;
+    virtual_texture_registry() noexcept = default;
+    ~virtual_texture_registry() noexcept = default;
 
-    [[nodiscard]] static auto create(
-        const virtual_texture_registry_specification& p_specification
-    ) -> std::unique_ptr<virtual_texture_registry>;
+    [[nodiscard]] static auto create() noexcept -> std::unique_ptr<virtual_texture_registry>;
 
     [[nodiscard]] auto import(const virtual_texture_specification& p_specification) noexcept -> virtual_texture_handle;
+
     // process all imported textures
     // potentially creates texture atlases from standalone textures, which can invalidate previous handles
     auto process() noexcept -> void;
 
     // save the registry to a cache document
     auto save(
-        const std::filesystem::path& p_cache_dir,
-        serialization_type_t p_serialization_type = serialization_type_t::yaml
+        virtual_texture_registry_serializer::serialization_type_t p_serialization_type,
+        const std::filesystem::path& p_cache_dir
     ) const noexcept -> void;
 
     // load a cached version (cache document) of the registry
-    auto load(
-        const std::filesystem::path& p_cache_dir,
-        serialization_type_t p_serialization_type = serialization_type_t::yaml
-    ) noexcept -> void;
+    [[nodiscard]] static auto load(
+        virtual_texture_registry_serializer::serialization_type_t p_serialization_type,
+        const std::filesystem::path& p_cache_dir
+    ) noexcept -> std::unique_ptr<virtual_texture_registry>;
 
     [[nodiscard]] auto get_texture_2d_by_raw_handle(
         raw_texture_handle p_handle
@@ -177,6 +163,7 @@ public:
     {
         return m_virtual_to_raw_handle_map;
     }
+
 private:
     // handler that processes already imported standalone textures and creates texture atlas(es)
     auto create_texture_atlases() noexcept -> void;
@@ -189,24 +176,6 @@ private:
         const virtual_texture_specification& p_specification,
         raw_texture_handle p_raw_texture_handle
     ) noexcept -> virtual_texture_handle;
-
-    // handler for serializing json data to disk
-    auto serialize_registry_json_data_to_disk(
-        const std::filesystem::path& p_cache_registry_file_path,
-        u32 p_version
-    ) const noexcept -> void;
-    // handler for serializing json data with document version 1 to disk
-    auto serialize_registry_json_data_version_1_to_disk(
-        const std::filesystem::path& p_cache_registry_file_path
-    ) const noexcept -> void;
-    // handler for deserializing registry cache data from json
-    auto deserialize_registry_data_from_json(
-        const std::filesystem::path& p_cache_json_file_path
-    ) noexcept -> void;
-    // handler for deserializing version 1 documents
-    auto deserialize_registry_data_from_json_version_1(
-        rapidjson::Document& p_document
-    ) noexcept -> void;
 
 private:
     // map of raw textures
@@ -231,6 +200,10 @@ private:
 
     // debug statistics
     debug_statistics m_debug_statistics{};
+
+    // Friend classes
+    friend class ::kb::serialize::virtual_texture_registry_json_serializer;
+    friend class ::kb::serialize::virtual_texture_registry_yaml_serializer;
 };
 
 } // end namespace kb::render

@@ -87,6 +87,7 @@ public:
 	const Threading::ThreadPool& GetThreadPool() const { return m_thread_pool; }
 
 	render_thread& get_render_thread() { return m_render_thread; }
+    auto get_render_thread() const noexcept -> const render_thread& { return m_render_thread; }
 
     // get a mutable reference to the primary renderer2d
     arc<render::renderer_2d> get_renderer_2d() noexcept { return m_renderer_2d; }

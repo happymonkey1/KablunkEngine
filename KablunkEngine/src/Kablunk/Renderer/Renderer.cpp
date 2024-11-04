@@ -38,8 +38,16 @@ void Renderer::init()
     m_shader_library->Load("resources/shaders/Renderer2D_Text.glsl");
 	// ==========
 
-	// compile shaders that were submitted
-	Application::Get().get_render_thread().pump();
+    const auto& application = Application::Get();
+    if (application.get_render_thread().is_running())
+    {
+        // compile shaders that were submitted
+        Application::Get().get_render_thread().pump();
+    }
+    else
+    {
+        KB_CORE_WARN("[renderer]: Shaders have not been compiled since render thread is not running!");
+    }
 
     // Initialize rendering backend
     m_backend.init();
