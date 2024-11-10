@@ -15,21 +15,23 @@
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 
-namespace kb 
+namespace kb
 { // start namespace kb
-enum class LoggerType : uint8_t
+
+enum class logger_type_t : uint8_t
 {
-	CORE = 0,
-	CLIENT
+	core = 0,
+	client
 };
 
 class Logger {
 public:
 	Logger() = default;
-	~Logger() = default;
 
-	std::shared_ptr<spdlog::logger> get_core_logger() { return s_core_logger; }
-	std::shared_ptr<spdlog::logger> get_client_logger() { return s_client_logger; }
+	~Logger() noexcept { shutdown(); }
+
+	std::shared_ptr<spdlog::logger> get_core_logger() { return m_core_logger; }
+	std::shared_ptr<spdlog::logger> get_client_logger() { return m_client_logger; }
 
 	void init();
 	void shutdown();
@@ -37,9 +39,8 @@ public:
 	SINGLETON_GET_FUNC(Logger)
 
 private:
-	std::shared_ptr<spdlog::logger> s_core_logger = nullptr;
-	std::shared_ptr<spdlog::logger> s_client_logger = nullptr;
-	bool m_has_shutdown = false;
+	std::shared_ptr<spdlog::logger> m_core_logger = nullptr;
+	std::shared_ptr<spdlog::logger> m_client_logger = nullptr;
 };
 } // end namespace kb
 

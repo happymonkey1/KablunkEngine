@@ -1,3 +1,5 @@
+KABLUNK_DIR = os.getenv("KABLUNK_DIR")
+
 project "KablunkEngine"
 kind "StaticLib"
 language "C++"
@@ -87,11 +89,10 @@ includedirs {
 	"%{IncludeDir.msdfgen}",
 	"%{IncludeDir.msgpack}",
 	"%{IncludeDir.rapidjson}",
+	"%{IncludeDir.sol2}",
 }
 
 links {
-	"vulkan-1.dll",
-
 	-- "Glad",
 	"ImGui",
 	"yaml-cpp",
@@ -109,11 +110,11 @@ links {
 
 	"%{Library.LuaJIT}",
 	-- "%{Library.VulkanUtils}",
-
 }
 
 prebuildcommands {
-	'if not exist "%{Library.LuaJIT}" (cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild)'
+	'if not exist "%{Library.LuaJIT}" (cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild)',
+	'if not exist "${KABLUNK_DIR}/KablunkEngine/vendor/sol2/single/single" (cd "%{KABLUNK_DIR}/KablunkEngine/vendor/sol2/single" && python3 single.py)',
 }
 
 postbuildcommands {

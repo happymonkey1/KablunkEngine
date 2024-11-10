@@ -68,3 +68,6 @@
 [submodule "KablunkEngine/vendor/rapidjson"]
 	path = KablunkEngine/vendor/rapidjson
 	url = https://github.com/happymonkey1/rapidjson.git
+[submodule "KablunkEngine/vendor/sol2"]
+	path = KablunkEngine/vendor/sol2
+	url = https://github.com/ThePhD/sol2.git
