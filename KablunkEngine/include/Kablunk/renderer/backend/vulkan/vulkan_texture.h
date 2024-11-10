@@ -20,20 +20,20 @@ public:
 	vulkan_texture_2d(
         weak_ptr<vulkan_logical_device> p_device,
         image_format_t format,
-        uint32_t width,
-        uint32_t height,
+        u32 width,
+        u32 height,
         const void* data
     );
 	vulkan_texture_2d(weak_ptr<vulkan_logical_device> p_device, std::string path);
 	~vulkan_texture_2d() override;
 
-	void resize(uint32_t width, uint32_t height) override;
+	void resize(u32 width, u32 height) override;
 	arc<image_2d> get_image() const override { return m_image; }
 
 	image_format_t get_format() const override { return m_format; }
 
-	uint32_t get_width() const override { return m_width; }
-	uint32_t get_height() const override { return m_height; }
+    u32 get_width() const override { return m_width; }
+    u32 get_height() const override { return m_height; }
 	RendererID get_renderer_id() const override { return 0; }
 	uint64_t get_hash() const override { return m_hash; }
 
@@ -52,9 +52,9 @@ public:
 
 	bool loaded() const override { return m_loaded; }
 
-	void set_data(void* data, uint32_t size) override;
+	void set_data(void* data, u32 size) override;
 
-	void bind(uint32_t slot) const override;
+	void bind(u32 slot) const override;
 	bool operator==(const texture_2d& other) const override;
 private:
 	virtual void invalidate() override;
@@ -62,8 +62,8 @@ private:
 private:
 	std::string m_filepath;
     u64 m_hash = 0ull;
-	uint32_t m_width;
-	uint32_t m_height;
+	u32 m_width;
+    u32 m_height;
 
     weak_ptr<vulkan_logical_device> m_device = nullptr;
 	arc<image_2d> m_image{};

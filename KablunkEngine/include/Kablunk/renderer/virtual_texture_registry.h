@@ -35,7 +35,7 @@ enum class texture_registry_import_type_t
     memory,
 };
 
-struct virtual_texture_specification
+struct virtual_texture_specification_t
 {
     // path to the texture
     // value does not matter for textures not loaded from disk (`!texture_registry_import_type_t::disk`)
@@ -54,9 +54,11 @@ struct virtual_texture_specification
     // value does not matter if the texture import type is not atlas (`!raw_texture_asset_type_t::texture_atlas`)
     glm::vec2 m_sprite_unpacker_dimensions{};
 };
-struct texture_metadata
+
+struct texture_metadata_t
 {
     std::string m_path{};
+    bool m_is_atlas = false;
 
     // return the size (in bytes) of the memory allocated
     [[nodiscard]] auto get_allocated_bytes() const noexcept -> size_t
@@ -70,7 +72,7 @@ struct texture_metadata
 class virtual_texture_registry
 {
 public:
-    struct debug_statistics
+    struct debug_statistics_t
     {
         // total memory allocated for the asset manager
         u64 m_total_memory_allocated = 0;
@@ -95,7 +97,19 @@ public:
 
     [[nodiscard]] static auto create() noexcept -> std::unique_ptr<virtual_texture_registry>;
 
-    [[nodiscard]] auto import(const virtual_texture_specification& p_specification) noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto load_texture(
+        const virtual_texture_specification_t& p_specification
+    ) noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto load_individual_texture(
+        std::filesystem::path p_texture_path
+    ) noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto load_texture_atlas(
+        std::filesystem::path p_atlas_path
+    ) noexcept -> virtual_texture_handle;
+
+    [[nodiscard]] static auto create_virtual_texture_handle(
+        const std::filesystem::path& p_file_path
+    ) noexcept -> virtual_texture_handle;
 
     // process all imported textures
     // potentially creates texture atlases from standalone textures, which can invalidate previous handles
@@ -142,7 +156,7 @@ public:
         return std::nullopt;
     }
 
-    [[nodiscard]] auto get_debug_statistics() const noexcept -> debug_statistics;
+    [[nodiscard]] auto get_debug_statistics() const noexcept -> debug_statistics_t;
 
     // returns an immutable reference to the underlying raw texture map
     [[nodiscard]] auto get_raw_texture_map() const noexcept -> const unordered_flat_map<raw_texture_handle, arc<backend::texture_2d>>&
@@ -168,12 +182,12 @@ private:
     // handler that processes already imported standalone textures and creates texture atlas(es)
     auto create_texture_atlases() noexcept -> void;
     // handler for importing textures from disk
-    auto import_texture_from_disk(const virtual_texture_specification& p_specification) noexcept -> raw_texture_handle;
+    auto import_texture_from_disk(const virtual_texture_specification_t& p_specification) noexcept -> raw_texture_handle;
     // load missing texture data
     auto import_missing_texture() noexcept -> void;
 
     auto create_or_get_virtual_texture(
-        const virtual_texture_specification& p_specification,
+        const virtual_texture_specification_t& p_specification,
         raw_texture_handle p_raw_texture_handle
     ) noexcept -> virtual_texture_handle;
 
@@ -181,7 +195,7 @@ private:
     // map of raw textures
     unordered_flat_map<raw_texture_handle, arc<backend::texture_2d>> m_raw_textures{};
     // map of texture metadata
-    unordered_flat_map<raw_texture_handle, texture_metadata> m_texture_metadata_map{};
+    unordered_flat_map<raw_texture_handle, texture_metadata_t> m_texture_metadata_map{};
     // map of virtual texture handle to raw texture handle
     unordered_flat_map<virtual_texture_handle, raw_texture_handle> m_virtual_to_raw_handle_map{};
     // map of virtual texture
@@ -199,7 +213,7 @@ private:
     } m_missing_texture_data{};
 
     // debug statistics
-    debug_statistics m_debug_statistics{};
+    debug_statistics_t m_debug_statistics{};
 
     // Friend classes
     friend class ::kb::serialize::virtual_texture_registry_json_serializer;

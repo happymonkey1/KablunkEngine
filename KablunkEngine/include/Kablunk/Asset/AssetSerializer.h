@@ -49,16 +49,6 @@ public:
     virtual bool try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const override;
 };
 
-// font serializer
-class font_asset_serializer : public AssetSerializer
-{
-public:
-    font_asset_serializer(arc<AssetManager> p_asset_manager) : AssetSerializer{ p_asset_manager } {}
-
-    virtual void serialize(const AssetMetadata& metadata, arc<IAsset>& asset) const override;
-    virtual bool try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const override;
-};
-
 // lua serializer
 class lua_asset_serializer : public AssetSerializer
 {

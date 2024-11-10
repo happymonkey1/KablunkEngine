@@ -370,7 +370,7 @@ auto virtual_texture_registry_json_serializer::deserialize_version_1() noexcept 
 
                 m_virtual_texture_registry->m_texture_metadata_map.emplace(
                     raw_handle,
-                    render::texture_metadata{
+                    render::texture_metadata_t{
                         .m_path = std::move(texture_path),
                     }
                 );

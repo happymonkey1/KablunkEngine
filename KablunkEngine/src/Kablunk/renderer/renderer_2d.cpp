@@ -361,9 +361,6 @@ void renderer_2d::init(renderer_2d_specification_t spec)
         m_renderer_data.m_text_pass->get_pipeline()->get_shader(),
         "render2d::material::text_material"
     );
-
-	// initialize font manager
-	m_renderer_data.m_font_manager.init();
 }
 
 void renderer_2d::shutdown()

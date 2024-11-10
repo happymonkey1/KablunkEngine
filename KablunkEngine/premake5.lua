@@ -52,6 +52,7 @@ defines {
 	"GLM_FORCE_DEPTH_ZERO_TO_ONE",
 	"_DISABLE_VECTOR_ANNOTATION",
 	"_DISABLE_STRING_ANNOTATION",
+	"MSGPACK_NO_BOOST",
 }
 
 includedirs {
@@ -68,20 +69,14 @@ includedirs {
 	"%{IncludeDir.stduuid}",
 	"%{IncludeDir.ImGuizmo}",
 	"%{IncludeDir.assimp}",
-	"%{IncludeDir.freetype}",
 	"%{IncludeDir.Box2d}",
-	"%{IncludeDir.cr}",
 	"%{IncludeDir.mono}",
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.VulkanSDK}",
 	"%{IncludeDir.VulkanSDK_LocalInclude}",
-	"%{IncludeDir.boost}",
 	"%{IncludeDir.miniaudio}",
-	"%{IncludeDir.optick}",
 	"%{IncludeDir.tl_expected}",
 	"%{IncludeDir.robin_hood}",
-	"%{IncludeDir.protobuf}",
-	"%{IncludeDir.absl}",
 	-- external fmt lib because of MSVC 17.7 bug
 	"%{IncludeDir.fmt}",
 	"%{IncludeDir.tracy}",
@@ -97,17 +92,11 @@ includedirs {
 links {
 	"vulkan-1.dll",
 
-	--
 	-- "Glad",
 	"ImGui",
 	"yaml-cpp",
 	"spdlog",
-	"FreeType",
 	"Box2d",
-	"optick",
-	"absl",
-	"protobuf",
-	"protoc",
 	-- external fmt lib because of MSVC 17.7 bug
 	"fmt",
 	"GameNetworkingSockets",

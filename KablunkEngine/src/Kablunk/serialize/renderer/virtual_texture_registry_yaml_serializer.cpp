@@ -60,15 +60,24 @@ auto virtual_texture_registry_yaml_serializer::serialize_version_1() const noexc
     for (const auto& [virtual_texture_handle, virtual_texture_data] : m_virtual_texture_registry->m_virtual_textures)
     {
         out << YAML::Key << virtual_texture_handle.as<u32>() << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "uvs" << YAML::Value << YAML::BeginMap;
         u32 index = 0;
         for (const auto& uv : virtual_texture_data.m_uvs)
         {
             out << YAML::Key << index++ << YAML::Value << YAML::BeginMap;
-            out << YAML::Key << "x" << YAML::Value << uv.m_storage.m_data[0];
-            out << YAML::Key << "y" << YAML::Value << uv.m_storage.m_data[1];
+            out << YAML::Key << "x" << YAML::Value << YAML::Precision(6) << uv.m_storage.m_data[0];
+            out << YAML::Key << "y" << YAML::Value << YAML::Precision(6) << uv.m_storage.m_data[1];
             out << YAML::EndMap; // End individual uv coordinate map
         }
-        out << YAML::EndMap; // End virtual texture uvs sequence
+        out << YAML::EndMap; // End UVs map
+
+        out << YAML::Key << "dimensions" << YAML::Value << YAML::BeginMap;
+        out << YAML::Key << "width" << YAML::Value << virtual_texture_data.get_width();
+        out << YAML::Key << "height" << YAML::Value << virtual_texture_data.get_height();
+        out << YAML::EndMap; // End dimensions map
+
+        out << YAML::EndMap; // End virtual texture data
     }
     out << YAML::EndMap; // End virtual_textures
 
@@ -204,7 +213,7 @@ auto virtual_texture_registry_yaml_serializer::deserialize_version_1(YAML::Node&
 
             m_virtual_texture_registry->m_texture_metadata_map.emplace(
                 kb::raw_texture_handle{ raw_texture_handle_value },
-                render::texture_metadata{
+                render::texture_metadata_t{
                     .m_path = std::move(filepath)
                 }
             );
@@ -247,8 +256,10 @@ auto virtual_texture_registry_yaml_serializer::deserialize_version_1(YAML::Node&
 
             const auto& virtual_texture_data_node = virtual_texture_data_pair.second;
 
+            const auto& uv_array_node_data = virtual_texture_data_node["uvs"];
+
             std::array<vec2_packed, 4> uvs{};
-            for (const auto& uvs_node_pair : virtual_texture_data_node)
+            for (const auto& uvs_node_pair : uv_array_node_data)
             {
                 u32 uv_index;
                 try
@@ -305,12 +316,55 @@ auto virtual_texture_registry_yaml_serializer::deserialize_version_1(YAML::Node&
                 uvs[uv_index] = { uvs_node_data["x"].as<f32>(), uvs_node_data["y"].as<f32>() };
             }
 
+            if (!virtual_texture_data_node["dimensions"])
+            {
+                KB_CORE_ASSERT(
+                    false,
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read dimensions node for virtual_texture_handle={}",
+                    virtual_texture_handle_value
+                );
+
+                m_valid = false;
+                return;
+            }
+
+            const auto& dimensions_node = virtual_texture_data_node["dimensions"];
+
+            if (!dimensions_node["width"])
+            {
+                KB_CORE_ASSERT(
+                    false,
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read width from dimensions node for virtual_texture_handle={}",
+                    virtual_texture_handle_value
+                );
+
+                m_valid = false;
+                return;
+            }
+
+            if (!dimensions_node["height"])
+            {
+                KB_CORE_ASSERT(
+                    false,
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read width from dimensions node for virtual_texture_handle={}",
+                    virtual_texture_handle_value
+                );
+
+                m_valid = false;
+                return;
+            }
+
+
             const kb::virtual_texture_handle virtual_texture_handle{ virtual_texture_handle_value };
             m_virtual_texture_registry->m_virtual_textures.emplace(
                 virtual_texture_handle,
                 render::virtual_texture_t{
                     .m_handle = virtual_texture_handle,
-                    .m_uvs = uvs
+                    .m_uvs = uvs,
+                    .m_dimensions = uvec2_packed{
+                        dimensions_node["width"].as<u32>(),
+                        dimensions_node["height"].as<u32>()
+                    }
                 }
             );
         }

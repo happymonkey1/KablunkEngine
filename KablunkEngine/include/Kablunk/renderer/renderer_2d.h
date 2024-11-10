@@ -15,11 +15,12 @@
 #include "Kablunk/renderer/scene_renderer.h"
 #include "Kablunk/renderer/backend/shader.h"
 #include "Kablunk/renderer/backend/buffer.h"
-#include "Kablunk/renderer/Font/FontManager.h"
 
 #include "Kablunk/Math/vec.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "Kablunk/Renderer/Font/font.h"
 
 namespace kb::render
 { // start namespace kb::render
@@ -186,8 +187,6 @@ struct renderer_2d_data_t
 
 	arc<backend::render_command_buffer> render_command_buffer;
 
-	font_manager m_font_manager;
-
     // --- render passes ------------------------
     arc<backend::render_pass> m_quad_pass;
 	arc<backend::render_pass> m_circle_pass;
@@ -241,11 +240,6 @@ public:
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
     void set_swap_chain_target(bool p_swap_chain_target = true);
-
-	// return a mutable reference to the font manager
-	[[deprecated]] render::font_manager& get_font_manager() { return m_renderer_data.m_font_manager; }
-	// return an immutable reference to the font manager
-	[[deprecated]] const render::font_manager& get_font_manager() const { return m_renderer_data.m_font_manager; }
 
     // ---draw commands-------------------------------------------------------------------------------------------------
 
@@ -431,7 +425,7 @@ public:
 		const std::string& text,
 		const glm::vec2& position,
         const glm::vec2& p_size,
-		const arc<render::font>& font_asset,
+		const arc<font>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f },
         f32 p_max_width = 0.f,
         f32 p_line_height_offset = 0.f,
@@ -442,7 +436,7 @@ public:
 		const std::string& text,
 		const glm::vec3& position,
 		const glm::vec2& size,
-		const arc<render::font>& font_asset,
+		const arc<font>& font_asset,
 		const glm::vec4& tint_color = glm::vec4{ 1.0f },
         f32 p_max_width = 0.f,
         f32 p_line_height_offset = 0.f,

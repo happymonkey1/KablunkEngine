@@ -8,7 +8,6 @@
 namespace kb::render
 { // start namespace kb::render
 
-
 auto virtual_texture_registry::create() noexcept -> std::unique_ptr<virtual_texture_registry>
 {
     auto virtual_texture_registry = std::make_unique<render::virtual_texture_registry>();
@@ -21,8 +20,8 @@ auto virtual_texture_registry::create() noexcept -> std::unique_ptr<virtual_text
     return std::move(virtual_texture_registry);
 }
 
-auto virtual_texture_registry::import(
-    const virtual_texture_specification& p_specification
+auto virtual_texture_registry::load_texture(
+    const virtual_texture_specification_t& p_specification
 ) noexcept -> virtual_texture_handle
 {
     const bool should_check_exists = p_specification.m_import_type == texture_registry_import_type_t::disk;
@@ -50,6 +49,28 @@ auto virtual_texture_registry::import(
     }
 
     return create_or_get_virtual_texture(p_specification, texture_handle);
+}
+
+auto virtual_texture_registry::load_individual_texture(
+    std::filesystem::path p_texture_path
+) noexcept -> virtual_texture_handle
+{
+    return load_texture(virtual_texture_specification_t{
+        .m_path = std::move(p_texture_path),
+        .m_import_type = texture_registry_import_type_t::disk,
+        .m_raw_texture_asset_type = raw_texture_asset_type_t::texture_2d,
+        .m_allow_to_be_packed = true,
+        .m_texture_dimensions = {},
+        .m_sprite_unpacker_dimensions = {}
+    });
+}
+
+auto virtual_texture_registry::create_virtual_texture_handle(
+    const std::filesystem::path& p_file_path) noexcept -> virtual_texture_handle
+{
+    auto file_name = p_file_path.filename().stem().string();
+    const auto virtual_texture_krn = fmt::format("kb::texture::{}", std::move(file_name));
+    return virtual_texture_handle::into(std::string_view{ virtual_texture_krn });
 }
 
 auto virtual_texture_registry::process() noexcept -> void
@@ -109,14 +130,14 @@ auto virtual_texture_registry::get_virtual_texture(
         m_missing_texture_data.m_virtual_texture;
 }
 
-auto virtual_texture_registry::get_debug_statistics() const noexcept -> debug_statistics
+auto virtual_texture_registry::get_debug_statistics() const noexcept -> debug_statistics_t
 {
     const auto virtual_texture_mem_alloc = m_virtual_textures.size() * sizeof(render::virtual_texture_t);
     const auto total_mem_alloc = m_debug_statistics.m_internal_memory_allocated +
         m_debug_statistics.m_internal_memory_allocated +
         m_debug_statistics.m_raw_texture_memory_allocated +
         virtual_texture_mem_alloc;
-    return debug_statistics{
+    return debug_statistics_t{
         .m_total_memory_allocated = total_mem_alloc,
         .m_internal_memory_allocated = m_debug_statistics.m_internal_memory_allocated,
         .m_raw_texture_memory_allocated = virtual_texture_mem_alloc,
@@ -132,7 +153,7 @@ auto virtual_texture_registry::create_texture_atlases() noexcept -> void
 }
 
 auto virtual_texture_registry::import_texture_from_disk(
-    const virtual_texture_specification& p_specification
+    const virtual_texture_specification_t& p_specification
 ) noexcept -> raw_texture_handle
 {
     // path str moved into `texture_metadata`
@@ -151,8 +172,9 @@ auto virtual_texture_registry::import_texture_from_disk(
 
     m_texture_metadata_map.emplace(
         new_texture_handle,
-        texture_metadata{
-            .m_path = std::move(path_str)
+        texture_metadata_t{
+            .m_path = std::move(path_str),
+            .m_is_atlas = p_specification.m_raw_texture_asset_type == raw_texture_asset_type_t::texture_atlas,
         }
     );
 
@@ -176,8 +198,10 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
         std::string_view{ k_missing_texture_krn_cstr }
     );
 
+    const auto raw_texture = backend::texture_2d::create(path_str);
+
     m_missing_texture_data = {
-        .m_raw_texture = backend::texture_2d::create(path_str),
+        .m_raw_texture = raw_texture,
         .m_virtual_texture = virtual_texture_t{
             .m_handle = missing_texture_virtual_handle,
             .m_uvs = {
@@ -185,6 +209,10 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
                 vec2_packed{ 0.f, 1.f },
                 vec2_packed{ 1.f, 1.f },
                 vec2_packed{ 1.f, 0.f },
+            },
+            .m_dimensions = uvec2_packed{
+                raw_texture->get_width(),
+                raw_texture->get_height()
             }
         },
         .m_raw_texture_handle = missing_texture_raw_handle,
@@ -204,8 +232,9 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
     );
     m_texture_metadata_map.emplace(
         missing_texture_raw_handle,
-        texture_metadata{
+        texture_metadata_t{
             .m_path = std::move(path_str),
+            .m_is_atlas = false,
         }
     );
 
@@ -216,12 +245,11 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
 }
 
 auto virtual_texture_registry::create_or_get_virtual_texture(
-    const virtual_texture_specification& p_specification,
+    const virtual_texture_specification_t& p_specification,
     const raw_texture_handle p_raw_texture_handle
 ) noexcept -> virtual_texture_handle
 {
-    const auto virtual_texture_opt = find_virtual_texture_by_raw_handle(p_raw_texture_handle);
-    if (virtual_texture_opt)
+    if (const auto virtual_texture_opt = find_virtual_texture_by_raw_handle(p_raw_texture_handle))
     {
         return virtual_texture_opt->m_handle;
     }
@@ -230,14 +258,14 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
     {
     case raw_texture_asset_type_t::texture_2d:
     {
-        const auto file_name = p_specification.m_path.filename().stem().string();
-        const auto virtual_texture_krn = fmt::format("kb::texture::{}", file_name);
-        const auto virtual_handle = virtual_texture_handle::into(std::string_view{ virtual_texture_krn });
+        const auto virtual_handle = create_virtual_texture_handle(p_specification.m_path);
 
         m_virtual_to_raw_handle_map.emplace(
             virtual_handle,
             p_raw_texture_handle
         );
+
+        const auto& raw_texture = m_raw_textures[p_raw_texture_handle];
 
         m_virtual_textures.emplace(
             virtual_handle,
@@ -248,6 +276,10 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
                     vec2_packed{ 0.f, 1.f },
                     vec2_packed{ 1.f, 1.f },
                     vec2_packed{ 1.f, 0.f },
+                },
+                .m_dimensions = uvec2_packed{
+                    raw_texture->get_width(),
+                    raw_texture->get_height()
                 }
             }
         );

@@ -4,6 +4,8 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
+#include "Kablunk/renderer/virtual_texture_registry.h"
+
 namespace kb::render
 { // start namespace kb::render
 
@@ -23,7 +25,14 @@ texture_atlas::texture_atlas(const texture_atlas_create_props& p_props) noexcept
             p_props.m_path.string().c_str()
         );
     }
+}
 
+texture_atlas::texture_atlas(std::initializer_list<arc<backend::texture_2d>> p_textures) noexcept
+{
+}
+
+texture_atlas::texture_atlas(const std::vector<backend::texture_2d>& p_textures) noexcept
+{
 }
 
 // lightmap texture packing algorithm: https://blackpawn.com/texts/lightmaps/
@@ -50,7 +59,7 @@ auto texture_atlas::node_t::insert(const image_data_t& p_image_data) noexcept ->
         p_image_data.m_height == static_cast<u32>(m_rect.get_height());
     if (perfect_fit)
     {
-        m_image_hash = static_cast<u64>(p_image_data.m_id);
+        m_image_hash = static_cast<u64>(p_image_data.m_texture_handle);
         return this;
     }
 
@@ -241,7 +250,7 @@ auto texture_atlas::add_image_to_atlas(
 
     // calculate and store uvs
     calculate_uv_offsets(
-        p_image_data.m_id,
+        p_image_data.m_texture_handle,
         p_node->m_rect
     );
 
@@ -288,16 +297,16 @@ auto texture_atlas::load_image(const std::filesystem::path& p_path) noexcept -> 
         .m_image_data = image_buffer,
         .m_width = static_cast<u32>(width),
         .m_height = static_cast<u32>(height),
-        .m_id = raw_texture_handle::into(std::string_view{ p_path.filename().string() }),
+        .m_texture_handle = virtual_texture_registry::create_virtual_texture_handle(p_path),
     };
 }
 
-auto texture_atlas::calculate_uv_offsets(raw_texture_handle p_id, const rect_i32& p_rect) noexcept -> void
+auto texture_atlas::calculate_uv_offsets(virtual_texture_handle p_texture_handle, const rect_i32& p_rect) noexcept -> void
 {
     KB_ASSERT(
-        !m_uv_map.contains(p_id),
+        !m_uv_map.contains(p_texture_handle),
         "[render::texture_atlas]: texture_id id '{}' is already in the uv map!",
-        static_cast<u64>(p_id)
+        static_cast<u64>(p_texture_handle)
     );
 
     constexpr f32 border_uv_offset_x = 0.0f;
@@ -312,29 +321,33 @@ auto texture_atlas::calculate_uv_offsets(raw_texture_handle p_id, const rect_i32
     const f32 uv_height = sprite_height / atlas_height;
 
     const std::array uvs{
-        glm::vec2{
+        vec2_packed{
             static_cast<f32>(p_rect.m_left) / atlas_width,
             static_cast<f32>(p_rect.m_top) / atlas_height
         },
-        glm::vec2{
+        vec2_packed{
             static_cast<f32>(p_rect.m_left) / atlas_width + uv_width,
             static_cast<f32>(p_rect.m_top) / atlas_height
         },
-        glm::vec2{
+        vec2_packed{
             static_cast<f32>(p_rect.m_left) / atlas_width + uv_width,
             static_cast<f32>(p_rect.m_top) / atlas_height + uv_height
         },
-        glm::vec2{
+        vec2_packed{
             static_cast<f32>(p_rect.m_left) / atlas_width,
             static_cast<f32>(p_rect.m_top) / atlas_height + uv_height
         }
     };
 
     m_uv_map.emplace(
-        p_id,
-        virtual_texture_data_t{
-            uvs,
-            glm::uvec2{ p_rect.get_width(), p_rect.get_height() }
+        p_texture_handle,
+        virtual_texture_t{
+            .m_handle = p_texture_handle,
+            .m_uvs = uvs,
+            .m_dimensions = uvec2_packed{
+                static_cast<u32>(p_rect.get_width()),
+                static_cast<u32>(p_rect.get_height())
+            },
         }
     );
 }

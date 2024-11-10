@@ -15,13 +15,13 @@ namespace kb::render::backend::vk
 vulkan_texture_2d::vulkan_texture_2d(
     weak_ptr<vulkan_logical_device> p_device,
     image_format_t format,
-    uint32_t width,
-    uint32_t height,
+    u32 width,
+    u32 height,
     const void* data
 )
-	: m_width{ width }, m_height{ height }, m_format{ format },
-    m_hash{ std::hash<std::string>{}(fmt::format("{}", data)) },
-    m_device{ p_device }
+	: m_hash{std::hash<std::string>{}(fmt::format("{}", data))}, m_width{width}, m_height{height},
+      m_device{p_device},
+      m_format{format}
 {
 	const size_t size = backend::util::GetImageMemorySize(format, width, height);
 
@@ -38,7 +38,7 @@ vulkan_texture_2d::vulkan_texture_2d(
 	//	spec.usage = ImageUsage::Storage;
 	m_image = image_2d::create(spec);
 
-    arc<vulkan_texture_2d> instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->invalidate();
@@ -82,7 +82,7 @@ vulkan_texture_2d::~vulkan_texture_2d()
 	m_image_data.release();
 }
 
-void vulkan_texture_2d::resize(uint32_t width, uint32_t height)
+void vulkan_texture_2d::resize(u32 width, u32 height)
 {
 	m_width = width;
 	m_height = height;
@@ -99,7 +99,7 @@ owning_buffer& vulkan_texture_2d::get_writeable_buffer()
 	return m_image_data;
 }
 
-void vulkan_texture_2d::set_data(void* data, uint32_t size)
+void vulkan_texture_2d::set_data(void* data, u32 size)
 {
     m_image_data = owning_buffer::copy(data, size);
 
@@ -110,7 +110,7 @@ void vulkan_texture_2d::set_data(void* data, uint32_t size)
         });
 }
 
-void vulkan_texture_2d::bind(uint32_t slot) const
+void vulkan_texture_2d::bind(u32 slot) const
 {
 }
 
@@ -125,7 +125,7 @@ void vulkan_texture_2d::invalidate()
 
 	m_image->release();
 
-	uint32_t mip_count = 1; // #TODO mipmap levels
+    u32 mip_count = 1; // #TODO mipmap levels
 
 	image_specification_t& image_spec = m_image->get_specification();
 	image_spec.format = m_format;
@@ -164,7 +164,7 @@ void vulkan_texture_2d::invalidate()
         );
 
 		// Copy data to staging buffer
-		uint8_t* dest_ptr = allocator.map_memory<uint8_t>(staging_buffer_allocation);
+		auto* dest_ptr = allocator.map_memory<u8>(staging_buffer_allocation);
 		KB_CORE_ASSERT(m_image_data.get(), "image data is nullptr!");
 		memcpy(dest_ptr, m_image_data.get(), size);
 		KB_CORE_INFO("VulkanTexture2D mapping gpu memory of size '{0}'", size);
@@ -311,7 +311,7 @@ bool vulkan_texture_2d::load_image(const std::string& filepath)
 	if (stbi_is_hdr(filepath.c_str()))
 	{
 		data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
-		const size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull * sizeof(float);
+		const auto size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull * sizeof(float);
 		m_image_data.allocate(size);
 
 		m_image_data.write(data, size, 0);
@@ -321,7 +321,7 @@ bool vulkan_texture_2d::load_image(const std::string& filepath)
 	{
         stbi_set_flip_vertically_on_load(1);
 		data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
-		const size_t size  = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
+		const auto size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
 		m_image_data.allocate(size);
 
 		m_image_data.write(data, size, 0);

@@ -4,8 +4,6 @@
 
 #include "Kablunk/Asset/AssetSerializer.h"
 
-#include "Kablunk/Renderer/Font/FontManager.h"
-
 #include "Kablunk/Core/Application.h"
 
 #include <yaml-cpp/yaml.h>
@@ -26,9 +24,6 @@ namespace kb::asset
         m_asset_serializers[AssetType::Audio] = arc<AssetSerializer>{
             arc<AudioAssetSerializer>::Create(instance)
         };
-        m_asset_serializers[AssetType::Font] = arc<AssetSerializer>{
-            arc<font_asset_serializer>::Create(instance)
-        };
 
 		m_asset_registry.clear();
 		load_asset_registry();
@@ -44,11 +39,9 @@ namespace kb::asset
             auto default_font_asset_id = import_engine_asset_metadata(relative_path);
             KB_CORE_ASSERT(default_font_asset_id != asset::null_asset_id, "[asset_manager]: tried loading default font, but asset_import returned null id?");
 
-            arc<render::font_asset_t> default_font_asset = get_asset<render::font_asset_t>(default_font_asset_id);
 
             // load into font registry
             std::filesystem::path absolute_path = m_active_project->get_asset_directory_path() / relative_path;
-            Application::Get().get_renderer_2d()->get_font_manager().add_font_file_to_library(default_font_asset, absolute_path);
             //render2d::get_font_manager().add_font_file_to_library(default_font_asset);
         }
 

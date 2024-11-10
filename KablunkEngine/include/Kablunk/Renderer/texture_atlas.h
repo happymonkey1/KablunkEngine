@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Kablunk/Math/rectangle.h"
-#include "Kablunk/Renderer/texture_handle.h"
-#include "Kablunk/Renderer/backend/texture.h"
-
-#include <glm/glm.hpp>
+#include "Kablunk/renderer/texture_handle.h"
+#include "Kablunk/renderer/backend/texture.h"
+#include "Kablunk/renderer/virtual_texture.h"
 
 #include <filesystem>
 #include <array>
@@ -16,21 +15,14 @@ struct texture_atlas_create_props
 {
     std::filesystem::path m_path = "";
     bool m_force_create = false;
-    u32 m_sprite_width = 0ul;
 
     std::filesystem::path m_root_directory;
 };
 
-class texture_atlas : public RefCounted
+class texture_atlas : public backend::texture_2d
 {
 public:
     constexpr static size_t k_default_atlas_size = 4096ull;
-
-    struct virtual_texture_data_t
-    {
-        std::array<glm::vec2, 4> m_uvs;
-        glm::uvec2 m_sprite_dimensions;
-    };
 
 public:
     texture_atlas() noexcept = default;
@@ -39,14 +31,13 @@ public:
     texture_atlas(const texture_atlas&) noexcept = delete;
     texture_atlas(texture_atlas&&) noexcept = default;
 
-    explicit texture_atlas(const texture_atlas_create_props& p_props) noexcept;
+    [[nodiscard]] static auto create(
+
+    ) noexcept -> arc<texture_atlas>;
 
     [[nodiscard]] auto get_filepath() const noexcept -> const std::filesystem::path& { return m_filepath; }
 
-    auto set_texture_atlas(const arc<backend::texture_2d>& p_texture) noexcept -> void { m_texture = p_texture; }
-    [[nodiscard]] auto get_texture_atlas() const noexcept -> const arc<backend::texture_2d>& { return m_texture; }
-
-    [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<raw_texture_handle, virtual_texture_data_t>& { return m_uv_map; }
+    [[nodiscard]] auto get_uv_map() const noexcept -> const unordered_flat_map<virtual_texture_handle, virtual_texture_t>& { return m_uv_map; }
 
     auto operator=(const texture_atlas&) noexcept -> texture_atlas& = delete;
 
@@ -61,7 +52,6 @@ public:
         std::swap(a.m_filepath, b.m_filepath);
         std::swap(a.m_atlas_dimension, b.m_atlas_dimension);
         std::swap(a.m_sprite_count, b.m_sprite_count);
-        std::swap(a.m_texture, b.m_texture);
         std::swap(a.m_uv_map, b.m_uv_map);
     }
 
@@ -72,7 +62,7 @@ private:
         owning_buffer m_image_data{};
         u32 m_width = 0;
         u32 m_height = 0;
-        raw_texture_handle m_id;
+        virtual_texture_handle m_texture_handle;
 
         [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
         {
@@ -92,6 +82,10 @@ private:
     };
 
 private:
+    explicit texture_atlas(const texture_atlas_create_props& p_props) noexcept;
+    explicit texture_atlas(std::initializer_list<arc<backend::texture_2d>> p_textures) noexcept;
+    explicit texture_atlas(const std::vector<backend::texture_2d>& p_textures) noexcept;
+
     auto create_texture_atlas(const texture_atlas_create_props& p_props) noexcept -> void;
     auto add_image_to_atlas(
         const node_t* p_node,
@@ -99,7 +93,7 @@ private:
         owning_buffer& p_atlas_buffer
     ) noexcept -> void;
     [[nodiscard]] static auto load_image(const std::filesystem::path& p_path) noexcept -> image_data_t;
-    auto calculate_uv_offsets(raw_texture_handle p_id, const rect_i32& p_rect) noexcept -> void;
+    auto calculate_uv_offsets(virtual_texture_handle p_texture_handle, const rect_i32& p_rect) noexcept -> void;
     // free binary tree
     static auto delete_tree(node_t* p_root) noexcept -> void;
 
@@ -108,8 +102,7 @@ private:
     // width and height of the atlas
     u32 m_atlas_dimension = k_default_atlas_size;
     u32 m_sprite_count = 0ul;
-    arc<backend::texture_2d> m_texture{};
-    unordered_flat_map<raw_texture_handle, virtual_texture_data_t> m_uv_map{};
+    unordered_flat_map<virtual_texture_handle, virtual_texture_t> m_uv_map{};
 };
 
 } // end namespace kb::render

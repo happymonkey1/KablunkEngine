@@ -19,7 +19,7 @@ struct vec_storage
 {
     T m_data[Extent];
 };
-    
+
 template <concepts::NumericT T = f32>
 struct alignas(4) vec2_packed
 {
@@ -104,9 +104,23 @@ static_assert(sizeof(vec2_packed) == 8ull);
 static_assert(sizeof(vec3_packed) == 12ull);
 static_assert(sizeof(vec4_packed) == 16ull);
 
+using uvec2_packed = details::vec2_packed<u32>;
+using uvec3_packed = details::vec3_packed<u32>;
+using uvec4_packed = details::vec4_packed<u32>;
+
+static_assert(sizeof(uvec2_packed) == 8ull);
+static_assert(sizeof(uvec3_packed) == 12ull);
+static_assert(sizeof(uvec4_packed) == 16ull);
+
+
 #else
 using vec2_packed = glm::vec2;
 using vec3_packed = glm::vec3;
+using vec4_packed = glm::vec4;
+
+using uvec2_packed = glm::uvec2;
+using uvec3_packed = glm::uvec3;
+using uvec4_packed = glm::uvec4;
 #endif
 
 } // end namespace kb

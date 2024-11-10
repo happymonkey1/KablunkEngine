@@ -6,7 +6,6 @@
 
 #include "Kablunk/Renderer/Renderer.h"
 #include "Kablunk/Renderer/scene_renderer.h"
-#include "Kablunk/Renderer/Font/FontAsset.h"
 #include "Kablunk/Renderer/renderer_2d.h"
 
 #include "Kablunk/Math/Math.h"
@@ -662,7 +661,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
                 auto& text_comp = text_entity.GetComponent<TextComponent>();
 
                 KB_CORE_ASSERT(false, "need to re-implement!");
-                arc<render::font_asset_t> font_asset{};
+                // arc<render::font_asset_t> font_asset{};
                 //arc<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
                 /*if (font_asset)
@@ -839,7 +838,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
             auto& text_comp = text_entity.GetComponent<TextComponent>();
 
             KB_CORE_ASSERT(false, "need to re-implement");
-            arc<render::font_asset_t> font_asset{};
+            // arc<render::font_asset_t> font_asset{};
             //arc<render::font_asset_t> font_asset = p_renderer_2d->get_font_manager().get_font_asset(text_comp.m_font_filename);
 
             /*if (font_asset)

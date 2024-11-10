@@ -9,7 +9,6 @@
 
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Audio/AudioAsset.h"
-#include "Kablunk/Renderer/Font/FontAsset.h"
 #include "Kablunk/lua/lua_asset.h"
 
 #include "Kablunk/Asset/AssetManager.h"
@@ -57,48 +56,6 @@ bool AudioAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IAss
 		asset->set_flag(AssetFlag::Invalid, true);
 
 	return success;
-}
-
-// ====================
-
-// =====================
-// font_asset_serializer
-// =====================
-
-void font_asset_serializer::serialize(const AssetMetadata& metadata, arc<IAsset>& asset) const
-{
-    KB_CORE_WARN("[font_asset_serializer]: serialize() not implemented!");
-}
-
-bool font_asset_serializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
-{
-    const render::font_asset_create_info font_create_info{
-        // path to font asset
-        m_asset_manager->get_absolute_path(metadata).string(),
-        // font point
-        render::font_manager::k_load_font_point,
-        // #TODO get rid of singleton reference
-        // underlying font engine
-        Application::Get().get_renderer_2d()->get_font_manager().get_ft_engine(),
-        // font face index to load
-        0ull,
-        // number of glyphs to load from the font
-        // #TODO this is probably wrong for non-ascii fonts
-        128ull,
-        // load font into memory
-        true
-    };
-
-    asset = arc<IAsset>{ render::font_asset_t::create(font_create_info) };
-    if (asset)
-    {
-        arc<render::font_asset_t> font_asset = asset.As<render::font_asset_t>();
-        font_asset->set_id(metadata.id);
-    }
-    else
-        asset->set_flag(AssetFlag::Invalid, true);
-
-    return asset;
 }
 
 // =====================

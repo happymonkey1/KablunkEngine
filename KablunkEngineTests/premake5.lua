@@ -52,6 +52,7 @@ defines {
     "_DISABLE_VECTOR_ANNOTATION",
     "_DISABLE_STRING_ANNOTATION",
     "GLFW_DLL",
+    "KB_PACKED_MATH_TYPES"
 }
 
 filter "configurations:Debug"

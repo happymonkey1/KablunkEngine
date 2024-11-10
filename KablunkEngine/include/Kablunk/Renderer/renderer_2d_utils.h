@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Kablunk/Math/bounding_box.h"
-#include "Kablunk/Renderer/Font/FontAsset.h"
-#include "Kablunk/Renderer/Font/FontManager.h"
 
 #include <glm/glm.hpp>
 

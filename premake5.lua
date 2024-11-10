@@ -27,17 +27,14 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 include "vendor/premake"
+include "KablunkEngine/vendor/abseil-cpp" -- Needed for GameNetworkingSockets
 include "KablunkEngine/vendor/GLFW"
 include "KablunkEngine/vendor/Glad"
 include "KablunkEngine/vendor/imgui"
 include "KablunkEngine/vendor/yaml-cpp"
 include "KablunkEngine/vendor/spdlog"
 include "KablunkEngine/vendor/box2d"
-include "KablunkEngine/vendor/optick"
-include "KablunkEngine/vendor/abseil-cpp"
-include "KablunkEngine/vendor/protobuf"
--- external fmt lib because of MSVC 17.7 bug
-include "KablunkEngine/vendor/fmt"
+include "KablunkEngine/vendor/fmt" -- external fmt lib because of MSVC 17.7 bug
 include "KablunkEngine/vendor/GameNetworkingSockets"
 include "KablunkEngine/vendor/Catch2"
 include "KablunkEngine/vendor/msdf-atlas-gen"
