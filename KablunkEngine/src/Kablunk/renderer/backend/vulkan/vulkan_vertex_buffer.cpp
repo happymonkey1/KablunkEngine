@@ -162,10 +162,4 @@ const buffer_layout& vulkan_vertex_buffer::get_layout() const
 	return {};
 }
 
-RendererID vulkan_vertex_buffer::get_renderer_id() const
-{
-	KB_CORE_WARN("VulkanVertexBuffer does not implement rendererID");
-	return 0;
-}
-
 } // end namespace kb::render::backend::vk

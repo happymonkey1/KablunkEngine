@@ -34,7 +34,6 @@ public:
 
     u32 get_width() const override { return m_width; }
     u32 get_height() const override { return m_height; }
-	RendererID get_renderer_id() const override { return 0; }
 	uint64_t get_hash() const override { return m_hash; }
 
     resource_descriptor_info_t get_descriptor_info() noexcept override

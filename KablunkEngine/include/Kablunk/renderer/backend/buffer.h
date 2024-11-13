@@ -2,7 +2,6 @@
 #define KABLUNK_RENDERER_BACKEND_BUFFER_H
 
 #include "Kablunk/Core/Core.h"
-#include "kablunk/renderer/renderer_types.h"
 
 namespace kb::render::backend
 { // start namespace kb::render::backend
@@ -126,8 +125,6 @@ public:
 
 	static arc<vertex_buffer> create(u32 size);
 	static arc<vertex_buffer> create(const void* data, u32 size);
-
-	virtual RendererID get_renderer_id() const = 0;
 };
 
 class index_buffer : public RefCounted
@@ -142,8 +139,6 @@ public:
 
 	virtual u32 get_count() const = 0;
 	virtual u32 get_size() const = 0;
-
-	virtual RendererID get_renderer_id() const = 0;
 
 	static arc<index_buffer> create(u32 count);
 	static arc<index_buffer> create(const void* data, u32 count);

@@ -3,7 +3,6 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Renderer/backend/image.h"
-#include "kablunk/renderer/renderer_types.h"
 
 #include "Kablunk/Asset/Asset.h"
 
@@ -18,7 +17,6 @@ public:
 	~texture() override = default;
 	virtual u32 get_width() const = 0;
 	virtual u32 get_height() const = 0;
-	virtual RendererID get_renderer_id() const = 0;
 	virtual void set_data(void* data, u32 size) = 0;
 
 	virtual uint64_t get_hash() const = 0;

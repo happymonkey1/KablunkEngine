@@ -82,12 +82,6 @@ public:
 	    return m_resources;
 	}
 
-	RendererID get_renderer_id() const override
-	{
-	    KB_CORE_ASSERT(false, "does not apply for Vulkan!");
-	    return 0;
-	}
-
 	const std::vector<VkPipelineShaderStageCreateInfo>& GetPipelineShaderStageCreateInfos() const { return m_pipeline_shader_stage_create_infos; }
 
 	VkDescriptorSetLayout get_vk_descriptor_set_layout(u32 set) const { return m_descriptor_set_layouts.at(set); }

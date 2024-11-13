@@ -91,10 +91,4 @@ void vulkan_index_buffer::set_data(const void* buffer, uint32_t size, uint32_t o
 	KB_CORE_WARN("VulkanIndexBuffer SetData not implemented!");
 }
 
-RendererID vulkan_index_buffer::get_renderer_id() const
-{
-	KB_CORE_WARN("VulkanIndexBuffer GetRendererID not implemented!");
-	return 0;
-}
-
 } // end namespace kb::render::backend::vk

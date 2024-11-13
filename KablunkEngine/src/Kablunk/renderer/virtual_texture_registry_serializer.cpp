@@ -13,7 +13,7 @@ namespace kb::render
 auto virtual_texture_registry_serializer::serialize(
     serialization_type_t p_serialization_type,
     const std::filesystem::path& p_cache_dir,
-    weak_ptr<virtual_texture_registry> p_virtual_texture_registry
+    const weak_ptr<virtual_texture_registry> p_virtual_texture_registry
 ) noexcept -> void
 {
     // TODO: ensure the is_directory returns true for directories that do not exist

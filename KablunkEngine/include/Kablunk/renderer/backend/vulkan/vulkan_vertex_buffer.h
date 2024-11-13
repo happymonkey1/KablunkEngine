@@ -41,8 +41,6 @@ public:
 
 	void set_layout(const buffer_layout& layout) override;
 	const buffer_layout& get_layout() const override;
-
-	RendererID get_renderer_id() const override;
 private:
 	uint32_t m_size = 0;
 	owning_buffer m_local_data{};

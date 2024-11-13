@@ -3,7 +3,6 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/renderer/backend/image.h"
-#include "kablunk/renderer/renderer_types.h"
 #include "Kablunk/renderer/backend/texture.h"
 #include <map>
 

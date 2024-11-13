@@ -11,7 +11,7 @@ namespace kb::serialize
 
 auto virtual_texture_registry_yaml_serializer::serialize(
     std::filesystem::path p_virtual_texture_registry_file_path,
-    weak_ptr<render::virtual_texture_registry> p_virtual_texture_registry
+    const weak_ptr<render::virtual_texture_registry> p_virtual_texture_registry
 ) noexcept -> void
 {
     const auto serializer = virtual_texture_registry_yaml_serializer{

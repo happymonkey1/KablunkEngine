@@ -3,6 +3,7 @@
 #define KABLUNK_RENDERER_VIRTUAL_TEXTURE_REGISTRY_SERIALIZER_H
 
 #include "Kablunk/Core/CoreTypes.h"
+#include "Kablunk/Core/RefCounting.h"
 
 #include <filesystem>
 

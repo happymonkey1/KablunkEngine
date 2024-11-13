@@ -65,6 +65,12 @@ auto virtual_texture_registry::load_individual_texture(
     });
 }
 
+auto virtual_texture_registry::load_texture_atlas(std::filesystem::path p_atlas_path) noexcept -> virtual_texture_handle
+{
+    KB_CORE_ASSERT(false, "[virtual_texture_registry]: load_texture_atlas() is not implemented!");
+    return virtual_texture_handle{ 0 };
+}
+
 auto virtual_texture_registry::create_virtual_texture_handle(
     const std::filesystem::path& p_file_path) noexcept -> virtual_texture_handle
 {

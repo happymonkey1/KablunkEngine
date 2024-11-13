@@ -29,8 +29,6 @@ public:
     u32 get_count() const noexcept override { return m_size / sizeof(u32); };
 	u32 get_size() const noexcept override { return m_size; }
 
-	RendererID get_renderer_id() const override;
-
 	VkBuffer GetVkBuffer() const noexcept { return m_vk_buffer; }
 private:
 	VkBuffer m_vk_buffer = nullptr;

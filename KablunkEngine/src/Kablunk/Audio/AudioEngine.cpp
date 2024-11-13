@@ -4,8 +4,6 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Asset/AssetCommand.h"
 
-#include <glm/glm.hpp>
-
 namespace kb::audio
 {
 	// documentation for miniaudio https://miniaud.io/docs/manual/index.html
@@ -76,9 +74,9 @@ namespace kb::audio
 	{
 		// clamp volume between 0.0 and 2.0
 		// volume > 1.0 in miniaudio results in amplification
-		glm::clamp(new_volume, 0.0f, 2.0f);
-		m_engine_config.master_volume = new_volume;
-		ma_engine_set_volume(&m_engine, new_volume);
+		const auto clamped_volume = std::clamp(new_volume, 0.0f, 2.0f);
+		m_engine_config.master_volume = clamped_volume;
+		ma_engine_set_volume(&m_engine, clamped_volume);
 	}
 
 	void AudioEngine::start_engine()

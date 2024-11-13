@@ -22,12 +22,12 @@ class virtual_texture_registry_yaml_serializer
 {
 public:
     static auto serialize(
-        std::filesystem::path p_cache_file_path,
+        std::filesystem::path p_virtual_texture_registry_file_path,
         weak_ptr<render::virtual_texture_registry> p_virtual_texture_registry
     ) noexcept -> void;
 
     [[nodiscard]] static auto deserialize(
-        std::filesystem::path p_cache_file_path
+        std::filesystem::path p_virtual_texture_registry_file_path
     ) noexcept -> std::unique_ptr<render::virtual_texture_registry>;
 
 private:

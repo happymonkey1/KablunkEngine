@@ -2,7 +2,6 @@
 
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Core/RefCounting.h"
-#include "kablunk/renderer/renderer_types.h"
 #include "Kablunk/Renderer/backend/shader_resource_declaration.h"
 
 #include <glm/glm.hpp>
@@ -91,7 +90,6 @@ public:
 	virtual void set_int_array(const std::string& name, int* values, u32 count) = 0;
 
 	virtual const std::string& get_name() const = 0;
-	virtual RendererID get_renderer_id() const = 0;
 
 	virtual const kb::unordered_flat_map<std::string, shader_buffer_t>& get_shader_buffers() const = 0;
 	virtual const kb::unordered_flat_map<std::string, shader_resource_declaration>& get_resources() const = 0;
