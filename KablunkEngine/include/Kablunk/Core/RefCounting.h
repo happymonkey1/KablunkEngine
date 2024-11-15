@@ -286,6 +286,9 @@ public:
     constexpr const T& operator*() const noexcept { return *m_ptr; }
 	constexpr T& operator*() noexcept { return *m_ptr; }
 	constexpr operator bool() const noexcept { return Valid(); }
+    constexpr auto operator==(std::nullptr_t p_null_ptr) const noexcept -> bool { return m_ptr == p_null_ptr; }
+    constexpr auto operator!=(std::nullptr_t p_null_ptr) const noexcept -> bool { return !(m_ptr == p_null_ptr); }
+    constexpr auto operator<=>(const weak_ptr&) const = default;
 
     template <typename T2>
     constexpr auto as() const noexcept -> weak_ptr<T2>
@@ -296,7 +299,7 @@ public:
     // get the raw pointer
 	constexpr T* get() noexcept { return m_ptr; }
 private:
-	T* m_ptr = nullptr;
+	T* m_ptr;
 };
 
 // ==============

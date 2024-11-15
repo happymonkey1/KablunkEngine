@@ -621,7 +621,7 @@ std::string CSharpScriptEngine::StripNamespace(const std::string& name_space, co
 
 void CSharpScriptEngine::InitScriptEntity(Entity entity)
 {
-	Scene* context = entity.m_scene;
+	auto context = entity.m_scene;
 	uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 	auto& comp = entity.GetComponent<CSharpScriptComponent>();
 	auto& module_name = comp.Module_name;
@@ -669,7 +669,7 @@ void CSharpScriptEngine::ShutdownScriptEntity(Entity entity, const std::string& 
 
 void CSharpScriptEngine::InstantiateEntityClass(Entity entity)
 {
-	Scene* context = entity.m_scene;
+	auto context = entity.m_scene;
 	kb::uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 	KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, static_cast<uint64_t>(entity.m_entity_handle));
 	auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
