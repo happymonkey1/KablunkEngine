@@ -731,7 +731,7 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			UI::PropertyColorEdit4("Tint Color", component.Color);
 
-            const arc<render::backend::texture_2d>& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+            const arc<render::backend::texture_2d>& white_texture = Singleton<render::Renderer>::get().get_white_texture();
             arc<render::backend::texture_2d> texture_asset = component.Texture != asset::null_asset_id ?
                 asset::get_asset<render::backend::texture_2d>(component.Texture) : white_texture;
             if (!texture_asset)

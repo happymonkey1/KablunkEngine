@@ -1,9 +1,12 @@
 #include "kablunkpch.h"
 #include "Kablunk/UI/PanelFactory.h"
+
+#include "Kablunk/Renderer/renderer.h"
 #include "Kablunk/Renderer/backend/texture.h"
 
 #include "Kablunk/UI/Panel.h"
 #include "Kablunk/UI/ImageButtonPanel.h"
+
 
 // #TODO remove when singleton reference to application is refactored
 #include "Kablunk/Core/Application.h"
@@ -19,9 +22,9 @@ IPanel* PanelFactory::create_panel(panel_type_t panel_type, const panel_create_i
 		case panel_type_t::Blank:		panel = new Panel{ panel_create_info.position, panel_create_info.size }; break;
 		case panel_type_t::ImageButton:
 		{
-			auto image = panel_create_info.image ?
+			const auto& image = panel_create_info.image ?
                 panel_create_info.image :
-                Application::Get().get_renderer_2d()->get_white_texture();
+                Singleton<render::Renderer>::get().get_white_texture();
 
 			panel = new ImageButtonPanel{ panel_create_info.position, panel_create_info.size, image };
 			break;

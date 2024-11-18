@@ -118,6 +118,12 @@ public:
 	    return m_resource_free_queue[index];
 	}
 
+    // Retrieve an immutable arc to a white texture
+    auto get_white_texture() const noexcept -> const arc<backend::texture_2d>&
+	{
+        return m_white_texture;
+	}
+
     // Submit a function to the render command queue.
     // Execution is deferred to the Render thread in multithreaded contexts
     auto submit(auto p_func) noexcept -> void
@@ -197,6 +203,8 @@ private:
 	// number of render command queues
 	constexpr static u32 s_render_command_queue_size = 3;
 	constexpr static u32 s_resource_free_queue_size = 3;
+    // White 1x1 texture in memory, usually used for default or uninitialized textures
+    arc<backend::texture_2d> m_white_texture{};
 
 	// resource freeing queues
     backend::render_command_queue m_resource_free_queue[s_resource_free_queue_size]{};

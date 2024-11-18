@@ -138,7 +138,7 @@ void scene_renderer::init()
         m_composite_pass = backend::render_pass::create(composite_render_pass);
 
         m_composite_pass->set_input("u_Texture", m_geometry_pass->get_output_image(0));
-        const auto& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+        const auto& white_texture = Singleton<Renderer>::get().get_white_texture();
         m_composite_pass->set_input("u_BloomTexture", white_texture);
         m_composite_pass->set_input("u_BloomDirtTexture", white_texture);
         m_composite_pass->set_input("u_DepthTexture", m_geometry_pass->get_depth_output());

@@ -82,7 +82,13 @@ namespace kb
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
 		m_viewport_renderer = arc<render::scene_renderer>::Create(m_active_scene, render::scene_renderer_specification_t{});
+
+#if APP_OWNED_RENDERER_2D
         m_renderer_2d = Application::Get().get_renderer_2d();
+#else
+        m_renderer_2d = arc<render::renderer_2d>::Create();
+        m_renderer_2d->init();
+#endif
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		NativeScriptEngine::get().set_scene(m_active_scene);

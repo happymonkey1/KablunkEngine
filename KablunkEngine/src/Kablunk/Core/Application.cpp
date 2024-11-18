@@ -68,11 +68,13 @@ void Application::init()
 	// start rendering render one frame
 	m_render_thread.pump();
 
+#if APP_OWNED_RENDERER_2D
     m_renderer_2d = arc<render::renderer_2d>::Create();
     m_renderer_2d->init();
 
     //m_screen_space_renderer_2d = arc<Renderer2D>::Create();
     //m_screen_space_renderer_2d->init();
+#endif
 
 	m_render_thread.pump();
 
@@ -116,8 +118,11 @@ void Application::shutdown()
 	// deletes any pushed layers, including imgui layer
 	m_layer_stack.Destroy();
 
+#if APP_OWNED_RENDERER_2D
     m_renderer_2d.reset();
     m_screen_space_renderer_2d.reset();
+#endif
+
 	render::shutdown();
 
 	ProjectManager::get().shutdown();

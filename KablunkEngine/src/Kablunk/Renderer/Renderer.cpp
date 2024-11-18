@@ -38,6 +38,15 @@ void Renderer::init()
     m_shader_library->Load("resources/shaders/Renderer2D_Text.glsl");
 	// ==========
 
+    // Load renderer's white texture
+    constexpr u32 white_texture_data = 0xFFFFFFFF;
+    m_white_texture = backend::texture_2d::create(
+        backend::image_format_t::RGBA,
+        1,
+        1,
+        &white_texture_data
+    );
+
     const auto& application = Application::Get();
     if (application.get_render_thread().is_running())
     {

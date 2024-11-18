@@ -13,6 +13,8 @@
 
 #include "Kablunk/renderer/renderer_2d.h"
 
+#define APP_OWNED_RENDERER_2D 0
+
 int main(int argc, char** argv);
 
 namespace kb {
@@ -89,14 +91,16 @@ public:
 	render_thread& get_render_thread() { return m_render_thread; }
     auto get_render_thread() const noexcept -> const render_thread& { return m_render_thread; }
 
-    // get a mutable reference to the primary renderer2d
+#if APP_OWNED_RENDERER_2D
+    // get a mutable reference to the primary renderer_2d
     arc<render::renderer_2d> get_renderer_2d() noexcept { return m_renderer_2d; }
-    // get an immutable reference to the primary renderer2d
+    // get an immutable reference to the primary renderer_2d
     const arc<render::renderer_2d>& get_renderer_2d() const noexcept { return m_renderer_2d; }
-    // get a mutable reference to the secondary renderer2d
+    // get a mutable reference to the secondary renderer_2d
     arc<render::renderer_2d> get_screen_space_renderer_2d() noexcept { return m_screen_space_renderer_2d; }
-    // get an immutable reference to the secondary renderer2d
+    // get an immutable reference to the secondary renderer_2d
     const arc<render::renderer_2d>& get_screen_space_renderer_2d() const noexcept { return m_screen_space_renderer_2d; }
+#endif
 
 	// toggle between fullscreen and windowed mode
 	void toggle_fullscreen();
@@ -149,10 +153,12 @@ private:
 	// flag for whether we should draw debug statistics to the screen
 	bool m_show_debug_statistics = false;
 
+#if APP_OWNED_RENDERER_2D
     // primary 2d renderer which uses world space camera
     arc<render::renderer_2d> m_renderer_2d{};
     // secondary 2d renderer that operates in screen space (UI)
     arc<render::renderer_2d> m_screen_space_renderer_2d{};
+#endif
 
 	u32 m_current_frame_index = 0;
 

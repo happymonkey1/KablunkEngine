@@ -149,7 +149,7 @@ void vulkan_pipeline::RT_Invalidate()
 	raster_state.rasterizerDiscardEnable = VK_FALSE;
 	raster_state.depthBiasEnable = VK_FALSE;
 	// #TODO make dynamic when lines are implemented!
-	raster_state.lineWidth = 1.0f; 
+	raster_state.lineWidth = 1.0f;
 
 	// Color m_enable_blend state describes how m_enable_blend factors are calculated (if used)
 	// We need one m_enable_blend attachment state per color attachment (even if blending is not used)

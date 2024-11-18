@@ -164,7 +164,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
 
 	// Create framebuffer
     backend::frame_buffer_specification_t frame_buffer_spec{};
-	frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
+	frame_buffer_spec.m_attachments = { backend::image_format_t::RGBA, backend::image_format_t::Depth };
 	frame_buffer_spec.m_samples = 1;
 	frame_buffer_spec.m_clear_color_on_load = false;
     frame_buffer_spec.m_clear_color = { 51.f / 255.f, 51.f / 255.f, 51.f / 255.f, 1.0f };
@@ -746,6 +746,8 @@ void renderer_2d::draw_entity(Entity entity) noexcept
 
     auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
+    KB_CORE_ASSERT(m_asset_manager, "[renderer_2d]: Asset manager cannot be null!");
+
     arc<backend::texture_2d> texture = sprite_renderer_comp.Texture != asset::null_asset_id ?
                                           m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) : m_renderer_data.white_texture;
 
@@ -983,7 +985,7 @@ void renderer_2d::draw_text_string(
     const std::string& text,
     const glm::vec2& position,
     const glm::vec2& size,
-    const arc<render::font>& font_asset,
+    const arc<font>& font_asset,
     const glm::vec4& tint_color, /* = glm::vec4{1.0f}*/
     f32 p_max_width, /* = 0.f */
     f32 p_line_height_offset, /*= 0.f*/

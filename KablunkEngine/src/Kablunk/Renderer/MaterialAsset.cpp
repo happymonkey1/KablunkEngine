@@ -35,7 +35,7 @@ MaterialAsset::MaterialAsset()
 
 	// Maps
     // #TODO refactor application singleton reference and remove
-    auto texture = Application::Get().get_renderer_2d()->get_white_texture();
+    const auto& texture = Singleton<Renderer>::get().get_white_texture();
 	SetAlbedoMap(texture);
 	SetNormalMap(texture);
 	SetMetalnessMap(texture);
@@ -100,7 +100,7 @@ void MaterialAsset::SetAlbedoMap(arc<backend::texture_2d> texture)
 
 void MaterialAsset::ClearAlbedoMap()
 {
-	m_material->set(s_albedo_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_albedo_map_uniform_str, Singleton<Renderer>::get().get_white_texture());
 }
 
 arc<backend::texture_2d> MaterialAsset::GetNormalMap()
@@ -125,7 +125,7 @@ void MaterialAsset::SetUseNormalMap(bool use_normal)
 
 void MaterialAsset::ClearNormalMap()
 {
-	m_material->set(s_normal_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_normal_map_uniform_str, Singleton<Renderer>::get().get_white_texture());
 }
 
 arc<backend::texture_2d> MaterialAsset::GetMetalnessMap()
@@ -140,7 +140,7 @@ void MaterialAsset::SetMetalnessMap(arc<backend::texture_2d> texture)
 
 void MaterialAsset::ClearMetalnessMap()
 {
-	m_material->set(s_metalness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_metalness_map_uniform_str, Singleton<Renderer>::get().get_white_texture());
 }
 
 arc<backend::texture_2d> MaterialAsset::GetRoughnessMap()
@@ -155,7 +155,7 @@ void MaterialAsset::SetRoughnessMap(arc<backend::texture_2d> texture)
 
 void MaterialAsset::ClearRoughnessMap()
 {
-	m_material->set(s_roughness_map_uniform_str, Application::Get().get_renderer_2d()->get_white_texture());
+	m_material->set(s_roughness_map_uniform_str, Singleton<Renderer>::get().get_white_texture());
 }
 
 MaterialTable::MaterialTable(uint32_t material_count /*= 1*/)

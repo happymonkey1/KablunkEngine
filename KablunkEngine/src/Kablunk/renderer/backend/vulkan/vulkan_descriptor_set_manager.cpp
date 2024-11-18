@@ -610,7 +610,7 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                     if (vulkan_texture == arc<vulkan_texture_2d>{})
                     {
                         // #TODO should be a missing texture
-                        vulkan_texture = Application::Get().get_renderer_2d()->get_white_texture()
+                        vulkan_texture = Singleton<Renderer>::get().get_white_texture()
                             .As<vulkan_texture_2d>();
                     }
                     const auto& image_info = vulkan_texture->GetVulkanDescriptorInfo();
@@ -906,7 +906,7 @@ auto vulkan_descriptor_set_manager::init() noexcept -> void
                 if (input_decl.m_type == render_pass_input_type_t::image_sampler_2d)
                 {
                     for (auto& texture : input.m_input)
-                        texture = Application::Get().get_renderer_2d()->get_white_texture().As<RefCounted>();
+                        texture = Singleton<Renderer>::get().get_white_texture().As<RefCounted>();
                 }
                 // #TODO default texture_3d
             }

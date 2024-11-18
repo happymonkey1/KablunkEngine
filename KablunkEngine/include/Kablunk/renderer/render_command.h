@@ -133,6 +133,12 @@ inline void swap_queues() noexcept
 	Singleton<Renderer>::get().swap_queues();
 }
 
+// Retrieve an immutable arc to a white texture
+inline auto get_white_texture() noexcept
+{
+    return Singleton<Renderer>::get().get_white_texture();
+}
+
 // ======
 // Meshes
 // ======

@@ -188,8 +188,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		}
 	}
 
-	auto white_texture = Application::Get().get_renderer_2d()->get_white_texture();
 #if 0
+    auto white_texture = Singleton<Renderer>::get().get_white_texture();
     if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
 	{
 		m_textures.resize(scene->mNumMaterials);

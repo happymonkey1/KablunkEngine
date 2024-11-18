@@ -61,7 +61,7 @@ void vulkan_material::Init()
 
     m_descriptor_set_manager = vulkan_descriptor_set_manager{ spec };
 
-    const auto& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+    const auto& white_texture = Singleton<Renderer>::get().get_white_texture();
 
     for (const auto& [name, decl] :
         m_descriptor_set_manager.get_input_declarations())
@@ -115,7 +115,7 @@ void vulkan_material::invalidate()
             }
         }
 
-        const auto& white_texture = Application::Get().get_renderer_2d()->get_white_texture();
+        const auto& white_texture = Singleton<Renderer>::get().get_white_texture();
         for (const auto& [binding, vk_write_descriptor] : write_descriptors)
         {
             m_material_write_descriptors[binding] = vk_write_descriptor;
