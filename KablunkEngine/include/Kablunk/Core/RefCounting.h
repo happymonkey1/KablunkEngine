@@ -94,6 +94,7 @@ public:
 #endif
 
 	template <typename T2>
+    requires (std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
     explicit constexpr arc(const arc<T2>& other) noexcept
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
@@ -102,6 +103,7 @@ public:
 	}
 
 	template <typename T2>
+    requires (std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
     explicit constexpr arc(arc<T2>&& other) noexcept
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
@@ -195,6 +197,7 @@ public:
 	}
 
 	template <typename T2>
+    requires (std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
     constexpr arc<T2> As() const noexcept
 	{
 		return arc<T2>(*this);
@@ -273,6 +276,12 @@ public:
 	constexpr weak_ptr(arc<T>& ref) : m_ptr{ ref.m_ptr } { }
 	constexpr weak_ptr(T* ptr) : m_ptr{ ptr } { }
 
+    template <typename V>
+    requires (std::is_base_of_v<V, T> || std::is_base_of_v<T, V>)
+    constexpr weak_ptr(const arc<V>& p_ref)
+        : m_ptr{ static_cast<T*>(p_ref.get()) }
+    { }
+
 	constexpr ~weak_ptr() noexcept = default;
 
 #if KB_LIVE_REFERENCES
@@ -291,6 +300,7 @@ public:
     constexpr auto operator<=>(const weak_ptr&) const = default;
 
     template <typename T2>
+    requires (std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
     constexpr auto as() const noexcept -> weak_ptr<T2>
 	{
         return weak_ptr<T2>{ static_cast<T2*>(m_ptr) };
