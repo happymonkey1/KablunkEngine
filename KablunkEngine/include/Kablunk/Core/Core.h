@@ -2,9 +2,9 @@
 #define KABLUNK_CORE_CORE_H
 
 #include "Kablunk/Core/CoreTypes.h"
-#include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Logger.h"
+#include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/Core/Singleton.h"
 #include "Kablunk/Core/Memory/Memory.h"
 #include "Kablunk/Core/Expected.hpp"
@@ -44,15 +44,17 @@ namespace kb
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 namespace kb
-{
-	template <typename T>
-	using box = std::unique_ptr<T>;
+{ // start namespace kb
 
-	template <typename T, typename ... Args>
-	constexpr box<T> create_box(Args&& ... args)
-	{
-		return std::make_unique<T>(std::forward<Args>(args)...);
-	}
+template <typename T>
+using box = std::unique_ptr<T>;
+
+template <typename T, typename ... Args>
+constexpr box<T> create_box(Args&& ... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
 }
+
+} // end namespace kb
 
 #endif

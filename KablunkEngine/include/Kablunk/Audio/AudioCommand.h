@@ -26,12 +26,12 @@ namespace kb::audio
 	// \brief add sound to audio queue
 	inline void queue_sound(const asset::asset_id_t& sound_id)
 	{
-		ref<AudioAsset> sound_asset = asset::get_asset<AudioAsset>(sound_id);
+		arc<AudioAsset> sound_asset = asset::get_asset<AudioAsset>(sound_id);
 		Singleton<AudioEngine>::get().add_to_queue(sound_asset);
 	}
 
 	// \brief add sound to audio queue
-	inline void queue_sound(ref<AudioAsset>& sound_asset) { Singleton<AudioEngine>::get().add_to_queue(sound_asset); }
+	inline void queue_sound(arc<AudioAsset>& sound_asset) { Singleton<AudioEngine>::get().add_to_queue(sound_asset); }
 
 	// \brief stop all playing audio and clear the queue
 	inline void stop_and_clear_queue() { Singleton<AudioEngine>::get().stop_and_clear_queue(); }

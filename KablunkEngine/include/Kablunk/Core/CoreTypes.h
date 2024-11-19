@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <uuid.h>
 #include <unordered_map>
+#include <optional>
 #pragma warning(push, 0)
 #include <robin-hood/robin_hood.h>
 #pragma warning(pop)
@@ -36,6 +37,9 @@ template <typename K>
 using unordered_flat_set = robin_hood::unordered_flat_set<K>;
 
 using uuid_t = uuids::uuid;
+
+template <typename T>
+using option = std::optional<T>;
 
 } // end namespace kb
 

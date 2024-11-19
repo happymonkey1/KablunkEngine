@@ -6,59 +6,51 @@
 #include "Kablunk/Events/MouseEvent.h"
 #include "Kablunk/Events/ApplicationEvent.h"
 
-#include "Kablunk/Renderer/RendererAPI.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
-#include "Platform/Vulkan/VulkanContext.h"
+#include "kablunk/vendor/glfw/glfw.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "Kablunk/Core/Application.h"
 
 namespace kb
 { // start namespace kb
 
 static uint8_t s_glfw_window_count = 0;
 
-static void GLFWErrorCallback(int error, const char* desc) 
+static void GLFWErrorCallback(int error, const char* desc)
 {
     KB_CORE_ERROR("GLFW Error ({0} {1})", error, desc);
 }
 
-box<Window> Window::Create(const WindowProps& props) 
-{
-    return create_box<WindowsWindow>(props);
-}
-
-WindowsWindow::WindowsWindow(const WindowProps& props)
+WindowsWindow::WindowsWindow(const WindowProps& props, render::backend::swap_chain* p_swap_chain_ptr)
 {
     KB_PROFILE_SCOPE;
 
-    Init(props);
+    WindowsWindow::Init(props, p_swap_chain_ptr);
 }
 
 WindowsWindow::~WindowsWindow()
 {
     KB_PROFILE_SCOPE;
 
-    Shutdown();
+    WindowsWindow::Shutdown();
 }
 
-void WindowsWindow::Init(const WindowProps& props)
+void WindowsWindow::Init(const WindowProps& props, render::backend::swap_chain* p_swap_chain_ptr)
 {
+    m_swap_chain = p_swap_chain_ptr;
+
     m_data.Title = props.Title;
     m_data.Width = props.Width;
     m_data.Height = props.Height;
 	m_data.Fullscreen = props.Fullscreen;
-    
+
     KB_CORE_INFO("Creating Window {0} ({1}x{2}), fullscreen={3}", props.Title, props.Width, props.Height, props.Fullscreen);
-    
 
-    if (s_glfw_window_count == 0) 
+    if (s_glfw_window_count == 0)
 	{
-		int success = glfwInit();
-        KB_CORE_ASSERT(success, "COULD NOT INITIALIZE GLFW");
-
 		// Hint to glfw that this will be rendered with Vulkan
-		if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
+		if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// #TODO resizing at runtime
@@ -115,29 +107,18 @@ void WindowsWindow::Init(const WindowProps& props)
             KB_CORE_INFO("[WindowsWindow]: GLFW reporting monitor DPI as ({}, {})", m_data.m_current_dpi.x, m_data.m_current_dpi.y);
         }
 	}
-	m_context = GraphicsContext::Create(m_window);
-	m_context->Init();
 
-	if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
-	{
-		// #TODO dynamic_cast bad!
-		ref<VulkanContext> context = m_context.As<VulkanContext>();
-		//vk_context->GetSwapchain().Init(vk_context->GetInstance(), vk_context->GetDevice());
-		context->GetSwapchain().InitSurface(m_window);
-
-		uint32_t width = m_data.Width, height = m_data.Height;
-		context->GetSwapchain().Create(&width, &height, m_data.VSync);
-	}
+    m_swap_chain->init_surface(m_window);
+    m_swap_chain->create(&m_data.Width, &m_data.Height, m_data.VSync);
 
 	KB_CORE_INFO("Context created!");
-    
-    
+
     glfwSetWindowUserPointer(m_window, &m_data);
     SetVsync(false);
 
     //GLFW Callbacks
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         WindowResizeEvent event(width, height);
         data.EventCallback(event);
@@ -152,14 +133,14 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         WindowCloseEvent event;
         data.EventCallback(event);
     });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         switch (action) {
             case GLFW_PRESS:
@@ -184,13 +165,13 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int keycode) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
         KeyTypedEvent event(keycode);
         data.EventCallback(event);
     });
 
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
         switch (action) {
             case GLFW_PRESS:
@@ -209,16 +190,16 @@ void WindowsWindow::Init(const WindowProps& props)
     });
 
     glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xOffset, double yOffset) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-        MouseScrolledEvent event((float)xOffset, (float)yOffset);
+        MouseScrolledEvent event(static_cast<float>(xOffset), static_cast<float>(yOffset));
         data.EventCallback(event);
     });
 
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos) {
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        const WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-        MouseMovedEvent event((float)xPos, (float)yPos);
+        MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
         data.EventCallback(event);
     });
 
@@ -237,18 +218,6 @@ void WindowsWindow::Init(const WindowProps& props)
 void WindowsWindow::Shutdown()
 {
     KB_PROFILE_SCOPE;
-
-	
-	if (RendererAPI::GetAPI() == RendererAPI::render_api_t::Vulkan)
-	{
-		// #TODO dynamic_cast bad!
-		VulkanContext* vk_context = dynamic_cast<VulkanContext*>(m_context.get());
-
-		vk_context->GetSwapchain().Destroy();
-        vk_context->GetDevice()->Destroy();
-	}
-
-	//m_context->Shutdown();
 
     glfwDestroyWindow(m_window);
 	--s_glfw_window_count;
@@ -280,7 +249,7 @@ void WindowsWindow::OnUpdate()
 {
     KB_PROFILE_SCOPE;
 
-    m_context->SwapBuffers();
+    m_swap_chain->present();
 }
 
 
@@ -307,15 +276,22 @@ void WindowsWindow::SetWindowTitle(const std::string& title)
 
 void WindowsWindow::set_window_mode(window_mode_t mode)
 {
+    if (mode == m_data.m_window_mode)
+        return;
+
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* glfw_mode = glfwGetVideoMode(monitor);
 	KB_CORE_ASSERT(glfw_mode, "null glfw mode?");
-	// whether or not to enable decoration bar
+	// whether to enable decoration bar
 	int decoration_value = GLFW_FALSE;
 	// starting position of the window
 	int x_pos = 0, y_pos = 0;
 	// refresh rate of the primary monitor
-	int refresh_rate = glfw_mode->refreshRate;
+    const int refresh_rate = glfw_mode->refreshRate;
+
+    int new_width = m_data.Width;
+    int new_height = m_data.Height;
+
 	switch (mode)
 	{
 		case window_mode_t::windowed:
@@ -324,12 +300,12 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 			decoration_value = GLFW_TRUE;
 
 			// #TODO(Sean) use cached, previous window size
-			m_data.Width = 1920;
-			m_data.Height = 1080;
+            new_width = 1920;
+			new_height = 1080;
 			m_data.Fullscreen = false;
 
-			x_pos = m_data.Width / 2;
-			y_pos = m_data.Height / 2;
+			x_pos = static_cast<i32>(static_cast<f32>(glfw_mode->width) / 2.f - static_cast<f32>(new_width) / 2.f);
+			y_pos = static_cast<i32>(static_cast<f32>(glfw_mode->height) / 2.f - static_cast<f32>(new_height) / 2.f);
 
 			break;
 		}
@@ -342,8 +318,8 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 			glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
 			glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
 
-			m_data.Width = glfw_mode->width;
-			m_data.Height = glfw_mode->height;
+			new_width = glfw_mode->width;
+			new_height = glfw_mode->height;
 			m_data.Fullscreen = true;
 
 			break;
@@ -352,13 +328,15 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 		{
 			decoration_value = GLFW_FALSE;
 
-			glfwWindowHint(GLFW_RED_BITS, glfw_mode->redBits);
-			glfwWindowHint(GLFW_GREEN_BITS, glfw_mode->greenBits);
-			glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
-			glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
+#if 0
+            glfwWindowHint(GLFW_RED_BITS, glfw_mode->redBits);
+            glfwWindowHint(GLFW_GREEN_BITS, glfw_mode->greenBits);
+            glfwWindowHint(GLFW_BLUE_BITS, glfw_mode->blueBits);
+            glfwWindowHint(GLFW_REFRESH_RATE, glfw_mode->refreshRate);
+#endif
 
-			m_data.Width = glfw_mode->width;
-			m_data.Height = glfw_mode->height;
+			new_width = glfw_mode->width;
+			new_height = glfw_mode->height;
 			m_data.Fullscreen = true;
 
 			// disable decorations (top bar of windowed and fullscreen mode)
@@ -374,17 +352,49 @@ void WindowsWindow::set_window_mode(window_mode_t mode)
 	// enable decorations (top bar of windowed and fullscreen mode)
 	glfwSetWindowAttrib(m_window, GLFW_DECORATED, decoration_value);
 
-	glfwSetWindowMonitor(m_window, m_data.Fullscreen ? monitor : nullptr, x_pos, y_pos, m_data.Width, m_data.Height, refresh_rate);
+    const bool window_to_fullscreen = (m_data.m_window_mode == window_mode_t::windowed ||
+        m_data.m_window_mode == window_mode_t::borderless_fullscreen) && mode == window_mode_t::fullscreen;
+    if (window_to_fullscreen || mode == window_mode_t::fullscreen)
+    {
+        glfwSetWindowMonitor(
+            m_window,
+            mode == window_mode_t::fullscreen ? monitor : nullptr,
+            x_pos,
+            y_pos,
+            new_width,
+            new_height,
+            refresh_rate
+        );
+    }
+    else
+    {
+        glfwSetWindowSize(
+            m_window,
+            new_width,
+            new_height
+        );
+        glfwSetWindowPos(m_window, x_pos, y_pos);
+
+        kb::log::core::info(
+            log::logger_tag_t::window,
+            "[WindowsWindow]: Setting window size ({}, {}) and position ({}, {})",
+            m_data.Width,
+            m_data.Height,
+            x_pos,
+            y_pos
+        );
+    }
+
+    m_data.m_window_mode = mode;
 }
 
 void WindowsWindow::swap_buffers()
 {
-	// #TODO this is not renderer agnostic
-	VulkanContext::Get()->GetSwapchain().Present();
+	m_swap_chain->present();
 }
 
 cursor_handle WindowsWindow::create_cursor(
-    ref<Texture2D>& p_texture,
+    arc<render::backend::texture_2d>& p_texture,
     const glm::ivec2& p_hot_spot
 ) noexcept
 {
@@ -396,10 +406,10 @@ cursor_handle WindowsWindow::create_cursor(
         k_max_cursors
     );
 
-    GLFWimage image{
-        .width = static_cast<i32>(p_texture->GetWidth()),
-        .height = static_cast<i32>(p_texture->GetHeight()),
-        .pixels = static_cast<unsigned char*>(p_texture->GetWriteableBuffer().get())
+    const GLFWimage image{
+        .width = static_cast<i32>(p_texture->get_width()),
+        .height = static_cast<i32>(p_texture->get_height()),
+        .pixels = static_cast<unsigned char*>(p_texture->get_writeable_buffer().get())
     };
 
     const auto glfw_cursor = glfwCreateCursor(&image, p_hot_spot.x, p_hot_spot.y);

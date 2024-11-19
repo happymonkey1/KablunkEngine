@@ -117,7 +117,7 @@ static auto create_and_cache_atlas(
     const std::vector<msdf_atlas::GlyphGeometry>& p_glyphs,
     const msdf_atlas::FontGeometry& p_font_geometry,
     const font_config& p_font_config
-) noexcept -> ref<Texture2D>
+) noexcept -> arc<backend::texture_2d>
 {
     msdf_atlas::ImmediateAtlasGenerator<S, N, GenFuncT, msdf_atlas::BitmapAtlasStorage<T, N>> generator{ p_font_config.m_width, p_font_config.m_height };
     generator.setAttributes(p_font_config.m_generator_attributes);
@@ -132,15 +132,15 @@ static auto create_and_cache_atlas(
     };
     cache_font_atlas(p_name, p_font_size, atlas_header, bitmap.pixels);
 
-    return Texture2D::Create(ImageFormat::RGBA32F, atlas_header.m_width, atlas_header.m_height, bitmap.pixels);
+    return backend::texture_2d::create(backend::image_format_t::RGBA32F, atlas_header.m_width, atlas_header.m_height, bitmap.pixels);
 }
 
 static auto create_atlas(
     const atlas_header p_atlas_header,
     const void* p_pixel_data
-) noexcept -> ref<Texture2D>
+) noexcept -> arc<backend::texture_2d>
 {
-    return Texture2D::Create(ImageFormat::RGBA32F, p_atlas_header.m_width, p_atlas_header.m_height, p_pixel_data);
+    return backend::texture_2d::create(backend::image_format_t::RGBA32F, p_atlas_header.m_width, p_atlas_header.m_height, p_pixel_data);
 }
 
 } // end namespace ::details
@@ -151,7 +151,7 @@ font::font(const std::filesystem::path& p_path) noexcept
     KB_CORE_ASSERT(std::filesystem::exists(p_path), "[font]: {} does not exist!", p_path.string().c_str());
     m_name = p_path.stem().string();
 
-    KB_CORE_INFO("[font]: Trying to load font file '{}'", p_path);
+    KB_CORE_INFO("[font]: Trying to load font file '{}'", p_path.string().c_str());
 
     owning_buffer buffer = FileSystem::read_bytes(p_path);
     generate_atlas(std::move(buffer));
@@ -319,12 +319,12 @@ auto font::generate_atlas(owning_buffer&& p_font_data_buffer) noexcept -> void
     if (details::try_read_cached_font_atlas(m_name, static_cast<f32>(config.m_em_size), atlas_header, pixel_data, storage_buffer))
     {
         m_texture_atlas = details::create_atlas(atlas_header, pixel_data);
-        storage_buffer.Release();
+        storage_buffer.release();
     }
     else
     {
         constexpr bool use_floating_point = true;
-        ref<Texture2D> texture_atlas{};
+        arc<backend::texture_2d> texture_atlas{};
         switch (config.m_image_type)
         {
         case msdf_atlas::ImageType::MSDF:

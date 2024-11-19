@@ -39,7 +39,7 @@ public:
     // generate a uniform random u64 within a range
     [[nodiscard]] static auto random_u64_range(u64 p_min, u64 p_max) noexcept -> u64
     {
-        // ref: https://stackoverflow.com/a/17554531
+        // arc: https://stackoverflow.com/a/17554531
         u64 r;
         const u64 range = 1 + p_max - p_min;
         const u64 buckets = std::numeric_limits<u64>::max() / range;

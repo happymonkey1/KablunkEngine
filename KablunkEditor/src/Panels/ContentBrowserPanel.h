@@ -26,7 +26,7 @@ namespace kb
 	class ContentBrowserPanel 
 	{
 	public:
-		ContentBrowserPanel(const ref<AssetEditorPanel>& asset_editor_panel);
+		ContentBrowserPanel(const arc<AssetEditorPanel>& asset_editor_panel);
 		~ContentBrowserPanel() = default;
 
 		void OnImGuiRender();
@@ -46,14 +46,14 @@ namespace kb
 		std::vector<std::filesystem::directory_entry> m_directory_entries{};
 		mutable std::shared_mutex m_mutex;
 
-		ref<Texture2D> m_directory_icon;
-		ref<Texture2D> m_file_icon;
-		ref<Texture2D> m_back_button;
-		ref<Texture2D> m_forward_button;
-		ref<Texture2D> m_refresh_button;
-		ref<Texture2D> m_asset_icon;
+		arc<render::backend::texture_2d> m_directory_icon;
+		arc<render::backend::texture_2d> m_file_icon;
+		arc<render::backend::texture_2d> m_back_button;
+		arc<render::backend::texture_2d> m_forward_button;
+		arc<render::backend::texture_2d> m_refresh_button;
+		arc<render::backend::texture_2d> m_asset_icon;
 
-		ref<AssetEditorPanel> m_asset_editor_panel;
+		arc<AssetEditorPanel> m_asset_editor_panel;
 
 		char m_search_buffer[MAX_SEARCH_BUFFER_LENGTH];
 

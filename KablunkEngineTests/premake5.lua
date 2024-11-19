@@ -17,6 +17,8 @@ files {
 
 includedirs {
     "%{wks.location}/KablunkEngine/include/",
+    "%{IncludeDir.GLFW}",
+	"%{IncludeDir.Glad}",
     "%{IncludeDir.Catch2}",
     "%{IncludeDir.robin_hood}",
     "%{IncludeDir.LuaJIT}",
@@ -28,22 +30,29 @@ includedirs {
     "%{IncludeDir.stduuid}",
     "%{IncludeDir.msgpack}",
     "%{IncludeDir.boost}",
+    "%{IncludeDir.glm}",
+    "%{IncludeDir.rapidjson}",
 }
 
 links {
     "KablunkEngine",
     "Catch2",
-    "%{Library.LuaJIT}"
+    "%{Library.LuaJIT}",
+    "GLFW"
 }
 
 postbuildcommands {
     '{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
+    '{COPY} "%{IncludeDir.GLFW}/../bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/GLFW/glfw.dll" "%{cfg.targetdir}"',
     '{COPY} "%{wks.location}KablunkEngineTests/resources/lua" "%{cfg.targetdir}/lua"',
+    '{COPY} "%{wks.location}KablunkEngine/vendor/mono/bin/%{cfg.buildcfg}/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
 }
 
 defines {
     "_DISABLE_VECTOR_ANNOTATION",
     "_DISABLE_STRING_ANNOTATION",
+    "GLFW_DLL",
+    "KB_PACKED_MATH_TYPES"
 }
 
 filter "configurations:Debug"

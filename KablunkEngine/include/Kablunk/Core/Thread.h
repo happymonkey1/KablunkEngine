@@ -23,6 +23,8 @@ public:
 
 	void set_name(const std::string& name);
 
+    auto get_id() const noexcept -> std::thread::id{ return m_thread.get_id(); }
+
 	void join();
 private:
 	// name of the thread

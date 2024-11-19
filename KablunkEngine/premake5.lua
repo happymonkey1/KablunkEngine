@@ -1,3 +1,5 @@
+KABLUNK_DIR = os.getenv("KABLUNK_DIR")
+
 project "KablunkEngine"
 kind "StaticLib"
 language "C++"
@@ -43,6 +45,7 @@ defines {
 	"NOMINMAX",
 	"KB_BUILD_DLL",
 	"GLFW_DLL",
+	"GLFW_INCLUDE_VULKAN",
 	"GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
 	"GLM_FORCE_INTRINSICS",
 	"STEAMNETWORKINGSOCKETS_STATIC_LINK",
@@ -51,13 +54,14 @@ defines {
 	"GLM_FORCE_DEPTH_ZERO_TO_ONE",
 	"_DISABLE_VECTOR_ANNOTATION",
 	"_DISABLE_STRING_ANNOTATION",
+	"MSGPACK_NO_BOOST",
 }
 
 includedirs {
 	"include",
 	"src",
 	"%{IncludeDir.GLFW}",
-	"%{IncludeDir.Glad}",
+	-- "%{IncludeDir.Glad}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.glm}",
 	"%{IncludeDir.stb_image}",
@@ -67,20 +71,14 @@ includedirs {
 	"%{IncludeDir.stduuid}",
 	"%{IncludeDir.ImGuizmo}",
 	"%{IncludeDir.assimp}",
-	"%{IncludeDir.freetype}",
 	"%{IncludeDir.Box2d}",
-	"%{IncludeDir.cr}",
 	"%{IncludeDir.mono}",
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.VulkanSDK}",
 	"%{IncludeDir.VulkanSDK_LocalInclude}",
-	"%{IncludeDir.boost}",
 	"%{IncludeDir.miniaudio}",
-	"%{IncludeDir.optick}",
 	"%{IncludeDir.tl_expected}",
 	"%{IncludeDir.robin_hood}",
-	"%{IncludeDir.protobuf}",
-	"%{IncludeDir.absl}",
 	-- external fmt lib because of MSVC 17.7 bug
 	"%{IncludeDir.fmt}",
 	"%{IncludeDir.tracy}",
@@ -91,21 +89,15 @@ includedirs {
 	"%{IncludeDir.msdfgen}",
 	"%{IncludeDir.msgpack}",
 	"%{IncludeDir.rapidjson}",
+	"%{IncludeDir.sol2}",
 }
 
 links {
-	--"GLFW",
-	"Glad",
+	-- "Glad",
 	"ImGui",
 	"yaml-cpp",
 	"spdlog",
-	"FreeType",
 	"Box2d",
-	"opengl32.lib",
-	"optick",
-	"absl",
-	"protobuf",
-	"protoc",
 	-- external fmt lib because of MSVC 17.7 bug
 	"fmt",
 	"GameNetworkingSockets",
@@ -114,12 +106,15 @@ links {
 	"tinyxml2",
 
 	"%{Library.Vulkan}",
+	"GLFW",
+
 	"%{Library.LuaJIT}",
 	-- "%{Library.VulkanUtils}",
 }
 
 prebuildcommands {
-	'if not exist "%{Library.LuaJIT}" (cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild)'
+	'if not exist "%{Library.LuaJIT}" (cd "%{wks.location}KablunkEngine/vendor/LuaJIT/src" && msvcbuild)',
+	'if not exist "${KABLUNK_DIR}/KablunkEngine/vendor/sol2/single/single" (cd "%{KABLUNK_DIR}/KablunkEngine/vendor/sol2/single" && python3 single.py)',
 }
 
 postbuildcommands {

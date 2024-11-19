@@ -4,9 +4,8 @@
 // #TODO remove when singleton reference to application is refactored
 #include "Kablunk/Core/Application.h"
 
-#include "Kablunk/Renderer/RenderCommand2D.h"
-#include "Kablunk/Renderer/SceneRenderer.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Renderer/scene_renderer.h"
+#include "Kablunk/renderer/render_command.h"
 
 #include "Kablunk/Events/MouseEvent.h"
 
@@ -103,7 +102,7 @@ namespace kb::ui
 		}
 	}
 
-	void Panel::on_render(const SceneRendererCamera& scene_camera)
+	void Panel::on_render(const render::scene_renderer_camera_t& scene_camera)
 	{
 		// #TODO assert that this is called from within a render2d scene
 		// KB_CORE_ASSERT(render2d::is_scene_rendering(), "did you forget to call render2d::begin_scene(...)?");
@@ -111,9 +110,7 @@ namespace kb::ui
 		if (!m_visible)
 			return;
 
-        ref<Renderer2D> renderer_2d = Application::Get().get_renderer_2d();
-
-		ref<Texture2D> white_texture = renderer_2d->get_white_texture();
+		arc<render::backend::texture_2d> white_texture = Singleton<render::Renderer>::get().get_white_texture();
 		glm::vec3 pos_relative = glm::vec4{ get_position_relative().x, get_position_relative().y, 1.0f, 1.0f };
 		glm::vec4 bg_color = !m_is_hovered ? m_panel_style.background_color : m_panel_style.background_color * m_panel_style.highlight_color;
 

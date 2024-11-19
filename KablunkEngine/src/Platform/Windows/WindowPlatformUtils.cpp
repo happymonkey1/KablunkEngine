@@ -4,7 +4,7 @@
 #include "Kablunk/Core/owning_buffer.h"
 
 #include <commdlg.h>
-#include <GLFW/glfw3.h>
+#include "kablunk/vendor/glfw/glfw.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>

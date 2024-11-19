@@ -11,7 +11,7 @@ namespace kb
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const ref<Scene>& scene);
+		SceneSerializer(const arc<Scene>& scene);
 	
 		void Serialize(const std::string& filepath);
 		void SerializeBinary(const std::string& filepath);
@@ -21,7 +21,7 @@ namespace kb
 	private:
 		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
-		ref<Scene> m_scene;
+		arc<Scene> m_scene;
 	};
 }
 

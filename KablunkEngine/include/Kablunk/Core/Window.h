@@ -6,14 +6,23 @@
 
 #include "glm/glm.hpp"
 #include "Kablunk/Core/handle.h"
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 
 #include <glm/glm.hpp>
 
 namespace kb
 { // start namespace kb
 
-struct WindowProps {
+// Forward declaration
+namespace render::backend
+{
+
+class swap_chain;
+
+}
+
+struct WindowProps
+{
 	std::string Title;
 	uint32_t Width;
 	uint32_t Height;
@@ -65,12 +74,15 @@ public:
 
 	virtual void swap_buffers() = 0;
 
-    virtual cursor_handle create_cursor(ref<Texture2D>& p_texture, const glm::ivec2& p_hot_spot) noexcept = 0;
+    virtual cursor_handle create_cursor(arc<render::backend::texture_2d>& p_texture, const glm::ivec2& p_hot_spot) noexcept = 0;
     virtual void set_cursor(cursor_handle p_cursor_handle) noexcept = 0;
     // set cursor back to OS specific default cursor
     virtual void set_default_cursor() noexcept = 0;
 
-	static box<Window> Create(const WindowProps& props = WindowProps());
+	static box<Window> Create(
+        render::backend::swap_chain* p_swap_chain_ptr,
+        WindowProps p_props = WindowProps{}
+    );
 };
 
 } // end namespace kb

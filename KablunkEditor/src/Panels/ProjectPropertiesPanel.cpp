@@ -12,7 +12,7 @@ namespace kb
 	static char s_scene_path_buffer[MAX_PATH_BUFFER_SIZE];
 	static bool s_serialize_project = false;
 
-	ProjectPropertiesPanel::ProjectPropertiesPanel(const ref<Project>& project)
+	ProjectPropertiesPanel::ProjectPropertiesPanel(const arc<Project>& project)
 		: m_project{ project }, m_default_scene{ project ? project->get_start_scene_name() : "Untitled Scene"}
 	{
 		memset(s_scene_path_buffer, 0, MAX_PATH_BUFFER_SIZE);

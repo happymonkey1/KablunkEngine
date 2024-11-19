@@ -1,7 +1,6 @@
 #include "kablunkpch.h"
-#include "Kablunk/Core/RenderThread.h"
-
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/Core/render_thread.h"
+#include "Kablunk/renderer/render_command.h"
 
 #ifdef KB_PLATFORM_WINDOWS
 #	include <Windows.h>
@@ -11,7 +10,7 @@
 
 
 namespace kb
-{ // start namespace Kablunk
+{ // start namespace kb
 
 struct render_thread_data_t
 {
@@ -22,7 +21,7 @@ struct render_thread_data_t
 };
 
 render_thread::render_thread(threading_policy_t p_engine_threading_policy)
-	: m_thread{ "Rendering thread" }, m_threading_policy{ p_engine_threading_policy }
+	: m_threading_policy{ p_engine_threading_policy }, m_thread{ "Rendering thread" }
 {
 	m_data = new render_thread_data_t{};
 
@@ -35,27 +34,31 @@ render_thread::render_thread(threading_policy_t p_engine_threading_policy)
 
 render_thread::~render_thread()
 {
-	if (m_threading_policy != threading_policy_t::multi_threaded)
-		return;
-
-    if (m_data)
+	if (m_threading_policy == threading_policy_t::multi_threaded && m_data)
 	    DeleteCriticalSection(&m_data->m_critical_section);
+
+    s_thread_id = std::thread::id{};
+}
+
+auto render_thread::is_current_thread_rt() noexcept -> bool
+{
+    return s_thread_id == std::this_thread::get_id();
 }
 
 void render_thread::run()
 {
 	m_running = true;
-	if (m_threading_policy != threading_policy_t::multi_threaded)
-		return;
+	if (m_threading_policy == threading_policy_t::multi_threaded)
+        m_thread.dispatch(render::details::render_thread_func, this);
 
-	m_thread.dispatch(render::details::render_thread_func, this);
+    s_thread_id = m_thread.get_id();
 }
 
 void render_thread::terminate()
 {
 	m_running = false;
 	// make sure we finish processing any submitted functions before termination
-	pump(); 
+	pump();
 
 	if (m_threading_policy == threading_policy_t::multi_threaded)
 		m_thread.join();
@@ -155,4 +158,4 @@ render_thread& render_thread::operator=(render_thread&& other) noexcept
 	return *this;
 }
 
-} // end namespace Kablunk
+} // end namespace kb

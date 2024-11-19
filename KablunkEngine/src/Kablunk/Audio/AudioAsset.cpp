@@ -18,9 +18,9 @@ namespace kb::audio
 			m_loaded = true;
 	}
 
-	ref<AudioAsset> AudioAsset::create(const audio_asset_config& config)
+	arc<AudioAsset> AudioAsset::create(const audio_asset_config& config)
 	{
-		return ref<AudioAsset>::Create(config);
+		return arc<AudioAsset>::Create(config);
 	}
 
 	void AudioAsset::play()

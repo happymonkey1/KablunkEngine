@@ -4,8 +4,6 @@
 #include "Kablunk/Core/Core.h"
 #include "Kablunk/Asset/AssetCommand.h"
 
-#include <glm/glm.hpp>
-
 namespace kb::audio
 {
 	// documentation for miniaudio https://miniaud.io/docs/manual/index.html
@@ -76,9 +74,9 @@ namespace kb::audio
 	{
 		// clamp volume between 0.0 and 2.0
 		// volume > 1.0 in miniaudio results in amplification
-		glm::clamp(new_volume, 0.0f, 2.0f);
-		m_engine_config.master_volume = new_volume;
-		ma_engine_set_volume(&m_engine, new_volume);
+		const auto clamped_volume = std::clamp(new_volume, 0.0f, 2.0f);
+		m_engine_config.master_volume = clamped_volume;
+		ma_engine_set_volume(&m_engine, clamped_volume);
 	}
 
 	void AudioEngine::start_engine()
@@ -91,14 +89,17 @@ namespace kb::audio
 		ma_engine_stop(&m_engine);
 	}
 
-	void AudioEngine::add_to_queue(ref<AudioAsset>& audio_asset, bool autoplay /*= false*/)
+	void AudioEngine::add_to_queue(arc<AudioAsset>& audio_asset, bool autoplay /*= false*/)
 	{
 		KB_CORE_ASSERT(audio_asset, "trying to queue null audio asset!");
 
 		if (std::find(m_queued_audio.begin(), m_queued_audio.end(), audio_asset) != m_queued_audio.end())
 		{
 			const asset::AssetMetadata& metadata = asset::try_get_asset_metadata(audio_asset->get_id());
-			KB_CORE_WARN("[AudioEngine]: audio '{}' is already in the play queue.", metadata.filepath);
+			KB_CORE_WARN(
+                "[AudioEngine]: audio '{}' is already in the play queue.",
+                metadata.filepath.string().c_str()
+            );
 		}
 
 		m_queued_audio.push_back(audio_asset);

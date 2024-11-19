@@ -9,7 +9,7 @@ layout(location = 4) in float a_Thickness;
 layout(location = 5) in float a_Fade;
 layout(location = 6) in int a_EntityID; // TODO remove when ray cast mouse picking added to editor
 
-layout(std140, binding = 0) uniform Camera
+layout(std140, set = 1, binding = 0) uniform Camera
 {
 	mat4 u_Projection;
 	mat4 u_ViewProjection;
@@ -19,7 +19,6 @@ layout (push_constant) uniform Transform
 {
 	mat4 Transform;
 } u_Renderer;
-
 
 struct VertexOutput
 {

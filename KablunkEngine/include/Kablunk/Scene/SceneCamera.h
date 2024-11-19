@@ -1,11 +1,11 @@
 #ifndef KABLUNK_SCENE_SCENE_CAMERA_H
 #define KABLUNK_SCENE_SCENE_CAMERA_H
 
-#include "Kablunk/Renderer/Camera.h"
+#include "Kablunk/Renderer/camera.h"
 
 namespace kb
 {
-	class SceneCamera : public Camera
+	class SceneCamera : public camera
 	{
 	public:
 		enum class ProjectionType

@@ -15,10 +15,10 @@
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/SceneCamera.h"
 
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/Mesh.h"
 #include "Kablunk/Renderer/MaterialAsset.h"
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "kablunk/renderer/render_command.h"
 
 #include "Kablunk/Project/ProjectManager.h"
 
@@ -113,8 +113,8 @@ struct SpriteRendererComponent
 
 	glm::vec2 GetTextureDimensions() const 
 	{ 
-        const auto& texture_asset = asset::get_asset<Texture2D>(Texture);
-        return glm::vec2{ texture_asset->GetWidth(), texture_asset->GetHeight() }; 
+        const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(Texture);
+        return glm::vec2{ texture_asset->get_width(), texture_asset->get_height() };
 	}
 
 	void SetVisible(bool v) { Visible = v; }
@@ -124,7 +124,7 @@ struct SpriteRendererComponent
 	SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	SpriteRendererComponent(glm::vec4 color) 
 		: Color{ color } { }
-	SpriteRendererComponent(const ref<Texture2D>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
+	SpriteRendererComponent(const arc<render::backend::texture_2d>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
 		: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
 };
 
@@ -264,23 +264,23 @@ struct NativeScriptComponent
 
 struct MeshComponent
 {
-	ref<kb::Mesh> Mesh;
-	ref<kb::MaterialTable> Material_table = ref<kb::MaterialTable>::Create();
+	arc<render::Mesh> Mesh;
+	arc<render::MaterialTable> Material_table = arc<render::MaterialTable>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
-	MeshComponent(const ref<kb::Mesh>& mesh)
+	MeshComponent(const arc<render::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ ref<kb::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ arc<render::MaterialTable>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{
 		if (!Filepath.empty())
 			Mesh.reset();
 
-		auto mesh_data = ref<MeshData>::Create(filepath, entity);
-		Mesh = ref<kb::Mesh>::Create(mesh_data);
+		auto mesh_data = arc<render::MeshData>::Create(filepath, entity);
+		Mesh = arc<render::Mesh>::Create(mesh_data);
 
 		Filepath = filepath;
 	}

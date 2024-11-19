@@ -4,9 +4,7 @@
 
 #include "Kablunk/Core/Application.h"
 
-#include "Kablunk/Imgui/ImGuiGlobalContext.h"
-
-#include "Kablunk/Renderer/RenderCommand.h"
+#include "Kablunk/renderer/render_command.h"
 
 // #TODO try to remove 
 #include <imgui.h>

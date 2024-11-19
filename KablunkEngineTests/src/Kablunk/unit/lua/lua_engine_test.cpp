@@ -11,7 +11,7 @@ using namespace kb;
 TEST_CASE("lua_engine can run basic lua program", "[lua_engine_test]")
 {
     // test setup
-    auto asset_manager = ref<asset::AssetManager>::Create();
+    auto asset_manager = arc<asset::AssetManager>::Create();
 
 
     kb::lua_engine lua_engine{ asset_manager };

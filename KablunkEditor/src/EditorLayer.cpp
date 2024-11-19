@@ -22,7 +22,7 @@
 
 #include "Kablunk/Plugin/PluginManager.h"
 
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/renderer_2d.h"
 
 // #TODO replace when runtime is figured out
 //#include "Eclipse/EclipseCore.h"
@@ -58,11 +58,11 @@ namespace kb
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
-        m_project_properties_panel{ ref<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ ref<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
+        m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		m_icon_play = Texture2D::Create("Resources/icons/play_icon.png");
-		m_icon_stop = Texture2D::Create("Resources/icons/stop_icon.png");
-		m_icon_pause = Texture2D::Create("Resources/icons/pause_icon.png");
+		m_icon_play = render::backend::texture_2d::create("Resources/icons/play_icon.png");
+		m_icon_stop = render::backend::texture_2d::create("Resources/icons/stop_icon.png");
+		m_icon_pause = render::backend::texture_2d::create("Resources/icons/pause_icon.png");
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
@@ -76,13 +76,19 @@ namespace kb
 		//m_kablunk_logo		= AssetManager::Create<Texture2D>("assets/textures/kablunk_logo.png");
 		//m_icon_play			= Texture2D::Create("assets/icons/round_play_arrow_white_72dp.png");
 
-		m_editor_scene = ref<Scene>::Create();
+		m_editor_scene = arc<Scene>::Create();
 		m_active_scene = m_editor_scene;
 
 		m_active_scene->OnViewportResize(m_viewport_size.x, m_viewport_size.y);
 
-		m_viewport_renderer = ref<SceneRenderer>::Create(m_active_scene);
+		m_viewport_renderer = arc<render::scene_renderer>::Create(m_active_scene, render::scene_renderer_specification_t{});
+
+#if APP_OWNED_RENDERER_2D
         m_renderer_2d = Application::Get().get_renderer_2d();
+#else
+        m_renderer_2d = arc<render::renderer_2d>::Create();
+        m_renderer_2d->init();
+#endif
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
 		NativeScriptEngine::get().set_scene(m_active_scene);
@@ -155,7 +161,7 @@ namespace kb
 
 		m_asset_editor_panel->on_update(ts);
 		OnOverlayRender();
-		SceneRenderer::wait_for_threads();
+		render::scene_renderer::wait_for_threads();
 
 #if KB_NATIVE_SCRIPTING
 		NativeScriptEngine::Get()->OnUpdate(ts);
@@ -237,7 +243,7 @@ namespace kb
 			UI::PropertyReadOnlyFloat("FPS", m_imgui_profiler_stats.Fps);
 			UI::PropertyReadOnlyVec3("Editor Camera Position", m_editor_camera.GetPosition());
 
-			renderer_2d_stats_t stats = m_renderer_2d->get_stats();
+            auto stats = m_renderer_2d->get_stats();
 
 			UI::PropertyReadOnlyUint32("Draw Calls", stats.Draw_calls);
 			UI::PropertyReadOnlyUint32("Verts", stats.GetTotalVertexCount());
@@ -290,8 +296,8 @@ namespace kb
 			
 			// store viewport size and position in renderer
 			ImVec2 viewport_pos = ImGui::GetWindowPos();
-			Singleton<Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
-			Singleton<Renderer>::get().m_viewport_size = m_viewport_size;
+			Singleton<render::Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
+			Singleton<render::Renderer>::get().m_viewport_size = m_viewport_size;
 
 			ImDrawList* viewport_draw_list = ImGui::GetWindowDrawList();
 
@@ -316,7 +322,7 @@ namespace kb
 							KB_CORE_ERROR("Tried to load non kablunkscene file as scene");
 					}
 					else
-						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path);
+						KB_CORE_ERROR("Drag and Drop path='{}' is not a valid file!", path.string().c_str());
 					
 				}
 				ImGui::EndDragDropTarget();
@@ -638,7 +644,7 @@ namespace kb
 		if (m_scene_state != SceneState::Edit)
 			play_stop_icon = m_icon_stop;
 
-		const float size = std::min(static_cast<float>(play_stop_icon->GetHeight()), ImGui::GetWindowHeight() - 4.0f);
+		const float size = std::min(static_cast<float>(play_stop_icon->get_height()), ImGui::GetWindowHeight() - 4.0f);
 		const float icon_padding = 0.0f;
 		// #TODO offset so buttons are centered
 		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.0f) - (1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.0f));
@@ -929,7 +935,7 @@ namespace kb
 
 	void EditorLayer::NewScene()
 	{
-		m_editor_scene = ref<Scene>::Create();
+		m_editor_scene = arc<Scene>::Create();
 		m_editor_scene->OnViewportResize(static_cast<uint32_t>(m_viewport_size.x), static_cast<uint32_t>(m_viewport_size.y));
 		
 		m_viewport_renderer->set_scene(m_active_scene);
@@ -971,7 +977,7 @@ namespace kb
 		}
 	}
 
-	void EditorLayer::SerializeScene(ref<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(arc<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer{ scene };
 		serializer.Serialize(path.string());
@@ -991,7 +997,7 @@ namespace kb
 	{
 		NewScene();
 
-		auto new_scene = ref<Scene>::Create();
+		auto new_scene = arc<Scene>::Create();
 		auto serializer = SceneSerializer{ new_scene };
 		if (serializer.Deserialize(path.string()))
 		{
@@ -1188,7 +1194,7 @@ namespace kb
 		if (ProjectManager::get().get_active())
 			CloseProject();
 
-		auto project = ref<Project>::Create();
+		auto project = arc<Project>::Create();
 		ProjectSerializer serializer{ project };
 
 		serializer.Deserialize(filepath);
@@ -1241,12 +1247,12 @@ namespace kb
 		CSharpScriptEngine::SetSceneContext(nullptr);
 		NativeScriptEngine::get().set_scene(nullptr);
 
-		m_viewport_renderer->set_scene(ref<Scene>{});
-		m_scene_hierarchy_panel.SetContext(ref<Scene>{});
+		m_viewport_renderer->set_scene(arc<Scene>{});
+		m_scene_hierarchy_panel.SetContext(arc<Scene>{});
 		m_active_scene = nullptr;
 
 		if (unload)
-			ProjectManager::get().set_active(ref<Project>{});
+			ProjectManager::get().set_active(arc<Project>{});
 	}
 
 	void EditorLayer::ReplaceToken(const char* token, std::string& data, const std::string& new_token) const
@@ -1300,7 +1306,7 @@ namespace kb
 		if (m_show_physics_colliders)
 		{
 			
-			Camera* camera = nullptr;
+			camera* camera = nullptr;
 			glm::mat4 transform = glm::mat4{ 1.0f };
 
 			switch (m_scene_state)
@@ -1340,7 +1346,9 @@ namespace kb
 			// #TODO move to scene renderer
 
 			m_renderer_2d->begin_scene(*camera, transform);
-			m_renderer_2d->set_target_render_pass(m_viewport_renderer->get_external_composite_render_pass());
+			m_renderer_2d->set_target_frame_buffer(
+                m_viewport_renderer->get_external_composite_frame_buffer()
+            );
 
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 

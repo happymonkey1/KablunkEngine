@@ -43,7 +43,7 @@ struct font_pack_file
     // headers for individual atlases
     std::vector<font_atlas_header> m_font_atlas_headers{};
     // atlas data
-    std::vector<ref<render::font>> m_fonts{};
+    std::vector<arc<render::font>> m_fonts{};
 };
 
 } // end namespace kb::asset

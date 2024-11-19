@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Kablunk/Core/Core.h"
-
 #include <glm/glm.hpp>
 
 namespace kb

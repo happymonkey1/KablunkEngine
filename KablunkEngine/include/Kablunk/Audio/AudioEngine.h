@@ -44,7 +44,7 @@ namespace kb::audio
 		// get the underlying ma_engine object
 		const ma_engine* get_ma_engine() const { return &m_engine; }
 		// queue audio to be played by the engine
-		void add_to_queue(ref<AudioAsset>& audio_asset, bool autoplay = false);
+		void add_to_queue(arc<AudioAsset>& audio_asset, bool autoplay = false);
 		// stop all audio sources in the queue and clear
 		void stop_and_clear_queue();
 		// get singleton of the audio engine
@@ -56,9 +56,9 @@ namespace kb::audio
 		// set the master volume
 		void set_master_volume(float new_volume);
 		// get the audio queue
-		const std::vector<ref<AudioAsset>>& get_audio_queue() const { return m_queued_audio; }
+		const std::vector<arc<AudioAsset>>& get_audio_queue() const { return m_queued_audio; }
 		// get the audio queue
-		std::vector<ref<AudioAsset>>& get_audio_queue() { return m_queued_audio; }
+		std::vector<arc<AudioAsset>>& get_audio_queue() { return m_queued_audio; }
 	private:
 		// settings for the audio engine
 		audio_engine_config m_engine_config{};
@@ -69,7 +69,7 @@ namespace kb::audio
 		// miniaudio high-level audio engine
 		ma_engine m_engine;
 		// queue of audio assets being played
-		std::vector<ref<AudioAsset>> m_queued_audio;
+		std::vector<arc<AudioAsset>> m_queued_audio;
 	};
 
 }

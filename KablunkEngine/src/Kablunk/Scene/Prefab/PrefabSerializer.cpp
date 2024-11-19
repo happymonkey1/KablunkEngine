@@ -6,7 +6,7 @@
 namespace kb
 {
 
-	PrefabSerializer::PrefabSerializer(const ref<Prefab>& prefab)
+	PrefabSerializer::PrefabSerializer(const arc<Prefab>& prefab)
 		: m_prefab{ prefab }
 	{
 

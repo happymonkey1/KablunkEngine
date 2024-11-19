@@ -96,7 +96,7 @@ namespace Internal
 static MonoDomain* s_current_mono_domain = nullptr;
 static MonoDomain* s_new_mono_domain = nullptr;
 static std::string s_core_assembly_path;
-static WeakRef<Scene> s_scene_context = nullptr;
+static weak_ptr<Scene> s_scene_context = nullptr;
 
 static EntityInstanceMap s_entity_instance_map;
 
@@ -431,7 +431,7 @@ bool CSharpScriptEngine::ReloadAssembly(const std::filesystem::path& path)
 
 	if (!s_entity_instance_map.empty())
 	{
-		WeakRef<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
+		weak_ptr<Scene> scene = CSharpScriptEngine::GetCurrentSceneContext();
 		KB_CORE_ASSERT(scene, "[C#-ScriptEngine] No active scene");
 		if (auto entity_instance_map = s_entity_instance_map.find(scene->GetUUID()); entity_instance_map != s_entity_instance_map.end())
 		{
@@ -455,7 +455,7 @@ void CSharpScriptEngine::SetSceneContext(Scene* scene)
 	s_scene_context = scene;
 }
 
-const WeakRef<Scene>& CSharpScriptEngine::GetCurrentSceneContext()
+const weak_ptr<Scene>& CSharpScriptEngine::GetCurrentSceneContext()
 {
 	return s_scene_context;
 }
@@ -621,7 +621,7 @@ std::string CSharpScriptEngine::StripNamespace(const std::string& name_space, co
 
 void CSharpScriptEngine::InitScriptEntity(Entity entity)
 {
-	Scene* context = entity.m_scene;
+	auto context = entity.m_scene;
 	uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 	auto& comp = entity.GetComponent<CSharpScriptComponent>();
 	auto& module_name = comp.Module_name;
@@ -669,7 +669,7 @@ void CSharpScriptEngine::ShutdownScriptEntity(Entity entity, const std::string& 
 
 void CSharpScriptEngine::InstantiateEntityClass(Entity entity)
 {
-	Scene* context = entity.m_scene;
+	auto context = entity.m_scene;
 	kb::uuid::uuid64 id = entity.GetComponent<IdComponent>().Id;
 	KB_CORE_TRACE("InstantiateEntityClass {0} ({1})", id, static_cast<uint64_t>(entity.m_entity_handle));
 	auto& script_comp = entity.GetComponent<CSharpScriptComponent>();
@@ -715,7 +715,7 @@ void CSharpScriptEngine::OnImGuiRender()
 		bool opened = ImGui::TreeNode((void*)(uint64_t)sceneID, "Scene (%llx)", sceneID);
 		if (opened)
 		{
-			WeakRef<Scene> scene = Scene::GetScene(sceneID);
+			weak_ptr<Scene> scene = Scene::GetScene(sceneID);
 			for (auto& [entityID, entityInstanceData] : entityMap)
 			{
 				Entity entity = scene->GetEntityMap().at(entityID);

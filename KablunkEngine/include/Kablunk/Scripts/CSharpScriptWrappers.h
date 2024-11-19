@@ -5,7 +5,7 @@
 #include "Kablunk/Core/KeyCodes.h"
 #include "Kablunk/Core/MouseCodes.h"
 
-#include "Kablunk/Renderer/Texture.h"
+#include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/Components.h"
 
@@ -59,8 +59,8 @@ namespace kb::Scripts
 
 	// Texture2D
 	void*			Kablunk_Texture2D_Constructor(uint32_t width, uint32_t height);
-	void			Kablunk_Texture2D_Destructor(ref<Texture2D>* _this);
-	void			Kablunk_Texture2D_SetData(ref<Texture2D>* _this, MonoArray* in_data, int32_t count);
+	void			Kablunk_Texture2D_Destructor(arc<render::backend::texture_2d>* _this);
+	void			Kablunk_Texture2D_SetData(arc<render::backend::texture_2d>* _this, MonoArray* in_data, int32_t count);
 
 	enum class LogLevel : int32_t
 	{

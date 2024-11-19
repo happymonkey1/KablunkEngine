@@ -28,8 +28,8 @@ namespace kb
 
 	void TextureViewer::render()
 	{
-		f32 texture_width = static_cast<f32>(m_asset->GetWidth());
-		f32 texture_height = static_cast<f32>(m_asset->GetHeight());
+		f32 texture_width = static_cast<f32>(m_asset->get_width());
+		f32 texture_height = static_cast<f32>(m_asset->get_height());
 
 		float image_size = ImGui::GetWindowWidth() - 40;
 		image_size = glm::min(image_size, 500.0f);

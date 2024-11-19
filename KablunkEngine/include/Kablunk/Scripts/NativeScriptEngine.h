@@ -24,8 +24,8 @@ namespace kb
 		// Returns a pointer to the script instance that is instantiated by the game module.
 		std::unique_ptr<INativeScript> get_script(const std::string& name);
 
-		WeakRef<Scene> get_scene();
-		void set_scene(WeakRef<Scene> scene);
+		weak_ptr<Scene> get_scene();
+		void set_scene(weak_ptr<Scene> scene);
 
 		void set_get_script_from_registry_func(GetScriptFromRegistryFuncT func_ptr) { m_get_script_from_registry = func_ptr; }
 

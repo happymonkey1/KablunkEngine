@@ -29,20 +29,18 @@
 // ----------------------------------------------
 
 // ---Renderer-----------------------------------
-#include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
-#include "Kablunk/Renderer/RenderCommand.h"
-#include "Kablunk/Renderer/RenderCommand2D.h"
+#include "Kablunk/renderer/Renderer.h"
+#include "Kablunk/renderer/renderer_2d.h"
+#include "Kablunk\renderer\render_command.h"
 
-#include "Kablunk/Renderer/Shader.h"
-#include "Kablunk/Renderer/Framebuffer.h"
-#include "Kablunk/Renderer/VertexArray.h"
-#include "Kablunk/Renderer/Buffer.h"
-#include "Kablunk/Renderer/Texture.h"
-#include "Kablunk/Renderer/SceneRenderer.h"
+#include "Kablunk/renderer/backend/shader.h"
+#include "Kablunk/renderer/backend/frame_buffer.h"
+#include "Kablunk/renderer/backend/buffer.h"
+#include "Kablunk/renderer/backend/texture.h"
+#include "Kablunk/renderer/scene_renderer.h"
 
 
-#include "Kablunk/Renderer/Camera.h"
+#include "Kablunk/renderer/camera.h"
 // ----------------------------------------------
 
 

@@ -5,9 +5,9 @@
 #include "Kablunk/Events/Event.h"
 
 #include "Kablunk/Renderer/Renderer.h"
-#include "Kablunk/Renderer/Renderer2D.h"
+#include "Kablunk/Renderer/renderer_2d.h"
 
-#include "Platform/Vulkan/VulkanContext.h"
+#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #include "Kablunk/Core/Timers.h"
 #include "Kablunk/Plugin/PluginManager.h"
@@ -17,7 +17,7 @@
 
 #include "Kablunk/Audio/AudioCommand.h"
 
-#include <GLFW/glfw3.h>
+#include "Kablunk/vendor/glfw/glfw.h"
 
 namespace kb
 {
@@ -48,24 +48,33 @@ void Application::init()
 
 	m_render_thread.run();
 
-	{
-		m_window = Window::Create({ m_specification.Name, m_specification.Width, m_specification.height, m_specification.Fullscreen });
-		m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
-		m_window->SetVsync(m_specification.Vsync);
-	}
+    render::init();
 
+    const WindowProps window_create_info{
+        m_specification.Name,
+        m_specification.Width,
+        m_specification.height,
+        m_specification.Fullscreen
+    };
+	m_window = Window::Create(
+        Singleton<render::Renderer>::get().get_graphics_context()->get_swap_chain(),
+        window_create_info
+    );
+	m_window->SetEventCallback([this](Event& e) { Application::OnEvent(e); });
+	m_window->SetVsync(m_specification.Vsync);
 
 	audio::init_audio_engine();
-	render::init();
 	KB_CORE_INFO("Finished initializing renderer!");
 	// start rendering render one frame
 	m_render_thread.pump();
 
-    m_renderer_2d = ref<Renderer2D>::Create();
+#if APP_OWNED_RENDERER_2D
+    m_renderer_2d = arc<render::renderer_2d>::Create();
     m_renderer_2d->init();
 
-    m_screen_space_renderer_2d = ref<Renderer2D>::Create();
-    m_screen_space_renderer_2d->init();
+    //m_screen_space_renderer_2d = arc<Renderer2D>::Create();
+    //m_screen_space_renderer_2d->init();
+#endif
 
 	m_render_thread.pump();
 
@@ -104,16 +113,16 @@ void Application::shutdown()
 	m_thread_pool.Shutdown();
 	//CSharpScriptEngine::Shutdown();
 
-	// clear the framebuffer pool
-	FramebufferPool::Get()->GetAll().clear();
-
 	m_render_thread.terminate();
 
 	// deletes any pushed layers, including imgui layer
 	m_layer_stack.Destroy();
 
+#if APP_OWNED_RENDERER_2D
     m_renderer_2d.reset();
     m_screen_space_renderer_2d.reset();
+#endif
+
 	render::shutdown();
 
 	ProjectManager::get().shutdown();
@@ -171,7 +180,7 @@ void Application::OnEvent(Event& e)
 	dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 	dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e){ return on_key_released(e); });
 
-	for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it) 
+	for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it)
 	{
 		(*it)->OnEvent(e);
 		if (e.GetStatus())
@@ -197,7 +206,7 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 	}
 
 	m_minimized = false;
-	render::submit([&](){ render::on_window_resize(width, height); });
+	// render::submit([&](){ render::on_window_resize(width, height); });
 	return false;
 }
 
@@ -231,7 +240,7 @@ void Application::Run()
 
 			// #TODO(Sean) not renderer agnostic
 			// start swapchain presentation on render thread
-			render::submit([&]() { VulkanContext::Get()->GetSwapchain().BeginFrame(); });
+			render::submit([&]() { Singleton<render::Renderer>::get().get_graphics_context()->get_swap_chain()->begin_frame(); });
 
 			render::begin_frame();
 			{
@@ -259,7 +268,7 @@ void Application::Run()
 
 			render::submit([&](){ m_window->swap_buffers(); });
 
-			m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flights();
+			m_current_frame_index = (m_current_frame_index + 1) % render::get_frames_in_flight();
 			m_thread_performance_timings.main_thread_work_time = main_thread_cpu_timer.get_elapsed_ms();
 		}
 
@@ -296,7 +305,7 @@ void Application::draw_debug_statistics()
 #if 0
     // #TODO this should use "screen renderer" rather than world space renderer
 	const auto& font_manager_ = m_renderer_2d->get_font_manager();
-	ref<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
+	arc<render::font_asset_t> font_asset = font_manager_.get_font_asset("Roboto-Medium.ttf");
 	if (!font_asset)
 	{
 		KB_CORE_WARN("trying to draw debug statistics with an null font asset!");

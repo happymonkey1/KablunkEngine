@@ -34,12 +34,15 @@
 #if defined(_MSC_VER) // MSVC
 #   define KB_NOT_NULL _Notnull_
 #   define KB_FORCE_INLINE __forceinline
+#   define KB_TRIVIAL_ABI
 #elif defined(__clang__) // CLANG
 #   define KB_NOT_NULL _Nonnull
 #   define KB_FORCE_INLINE [[clang::always_inline]]
+#   define KB_TRIVIAL_ABI [[clang::trivial_abi]]
 #elif defined(__GNUC__) // GCC
 #   define KB_NOT_NULL __attribute__((nonnull))
 #   define KB_FORCE_INLINE __attribute((always_inline))
+#   define KB_TRIVIAL_ABI
 #else
 #   error "Failed to detect compiler!"
 #endif
@@ -60,7 +63,7 @@
 #		define KB_DEBUG_BREAK() raise(SIGTRAP)
 #	else
 #		error "Platform doesn't support debugbreak!"
-#	endif	
+#	endif
 #	define KB_ENABLE_ASSERTS
 #	define KB_PROFILE 0
 // #	define KB_TRACK_MEMORY
@@ -82,8 +85,9 @@
 
 #ifdef KB_ENABLE_ASSERTS
 #	define KB_ASSERT(x, ...)      { if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } }
-#	define KB_CORE_ASSERT(x, ...) { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } } 
+#	define KB_CORE_ASSERT(x, ...) do { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); KB_DEBUG_BREAK(); } } while (0)
 #	define KB_ASSERT_NO_LOG(x)    { if (!(x)) KB_DEBUG_BREAK(); }
+#   define KB_STATIC_ASSERT(x, msg)    do { if (!(x)) static_assert(false, msg); } while (0)
 #else
 #	define KB_ASSERT(x, ...)		{ if (!(x)) { KB_CLIENT_ERROR("Assertion Failed: {0}", __VA_ARGS__); } }
 #	define KB_CORE_ASSERT(x, ...)   { if (!(x)) { KB_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); } } 

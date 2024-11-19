@@ -31,7 +31,7 @@ void Prefab::create(Entity entity, bool serialize /*= true*/)
 
 	if (serialize)
 	{
-        PrefabSerializer serializer{ ref{ this } };
+        PrefabSerializer serializer{ arc{ this } };
 		KB_CORE_ASSERT(ProjectManager::get().get_active(), "No active project!");
 		const std::filesystem::path path = ProjectManager::get().get_active()->get_asset_directory_path() / "prefabs" / m_entity.GetComponent<TagComponent>().Tag;
 		serializer.Serialize(path.string());

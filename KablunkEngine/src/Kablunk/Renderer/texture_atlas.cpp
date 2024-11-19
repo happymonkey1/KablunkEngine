@@ -1,228 +1,355 @@
 #include "kablunkpch.h"
-
 #include "Kablunk/Renderer/texture_atlas.h"
-#include "Kablunk/Renderer/Texture.h"
+
+#include <stb_image.h>
+#include <stb_image_write.h>
+
+#include "Kablunk/renderer/virtual_texture_registry.h"
 
 namespace kb::render
 { // start namespace kb::render
 
-texture_atlas::texture_atlas(const std::string& filepath, u32 width /*= 128ul*/, u32 height /*= 128ul*/)
-	: m_atlas_filepath{ filepath }, m_texture_width{ width }, m_texture_height{ height }
+texture_atlas::texture_atlas(const texture_atlas_create_props& p_props) noexcept
+    : m_filepath{ p_props.m_path }
 {
-	m_texture_atlas = kb::Texture2D::Create(m_atlas_filepath);
+    KB_ASSERT(!p_props.m_path.empty(), "[render::texture_atlas]: path is empty!");
+    KB_ASSERT(!p_props.m_root_directory.empty(), "[render::texture_atlas]: root directory is empty!");
 
-	KB_CORE_ASSERT(m_texture_atlas->GetFormat() == kb::ImageFormat::RGBA, "only RGBA image format is supported!");
-
-	splice_texture_atlas();
+    const bool should_create = !std::filesystem::exists(p_props.m_path) || p_props.m_force_create;
+    if (should_create)
+        create_texture_atlas(p_props);
+    else
+    {
+        KB_CLIENT_INFO(
+            "[render::texture_atlas] Found cached texture atlas '{}'!",
+            p_props.m_path.string().c_str()
+        );
+    }
 }
 
-texture_atlas::texture_atlas(u32 width, u32 height)
-	: m_texture_width{ width }, m_texture_height{ height }
+texture_atlas::texture_atlas(std::initializer_list<arc<backend::texture_2d>> p_textures) noexcept
 {
-	KB_CORE_ASSERT(false, "not implemented!");
 }
 
-texture_atlas::texture_atlas(const std::vector<ref<kb::Texture2D>> textures, u32 width /*= 128ul*/, u32 height /*= 128ul*/)
-	: m_texture_width{ width }, m_texture_height{ height }
+texture_atlas::texture_atlas(const std::vector<backend::texture_2d>& p_textures) noexcept
 {
-	KB_CORE_ASSERT(textures.size() > 0, "there are no textures in the input textures list");
-	KB_CORE_ASSERT(textures[0]->GetFormat() == kb::ImageFormat::RGBA, "only RGBA image format is supported!");
-		
-	create_texture_atlas_from_images(textures);
-	splice_texture_atlas();
 }
 
-texture_atlas::~texture_atlas()
+// lightmap texture packing algorithm: https://blackpawn.com/texts/lightmaps/
+// greedy bottom left packing
+auto texture_atlas::node_t::insert(const image_data_t& p_image_data) noexcept -> node_t*
 {
-	invalidate();
+    if (!is_leaf())
+    {
+        if (node_t* new_node = m_left ? m_left->insert(p_image_data) : nullptr; new_node != nullptr)
+            return new_node;
+
+        return m_right->insert(p_image_data);
+    }
+
+    if (m_image_hash != 0)
+        return nullptr;
+
+    const bool can_fit = p_image_data.m_width <= static_cast<u32>(m_rect.get_width()) &&
+        p_image_data.m_height <= static_cast<u32>(m_rect.get_height());
+    if (!can_fit)
+        return nullptr;
+
+    const bool perfect_fit = p_image_data.m_width == static_cast<u32>(m_rect.get_width()) &&
+        p_image_data.m_height == static_cast<u32>(m_rect.get_height());
+    if (perfect_fit)
+    {
+        m_image_hash = static_cast<u64>(p_image_data.m_texture_handle);
+        return this;
+    }
+
+    m_left = new node_t{};
+    m_right = new node_t{};
+
+    const auto dw = m_rect.get_width() - p_image_data.m_width;
+    const auto dh = m_rect.get_height() - p_image_data.m_height;
+
+    if (dw > dh)
+    {
+        m_left->m_rect = rect_i32{
+            m_rect.m_left,
+            m_rect.m_top,
+            m_rect.m_left + static_cast<i32>(p_image_data.m_width),
+            m_rect.m_bottom
+        };
+
+        m_right->m_rect = rect_i32{
+            m_rect.m_left + static_cast<i32>(p_image_data.m_width),
+            m_rect.m_top,
+            m_rect.m_right,
+            m_rect.m_bottom
+        };
+    }
+    else
+    {
+        m_left->m_rect = rect_i32{
+            m_rect.m_left,
+            m_rect.m_top,
+            m_rect.m_right,
+            m_rect.m_top + static_cast<i32>(p_image_data.m_height)
+        };
+
+        m_right->m_rect = rect_i32{
+            m_rect.m_left,
+            m_rect.m_top + static_cast<i32>(p_image_data.m_height),
+            m_rect.m_right,
+            m_rect.m_bottom
+        };
+    }
+
+    return m_left->insert(p_image_data);
 }
 
-TextureAtlasSprite texture_atlas::get_texture_by_uuid(kb::uuid::uuid64 uuid) const
+auto texture_atlas::delete_tree(node_t* p_root) noexcept -> void
 {
-	KB_CORE_ASSERT(m_sprite_map.find(uuid) != m_sprite_map.end(), "uuid not found in sprite map!");
+    if (!p_root)
+        return;
 
-	return m_sprite_map.at(uuid);
+    delete_tree(p_root->m_left);
+    delete_tree(p_root->m_right);
+
+    delete p_root;
 }
 
-void texture_atlas::invalidate()
+auto texture_atlas::create_texture_atlas(
+    const texture_atlas_create_props& p_props
+) noexcept -> void
 {
-	m_texture_atlas->GetImage()->Invalidate();
+    // by default, search through asset directory
+    // #TODO should probably be able to search multiple directories for modding support...
+    const auto& root_directory = p_props.m_root_directory;
 
-	m_sprite_map.clear();
+    std::vector<std::filesystem::path> directories_to_search{};
+    directories_to_search.reserve(64ull);
+    directories_to_search.emplace_back(root_directory);
+
+    constexpr u32 atlas_width = k_default_atlas_size;
+    m_atlas_dimension = atlas_width;
+
+    // #TODO support hdr textures
+
+    constexpr size_t buffer_size = static_cast<std::size_t>(atlas_width) *
+        static_cast<std::size_t>(atlas_width) * image_data_t::k_bit_depth_data_size;
+    owning_buffer atlas_image_buf{ buffer_size };
+    atlas_image_buf.zero();
+
+    m_uv_map.reserve(256ull);
+
+    const auto root_insertion_node = new node_t{
+        nullptr,
+        nullptr,
+        rect_i32{ 0l, 0l, k_default_atlas_size, k_default_atlas_size },
+        0l,
+    };
+
+    // #TODO this is not very efficient, will scan all files multiple times if we need to create multiple atlases
+    size_t dir_index = 0;
+    while (dir_index < directories_to_search.size())
+    {
+        const auto& dir_path = directories_to_search.at(dir_index);
+        // #TODO allocate large buffer once and re-use...
+        for (const auto& entry : std::filesystem::directory_iterator(dir_path))
+        {
+            auto filename_str = entry.path().filename().string();
+            // #TODO ignore pattern should probably be regex
+            if (entry.is_directory() && filename_str[0] != '.')
+            {
+                directories_to_search.emplace_back(entry.path());
+                continue;
+            }
+
+            // #TODO this should support more than just png
+            if (!entry.is_regular_file() || entry.path().extension() != ".png")
+                continue;
+
+            auto image_data = load_image(entry.path());
+            if (!image_data.is_valid())
+                continue;
+
+            const auto filename_as_str = entry.path().filename().string();
+            KB_CLIENT_INFO("[render::texture_atlas]: adding '{}' to texture atlas", filename_as_str.c_str());
+
+            const node_t* insert_node = root_insertion_node->insert(image_data);
+            KB_ASSERT(insert_node, "[render::texture_atlas]: failed to insert into atlas!");
+
+            add_image_to_atlas(insert_node, image_data, atlas_image_buf);
+        }
+
+        ++dir_index;
+    }
+
+    if (m_sprite_count == 0)
+        KB_ASSERT(false, "[render::texture_atlas]: failed to find any sprites to add to atlas!");
+
+    delete_tree(root_insertion_node);
+
+    KB_CLIENT_INFO("[render::texture_atlas]: added {} textures to atlas", m_sprite_count);
+
+    KB_CLIENT_TRACE("[render::texture_atlas]: saving tile atlas '{}'...", p_props.m_path.string().c_str());
+    constexpr u32 k_channels = 4;
+
+
+    const std::filesystem::path asset_path = std::filesystem::path{ "assets" } / m_filepath;
+    stbi_write_png(
+        asset_path.string().c_str(),
+        atlas_width,
+        atlas_width,
+        k_channels,
+        atlas_image_buf.get(),
+        atlas_width * k_channels
+    );
+    KB_CLIENT_TRACE("[render::texture_atlas]: done saving");
+
+    atlas_image_buf.release();
 }
 
-void texture_atlas::splice_texture_atlas()
+auto texture_atlas::add_image_to_atlas(
+    const node_t* p_node,
+    const image_data_t& p_image_data,
+    owning_buffer& p_atlas_buffer
+) noexcept -> void
 {
-	// #TODO should the entire map be cleared?
-	if (!m_sprite_map.empty())
-		m_sprite_map.clear();
-		
-	KB_CORE_ASSERT(m_padding == 0ul, "only padding == 0 is supported!");
+    KB_ASSERT(p_node, "[render::texture_atlas]: atlas insertion node is null?");
 
-	u32 width = m_texture_atlas->GetWidth(), height = m_texture_atlas->GetHeight();
-	u32 columns = width / m_texture_width;
-	size_t rows = height / m_texture_height;
+    const u32 offset_y = p_node->m_rect.m_top, offset_x = p_node->m_rect.m_left;
 
-	size_t max_sprite_count = rows * columns;
-	m_sprite_map.reserve(max_sprite_count);
+    const size_t atlas_buf_offset_index = (offset_x)+(offset_y * m_atlas_dimension);
 
-	constexpr float border_uv_offset_x = 0.05f;
-	constexpr float border_uv_offset_y = 0.05f;
+    void* atlas_image_buf_head = p_atlas_buffer.get();
 
-	float texture_uv_width = static_cast<float>(m_texture_width) / static_cast<float>(width);
-	float texture_uv_height = static_cast<float>(m_texture_width) / static_cast<float>(height);
+    // copy image data to atlas buffer
+    // iterates row by row and computes offset into atlas
+    for (size_t sprite_buf_index = 0; sprite_buf_index < p_image_data.m_height; ++sprite_buf_index)
+    {
+        const u32 atlas_row_offset_index = (sprite_buf_index * m_atlas_dimension);
+        const u32 image_row_offset_index = (sprite_buf_index * p_image_data.m_height);
 
+        u32* dst = static_cast<u32*>(atlas_image_buf_head) + atlas_buf_offset_index + atlas_row_offset_index;
+        const u32* src = static_cast<const u32*>(p_image_data.m_image_data.get()) + image_row_offset_index;
 
-	for (size_t i = 0; i < max_sprite_count; ++i)
-	{
-		TextureAtlasSprite& sprite = m_sprite_map.emplace(kb::uuid::generate(), TextureAtlasSprite{}).first->second;
-			
-		u32 y = static_cast<u32>(i) / columns;
-		u32 x = static_cast<u32>(i) % columns;
-			
-		// calculate uv values
-		sprite.texture_coords[0] = glm::vec2{
-			(float)(border_uv_offset_x + x * m_texture_width) / width,
-			(float)(border_uv_offset_y + y * m_texture_height) / height
-		};
-		sprite.texture_coords[1] = glm::vec2{ 
-			(float)(-border_uv_offset_x + x * m_texture_width) / width + texture_uv_width,
-			(float)(border_uv_offset_y + y * m_texture_height) / height
-		};
-		sprite.texture_coords[2] = glm::vec2{
-			(float)(-border_uv_offset_x + x * m_texture_width) / width + texture_uv_width,
-			(float)(-border_uv_offset_y + y * m_texture_height) / height + texture_uv_height
-		};
-		sprite.texture_coords[3] = glm::vec2{
-			(float)(border_uv_offset_x + x * m_texture_width) / width,
-			(float)(-border_uv_offset_y + y * m_texture_height) / height + texture_uv_height
-		};
-        sprite.texture_atlas = ref{ this };
-	}
-#if 0
-	// #TODO I think this only works for RGBA textures (not RGBA16, RGBA32)
+        KB_ASSERT(
+            static_cast<const void*>(dst) < static_cast<void*>(static_cast<u8*>(atlas_image_buf_head) + p_atlas_buffer.size()),
+            "[render::texture_atlas]: sprite image buffer overflow!"
+        );
 
-	u32 width = m_atlas_texture->GetWidth(), height = m_atlas_texture->GetHeight();
+        KB_ASSERT(
+            static_cast<const void*>(src) < static_cast<const void*>(static_cast<const u8*>(p_image_data.m_image_data.get()) + p_image_data.
+                m_image_data.size()),
+            "[render::texture_atlas]: sprite image buffer overflow!"
+        );
 
-	size_t max_sprite_count = (width / m_texture_width) * (height / m_texture_height);
-	m_sprite_map.reserve(max_sprite_count);
+        const std::size_t stride = p_image_data.m_height * image_data_t::k_bit_depth_data_size;
+        // move?
+        memcpy(dst, src, stride);
+    }
 
-	const owning_buffer& atlas_buffer = m_atlas_texture->GetImage()->GetBuffer();
-	owning_buffer* sprites = new owning_buffer[max_sprite_count];
-	for (size_t y = 0; y < height; ++y)
-	{
-		for (size_t x = 0; x < width; ++x)
-		{
-			// calculate index of pixel in atlas data buffer
-			size_t index = y * width + x;
-			// calculate index of sprite
-			size_t sprite_index = ((y * width) % m_texture_height) + (x % m_texture_width);
-			// calculate index of pixel in sprite's data buffer
-			size_t sprite_pixel_index = ((y * width) / m_texture_height) + (x / m_texture_width);
-
-			// copy pixel data from atlas buffer to sprite image buffer
-			sprites[sprite_index][sprite_pixel_index] = atlas_buffer[index];
-		}
-	}
-
-	// check if created sprite is fully transparent
-	for (size_t i = 0; i < max_sprite_count; ++i)
-	{
-		const owning_buffer& image_buffer = sprites[i];
-		bool valid = false;
-
-		// search through buffer and check for pixel that is not fully transparent.
-		// texture is valid if found
-		for (size_t j = 0; j < image_buffer.size(); ++j)
-			if ((image_buffer[j] | 0xFF) > 0)
-				valid = true;
-
-		if (valid)
-		{
-			// assumes texture2D copies passed in buffer data
-			// #TODO data should not be copied, since we can reference the texture atlas buffer
-			m_sprite_map.emplace(
-				uuid::generate(), 
-				Texture2D::Create(m_atlas_texture->GetFormat(), m_texture_width, m_texture_height, image_buffer.get())
-			);
-		}
-	}
-
-	delete[] sprites;
-#endif
-}
-
-void texture_atlas::create_texture_atlas_from_images(const std::vector<ref<kb::Texture2D>> textures)
-{
-	size_t sprite_count = textures.size();
-
-	// #TODO allow textures with different dimensions
-	for (const auto& texture : textures)
-		KB_CORE_ASSERT(texture->GetWidth() == textures[0]->GetWidth() && texture->GetHeight() == textures[0]->GetHeight(), "Texture Atlas only supports textures with the same dimensions!");
-
-	// choose the best atlas size
-	constexpr const size_t atlas_sizes[4] = { 1024ull, 2048ull, 4096ull, 8192ull };
-	std::array<size_t, 4> unused_sprite_counts{};
-	for (size_t i = 0; i < 4; ++i)
-	{
-		const size_t width = atlas_sizes[i];
-		const size_t sprites_per_row = width / m_texture_width;
-		i32 unused_count = static_cast<i32>(sprites_per_row * sprites_per_row) - static_cast<i32>(sprites_per_row);
-		if (unused_count < 0)
-			unused_count = static_cast<i32>(width + 1);
-
-		unused_sprite_counts[i] = static_cast<size_t>(unused_count);
-	}
-
-	// get final atlas sized based off the one that minimizes unused space
-	const size_t final_atlas_width = atlas_sizes[std::min_element(unused_sprite_counts.begin(), unused_sprite_counts.end()) - unused_sprite_counts.begin()];
-		
-	// #TODO expose other image specifications
-    kb::ImageSpecification image_spec{};
-	image_spec.width  = static_cast<uint32_t>(final_atlas_width);
-	image_spec.height = static_cast<uint32_t>(final_atlas_width);
-
-	KB_CORE_ASSERT(textures[0]->GetImage()->GetSpecification().layers == 4, "assertion that RGBA has 4 layers");
-    kb::owning_buffer atlas_image_data_buffer{ final_atlas_width * final_atlas_width * textures[0]->GetImage()->GetSpecification().layers };
-
-	size_t x = 0, y = 0;
-	// #TODO out of bounds checks
-	for (const auto& texture : textures)
-	{
-		size_t width = static_cast<size_t>(texture->GetWidth());
-		size_t height = static_cast<size_t>(texture->GetHeight());
-		for (size_t texture_y = 0; texture_y < height; ++texture_y)
-		{
-			for (size_t texture_x = 0; texture_x < width; ++texture_x)
-			{
-				// calculate index of pixel in atlas data buffer
-				size_t atlas_buffer_index = y * final_atlas_width + x;
-
-				// calculate index of sprite
-				size_t texture_index = texture_y * final_atlas_width + texture_x;
-
-				atlas_image_data_buffer[atlas_buffer_index] = texture->GetImage()->GetBuffer()[texture_index];
-
-				if (++x >= final_atlas_width)
-				{
-					x = 0;
-					y++;
-					KB_CORE_ASSERT(y < final_atlas_width, "out of texture bounds!");
-				}
-			}
-		}
-	}
-
-	m_texture_atlas = kb::Texture2D::Create(
-        textures[0]->GetFormat(), 
-        static_cast<u32>(final_atlas_width), 
-        static_cast<u32>(final_atlas_width), 
-        atlas_image_data_buffer.get()
+    // calculate and store uvs
+    calculate_uv_offsets(
+        p_image_data.m_texture_handle,
+        p_node->m_rect
     );
 
-	// #TODO save atlas texture to disk so processing is only done once
-
-	atlas_image_data_buffer.Release();
+    ++m_sprite_count;
 }
 
+auto texture_atlas::load_image(const std::filesystem::path& p_path) noexcept -> image_data_t
+{
+    const std::string path_str = p_path.string();
+    owning_buffer image_buffer{};
+    i32 width, height, channels;
+    void* data;
+    if (stbi_is_hdr(path_str.c_str()))
+    {
+        KB_ASSERT(false, "[render::texture_atlas]: does not support hdr images!");
+#if 0
+        data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 4);
+        size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull * sizeof(float);
+        image_buffer.Allocate(size);
+
+        image_buffer.Write(data, size, 0);
+        m_format = ImageFormat::RGBA32F;
+#endif
+        return {};
+    }
+    else
+    {
+        data = stbi_load(path_str.c_str(), &width, &height, &channels, 4);
+        std::size_t size = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4ull;
+        image_buffer.allocate(size);
+
+        image_buffer.write(data, size, 0);
+    }
+
+    stbi_image_free(data);
+
+    if (!image_buffer.get())
+    {
+        KB_ASSERT(false, "[render::texture_atlas]: Image loaded but data is null!");
+        return {};
+    }
+
+    return {
+        .m_image_data = image_buffer,
+        .m_width = static_cast<u32>(width),
+        .m_height = static_cast<u32>(height),
+        .m_texture_handle = virtual_texture_registry::create_virtual_texture_handle(p_path),
+    };
 }
+
+auto texture_atlas::calculate_uv_offsets(virtual_texture_handle p_texture_handle, const rect_i32& p_rect) noexcept -> void
+{
+    KB_ASSERT(
+        !m_uv_map.contains(p_texture_handle),
+        "[render::texture_atlas]: texture_id id '{}' is already in the uv map!",
+        static_cast<u64>(p_texture_handle)
+    );
+
+    constexpr f32 border_uv_offset_x = 0.0f;
+    constexpr f32 border_uv_offset_y = 0.0f;
+
+    const f32 atlas_width = static_cast<f32>(m_atlas_dimension);
+    const f32 atlas_height = static_cast<f32>(m_atlas_dimension);
+
+    const f32 sprite_width = static_cast<f32>(p_rect.get_width());
+    const f32 sprite_height = static_cast<f32>(p_rect.get_height());
+    const f32 uv_width = sprite_width / atlas_width;
+    const f32 uv_height = sprite_height / atlas_height;
+
+    const std::array uvs{
+        vec2_packed{
+            static_cast<f32>(p_rect.m_left) / atlas_width,
+            static_cast<f32>(p_rect.m_top) / atlas_height
+        },
+        vec2_packed{
+            static_cast<f32>(p_rect.m_left) / atlas_width + uv_width,
+            static_cast<f32>(p_rect.m_top) / atlas_height
+        },
+        vec2_packed{
+            static_cast<f32>(p_rect.m_left) / atlas_width + uv_width,
+            static_cast<f32>(p_rect.m_top) / atlas_height + uv_height
+        },
+        vec2_packed{
+            static_cast<f32>(p_rect.m_left) / atlas_width,
+            static_cast<f32>(p_rect.m_top) / atlas_height + uv_height
+        }
+    };
+
+    m_uv_map.emplace(
+        p_texture_handle,
+        virtual_texture_t{
+            .m_handle = p_texture_handle,
+            .m_uvs = uvs,
+            .m_dimensions = uvec2_packed{
+                static_cast<u32>(p_rect.get_width()),
+                static_cast<u32>(p_rect.get_height())
+            },
+        }
+    );
+}
+
+} // end namespace kb::render

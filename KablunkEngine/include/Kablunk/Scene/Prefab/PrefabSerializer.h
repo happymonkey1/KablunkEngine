@@ -12,7 +12,7 @@ namespace kb
 	class PrefabSerializer
 	{
 	public:
-		PrefabSerializer(const ref<Prefab>& prefab);
+		PrefabSerializer(const arc<Prefab>& prefab);
 		~PrefabSerializer() = default;
 
 		void Serialize(const std::string& filepath);
@@ -23,7 +23,7 @@ namespace kb
 	private:
 		void DeserializeEntity(YAML::detail::iterator_value& entity);
 	private:
-		ref<Prefab> m_prefab;
+		arc<Prefab> m_prefab;
 	};
 
 }

@@ -19,9 +19,9 @@ namespace kb
 		virtual void on_event(Event& e) {}
 		virtual void on_imgui_render();
 		
-		virtual void set_scene_context(const ref<Scene>& context) {}
+		virtual void set_scene_context(const arc<Scene>& context) {}
 
-		virtual void set_asset(const ref<asset::IAsset>& asset) = 0;
+		virtual void set_asset(const arc<asset::IAsset>& asset) = 0;
 
 		bool& get_open() { return m_open; }
 		bool get_open() const { return m_open; }
@@ -65,7 +65,7 @@ namespace kb
 		void on_update(Timestep ts);
 		void on_event(Event& e);
 		void on_imgui_render();
-		void open_editor(const ref<asset::IAsset>& asset);
+		void open_editor(const arc<asset::IAsset>& asset);
 
 		template <typename T>
 		void register_editor(asset::AssetType asset_type)
@@ -76,7 +76,7 @@ namespace kb
 		}
 	private:
 		// current scene context
-		ref<Scene> m_scene_context{};
+		arc<Scene> m_scene_context{};
 		// registered asset editors
 		kb::unordered_flat_map<asset::AssetType, box<AssetEditor>> m_registered_editors;
 	};

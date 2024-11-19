@@ -4,19 +4,18 @@
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 
-layout(std140, binding = 0) uniform Camera
+layout (push_constant) uniform Transform
+{
+	mat4 Transform;
+} u_Renderer;
+
+layout(std140, set = 1, binding = 0) uniform Camera
 {
 	mat4 u_ViewProjection;
 	mat4 u_Projection;
 	mat4 u_View;
 	vec3 u_Position;
 };
-
-layout (push_constant) uniform Transform
-{
-	mat4 Transform;
-} u_Renderer;
-
 
 layout(location = 0) out vec4 v_Color;
 
