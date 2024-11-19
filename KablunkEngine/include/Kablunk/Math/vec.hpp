@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 
+#include <xmmintrin.h>
+
 namespace kb
 { // start namespace kb
 
@@ -15,15 +17,28 @@ namespace details
 { // start namespace ::details
 
 template <size_t Extent, concepts::NumericT T>
+requires(sizeof(T) == 4)
 struct vec_storage
 {
     T m_data[Extent];
 };
 
 template <concepts::NumericT T = f32>
+requires(sizeof(T) == 4)
 struct alignas(4) vec2_packed
 {
-    vec_storage<2, T> m_storage;
+    union
+    {
+        // Handy accessors
+        struct
+        {
+            T x;
+            T y;
+        };
+
+        // Memory layout
+        vec_storage<2, T> m_storage;
+    };
 
     constexpr vec2_packed() = default;
     constexpr ~vec2_packed() = default;
@@ -45,9 +60,22 @@ struct alignas(4) vec2_packed
 };
 
 template <concepts::NumericT T = f32>
+requires(sizeof(T) == 4)
 struct alignas(4) vec3_packed
 {
-    vec_storage<3, T> m_storage;
+    union
+    {
+        // Handy accessors
+        struct
+        {
+            T x;
+            T y;
+            T z;
+        };
+
+        // Memory layout
+        vec_storage<3, T> m_storage;
+    };
 
     constexpr vec3_packed() = default;
     constexpr ~vec3_packed() = default;
@@ -70,17 +98,34 @@ struct alignas(4) vec3_packed
 };
 
 template <concepts::NumericT T = f32>
+requires(sizeof(T) == 4)
 struct alignas(4) vec4_packed
 {
-    vec_storage<4, T> m_storage;
+    union
+    {
+        // Handy accessors
+        struct
+        {
+            T x;
+            T y;
+            T z;
+            T w;
+        };
+
+        // Memory layout
+        vec_storage<4, T> m_storage;
+    };
 
     constexpr vec4_packed() = default;
     constexpr ~vec4_packed() = default;
 
     explicit constexpr vec4_packed(T p_x, T p_y, T p_z, T p_a)
         : m_storage{ p_x, p_y, p_z, p_a }
-    {
-    }
+    { }
+
+    explicit constexpr vec4_packed(const vec3_packed<T>& p_other)
+        : x{ p_other.x }, y{ p_other.y }, z{ p_other.z }, w{ p_other.w }
+    { }
 
     constexpr vec4_packed(const glm::vec4& p_vec)
         : m_storage{ p_vec.x, p_vec.y, p_vec.z, p_vec.a }

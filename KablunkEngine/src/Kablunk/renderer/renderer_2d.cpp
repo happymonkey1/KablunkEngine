@@ -746,10 +746,17 @@ void renderer_2d::draw_entity(Entity entity) noexcept
 
     auto& sprite_renderer_comp = entity.GetComponent<SpriteRendererComponent>();
 
+#ifdef KB_DISTRIBUTION
     KB_CORE_ASSERT(m_asset_manager, "[renderer_2d]: Asset manager cannot be null!");
 
     arc<backend::texture_2d> texture = sprite_renderer_comp.Texture != asset::null_asset_id ?
-                                          m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) : m_renderer_data.white_texture;
+        m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
+        m_renderer_data.white_texture;
+#else
+    auto texture = m_asset_manager && sprite_renderer_comp.Texture != asset::null_asset_id ?
+        m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
+        m_renderer_data.white_texture;
+#endif
 
     if (!texture)
     {
