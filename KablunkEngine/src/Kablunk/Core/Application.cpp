@@ -24,12 +24,12 @@ namespace kb
 constexpr uint8_t NUM_JOB_THREADS = 4;
 
 Application::Application()
-	: m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ m_specification.m_engine_threading_policy }
+	: m_imgui_layer{nullptr}, m_thread_pool{NUM_JOB_THREADS}, m_render_thread{ m_specification.m_engine_threading_policy }
 {
 }
 
 Application::Application(const ApplicationSpecification& spec)
-	: m_specification{ spec }, m_thread_pool{ NUM_JOB_THREADS }, m_imgui_layer{ nullptr }, m_render_thread{ spec.m_engine_threading_policy }
+	: m_specification{ spec }, m_imgui_layer{ nullptr }, m_thread_pool{ NUM_JOB_THREADS }, m_render_thread{ spec.m_engine_threading_policy }
 {
 }
 
@@ -107,9 +107,6 @@ void Application::init()
 
 void Application::shutdown()
 {
-	if (m_has_shutdown)
-		return;
-
 	m_thread_pool.Shutdown();
 	//CSharpScriptEngine::Shutdown();
 
@@ -134,8 +131,6 @@ void Application::shutdown()
 
 	// delete window
 	m_window.reset();
-
-	m_has_shutdown = true;
 }
 
 void Application::PushLayer(Layer* layer)
