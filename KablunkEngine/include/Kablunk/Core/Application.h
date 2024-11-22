@@ -148,8 +148,6 @@ private:
 	performance_timings_t m_thread_performance_timings{};
 	Timestep m_timestep;
 	float m_last_frame_time = 0.0f;
-
-	bool m_has_shutdown = false;
 	// flag for whether we should draw debug statistics to the screen
 	bool m_show_debug_statistics = false;
 
