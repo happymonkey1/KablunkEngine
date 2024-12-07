@@ -95,7 +95,7 @@ public:
 	// ==============
 
 	// wait for frame data to finish rendering
-	void wait_and_render(render_thread* rendering_thread);
+	void wait_and_render(render_thread* p_rendering_thread);
 	// main render function which runs on render thread
 	void render_thread_func(render_thread* rendering_thread);
 	// swap rendering command queues

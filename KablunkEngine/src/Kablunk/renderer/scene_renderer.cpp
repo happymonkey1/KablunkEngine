@@ -507,10 +507,6 @@ void scene_renderer::geometry_pass()
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
 	for (const auto& draw_command_data : m_draw_list)
 	{
-        KB_CORE_ASSERT(false, "not implemented!");
-#if 0
-		render::
-#endif
         Singleton<render::Renderer>::get().get_render_backend().render_instanced_submesh(
             m_command_buffer,
             geometry_pipeline,

@@ -503,7 +503,7 @@ void renderer_2d::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.texture_slots;
-            for (uint32_t j = 0; j < renderer_2d_data_t::max_texture_slots; j++)
+            for (uint32_t j = 0; j < renderer_2d_data_t::k_max_texture_slots; j++)
             {
                 if (textures[j])
                     m_renderer_data.quad_material->set("u_Textures", textures[j], j);
@@ -616,7 +616,7 @@ void renderer_2d::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.text_texture_atlas_slots;
-            for (uint32_t j = 0; j < renderer_2d_data_t::max_texture_slots; j++)
+            for (uint32_t j = 0; j < renderer_2d_data_t::k_max_texture_slots; j++)
             {
                 if (textures[j])
                     m_renderer_data.text_material->set("u_FontAtlases", textures[j], j);
@@ -793,7 +793,7 @@ void renderer_2d::draw_quad(const glm::mat4& transform, const arc<backend::textu
         {
             texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots, "texture slot overflow!");
         }
     }
 
@@ -843,7 +843,7 @@ void renderer_2d::draw_quad_from_texture_atlas(
             texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
             KB_CORE_ASSERT(
-                m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots,
+                m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots,
                 "texture slot overflow!"
             );
         }
@@ -1061,7 +1061,7 @@ void renderer_2d::draw_text_string(
 	{
 		texture_index = static_cast<float>(m_renderer_data.text_texture_atlas_slot_index);
 		m_renderer_data.text_texture_atlas_slots[m_renderer_data.text_texture_atlas_slot_index++] = font_texture_atlas;
-		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.max_texture_slots, "font texture atlas slot overflow!");
+		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.k_max_texture_slots, "font texture atlas slot overflow!");
 	}
 
     // #TODO hopefully c++23 has officially supported method that isn't deprecated...
@@ -1365,13 +1365,13 @@ void renderer_2d::start_new_batch() noexcept
 
 	m_renderer_data.texture_slot_index = 1;
 	m_renderer_data.text_texture_atlas_slot_index = 0;
-	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::k_max_texture_slots; ++i)
 	{
 		if (i != 0)
 			m_renderer_data.texture_slots[i] = nullptr;
 	}
 
-	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::k_max_texture_slots; ++i)
 	{
 		m_renderer_data.text_texture_atlas_slots[i] = nullptr;
 	}

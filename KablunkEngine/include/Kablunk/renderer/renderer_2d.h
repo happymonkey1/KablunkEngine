@@ -101,7 +101,7 @@ struct renderer_2d_data_t
     static constexpr uint32_t max_lines = 10'000;
 	static constexpr uint32_t max_line_vertices = max_lines * 2;
 	static constexpr uint32_t max_line_indices = max_lines * 6;
-	static constexpr uint32_t max_texture_slots = 32;
+	static constexpr uint32_t k_max_texture_slots = 32;
     static constexpr std::array<vec2_packed, 4> k_texture_coords = {
         vec2_packed{0.0f, 0.0f},
         vec2_packed{ 1.0f, 0.0f },
@@ -182,8 +182,8 @@ struct renderer_2d_data_t
 	u32 text_texture_atlas_slot_index = 0;
 
 	// TODO: change to asset handle when implemented
-	std::array<arc<backend::texture_2d>, max_texture_slots> texture_slots;
-	std::array<arc<backend::texture_2d>, max_texture_slots> text_texture_atlas_slots;
+	std::array<arc<backend::texture_2d>, k_max_texture_slots> texture_slots;
+	std::array<arc<backend::texture_2d>, k_max_texture_slots> text_texture_atlas_slots;
 
 	arc<backend::render_command_buffer> render_command_buffer;
 
@@ -466,7 +466,7 @@ public:
         {
             texture_index = m_renderer_data.texture_slot_index;
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots, "texture slot overflow!");
         }
 
         return texture_index;

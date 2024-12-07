@@ -136,23 +136,23 @@ uint32_t Renderer::get_current_frame_index() const noexcept
     }
 }
 
-void Renderer::wait_and_render(render_thread* rendering_thread)
+void Renderer::wait_and_render(render_thread* p_rendering_thread)
 {
     KB_PROFILE_SCOPE;
-	KB_CORE_ASSERT(rendering_thread, "render thread is null?");
+	KB_CORE_ASSERT(p_rendering_thread, "render thread is null?");
 
     auto& thread_performance_timers = Application::Get().get_thread_performance_timings_mut();
 
 	{
         const timer render_thread_wait_timer{};
-		rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
+		p_rendering_thread->wait_and_set(thread_state_t::kick, thread_state_t::busy);
         thread_performance_timers.render_thread_wait_time = render_thread_wait_timer.get_elapsed_ms();
 	}
 
 	// execute command queue
     const timer render_thread_work_timer{};
 	m_command_queues[get_render_command_queue_index()].execute();
-	rendering_thread->set(thread_state_t::idle);
+	p_rendering_thread->set(thread_state_t::idle);
     thread_performance_timers.render_thread_work_time = render_thread_work_timer.get_elapsed_ms();
 }
 

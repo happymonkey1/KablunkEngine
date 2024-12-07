@@ -94,7 +94,7 @@ auto lua_engine::add_renderer_2d_reference(
 {
     auto* renderer_2d = p_renderer_2d.get();
     m_lua_state[p_name] = renderer_2d;
-    sol::table lua_renderer_2d = m_lua_state.get<>();
+    sol::table lua_renderer_2d = m_lua_state[p_name];
 
     // Member function pointer decl for the overload we want
     using draw_quad_base_func_t = void (render::renderer_2d::*)(

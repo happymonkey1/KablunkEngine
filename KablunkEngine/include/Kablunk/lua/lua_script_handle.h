@@ -38,3 +38,17 @@ constexpr auto lua_script_handle::into(std::string_view p_value) noexcept -> lua
 }
 
 }
+
+namespace std
+{
+
+template <>
+struct std::hash<kb::lua_script_handle>
+{
+    std::size_t operator()(const kb::lua_script_handle& p_item_handle) const noexcept
+    {
+        return static_cast<std::size_t>(p_item_handle);
+    }
+};
+
+}
