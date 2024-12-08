@@ -29,7 +29,7 @@ public:
     u32 get_count() const noexcept override { return m_size / sizeof(u32); };
 	u32 get_size() const noexcept override { return m_size; }
 
-	VkBuffer GetVkBuffer() const noexcept { return m_vk_buffer; }
+	VkBuffer get_vk_buffer() const noexcept { return m_vk_buffer; }
 private:
 	VkBuffer m_vk_buffer = nullptr;
 	owning_buffer m_local_data;

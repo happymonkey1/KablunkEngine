@@ -385,7 +385,7 @@ auto vulkan_render_backend::set_line_width(
     submit([width = line_width, render_command_buffer = p_render_command_buffer]()
         {
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+            const VkCommandBuffer vk_cmd_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frame_index);
             vkCmdSetLineWidth(vk_cmd_buffer, width);
         });
 }
@@ -404,19 +404,19 @@ auto vulkan_render_backend::submit_fullscreen_quad(
             KB_PROFILE_SCOPE;
 
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+            const VkCommandBuffer vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frame_index);
 
             arc<vulkan_pipeline> vulkan_pipeline = pipeline.As<vk::vulkan_pipeline>();
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
             auto vulkan_vertex_buffer = s_renderer_data->m_quad_vertex_buffer.As<vk::vulkan_vertex_buffer>();
-            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->get_vk_buffer();
             constexpr VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
             auto vulkan_index_buffer = s_renderer_data->m_quad_index_buffer.As<vk::vulkan_index_buffer>();
-            const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_index_buffer->get_vk_buffer();
             vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
             if (vulkan_material)
@@ -508,15 +508,15 @@ auto vulkan_render_backend::render_geometry(
             KB_PROFILE_SCOPE;
 
             const u32 frame_index = rt_get_current_frame_index();
-            const VkCommandBuffer command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+            const VkCommandBuffer command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frame_index);
 
             const VkPipelineLayout layout = vulkan_pipeline->get_vk_pipeline_layout();
 
-            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->GetVkBuffer();
+            const VkBuffer vk_vertex_buffer = vulkan_vertex_buffer->get_vk_buffer();
             constexpr VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(command_buffer, 0, 1, &vk_vertex_buffer, offsets);
 
-            const VkBuffer vk_index_buffer = vulkan_index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = vulkan_index_buffer->get_vk_buffer();
             vkCmdBindIndexBuffer(command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
             const VkDescriptorSet vk_descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
@@ -597,24 +597,24 @@ auto vulkan_render_backend::render_instanced_submesh(
 
             const u32 frame_index = rt_get_current_frame_index();
             const VkCommandBuffer vk_command_buffer =
-                p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+                p_render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frame_index);
 
             // Retrieve mesh data vertex buffer and bind
             arc<MeshData> mesh_data = p_mesh->GetMeshData();
             arc<vulkan_vertex_buffer> vertex_buffer = mesh_data->get_vertex_buffer().As<vulkan_vertex_buffer>();
-            const VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
+            const VkBuffer vk_vertex_buffer = vertex_buffer->get_vk_buffer();
             constexpr VkDeviceSize vertex_offsets[1] = { 0 };
             vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
             // Retrieve mesh transform vertex buffer and bind
             arc<vulkan_vertex_buffer> vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>();
-            const VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
+            const VkBuffer vk_transform_buffer = vulkan_transform_buffer->get_vk_buffer();
             const VkDeviceSize transform_offsets[1] = { p_transform_offset };
             vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
             // Bind index buffer
             arc<vulkan_index_buffer> index_buffer = mesh_data->get_index_buffer().As<vulkan_index_buffer>();
-            const VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
+            const VkBuffer vk_index_buffer = index_buffer->get_vk_buffer();
             vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
             // Retrieve sub mesh material
@@ -702,7 +702,7 @@ auto vulkan_render_backend::copy_image(
 
             const auto frame_index = rt_get_current_frame_index();
             const auto vk_command_buffer = p_render_command_buffer
-                .As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
+                .As<vulkan_render_command_buffer>()->get_vk_command_buffer(frame_index);
 
             auto vk_src_image = source_image->get_vk_image_info().image;
             auto vk_dst_image = destination_image->get_vk_image_info().image;

@@ -124,13 +124,13 @@ private:
 	arc<backend::texture_2d> m_bloom_texture;
 	arc<backend::texture_2d> m_bloom_dirt_texture;
 
-	struct TransformVertexData
+	struct transform_vertex_data_t
 	{
 		vec4_packed MRow[3];
 	};
 
 	arc<backend::vertex_buffer> m_transform_buffer;
-	TransformVertexData* m_transform_vertex_data = nullptr;
+	transform_vertex_data_t* m_transform_vertex_data = nullptr;
 
     arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};

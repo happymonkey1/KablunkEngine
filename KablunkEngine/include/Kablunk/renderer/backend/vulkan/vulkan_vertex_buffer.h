@@ -37,7 +37,7 @@ public:
 	void set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
 	void rt_set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
 
-	VkBuffer GetVkBuffer() const { return m_vk_buffer; }
+	VkBuffer get_vk_buffer() const { return m_vk_buffer; }
 
 	void set_layout(const buffer_layout& layout) override;
 	const buffer_layout& get_layout() const override;

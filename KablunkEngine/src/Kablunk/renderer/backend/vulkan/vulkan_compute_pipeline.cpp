@@ -91,7 +91,7 @@ void vulkan_compute_pipeline::begin(arc<render_command_buffer> p_render_command_
     if (p_render_command_buffer)
     {
         const u32 frameIndex = get_current_frame_index();
-        m_vk_active_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frameIndex);
+        m_vk_active_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frameIndex);
         m_using_graphics_queue = true;
     }
     else
@@ -111,7 +111,7 @@ void vulkan_compute_pipeline::rt_begin(arc<render_command_buffer> p_render_comma
     if (p_render_command_buffer)
     {
         const u32 frameIndex = rt_get_current_frame_index();
-        m_vk_active_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frameIndex);
+        m_vk_active_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>()->get_vk_command_buffer(frameIndex);
         m_using_graphics_queue = true;
     }
     else
