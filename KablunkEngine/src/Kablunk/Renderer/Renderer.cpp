@@ -12,7 +12,7 @@ void Renderer::init()
     KB_PROFILE_SCOPE;
 
 	// initialize render command queues
-	for (size_t i = 0; i < s_render_command_queue_size; ++i)
+	for (size_t i = 0; i < k_render_command_queue_size; ++i)
 		m_command_queues[i] = backend::render_command_queue{};
 
     // Initialize graphics context
@@ -23,17 +23,17 @@ void Renderer::init()
 	// ==========
 	// 3d shaders
 	// ==========
-    m_shader_library->Load("resources/shaders/Kablunk_diffuse_static.glsl");
-	m_shader_library->Load("resources/shaders/scene_composite.glsl");
+    m_shader_library->load("resources/shaders/Kablunk_diffuse_static.glsl");
+	m_shader_library->load("resources/shaders/scene_composite.glsl");
 
 	// ==========
 	// 2d shaders
 	// ==========
-    m_shader_library->Load("resources/shaders/Renderer2D_Circle.glsl");
-    m_shader_library->Load("resources/shaders/Renderer2D_Quad.glsl");
-    m_shader_library->Load("resources/shaders/Renderer2D_Line.glsl");
-    m_shader_library->Load("resources/shaders/Renderer2D_UI.glsl");
-    m_shader_library->Load("resources/shaders/Renderer2D_Text.glsl");
+    m_shader_library->load("resources/shaders/Renderer2D_Circle.glsl");
+    m_shader_library->load("resources/shaders/Renderer2D_Quad.glsl");
+    m_shader_library->load("resources/shaders/Renderer2D_Line.glsl");
+    m_shader_library->load("resources/shaders/Renderer2D_UI.glsl");
+    m_shader_library->load("resources/shaders/Renderer2D_Text.glsl");
 	// ==========
 
     // Load renderer's white texture
@@ -74,21 +74,21 @@ void Renderer::shutdown()
     delete m_backend;
     m_backend = nullptr;
 
-	for (size_t i = 0; i < s_render_command_queue_size; ++i)
+	for (size_t i = 0; i < k_render_command_queue_size; ++i)
         if (!m_command_queues[i].is_empty())
 			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
 
     m_context->destroy();
 }
 
-arc<shader_library> Renderer::GetShaderLibrary()
+const arc<shader_library>& Renderer::get_shader_library()
 {
 	return m_shader_library;
 }
 
-arc<backend::shader> Renderer::GetShader(const std::string& p_shader_name)
+const arc<backend::shader>& Renderer::get_shader(const std::string& p_shader_name)
 {
-	return m_shader_library->Get(p_shader_name);
+	return m_shader_library->get(p_shader_name);
 }
 
 void Renderer::register_shader_dependency(arc<backend::shader> p_shader, arc<backend::pipeline> p_pipeline)
@@ -167,6 +167,6 @@ void Renderer::render_thread_func(render_thread* rendering_thread)
 
 void Renderer::swap_queues()
 {
-	m_render_command_queue_submission_index = (m_render_command_queue_submission_index + 1) % s_render_command_queue_size;
+	m_render_command_queue_submission_index = (m_render_command_queue_submission_index + 1) % k_render_command_queue_size;
 }
 } // end namespace kb::render

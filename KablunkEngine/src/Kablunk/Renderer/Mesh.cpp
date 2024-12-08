@@ -426,7 +426,7 @@ MeshData::MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<In
 	if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
 	{
 #endif
-		m_mesh_shader = render::get_shader_library()->Get("Kablunk_diffuse_static");
+		m_mesh_shader = render::get_shader_library()->get("Kablunk_diffuse_static");
 		auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
 		mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
 		mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);

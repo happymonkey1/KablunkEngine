@@ -24,7 +24,7 @@ static const std::string s_roughness_map_uniform_str = "u_RoughnessTexture";
 
 MaterialAsset::MaterialAsset()
 {
-	m_material = backend::material::create(get_shader_library()->Get("Kablunk_pbr_static"));
+	m_material = backend::material::create(get_shader_library()->get("Kablunk_pbr_static"));
 
 	// Set defaults
 	SetAlbedoColor(glm::vec3(0.8f));

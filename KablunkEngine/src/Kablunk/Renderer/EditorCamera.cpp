@@ -159,12 +159,7 @@ void EditorCamera::UpdateView()
 	const glm::vec3 look_at = m_position + GetForwardDirection();
 	m_direction = glm::normalize(look_at - m_position);
 	m_distance = glm::distance(m_position, m_focal_point);
-	m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f }); //* glm::toMat4(GetOrientation());
-	//m_translation = CalculateTranslation();
-
-	//auto orientation = GetOrientation();
-	//m_view_matrix = glm::translate(glm::mat4{ 1.0f }, m_position) * glm::toMat4(orientation);
-	//m_view_matrix = glm::inverse(m_view_matrix);
+    m_view_matrix = glm::lookAt(m_position, look_at, glm::vec3{ 0.0f, yaw_sign, 0.0f });
 
 	m_yaw_delta *= 0.6f;
 	m_pitch_delta *= 0.6f;

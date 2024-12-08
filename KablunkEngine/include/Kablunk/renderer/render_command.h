@@ -90,13 +90,13 @@ inline void end_render_pass(const arc<backend::render_command_buffer>& p_render_
 // return a reference to the shader library
 inline arc<shader_library> get_shader_library() noexcept
 {
-	return Singleton<Renderer>::get().GetShaderLibrary();
+	return Singleton<Renderer>::get().get_shader_library();
 }
 
 // get a specific shader by name
 inline arc<backend::shader> get_shader(const std::string& name) noexcept
 {
-	return Singleton<Renderer>::get().GetShader(name);
+	return Singleton<Renderer>::get().get_shader(name);
 }
 
 inline void register_shader_dependency(arc<backend::shader> shader, arc<backend::material> material) noexcept

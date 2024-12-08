@@ -142,11 +142,11 @@ void renderer_2d::init(renderer_2d_specification_t spec)
 	m_renderer_data.white_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1, &white_texture_data);
 
 	// get references to pre-loaded shaders
-	m_renderer_data.quad_shader = render::get_shader("Renderer2D_Quad");
-	m_renderer_data.circle_shader = render::get_shader("Renderer2D_Circle");
-	m_renderer_data.line_shader = render::get_shader("Renderer2D_Line");
-	m_renderer_data.ui_shader = render::get_shader("Renderer2D_UI");
-	m_renderer_data.text_shader = render::get_shader("Renderer2D_Text");
+	m_renderer_data.quad_shader = get_shader("Renderer2D_Quad");
+	m_renderer_data.circle_shader = get_shader("Renderer2D_Circle");
+	m_renderer_data.line_shader = get_shader("Renderer2D_Line");
+	m_renderer_data.ui_shader = get_shader("Renderer2D_UI");
+	m_renderer_data.text_shader = get_shader("Renderer2D_Text");
 
 	// Set all the texture slots to zero
 	//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));

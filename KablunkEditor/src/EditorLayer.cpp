@@ -353,9 +353,8 @@ namespace kb
 
 				float snap_values[3] = { snap_value, snap_value, snap_value };
 
-
 				ImGuizmo::Manipulate(glm::value_ptr(m_editor_camera.GetViewMatrix()),
-					glm::value_ptr(m_editor_camera.GetUnreversedProjection()),
+					glm::value_ptr(m_editor_camera.GetProjection()),
 					static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
 					ImGuizmo::LOCAL,
 					glm::value_ptr(transform),

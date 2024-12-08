@@ -12,16 +12,14 @@ public:
     shader_library() = default;
     ~shader_library() noexcept override = default;
 
-    void Destroy();
+    void add(const arc<backend::shader>& shader);
+    void add(const std::string& name, const arc<backend::shader>& shader);
+    const arc<backend::shader>& load(const std::string& filepath);
+    const arc<backend::shader>& load(const std::string& name, const std::string& filepath);
 
-    void Add(const arc<backend::shader>& shader);
-    void Add(const std::string& name, const arc<backend::shader>& shader);
-    arc<backend::shader> Load(const std::string& filepath);
-    arc<backend::shader> Load(const std::string& name, const std::string& filepath);
+    const arc<backend::shader>& get(const std::string& name);
 
-    arc<backend::shader> Get(const std::string& name);
-
-    bool Exists(const std::string& name);
+    bool exists(const std::string& name);
 
 private:
     unordered_flat_map<std::string, arc<backend::shader>> m_shaders;

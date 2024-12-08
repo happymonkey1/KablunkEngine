@@ -57,8 +57,8 @@ public:
 
     uint32_t get_current_frame_index() const noexcept;
 
-    arc<shader_library> GetShaderLibrary();
-    arc<backend::shader> GetShader(const std::string& name);
+    const arc<shader_library>& get_shader_library();
+    const arc<backend::shader>& get_shader(const std::string& name);
 
     const renderer_options_t& get_config() const noexcept { return m_options; }
 
@@ -93,7 +93,7 @@ public:
 	// swap rendering command queues
 	void swap_queues();
 	// get the current render queue index
-	u32 get_render_command_queue_index() const { return (m_render_command_queue_submission_index + 1) % s_render_command_queue_size; }
+	u32 get_render_command_queue_index() const { return (m_render_command_queue_submission_index + 1) % k_render_command_queue_size; }
 	// get the current render queue submission index
 	u32 get_render_command_queue_submission_index() const { return m_render_command_queue_submission_index; }
 
@@ -106,7 +106,7 @@ public:
 	// get a mutable reference to a resource release queue
     backend::render_command_queue& get_resource_free_queue(size_t index)
 	{
-	    KB_CORE_ASSERT(index < s_resource_free_queue_size, "index out of bounds!");
+	    KB_CORE_ASSERT(index < k_resource_free_queue_size, "index out of bounds!");
 	    return m_resource_free_queue[index];
 	}
 
@@ -179,12 +179,11 @@ private:
 	unordered_flat_map<uint64_t, shader_dependencies_t> m_shader_dependencies;
 	renderer_options_t m_options = { };
 	arc<shader_library> m_shader_library;
-    // #TODO expose changing render backend at compile time...
+
+    arc<backend::graphics_context> m_context;
 
     backend::render_backend* m_backend{};
     backend::render_backend_type_t m_backend_type = backend::render_backend_type_t::vulkan;
-
-    arc<backend::graphics_context> m_context;
 
 	// store the viewport's os screen position within the application
 	// used for calculating screen to world space in the editor
@@ -195,15 +194,15 @@ private:
 	// submission index of render command queue
 	std::atomic<u32> m_render_command_queue_submission_index = 0;
 	// number of render command queues
-	constexpr static u32 s_render_command_queue_size = 3;
-	constexpr static u32 s_resource_free_queue_size = 3;
+	constexpr static u32 k_render_command_queue_size = 3;
+	constexpr static u32 k_resource_free_queue_size = 3;
     // White 1x1 texture in memory, usually used for default or uninitialized textures
     arc<backend::texture_2d> m_white_texture{};
 
 	// resource freeing queues
-    backend::render_command_queue m_resource_free_queue[s_resource_free_queue_size]{};
+    backend::render_command_queue m_resource_free_queue[k_resource_free_queue_size]{};
 	// render command queues
-    backend::render_command_queue m_command_queues[s_render_command_queue_size];
+    backend::render_command_queue m_command_queues[k_render_command_queue_size];
 
 	friend class ::kb::EditorLayer;
 };

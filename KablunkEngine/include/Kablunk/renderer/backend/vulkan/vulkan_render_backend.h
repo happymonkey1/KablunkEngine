@@ -3,22 +3,18 @@
 #include "Kablunk/renderer/backend/render_backend.h"
 #include "Kablunk/renderer/backend/graphics_context.h"
 
+#include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
-
-// forward declarations
-struct VkDescriptorSetAllocateInfo;
-struct VkDescriptorSet_T;
-typedef VkDescriptorSet_T* VkDescriptorSet;
-
 namespace kb::render::backend::vk
-{
+{ // start namespace kb::render::backend::vk
+
+// Forward declaration
 class vulkan_context;
-// start namespace kb::render::vk
 
 // #TODO need to evaluate whether the refs in each command can be passed by const&
 
-class vulkan_render_backend : public render_backend
+class vulkan_render_backend final : public render_backend
 {
 public:
     vulkan_render_backend() = default;
