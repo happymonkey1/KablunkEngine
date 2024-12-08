@@ -10,6 +10,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
+#include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk

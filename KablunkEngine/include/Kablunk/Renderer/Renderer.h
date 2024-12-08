@@ -19,7 +19,6 @@
 
 #include "Kablunk/Renderer/backend/backend_type.h"
 #include "Kablunk/renderer/backend/graphics_context.h"
-#include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
 namespace kb
 { // start namespace kb
@@ -43,11 +42,6 @@ class Renderer
 public:
     // type alias for main render thread function
     using render_thread_func_t = void(*)(Renderer*, render_thread*);
-
-    // #TODO expose compile time backend switch
-    inline static constexpr backend::render_backend_type_t k_render_backend_type = backend::render_backend_type_t::vulkan;
-    using underlying_render_backend_t = backend::vk::vulkan_render_backend;
-    using render_backend_t = backend::render_backend<underlying_render_backend_t>;
 
 public:
     void init();
@@ -73,13 +67,11 @@ public:
     // \brief get the viewport's size
     const glm::vec2& get_viewport_size() const { return m_viewport_size; }
 
-    static constexpr auto get_render_backend_type() noexcept -> backend::render_backend_type_t
-    {
-        return k_render_backend_type;
-    }
+    // Retrieve the render backend type
+    auto get_render_backend_type() const noexcept -> backend::render_backend_type_t { return m_backend_type; }
 
-    auto get_render_backend() const noexcept -> const render_backend_t& { return m_backend; }
-    auto get_render_backend() noexcept -> render_backend_t& { return m_backend; }
+    auto get_render_backend() const noexcept -> weak_ptr<const backend::render_backend> { return m_backend; }
+    auto get_render_backend() noexcept -> weak_ptr<backend::render_backend> { return m_backend; }
 
     // Retrieves a weak arc to the graphics context
     auto get_graphics_context() const noexcept -> weak_ptr<backend::graphics_context>
@@ -188,7 +180,9 @@ private:
 	renderer_options_t m_options = { };
 	arc<shader_library> m_shader_library;
     // #TODO expose changing render backend at compile time...
-    render_backend_t m_backend{};
+
+    backend::render_backend* m_backend{};
+    backend::render_backend_type_t m_backend_type = backend::render_backend_type_t::vulkan;
 
     arc<backend::graphics_context> m_context;
 

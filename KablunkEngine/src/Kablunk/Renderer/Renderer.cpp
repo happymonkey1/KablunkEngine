@@ -1,8 +1,6 @@
 #include "kablunkpch.h"
 #include "Kablunk/Renderer/Renderer.h"
 
-#include "kablunk/renderer/backend/vulkan/vulkan_shader.h"
-#include "kablunk/renderer/backend/vulkan/vulkan_context.h"
 
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Timers.h"
@@ -59,7 +57,8 @@ void Renderer::init()
     }
 
     // Initialize rendering backend
-    m_backend.init();
+    m_backend = backend::render_backend::create(m_backend_type, m_context.get());
+    m_backend->init();
 }
 
 void Renderer::shutdown()
@@ -72,7 +71,8 @@ void Renderer::shutdown()
 
 	// render2d::shutdown();
 
-	m_backend.shutdown();
+    delete m_backend;
+    m_backend = nullptr;
 
 	for (size_t i = 0; i < s_render_command_queue_size; ++i)
         if (!m_command_queues[i].is_empty())
@@ -123,11 +123,12 @@ void Renderer::on_shader_reloaded(const uint64_t p_hash)
 
 uint32_t Renderer::get_current_frame_index() const noexcept
 {
-    constexpr auto backend = get_render_backend_type();
-    switch (backend)
+    switch (Singleton<Renderer>::get().get_render_backend_type())
     {
     case backend::render_backend_type_t::vulkan:
         return m_context->get_swap_chain()->get_current_buffer_index();
+    case backend::render_backend_type_t::none:
+        return Application::Get().get_current_frame_index();
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!");

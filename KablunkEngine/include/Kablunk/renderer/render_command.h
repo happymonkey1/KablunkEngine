@@ -61,11 +61,11 @@ inline void shutdown() noexcept
 inline void begin_frame() noexcept
 {
     auto& renderer = Singleton<Renderer>::get();
-    renderer.get_render_backend().begin_frame(renderer.get_graphics_context());
+    renderer.get_render_backend()->begin_frame();
 }
 
 // end renderering frame
-inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend().end_frame(); }
+inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend()->end_frame(); }
 
 // begin render pass
 inline void begin_render_pass(
@@ -75,18 +75,16 @@ inline void begin_render_pass(
 ) noexcept
 {
     auto& renderer = Singleton<Renderer>::get();
-	renderer.get_render_backend()
-        .begin_render_pass(
-            renderer.get_graphics_context(),
-            p_render_command_buffer,
-            p_render_pass,
-            explicit_clear
-        );
+	renderer.get_render_backend()->begin_render_pass(
+        p_render_command_buffer,
+        p_render_pass,
+        explicit_clear
+    );
 }
 
 inline void end_render_pass(const arc<backend::render_command_buffer>& p_render_command_buffer) noexcept
 {
-	Singleton<Renderer>::get().get_render_backend().end_render_pass(p_render_command_buffer);
+	Singleton<Renderer>::get().get_render_backend()->end_render_pass(p_render_command_buffer);
 }
 
 // return a reference to the shader library
@@ -321,7 +319,7 @@ inline void render_geometry(
     uint32_t p_index_count = 0
 ) noexcept
 {
-    Singleton<Renderer>::get().get_render_backend().render_geometry(
+    Singleton<Renderer>::get().get_render_backend()->render_geometry(
         p_render_command_buffer,
         p_pipeline,
         p_material,
@@ -338,7 +336,7 @@ inline void submit_fullscreen_quad(
     const arc<backend::material>& p_material
 ) noexcept
 {
-    Singleton<Renderer>::get().get_render_backend().submit_fullscreen_quad(
+    Singleton<Renderer>::get().get_render_backend()->submit_fullscreen_quad(
         p_render_command_buffer,
         p_pipeline,
         p_material
@@ -351,7 +349,7 @@ inline void submit_fullscreen_quad(
 
 inline void set_line_width(const arc<backend::render_command_buffer>& p_render_command_buffer, f32 p_line_width) noexcept
 {
-	Singleton<Renderer>::get().get_render_backend().set_line_width(p_render_command_buffer, p_line_width);
+	Singleton<Renderer>::get().get_render_backend()->set_line_width(p_render_command_buffer, p_line_width);
 }
 
 // get the number of frames in flight that will be rendered

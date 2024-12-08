@@ -15,6 +15,8 @@
 
 #include <filesystem>
 
+#include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
+
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
@@ -267,9 +269,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::allocate_descriptor_se
 	alloc_info.descriptorSetCount = 1;
 	alloc_info.pSetLayouts = &m_descriptor_set_layouts.at(set);
 
-    const auto vulkan_render_backend = render::Renderer::get().get_render_backend().backend();
-
-    const VkDescriptorSet vk_descriptor_set = vulkan_render_backend->rt_allocate_descriptor_set(alloc_info);
+    const VkDescriptorSet vk_descriptor_set = vulkan_render_backend::rt_allocate_descriptor_set(alloc_info);
 	KB_CORE_ASSERT(vk_descriptor_set, "Vulkan failed to allocate descriptor set!");
 	result.descriptor_sets.push_back(vk_descriptor_set);
 

@@ -10,8 +10,7 @@ namespace kb::render::backend
 
 arc<frame_buffer> frame_buffer::create(const frame_buffer_specification_t& specs)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (const auto backend = Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
     {
@@ -21,6 +20,8 @@ arc<frame_buffer> frame_buffer::create(const frame_buffer_specification_t& specs
             specs
         ));
     }
+    case render_backend_type_t::none:
+        return arc<frame_buffer>{};
     default:
     {
         KB_CORE_ASSERT(
@@ -28,7 +29,7 @@ arc<frame_buffer> frame_buffer::create(const frame_buffer_specification_t& specs
             "[Framebuffer::Create]: Unhandled render backend {}!",
             static_cast<std::underlying_type_t<render_backend_type_t>>(backend)
         );
-        return arc<backend::frame_buffer>{};
+        return arc<frame_buffer>{};
     }
     }
 }

@@ -41,12 +41,23 @@ struct vulkan_render_backend_data
     int32_t draw_call_count = 0;
 };
 
-namespace
-{
 std::unique_ptr<vulkan_render_backend_data> s_renderer_data{};
+
+
+vulkan_render_backend::vulkan_render_backend(weak_ptr<vulkan_context> p_graphics_context) noexcept
+    : m_vulkan_context{ p_graphics_context }
+{
 }
 
-auto vulkan_render_backend::init() noexcept -> void
+vulkan_render_backend::~vulkan_render_backend() noexcept
+{
+    if (s_renderer_data)
+    {
+        vulkan_render_backend::shutdown();
+    }
+}
+
+void vulkan_render_backend::init() noexcept
 {
     s_renderer_data = std::make_unique<vulkan_render_backend_data>();
     const auto frames_in_flight = render::get_frames_in_flight();
@@ -54,7 +65,7 @@ auto vulkan_render_backend::init() noexcept -> void
     s_renderer_data->m_descriptor_pools.resize(frames_in_flight);
     s_renderer_data->m_descriptor_pool_allocation_count.resize(frames_in_flight);
 
-    submit([frames_in_flight]() mutable
+    submit([frames_in_flight, vulkan_context = m_vulkan_context]() mutable
         {
             constexpr size_t k_individual_pool_size = 1000ull;
             const VkDescriptorPoolSize vk_pool_sizes[] =
@@ -83,7 +94,7 @@ auto vulkan_render_backend::init() noexcept -> void
             };
 
             // per-frame renderer descriptor pools
-            const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
+            const auto vk_device = vulkan_context->get_device()->get_vk_device();
             for (u32 i = 0; i < frames_in_flight; i++)
             {
                 KB_VK_CHECK_RESULT(
@@ -131,14 +142,14 @@ auto vulkan_render_backend::init() noexcept -> void
     s_renderer_data->m_quad_index_buffer = index_buffer::create(indices, 6 * sizeof(uint32_t));
 }
 
-auto vulkan_render_backend::shutdown() noexcept -> void
+void vulkan_render_backend::shutdown() noexcept
 {
     KB_PROFILE_SCOPE;
     log::core::info(
         log::logger_tag_t::renderer,
         "Shutting down Vulkan render backend"
     );
-    const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
+    const auto vk_device = m_vulkan_context->get_device()->get_vk_device();
     vkDeviceWaitIdle(vk_device);
 
     for (const auto& vk_descriptor_pool : s_renderer_data->m_descriptor_pools)
@@ -159,12 +170,9 @@ auto vulkan_render_backend::shutdown() noexcept -> void
     s_renderer_data.reset();
 }
 
-auto vulkan_render_backend::begin_frame(
-    weak_ptr<graphics_context> p_context
-) noexcept -> void
+void vulkan_render_backend::begin_frame() noexcept
 {
-    const auto vulkan_context = p_context.as<vk::vulkan_context>();
-    submit([vulkan_context]()
+    submit([vulkan_context = m_vulkan_context]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_frame");
             const auto vk_device = vulkan_context->get_device()->get_vk_device();
@@ -186,18 +194,18 @@ auto vulkan_render_backend::begin_frame(
     );
 }
 
-auto vulkan_render_backend::end_frame() noexcept -> void
+void vulkan_render_backend::end_frame() noexcept
 {
+    // No-op
 }
 
-auto vulkan_render_backend::begin_render_pass(
-    weak_ptr<graphics_context> p_graphics_context,
+void vulkan_render_backend::begin_render_pass(
     const arc<render_command_buffer>& p_render_command_buffer,
     const arc<render_pass>& p_render_pass,
     bool p_explicit_clear
-) noexcept -> void
+) noexcept
 {
-    submit([graphics_context = p_graphics_context, render_command_buffer = p_render_command_buffer, render_pass = p_render_pass, p_explicit_clear]()
+    submit([vulkan_context = m_vulkan_context, render_command_buffer = p_render_command_buffer, render_pass = p_render_pass, p_explicit_clear]()
         {
             KB_PROFILE_SCOPE_NAMED("vulkan_render_backend::begin_render_pass");
             log::core::trace(
@@ -205,9 +213,6 @@ auto vulkan_render_backend::begin_render_pass(
                 "vulkan_render_backend::begin_render_pass {}",
                 render_pass->get_specification().m_debug_name
             );
-
-            const auto vulkan_context = graphics_context.as<vk::vulkan_context>();
-
 
             const u32 frame_index = rt_get_current_frame_index();
             const VkCommandBuffer vk_command_buffer = render_command_buffer.As<vulkan_render_command_buffer>()->get_active_command_buffer();
@@ -359,9 +364,9 @@ auto vulkan_render_backend::begin_render_pass(
     );
 }
 
-auto vulkan_render_backend::end_render_pass(
+void vulkan_render_backend::end_render_pass(
     const arc<render_command_buffer>& p_render_command_buffer
-) noexcept -> void
+) noexcept
 {
     submit([render_command_buffer = p_render_command_buffer]()
         {
@@ -377,10 +382,10 @@ auto vulkan_render_backend::end_render_pass(
     );
 }
 
-auto vulkan_render_backend::set_line_width(
+void vulkan_render_backend::set_line_width(
     const arc<render_command_buffer>& p_render_command_buffer,
     f32 line_width
-) noexcept -> void
+) noexcept
 {
     submit([width = line_width, render_command_buffer = p_render_command_buffer]()
         {
@@ -390,11 +395,11 @@ auto vulkan_render_backend::set_line_width(
         });
 }
 
-auto vulkan_render_backend::submit_fullscreen_quad(
+void vulkan_render_backend::submit_fullscreen_quad(
     const arc<render_command_buffer>& p_render_command_buffer,
     const arc<pipeline>& p_pipeline,
     const arc<material>& p_material
-) noexcept -> void
+) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -483,7 +488,7 @@ auto vulkan_render_backend::submit_fullscreen_quad(
         });
 }
 
-auto vulkan_render_backend::render_geometry(
+void vulkan_render_backend::render_geometry(
     const arc<render_command_buffer>& p_render_command_buffer,
     const arc<pipeline>& p_pipeline,
     const arc<material>& p_material,
@@ -491,7 +496,7 @@ auto vulkan_render_backend::render_geometry(
     const arc<index_buffer>& p_index_buffer,
     const glm::mat4& p_transform,
     uint32_t p_index_count
-) noexcept -> void
+) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -577,7 +582,7 @@ auto vulkan_render_backend::render_geometry(
         });
 }
 
-auto vulkan_render_backend::render_instanced_submesh(
+void vulkan_render_backend::render_instanced_submesh(
     arc<render_command_buffer> p_render_command_buffer,
     arc<pipeline> p_pipeline,
     arc<Mesh> p_mesh,
@@ -587,7 +592,7 @@ auto vulkan_render_backend::render_instanced_submesh(
     u32 p_transform_offset,
     u32 p_bone_transforms_offset,
     u32 p_instance_count
-) noexcept -> void
+) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -685,11 +690,11 @@ auto vulkan_render_backend::render_instanced_submesh(
     );
 }
 
-auto vulkan_render_backend::copy_image(
+void vulkan_render_backend::copy_image(
     arc<render_command_buffer> p_render_command_buffer,
     arc<image_2d> p_source_image,
     arc<image_2d> p_destination_image
-) noexcept -> void
+) noexcept
 {
     KB_PROFILE_SCOPE;
 
@@ -871,6 +876,7 @@ auto vulkan_render_backend::rt_allocate_descriptor_set(
 
     const auto buffer_index = rt_get_current_frame_index();
     p_alloc_info.descriptorPool = s_renderer_data->m_descriptor_pools[buffer_index];
+    // TODO: remove singleton call
     const auto vk_device = Singleton<Renderer>::get().get_graphics_context().as<vulkan_context>()->get_device()->get_vk_device();
     VkDescriptorSet vk_descriptor_set;
     const auto res = vkAllocateDescriptorSets(vk_device, &p_alloc_info, &vk_descriptor_set);

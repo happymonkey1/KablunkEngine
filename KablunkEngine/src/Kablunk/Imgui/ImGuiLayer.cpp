@@ -39,11 +39,12 @@ void ImGuiLayer::SetDarkTheme()
 
 ImGuiLayer* ImGuiLayer::Create()
 {
-    constexpr auto backend = render::Renderer::get_render_backend_type();
-    switch (backend)
+    switch (const auto backend = Singleton<render::Renderer>::get().get_render_backend_type())
     {
     case render::backend::render_backend_type_t::vulkan:
         return new render::backend::vk::vulkan_imgui_layer{};
+    case render::backend::render_backend_type_t::none:
+        return nullptr;
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return nullptr;

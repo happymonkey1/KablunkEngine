@@ -9,11 +9,12 @@ namespace kb::render::backend
 
 arc<graphics_context> graphics_context::create(void* window)
 {
-    constexpr auto backend = render::Renderer::get_render_backend_type();
-    switch (backend)
+    switch (const auto backend = Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
         return static_cast<arc<graphics_context>>(arc<vk::vulkan_context>::Create(static_cast<GLFWwindow*>(window)));
+    case render_backend_type_t::none:
+        return arc<graphics_context>{};
     default:
     {
         KB_CORE_ASSERT(
