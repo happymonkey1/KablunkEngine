@@ -42,6 +42,8 @@ includedirs
     "%{IncludeDir.msdf_atlas_gen}",
     "%{IncludeDir.msdfgen}",
     "%{IncludeDir.msgpack}",
+    "%{IncludeDir.LuaJIT}",
+    "%{IncludeDir.sol2}",
 }
 
 links
@@ -91,7 +93,8 @@ postbuildcommands
 {
     '{COPY} "../KablunkEngine/vendor/assimp/bin/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
     '{COPY} "../KablunkEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
-    '{COPY} "%{LibraryDir.VulkanSDK_Debug_Bin}/shaderc_sharedd.dll" "%{cfg.targetdir}"'
+    '{COPY} "%{LibraryDir.VulkanSDK_Debug_Bin}/shaderc_sharedd.dll" "%{cfg.targetdir}"',
+    '{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
     -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
 }
 
@@ -109,7 +112,8 @@ postbuildcommands
 {
     '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
     '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
-    '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
+    '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"',
+    '{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
     -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
 }
 
@@ -128,6 +132,7 @@ postbuildcommands
 {
     '{COPY} "../KablunkEngine/vendor/assimp/bin/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
     '{COPY} "../KablunkEngine/vendor/mono/bin/Release/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
-    '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"'
+    '{COPY} "%{LibraryDir.VulkanSDK_Bin}/shaderc_shared.dll" "%{cfg.targetdir}"',
+    '{COPY} "%{wks.location}KablunkEngine/vendor/LuaJIT/src/lua51.dll" "%{cfg.targetdir}"',
     -- '{COPY} "../bin/Release-windows-x86_64/Sandbox/Sandbox.dll" "%{cfg.targetdir}"'
 }

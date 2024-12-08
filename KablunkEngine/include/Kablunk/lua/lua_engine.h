@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Kablunk/lua/lua_core.h"
-
-#include <string_view>
-
 #include "Kablunk/Asset/AssetManager.h"
+#include "Kablunk/lua/lua_core.h" // Includes <sol/sol.hpp>
 #include "Kablunk/lua/lua_asset.h"
 #include "Kablunk/lua/lua_error.h"
 #include "Kablunk/lua/lua_script.h"
 #include "Kablunk/lua/lua_script_handle.h"
+
+#include <string_view>
+
 
 namespace kb::render
 { // start namespace kb::render

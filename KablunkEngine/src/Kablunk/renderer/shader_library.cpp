@@ -5,30 +5,29 @@
 namespace kb::render
 { // start namespace kb::render
 
-void shader_library::add(const std::string& name, const arc<backend::shader>& shader)
+auto shader_library::add(const std::string& name, const arc<backend::shader>& shader) noexcept -> const arc<backend::shader>&
 {
     KB_CORE_ASSERT(!exists(name), "Shader already exists!");
     m_shaders[name] = shader;
+    return m_shaders[name];
 }
 
-void shader_library::add(const arc<backend::shader>& shader)
+auto shader_library::add(const arc<backend::shader>& shader) noexcept -> const arc<backend::shader>&
 {
     auto& name = shader->get_name();
-    add(name, shader);
+    return add(name, shader);
 }
 
 const arc<backend::shader>& shader_library::load(const std::string& filepath)
 {
-    auto shader{ backend::shader::create(filepath) };
-    add(shader);
-    return shader;
+    const auto shader{ backend::shader::create(filepath) };
+    return add(shader);
 }
 
 const arc<backend::shader>& shader_library::load(const std::string& name, const std::string& filepath)
 {
-    auto shader = backend::shader::create(filepath);
-    add(name, shader);
-    return shader;
+    const auto shader = backend::shader::create(filepath);
+    return add(name, shader);
 }
 
 const arc<backend::shader>& shader_library::get(const std::string& name)

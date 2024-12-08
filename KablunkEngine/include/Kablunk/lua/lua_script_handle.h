@@ -4,7 +4,7 @@
 #include "Kablunk/Core/handle.h"
 
 namespace kb
-{
+{ // start namespace kb
 
 namespace details
 { // start namespace ::details
@@ -37,10 +37,10 @@ constexpr auto lua_script_handle::into(std::string_view p_value) noexcept -> lua
     }
 }
 
-}
+} // end namespace kb
 
 namespace std
-{
+{ // start namespace std
 
 template <>
 struct std::hash<kb::lua_script_handle>
@@ -51,4 +51,4 @@ struct std::hash<kb::lua_script_handle>
     }
 };
 
-}
+} // end namespace std

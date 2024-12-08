@@ -38,7 +38,7 @@ auto lua_engine::load_file(const std::string& p_script_path, std::string p_debug
     sol::load_result loaded_script = m_lua_state.load_file(p_script_path);
     KB_CORE_ASSERT(loaded_script.valid(), "[lua_engine]: Failed to load lua script '{}'", p_script_path);
 
-    const auto script_handle = lua_script_handle::into(p_script_path);
+    const auto script_handle = lua_script_handle::into(std::string_view{ p_script_path });
 
     m_lua_scripts.emplace(
         script_handle,

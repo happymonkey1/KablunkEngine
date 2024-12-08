@@ -14,6 +14,7 @@
 
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/SceneCamera.h"
+#include "Kablunk/Scene/component/script_component.h"
 
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/Mesh.h"

@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-namespace kb::lua
+namespace kb::lua::glue
 { // start namespace kb
 
 auto logger_info(lua_State* p_lua_state) -> int
