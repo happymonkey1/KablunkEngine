@@ -559,7 +559,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 				auto& transform = entity.GetComponent<TransformComponent>();
 				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				PointLight plight_data = {
+				point_light_t plight_data = {
 					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
 					plight_comp.Multiplier,
 					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
@@ -755,7 +755,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 				auto& transform = entity.GetComponent<TransformComponent>();
 				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				PointLight plight_data = {
+				point_light_t plight_data = {
 					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
 					plight_comp.Multiplier,
 					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },

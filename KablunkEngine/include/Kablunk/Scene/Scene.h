@@ -6,6 +6,7 @@
 #include "Kablunk/Core/RefCounting.h"
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Core/Uuid64.h"
+#include "Kablunk/Math/vec.hpp"
 #include "Kablunk/Renderer/EditorCamera.h"
 
 class b2World;
@@ -28,24 +29,26 @@ class renderer_2d;
 using EntityMap = kb::unordered_flat_map<uuid::uuid64, Entity>;
 constexpr const char* DEFAULT_SCENE_NAME = "Untitled Scene";
 
-struct PointLight
+struct point_light_t
 {
-	glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+	vec3_packed Position = vec3_packed{ 0.0f, 0.0f, 0.0f };
 	float Multiplier = { 1.0f };
-	glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+    vec3_packed Radiance = vec3_packed{ 1.0f, 1.0f, 1.0f };
 	float Radius = { 10.0f };
 	float Min_radius = { 1.0f };
 	float Falloff = { 1.0f };
 
-	char Padding[8]{}; 
+	char Padding[8]{};
 };
+
+static_assert(sizeof(point_light_t) % 4 == 0);
 
 struct LightEnvironmentData
 {
 	// #TODO Directional Lights
 
-	std::vector<PointLight> point_lights;
-	size_t GetPointLightsSize() const { return point_lights.size() * sizeof(PointLight); }
+	std::vector<point_light_t> point_lights;
+	size_t GetPointLightsSize() const { return point_lights.size() * sizeof(point_light_t); }
 };
 
 class Scene : public RefCounted

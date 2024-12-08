@@ -28,7 +28,8 @@ public:
 	~vulkan_texture_2d() override;
 
 	void resize(u32 width, u32 height) override;
-	arc<image_2d> get_image() const override { return m_image; }
+	arc<image_2d> get_image() const override { return m_image.As<image_2d>(); }
+    arc<vulkan_image_2d> get_vulkan_image() const { return m_image; }
 
 	image_format_t get_format() const override { return m_format; }
 
@@ -38,12 +39,12 @@ public:
 
     resource_descriptor_info_t get_descriptor_info() noexcept override
 	{
-        return m_image.As<vulkan_image_2d>()->get_descriptor_info();
+        return m_image->get_descriptor_info();
 	}
 
-	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const
+	const VkDescriptorImageInfo& get_vk_descriptor_image_info() const
 	{
-	    return m_image.As<vulkan_image_2d>()->get_vk_image_info_descriptor();
+	    return m_image->get_vk_image_info_descriptor();
 	}
 
 	owning_buffer& get_writeable_buffer() override;
@@ -65,7 +66,7 @@ private:
     u32 m_height;
 
     weak_ptr<vulkan_logical_device> m_device = nullptr;
-	arc<image_2d> m_image{};
+	arc<vulkan_image_2d> m_image{};
 
 	image_format_t m_format;
 

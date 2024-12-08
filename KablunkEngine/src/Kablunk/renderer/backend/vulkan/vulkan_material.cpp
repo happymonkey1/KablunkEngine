@@ -30,6 +30,7 @@ vulkan_material::vulkan_material(arc<material> p_material, const std::string& na
 	if (name.empty())
 		m_name = p_material->get_name();
 
+    Init();
 	render::register_shader_dependency(m_shader.As<shader>(), arc<material>{ this });
 
 	auto vk_material = p_material.As<vulkan_material>();

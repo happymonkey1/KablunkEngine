@@ -146,49 +146,11 @@ void scene_renderer::init()
         m_composite_pass->bake();
 	}
 
-#if 0
-    render::frame_buffer_specification composite_frame_buffer{};
-    composite_frame_buffer.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-    composite_frame_buffer.m_samples = 1;
-    composite_frame_buffer.m_clear_on_load = false;
-    composite_frame_buffer.m_transfer = false;
-    composite_frame_buffer.m_existing_images[0] = m_composite_pass->get_output_image(0);
-    composite_frame_buffer.m_existing_images[1] = m_geometry_pass->get_depth_output();
-    composite_frame_buffer.m_debug_name = "scene_renderer::frame_buffer::composite";
-
-    m_external_composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer);
-#endif
-
-	// external compositing
-	if (!m_specification.swap_chain_target)
-	{
-#if 0
-		frame_buffer_specification external_composite_framebuffer_spec;
-		external_composite_framebuffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-		external_composite_framebuffer_spec.m_clear_color = { 1.0f, 0.1f, 0.1f, 1.0f };
-		external_composite_framebuffer_spec.m_clear_on_load  = false;
-		external_composite_framebuffer_spec.m_debug_name = "External Composite";
-
-		// Use the color buffer from the final compositing pass, but the depth buffer from
-		// the actual 3D geometry pass, in case we want to composite elements behind meshes
-		// in the scene
-		external_composite_framebuffer_spec.m_existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetImage();
-		external_composite_framebuffer_spec.m_existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetDepthImage();
-
-		arc<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
-
-		render_pass_specification render_pass_spec;
-		render_pass_spec.target_frame_buffer = framebuffer;
-		render_pass_spec.m_debug_name = "External Composite";
-		m_external_composite_render_pass = RenderPass::Create(render_pass_spec);
-#endif
-	}
-
     constexpr size_t transform_buffer_count = 1024;
-	m_transform_buffer = backend::vertex_buffer::create(sizeof(TransformVertexData) * transform_buffer_count);
-	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
+	m_transform_buffer = backend::vertex_buffer::create(sizeof(transform_vertex_data_t) * transform_buffer_count);
+	m_transform_vertex_data = new transform_vertex_data_t[transform_buffer_count];
 
-    arc<scene_renderer> instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->m_resources_created = true;
@@ -220,13 +182,6 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 		m_geometry_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 		m_composite_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 
-#if 0
-		if (m_external_composite_render_pass)
-		{
-            m_external_composite_render_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
-		}
-#endif
-
 		m_needs_resize = false;
 
 		if (m_specification.swap_chain_target)
@@ -256,22 +211,11 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 		}
 	);
 
-	// Set Renderer Transform
-#if 0
-	render::submit([instance]() mutable
-		{
-			uint32_t buffer_index = render::rt_get_current_frame_index();
-			glm::mat4 transform = glm::mat4{ 1.0f };
-			instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
-		}
-	);
-#endif
-
 	// Submit point lights uniform buffer
 	const auto light_enviornment_copy = m_scene_data.light_environment;
-	const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
+	const std::vector<point_light_t>& point_lights_vec = light_enviornment_copy.point_lights;
 
-	m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
+	m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(point_light_t));
 	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
 
 	render::submit([instance, point_lights = m_point_lights_ub]() mutable
@@ -279,7 +223,7 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
             constexpr size_t point_light_vec_offset = 16ull;
 			instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
                 point_lights,
-                static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count)
+                static_cast<uint32_t>(point_light_vec_offset + sizeof(point_light_t) * point_lights->count)
             );
 		}
 	);
@@ -308,14 +252,20 @@ void scene_renderer::end_scene()
 	m_active = false;
 }
 
-void scene_renderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<backend::material> override_material/* = nullptr */)
+void scene_renderer::submit_mesh(
+    arc<Mesh> mesh,
+    uint32_t submesh_index,
+    arc<MaterialTable> material_table,
+    const glm::mat4& transform /*= glm::mat4{ 1.0f }*/,
+    arc<backend::material> override_material/* = nullptr */
+)
 {
     KB_PROFILE_SCOPE;
 
 	//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 	//uint32_t material_index = 0; // #TODO fix
-	const auto& submeshes = mesh->GetMeshData()->GetSubmeshes();
-	uint32_t material_index = submeshes[submesh_index].Material_index;
+	const auto& sub_meshes = mesh->GetMeshData()->get_sub_meshes();
+	uint32_t material_index = sub_meshes[submesh_index].Material_index;
 
 	m_transform_vertex_data[m_draw_list.size()].MRow[0] = {transform[0][0], transform[1][0], transform[2][0], transform[3][0]};
 	m_transform_vertex_data[m_draw_list.size()].MRow[1] = {transform[0][1], transform[1][1], transform[2][1], transform[3][1]};
@@ -323,7 +273,7 @@ void scene_renderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<Mat
 
 
 	// #TODO fix instancing implementation
-	m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
+	m_draw_list.emplace_back(draw_command_data_t{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
 }
 
 void scene_renderer::set_viewport_size(uint32_t width, uint32_t height)
@@ -378,11 +328,6 @@ void scene_renderer::wait_for_threads()
 	s_thread_pool.clear();
 }
 
-void scene_renderer::submit_ui_panel(ui::IPanel* panel)
-{
-	m_ui_panels_list.push_back(panel);
-}
-
 void scene_renderer::flush_draw_list()
 {
     KB_PROFILE_SCOPE;
@@ -396,7 +341,7 @@ void scene_renderer::flush_draw_list()
 		// draw 3d geometry
 		geometry_pass();
 
-		// composite and post processing pass
+		// composite and post-processing pass
 		composite_pass();
 	}
 	else
@@ -409,43 +354,6 @@ void scene_renderer::flush_draw_list()
 
 	m_scene_data = {};
 	m_draw_list = {};
-}
-
-void scene_renderer::flush_2d_draw_list()
-{
-    // disabled when refactoring renderer2d singleton
-    // #TODO refactor
-#if 0
-	// 2d composite and ui pass
-	if (get_final_render_pass_image())
-	{
-		// #TODO assert that the camera is orthographic for screen space panels
-
-		// get camera from scene renderer data
-		const glm::mat4& main_camera_proj = m_scene_data.camera.camera.GetProjection();
-		const glm::mat4& main_camera_transform = m_scene_data.camera.view_mat;
-
-		// start 2d scene rendering
-		render2d::begin_scene(m_scene_data.camera.camera, main_camera_transform);
-		render2d::set_target_render_pass(get_external_composite_render_pass());
-
-		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
-		{
-			// draw 2d elements
-			two_dimensional_pass();
-
-			// draw ui elements
-			ui_pass();
-		}
-
-		render2d::end_scene();
-	}
-	else
-		KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
-#endif
-
-	m_entity_list.clear();
-	m_ui_panels_list.clear();
 }
 
 void scene_renderer::pre_render()
@@ -466,48 +374,21 @@ void scene_renderer::clear_pass(arc<backend::render_pass> render_pass, bool expl
 	render::end_render_pass(m_command_buffer);
 }
 
-void scene_renderer::ui_pass()
-{
-	if (m_ui_panels_list.empty())
-		return;
-
-	for (ui::IPanel* panel : m_ui_panels_list)
-		panel->on_render(m_scene_data.camera);
-}
-
-void scene_renderer::two_dimensional_pass()
-{
-    // disabled when refactoring renderer2d singleton
-    // #TODO refactor
-#if 0
-	for (Entity entity : m_entity_list)
-		render2d::draw_sprite(entity);
-#endif
-
-	// #TODO circles, lines, rectangles, text
-
-}
-
 void scene_renderer::geometry_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
-	render::begin_render_pass(m_command_buffer, m_geometry_pass);
+	m_gpu_time_query_indices.geometry_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
+	begin_render_pass(m_command_buffer, m_geometry_pass);
 
 	// submit transform data
-	m_transform_buffer->set_data(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
-	/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
-		{
-			transform_buffer->rt_set_data(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
-		}
-	);*/
+	m_transform_buffer->set_data(m_transform_vertex_data, static_cast<u32>(sizeof(transform_vertex_data_t) * m_draw_list.size()), 0);
 
 	size_t transform_offset_ind = 0;
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
 	for (const auto& draw_command_data : m_draw_list)
 	{
-        Singleton<render::Renderer>::get().get_render_backend().render_instanced_submesh(
+        Singleton<Renderer>::get().get_render_backend().render_instanced_submesh(
             m_command_buffer,
             geometry_pipeline,
             draw_command_data.Mesh,
@@ -520,7 +401,7 @@ void scene_renderer::geometry_pass()
         );
 	}
 
-	render::end_render_pass(m_command_buffer);
+	end_render_pass(m_command_buffer);
 	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.geometry_pass_query);
 }
 

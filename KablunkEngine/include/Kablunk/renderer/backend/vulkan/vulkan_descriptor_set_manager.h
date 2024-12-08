@@ -360,11 +360,19 @@ template <>
 inline auto vulkan_descriptor_set_manager::set_input_impl(
     std::string_view p_name,
     const arc<texture_2d>& p_resource,
-    [[maybe_unused]] u32 p_index /* = 0 */
+    u32 p_index /* = 0 */
 ) noexcept -> vulkan_descriptor_set_manager&
 {
     if (const auto* decl = get_input_declaration(p_name))
+    {
+        KB_CORE_ASSERT(
+            p_index < decl->m_count,
+            "[vulkan_descriptor_set_manager]: Texture2D input index out of bounds ({}>{})!",
+            p_index,
+            decl->m_count
+        );
         m_input_resources.at(decl->m_set).at(decl->m_binding).set(p_resource, p_index);
+    }
     else
     {
         log::core::warn(

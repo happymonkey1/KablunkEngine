@@ -173,7 +173,7 @@ MaterialTable::MaterialTable(arc<MaterialTable> other)
 
 void MaterialTable::SetMaterial(uint32_t index, arc<MaterialAsset> material)
 {
-	m_materials[index] = material;
+	m_materials[index] = std::move(material);
 	if (index >= m_material_count)
 		m_material_count = index + 1;
 }

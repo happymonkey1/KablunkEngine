@@ -89,7 +89,7 @@ namespace kb
 		glm::vec2 m_viewport_size{ 0.0f };
 		glm::vec2 m_viewport_bounds[2];
 
-		Entity m_selected_entity;
+		Entity m_selected_entity{};
 
 		// Panels
 		SceneHierarchyPanel m_scene_hierarchy_panel;

@@ -150,7 +150,6 @@ void SceneHierarchyPanel::OnImGuiRender()
 
 		ImGui::EndDragDropTarget();
 	}
-	
 
 	if (UI::IsMouseDownOnDockedWindow()) m_selection_context = {};
 
@@ -162,7 +161,7 @@ void SceneHierarchyPanel::OnImGuiRender()
 			auto entity = m_context->CreateEntity();
 			m_selection_context = entity;
 		}
-		
+
 		if (ImGui::MenuItem("Create Sprite"))
 		{
 			auto entity = m_context->CreateEntity("Blank Sprite");
@@ -200,13 +199,11 @@ void SceneHierarchyPanel::OnImGuiRender()
 		ImGui::EndPopup();
 	}
 
-	
-
 	ImGui::End();
 
 	ImGui::Begin("Properties");
 
-	if (m_selection_context)
+	if (m_selection_context.Valid())
 		UI_DrawComponents(m_selection_context);
 
 	ImGui::End();
@@ -217,7 +214,6 @@ void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	auto& tag = entity.GetComponent<TagComponent>().Tag;
 	ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen;
 	node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-	
 
 	if (entity.GetChildren().empty())
 		node_flags |= ImGuiTreeNodeFlags_Leaf;
@@ -280,7 +276,7 @@ void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	{
 		m_context->DestroyEntity(entity);
 
-		if (m_selection_context == entity) m_selection_context = { };
+		if (m_selection_context == entity) m_selection_context = {};
 	}
 }
 
@@ -912,7 +908,7 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			if (ImGui::Button(add_or_change_button_text))
 			{
-				auto filepath = FileDialog::OpenFile("Mesh (*.fbx)\0*.fbx\0");
+				auto filepath = FileDialog::OpenFile("Mesh FBX (*.fbx)\0*.fbx\0Mesh OBJ (*.obj)\0*.obj");
 				if (!filepath.empty())
 					component.LoadMeshFromFileEditor(filepath, entity);
 			}

@@ -599,32 +599,34 @@ auto vulkan_render_backend::render_instanced_submesh(
             const VkCommandBuffer vk_command_buffer =
                 p_render_command_buffer.As<vulkan_render_command_buffer>()->GetCommandBuffer(frame_index);
 
-            // retrieve mesh data vertex buffer and bind
+            // Retrieve mesh data vertex buffer and bind
             arc<MeshData> mesh_data = p_mesh->GetMeshData();
-            arc<vulkan_vertex_buffer> vertex_buffer = mesh_data->GetVertexBuffer().As<vulkan_vertex_buffer>();
+            arc<vulkan_vertex_buffer> vertex_buffer = mesh_data->get_vertex_buffer().As<vulkan_vertex_buffer>();
             const VkBuffer vk_vertex_buffer = vertex_buffer->GetVkBuffer();
             constexpr VkDeviceSize vertex_offsets[1] = { 0 };
             vkCmdBindVertexBuffers(vk_command_buffer, 0, 1, &vk_vertex_buffer, vertex_offsets);
 
-            // retrieve mesh transform vertex buffer and bind
+            // Retrieve mesh transform vertex buffer and bind
             arc<vulkan_vertex_buffer> vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>();
             const VkBuffer vk_transform_buffer = vulkan_transform_buffer->GetVkBuffer();
             const VkDeviceSize transform_offsets[1] = { p_transform_offset };
             vkCmdBindVertexBuffers(vk_command_buffer, 1, 1, &vk_transform_buffer, transform_offsets);
 
-            arc<vulkan_index_buffer> index_buffer = mesh_data->GetIndexBuffer().As<vulkan_index_buffer>();
+            // Bind index buffer
+            arc<vulkan_index_buffer> index_buffer = mesh_data->get_index_buffer().As<vulkan_index_buffer>();
             const VkBuffer vk_index_buffer = index_buffer->GetVkBuffer();
             vkCmdBindIndexBuffer(vk_command_buffer, vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-            const auto& mesh_asset_submeshes = mesh_data->GetSubmeshes();
-            const Submesh& submesh = mesh_asset_submeshes[p_index];
+            // Retrieve sub mesh material
+            const sub_mesh_t& sub_mesh = mesh_data->get_sub_meshes()[p_index];
             const auto& mesh_material_table = p_mesh->GetMaterials();
-            uint32_t material_count = mesh_material_table->GetMaterialCount();
-            arc<MaterialAsset> material = p_material_table->HasMaterial(submesh.Material_index) ?
-                p_material_table->GetMaterial(submesh.Material_index) :
-                mesh_material_table->GetMaterial(submesh.Material_index);
+            // uint32_t material_count = mesh_material_table->GetMaterialCount();
+            arc<MaterialAsset> material = p_material_table->HasMaterial(sub_mesh.Material_index) ?
+                p_material_table->GetMaterial(sub_mesh.Material_index) :
+                mesh_material_table->GetMaterial(sub_mesh.Material_index);
             arc<vulkan_material> vulkan_material = material->GetMaterial().As<vk::vulkan_material>();
 
+            // Bind vulkan pipeline
             arc<vulkan_pipeline> pipeline = p_pipeline.As<vk::vulkan_pipeline>();
             const VkPipeline vk_pipeline = pipeline->get_vk_pipeline();
             const VkPipelineLayout vk_pipeline_layout = pipeline->get_vk_pipeline_layout();
@@ -673,10 +675,10 @@ auto vulkan_render_backend::render_instanced_submesh(
 
             vkCmdDrawIndexed(
                 vk_command_buffer,
-                submesh.IndexCount,
+                sub_mesh.IndexCount,
                 p_instance_count,
-                submesh.BaseIndex,
-                static_cast<i32>(submesh.BaseVertex),
+                sub_mesh.BaseIndex,
+                static_cast<i32>(sub_mesh.BaseVertex),
                 0
             );
         }

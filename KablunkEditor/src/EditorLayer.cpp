@@ -779,7 +779,7 @@ namespace kb
 	{
 		m_scene_state = SceneState::Play;
 		//m_active_scene->OnStartRuntime();
-		
+
 		if (ProjectManager::get().get_active())
 			if (ProjectManager::get().get_active()->GetConfig().Reload_csharp_script_assemblies_on_play)
 				CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
@@ -927,7 +927,6 @@ namespace kb
 			{
 				m_scene_hierarchy_panel.SetSelectionContext(m_selected_entity);
 				// #TODO ray cast mouse picking?
-
 			}
 
 		return false;
@@ -1290,7 +1289,7 @@ namespace kb
 		{
 			if (pixel_data != -1)
 			{
-				EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+				entity_handle_t handle{ static_cast<uint64_t>(pixel_data) };
 				m_selected_entity = { handle, m_active_scene.get() };
 			}
 			else // Make sure we are not trying to use a gizmo and we are not using the editor camera

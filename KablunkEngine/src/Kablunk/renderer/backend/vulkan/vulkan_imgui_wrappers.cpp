@@ -22,7 +22,7 @@ using VulkanImage2D = kb::render::backend::vk::vulkan_image_2d;
 ImTextureID GetTextureID(arc<Texture2D> texture)
 {
 	arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
-	const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+	const VkDescriptorImageInfo& image_info = vulkan_texture->get_vk_descriptor_image_info();
 	if (!image_info.imageView)
 	{
 		KB_CORE_ERROR("VulkanImGuiWrapper image view is empty!");
@@ -47,7 +47,7 @@ void Image(const arc<Image2D>& image, const ImVec2& size, const ImVec2& uv0, con
 void Image(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
 	arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
-	const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+	const VkDescriptorImageInfo& image_info = vulkan_texture->get_vk_descriptor_image_info();
 	if (!image_info.imageView)
 		return;
 
@@ -58,7 +58,7 @@ void Image(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0,
 bool ImageButton(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 {
 	arc<VulkanTexture2D> vulkan_texture = texture.As<VulkanTexture2D>();
-	const VkDescriptorImageInfo& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+	const VkDescriptorImageInfo& image_info = vulkan_texture->get_vk_descriptor_image_info();
 	if (!image_info.imageView)
 		return false;
 

@@ -10,14 +10,14 @@ namespace kb
 // Forward declaration
 struct TransformComponent;
 
-using EntityHandle = entt::entity;
-constexpr EntityHandle null_entity = entt::null;
+using entity_handle_t = entt::entity;
+constexpr entity_handle_t null_entity = entt::null;
 
 class Entity
 {
 public:
 	Entity() = default;
-	Entity(EntityHandle handle, weak_ptr<Scene> scene);
+	Entity(entity_handle_t handle, weak_ptr<Scene> scene);
     ~Entity() noexcept = default;
 
 	Entity(const Entity&) noexcept = default;
@@ -46,7 +46,7 @@ public:
 	bool Valid() const { return m_entity_handle != null_entity && m_scene != nullptr; }
 
 	std::string GetHandleAsString() const { return std::to_string(static_cast<uint64_t>(m_entity_handle)); }
-	const EntityHandle& GetHandle() const { return m_entity_handle; }
+	const entity_handle_t& GetHandle() const { return m_entity_handle; }
 
 	const uuid::uuid64& GetUUID() const;
 	const uuid::uuid64& GetParentUUID() const;
@@ -67,14 +67,14 @@ public:
 	void SetParentUUID(const uuid::uuid64& uuid);
 
 	operator uint64_t() const { return static_cast<uint64_t>(m_entity_handle); }
-	operator EntityHandle() const { return m_entity_handle; }
+	operator entity_handle_t() const { return m_entity_handle; }
 
 	operator bool() const { return Valid(); }
 	bool operator==(const Entity& other) const { return m_entity_handle == other.m_entity_handle && m_scene == other.m_scene; }
 	bool operator!=(const Entity& other) const { return !(*this == other); }
 
 private:
-	EntityHandle m_entity_handle;
+	entity_handle_t m_entity_handle;
 	weak_ptr<Scene> m_scene;
 
 	friend class CSharpScriptEngine;

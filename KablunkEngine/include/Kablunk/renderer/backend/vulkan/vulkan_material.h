@@ -110,7 +110,7 @@ public:
         const auto index_opt = m_descriptor_set_manager.get_first_set_index();
         if (!index_opt)
         {
-            // #TODO should look into this...
+            // TODO: Should probably look into this
 #if 0
             log::core::warn(
                 log::logger_tag_t::material,

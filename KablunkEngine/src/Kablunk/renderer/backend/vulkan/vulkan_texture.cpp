@@ -36,7 +36,7 @@ vulkan_texture_2d::vulkan_texture_2d(
 	spec.debug_name = "FIXME";
 	//if (properties.Storage)
 	//	spec.usage = ImageUsage::Storage;
-	m_image = image_2d::create(spec);
+	m_image = image_2d::create(spec).As<vulkan_image_2d>();
 
     arc instance{ this };
 	render::submit([instance]() mutable
@@ -64,7 +64,7 @@ vulkan_texture_2d::vulkan_texture_2d(weak_ptr<vulkan_logical_device> p_device, s
 	spec.height = m_height;
 	spec.mips = 1; // #TODO mipmaps
 	spec.debug_name = "UNKNOWN_DEBUG_IMG_NAME";
-	m_image = image_2d::create(spec);
+	m_image = image_2d::create(spec).As<vulkan_image_2d>();
 
 
     arc instance{ this };

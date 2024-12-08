@@ -59,7 +59,7 @@ struct point_light_ub_t
     static constexpr size_t k_point_light_buffer_size = 128ull;
     uint32_t count{ 0 };
     vec3_packed padding{};
-    PointLight point_lights[k_point_light_buffer_size]{};
+    point_light_t point_lights[k_point_light_buffer_size]{};
 };
 
 class scene_renderer final : public RefCounted
@@ -90,23 +90,14 @@ public:
 
 	static void wait_for_threads();
 
-	void submit_ui_panel(ui::IPanel* panel);
-
 private:
 	void flush_draw_list();
-	void flush_2d_draw_list();
 	void pre_render();
 	void clear_pass();
 	void geometry_pass();
 	void composite_pass();
 
 	void clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear = false);
-
-	// draw all ui elements presented to the scene renderer
-	void ui_pass();
-
-	// draw all 2d elements presented to the scene renderer
-	void two_dimensional_pass();
 
 private:
 	arc<Scene> m_context;
@@ -135,7 +126,7 @@ private:
 
 	struct TransformVertexData
 	{
-		glm::vec4 MRow[3];
+		vec4_packed MRow[3];
 	};
 
 	arc<backend::vertex_buffer> m_transform_buffer;
@@ -159,7 +150,7 @@ private:
 
 	scene_renderer_data_t m_scene_data;
 
-	struct DrawCommandData
+	struct draw_command_data_t
 	{
 		arc<Mesh> Mesh;
 		uint32_t Submesh_index;
@@ -176,23 +167,7 @@ private:
 	// implement a operator< so they can be sorted into a map
 
 	// #TODO replace with a map that maps MeshKeys to DrawCommandData
-	std::vector<DrawCommandData> m_draw_list;
-
-	// =========
-	// ui panels
-	// =========
-
-	std::vector<ui::IPanel*> m_ui_panels_list;
-
-	// =========
-
-	// =================
-	// 2d composite data
-	// =================
-
-	// list of sprite entities to be drawn in the 2d composite pass
-	// #TODO linear allocator 
-	std::vector<Entity> m_entity_list;
+	std::vector<draw_command_data_t> m_draw_list;
 
 	// =================
 

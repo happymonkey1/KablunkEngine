@@ -23,6 +23,7 @@
 
 namespace kb::render
 { // start namespace kb::render
+
 static constexpr u32 s_mesh_import_flags =
 	aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 
@@ -72,22 +73,23 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	{
 		aiMesh* mesh = scene->mMeshes[m];
 
-		Submesh& submesh = m_sub_meshes.emplace_back();
-		submesh.BaseVertex = static_cast<uint32_t>(vertex_count);
-		submesh.BaseIndex = static_cast<uint32_t>(index_count);
-		submesh.Material_index = mesh->mMaterialIndex;
-		submesh.VertexCount = mesh->mNumVertices;
-		submesh.IndexCount = mesh->mNumFaces * 3;
-		submesh.mesh_name = mesh->mName.C_Str();
+		sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
+		sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
+		sub_mesh.BaseIndex = static_cast<u32>(index_count);
+		sub_mesh.Material_index = mesh->mMaterialIndex - 1;
+        KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
+		sub_mesh.VertexCount = mesh->mNumVertices;
+		sub_mesh.IndexCount = mesh->mNumFaces * 3;
+		sub_mesh.mesh_name = mesh->mName.C_Str();
 
 		vertex_count += mesh->mNumVertices;
-		index_count += submesh.IndexCount;
+		index_count += sub_mesh.IndexCount;
 
 		if (m_is_animated)
 		{
 			for (size_t i = 0; i < mesh->mNumVertices; ++i)
 			{
-				AnimatedVertex v;
+				animated_vertex_t v;
 				v.Position = vec3_packed{ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 				v.Normal = vec3_packed{ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 				v.EntityID = static_cast<int32_t>(entity);
@@ -111,7 +113,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		{
 			for (size_t i = 0; i < mesh->mNumVertices; ++i)
 			{
-				Vertex v;
+				vertex_t v;
 				v.Position = vec3_packed{ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 				v.Normal = vec3_packed{ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 
@@ -131,8 +133,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 			}
 		}
 
-		
-		for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
+
+		for (u32 i = 0; i < mesh->mNumFaces; ++i)
 		{
 			KB_CORE_ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices");
 			Index index = { mesh->mFaces[i].mIndices[0], mesh->mFaces[i].mIndices[1], mesh->mFaces[i].mIndices[2] };
@@ -141,9 +143,9 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 			if (!m_is_animated)
 			{
 				m_triangle_cache[static_cast<u32>(m)].emplace_back(
-					m_static_vertices[index.V1 + submesh.BaseVertex], 
-					m_static_vertices[index.V2 + submesh.BaseVertex], 
-					m_static_vertices[index.V3 + submesh.BaseVertex]
+					m_static_vertices[index.V1 + sub_mesh.BaseVertex],
+					m_static_vertices[index.V2 + sub_mesh.BaseVertex],
+					m_static_vertices[index.V3 + sub_mesh.BaseVertex]
 				);
 			}
 		}
@@ -157,7 +159,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		for (size_t i = 0; i < scene->mNumMeshes; ++i)
 		{
 			aiMesh* mesh = scene->mMeshes[i];
-			Submesh& submesh = m_sub_meshes[i];
+			sub_mesh_t& submesh = m_sub_meshes[i];
 
 			for (size_t b = 0; b < mesh->mNumBones; ++b)
 			{
@@ -168,7 +170,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 				if (m_bone_mapping.find(bone_name) == m_bone_mapping.end())
 				{
 					bone_index = m_bone_count++;
-					BoneInfo& bone_info = m_bone_info.emplace_back();
+					bone_info_t& bone_info = m_bone_info.emplace_back();
 					bone_info.Bone_offset = Utils::Mat4FromAssimpMat4(bone->mOffsetMatrix);
 					m_bone_mapping[bone_name] = bone_index;
 				}
@@ -182,7 +184,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 				{
 					uint32_t vertex_id = submesh.BaseVertex + bone->mWeights[j].mVertexId;
 					float weight = bone->mWeights[j].mWeight;
-					m_animated_vertices[vertex_id].AddBoneData(bone_index, weight);
+					m_animated_vertices[vertex_id].add_bone_data(bone_index, weight);
 				}
 			}
 		}
@@ -396,29 +398,29 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 
 
 	if (m_is_animated)
-		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), (uint32_t)m_animated_vertices.size() * sizeof(AnimatedVertex));
+		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), static_cast<u32>(m_animated_vertices.size()) * sizeof(animated_vertex_t));
 	else
-		m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), (uint32_t)m_static_vertices.size() * sizeof(Vertex));
-	
+		m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), static_cast<u32>(m_static_vertices.size()) * sizeof(vertex_t));
 
-	m_index_buffer = backend::index_buffer::create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+
+	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 }
 
-MeshData::MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform)
-	: m_static_vertices{ verticies }, m_indices{ indices }
+MeshData::MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<Index>& indices, const glm::mat4& transform)
+	: m_static_vertices{ p_vertices }, m_indices{ indices }
 {
-	Submesh submesh;
-	submesh.BaseVertex = 0;
-	submesh.BaseIndex = 0;
-	submesh.IndexCount = (uint32_t)indices.size() * 3u;
-	submesh.Transform = transform;
-	submesh.Material_index = 0;
-	m_sub_meshes.push_back(submesh);
+	sub_mesh_t sub_mesh;
+	sub_mesh.BaseVertex = 0;
+	sub_mesh.BaseIndex = 0;
+	sub_mesh.IndexCount = static_cast<u32>(indices.size()) * 3u;
+	sub_mesh.Transform = transform;
+	sub_mesh.Material_index = 0;
+	m_sub_meshes.push_back(sub_mesh);
 
-	m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), (uint32_t)(m_static_vertices.size() * sizeof(Vertex)));
+	m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), static_cast<u32>(m_static_vertices.size() * sizeof(vertex_t)));
 
 	KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
-	m_index_buffer = backend::index_buffer::create(m_indices.data(), (uint32_t)(m_indices.size() * sizeof(Index)));
+	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
 #if 0
 	if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
@@ -445,17 +447,17 @@ MeshData::~MeshData()
 
 }
 
-void MeshData::SetSubmeshes(const std::vector<Submesh>& submeshes)
+void MeshData::set_sub_meshes(const std::vector<sub_mesh_t>& p_sub_meshes)
 {
-	if (!submeshes.empty())
-		m_sub_meshes = submeshes;
+	if (!p_sub_meshes.empty())
+		m_sub_meshes = p_sub_meshes;
 	else
 		KB_CORE_ERROR("Trying to set empty submesh array!");
 }
 
 const aiNodeAnim* MeshData::FindNodeAnim(const aiAnimation* animation, const std::string& node_name)
 {
-	for (uint32_t i = 0; i < animation->mNumChannels; ++i)
+	for (u32 i = 0; i < animation->mNumChannels; ++i)
 	{
 		const aiNodeAnim* node_anim = animation->mChannels[i];
 		if (std::string{ node_anim->mNodeName.data } == node_name)
@@ -465,9 +467,9 @@ const aiNodeAnim* MeshData::FindNodeAnim(const aiAnimation* animation, const std
 	return nullptr;
 }
 
-uint32_t MeshData::FindPosition(float animation_time, const aiNodeAnim* root_node_anim)
+u32 MeshData::FindPosition(float animation_time, const aiNodeAnim* root_node_anim)
 {
-	for (uint32_t i = 0; i < root_node_anim->mNumPositionKeys - 1; ++i)
+	for (u32 i = 0; i < root_node_anim->mNumPositionKeys - 1; ++i)
 	{
 		if (animation_time < static_cast<float>(root_node_anim->mPositionKeys[i + 1].mTime))
 			return i;
@@ -476,9 +478,9 @@ uint32_t MeshData::FindPosition(float animation_time, const aiNodeAnim* root_nod
 	return 0;
 }
 
-uint32_t MeshData::FindRotation(float animation_time, const aiNodeAnim* root_node_anim)
+u32 MeshData::FindRotation(float animation_time, const aiNodeAnim* root_node_anim)
 {
-	for (uint32_t i = 0; i < root_node_anim->mNumRotationKeys - 1; ++i)
+	for (u32 i = 0; i < root_node_anim->mNumRotationKeys - 1; ++i)
 	{
 		if (animation_time < static_cast<float>(root_node_anim->mRotationKeys[i + 1].mTime))
 			return i;
@@ -487,9 +489,9 @@ uint32_t MeshData::FindRotation(float animation_time, const aiNodeAnim* root_nod
 	return 0;
 }
 
-uint32_t MeshData::FindScaling(float animation_time, const aiNodeAnim* root_node_anim)
+u32 MeshData::FindScaling(float animation_time, const aiNodeAnim* root_node_anim)
 {
-	for (uint32_t i = 0; i < root_node_anim->mNumScalingKeys - 1; ++i)
+	for (u32 i = 0; i < root_node_anim->mNumScalingKeys - 1; ++i)
 	{
 		if (animation_time < static_cast<float>(root_node_anim->mScalingKeys[i + 1].mTime))
 			return i;
@@ -518,91 +520,75 @@ glm::vec3 MeshData::InterpolateScale(float animation_time, const aiNodeAnim* nod
 
 void MeshData::ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform)
 {
-	std::string name = root->mName.data;
+    const std::string name = root->mName.data;
 	const aiAnimation* animation = m_scene->mAnimations[0];
 	auto node_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
 	const aiNodeAnim* node_anim = FindNodeAnim(animation, name);
 
 	if (node_anim)
 	{
-		glm::vec3 translation = InterpolateTranslation(animation_time, node_anim);
-		glm::mat4 translation_mat = glm::translate(glm::mat4{ 1.0f }, translation);
+        const glm::vec3 translation = InterpolateTranslation(animation_time, node_anim);
+        const glm::mat4 translation_mat = glm::translate(glm::mat4{ 1.0f }, translation);
 
-		glm::quat rot = InterpolateRotation(animation_time, node_anim);
-		glm::mat4 rot_mat = glm::toMat4(rot);
+        const glm::quat rot = InterpolateRotation(animation_time, node_anim);
+        const glm::mat4 rot_mat = glm::toMat4(rot);
 
-		glm::vec3 scale = InterpolateScale(animation_time, node_anim);
-		glm::mat4 scale_mat = glm::scale(glm::mat4{ 1.0f }, scale);
+        const glm::vec3 scale = InterpolateScale(animation_time, node_anim);
+        const glm::mat4 scale_mat = glm::scale(glm::mat4{ 1.0f }, scale);
 
 		node_transform = translation_mat * rot_mat * scale_mat;
 	}
 
-	glm::mat4 transform = parent_transform * node_transform;
+    const glm::mat4 transform = parent_transform * node_transform;
 
 	if (m_bone_mapping.find(name) != m_bone_mapping.end())
 	{
-		uint32_t bone_index = m_bone_mapping[name];
+        const u32 bone_index = m_bone_mapping[name];
 		m_bone_info[bone_index].Final_transformation = m_inverse_transform * transform * m_bone_info[bone_index].Bone_offset;
 	}
 
-	for (uint32_t i = 0; i < root->mNumChildren; ++i)
+	for (u32 i = 0; i < root->mNumChildren; ++i)
 		ReadNodeHierarchy(animation_time, root->mChildren[i], transform);
 }
 
-void MeshData::TraverseNodes(aiNode* root, const glm::mat4& parent_transform, uint32_t level)
+void MeshData::TraverseNodes(aiNode* root, const glm::mat4& parent_transform, u32 level)
 {
-	auto local_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
-	auto transform = parent_transform * local_transform;
+    const auto local_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
+    const auto transform = parent_transform * local_transform;
 	m_node_map[root].resize(root->mNumMeshes);
-	for (uint32_t i = 0; i < root->mNumMeshes; ++i)
+	for (u32 i = 0; i < root->mNumMeshes; ++i)
 	{
-		uint32_t mesh_index = root->mMeshes[i];
-		auto& submesh = m_sub_meshes[mesh_index];
-		submesh.node_name = root->mName.C_Str();
-		submesh.Transform = transform;
-		submesh.Local_transform = local_transform;
+        const u32 mesh_index = root->mMeshes[i];
+		auto& sub_mesh = m_sub_meshes[mesh_index];
+		sub_mesh.node_name = root->mName.C_Str();
+		sub_mesh.Transform = transform;
+		sub_mesh.Local_transform = local_transform;
 		m_node_map[root][i] = mesh_index;
 	}
 
-	for (uint32_t i = 0; i < root->mNumChildren; ++i)
+	for (u32 i = 0; i < root->mNumChildren; ++i)
 		TraverseNodes(root->mChildren[i], transform, level + 1);
 }
 
 Mesh::Mesh(arc<MeshData> mesh_data)
-	: m_mesh_data{ mesh_data }
+	: m_mesh_data{ std::move(mesh_data) }
 {
-	SetSubmeshes({});
-
-	const auto& mesh_materials = m_mesh_data->GetMaterials();
-	m_material_table = arc<MaterialTable>::Create(static_cast<u32>(mesh_materials.size()));
-	for (size_t i = 0; i < mesh_materials.size(); ++i)
-		m_material_table->SetMaterial(static_cast<uint32_t>(i), arc<MaterialAsset>::Create(mesh_materials[i]));
+	set_sub_meshes({});
+    init_material_table(m_mesh_data->get_materials());
 }
 
 Mesh::Mesh(const arc<Mesh>& other)
 	: m_mesh_data{ other->m_mesh_data }
 {
-	SetSubmeshes({});
-
-	const auto& mesh_materials = m_mesh_data->GetMaterials();
-	m_material_table = arc<MaterialTable>::Create(mesh_materials.size());
-	for (size_t i = 0; i < mesh_materials.size(); ++i)
-		m_material_table->SetMaterial(static_cast<uint32_t>(i), arc<MaterialAsset>::Create(mesh_materials[i]));
+	set_sub_meshes({});
+    init_material_table(m_mesh_data->get_materials());
 }
 
-Mesh::Mesh(arc<MeshData> mesh_data, const std::vector<uint32_t>& submeshes)
+Mesh::Mesh(arc<MeshData> mesh_data, const std::vector<u32>& sub_meshes)
+    : m_mesh_data{ std::move(mesh_data) }
 {
-	SetSubmeshes(submeshes);
-
-	const auto& mesh_materials = m_mesh_data->GetMaterials();
-	m_material_table = arc<MaterialTable>::Create(mesh_materials.size());
-	for (size_t i = 0; i < mesh_materials.size(); ++i)
-		m_material_table->SetMaterial(static_cast<uint32_t>(i), arc<MaterialAsset>::Create(mesh_materials[i]));
-}
-
-Mesh::~Mesh()
-{
-
+	set_sub_meshes(sub_meshes);
+    init_material_table(m_mesh_data->get_materials());
 }
 
 void Mesh::OnUpdate(Timestep ts)
@@ -610,22 +596,31 @@ void Mesh::OnUpdate(Timestep ts)
 	KB_CORE_WARN("Mesh OnUpdate() not implemented!");
 }
 
-void Mesh::SetSubmeshes(const std::vector<uint32_t>& submeshes)
+void Mesh::set_sub_meshes(const std::vector<u32>& p_sub_meshes)
 {
-	if (!submeshes.empty())
-		m_submeshes = submeshes;
+	if (!p_sub_meshes.empty())
+		m_submeshes = p_sub_meshes;
 	else
 	{
-		const auto& submeshes = m_mesh_data->GetSubmeshes();
-		m_submeshes.resize(submeshes.size());
-		for (uint32_t i = 0; i < submeshes.size(); ++i)
+		const auto& sub_meshes = m_mesh_data->get_sub_meshes();
+		m_submeshes.resize(sub_meshes.size());
+		for (u32 i = 0; i < sub_meshes.size(); ++i)
 			m_submeshes[i] = i;
 	}
 }
 
+auto Mesh::init_material_table(const std::vector<arc<backend::material>>& p_materials) noexcept -> void
+{
+    m_material_table = arc<MaterialTable>::Create(p_materials.size());
+    for (size_t i = 0; i < p_materials.size(); ++i)
+    {
+        m_material_table->SetMaterial(static_cast<u32>(i), arc<MaterialAsset>::Create(p_materials[i]));
+    }
+}
+
 arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 {
-	std::vector<Vertex> verts;
+	std::vector<vertex_t> verts;
 	verts.resize(8);
 	verts[0].Position = vec3_packed{ -side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
 	verts[1].Position = vec3_packed{ side_length / 2.0f, -side_length / 2.0f,  side_length / 2.0f };
@@ -681,11 +676,11 @@ arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	//Front
 	indices[0]  = { 0, 1, 2 };
 	indices[1]  = { 2, 3, 0 };
-	
+
 	//Right
 	indices[2] = { 1, 5, 6 };
 	indices[3] = { 6, 2, 1 };
-	
+
 	//Back
 	indices[4] = { 7, 6, 5 };
 	indices[5] = { 5, 4, 7 };
@@ -693,11 +688,11 @@ arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	// Left
 	indices[6] = { 4, 0, 3 };
 	indices[7] = { 3, 7, 4 };
-	
+
 	//Bottom
 	indices[8] = { 4, 5, 1 };
 	indices[9] = { 1, 0, 4 };
-	
+
 	//Top
 	indices[10] = { 3, 2, 6 };
 	indices[11] = { 6, 7, 3 };
