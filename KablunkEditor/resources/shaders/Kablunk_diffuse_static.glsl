@@ -96,6 +96,9 @@ struct PointLight
     vec2 Padding;
 };
 
+layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
+layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
+
 layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
     uint Count;
@@ -107,6 +110,11 @@ layout(std140, push_constant) uniform Material
 	float AmbientStrength;
     float DiffuseStrength;
     float SpecularStrength;
+    vec3 AlbedoColor;
+    float Metalness;
+	float Roughness;
+	float Emission;
+    bool UseNormalMap;
 } u_MaterialUniforms;
 
 vec3 GetPointLightAttenuationValues(in float distance)
@@ -202,12 +210,39 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
     return result;
 }
 
+mat3 cotangent(vec3 N, vec3 p, vec2 uv)
+{
+  // get edge vectors of the pixel triangle
+  vec3 dp1 = dFdx(p);
+  vec3 dp2 = dFdy(p);
+  vec2 duv1 = dFdx(uv);
+  vec2 duv2 = dFdy(uv);
+
+  // solve the linear system
+  vec3 dp2perp = cross(dp2, N);
+  vec3 dp1perp = cross(N, dp1);
+  vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+  vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+  // construct a scale-invariant frame 
+  float invmax = 1.0 / sqrt(max(dot(T,T), dot(B,B)));
+  return mat3(normalize(T * invmax), normalize(B * invmax), N);
+}
+
+vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
+{
+    mat3 TBN = cotangent(normal, -view, texCoord);
+    return normalize(TBN * normalMap);
+}
+
 void main()
 {
-    vec3 color = vec3(1.0);
-    vec3 normal = normalize(v_Input.Normal);
+    vec3 color = texture(u_AlbedoTexture, v_Input.TexCoord).rgb;
+    vec3 normalMap = texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0 - 1.0;
+    
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
+    vec3 normal = perturb(normalMap, v_Input.Normal, viewDir, v_Input.TexCoord);
     vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
-    o_Color = vec4(color, 1.0) * (pLightsColor);
+    o_Color = vec4(color * u_MaterialUniforms.AlbedoColor, 1.0) * (pLightsColor);
 }

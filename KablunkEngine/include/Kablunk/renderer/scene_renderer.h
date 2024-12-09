@@ -14,7 +14,7 @@
 #include "Kablunk/renderer/backend/material.h"
 #include "Kablunk/renderer/backend/uniform_buffer_set.h"
 #include "Kablunk/renderer/backend/storage_buffer_set.h"
-#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/material_asset.h"
 #include "Kablunk/renderer/Mesh.h"
 
 // forward declaration
@@ -75,7 +75,7 @@ public:
 	void begin_scene(const scene_renderer_camera_t& camera);
 	void end_scene();
 
-	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<backend::material> override_material = {});
+	void submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<material_table> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<backend::material> override_material = {});
 
 	void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
 	bool is_multi_threaded() const { return m_use_threads; }
@@ -154,7 +154,7 @@ private:
 	{
 		arc<Mesh> Mesh;
 		uint32_t Submesh_index;
-		arc<MaterialTable> Material_table;
+		arc<material_table> Material_table;
 		arc<backend::material> Override_material;
 
 		uint32_t Instance_count = 0;

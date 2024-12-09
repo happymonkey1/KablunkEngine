@@ -130,6 +130,14 @@ public:
 class index_buffer : public RefCounted
 {
 public:
+    enum class index_type_t
+    {
+        u8,
+        u16,
+        u32
+    };
+
+public:
     ~index_buffer() override = default;
 
 	virtual void bind() const = 0;

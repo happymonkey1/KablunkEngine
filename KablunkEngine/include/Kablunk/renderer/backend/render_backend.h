@@ -51,12 +51,25 @@ public:
         uint32_t p_index_count = 0
     ) noexcept = 0;
 
-    virtual void render_instanced_submesh(
+    // Render a static mesh which has no skeletal animations and a flattened hierarchy
+    virtual void render_static_mesh(
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<Mesh>& p_mesh,
+        const arc<MeshData>& p_mesh_data,
+        u32 p_sub_mesh_index,
+        const arc<material_table>& p_material_table,
+        const arc<vertex_buffer>& p_transform_buffer,
+        u32 p_transform_offset,
+        u32 p_instance_count
+    ) noexcept = 0;
+
+    virtual void render_instanced_sub_mesh(
         arc<render_command_buffer> p_render_command_buffer,
         arc<pipeline> p_pipeline,
         arc<Mesh> p_mesh,
         u32 p_index,
-        arc<MaterialTable> p_material_table,
+        arc<material_table> p_material_table,
         arc<vertex_buffer> p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,

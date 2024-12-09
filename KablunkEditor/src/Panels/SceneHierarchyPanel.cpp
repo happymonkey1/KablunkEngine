@@ -373,16 +373,16 @@ static bool DrawVec3Control(const std::string& label, glm::vec3& values, float r
 }
 
 template <typename ComponentT>
-void DrawMaterialTable(arc<render::MaterialTable> mesh_material_table)
+void DrawMaterialTable(arc<render::material_table> mesh_material_table)
 {
 	if (UI::BeginTreeNode("Materials"))
 	{
 
-		for (size_t i = 0; i < mesh_material_table->GetMaterialCount(); i++)
+		for (size_t i = 0; i < mesh_material_table->get_material_count(); i++)
 		{
 			UI::BeginProperties();
 
-			if (i == mesh_material_table->GetMaterialCount())
+			if (i == mesh_material_table->get_material_count())
 				ImGui::Separator();
 
 
@@ -391,14 +391,79 @@ void DrawMaterialTable(arc<render::MaterialTable> mesh_material_table)
 			std::string id = fmt::format("{0}-{1}", label, i);
 			ImGui::PushID(id.c_str());
 
-			arc<render::MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
-			std::string mesh_material_name = mesh_material_asset->GetMaterial()->get_name();
+			arc<render::material_asset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+            auto& render_material = mesh_material_asset->get_material();
+			std::string mesh_material_name = render_material->get_name();
 			if (mesh_material_name.empty())
 				mesh_material_name = "Unnamed Material";
 
 			UI::PushItemDisabled();
 			UI::Property("Name", mesh_material_name);
-			UI::PopItemDisabled();
+            UI::PopItemDisabled();
+
+            // TODO: we should be able to determine properties based on loaded uniforms...
+            auto shader = render_material->get_shader();
+            const auto& resources = shader->get_resources();
+
+            for (const auto& [name, decl] : resources)
+            {
+                std::string foo = "";
+                UI::Property(name.c_str(), foo);
+            }
+
+            const auto& shader_buffers = shader->get_shader_buffers();
+            for (const auto& [buffer_name, buffer] : shader_buffers)
+            {
+                UI::PushItemDisabled();
+                UI::Property(buffer_name.c_str(), "");
+                UI::PopItemDisabled();
+
+                for (const auto& [uniform_name, uniform] : buffer.uniforms)
+                {
+                    const auto stripped_name = uniform_name.substr(uniform_name.find(".") + 1);
+
+                    switch (uniform.get_type())
+                    {
+                    case render::backend::shader_uniform_type_t::Bool:
+                    {
+                        bool uniform_value = render_material->get_bool(
+                            uniform_name
+                        );
+                        if (UI::Property(stripped_name.c_str(), &uniform_value))
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    case render::backend::shader_uniform_type_t::Vec3:
+                    {
+                        glm::vec3 uniform_value = render_material->get_vec3(uniform_name);
+                        if (UI::Property(stripped_name.c_str(), uniform_value))
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    case render::backend::shader_uniform_type_t::Float:
+                    {
+                        f32 uniform_value = render_material->get_float(uniform_name);
+                        if (UI::Property(stripped_name.c_str(), uniform_value), 0.01f, 0.0f, 1.0f)
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        UI::PushItemDisabled();
+                        UI::Property(stripped_name.c_str(), "");
+                        UI::PopItemDisabled();
+                    }
+                    }
+
+                }
+            }
+
 
 #if 0
 			if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
@@ -927,7 +992,7 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 					UI::Property("Submesh Index", submesh_index);
 				}
 
-				DrawMaterialTable<MeshComponent>(mesh->GetMaterials());
+				DrawMaterialTable<MeshComponent>(mesh->get_material_table());
 			}
 
 			UI::EndProperties();

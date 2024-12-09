@@ -11,6 +11,13 @@
 namespace kb::render::backend
 { // start namespace kb::render::backend
 
+struct texture_specification_t
+{
+    image_format_t m_format = image_format_t::RGBA;
+    u32 m_width = 1ul;
+    u32 m_height = 1ul;
+};
+
 class texture : public render_resource
 {
 public:

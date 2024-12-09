@@ -482,11 +482,11 @@ void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageF
 				KB_CORE_ASSERT(false, "module compilation failed");
 			}
 
-            auto begin = reinterpret_cast<const uint8_t*>(module.cbegin());
-            auto end = reinterpret_cast<const uint8_t*>(module.cend());
+            auto begin = reinterpret_cast<const u8*>(module.cbegin());
+            auto end = reinterpret_cast<const u8*>(module.cend());
 			const ptrdiff_t size = end - begin;
 
-			output_binary[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
+			output_binary[stage] = std::vector<u32>(module.cbegin(), module.cend());
 
 			std::filesystem::path p = m_file_path;
 			auto path = cache_dir / (p.filename().string() + extension);
@@ -497,14 +497,14 @@ void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageF
 			errno_t err = fopen_s(&f, cached_filepath.c_str(), "wb");
 			if (!err)
 			{
-				fwrite(output_binary[stage].data(), sizeof(uint32_t), output_binary[stage].size(), f);
+				fwrite(output_binary[stage].data(), sizeof(u32), output_binary[stage].size(), f);
 				fclose(f);
 			}
 		}
 	}
 }
 
-void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data)
+void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>>& shader_data)
 {
     KB_PROFILE_SCOPE;
 

@@ -8,6 +8,7 @@
 #include "Kablunk/renderer/shader_library.h"
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/Mesh.h"
+#include "Kablunk/renderer/virtual_texture_registry.h"
 #include "Kablunk/renderer/backend/pipeline.h"
 #include "Kablunk/renderer/backend/material.h"
 #include "Kablunk/renderer/backend/render_command_queue.h"
@@ -57,8 +58,22 @@ public:
 
     uint32_t get_current_frame_index() const noexcept;
 
+    // Retrieve an immutable arc to the shader library
     const arc<shader_library>& get_shader_library();
+    // Retrieve (and load if not already in the shader library) a shader
     const arc<backend::shader>& get_shader(const std::string& name);
+
+    // Retrieve an immutable reference to the virtual texture registry
+    auto get_virtual_texture_registry() const noexcept -> const virtual_texture_registry&
+    {
+        return *m_virtual_texture_registry;
+    }
+
+    // Retrieve a mutable reference to the virtual texture registry
+    auto get_virtual_texture_registry() noexcept -> virtual_texture_registry&
+    {
+        return *m_virtual_texture_registry;
+    }
 
     const renderer_options_t& get_config() const noexcept { return m_options; }
 
@@ -82,9 +97,24 @@ public:
     // Retrieves a mutable reference arc to the graphics context
     auto get_graphics_context() noexcept -> weak_ptr<backend::graphics_context> { return m_context; }
 
-	// ==============
-	// multithreading
-	// ==============
+    // ============
+    //   Textures
+    // ============
+
+    [[nodiscard]] auto create_texture(
+        const std::filesystem::path& p_filepath
+    ) const noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto create_texture(
+        backend::texture_specification_t p_specification,
+        const void* p_data
+    ) const noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto get_texture(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&;
+
+    // ============
+
+	// ==================
+	//   multithreading
+	// ==================
 
 	// wait for frame data to finish rendering
 	void wait_and_render(render_thread* p_rendering_thread);
@@ -176,11 +206,12 @@ private:
         std::vector<arc<backend::compute_pipeline>> compute_pipelines;
 	};
 
-	unordered_flat_map<uint64_t, shader_dependencies_t> m_shader_dependencies;
-	renderer_options_t m_options = { };
-	arc<shader_library> m_shader_library;
+	unordered_flat_map<uint64_t, shader_dependencies_t> m_shader_dependencies{};
+	renderer_options_t m_options = {};
+	arc<shader_library> m_shader_library{};
+    std::unique_ptr<virtual_texture_registry> m_virtual_texture_registry{};
 
-    arc<backend::graphics_context> m_context;
+    arc<backend::graphics_context> m_context{};
 
     backend::render_backend* m_backend{};
     backend::render_backend_type_t m_backend_type = backend::render_backend_type_t::vulkan;
@@ -202,7 +233,7 @@ private:
 	// resource freeing queues
     backend::render_command_queue m_resource_free_queue[k_resource_free_queue_size]{};
 	// render command queues
-    backend::render_command_queue m_command_queues[k_render_command_queue_size];
+    backend::render_command_queue m_command_queues[k_render_command_queue_size]{};
 
 	friend class ::kb::EditorLayer;
 };

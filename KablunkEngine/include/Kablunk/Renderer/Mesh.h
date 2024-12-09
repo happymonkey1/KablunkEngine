@@ -8,7 +8,7 @@
 #include "Kablunk/Renderer/backend/buffer.h"
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/backend/shader.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/material_asset.h"
 #include "Kablunk/Math/vec.hpp"
 
 #include <vector>
@@ -146,8 +146,8 @@ public:
 	arc<backend::vertex_buffer> get_vertex_buffer() const { return m_vertex_buffer; }
 	arc<backend::index_buffer> get_index_buffer() const { return m_index_buffer; }
 
-	std::vector<arc<backend::material>>& get_materials() { return m_materials; }
-	const std::vector<arc<backend::material>>& get_materials() const { return m_materials; }
+	std::vector<arc<material_asset>>& get_materials() { return m_materials; }
+	const std::vector<arc<material_asset>>& get_materials() const { return m_materials; }
 
 	const std::vector<arc<backend::texture_2d>>& get_textures() const { return m_textures; }
 	const std::vector<arc<backend::texture_2d>>& get_normal_maps() const { return m_normal_map; }
@@ -195,7 +195,7 @@ private:
 	arc<backend::shader> m_mesh_shader;
 	std::vector<arc<backend::texture_2d>> m_textures;
 	std::vector<arc<backend::texture_2d>> m_normal_map;
-	std::vector<arc<backend::material>> m_materials;
+	std::vector<arc<material_asset>> m_materials;
 
 	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
 
@@ -231,17 +231,17 @@ public:
 	arc<MeshData> GetMeshData() const { return m_mesh_data; }
 	void SetMeshData(arc<MeshData> mesh_data) { m_mesh_data = mesh_data; }
 
-	arc<MaterialTable>& GetMaterials() { return m_material_table; }
-	const arc<MaterialTable>& GetMaterials() const { return m_material_table; }
+	arc<material_table>& get_material_table() { return m_material_table; }
+	const arc<material_table>& get_material_table() const { return m_material_table; }
 
 private:
-    auto init_material_table(const std::vector<arc<backend::material>>& p_materials) noexcept -> void;
+    auto init_material_table(const std::vector<arc<material_asset>>& p_materials) noexcept -> void;
 
 private:
 	arc<MeshData> m_mesh_data;
 	std::vector<u32> m_submeshes;
 
-	arc<MaterialTable> m_material_table;
+	arc<material_table> m_material_table;
 };
 
 // #TODO move elsewhere

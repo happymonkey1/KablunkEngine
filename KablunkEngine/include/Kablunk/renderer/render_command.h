@@ -8,7 +8,7 @@
 #include "Kablunk/renderer/backend/uniform_buffer_set.h"
 #include "Kablunk/renderer/backend/storage_buffer_set.h"
 #include "Kablunk/renderer/Mesh.h"
-#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/material_asset.h"
 #include "Kablunk/renderer/backend/compute_pipeline.h"
 
 #include <mutex>

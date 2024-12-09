@@ -255,7 +255,7 @@ void scene_renderer::end_scene()
 void scene_renderer::submit_mesh(
     arc<Mesh> mesh,
     uint32_t submesh_index,
-    arc<MaterialTable> material_table,
+    arc<material_table> material_table,
     const glm::mat4& transform /*= glm::mat4{ 1.0f }*/,
     arc<backend::material> override_material/* = nullptr */
 )
@@ -388,7 +388,7 @@ void scene_renderer::geometry_pass()
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
 	for (const auto& draw_command_data : m_draw_list)
 	{
-        Singleton<Renderer>::get().get_render_backend()->render_instanced_submesh(
+        Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh(
             m_command_buffer,
             geometry_pipeline,
             draw_command_data.Mesh,

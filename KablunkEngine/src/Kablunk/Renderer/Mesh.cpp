@@ -61,7 +61,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	if (m_is_animated)
 		KB_CORE_INFO("ANIMATED MESH!");
 
-	m_mesh_shader = m_is_animated ? render::get_shader("Kablunk_diffuse_anim") : render::get_shader("Kablunk_diffuse_static");
+	m_mesh_shader = m_is_animated ? render::get_shader(shader_library::k_diffuse_anim_shader_name) : render::get_shader(shader_library::k_diffuse_static_shader_name);
 
 	m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
@@ -190,212 +190,152 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		}
 	}
 
-#if 0
-    auto white_texture = Singleton<Renderer>::get().get_white_texture();
-    if (scene->HasMaterials() && render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
-	{
-		m_textures.resize(scene->mNumMaterials);
-		m_materials.resize(scene->mNumMaterials);
+    const auto& white_texture = Singleton<Renderer>::get().get_white_texture();
+    if (scene->HasMaterials())
+    {
+        m_materials.resize(scene->mNumMaterials);
+        for (u32 i = 0; i < scene->mNumMaterials; ++i)
+        {
+            const auto* ai_material = scene->mMaterials[i];
+            auto ai_material_name = ai_material->GetName();
+            auto material = backend::material::create(
+                m_mesh_shader,
+                ai_material_name.data
+            );
+            auto material_asset = material_asset::create(material);
 
-		for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
-		{
-			auto ai_material = scene->mMaterials[i];
-			auto ai_material_name = ai_material->GetName();
+            KB_CORE_INFO("[mesh]: Adding material {} '{}'", i, ai_material_name.data);
 
-			auto mat = Material::Create(m_mesh_shader, ai_material_name.data);
-			m_materials[i] = mat;
+            aiString ai_texture_path;
 
-			aiString ai_texture_path;
-			uint32_t texture_count = ai_material->GetTextureCount(aiTextureType_DIFFUSE);
+            glm::vec3 albedo_color{ 0.8f };
+            f32 emission = 0.0f;
+            aiColor3D ai_color, ai_emission;
+            if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, ai_color) == AI_SUCCESS)
+            {
+                auto srgb_from_linear = [](float linear_value)
+                    {
+                        return linear_value <= 0.0031308f
+                            ? linear_value * 12.92f
+                            : powf(linear_value, 1.0f / 2.2f) * 1.055f - 0.055f;
+                    };
+                albedo_color = {
+                    srgb_from_linear(ai_color.r),
+                    srgb_from_linear(ai_color.g),
+                    srgb_from_linear(ai_color.b)
+                };
+            }
 
-			glm::vec3 albedo_color{ 0.8f };
-			float emission = 0.0f;
-			aiColor3D ai_color, ai_emission;
+            if (ai_material->Get(AI_MATKEY_COLOR_EMISSIVE, ai_emission) == AI_SUCCESS)
+            {
+                emission = ai_emission.r;
+            }
 
-			float shininess, metalness;
+            material_asset->SetAlbedoColor(albedo_color);
+            material_asset->SetEmission(emission);
 
-			if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, ai_color) == AI_SUCCESS)
-				albedo_color = { ai_color.r, ai_color.g, ai_color.b };
+            // TODO: roughness
+            // TODO: relfectivity
 
-			if (ai_material->Get(AI_MATKEY_COLOR_EMISSIVE, ai_emission) == AI_SUCCESS)
-				emission = ai_emission.r;
+            // Try load albedo
+            {
+                // Check for PBR albedo
+                bool has_albedo_map = ai_material->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &ai_texture_path) == AI_SUCCESS;
+                if (!has_albedo_map)
+                {
+                    // Check for diffuse texture
+                    has_albedo_map = ai_material->GetTexture(aiTextureType_DIFFUSE, 0, &ai_texture_path) == AI_SUCCESS;
+                }
 
-			if (ai_material->Get(AI_MATKEY_SHININESS, shininess) != AI_SUCCESS)
-				shininess = 80.0f;
+                if (has_albedo_map)
+                {
+                    KB_CORE_INFO("[mesh]: Trying to load albedo map");
+                    virtual_texture_handle texture_handle;
+                    if (auto ai_texture_embedded = scene->GetEmbeddedTexture(ai_texture_path.C_Str()))
+                    {
+                        const u32 width = ai_texture_embedded->mWidth;
+                        const u32 height = ai_texture_embedded->mHeight;
+                        // Create a texture that is handled owned by the renderer
+                        texture_handle = Singleton<Renderer>::get().create_texture(
+                            backend::texture_specification_t{
+                                .m_format = backend::image_format_t::RGBA,
+                                .m_width = width,
+                                .m_height = height,
+                            },
+                            ai_texture_embedded->pcData
+                        );
+                    }
+                    else
+                    {
+                        KB_CORE_INFO(
+                            "[mesh]: Loading material albedo map from '{}'",
+                            ai_texture_path.C_Str()
+                        );
+                        // Create a texture that is owned by the renderer
+                        texture_handle = Singleton<Renderer>::get().create_texture(
+                            std::filesystem::path{ ai_texture_path.C_Str() }
+                        );
+                    }
 
-			if (ai_material->Get(AI_MATKEY_REFLECTIVITY, metalness) != AI_SUCCESS)
-				metalness = 0.0f;
+                    // TODO: material asset should take a handle instead
+                    material_asset->SetAlbedoMap(Singleton<Renderer>::get().get_texture(texture_handle));
+                    material_asset->SetAlbedoColor(glm::vec3{ 1.0f });
+                }
+            }
 
-			float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
+            // Try load normal
+            {
+                KB_CORE_INFO("[mesh]: Trying to load normal map");
+                // Check for PBR albedo
+                bool has_normal_map = ai_material->GetTexture(aiTextureType_NORMALS, 0, &ai_texture_path) == AI_SUCCESS;
+                if (has_normal_map)
+                {
+                    virtual_texture_handle texture_handle;
+                    if (auto ai_texture_embedded = scene->GetEmbeddedTexture(ai_texture_path.C_Str()))
+                    {
+                        const u32 width = ai_texture_embedded->mWidth;
+                        const u32 height = ai_texture_embedded->mHeight;
+                        // Create a texture that is handled owned by the renderer
+                        texture_handle = Singleton<Renderer>::get().create_texture(
+                            backend::texture_specification_t{
+                                .m_format = backend::image_format_t::RGBA,
+                                .m_width = width,
+                                .m_height = height,
+                            },
+                            ai_texture_embedded->pcData
+                        );
+                    }
+                    else
+                    {
+                        KB_CORE_INFO(
+                            "[mesh]: Loading material normal map from '{}'",
+                            ai_texture_path.C_Str()
+                        );
+                        // Create a texture that is owned by the renderer
+                        texture_handle = Singleton<Renderer>::get().create_texture(
+                            std::filesystem::path{ ai_texture_path.C_Str() }
+                        );
+                    }
 
-			mat->Set("u_MaterialUniforms.AlbedoColor", albedo_color);
-			mat->Set("u_MaterialUniforms.Emission", emission);
+                    // TODO: material asset should take a handle instead
+                    material_asset->SetNormalMap(Singleton<Renderer>::get().get_texture(texture_handle));
+                    material_asset->SetUseNormalMap(true);
+                }
+            }
 
-			// Albedo
-			bool has_albedo_map = ai_material->GetTexture(aiTextureType_DIFFUSE, 0, &ai_texture_path) == AI_SUCCESS;
-			bool fallback = !has_albedo_map;
-			if (has_albedo_map)
-			{
-				std::filesystem::path path = m_filepath;
-				auto parent_path = path.parent_path();
-				parent_path /= std::string(ai_texture_path.data);
-				std::string texture_path = parent_path.string();
+            // TODO: roughness map
+            // TODO: metalness map
 
-				// #TODO texture properties
-				//TextureProperties props;
-				//props.SRGB = true;
-				auto texture = Texture2D::Create(texture_path);
-				if (texture)
-				{
-					m_textures[i] = texture;
-					mat->Set("u_AlbedoTexture", texture);
-					mat->Set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
-				}
-				else
-				{
-					m_textures[i] = white_texture;
-					fallback = true;
-				}
-			}
-			
-			if (fallback)
-				mat->Set("u_AlbedoTexture", white_texture);
-
-			// Normal Map
-			bool has_normal_map = ai_material->GetTexture(aiTextureType_NORMALS, 0, &ai_texture_path) == AI_SUCCESS;
-			fallback = !has_normal_map;
-			if (has_normal_map)
-			{
-				std::filesystem::path path = m_filepath;
-				auto parent_path = path.parent_path();
-				parent_path /= std::string(ai_texture_path.data);
-				std::string texture_path = parent_path.string();
-
-				// #TODO texture properties
-				//TextureProperties props;
-				//props.SRGB = true;
-				auto texture = Texture2D::Create(texture_path);
-				if (texture)
-				{
-					m_textures[i] = texture;
-					mat->Set("u_NormalTexture", texture);
-					mat->Set("u_MaterialUniforms.UseNormalMap", true);
-				}
-				else
-				{
-					m_textures[i] = white_texture;
-					fallback = true;
-				}
-			}
-
-			if (fallback)
-			{
-				mat->Set("u_NormalTexture", white_texture);
-				mat->Set("u_MaterialUniforms.UseNormalMap", false);
-			}
-
-			// Roughness map
-			bool has_roughness_map = ai_material->GetTexture(aiTextureType_SHININESS, 0, &ai_texture_path) == AI_SUCCESS;
-			fallback = !has_roughness_map;
-			if (has_roughness_map)
-			{
-				// TODO: Temp - this should be handled by Hazel's filesystem
-				std::filesystem::path path = m_filepath;
-				auto parent_path = path.parent_path();
-				parent_path /= std::string(ai_texture_path.data);
-				std::string texture_path = parent_path.string();
-				auto texture = Texture2D::Create(texture_path);
-				if (texture)
-				{
-					m_textures.push_back(texture);
-					mat->Set("u_RoughnessTexture", texture);
-					mat->Set("u_MaterialUniforms.Roughness", 1.0f);
-				}
-				else
-					fallback = true;
-				
-			}
-
-			if (fallback)
-			{
-				mat->Set("u_RoughnessTexture", white_texture);
-				mat->Set("u_MaterialUniforms.Roughness", roughness);
-			}
-
-			// Metalness Textures
-			bool metalness_texture_found = false;
-			for (uint32_t p = 0; p < ai_material->mNumProperties; p++)
-			{
-				auto prop = ai_material->mProperties[p];
-
-				if (prop->mType == aiPTI_String)
-				{
-					uint32_t strLength = *(uint32_t*)prop->mData;
-					std::string str(prop->mData + 4, strLength);
-
-					std::string key = prop->mKey.data;
-					if (key == "$raw.ReflectionFactor|file")
-					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
-						std::filesystem::path path = m_filepath;
-						auto parent_path = path.parent_path();
-						parent_path /= str;
-						std::string texture_path = parent_path.string();
-						auto texture = Texture2D::Create(texture_path);
-						if (texture)
-						{
-							metalness_texture_found = true;
-							m_textures.push_back(texture);
-							mat->Set("u_MetalnessTexture", texture);
-							mat->Set("u_MaterialUniforms.Metalness", 1.0f);
-						}
-
-						break;
-					}
-				}
-			}
-
-			fallback = !metalness_texture_found;
-			if (fallback)
-			{
-				mat->Set("u_MetalnessTexture", white_texture);
-				mat->Set("u_MaterialUniforms.Metalness", metalness);
-			}
-
-		}
-	}
-	else
-#endif
-
-	{
-#if 0
-		if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
-		{
-			auto mat = Material::Create(m_mesh_shader, "Kablunk-Default");
-			// Props
-			mat->Set("u_MaterialUniforms.AlbedoColor", glm::vec3(0.8f));
-			mat->Set("u_MaterialUniforms.Emission", 0.0f);
-			mat->Set("u_MaterialUniforms.Metalness", 0.0f);
-			mat->Set("u_MaterialUniforms.Roughness", 0.8f);
-			mat->Set("u_MaterialUniforms.UseNormalMap", false);
-
-			// textures
-			mat->Set("u_AlbedoTexture", white_texture);
-			mat->Set("u_MetalnessTexture", white_texture);
-			mat->Set("u_RoughnessTexture", white_texture);
-			m_materials.push_back(mat);
-		}
-		else if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
-#endif
-		{
-			auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
-			mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
-			mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-			mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
-			m_materials.push_back(mat);
-		}
-	}
-
+            m_materials[i] = material_asset;
+        }
+    }
+    else
+    {
+        if (scene->HasMeshes())
+        {
+            m_materials.push_back(material_asset::create(backend::material::create(m_mesh_shader)));
+        }
+    }
 
 	if (m_is_animated)
 		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), static_cast<u32>(m_animated_vertices.size()) * sizeof(animated_vertex_t));
@@ -431,7 +371,9 @@ MeshData::MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<In
 		mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
 		mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
 		mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
-		m_materials.push_back(mat);
+        auto material_asset = material_asset::create(mat);
+
+		m_materials.push_back(material_asset);
 
 #if 0
 	}
@@ -609,12 +551,12 @@ void Mesh::set_sub_meshes(const std::vector<u32>& p_sub_meshes)
 	}
 }
 
-auto Mesh::init_material_table(const std::vector<arc<backend::material>>& p_materials) noexcept -> void
+auto Mesh::init_material_table(const std::vector<arc<material_asset>>& p_materials) noexcept -> void
 {
-    m_material_table = arc<MaterialTable>::Create(p_materials.size());
+    m_material_table = arc<material_table>::Create(p_materials.size());
     for (size_t i = 0; i < p_materials.size(); ++i)
     {
-        m_material_table->SetMaterial(static_cast<u32>(i), arc<MaterialAsset>::Create(p_materials[i]));
+        m_material_table->SetMaterial(static_cast<u32>(i), p_materials[i]);
     }
 }
 

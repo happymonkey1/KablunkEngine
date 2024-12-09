@@ -166,6 +166,7 @@ auto virtual_texture_registry::import_texture_from_disk(
     auto path_str = p_specification.m_path.string();
     const auto new_texture_handle = raw_texture_handle::into(std::string_view{ path_str });
 
+    // Check if texture is already imported
     if (m_raw_textures.contains(new_texture_handle))
     {
         return new_texture_handle;

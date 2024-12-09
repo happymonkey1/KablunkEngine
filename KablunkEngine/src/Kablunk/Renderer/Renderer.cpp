@@ -23,17 +23,38 @@ void Renderer::init()
 	// ==========
 	// 3d shaders
 	// ==========
-    m_shader_library->load("resources/shaders/Kablunk_diffuse_static.glsl");
-	m_shader_library->load("resources/shaders/scene_composite.glsl");
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_diffuse_static_shader_name
+    ));
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_scene_composite_name
+    ));
 
 	// ==========
 	// 2d shaders
-	// ==========
-    m_shader_library->load("resources/shaders/Renderer2D_Circle.glsl");
-    m_shader_library->load("resources/shaders/Renderer2D_Quad.glsl");
-    m_shader_library->load("resources/shaders/Renderer2D_Line.glsl");
-    m_shader_library->load("resources/shaders/Renderer2D_UI.glsl");
-    m_shader_library->load("resources/shaders/Renderer2D_Text.glsl");
+	//
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_renderer_2d_quad_name
+    ));
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_renderer_2d_circle_name
+    ));
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_renderer_2d_line_name
+    ));
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_renderer_2d_UI_name
+    ));
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_renderer_2d_text_name
+    ));
 	// ==========
 
     // Load renderer's white texture
@@ -44,6 +65,8 @@ void Renderer::init()
         1,
         &white_texture_data
     );
+
+    m_virtual_texture_registry = virtual_texture_registry::create();
 
     const auto& application = Application::Get();
     if (application.get_render_thread().is_running())
@@ -135,6 +158,27 @@ uint32_t Renderer::get_current_frame_index() const noexcept
         return 0;
     }
     }
+}
+
+auto Renderer::create_texture(
+    const std::filesystem::path& p_filepath
+) const noexcept -> virtual_texture_handle
+{
+    return m_virtual_texture_registry->load_individual_texture(p_filepath);
+}
+
+auto Renderer::create_texture(
+    backend::texture_specification_t p_specification,
+    const void* p_data
+)  const noexcept -> virtual_texture_handle
+{
+    KB_CORE_ASSERT(false, "not implemented!");
+    return {};
+}
+
+auto Renderer::get_texture(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&
+{
+    return m_virtual_texture_registry->get_texture_2d_by_virtual_handle(p_handle);
 }
 
 void Renderer::wait_and_render(render_thread* p_rendering_thread)

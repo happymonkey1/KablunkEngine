@@ -6,7 +6,7 @@
 
 #include "kablunk/renderer/backend/vulkan/vulkan_render_pass.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_material.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/material_asset.h"
 
 #include <vulkan/vulkan.h>
 

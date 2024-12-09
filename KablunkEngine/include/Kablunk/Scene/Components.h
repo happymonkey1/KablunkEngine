@@ -18,7 +18,7 @@
 
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/material_asset.h"
 #include "kablunk/renderer/render_command.h"
 
 #include "Kablunk/Project/ProjectManager.h"
@@ -266,14 +266,14 @@ struct NativeScriptComponent
 struct MeshComponent
 {
 	arc<render::Mesh> Mesh;
-	arc<render::MaterialTable> Material_table = arc<render::MaterialTable>::Create();
+	arc<render::material_table> Material_table = arc<render::material_table>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
 	MeshComponent(const arc<render::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ arc<render::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ arc<render::material_table>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{

@@ -582,12 +582,99 @@ void vulkan_render_backend::render_geometry(
         });
 }
 
-void vulkan_render_backend::render_instanced_submesh(
+void vulkan_render_backend::render_static_mesh(
+    const arc<render_command_buffer>& p_render_command_buffer,
+    const arc<pipeline>& p_pipeline,
+    const arc<Mesh>& p_mesh,
+    const arc<MeshData>& p_mesh_data,
+    const u32 p_sub_mesh_index,
+    const arc<material_table>& p_material_table,
+    const arc<vertex_buffer>& p_transform_buffer,
+    const u32 p_transform_offset,
+    const u32 p_instance_count
+) noexcept
+{
+    submit([
+        vulkan_render_command_buffer = p_render_command_buffer.As<vulkan_render_command_buffer>(),
+        vulkan_pipeline = p_pipeline.As<vulkan_pipeline>(),
+        mesh = p_mesh,
+        mesh_data = p_mesh_data,
+        vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>(),
+        sub_mesh_index = p_sub_mesh_index,
+        material_table = p_material_table,
+        instance_count = p_instance_count
+    ]()
+        {
+            const u32 current_frame_index = rt_get_current_frame_index();
+            const auto vk_command_buffer = vulkan_render_command_buffer->get_active_command_buffer();
+
+            // Bind mesh vertex buffer
+            mesh_data->get_vertex_buffer()
+                .As<vulkan_vertex_buffer>()
+                ->rt_vk_bind_buffer(vk_command_buffer, 0);
+
+            // Bind transform buffer
+            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1);
+
+            // Bind mesh index buffer
+            mesh_data->get_index_buffer()
+                .As<vulkan_index_buffer>()
+                ->rt_vk_bind_buffer(vk_command_buffer);
+
+            const auto& sub_meshes = mesh_data->get_sub_meshes();
+            const auto& sub_mesh = sub_meshes[sub_mesh_index];
+            const auto& mesh_material_table = mesh->get_material_table();
+            const u32 material_count = mesh_material_table->get_material_count();
+            // Try retrieve material from material table override.
+            // Otherwise use base material table from mesh.
+            const auto& material = material_table->HasMaterial(sub_mesh.Material_index) ?
+                material_table->GetMaterial(sub_mesh.Material_index) :
+                mesh_material_table->GetMaterial(sub_mesh.Material_index);
+            auto vulkan_material = material->get_material().As<vk::vulkan_material>();
+
+            const auto vk_pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
+            const auto vk_descriptor_set = vulkan_material->get_vk_descriptor_set(current_frame_index);
+            if (vk_descriptor_set)
+            {
+                vkCmdBindDescriptorSets(
+                    vk_command_buffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    vk_pipeline_layout,
+                    0,
+                    1,
+                    &vk_descriptor_set,
+                    0,
+                    nullptr
+                );
+            }
+
+            const auto& uniform_storage_buffer = vulkan_material->get_uniform_storage_buffer();
+            vkCmdPushConstants(
+                vk_command_buffer,
+                vk_pipeline_layout,
+                VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                static_cast<u32>(uniform_storage_buffer.size()),
+                uniform_storage_buffer.get()
+            );
+
+            vkCmdDrawIndexed(
+                vk_command_buffer,
+                sub_mesh.IndexCount,
+                instance_count,
+                sub_mesh.BaseIndex,
+                sub_mesh.BaseVertex,
+                0
+            );
+        });
+}
+
+void vulkan_render_backend::render_instanced_sub_mesh(
     arc<render_command_buffer> p_render_command_buffer,
     arc<pipeline> p_pipeline,
     arc<Mesh> p_mesh,
     u32 p_index,
-    arc<MaterialTable> p_material_table,
+    arc<material_table> p_material_table,
     arc<vertex_buffer> p_transform_buffer,
     u32 p_transform_offset,
     u32 p_bone_transforms_offset,
@@ -624,12 +711,12 @@ void vulkan_render_backend::render_instanced_submesh(
 
             // Retrieve sub mesh material
             const sub_mesh_t& sub_mesh = mesh_data->get_sub_meshes()[p_index];
-            const auto& mesh_material_table = p_mesh->GetMaterials();
+            const auto& mesh_material_table = p_mesh->get_material_table();
             // uint32_t material_count = mesh_material_table->GetMaterialCount();
-            arc<MaterialAsset> material = p_material_table->HasMaterial(sub_mesh.Material_index) ?
+            arc<material_asset> material = p_material_table->HasMaterial(sub_mesh.Material_index) ?
                 p_material_table->GetMaterial(sub_mesh.Material_index) :
                 mesh_material_table->GetMaterial(sub_mesh.Material_index);
-            arc<vulkan_material> vulkan_material = material->GetMaterial().As<vk::vulkan_material>();
+            arc<vulkan_material> vulkan_material = material->get_material().As<vk::vulkan_material>();
 
             // Bind vulkan pipeline
             arc<vulkan_pipeline> pipeline = p_pipeline.As<vk::vulkan_pipeline>();
@@ -982,4 +1069,5 @@ auto vulkan_render_backend::rt_allocate_material_descriptor_set(
     }
     return vk_descriptor_set;
 }
+
 } // end namespace kb::render::backend::vk

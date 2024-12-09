@@ -9,6 +9,18 @@ namespace kb::render
 class shader_library : public RefCounted
 {
 public:
+    // Engine shader names
+    inline static constexpr const char* k_diffuse_static_shader_name = "Kablunk_diffuse_static";
+    inline static constexpr const char* k_diffuse_anim_shader_name = "Kablunk_diffuse_anim";
+    inline static constexpr const char* k_renderer_2d_quad_name = "Renderer2D_Quad";
+    inline static constexpr const char* k_renderer_2d_circle_name = "Renderer2D_Circle";
+    inline static constexpr const char* k_renderer_2d_line_name = "Renderer2D_Line";
+    inline static constexpr const char* k_renderer_2d_text_name = "Renderer2D_Text";
+    inline static constexpr const char* k_renderer_2d_UI_name = "Renderer2D_UI";
+    inline static constexpr const char* k_scene_composite_name = "scene_composite";
+
+    inline static constexpr const char* k_default_shader_name = k_diffuse_static_shader_name;
+public:
     shader_library() = default;
     ~shader_library() noexcept override = default;
 

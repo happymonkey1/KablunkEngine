@@ -13,12 +13,15 @@ namespace kb::render
 { // start namespace kb::render
 
 // TODO: this should not be with rendering...
-class MaterialAsset : public RefCounted
+class material_asset : public RefCounted
 {
 public:
-	MaterialAsset();
-	MaterialAsset(arc<backend::material> material);
-    ~MaterialAsset() override = default;
+	material_asset();
+	material_asset(const arc<backend::material>& material);
+    ~material_asset() override = default;
+
+    static auto create() noexcept -> arc<material_asset>;
+    static auto create(const arc<backend::material>& p_material) noexcept -> arc<material_asset>;
 
 	glm::vec3& GetAlbedoColor();
 	void SetAlbedoColor(const glm::vec3& albedo);
@@ -50,37 +53,38 @@ public:
 	void SetRoughnessMap(arc<backend::texture_2d> texture);
 	void ClearRoughnessMap();
 
-	arc<backend::material> GetMaterial() const { return m_material; }
+	auto get_material() const noexcept -> const arc<backend::material>& { return m_material; }
+    auto get_material() noexcept -> arc<backend::material>& { return m_material; }
 private:
 	arc<backend::material> m_material;
 };
 
-class MaterialTable : public RefCounted
+class material_table : public RefCounted
 {
 public:
-	MaterialTable(uint32_t material_count = 1);
-	MaterialTable(arc<MaterialTable> other);
-	~MaterialTable() = default;
+	material_table(uint32_t material_count = 1);
+	material_table(arc<material_table> other);
+	~material_table() = default;
 
 	bool HasMaterial(uint32_t material_index) const { return m_materials.find(material_index) != m_materials.end(); }
-	void SetMaterial(uint32_t index, arc<MaterialAsset> material);
+	void SetMaterial(uint32_t index, arc<material_asset> material);
 	void ClearMaterial(uint32_t index);
 
-	const arc<MaterialAsset>& GetMaterial(uint32_t index) const
+	const arc<material_asset>& GetMaterial(uint32_t index) const
 	{
 		KB_CORE_ASSERT(HasMaterial(index), "Material not found in map!");
 		return m_materials.at(index);
 	}
 
-	std::map<uint32_t, arc<MaterialAsset>>& GetMaterials() { return m_materials; }
-	const std::map<uint32_t, arc<MaterialAsset>>& GetMaterials() const { return m_materials; }
+	std::map<uint32_t, arc<material_asset>>& GetMaterials() { return m_materials; }
+	const std::map<uint32_t, arc<material_asset>>& GetMaterials() const { return m_materials; }
 
-	uint32_t GetMaterialCount() const { return m_material_count; }
+	uint32_t get_material_count() const { return m_material_count; }
 	void SetMaterialCount(uint32_t new_count) { m_material_count = new_count; }
 
 	void Clear();
 private:
-	std::map<uint32_t, arc<MaterialAsset>> m_materials;
+	std::map<uint32_t, arc<material_asset>> m_materials;
 	uint32_t m_material_count;
 };
 

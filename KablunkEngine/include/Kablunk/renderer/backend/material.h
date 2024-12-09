@@ -16,7 +16,6 @@ enum class MaterialFlag
 	TwoSided	= BIT(3)
 };
 
-
 class material : public RefCounted
 {
 public:
