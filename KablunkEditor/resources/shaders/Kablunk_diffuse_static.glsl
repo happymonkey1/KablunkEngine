@@ -240,7 +240,7 @@ void main()
 {
     vec3 color = texture(u_AlbedoTexture, v_Input.TexCoord).rgb;
     vec3 normalMap = texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0 - 1.0;
-    
+
     // Ambient
     vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
     // vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor;
@@ -248,6 +248,7 @@ void main()
 
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
     vec3 normal = normalize(v_Input.Normal);
+    // TODO: https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     // vec3 normal = perturb(normalMap, normalize(v_Input.Normal), viewDir, v_Input.TexCoord);
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 

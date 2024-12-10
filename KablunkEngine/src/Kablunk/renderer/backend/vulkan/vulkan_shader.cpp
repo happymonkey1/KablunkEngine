@@ -478,6 +478,10 @@ void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageF
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 			{
+                std::filesystem::path p = m_file_path;
+                auto path = cache_dir / (p.filename().string() + extension);
+                std::string cached_file_path = path.string();
+                std::filesystem::remove(cached_file_path);
 				KB_CORE_ERROR("{0}", module.GetErrorMessage());
 				KB_CORE_ASSERT(false, "module compilation failed");
 			}

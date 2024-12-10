@@ -724,8 +724,6 @@ void vulkan_render_backend::render_instanced_sub_mesh(
             const VkPipelineLayout vk_pipeline_layout = pipeline->get_vk_pipeline_layout();
             vkCmdBindPipeline(vk_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
-            // #TODO line width
-
             if (vulkan_material)
             {
                 const auto vk_descriptor_set = vulkan_material->get_vk_descriptor_set(frame_index);
