@@ -177,6 +177,7 @@ private:
 
     arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
+    arc<backend::uniform_buffer_set> m_directional_light_set{};
 	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
     point_light_ub_t* m_point_lights_ub = new point_light_ub_t{};

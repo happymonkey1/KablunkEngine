@@ -257,6 +257,43 @@ namespace kb
 			UI::PropertyReadOnlyUint64("Editor Scene UUID", m_editor_scene->GetUUID());
 			UI::PropertyReadOnlyUint64("Runtime Scene UUID", m_runtime_scene.get() ? m_runtime_scene->GetUUID() : 0ull);
 
+            // Scene directional light
+			{
+                auto& directional_light = m_active_scene->get_directional_light_data();
+
+                bool enabled = directional_light.m_enabled;
+                if (UI::Property("Directional Light Enabled", &enabled))
+                {
+                    directional_light.m_enabled = enabled;
+                }
+
+                auto& direction = directional_light.m_direction;
+                glm::vec3 dir{
+                    direction.x,
+                    direction.y,
+                    direction.z,
+                };
+                if (UI::Property("Directional Light Direction", dir, 0.1f, -1.0f, 1.0f))
+                {
+                    direction.x = dir.x;
+                    direction.y = dir.y;
+                    direction.z = dir.z;
+                }
+
+                auto& radiance = directional_light.m_radiance;
+                glm::vec3 rad{
+                    radiance.x,
+                    radiance.y,
+                    radiance.z,
+                };
+                if (UI::Property("Directional Light Radiance", rad, 0.1f, 0.0f, 1.0f))
+                {
+                    radiance.x = rad.x;
+                    radiance.y = rad.y;
+                    radiance.z = rad.z;
+                }
+			}
+
 			UI::EndProperties();
 
 			ImGui::End();
@@ -1364,7 +1401,6 @@ namespace kb
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
 					m_renderer_2d->draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
-
 				}
 			}
 			// Circles

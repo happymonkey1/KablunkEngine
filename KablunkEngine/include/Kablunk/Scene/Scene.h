@@ -43,12 +43,24 @@ struct point_light_t
 
 static_assert(sizeof(point_light_t) % 4 == 0);
 
+struct directional_light_t
+{
+    vec3_packed m_direction = vec3_packed{ -0.2f, -1.0f, -0.3f };
+    f32 m_multiplier = 1.0f;
+    vec3_packed m_radiance = vec3_packed{ 1.0f, 1.0f, 1.0f };
+    bool m_enabled = false;
+    char padding[3]{ 0 };
+};
+
+static_assert(sizeof(directional_light_t) == 32);
+
 struct LightEnvironmentData
 {
 	// #TODO Directional Lights
 
-	std::vector<point_light_t> point_lights;
-	size_t GetPointLightsSize() const { return point_lights.size() * sizeof(point_light_t); }
+    directional_light_t m_directional_light;
+	std::vector<point_light_t> m_point_lights;
+	size_t GetPointLightsSize() const { return m_point_lights.size() * sizeof(point_light_t); }
 };
 
 class Scene : public RefCounted
@@ -115,6 +127,9 @@ public:
 
 	glm::mat4 get_world_space_transform_matrix(Entity entity) const;
 	TransformComponent get_world_space_transform(Entity entity) const;
+
+    auto get_directional_light_data() const noexcept -> const directional_light_t& { return m_directional_light; }
+    auto get_directional_light_data() noexcept -> directional_light_t& { return m_directional_light; }
 private:
 	template <typename T>
 	void OnComponentAdded(Entity entity, T& component);
@@ -139,6 +154,7 @@ private:
 
 	b2World* m_box2D_world = nullptr;
 
+    directional_light_t m_directional_light;
 	LightEnvironmentData m_light_environment;
 
 	// reference to primary camera entity. set when a CameraComponent is created that is tagged with primary, 

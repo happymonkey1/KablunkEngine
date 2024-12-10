@@ -94,6 +94,8 @@ struct PointLight
     float MinRadius;
     float Falloff;
 
+    // TODO: angles
+
     vec2 Padding;
 };
 
@@ -105,6 +107,19 @@ layout(std140, set = 1, binding = 1) uniform PointLightsData
     uint Count;
     PointLight Lights[128];
 } u_PointLights;
+
+// Directional light represents an "infintely" far away sun
+layout(std140, set = 1, binding = 2) uniform DirectionalLightData
+{
+    // Light direction
+    vec3 Direction;
+    // Multiplier for the radiance
+    float Multiplier;
+    // Color
+    vec3 Radiance;
+    // Whether the directional light is enabled
+    bool Enabled;
+} u_DirectionalLight;
 
 layout(std140, push_constant) uniform Material
 {
@@ -186,7 +201,6 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         float linear = attenuationValues.y;
         float quadratic = attenuationValues.z;
 
-        //float attenuation = clamp(1.0 / (constant + linear * distance + quadratic * distance * distance), 0.0, 1.0);
         float attenuation = clamp(1.0 / (1 + (2.0 / light.Radius) * distance + (1.0 / (light.Radius * light.Radius)) * (distance * distance)), 0.0, 1.0);
 
         vec3 radiance = light.Radiance * light.Multiplier * albedoColor;
@@ -199,7 +213,6 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         // Specular
         float shininess = 32;
         // Blinn-Phong 
-        //vec3 reflectDir = reflect(-lightDir, normal);
         vec3 halfDir = normalize(lightDir + viewDir);
         float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
         vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * radiance;
@@ -250,7 +263,31 @@ void main()
     vec3 normal = normalize(v_Input.Normal);
     // TODO: https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     // vec3 normal = perturb(normalMap, normalize(v_Input.Normal), viewDir, v_Input.TexCoord);
+
+    // ===========================
+    // Calculate directional light
+    // ===========================
+    vec3 dirLightDirection = normalize(-u_DirectionalLight.Direction);
+    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * albedoColor;
+
+    // Diffuse
+    float diffuseImpact = max(dot(normal, dirLightDirection), 0.0);
+    vec3 diffuse = diffuseImpact * u_MaterialUniforms.DiffuseStrength * dirLightRadiance;
+
+    // Specular
+    float shininess = 32;
+    // Blinn-Phong 
+    vec3 halfDir = normalize(dirLightDirection + viewDir);
+    float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
+    vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * dirLightRadiance;
+    vec3 directionalLightColor = vec3(0.0);
+    if (u_DirectionalLight.Enabled) {
+        directionalLightColor = diffuse + specular;
+    }
+    // ===========================
+
+    // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    o_Color = vec4(ambient + pLightsColor, 1.0);
+    o_Color = vec4(ambient + directionalLightColor + pLightsColor, 1.0);
 }

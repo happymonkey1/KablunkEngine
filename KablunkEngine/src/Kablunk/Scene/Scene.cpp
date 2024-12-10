@@ -547,11 +547,12 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 	// Lights
 	{
 		m_light_environment = LightEnvironmentData{};
+        m_light_environment.m_directional_light = m_directional_light;
 
 		// Point Lights
 		{
 			auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
-			m_light_environment.point_lights.resize(point_lights.size());
+			m_light_environment.m_point_lights.resize(point_lights.size());
 			size_t point_light_index = 0;
 			for (auto id : point_lights)
 			{
@@ -568,7 +569,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 					plight_comp.Falloff
 				};
 
-				m_light_environment.point_lights[point_light_index++] = plight_data;
+				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
 	}
@@ -743,11 +744,12 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 	// #TODO move to scene renderer?
 	{
 		m_light_environment = LightEnvironmentData{};
+        m_light_environment.m_directional_light = m_directional_light;
 
 		// Point Lights
 		{
 			auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
-			m_light_environment.point_lights.resize(point_lights.size());
+			m_light_environment.m_point_lights.resize(point_lights.size());
 			size_t point_light_index = 0;
 			for (auto id : point_lights)
 			{
@@ -764,7 +766,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 					plight_comp.Falloff
 				};
 
-				m_light_environment.point_lights[point_light_index++] = plight_data;
+				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
 	}

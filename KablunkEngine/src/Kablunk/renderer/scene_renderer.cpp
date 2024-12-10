@@ -47,6 +47,7 @@ void scene_renderer::init()
 	uint32_t frames_in_flight = render::get_frames_in_flight();
     m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);
     m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(point_light_ub_t), frames_in_flight);
+    m_directional_light_set = backend::uniform_buffer_set::create(sizeof(directional_light_t), frames_in_flight);
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
@@ -94,6 +95,7 @@ void scene_renderer::init()
 
         m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
         m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
+        m_geometry_pass->set_input("DirectionalLightData", m_directional_light_set);
 
         KB_CORE_ASSERT(m_geometry_pass->validate(), "Geometry pass validation failed!");
         m_geometry_pass->bake();
@@ -213,7 +215,7 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 
 	// Submit point lights uniform buffer
 	const auto light_environment_copy = m_scene_data.light_environment;
-	const std::vector<point_light_t>& point_lights_vec = light_environment_copy.point_lights;
+	const std::vector<point_light_t>& point_lights_vec = light_environment_copy.m_point_lights;
 
 	m_point_lights_ub->count = static_cast<uint32_t>(point_lights_vec.size());
 	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_environment_copy.GetPointLightsSize());
@@ -227,6 +229,15 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
             );
 		}
 	);
+
+    // Submit directional light uniform buffer
+    render::submit([instance, directional_light_copy = light_environment_copy.m_directional_light]() mutable
+        {
+            instance->m_directional_light_set->rt_get()->rt_set_data(
+                &directional_light_copy,
+                sizeof(directional_light_copy)
+            );
+        });
 }
 
 void scene_renderer::end_scene()

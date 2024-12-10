@@ -364,29 +364,30 @@ MeshData::MeshData(
     const std::vector<Index>& indices,
     const glm::mat4& transform
 )
-	: m_static_vertices{ p_vertices }, m_indices{ indices }, m_scene{ nullptr }, m_handle{ p_handle }
+    : m_static_vertices{ p_vertices }, m_indices{ indices }, m_scene{ nullptr }, m_handle{ p_handle }
 {
-	sub_mesh_t sub_mesh;
-	sub_mesh.BaseVertex = 0;
-	sub_mesh.BaseIndex = 0;
-	sub_mesh.IndexCount = static_cast<u32>(indices.size()) * 3u;
-	sub_mesh.Transform = transform;
-	sub_mesh.Material_index = 0;
-	m_sub_meshes.push_back(sub_mesh);
+    sub_mesh_t sub_mesh;
+    sub_mesh.BaseVertex = 0;
+    sub_mesh.BaseIndex = 0;
+    sub_mesh.IndexCount = static_cast<u32>(indices.size()) * 3u;
+    sub_mesh.Transform = transform;
+    sub_mesh.Material_index = 0;
+    m_sub_meshes.push_back(sub_mesh);
 
-	m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), static_cast<u32>(m_static_vertices.size() * sizeof(vertex_t)));
+    m_vertex_buffer = backend::vertex_buffer::create(m_static_vertices.data(), static_cast<u32>(m_static_vertices.size() * sizeof(vertex_t)));
 
-	KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
-	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
+    KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
+    m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
-		m_mesh_shader = render::get_shader_library()->get("Kablunk_diffuse_static");
-		auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
-		mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
-		mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-		mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
-        auto material_asset = material_asset::create(mat);
+    m_mesh_shader = render::get_shader_library()->get("Kablunk_diffuse_static");
+    auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
+    mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
+    mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+    mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
+    mat->set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
+    auto material_asset = material_asset::create(mat);
 
-		m_materials.push_back(material_asset);
+	m_materials.push_back(material_asset);
 }
 
 MeshData::~MeshData()
