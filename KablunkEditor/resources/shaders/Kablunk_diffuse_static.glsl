@@ -88,6 +88,7 @@ struct PointLight
 {
     vec3 Position;
     float Multiplier;
+    // Color
     vec3 Radiance;
     float Radius;
     float MinRadius;
@@ -173,7 +174,9 @@ vec3 GetPointLightAttenuationValues(in float distance)
 
 vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 {
-    vec3 result = vec3(0.33); // set default ambience to .33
+    vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
+
+    vec3 result = vec3(0.0);
     for (int i = 0; i < u_PointLights.Count; i++)
     {
         PointLight light = u_PointLights.Lights[i];
@@ -185,10 +188,8 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 
         //float attenuation = clamp(1.0 / (constant + linear * distance + quadratic * distance * distance), 0.0, 1.0);
         float attenuation = clamp(1.0 / (1 + (2.0 / light.Radius) * distance + (1.0 / (light.Radius * light.Radius)) * (distance * distance)), 0.0, 1.0);
-        vec3 radiance = light.Radiance * light.Multiplier;
 
-        // Ambient
-        vec3 ambient = u_MaterialUniforms.AmbientStrength * radiance;
+        vec3 radiance = light.Radiance * light.Multiplier * albedoColor;
 
         // Diffuse
         vec3 lightDir = normalize(light.Position - v_Input.WorldPosition);
@@ -203,7 +204,7 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
         vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * radiance;
 
-        result += (ambient + diffuse + specular) * attenuation;
+        result += (diffuse + specular) * attenuation;
         //result += vec3(light.MinRadius);
     }
 
@@ -240,9 +241,15 @@ void main()
     vec3 color = texture(u_AlbedoTexture, v_Input.TexCoord).rgb;
     vec3 normalMap = texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0 - 1.0;
     
-    vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
-    vec3 normal = perturb(normalMap, v_Input.Normal, viewDir, v_Input.TexCoord);
-    vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
+    // Ambient
+    vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
+    // vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor;
+    vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor;
 
-    o_Color = vec4(color * u_MaterialUniforms.AlbedoColor, 1.0) * (pLightsColor);
+    vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
+    vec3 normal = normalize(v_Input.Normal);
+    // vec3 normal = perturb(normalMap, normalize(v_Input.Normal), viewDir, v_Input.TexCoord);
+    vec3 pLightsColor = CalculatePointLights(normal, viewDir);
+
+    o_Color = vec4(ambient + pLightsColor, 1.0);
 }

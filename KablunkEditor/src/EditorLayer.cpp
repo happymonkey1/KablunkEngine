@@ -286,14 +286,16 @@ namespace kb
 			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			m_active_scene->OnViewportResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-			
 
-			// present the viewport (image) using imgui
+			// Present the viewport (image) using imgui
+            // Flip UV coordinates to convert from right-handed (Vulkan) to left-handed (OpenGL)
 			UI::Image(
 				m_viewport_renderer->get_final_render_pass_image(),
-				{ m_viewport_size.x, m_viewport_size.y }
+				{ m_viewport_size.x, m_viewport_size.y },
+                { 0, 1 },
+                { 1, 0 }
 			);
-			
+
 			// store viewport size and position in renderer
 			ImVec2 viewport_pos = ImGui::GetWindowPos();
 			Singleton<render::Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };

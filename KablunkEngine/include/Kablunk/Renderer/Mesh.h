@@ -15,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "Kablunk/renderer/mesh_handle.h"
+
 
 // Forward decs
 struct aiScene;
@@ -137,8 +139,15 @@ class MeshData : public RefCounted
 {
 public:
 	MeshData(const std::string& filename, kb::Entity entity);
-	MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<Index>& indices, const glm::mat4& transform);
+	MeshData(
+        mesh_handle p_handle,
+        const std::vector<vertex_t>& p_vertices,
+        const std::vector<Index>& indices,
+        const glm::mat4& transform
+    );
 	virtual ~MeshData() override;
+
+    auto get_handle() const noexcept -> mesh_handle { return m_handle; }
 
 	const std::vector<vertex_t>& get_vertices() const { return m_static_vertices; }
 	const std::vector<Index>& get_indices() const { return m_indices; }
@@ -200,6 +209,7 @@ private:
 	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
 
 	std::string m_filepath;
+    mesh_handle m_handle{};
 
 	// Animation
 	bool m_is_animated = false;
@@ -219,6 +229,8 @@ public:
 	Mesh(const arc<Mesh>& other);
 	Mesh(arc<MeshData> mesh_data, const std::vector<u32>& sub_meshes);
 	virtual ~Mesh() noexcept = default;
+
+    auto get_handle() const noexcept -> mesh_handle { return m_mesh_data->get_handle(); }
 
 	void OnUpdate(Timestep ts);
 
@@ -247,6 +259,10 @@ private:
 // #TODO move elsewhere
 class MeshFactory
 {
+public:
+    // Kablunk resource notation (krn) used to construct the mesh handle
+    inline static constexpr const char* k_cube_mesh_krn = "kb::mesh::cube";
+    inline static constexpr mesh_handle k_cube_mesh_handle = mesh_handle::into(std::string_view{ k_cube_mesh_krn });
 public:
 	static arc<Mesh> CreateCube(float side_length, Entity entity);
 };

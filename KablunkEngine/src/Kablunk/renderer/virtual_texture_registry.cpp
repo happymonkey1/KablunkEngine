@@ -71,6 +71,7 @@ auto virtual_texture_registry::load_texture_atlas(std::filesystem::path p_atlas_
     return virtual_texture_handle{ 0 };
 }
 
+// TODO: this could have collisions if there are two files in separate directories with the same name
 auto virtual_texture_registry::create_virtual_texture_handle(
     const std::filesystem::path& p_file_path) noexcept -> virtual_texture_handle
 {
@@ -169,6 +170,17 @@ auto virtual_texture_registry::import_texture_from_disk(
     // Check if texture is already imported
     if (m_raw_textures.contains(new_texture_handle))
     {
+#ifdef KB_DEBUG
+        if (new_texture_handle != k_missing_texture_krn)
+        {
+            KB_CORE_WARN(
+                "[virtual_texture_registry]: Loading texture '{}' with handle {} that is already contained in the registry?",
+                p_specification.m_path.string(),
+                new_texture_handle.as<u32>()
+            );
+        }
+#endif
+
         return new_texture_handle;
     }
 
@@ -256,7 +268,8 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
     const raw_texture_handle p_raw_texture_handle
 ) noexcept -> virtual_texture_handle
 {
-    if (const auto virtual_texture_opt = find_virtual_texture_by_raw_handle(p_raw_texture_handle))
+    // TODO: this could have collisions if there are two files in separate directories with the same name
+    if (const auto virtual_texture_opt = find_virtual_texture_by_raw_handle(p_raw_texture_handle); virtual_texture_opt.has_value())
     {
         return virtual_texture_opt->m_handle;
     }

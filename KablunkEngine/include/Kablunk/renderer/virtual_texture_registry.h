@@ -90,6 +90,7 @@ public:
 
     inline static constexpr const char* k_missing_texture_file_path = "resources/textures/missing_texture.png";
     inline static constexpr const char* k_missing_texture_krn_cstr = "kb::texture::missing_texture";
+    inline static constexpr raw_texture_handle k_missing_texture_krn = raw_texture_handle::into(std::string_view{ k_missing_texture_krn_cstr });
 
 public:
     virtual_texture_registry() noexcept = default;

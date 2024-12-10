@@ -78,9 +78,9 @@ void scene_renderer::init()
                 { backend::shader_data_type_t::Float4, "a_MRow2" },
             },
             .topology = backend::primitive_topology_t::triangles,
-            .backface_culling = false,
-            .depth_test = false,
-            .depth_write = false,
+            .backface_culling = true,
+            .depth_test = true,
+            .depth_write = true,
             .wireframe = false,
             .debug_name = "scene_renderer::pipeline::geometry"
 		};
@@ -212,18 +212,18 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 	);
 
 	// Submit point lights uniform buffer
-	const auto light_enviornment_copy = m_scene_data.light_environment;
-	const std::vector<point_light_t>& point_lights_vec = light_enviornment_copy.point_lights;
+	const auto light_environment_copy = m_scene_data.light_environment;
+	const std::vector<point_light_t>& point_lights_vec = light_environment_copy.point_lights;
 
-	m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(point_light_t));
-	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
+	m_point_lights_ub->count = static_cast<uint32_t>(point_lights_vec.size());
+	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_environment_copy.GetPointLightsSize());
 
 	render::submit([instance, point_lights = m_point_lights_ub]() mutable
 		{
-            constexpr size_t point_light_vec_offset = 16ull;
+            constexpr size_t k_offset = 16;
 			instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
                 point_lights,
-                static_cast<uint32_t>(point_light_vec_offset + sizeof(point_light_t) * point_lights->count)
+                static_cast<uint32_t>(k_offset + sizeof(point_light_t) * point_lights->count)
             );
 		}
 	);
@@ -254,7 +254,7 @@ void scene_renderer::end_scene()
 
 void scene_renderer::submit_mesh(
     arc<Mesh> mesh,
-    uint32_t submesh_index,
+    uint32_t p_sub_mesh_index,
     arc<material_table> material_table,
     const glm::mat4& transform /*= glm::mat4{ 1.0f }*/,
     arc<backend::material> override_material/* = nullptr */
@@ -265,15 +265,27 @@ void scene_renderer::submit_mesh(
 	//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
 	//uint32_t material_index = 0; // #TODO fix
 	const auto& sub_meshes = mesh->GetMeshData()->get_sub_meshes();
-	uint32_t material_index = sub_meshes[submesh_index].Material_index;
+	uint32_t material_index = sub_meshes[p_sub_mesh_index].Material_index;
 
-	m_transform_vertex_data[m_draw_list.size()].MRow[0] = {transform[0][0], transform[1][0], transform[2][0], transform[3][0]};
-	m_transform_vertex_data[m_draw_list.size()].MRow[1] = {transform[0][1], transform[1][1], transform[2][1], transform[3][1]};
-	m_transform_vertex_data[m_draw_list.size()].MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
+    const auto mesh_handle = mesh->get_handle();
+    const mesh_transform_handle mesh_transform_handle{
+        .m_mesh_handle = mesh_handle,
+        .m_sub_mesh_index = p_sub_mesh_index
+    };
 
+    // Submit transform
+    auto& transform_data = m_transform_map[mesh_transform_handle].m_transforms.emplace_back();
+    transform_data.MRow[0] = {transform[0][0], transform[1][0], transform[2][0], transform[3][0]};
+    transform_data.MRow[1] = {transform[0][1], transform[1][1], transform[2][1], transform[3][1]};
+    transform_data.MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
 
-	// #TODO fix instancing implementation
-	m_draw_list.emplace_back(draw_command_data_t{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
+    // Submit draw command
+    auto& draw_command = m_draw_list[mesh_transform_handle];
+    draw_command.Mesh = mesh;
+    draw_command.Submesh_index = p_sub_mesh_index;
+    draw_command.Material_table = std::move(material_table);
+    draw_command.Override_material = std::move(override_material);
+    draw_command.Instance_count++;
 }
 
 void scene_renderer::set_viewport_size(uint32_t width, uint32_t height)
@@ -354,11 +366,29 @@ void scene_renderer::flush_draw_list()
 
 	m_scene_data = {};
 	m_draw_list = {};
+    m_transform_map.clear();
 }
 
 void scene_renderer::pre_render()
 {
-	// #TODO
+    // Submit transform data
+    {
+        u32 count = 0;
+        for (auto& [mesh_transform_handle, transform_data] : m_transform_map)
+        {
+            transform_data.m_transform_offset = count * sizeof(transform_vertex_data_t);
+            for (const auto& transform : transform_data.m_transforms)
+            {
+                m_transform_vertex_data[count] = transform;
+                count++;
+            }
+        }
+
+        m_transform_buffer->set_data(
+            m_transform_vertex_data,
+            count * static_cast<u32>(sizeof(transform_vertex_data_t))
+        );
+    }
 }
 
 void scene_renderer::clear_pass()
@@ -381,23 +411,24 @@ void scene_renderer::geometry_pass()
 	m_gpu_time_query_indices.geometry_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
 	begin_render_pass(m_command_buffer, m_geometry_pass);
 
-	// submit transform data
-	m_transform_buffer->set_data(m_transform_vertex_data, static_cast<u32>(sizeof(transform_vertex_data_t) * m_draw_list.size()), 0);
-
-	size_t transform_offset_ind = 0;
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
-	for (const auto& draw_command_data : m_draw_list)
+	for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
 	{
-        Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh(
+        const auto& transform_data = m_transform_map[mesh_transform_handle];
+        const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
+            sizeof(transform_vertex_data_t);
+        KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
+
+	    Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh(
             m_command_buffer,
             geometry_pipeline,
             draw_command_data.Mesh,
             draw_command_data.Submesh_index,
             draw_command_data.Material_table,
             m_transform_buffer,
-            static_cast<uint32_t>(transform_offset_ind++),
+            static_cast<u32>(transform_offset),
             0ull,
-            1ul
+            draw_command_data.Instance_count
         );
 	}
 

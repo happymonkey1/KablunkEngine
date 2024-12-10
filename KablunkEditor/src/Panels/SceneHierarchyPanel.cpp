@@ -447,7 +447,7 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
                     case render::backend::shader_uniform_type_t::Float:
                     {
                         f32 uniform_value = render_material->get_float(uniform_name);
-                        if (UI::Property(stripped_name.c_str(), uniform_value), 0.01f, 0.0f, 1.0f)
+                        if (UI::Property(stripped_name.c_str(), uniform_value, 0.01f, 0.0f, 1.0f))
                         {
                             render_material->set(uniform_name, uniform_value);
                         }
@@ -460,7 +460,6 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
                         UI::PopItemDisabled();
                     }
                     }
-
                 }
             }
 

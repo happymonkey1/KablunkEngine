@@ -42,7 +42,7 @@ namespace Utils
 }
 
 MeshData::MeshData(const std::string& filepath, Entity entity)
-	: m_filepath{ filepath }
+	: m_filepath{ filepath }, m_handle{ mesh_handle::into(std::string_view{ filepath }) }
 {
 	KB_CORE_TRACE("Loading mesh: '{0}'", filepath.c_str());
 
@@ -193,6 +193,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
     const auto& white_texture = Singleton<Renderer>::get().get_white_texture();
     if (scene->HasMaterials())
     {
+        const auto parent_path = std::filesystem::path{ m_filepath }.parent_path();
+
         m_materials.resize(scene->mNumMaterials);
         for (u32 i = 0; i < scene->mNumMaterials; ++i)
         {
@@ -273,7 +275,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         );
                         // Create a texture that is owned by the renderer
                         texture_handle = Singleton<Renderer>::get().create_texture(
-                            std::filesystem::path{ ai_texture_path.C_Str() }
+                            parent_path / std::filesystem::path{ ai_texture_path.C_Str() }
                         );
                     }
 
@@ -313,7 +315,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         );
                         // Create a texture that is owned by the renderer
                         texture_handle = Singleton<Renderer>::get().create_texture(
-                            std::filesystem::path{ ai_texture_path.C_Str() }
+                            parent_path / std::filesystem::path{ ai_texture_path.C_Str() }
                         );
                     }
 
@@ -337,6 +339,16 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
         }
     }
 
+    // TODO: remove once pbr renderer is added
+    for (auto& material_asset : m_materials)
+    {
+        auto& material = material_asset->get_material();
+        material->set("u_MaterialUniforms.AmbientStrength", 0.05f);
+        material->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+        material->set("u_MaterialUniforms.SpecularStrength", 0.3f);
+    }
+
+
 	if (m_is_animated)
 		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), static_cast<u32>(m_animated_vertices.size()) * sizeof(animated_vertex_t));
 	else
@@ -346,8 +358,13 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 }
 
-MeshData::MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<Index>& indices, const glm::mat4& transform)
-	: m_static_vertices{ p_vertices }, m_indices{ indices }
+MeshData::MeshData(
+    mesh_handle p_handle,
+    const std::vector<vertex_t>& p_vertices,
+    const std::vector<Index>& indices,
+    const glm::mat4& transform
+)
+	: m_static_vertices{ p_vertices }, m_indices{ indices }, m_scene{ nullptr }, m_handle{ p_handle }
 {
 	sub_mesh_t sub_mesh;
 	sub_mesh.BaseVertex = 0;
@@ -362,26 +379,14 @@ MeshData::MeshData(const std::vector<vertex_t>& p_vertices, const std::vector<In
 	KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
 	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
-#if 0
-	if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
-	{
-#endif
 		m_mesh_shader = render::get_shader_library()->get("Kablunk_diffuse_static");
 		auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
-		mat->set("u_MaterialUniforms.AmbientStrength", 0.3f);
+		mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
 		mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
 		mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
         auto material_asset = material_asset::create(mat);
 
 		m_materials.push_back(material_asset);
-
-#if 0
-	}
-	else if (render::get_render_pipeline() == RendererPipelineDescriptor::PBR)
-	{
-		KB_CORE_ASSERT(false, "not implemented!");
-	}
-#endif
 }
 
 MeshData::~MeshData()
@@ -639,6 +644,11 @@ arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)
 	indices[10] = { 3, 2, 6 };
 	indices[11] = { 6, 7, 3 };
 
-	return arc<Mesh>::Create(arc<MeshData>::Create(verts, indices, glm::mat4{ 1.0f }));
+	return arc<Mesh>::Create(arc<MeshData>::Create(
+        k_cube_mesh_handle,
+        verts,
+        indices,
+        glm::mat4{ 1.0f }
+    ));
 }
 } // end namespace kb::render

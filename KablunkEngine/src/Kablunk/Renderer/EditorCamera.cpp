@@ -14,8 +14,8 @@ namespace kb
 { // start namespace kb
 
 EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
-	: m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip }, m_focal_point{ 0.0f },
-	  camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }
+	: camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }, m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip },
+	  m_focal_point{ 0.0f }
 {
 	m_focal_point = glm::vec3{ 0.0f };
 
@@ -68,7 +68,7 @@ void EditorCamera::OnUpdate(Timestep ts)
 
 		constexpr float max_rate = 0.12f;
 		m_yaw_delta += glm::clamp(yaw_sign * delta.x * GetRotationSpeed(), -max_rate, max_rate);
-		m_pitch_delta += glm::clamp(-delta.y * GetRotationSpeed(), -max_rate, max_rate);
+		m_pitch_delta += glm::clamp(delta.y * GetRotationSpeed(), -max_rate, max_rate);
 
 		m_right_direction = glm::cross(m_direction, glm::vec3{ 0.0f, yaw_sign, 0.0f });
 
@@ -254,7 +254,7 @@ glm::vec3 EditorCamera::GetForwardDirection() const
 
 glm::quat EditorCamera::GetOrientation() const
 {
-	return glm::quat(glm::vec3{ -m_pitch - m_pitch_delta, -m_yaw - m_yaw_delta, 0.0f });
+    return { glm::vec3{ -m_pitch - m_pitch_delta, -m_yaw - m_yaw_delta, 0.0f } };
 }
 
 glm::vec3 EditorCamera::CalculatePosition() const
