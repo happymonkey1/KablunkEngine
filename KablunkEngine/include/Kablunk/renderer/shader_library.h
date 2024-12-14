@@ -10,8 +10,12 @@ class shader_library : public RefCounted
 {
 public:
     // Engine shader names
+    // Basic pipeline static shader
     inline static constexpr const char* k_diffuse_static_shader_name = "Kablunk_diffuse_static";
+    // Basic pipeline animated shader
     inline static constexpr const char* k_diffuse_anim_shader_name = "Kablunk_diffuse_anim";
+    // PBR pipeline static shader
+    inline static constexpr const char* k_pbr_static_shader_name = "Kablunk_pbr_static";
     inline static constexpr const char* k_renderer_2d_quad_name = "Renderer2D_Quad";
     inline static constexpr const char* k_renderer_2d_circle_name = "Renderer2D_Circle";
     inline static constexpr const char* k_renderer_2d_line_name = "Renderer2D_Line";

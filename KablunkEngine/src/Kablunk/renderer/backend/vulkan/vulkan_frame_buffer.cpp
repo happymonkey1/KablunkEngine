@@ -304,7 +304,7 @@ void vulkan_frame_buffer::rt_invalidate()
 
 			VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 			attachment_description.flags = 0;
-			attachment_description.format = util::VulkanImageFormat(attachment_spec.format);
+			attachment_description.format = util::get_vk_image_format(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
             attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
@@ -394,7 +394,7 @@ void vulkan_frame_buffer::rt_invalidate()
 
 			VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 			attachment_description.flags = 0;
-			attachment_description.format = util::VulkanImageFormat(attachment_spec.format);
+			attachment_description.format = util::get_vk_image_format(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
             attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)

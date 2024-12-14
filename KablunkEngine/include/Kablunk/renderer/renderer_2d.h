@@ -217,7 +217,7 @@ class renderer_2d : public RefCounted
 {
 public:
 	renderer_2d() = default;
-	~renderer_2d();
+	~renderer_2d() override;
 
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();

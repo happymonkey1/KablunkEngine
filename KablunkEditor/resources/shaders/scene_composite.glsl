@@ -87,6 +87,16 @@ vec3 ACESTonemap(vec3 color)
 	return clamp(m2 * (a / b), 0.0, 1.0);
 }
 
+float luminance(vec3 v) {
+    return dot(v, vec3(0.2126f, 0.7152f, 0.0722f));
+}
+
+vec3 ReinhardJodieTonemap(vec3 color) {
+	float l = luminance(color);
+    vec3 tv = color / (1.0f + color);
+    return mix(color / (1.0f + l), tv, tv);
+}
+
 vec3 GammaCorrect(vec3 color, float gamma)
 {
 	return clamp(pow(color, vec3(1.0f / gamma)), 0.0, 1.0);
@@ -123,7 +133,8 @@ void main()
 
 	color = contrastAndBrightness(color, u_Uniforms.Contrast, u_Uniforms.Brightness);
 	color = saturate(color, u_Uniforms.Saturation);
-	color = ACESTonemap(color);
+	// color = ACESTonemap(color);
+	color = ReinhardJodieTonemap(color);
 	color = GammaCorrect(color.rgb, gamma);
 	o_Color = vec4(color, 1.0);
 }

@@ -33,9 +33,18 @@ namespace kb::render
 
 constexpr uint32_t MAX_POINT_LIGHTS = 16;
 
+enum class renderer_pipeline_type_t
+{
+    // Physically based rendering pipeline
+    pbr,
+    // Basic diffuse (phong shading) rendering pipeline
+    basic
+};
+
 struct renderer_options_t
 {
     uint32_t frames_in_flight = 3;
+    renderer_pipeline_type_t m_renderer_pipeline_type = renderer_pipeline_type_t::basic;
 };
 
 class Renderer
@@ -76,6 +85,7 @@ public:
     }
 
     const renderer_options_t& get_config() const noexcept { return m_options; }
+    auto get_renderer_pipeline_type() const noexcept -> renderer_pipeline_type_t { return m_options.m_renderer_pipeline_type; }
 
     // \brief get the viewport's os screen position within the application
     const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }

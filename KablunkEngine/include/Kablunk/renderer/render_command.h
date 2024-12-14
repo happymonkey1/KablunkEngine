@@ -137,6 +137,12 @@ inline auto get_white_texture() noexcept
     return Singleton<Renderer>::get().get_white_texture();
 }
 
+// Retrieve current renderer pipeline state
+inline auto get_renderer_pipeline_type() noexcept -> renderer_pipeline_type_t
+{
+    return Singleton<Renderer>::get().get_renderer_pipeline_type();
+}
+
 // ======
 // Meshes
 // ======

@@ -36,6 +36,8 @@ public:
     u32 get_width() const override { return m_width; }
     u32 get_height() const override { return m_height; }
 	uint64_t get_hash() const override { return m_hash; }
+    u32 get_mip_level_count() const noexcept override;
+    std::pair<u32, u32> get_mip_size(u32 p_mip) const noexcept override;
 
     resource_descriptor_info_t get_descriptor_info() noexcept override
 	{
@@ -59,6 +61,7 @@ public:
 private:
 	virtual void invalidate() override;
 	bool load_image(const std::string& filepath);
+
 private:
 	std::string m_filepath;
     u64 m_hash = 0ull;

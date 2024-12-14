@@ -7,7 +7,8 @@
 #include "Kablunk/Core/Timestep.h"
 #include "Kablunk/Core/Uuid64.h"
 #include "Kablunk/Math/vec.hpp"
-#include "Kablunk/Renderer/EditorCamera.h"
+#include "Kablunk/renderer/EditorCamera.h"
+#include "Kablunk/renderer/glsl_types.h"
 
 class b2World;
 
@@ -48,6 +49,7 @@ struct directional_light_t
     vec3_packed m_direction = vec3_packed{ -0.2f, -1.0f, -0.3f };
     f32 m_multiplier = 1.0f;
     vec3_packed m_radiance = vec3_packed{ 1.0f, 1.0f, 1.0f };
+    // Bools in GLSL are 32 bits
     bool m_enabled = false;
     char padding[3]{ 0 };
 };

@@ -196,7 +196,9 @@ void main()
     // Fresnel reflectance, metals use albedo
 	vec3 F0 = mix(Fdielectric, m_Params.Albedo, m_Params.Metalness);
 
-    // #TODO lights
+	// #TODO directional lights
+
+    // #TODO point lights
     vec3 lightContribution = vec3(0.3);
     lightContribution += m_Params.Albedo * u_MaterialUniforms.Emission;
 

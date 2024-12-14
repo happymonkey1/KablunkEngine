@@ -235,22 +235,36 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	VkSemaphoreCreateInfo semaphore_create_info{};
 	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &m_semaphores.present_complete) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to create presenting semaphore!");
+    const auto frames_in_flight = get_frames_in_flight();
+    if (m_semaphores.m_image_available_semaphores.size() != frames_in_flight)
+    {
+        m_semaphores.m_image_available_semaphores.resize(frames_in_flight);
+        m_semaphores.m_render_complete_semaphores.resize(frames_in_flight);
+        for (size_t i = 0; i < frames_in_flight; ++i)
+        {
+            if (vkCreateSemaphore(
+                device,
+                &semaphore_create_info,
+                nullptr,
+                &m_semaphores.m_image_available_semaphores[i]
+            ) != VK_SUCCESS)
+            {
+                KB_CORE_ASSERT(false, "Vulkan failed to create presenting semaphore!");
+            }
 
-	if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &m_semaphores.render_complete) != VK_SUCCESS)
-		KB_CORE_ASSERT(false, "Vulkan failed to create rendering semaphore!");
+            if (vkCreateSemaphore(
+                device,
+                &semaphore_create_info,
+                nullptr,
+                &m_semaphores.m_render_complete_semaphores[i]
+            ) != VK_SUCCESS)
+            {
+                KB_CORE_ASSERT(false, "Vulkan failed to create rendering semaphore!");
+            }
+        }
+    }
 
 	VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	// setup submit info struct
-	m_submit_info = {};
-	m_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	m_submit_info.pWaitDstStageMask = &pipeline_stage_flags;
-	m_submit_info.waitSemaphoreCount = 1;
-	m_submit_info.pWaitSemaphores = &m_semaphores.present_complete;
-	m_submit_info.signalSemaphoreCount = 1;
-	m_submit_info.pSignalSemaphores = &m_semaphores.render_complete;
 
 	// Wait for fences to sync command buffer access
 	VkFenceCreateInfo fence_create_info{};
@@ -387,7 +401,7 @@ void vulkan_swap_chain::begin_frame() noexcept
 	if (vkResetCommandPool(m_device->get_vk_device(), m_command_buffers[m_current_buffer_index].m_command_pool, 0))
 		KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 
-	if (acquire_next_image(m_semaphores.present_complete, &m_current_image_index) != VK_SUCCESS)
+	if (acquire_next_image(m_semaphores.m_image_available_semaphores[m_current_buffer_index], &m_current_image_index) != VK_SUCCESS)
 		KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
 }
 
@@ -403,9 +417,9 @@ void vulkan_swap_chain::present() noexcept
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pWaitDstStageMask = &wait_stage_mask;
 	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &m_semaphores.present_complete;
+	submit_info.pWaitSemaphores = &m_semaphores.m_image_available_semaphores[m_current_buffer_index];
 	submit_info.signalSemaphoreCount = 1;
-	submit_info.pSignalSemaphores = &m_semaphores.render_complete;
+	submit_info.pSignalSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_buffer_index];
 	submit_info.pCommandBuffers = &m_command_buffers[m_current_buffer_index].m_command_buffer;
 	submit_info.commandBufferCount = 1;
 
@@ -436,7 +450,7 @@ void vulkan_swap_chain::present() noexcept
         present_info.pSwapchains = &m_swapchain;
         present_info.pImageIndices = &m_current_buffer_index;
         //KB_CORE_ASSERT(wait_sem != VK_NULL_HANDLE, "[VulkanSwapChain]: Swap Chain wait semaphore is null?");
-        present_info.pWaitSemaphores = &m_semaphores.render_complete;
+        present_info.pWaitSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_buffer_index];
         present_info.waitSemaphoreCount = 1;
 
         result = vkQueuePresentKHR(m_device->get_vk_graphics_queue(), &present_info);
@@ -492,14 +506,23 @@ void vulkan_swap_chain::destroy() noexcept
 	for (auto& framebuffer : m_framebuffers)
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-	if (m_semaphores.present_complete)
-		vkDestroySemaphore(device, m_semaphores.present_complete, nullptr);
+    for (const auto& image_available_semaphore : m_semaphores.m_image_available_semaphores)
+    {
+        if (image_available_semaphore)
+            vkDestroySemaphore(device, image_available_semaphore, nullptr);
+    }
 
-	if (m_semaphores.render_complete)
-		vkDestroySemaphore(device, m_semaphores.render_complete, nullptr);
+    for (const auto& render_complete_semaphore : m_semaphores.m_render_complete_semaphores)
+    {
+        if (render_complete_semaphore)
+            vkDestroySemaphore(device, render_complete_semaphore, nullptr);
+    }
+
+    m_semaphores = {};
 
 	for (auto fence : m_wait_fences)
 		vkDestroyFence(device, fence, nullptr);
+    m_wait_fences = {};
 
     if (m_surface)
     {

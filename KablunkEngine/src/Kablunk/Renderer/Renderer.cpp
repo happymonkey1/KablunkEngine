@@ -5,11 +5,21 @@
 #include "Kablunk/Core/Application.h"
 #include "Kablunk/Core/Timers.h"
 
+#define ENABLE_PBR_RENDERER 0
+
 namespace kb::render
 { // start namespace kb::render
 void Renderer::init()
 {
     KB_PROFILE_SCOPE;
+
+#if !ENABLE_PBR_RENDERER
+    if (m_options.m_renderer_pipeline_type == renderer_pipeline_type_t::pbr)
+    {
+        KB_CORE_WARN("[renderer]: PBR renderer pipeline is not finished, defaulting to basic pipeline instead!");
+        m_options.m_renderer_pipeline_type = renderer_pipeline_type_t::basic;
+    }
+#endif
 
 	// initialize render command queues
 	for (size_t i = 0; i < k_render_command_queue_size; ++i)
@@ -23,10 +33,35 @@ void Renderer::init()
 	// ==========
 	// 3d shaders
 	// ==========
-    m_shader_library->load(fmt::format(
-        "resources/shaders/{}.glsl",
-        shader_library::k_diffuse_static_shader_name
-    ));
+
+    switch (m_options.m_renderer_pipeline_type)
+    {
+    case renderer_pipeline_type_t::pbr:
+    {
+        KB_CORE_INFO("[renderer]: Loading PBR pipeline renderer shaders");
+
+        m_shader_library->load(fmt::format(
+            "resources/shaders/{}.glsl",
+            shader_library::k_pbr_static_shader_name
+        ));
+
+        break;
+    }
+    case renderer_pipeline_type_t::basic:
+    {
+        KB_CORE_INFO("[renderer]: Loading basic pipeline renderer shaders");
+
+        m_shader_library->load(fmt::format(
+            "resources/shaders/{}.glsl",
+            shader_library::k_diffuse_static_shader_name
+        ));
+
+        break;
+    }
+    default:
+        KB_CORE_ASSERT(false, "[renderer]: Cannot load shaders for unknown renderer pipeline type!");
+    }
+    
     m_shader_library->load(fmt::format(
         "resources/shaders/{}.glsl",
         shader_library::k_scene_composite_name
@@ -34,7 +69,9 @@ void Renderer::init()
 
 	// ==========
 	// 2d shaders
-	//
+	// ==========
+
+    KB_CORE_INFO("[renderer]: Loading 2D shaders");
     m_shader_library->load(fmt::format(
         "resources/shaders/{}.glsl",
         shader_library::k_renderer_2d_quad_name
@@ -55,6 +92,7 @@ void Renderer::init()
         "resources/shaders/{}.glsl",
         shader_library::k_renderer_2d_text_name
     ));
+
 	// ==========
 
     // Load renderer's white texture

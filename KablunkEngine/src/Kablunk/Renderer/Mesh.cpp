@@ -61,7 +61,25 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	if (m_is_animated)
 		KB_CORE_INFO("ANIMATED MESH!");
 
-	m_mesh_shader = m_is_animated ? render::get_shader(shader_library::k_diffuse_anim_shader_name) : render::get_shader(shader_library::k_diffuse_static_shader_name);
+    const auto renderer_pipeline = get_renderer_pipeline_type();
+    switch (renderer_pipeline)
+    {
+    case renderer_pipeline_type_t::pbr:
+    {
+        KB_CORE_ASSERT(!m_is_animated, "[mesh]: Cannot set PBR shader for animated mesh, shader does not exist!");
+        m_mesh_shader = render::get_shader(shader_library::k_pbr_static_shader_name);
+        break;
+    }
+    case renderer_pipeline_type_t::basic:
+    {
+        m_mesh_shader = m_is_animated ? render::get_shader(shader_library::k_diffuse_anim_shader_name) : render::get_shader(shader_library::k_diffuse_static_shader_name);
+        break;
+    }
+    default:
+        KB_CORE_ASSERT(false, "[mesh]: Unable to determine mesh shader for unknown renderer pipeline!");
+    }
+
+	
 
 	m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
@@ -76,8 +94,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
 		sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
 		sub_mesh.BaseIndex = static_cast<u32>(index_count);
-		sub_mesh.Material_index = mesh->mMaterialIndex - 1;
-        KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
+		sub_mesh.Material_index = mesh->mMaterialIndex;
+        // KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
 		sub_mesh.VertexCount = mesh->mNumVertices;
 		sub_mesh.IndexCount = mesh->mNumFaces * 3;
 		sub_mesh.mesh_name = mesh->mName.C_Str();
@@ -339,14 +357,28 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
         }
     }
 
-    // TODO: remove once pbr renderer is added
-    for (auto& material_asset : m_materials)
+    switch (renderer_pipeline)
     {
-        auto& material = material_asset->get_material();
-        material->set("u_MaterialUniforms.AmbientStrength", 0.05f);
-        material->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-        material->set("u_MaterialUniforms.SpecularStrength", 0.3f);
+    case renderer_pipeline_type_t::pbr:
+    {
+        break;
     }
+    case renderer_pipeline_type_t::basic:
+    {
+        KB_CORE_INFO("[mesh]: Setting default material values for basic pipeline");
+        for (auto& material_asset : m_materials)
+        {
+            auto& material = material_asset->get_material();
+            material->set("u_MaterialUniforms.AmbientStrength", 0.05f);
+            material->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+            material->set("u_MaterialUniforms.SpecularStrength", 0.3f);
+        }
+        break;
+    }
+    default:
+        KB_CORE_ASSERT(false, "[mesh]: Unhandled renderer pipeline type!");
+    }
+
 
 
 	if (m_is_animated)
@@ -356,6 +388,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 
 
 	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
+
+    m_importer.reset();
 }
 
 MeshData::MeshData(
@@ -379,14 +413,31 @@ MeshData::MeshData(
     KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
     m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
-    m_mesh_shader = render::get_shader_library()->get("Kablunk_diffuse_static");
-    auto mat = backend::material::create(m_mesh_shader, "Kablunk-PhongDefault");
-    mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
-    mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-    mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
-    mat->set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
-    auto material_asset = material_asset::create(mat);
+    arc<material_asset> material_asset;
+    switch (get_renderer_pipeline_type())
+    {
+    case renderer_pipeline_type_t::pbr:
+    {
+        m_mesh_shader = get_shader_library()->get(shader_library::k_pbr_static_shader_name);
+        auto mat = backend::material::create(m_mesh_shader, "default-pbr-material");
+        // TODO: set default values
+        material_asset = material_asset::create(mat);
+        break;
+    }
+    case renderer_pipeline_type_t::basic:
+    {
+        m_mesh_shader = get_shader_library()->get(shader_library::k_diffuse_static_shader_name);
+        auto mat = backend::material::create(m_mesh_shader, "default-basic-material");
+        mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
+        mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+        mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
+        mat->set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
+        material_asset = material_asset::create(mat);
+        break;
+    }
+    }
 
+    KB_CORE_ASSERT(material_asset, "[mesh_data]: Material asset must be set!");
 	m_materials.push_back(material_asset);
 }
 

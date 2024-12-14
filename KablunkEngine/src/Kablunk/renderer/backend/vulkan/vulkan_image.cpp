@@ -100,7 +100,7 @@ void vulkan_image_2d::RT_Invalidate()
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8)
 		aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-	VkFormat vulkan_format = util::VulkanImageFormat(m_specification.format);
+	VkFormat vulkan_format = util::get_vk_image_format(m_specification.format);
 
 	VkImageCreateInfo image_create_info = {};
 	image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -212,7 +212,7 @@ void vulkan_image_2d::RT_CreatePerLayerImageViews()
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8)
 		aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-	const VkFormat vk_format = util::VulkanImageFormat(m_specification.format);
+	const VkFormat vk_format = util::get_vk_image_format(m_specification.format);
 
 	m_per_layer_image_views.resize(m_specification.layers);
 	for (uint32_t layer = 0; layer < m_specification.layers; layer++)
@@ -251,7 +251,7 @@ void vulkan_image_2d::RT_CreatePerSpecificLayerImageViews(const std::vector<uint
 
 #endif
 
-	const VkFormat vk_format = util::VulkanImageFormat(m_specification.format);
+	const VkFormat vk_format = util::get_vk_image_format(m_specification.format);
 
 	//HZ_CORE_ASSERT(m_PerLayerImageViews.size() == m_Specification.Layers);
 	if (m_per_layer_image_views.empty())
@@ -302,7 +302,7 @@ VkImageView vulkan_image_2d::RT_GetMipImageView(uint32_t mip)
 		if (m_specification.format == image_format_t::DEPTH24STENCIL8)
 			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-        const VkFormat vk_format = util::VulkanImageFormat(m_specification.format);
+        const VkFormat vk_format = util::get_vk_image_format(m_specification.format);
 
 		m_per_layer_image_views.resize(m_specification.layers);
 		VkImageViewCreateInfo image_view_create_info{};
@@ -381,7 +381,7 @@ auto vulkan_image_view::rt_invalidate() noexcept -> void
     if (image_spec.format == image_format_t::DEPTH24STENCIL8)
         aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-    const auto vk_format = util::VulkanImageFormat(image_spec.format);
+    const auto vk_format = util::get_vk_image_format(image_spec.format);
 
     const VkImageViewCreateInfo image_view_create_info{
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,

@@ -583,8 +583,18 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 			auto entity = Entity{ entity_id, this };
 			auto& mesh_comp = entity.GetComponent<MeshComponent>();
 			auto& transform = entity.GetComponent<TransformComponent>();
-			if (mesh_comp.Mesh)
-				scene_renderer->submit_mesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
+            if (mesh_comp.Mesh)
+            {
+                for (const auto& sub_mesh : mesh_comp.Mesh->GetSubmeshes())
+                {
+                    scene_renderer->submit_mesh(
+                        mesh_comp.Mesh,
+                        sub_mesh,
+                        mesh_comp.Material_table,
+                        get_world_space_transform_matrix(entity)
+                    );
+                }
+            }
 		}
 	}
 
