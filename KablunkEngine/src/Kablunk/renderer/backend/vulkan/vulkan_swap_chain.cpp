@@ -20,10 +20,10 @@ void vulkan_swap_chain::init(VkInstance instance, const arc<vulkan_logical_devic
 
 void vulkan_swap_chain::init_surface(GLFWwindow* window_handle) noexcept
 {
-	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_surface) != VK_SUCCESS)
+	if (glfwCreateWindowSurface(m_instance, window_handle, nullptr, &m_vk_surface) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Failed to create Vulkan surface!");
 
-	m_device->get_physical_device()->find_presenting_indices(m_surface);
+	m_device->get_physical_device()->find_presenting_indices(m_vk_surface);
 
 	find_image_format_and_color_space();
 }
@@ -38,18 +38,18 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	VkDevice device = m_device->get_vk_device();
 	VkPhysicalDevice physical_device = m_device->get_vk_physical_device();
 
-	VkSwapchainKHR old_swap_chain = m_swapchain;
+	VkSwapchainKHR old_swap_chain = m_vk_swap_chain;
 
 	VkSurfaceCapabilitiesKHR surface_cap;
-	if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, m_surface, &surface_cap) != VK_SUCCESS)
+	if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, m_vk_surface, &surface_cap) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface capabilties!");
 
     u32 present_mode_count = 0;
-	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, m_surface, &present_mode_count, nullptr) != VK_SUCCESS)
+	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, m_vk_surface, &present_mode_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface present mode count!");
 
 	std::vector<VkPresentModeKHR> present_modes(present_mode_count);
-	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, m_surface, &present_mode_count, present_modes.data()) != VK_SUCCESS)
+	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, m_vk_surface, &present_mode_count, present_modes.data()) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan unable to get physical device surface present modes!");
 
 	VkExtent2D swap_chain_extent{};
@@ -121,10 +121,10 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	VkSwapchainCreateInfoKHR swap_chain_create_info{};
 	swap_chain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swap_chain_create_info.pNext = nullptr;
-	swap_chain_create_info.surface = m_surface;
+	swap_chain_create_info.surface = m_vk_surface;
 	swap_chain_create_info.minImageCount = desired_number_of_swap_images;
-	swap_chain_create_info.imageFormat = m_color_format;
-	swap_chain_create_info.imageColorSpace = m_color_space;
+	swap_chain_create_info.imageFormat = m_vk_color_format;
+	swap_chain_create_info.imageColorSpace = m_vk_color_space;
 	swap_chain_create_info.imageExtent = { swap_chain_extent.width, swap_chain_extent.height };
 	swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	swap_chain_create_info.preTransform = (VkSurfaceTransformFlagBitsKHR)pre_transform;
@@ -143,7 +143,7 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	if (surface_cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)
 		swap_chain_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-	if (vkCreateSwapchainKHR(device, &swap_chain_create_info, nullptr, &m_swapchain) != VK_SUCCESS)
+	if (vkCreateSwapchainKHR(device, &swap_chain_create_info, nullptr, &m_vk_swap_chain) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create swapchain!");
 
 	// destroy old swap chain if it exists, since we are recreating the swapchain.
@@ -155,17 +155,17 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 #endif
 
 		for (u32 i = 0; i < m_image_count; ++i)
-			vkDestroyImageView(device, m_buffers[i].view, nullptr);
+			vkDestroyImageView(device, m_buffers[i].m_vk_image_view, nullptr);
 
         log::core::trace(log::logger_tag_t::renderer, "[VulkanSwapChain]: Destroying old swap chain");
 		vkDestroySwapchainKHR(device, old_swap_chain, nullptr);
 	}
 
-	if (vkGetSwapchainImagesKHR(device, m_swapchain, &m_image_count, nullptr) != VK_SUCCESS)
+	if (vkGetSwapchainImagesKHR(device, m_vk_swap_chain, &m_image_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ERROR("Vulkan failed to retrieve swapchain image count");
 
-	m_images.resize(m_image_count);
-	if (vkGetSwapchainImagesKHR(device, m_swapchain, &m_image_count, m_images.data()) != VK_SUCCESS)
+	m_vk_images.resize(m_image_count);
+	if (vkGetSwapchainImagesKHR(device, m_vk_swap_chain, &m_image_count, m_vk_images.data()) != VK_SUCCESS)
 		KB_CORE_ERROR("Vulkan failed to retrieve swapchain images");
 
 	// Get swap chain buffers that contain image and view
@@ -175,7 +175,7 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 		VkImageViewCreateInfo color_attachment_view_create_info{};
 		color_attachment_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		color_attachment_view_create_info.pNext = nullptr;
-		color_attachment_view_create_info.format = m_color_format;
+		color_attachment_view_create_info.format = m_vk_color_format;
 		color_attachment_view_create_info.components = {
 			VK_COMPONENT_SWIZZLE_R,
 			VK_COMPONENT_SWIZZLE_G,
@@ -190,11 +190,11 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 		color_attachment_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		color_attachment_view_create_info.flags = 0;
 
-		m_buffers[i].image = m_images[i];
+		m_buffers[i].m_vk_image = m_vk_images[i];
 
-		color_attachment_view_create_info.image = m_buffers[i].image;
+		color_attachment_view_create_info.image = m_buffers[i].m_vk_image;
 
-		if (vkCreateImageView(device, &color_attachment_view_create_info, nullptr, &m_buffers[i].view) != VK_SUCCESS)
+		if (vkCreateImageView(device, &color_attachment_view_create_info, nullptr, &m_buffers[i].m_vk_image_view) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 
         KB_CORE_TRACE("[VulkanSwapChain]: created image view {}", i);
@@ -307,7 +307,7 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
     attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 #endif
     VkAttachmentDescription vk_color_attachment_description{};
-    vk_color_attachment_description.format = m_color_format;
+    vk_color_attachment_description.format = m_vk_color_format;
     vk_color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
     vk_color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     vk_color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -356,10 +356,10 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	render_pass_info.dependencyCount = 1;
 	render_pass_info.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(m_device->get_vk_device(), &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS)
+	if (vkCreateRenderPass(m_device->get_vk_device(), &render_pass_info, nullptr, &m_vk_render_pass) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create render pass!");
 
-	create_framebuffer();
+	create_frame_buffer();
 }
 
 void vulkan_swap_chain::on_resize(u32 width, u32 height) noexcept
@@ -376,7 +376,7 @@ void vulkan_swap_chain::on_resize(u32 width, u32 height) noexcept
 	//for (auto& framebuffer : m_framebuffers)
 	//	vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-	create_framebuffer();
+	create_frame_buffer();
 
 	vkDeviceWaitIdle(device);
 }
@@ -387,21 +387,21 @@ void vulkan_swap_chain::begin_frame() noexcept
 
 	// Make sure the frame we're requesting has finished rendering
 	const auto frames_in_flight = render::get_frames_in_flight();
-    if (auto res = vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[(m_current_buffer_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
+    if (auto res = vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[(m_current_frame_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences, Error={}", static_cast<u32>(res));
 
 	// execute resource release queue
 
-	auto& queue = render::get_render_resource_release_queue(m_current_buffer_index);
+	auto& queue = render::get_render_resource_release_queue(m_current_frame_index);
 	queue.execute();
 
-	if (vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+	if (vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences");
 
-	if (vkResetCommandPool(m_device->get_vk_device(), m_command_buffers[m_current_buffer_index].m_command_pool, 0))
+	if (vkResetCommandPool(m_device->get_vk_device(), m_command_buffers[m_current_frame_index].m_command_pool, 0))
 		KB_CORE_ASSERT(false, "Vulkan failed to reset command pool!");
 
-	if (acquire_next_image(m_semaphores.m_image_available_semaphores[m_current_buffer_index], &m_current_image_index) != VK_SUCCESS)
+	if (acquire_next_image(m_semaphores.m_image_available_semaphores[m_current_frame_index], &m_current_image_index) != VK_SUCCESS)
 		KB_CORE_ERROR("VulkanSwapChain BeginFrame failed to acquire next image!");
 }
 
@@ -417,13 +417,13 @@ void vulkan_swap_chain::present() noexcept
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pWaitDstStageMask = &wait_stage_mask;
 	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &m_semaphores.m_image_available_semaphores[m_current_buffer_index];
+	submit_info.pWaitSemaphores = &m_semaphores.m_image_available_semaphores[m_current_frame_index];
 	submit_info.signalSemaphoreCount = 1;
-	submit_info.pSignalSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_buffer_index];
-	submit_info.pCommandBuffers = &m_command_buffers[m_current_buffer_index].m_command_buffer;
+	submit_info.pSignalSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_frame_index];
+	submit_info.pCommandBuffers = &m_command_buffers[m_current_frame_index].m_command_buffer;
 	submit_info.commandBufferCount = 1;
 
-	if (vkResetFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_buffer_index]) != VK_SUCCESS)
+	if (vkResetFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_frame_index]) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to reset fence!");
 
     {
@@ -432,7 +432,7 @@ void vulkan_swap_chain::present() noexcept
                 m_device->get_vk_graphics_queue(),
                 1,
                 &submit_info,
-                m_wait_fences[m_current_buffer_index]
+                m_wait_fences[m_current_frame_index]
             ) != VK_SUCCESS
         )
 			KB_CORE_ASSERT(false, "Vulkan failed to submit!");
@@ -447,10 +447,10 @@ void vulkan_swap_chain::present() noexcept
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         present_info.pNext = nullptr;
         present_info.swapchainCount = 1;
-        present_info.pSwapchains = &m_swapchain;
-        present_info.pImageIndices = &m_current_buffer_index;
+        present_info.pSwapchains = &m_vk_swap_chain;
+        present_info.pImageIndices = &m_current_frame_index;
         //KB_CORE_ASSERT(wait_sem != VK_NULL_HANDLE, "[VulkanSwapChain]: Swap Chain wait semaphore is null?");
-        present_info.pWaitSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_buffer_index];
+        present_info.pWaitSemaphores = &m_semaphores.m_render_complete_semaphores[m_current_frame_index];
         present_info.waitSemaphoreCount = 1;
 
         result = vkQueuePresentKHR(m_device->get_vk_graphics_queue(), &present_info);
@@ -465,8 +465,8 @@ void vulkan_swap_chain::present() noexcept
 	}
 
     {
-		m_current_buffer_index = (m_current_image_index + 1) % render::get_frames_in_flight();
-		if (vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_buffer_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+		m_current_frame_index = (m_current_image_index + 1) % render::get_frames_in_flight();
+		if (vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[m_current_frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "Vulkan failed to wait for fences!");
     }
 }
@@ -477,12 +477,12 @@ void vulkan_swap_chain::destroy() noexcept
 
 	const VkDevice device = m_device->get_vk_device();
 
-	if (m_swapchain)
+	if (m_vk_swap_chain)
 	{
 		for (u32 i = 0; i < m_image_count; ++i)
 		{
-            KB_CORE_INFO("[VulkanSwapChain]: destroying image view {}", static_cast<void*>(m_buffers[i].view));
-            vkDestroyImageView(device, m_buffers[i].view, nullptr);
+            KB_CORE_INFO("[VulkanSwapChain]: destroying image view {}", static_cast<void*>(m_buffers[i].m_vk_image_view));
+            vkDestroyImageView(device, m_buffers[i].m_vk_image_view, nullptr);
 		}
 	}
 
@@ -497,13 +497,13 @@ void vulkan_swap_chain::destroy() noexcept
 
     KB_CORE_WARN("[VulkanSwapChain]: not destroying render pass!");
 
-	if (m_render_pass)
+	if (m_vk_render_pass)
 	{
-        KB_CORE_INFO("[VulkanSwapChain]: destroying render pass {}", static_cast<void*>(m_render_pass));
-        vkDestroyRenderPass(device, m_render_pass, nullptr);
+        KB_CORE_INFO("[VulkanSwapChain]: destroying render pass {}", static_cast<void*>(m_vk_render_pass));
+        vkDestroyRenderPass(device, m_vk_render_pass, nullptr);
 	}
 
-	for (auto& framebuffer : m_framebuffers)
+	for (auto& framebuffer : m_frame_buffers)
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
 
     for (const auto& image_available_semaphore : m_semaphores.m_image_available_semaphores)
@@ -524,14 +524,14 @@ void vulkan_swap_chain::destroy() noexcept
 		vkDestroyFence(device, fence, nullptr);
     m_wait_fences = {};
 
-    if (m_surface)
+    if (m_vk_surface)
     {
-        vkDestroySwapchainKHR(device, m_swapchain, nullptr);
-        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+        vkDestroySwapchainKHR(device, m_vk_swap_chain, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_vk_surface, nullptr);
     }
 
-	m_swapchain = nullptr;
-	m_surface = nullptr;
+	m_vk_swap_chain = nullptr;
+	m_vk_surface = nullptr;
     m_instance = nullptr;
 }
 
@@ -542,7 +542,7 @@ VkResult vulkan_swap_chain::acquire_next_image(VkSemaphore present_complete_sem,
 	// why no fence?
 	return vkAcquireNextImageKHR(
         m_device->get_vk_device(),
-        m_swapchain,
+        m_vk_swap_chain,
         UINT64_MAX,
         present_complete_sem,
         nullptr,
@@ -558,7 +558,7 @@ VkResult vulkan_swap_chain::queue_present(VkQueue queue, u32 image_index, VkSema
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     present_info.pNext = nullptr;
     present_info.swapchainCount = 1;
-    present_info.pSwapchains = &m_swapchain;
+    present_info.pSwapchains = &m_vk_swap_chain;
     present_info.pImageIndices = &image_index;
     //KB_CORE_ASSERT(wait_sem != VK_NULL_HANDLE, "[VulkanSwapChain]: Swap Chain wait semaphore is null?");
     present_info.pWaitSemaphores = &wait_sem;
@@ -573,17 +573,17 @@ void vulkan_swap_chain::find_image_format_and_color_space()
     const VkPhysicalDevice physical_device = m_device->get_vk_physical_device();
 
     u32 format_count = 0;
-	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, nullptr) != VK_SUCCESS)
+	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_vk_surface, &format_count, nullptr) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan could not find image format count!");
 
 	std::vector<VkSurfaceFormatKHR> formats(format_count);
-	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_surface, &format_count, formats.data()) != VK_SUCCESS)
+	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, m_vk_surface, &format_count, formats.data()) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan could not find image formats!");
 
 	if ((format_count == 1) && (formats[0].format == VK_FORMAT_UNDEFINED))
 	{
-		m_color_format = VK_FORMAT_B8G8R8_UNORM;
-		m_color_space = formats[0].colorSpace;
+		m_vk_color_format = VK_FORMAT_B8G8R8_UNORM;
+		m_vk_color_space = formats[0].colorSpace;
 	}
 	else
 	{
@@ -606,33 +606,33 @@ void vulkan_swap_chain::find_image_format_and_color_space()
 
         if (found_16bit_extended.has_value() && k_enable_hdr)
         {
-            m_color_format = (*found_16bit_extended).format;
-            m_color_space = (*found_16bit_extended).colorSpace;
+            m_vk_color_format = (*found_16bit_extended).format;
+            m_vk_color_space = (*found_16bit_extended).colorSpace;
         }
         else if (found_8bit_normalized.has_value())
         {
-            m_color_format = (*found_8bit_normalized).format;
-            m_color_space = (*found_8bit_normalized).colorSpace;
+            m_vk_color_format = (*found_8bit_normalized).format;
+            m_vk_color_space = (*found_8bit_normalized).colorSpace;
         }
         // #TODO imgui does not support srgb framebuffer for swapchain, so we have to default to UNORM
         else if (found_8bit_srgb.has_value())
         {
-            m_color_format = (*found_8bit_srgb).format;
-            m_color_space = (*found_8bit_srgb).colorSpace;
+            m_vk_color_format = (*found_8bit_srgb).format;
+            m_vk_color_space = (*found_8bit_srgb).colorSpace;
         }
         else
 		{
-			m_color_format = formats[0].format;
-			m_color_space = formats[0].colorSpace;
+			m_vk_color_format = formats[0].format;
+			m_vk_color_space = formats[0].colorSpace;
 		}
 	}
 }
 
-void vulkan_swap_chain::create_framebuffer()
+void vulkan_swap_chain::create_frame_buffer()
 {
     KB_PROFILE_SCOPE;
 
-	for (auto& framebuffer : m_framebuffers)
+	for (auto& framebuffer : m_frame_buffers)
 		if (framebuffer)
 			vkDestroyFramebuffer(m_device->get_vk_device(), framebuffer, nullptr);
 
@@ -642,7 +642,7 @@ void vulkan_swap_chain::create_framebuffer()
 	VkFramebufferCreateInfo frame_buffer_create_info{};
 	frame_buffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	frame_buffer_create_info.pNext = nullptr;
-	frame_buffer_create_info.renderPass = m_render_pass;
+	frame_buffer_create_info.renderPass = m_vk_render_pass;
 	frame_buffer_create_info.attachmentCount = 1;
 	frame_buffer_create_info.width = m_width;
 	frame_buffer_create_info.height = m_height;
@@ -651,12 +651,12 @@ void vulkan_swap_chain::create_framebuffer()
     if (m_width == 0 || m_height == 0)
         KB_CORE_ERROR("[VulkanSwapChain]: creating framebuffer ({}, {}) which is not to spec!", m_width, m_height);
 
-	m_framebuffers.resize(m_image_count);
+	m_frame_buffers.resize(m_image_count);
 	for (u32 i = 0; i < m_image_count; ++i)
 	{
-        frame_buffer_create_info.pAttachments = &m_buffers[i].view;
+        frame_buffer_create_info.pAttachments = &m_buffers[i].m_vk_image_view;
 
-		if (vkCreateFramebuffer(m_device->get_vk_device(), &frame_buffer_create_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(m_device->get_vk_device(), &frame_buffer_create_info, nullptr, &m_frame_buffers[i]) != VK_SUCCESS)
 			KB_CORE_ASSERT(false, "[VulkanSwapChain]: Vulkan failed to create framebuffer!");
 	}
 }
@@ -681,12 +681,12 @@ void vulkan_swap_chain::create_depth_stencil()
 	image_create_info.pQueueFamilyIndices = nullptr;
 
 	vulkan_allocator allocator{ "Swapchain Depth Stencil" };
-	m_depth_stencil.memory_allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_depth_stencil.image);
+	m_depth_stencil.m_vk_memory_allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, m_depth_stencil.m_vk_image);
 
 	VkImageViewCreateInfo image_view_create_info;
 	image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	image_view_create_info.image = m_depth_stencil.image;
+	image_view_create_info.image = m_depth_stencil.m_vk_image;
 	image_view_create_info.format = depth_format;
 	image_view_create_info.subresourceRange.baseMipLevel = 0;
 	image_view_create_info.subresourceRange.levelCount = 1;
@@ -697,7 +697,7 @@ void vulkan_swap_chain::create_depth_stencil()
 	if (depth_format >= VK_FORMAT_D16_UNORM_S8_UINT)
 		image_view_create_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-	if (vkCreateImageView(device, &image_view_create_info, nullptr, &m_depth_stencil.image_view) != VK_SUCCESS)
+	if (vkCreateImageView(device, &image_view_create_info, nullptr, &m_depth_stencil.m_vk_image_view) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create depth stencil image view!");
 }
 
