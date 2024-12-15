@@ -251,24 +251,23 @@ vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
 
 void main()
 {
-    vec3 color = texture(u_AlbedoTexture, v_Input.TexCoord).rgb;
-    vec3 normalMap = texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0 - 1.0;
-
     // Ambient
-    vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
-    // vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor;
-    vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor;
+    vec4 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord) * vec4(u_MaterialUniforms.AlbedoColor, 1.0);
+    float alpha = albedoColor.a;
+    vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor.rgb;
 
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
+
     vec3 normal = normalize(v_Input.Normal);
-    // TODO: https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-    // vec3 normal = perturb(normalMap, normalize(v_Input.Normal), viewDir, v_Input.TexCoord);
+    if (u_MaterialUniforms.UseNormalMap) {
+        normal = normalize(texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0f - 1.0f);
+    }
 
     // ===========================
     // Calculate directional light
     // ===========================
     vec3 dirLightDirection = normalize(-u_DirectionalLight.Direction);
-    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * albedoColor;
+    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * albedoColor.rgb;
 
     // Diffuse
     float diffuseImpact = max(dot(normal, dirLightDirection), 0.0);
@@ -289,5 +288,5 @@ void main()
     // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    o_Color = vec4(ambient + directionalLightColor + pLightsColor, 1.0);
+    o_Color = vec4(ambient + directionalLightColor + pLightsColor, alpha);
 }

@@ -408,7 +408,11 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
             for (const auto& [name, decl] : resources)
             {
                 std::string foo = "";
-                UI::Property(name.c_str(), foo);
+
+#if 0
+                UI::PropertyImageButton(name.c_str(), render_material->get_texture_2d(name), { 32, 32 });
+#endif
+                UI::PropertyReadOnlyChars(name.c_str(), decl.get_name().c_str());
             }
 
             const auto& shader_buffers = shader->get_shader_buffers();
@@ -975,7 +979,7 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			if (ImGui::Button(add_or_change_button_text))
 			{
-				auto filepath = FileDialog::OpenFile("Mesh FBX (*.fbx)\0*.fbx\0Mesh OBJ (*.obj)\0*.obj");
+				auto filepath = FileDialog::OpenFile("Mesh FBX (*.fbx)\0*.fbx\0Mesh OBJ (*.obj)\0*.obj\0Mesh GLFT (*.gltf)\0*.gltf");
 				if (!filepath.empty())
 					component.LoadMeshFromFileEditor(filepath, entity);
 			}

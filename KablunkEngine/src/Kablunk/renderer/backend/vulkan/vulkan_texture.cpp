@@ -331,7 +331,7 @@ bool vulkan_texture_2d::load_image(const std::string& filepath)
 	}
 	else
 	{
-        stbi_set_flip_vertically_on_load(1);
+        // stbi_set_flip_vertically_on_load(1);
 		data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 		const auto size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
 		m_image_data.allocate(size);

@@ -130,6 +130,8 @@ public:
         std::filesystem::path p_atlas_path
     ) noexcept -> virtual_texture_handle;
 
+    auto release_texture(virtual_texture_handle p_handle) noexcept -> void;
+
     // Create a virtual texture handle from a filepath
     [[nodiscard]] static auto create_virtual_texture_handle(
         const std::filesystem::path& p_file_path

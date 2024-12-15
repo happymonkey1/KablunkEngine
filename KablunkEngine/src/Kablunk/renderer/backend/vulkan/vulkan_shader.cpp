@@ -22,92 +22,92 @@ namespace kb::render::backend::vk
 
 namespace Internal
 { // start namespace ::Internal
-	static const char* GetCacheDirectory() { return "Resources/Cache/Shader/Vulkan"; }
+static const char* GetCacheDirectory() { return "Resources/Cache/Shader/Vulkan"; }
 
-	static void CreateCacheDirectoryIfNecessary()
+static void CreateCacheDirectoryIfNecessary()
+{
+    const std::string cache_dir = GetCacheDirectory();
+	if (!std::filesystem::exists(cache_dir))
+		std::filesystem::create_directories(cache_dir);
+}
+
+static shader_uniform_type_t SPIRTypeToShaderUniformType(spirv_cross::SPIRType type)
+{
+	switch (type.basetype)
 	{
-        const std::string cache_dir = GetCacheDirectory();
-		if (!std::filesystem::exists(cache_dir))
-			std::filesystem::create_directories(cache_dir);
-	}
+	case spirv_cross::SPIRType::Boolean:  return shader_uniform_type_t::Bool;
+	case spirv_cross::SPIRType::Int:
+		if (type.vecsize == 1)            return shader_uniform_type_t::Int;
+		if (type.vecsize == 2)            return shader_uniform_type_t::IVec2;
+		if (type.vecsize == 3)            return shader_uniform_type_t::IVec3;
+		if (type.vecsize == 4)            return shader_uniform_type_t::IVec4;
 
-	static shader_uniform_type_t SPIRTypeToShaderUniformType(spirv_cross::SPIRType type)
+	case spirv_cross::SPIRType::UInt:     return shader_uniform_type_t::UInt;
+	case spirv_cross::SPIRType::Float:
+		if (type.columns == 3)            return shader_uniform_type_t::Mat3;
+		if (type.columns == 4)            return shader_uniform_type_t::Mat4;
+
+		if (type.vecsize == 1)            return shader_uniform_type_t::Float;
+		if (type.vecsize == 2)            return shader_uniform_type_t::Vec2;
+		if (type.vecsize == 3)            return shader_uniform_type_t::Vec3;
+		if (type.vecsize == 4)            return shader_uniform_type_t::Vec4;
+		break;
+	}
+	KB_CORE_ASSERT(false, "Unknown type!");
+	return shader_uniform_type_t::None;
+}
+
+static std::string ReadShaderFromFile(const std::string& filepath)
+{
+	std::string result;
+	std::ifstream in(filepath, std::ios::in | std::ios::binary);
+	if (in)
 	{
-		switch (type.basetype)
-		{
-		case spirv_cross::SPIRType::Boolean:  return shader_uniform_type_t::Bool;
-		case spirv_cross::SPIRType::Int:
-			if (type.vecsize == 1)            return shader_uniform_type_t::Int;
-			if (type.vecsize == 2)            return shader_uniform_type_t::IVec2;
-			if (type.vecsize == 3)            return shader_uniform_type_t::IVec3;
-			if (type.vecsize == 4)            return shader_uniform_type_t::IVec4;
-
-		case spirv_cross::SPIRType::UInt:     return shader_uniform_type_t::UInt;
-		case spirv_cross::SPIRType::Float:
-			if (type.columns == 3)            return shader_uniform_type_t::Mat3;
-			if (type.columns == 4)            return shader_uniform_type_t::Mat4;
-
-			if (type.vecsize == 1)            return shader_uniform_type_t::Float;
-			if (type.vecsize == 2)            return shader_uniform_type_t::Vec2;
-			if (type.vecsize == 3)            return shader_uniform_type_t::Vec3;
-			if (type.vecsize == 4)            return shader_uniform_type_t::Vec4;
-			break;
-		}
-		KB_CORE_ASSERT(false, "Unknown type!");
-		return shader_uniform_type_t::None;
+		in.seekg(0, std::ios::end);
+		result.resize(in.tellg());
+		in.seekg(0, std::ios::beg);
+		in.read(&result[0], result.size());
 	}
+	else
+		KB_CORE_ASSERT(false, "Could not load shader!");
 
-	static std::string ReadShaderFromFile(const std::string& filepath)
+	in.close();
+
+	return result;
+}
+
+static const char* VkShaderStageCachedFileExtension(VkShaderStageFlagBits stage)
+{
+	switch (stage)
 	{
-		std::string result;
-		std::ifstream in(filepath, std::ios::in | std::ios::binary);
-		if (in)
-		{
-			in.seekg(0, std::ios::end);
-			result.resize(in.tellg());
-			in.seekg(0, std::ios::beg);
-			in.read(&result[0], result.size());
-		}
-		else
-			KB_CORE_ASSERT(false, "Could not load shader!");
-
-		in.close();
-
-		return result;
+	case VK_SHADER_STAGE_VERTEX_BIT:    return ".cached_vulkan.vert";
+	case VK_SHADER_STAGE_FRAGMENT_BIT:  return ".cached_vulkan.frag";
+	case VK_SHADER_STAGE_COMPUTE_BIT:   return ".cached_vulkan.comp";
 	}
+	KB_CORE_ASSERT(false, "unreachable");
+	return "";
+}
 
-	static const char* VkShaderStageCachedFileExtension(VkShaderStageFlagBits stage)
+static shaderc_shader_kind VkShaderStageToShaderC(VkShaderStageFlagBits stage)
+{
+	switch (stage)
 	{
-		switch (stage)
-		{
-		case VK_SHADER_STAGE_VERTEX_BIT:    return ".cached_vulkan.vert";
-		case VK_SHADER_STAGE_FRAGMENT_BIT:  return ".cached_vulkan.frag";
-		case VK_SHADER_STAGE_COMPUTE_BIT:   return ".cached_vulkan.comp";
-		}
-		KB_CORE_ASSERT(false, "unreachable");
-		return "";
+	case VK_SHADER_STAGE_VERTEX_BIT:    return shaderc_vertex_shader;
+	case VK_SHADER_STAGE_FRAGMENT_BIT:  return shaderc_fragment_shader;
+	case VK_SHADER_STAGE_COMPUTE_BIT:   return shaderc_compute_shader;
 	}
+	KB_CORE_ASSERT(false, "unreachable");
+	return (shaderc_shader_kind)0;
+}
 
-	static shaderc_shader_kind VkShaderStageToShaderC(VkShaderStageFlagBits stage)
-	{
-		switch (stage)
-		{
-		case VK_SHADER_STAGE_VERTEX_BIT:    return shaderc_vertex_shader;
-		case VK_SHADER_STAGE_FRAGMENT_BIT:  return shaderc_fragment_shader;
-		case VK_SHADER_STAGE_COMPUTE_BIT:   return shaderc_compute_shader;
-		}
-		KB_CORE_ASSERT(false, "unreachable");
-		return (shaderc_shader_kind)0;
-	}
+static VkShaderStageFlagBits ShaderTypeFromString(const std::string& type)
+{
+	if (type == "vertex")                       return VK_SHADER_STAGE_VERTEX_BIT;
+	if (type == "fragment" || type == "pixel")  return VK_SHADER_STAGE_FRAGMENT_BIT;
+	if (type == "compute")                      return VK_SHADER_STAGE_COMPUTE_BIT;
 
-	static VkShaderStageFlagBits ShaderTypeFromString(const std::string& type)
-	{
-		if (type == "vertex")                       return VK_SHADER_STAGE_VERTEX_BIT;
-		if (type == "fragment" || type == "pixel")  return VK_SHADER_STAGE_FRAGMENT_BIT;
-		if (type == "compute")                      return VK_SHADER_STAGE_COMPUTE_BIT;
-
-		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
-	}
+	return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+}
 } // end namespace ::Internal
 
 static kb::unordered_flat_map<u32, kb::unordered_flat_map<u32, vulkan_shader::vk_uniform_buffer_t*>> s_uniform_buffers;
@@ -174,7 +174,7 @@ void vulkan_shader::reload(bool force_compile /*= false*/)
 		    force_compile = shader_cache::has_changed(inst->m_file_path, source);
 
             inst->m_shader_source = inst->PreProcess(source);
-		    kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>> shader_data;
+		    unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>> shader_data;
             inst->CompileOrGetVulkanBinaries(shader_data, force_compile);
             inst->LoadAndCreateShaders(shader_data);
             inst->ReflectAllShaderStages(shader_data);

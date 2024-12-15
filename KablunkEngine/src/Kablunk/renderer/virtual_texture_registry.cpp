@@ -112,6 +112,42 @@ auto virtual_texture_registry::load_texture_atlas(std::filesystem::path p_atlas_
     return virtual_texture_handle{ 0 };
 }
 
+auto virtual_texture_registry::release_texture(virtual_texture_handle p_handle) noexcept -> void
+{
+    // TODO: should tombstone and batch erase?
+
+    if (!m_virtual_to_raw_handle_map.contains(p_handle))
+    {
+        KB_CORE_WARN(
+            "[virtual_texture_registry]: Unable to release virtual texture with handle={}",
+            p_handle.as<virtual_texture_handle::value_t>()
+        );
+    }
+
+    const auto raw_handle = m_virtual_to_raw_handle_map.at(p_handle);
+    m_virtual_to_raw_handle_map.erase(p_handle);
+
+    if (m_virtual_textures.contains(p_handle))
+    {
+        m_virtual_textures.erase(p_handle);
+    }
+
+    if (m_texture_metadata_map.contains(raw_handle))
+    {
+        m_texture_metadata_map.erase(raw_handle);
+    }
+
+    if (m_raw_textures.contains(raw_handle))
+    {
+        m_raw_textures.erase(raw_handle);
+    }
+
+    KB_CORE_INFO(
+        "[virtual_texture_registry]: Erased virtual texture with handle={}",
+        p_handle.as<virtual_texture_handle::value_t>()
+    );
+}
+
 // TODO: this could have collisions if there are two files in separate directories with the same name
 auto virtual_texture_registry::create_virtual_texture_handle(
     const std::filesystem::path& p_file_path) noexcept -> virtual_texture_handle
