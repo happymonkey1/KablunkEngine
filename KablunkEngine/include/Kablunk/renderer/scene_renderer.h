@@ -81,10 +81,15 @@ struct scene_renderer_camera_t
 	glm::mat4 view_mat;
 };
 
-struct scene_renderer_data_t
+struct scene_renderer_data_ub_t
 {
 	scene_renderer_camera_t camera;
 	LightEnvironmentData light_environment;
+};
+
+struct shadow_data_ub_t
+{
+    glm::mat4 m_view_projection;
 };
 
 struct point_light_ub_t
@@ -127,10 +132,16 @@ private:
     void flush_draw_list();
     void pre_render();
     void clear_pass();
+    auto shadow_pass() noexcept -> void;
     void geometry_pass();
     void composite_pass();
 
     void clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear = false);
+
+    auto calculate_shadow_map_data(
+        const scene_renderer_camera_t& p_scene_camera,
+        const glm::vec3& p_light_direction
+    ) noexcept -> void;
 
 private:
     arc<Scene> m_context;
@@ -138,10 +149,12 @@ private:
 
     arc<backend::render_command_buffer> m_command_buffer;
 
+    arc<backend::render_pass> m_directional_shadow_pass;
     arc<backend::render_pass> m_geometry_pass;
     arc<backend::render_pass> m_composite_pass;
 
     arc<backend::material> m_composite_material;
+    arc<backend::material> m_dir_shadow_pass_material;
 
 #if 0
     arc<render::render_pass> m_external_composite_render_pass;
@@ -150,8 +163,9 @@ private:
 
     struct GPUTimeQueryIndices
     {
-        uint32_t geometry_pass_query;
-        uint32_t composite_pass_query;
+        u32 m_shadow_pass_query;
+        uint32_t m_geometry_pass_query;
+        uint32_t m_composite_pass_query;
     };
 
     arc<backend::texture_2d> m_bloom_texture;
@@ -178,6 +192,7 @@ private:
     arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_directional_light_set{};
+    arc<backend::uniform_buffer_set> m_shadow_data_uniform_buffer_set{};
 	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
     point_light_ub_t* m_point_lights_ub = new point_light_ub_t{};
@@ -192,7 +207,9 @@ private:
 	// flag for flushing scene data on a separate "job" thread
 	bool m_use_threads = false;
 
-	scene_renderer_data_t m_scene_data;
+    f32 m_shadow_scale_from_origin = 10.f;
+	scene_renderer_data_ub_t m_scene_data;
+    shadow_data_ub_t m_shadow_data;
 
 	struct draw_command_data_t
 	{

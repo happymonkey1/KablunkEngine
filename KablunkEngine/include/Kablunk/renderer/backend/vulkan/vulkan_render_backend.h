@@ -74,6 +74,18 @@ public:
         u32 p_instance_count
     ) noexcept override;
 
+    void render_instanced_sub_mesh_with_material(
+        const arc<render_command_buffer>& p_render_command_buffer,
+        const arc<pipeline>& p_pipeline,
+        const arc<Mesh>& p_mesh,
+        u32 p_sub_mesh_index,
+        const arc<material>& p_material,
+        const arc<vertex_buffer>& p_transform_buffer,
+        u32 p_transform_offset,
+        u32 p_bone_transforms_offset,
+        u32 p_instance_count
+    ) noexcept override;
+
     void render_instanced_sub_mesh(
         arc<render_command_buffer> p_render_command_buffer,
         arc<pipeline> p_pipeline,

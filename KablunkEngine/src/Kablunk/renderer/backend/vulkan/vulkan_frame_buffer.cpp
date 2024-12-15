@@ -330,7 +330,7 @@ void vulkan_frame_buffer::rt_invalidate()
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 				depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 			}
-			m_clear_values[attachment_index].depthStencil = { 1.0f, 0 };
+			m_clear_values[attachment_index].depthStencil = { m_specification.m_depth_clear_value, 0 };
 		}
 		else
 		{
@@ -505,7 +505,7 @@ void vulkan_frame_buffer::rt_invalidate()
 	if (m_depth_attachment_image)
 	{
 		arc<vulkan_image_2d> image = m_depth_attachment_image.As<vulkan_image_2d>();
-		if (m_specification.m_existing_image)
+		if (m_specification.m_existing_image && image->get_specification().layers > 1)
 		{
 			KB_CORE_ASSERT(m_specification.m_existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
 			attachments.emplace_back(image->GetLayerImageView(m_specification.m_existing_image_layers[0]));

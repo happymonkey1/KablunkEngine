@@ -15,6 +15,9 @@
 
 #include "Kablunk/Core/Application.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/compatibility.hpp>
+
 namespace kb::render
 { // start namespace kb::render
 
@@ -68,8 +71,69 @@ void scene_renderer::init()
     m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);
     m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(point_light_ub_t), frames_in_flight);
     m_directional_light_set = backend::uniform_buffer_set::create(sizeof(directional_light_t), frames_in_flight);
+    m_shadow_data_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(shadow_data_ub_t), frames_in_flight);
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
+
+    backend::buffer_layout vertex_buffer_layout = {
+        { backend::shader_data_type_t::Float3, "a_Position" },
+        { backend::shader_data_type_t::Float3, "a_Normal" },
+        { backend::shader_data_type_t::Float3, "a_Tangent" },
+        { backend::shader_data_type_t::Float3, "a_Binormal" },
+        { backend::shader_data_type_t::Float2, "a_TexCoord" }
+    };
+
+    backend::buffer_layout instance_buffer_layout = {
+        { backend::shader_data_type_t::Float4, "a_MRow0" },
+        { backend::shader_data_type_t::Float4, "a_MRow1" },
+        { backend::shader_data_type_t::Float4, "a_MRow2" },
+    };
+
+    // Directional shadow pass
+    {
+        u32 shadow_map_resolution = 4096;
+
+        backend::frame_buffer_specification_t frame_buffer_spec{};
+        frame_buffer_spec.m_attachments = {
+            backend::image_format_t::DEPTH32F
+        };
+        frame_buffer_spec.m_width = shadow_map_resolution;
+        frame_buffer_spec.m_height = shadow_map_resolution;
+        frame_buffer_spec.m_clear_color = { 0.f, 0.f, 0.f, 0.f };
+        frame_buffer_spec.m_clear_depth_on_load = false;
+        frame_buffer_spec.m_no_resize = true;
+        frame_buffer_spec.m_depth_clear_value = 1.0f;
+
+        const auto& dir_shadow_shader = get_shader(shader_library::k_directional_shadows_shader_name);
+        backend::pipeline_specification_t dir_shadow_pipeline_spec{
+            .shader = dir_shadow_shader,
+            .m_target_frame_buffer = backend::frame_buffer::create(frame_buffer_spec),
+            .layout = vertex_buffer_layout,
+            .instance_layout = instance_buffer_layout,
+            .topology = backend::primitive_topology_t::triangles,
+            .m_depth_compare_op = backend::depth_compare_op_t::less,
+            .backface_culling = true,
+            .depth_test = true,
+            .depth_write = true,
+            .wireframe = false,
+            .debug_name = "scene_renderer::pipeline::directional_shadow_map"
+        };
+
+        backend::render_pass_specification dir_shadow_render_pass_spec{
+            .m_pipeline = backend::pipeline::create(dir_shadow_pipeline_spec),
+            .m_debug_name = "scene_renderer::render_pass::geometry"
+        };
+
+        m_directional_shadow_pass = backend::render_pass::create(dir_shadow_render_pass_spec);
+        m_directional_shadow_pass->set_input("DirShadowData", m_shadow_data_uniform_buffer_set);
+        KB_CORE_ASSERT(m_directional_shadow_pass->validate(), "[scene_renderer]: Directional shadow pass validation failed!");
+        m_directional_shadow_pass->bake();
+
+        m_dir_shadow_pass_material = backend::material::create(
+            dir_shadow_shader,
+            "scene_renderer::material::dir_shadow_pass"
+        );
+    }
 
     // Geometry
 	{
@@ -77,28 +141,37 @@ void scene_renderer::init()
         geometry_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+        geometry_frame_buffer_spec.m_depth_clear_value = 0.0f;
         geometry_frame_buffer_spec.m_debug_name = "Geometry";
         //geometry_frame_buffer_spec.m_transfer = true;
         geometry_frame_buffer_spec.m_clear_color_on_load = true;
         geometry_frame_buffer_spec.m_clear_depth_on_load = true;
         arc<backend::frame_buffer> frame_buffer = backend::frame_buffer::create(geometry_frame_buffer_spec);
 
+        arc<backend::shader> geo_shader;
+        switch (get_renderer_pipeline_type())
+        {
+        case renderer_pipeline_type_t::basic:
+        {
+            geo_shader = get_shader(shader_library::k_diffuse_static_shader_name);
+            break;
+        }
+        case renderer_pipeline_type_t::pbr:
+        {
+            geo_shader = get_shader(shader_library::k_pbr_static_shader_name);
+            break;
+        }
+        default:
+            KB_CORE_ASSERT(false, "[scene_renderer]: Cannot select geometry shader for unhandled renderer pipeline type!");
+        }
+
         backend::pipeline_specification_t pipeline_spec{
-            .shader = render::get_shader("Kablunk_diffuse_static"),
+            .shader = geo_shader,
             .m_target_frame_buffer = frame_buffer,
-            .layout = {
-                { backend::shader_data_type_t::Float3, "a_Position" },
-                { backend::shader_data_type_t::Float3, "a_Normal" },
-                { backend::shader_data_type_t::Float3, "a_Tangent" },
-                { backend::shader_data_type_t::Float3, "a_Binormal" },
-                { backend::shader_data_type_t::Float2, "a_TexCoord" }
-            },
-            .instance_layout = {
-                { backend::shader_data_type_t::Float4, "a_MRow0" },
-                { backend::shader_data_type_t::Float4, "a_MRow1" },
-                { backend::shader_data_type_t::Float4, "a_MRow2" },
-            },
+            .layout = vertex_buffer_layout,
+            .instance_layout = instance_buffer_layout,
             .topology = backend::primitive_topology_t::triangles,
+            .m_depth_compare_op = backend::depth_compare_op_t::greater_or_equal,
             .backface_culling = true,
             .depth_test = true,
             .depth_write = true,
@@ -116,6 +189,8 @@ void scene_renderer::init()
         m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
         m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
         m_geometry_pass->set_input("DirectionalLightData", m_directional_light_set);
+        m_geometry_pass->set_input("DirShadowData", m_shadow_data_uniform_buffer_set);
+        m_geometry_pass->set_input("u_ShadowMapTexture", m_directional_shadow_pass->get_depth_output());
 
         KB_CORE_ASSERT(m_geometry_pass->validate(), "Geometry pass validation failed!");
         m_geometry_pass->bake();
@@ -258,6 +333,21 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
                 sizeof(directional_light_copy)
             );
         });
+
+    const auto dir_light_vec3_packed = m_scene_data.light_environment.m_directional_light.m_direction;
+    calculate_shadow_map_data(
+        camera,
+        glm::vec3{ dir_light_vec3_packed.x, dir_light_vec3_packed.y, dir_light_vec3_packed.z }
+    );
+
+    // Submit directional light uniform buffer
+    render::submit([instance, shadow_data_ub = m_shadow_data]() mutable
+        {
+            instance->m_shadow_data_uniform_buffer_set->rt_get()->rt_set_data(
+                &shadow_data_ub,
+                sizeof(shadow_data_ub)
+            );
+        });
 }
 
 void scene_renderer::end_scene()
@@ -353,8 +443,9 @@ void scene_renderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
 
 	uint32_t current_frame_index = rt_get_current_frame_index();
 	ImGui::Text("GPU time: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index));
-	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
-	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
+    ImGui::Text("Shadow Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_shadow_pass_query));
+	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_geometry_pass_query));
+	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_composite_pass_query));
 
     p_renderer_2d->on_imgui_render();
 
@@ -382,6 +473,7 @@ void scene_renderer::flush_draw_list()
 		pre_render();
 
 		// draw 3d geometry
+        shadow_pass();
 		geometry_pass();
 
 		// composite and post-processing pass
@@ -435,11 +527,41 @@ void scene_renderer::clear_pass(arc<backend::render_pass> render_pass, bool expl
 	render::end_render_pass(m_command_buffer);
 }
 
+auto scene_renderer::shadow_pass() noexcept -> void
+{
+    m_gpu_time_query_indices.m_shadow_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
+    begin_render_pass(m_command_buffer, m_directional_shadow_pass);
+
+    const auto& dir_shadow_pass_pipeline = m_directional_shadow_pass->get_pipeline();
+    for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
+    {
+        const auto& transform_data = m_transform_map[mesh_transform_handle];
+        const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
+            sizeof(transform_vertex_data_t);
+        KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
+
+        Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh_with_material(
+            m_command_buffer,
+            dir_shadow_pass_pipeline,
+            draw_command_data.Mesh,
+            draw_command_data.Submesh_index,
+            m_dir_shadow_pass_material,
+            m_transform_buffer,
+            static_cast<u32>(transform_offset),
+            0ull,
+            draw_command_data.Instance_count
+        );
+    }
+
+    end_render_pass(m_command_buffer);
+    m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_shadow_pass_query);
+}
+
 void scene_renderer::geometry_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.geometry_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
+	m_gpu_time_query_indices.m_geometry_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
 	begin_render_pass(m_command_buffer, m_geometry_pass);
 
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
@@ -464,14 +586,14 @@ void scene_renderer::geometry_pass()
 	}
 
 	end_render_pass(m_command_buffer);
-	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.geometry_pass_query);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_geometry_pass_query);
 }
 
 void scene_renderer::composite_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
+	m_gpu_time_query_indices.m_composite_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
 	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 
 	constexpr float exposure = 1.0f; // #TODO dynamic based off camera
@@ -510,7 +632,34 @@ void scene_renderer::composite_pass()
     );
 
 	render::end_render_pass(m_command_buffer);
-	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.composite_pass_query);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_composite_pass_query);
 }
+
+auto scene_renderer::calculate_shadow_map_data(
+    const scene_renderer_camera_t& p_scene_camera,
+    const glm::vec3& p_light_direction
+) noexcept -> void
+{
+    constexpr f32 scale_to_origin = 0.0f;
+
+    // calculate view projection matrix from directional light's perspective
+#if 0
+    glm::mat4 view_mat = p_scene_camera.view_mat;
+    const glm::vec4 origin{ glm::vec3{ 0.0f }, 1.0f };
+    view_mat[3] = glm::lerp(view_mat[3], origin, scale_to_origin);
+#endif
+    const auto& light_dir = m_scene_data.light_environment.m_directional_light.m_direction;
+
+    glm::mat4 view_mat = glm::lookAt(
+        glm::vec3{ light_dir.x, light_dir.y, light_dir.z } * m_shadow_scale_from_origin * -1.f,
+        glm::vec3{ 0.f },
+        glm::vec3{ 0.f, 1.f, 0.f }
+    );
+
+    const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+
+    m_shadow_data.m_view_projection = light_view_projection;
+}
+
 
 } // end namespace kb::render

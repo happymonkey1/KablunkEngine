@@ -14,7 +14,7 @@ namespace kb
 { // start namespace kb
 
 EditorCamera::EditorCamera(float fov, float aspect_ratio, float near_clip, float far_clip)
-	: camera{ glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }, m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip },
+	: camera{ glm::perspective(glm::radians(fov), aspect_ratio, far_clip, near_clip), glm::perspective(glm::radians(fov), aspect_ratio, near_clip, far_clip) }, m_fov{ fov }, m_aspect_ratio{ aspect_ratio }, m_near_clip{ near_clip }, m_far_clip{ far_clip },
 	  m_focal_point{ 0.0f }
 {
 	m_focal_point = glm::vec3{ 0.0f };
@@ -143,7 +143,7 @@ void EditorCamera::DisableMouse() const
 void EditorCamera::UpdateProjection()
 {
 	m_aspect_ratio = m_viewport_width / m_viewport_height;
-	m_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near_clip, m_far_clip);
+	m_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_far_clip, m_near_clip);
 	m_unreversed_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near_clip, m_far_clip);
 }
 

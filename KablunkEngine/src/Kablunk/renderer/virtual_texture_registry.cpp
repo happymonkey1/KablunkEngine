@@ -50,7 +50,7 @@ auto virtual_texture_registry::load_texture(
         // In release builds, invalid specified texture handle will return missing texture
         if (p_specification.m_in_memory_specification.m_name.empty())
         {
-            KB_CORE_ERROR("[virtual_texture_registry]: Memory texture must define a raw texture handle in the import specification")
+            KB_CORE_ERROR("[virtual_texture_registry]: Memory texture must define a raw texture handle in the import specification");
             texture_handle = k_missing_texture_raw_handle;
             break;
         }
@@ -445,7 +445,7 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
                 "[virtual_texture_registry]: Failed to create virtual texture handle for empty name!"
             );
 #else
-            if (p_specification.m_path.empty())
+            if (p_specification.m_in_memory_specification.m_name.empty())
             {
                 KB_CORE_ERROR("[virtual_texture_registry]: Failed to create virtual texture handle for empty name!");
                 return k_missing_texture_virtual_handle;

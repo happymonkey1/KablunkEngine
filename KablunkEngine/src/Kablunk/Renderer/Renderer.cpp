@@ -61,7 +61,12 @@ void Renderer::init()
     default:
         KB_CORE_ASSERT(false, "[renderer]: Cannot load shaders for unknown renderer pipeline type!");
     }
-    
+
+    m_shader_library->load(fmt::format(
+        "resources/shaders/{}.glsl",
+        shader_library::k_directional_shadows_shader_name
+    ));
+
     m_shader_library->load(fmt::format(
         "resources/shaders/{}.glsl",
         shader_library::k_scene_composite_name

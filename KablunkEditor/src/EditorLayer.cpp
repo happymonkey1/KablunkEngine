@@ -57,7 +57,7 @@ namespace kb
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.01f, 10000.0f },
         m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
         // TODO: clean up

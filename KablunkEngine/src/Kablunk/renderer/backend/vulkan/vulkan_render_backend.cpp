@@ -669,6 +669,87 @@ void vulkan_render_backend::render_static_mesh(
         });
 }
 
+void vulkan_render_backend::render_instanced_sub_mesh_with_material(
+    const arc<render_command_buffer>& p_render_command_buffer, const arc<pipeline>& p_pipeline, const arc<Mesh>& p_mesh,
+    u32 p_sub_mesh_index, const arc<material>& p_material, const arc<vertex_buffer>& p_transform_buffer,
+    u32 p_transform_offset, u32 p_bone_transforms_offset, u32 p_instance_count) noexcept
+{
+    submit([
+        render_command_buffer = p_render_command_buffer,
+        mesh = p_mesh,
+        vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>(),
+        vulkan_pipeline = p_pipeline.As<vulkan_pipeline>(),
+        vulkan_material = p_material.As<vulkan_material>(),
+        sub_mesh_index = p_sub_mesh_index,
+        instance_count = p_instance_count
+    ]() mutable
+        {
+            u32 current_frame_index = rt_get_current_frame_index();
+            const auto vk_command_buffer = render_command_buffer
+                .As<vulkan_render_command_buffer>()
+                ->get_active_command_buffer();
+
+            const auto& mesh_data = mesh->GetMeshData();
+
+            // Bind mesh vertex buffer
+            mesh_data->get_vertex_buffer()
+                .As<vulkan_vertex_buffer>()
+                ->rt_vk_bind_buffer(vk_command_buffer, 0);
+
+            // Bind transform buffer
+            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1);
+
+            // Bind mesh index buffer
+            mesh_data->get_index_buffer()
+                .As<vulkan_index_buffer>()
+                ->rt_vk_bind_buffer(vk_command_buffer);
+
+            if (vulkan_material)
+            {
+                const auto vk_layout = vulkan_pipeline->get_vk_pipeline_layout();
+                const auto vk_descriptor_set = vulkan_material->get_vk_descriptor_set(current_frame_index);
+                if (vk_descriptor_set)
+                {
+                    vkCmdBindDescriptorSets(
+                        vk_command_buffer,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        vk_layout,
+                        0,
+                        1,
+                        &vk_descriptor_set,
+                        0,
+                        nullptr
+                    );
+                }
+
+                const auto& uniform_storage_buffer = vulkan_material->get_uniform_storage_buffer();
+                if (uniform_storage_buffer.size())
+                {
+                    vkCmdPushConstants(
+                        vk_command_buffer,
+                        vk_layout,
+                        VK_SHADER_STAGE_FRAGMENT_BIT,
+                        0,
+                        static_cast<u32>(uniform_storage_buffer.size()),
+                        uniform_storage_buffer.get()
+                    );
+                }
+            }
+
+            const auto& sub_meshes = mesh_data->get_sub_meshes();
+            const auto& sub_mesh = sub_meshes.at(sub_mesh_index);
+
+            vkCmdDrawIndexed(
+                vk_command_buffer,
+                sub_mesh.IndexCount,
+                instance_count,
+                sub_mesh.BaseIndex,
+                sub_mesh.BaseVertex,
+                0
+            );
+        });
+}
+
 void vulkan_render_backend::render_instanced_sub_mesh(
     arc<render_command_buffer> p_render_command_buffer,
     arc<pipeline> p_pipeline,

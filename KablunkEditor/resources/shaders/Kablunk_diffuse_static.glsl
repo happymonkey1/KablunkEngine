@@ -20,6 +20,11 @@ layout(std140, set = 1, binding = 0) uniform Camera
     vec3 u_CameraPosition;
 };
 
+layout (std140, set = 1, binding = 7) uniform DirShadowData 
+{
+	mat4 DirLightMat;
+} u_DirShadowUniform;
+
 struct VertexOutput
 {
     vec3 WorldPosition;
@@ -33,9 +38,11 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
+    vec3 ShadowMapCoords;
 };
 
 layout(location = 0) out VertexOutput v_Output;
+
 
 void main()
 {
@@ -58,6 +65,8 @@ void main()
     v_Output.CameraView = mat3(u_ViewMatrix);
     v_Output.CameraPosition = u_CameraPosition;
     v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
+    vec4 shadowProj = u_DirShadowUniform.DirLightMat * vec4(v_Output.WorldPosition, 1.0);
+    v_Output.ShadowMapCoords = shadowProj.xyz / shadowProj.w;
 
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
@@ -78,6 +87,7 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
+    vec3 ShadowMapCoords;
 };
 
 layout(location = 0) in VertexOutput v_Input;
@@ -101,6 +111,7 @@ struct PointLight
 
 layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
 layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
+layout(set = 0, binding = 8) uniform sampler2D u_ShadowMapTexture;
 
 layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
@@ -249,6 +260,14 @@ vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
     return normalize(TBN * normalMap);
 }
 
+float CalculateShadow(vec3 coords, sampler2D shadowMap) {
+    vec3 projectedCoords = coords * 0.5 + 0.5;
+    float closeDepth = texture(shadowMap, projectedCoords.xy).r;
+    float currentDepth = projectedCoords.z;
+    float shadow = currentDepth > closeDepth ? 1.0 : 0.0;
+    return shadow;
+}
+
 void main()
 {
     // Ambient
@@ -288,5 +307,7 @@ void main()
     // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    o_Color = vec4(ambient + directionalLightColor + pLightsColor, alpha);
+    float shadow = CalculateShadow(v_Input.ShadowMapCoords, u_ShadowMapTexture);
+
+    o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
 }

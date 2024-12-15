@@ -16,6 +16,8 @@ public:
     inline static constexpr const char* k_diffuse_anim_shader_name = "Kablunk_diffuse_anim";
     // PBR pipeline static shader
     inline static constexpr const char* k_pbr_static_shader_name = "Kablunk_pbr_static";
+    // Directional shadows
+    inline static constexpr const char* k_directional_shadows_shader_name = "kb_directional_shadows";
     inline static constexpr const char* k_renderer_2d_quad_name = "Renderer2D_Quad";
     inline static constexpr const char* k_renderer_2d_circle_name = "Renderer2D_Circle";
     inline static constexpr const char* k_renderer_2d_line_name = "Renderer2D_Line";
