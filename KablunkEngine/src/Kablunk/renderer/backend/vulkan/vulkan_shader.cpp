@@ -110,8 +110,8 @@ namespace Internal
 	}
 } // end namespace ::Internal
 
-static kb::unordered_flat_map<uint32_t, kb::unordered_flat_map<uint32_t, vulkan_shader::vk_uniform_buffer_t*>> s_uniform_buffers;
-static kb::unordered_flat_map<uint32_t, kb::unordered_flat_map<uint32_t, vulkan_shader::vk_storage_buffer_t*>> s_storage_buffers;
+static kb::unordered_flat_map<u32, kb::unordered_flat_map<u32, vulkan_shader::vk_uniform_buffer_t*>> s_uniform_buffers;
+static kb::unordered_flat_map<u32, kb::unordered_flat_map<u32, vulkan_shader::vk_storage_buffer_t*>> s_storage_buffers;
 
 
 vulkan_shader::vulkan_shader(VkDevice p_vk_device, const std::string& path, bool force_compile)
@@ -174,7 +174,7 @@ void vulkan_shader::reload(bool force_compile /*= false*/)
 		    force_compile = shader_cache::has_changed(inst->m_file_path, source);
 
             inst->m_shader_source = inst->PreProcess(source);
-		    kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
+		    kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>> shader_data;
             inst->CompileOrGetVulkanBinaries(shader_data, force_compile);
             inst->LoadAndCreateShaders(shader_data);
             inst->ReflectAllShaderStages(shader_data);
@@ -234,7 +234,7 @@ void vulkan_shader::set_int(const std::string& name, int value)
 	KB_CORE_ASSERT(false, "not implemented!");
 }
 
-void vulkan_shader::set_int_array(const std::string& name, int* values, uint32_t count)
+void vulkan_shader::set_int_array(const std::string& name, int* values, u32 count)
 {
 	KB_CORE_ERROR("VulkanShader SetIntArray() not implemented!");
 }
@@ -252,7 +252,7 @@ std::vector<VkDescriptorSetLayout> vulkan_shader::GetAllDescriptorSetLayouts()
 	return result;
 }
 
-vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::allocate_descriptor_set(uint32_t set /*= 0*/) const
+vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::allocate_descriptor_set(u32 set /*= 0*/) const
 {
     KB_PROFILE_SCOPE;
 
@@ -276,7 +276,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::allocate_descriptor_se
 	return result;
 }
 
-vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(uint32_t set /*= 0*/)
+vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u32 set /*= 0*/)
 {
     KB_PROFILE_SCOPE;
 
@@ -293,7 +293,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
 	descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	descriptor_pool_create_info.pNext = nullptr;
-	descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(m_type_counts.at(set).size());
+	descriptor_pool_create_info.poolSizeCount = static_cast<u32>(m_type_counts.at(set).size());
 	descriptor_pool_create_info.pPoolSizes = m_type_counts.at(set).data();
 	descriptor_pool_create_info.maxSets = 1;
 
@@ -313,14 +313,14 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	return result;
 }
 
-vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(uint32_t set, uint32_t number_of_sets)
+vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u32 set, u32 number_of_sets)
 {
     KB_PROFILE_SCOPE;
 
 	ShaderMaterialDescriptorSet result;
 
-	unordered_flat_map<uint32_t, std::vector<VkDescriptorPoolSize>> pool_sizes;
-	for (uint32_t descriptor_set = 0; descriptor_set < m_shader_descriptor_sets.size(); descriptor_set++)
+	unordered_flat_map<u32, std::vector<VkDescriptorPoolSize>> pool_sizes;
+	for (u32 descriptor_set = 0; descriptor_set < m_shader_descriptor_sets.size(); descriptor_set++)
 	{
 		auto& shader_descriptor_set = m_shader_descriptor_sets[descriptor_set];
 		if (!shader_descriptor_set) // Empty descriptor set
@@ -330,19 +330,19 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 		{
 			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.uniform_buffers.size()) * number_of_sets;
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.uniform_buffers.size()) * number_of_sets;
 		}
 		if (!shader_descriptor_set.storage_buffers.empty())
 		{
 			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_buffers.size()) * number_of_sets;
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.storage_buffers.size()) * number_of_sets;
 		}
 		if (!shader_descriptor_set.image_samplers.empty())
 		{
 			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			uint32_t descriptor_set_count = 0;
+			u32 descriptor_set_count = 0;
 			for (auto&& [binding, image_sampler] : shader_descriptor_set.image_samplers)
 				descriptor_set_count += image_sampler.array_size;
 
@@ -352,7 +352,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 		{
 			VkDescriptorPoolSize& type_count = pool_sizes[descriptor_set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_images.size()) * number_of_sets;
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.storage_images.size()) * number_of_sets;
 		}
 	}
 
@@ -362,7 +362,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 	VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
 	descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	descriptor_pool_create_info.pNext = nullptr;
-	descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.at(set).size());
+	descriptor_pool_create_info.poolSizeCount = static_cast<u32>(pool_sizes.at(set).size());
 	descriptor_pool_create_info.pPoolSizes = pool_sizes.at(set).data();
 	descriptor_pool_create_info.maxSets = number_of_sets;
 
@@ -371,7 +371,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 
 	result.descriptor_sets.resize(number_of_sets);
 
-	for (uint32_t i = 0; i < number_of_sets; i++)
+	for (u32 i = 0; i < number_of_sets; i++)
 	{
 		VkDescriptorSetAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -386,7 +386,7 @@ vulkan_shader::ShaderMaterialDescriptorSet vulkan_shader::CreateDescriptorSets(u
 
 }
 
-const VkWriteDescriptorSet* vulkan_shader::GetDescriptorSet(const std::string& name, uint32_t set /*= 0*/) const
+const VkWriteDescriptorSet* vulkan_shader::GetDescriptorSet(const std::string& name, u32 set /*= 0*/) const
 {
 	KB_CORE_ASSERT(set < m_shader_descriptor_sets.size(), "error");
 	KB_CORE_ASSERT(m_shader_descriptor_sets[set], "error");
@@ -429,7 +429,7 @@ unordered_flat_map<VkShaderStageFlagBits, std::string> vulkan_shader::PreProcess
 	return shader_sources;
 }
 
-void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& output_binary, bool force_compile)
+void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>>& output_binary, bool force_compile)
 {
     KB_PROFILE_SCOPE;
 
@@ -451,8 +451,8 @@ void vulkan_shader::CompileOrGetVulkanBinaries(unordered_flat_map<VkShaderStageF
 				fseek(f, 0, SEEK_END);
 				uint64_t size = ftell(f);
 				fseek(f, 0, SEEK_SET);
-				output_binary[stage] = std::vector<uint32_t>(size / sizeof(uint32_t));
-				fread(output_binary[stage].data(), sizeof(uint32_t), output_binary[stage].size(), f);
+				output_binary[stage] = std::vector<u32>(size / sizeof(u32));
+				fread(output_binary[stage].data(), sizeof(u32), output_binary[stage].size(), f);
 				fclose(f);
 			}
 		}
@@ -519,7 +519,7 @@ void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSt
 
 		VkShaderModuleCreateInfo module_create_info{};
 		module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		module_create_info.codeSize = data.size() * sizeof(uint32_t);
+		module_create_info.codeSize = data.size() * sizeof(u32);
 		module_create_info.pCode = data.data();
 
 		VkShaderModule shader_module;
@@ -534,7 +534,7 @@ void vulkan_shader::LoadAndCreateShaders(const kb::unordered_flat_map<VkShaderSt
 	}
 }
 
-void vulkan_shader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector<uint32_t>& shader_data)
+void vulkan_shader::Reflect(VkShaderStageFlagBits shader_stage, const std::vector<u32>& shader_data)
 {
 	KB_CORE_TRACE("===========================");
 	KB_CORE_TRACE(" Vulkan Shader Reflection");
@@ -723,7 +723,7 @@ void vulkan_shader::Reflect(VkShaderStageFlagBits shader_stage, const std::vecto
 	KB_CORE_TRACE("===========================");
 }
 
-void vulkan_shader::ReflectAllShaderStages(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data)
+void vulkan_shader::ReflectAllShaderStages(const kb::unordered_flat_map<VkShaderStageFlagBits, std::vector<u32>>& shader_data)
 {
 	for (auto [stage, data] : shader_data)
 		Reflect(stage, data);
@@ -734,7 +734,7 @@ void vulkan_shader::CreateDescriptors()
     KB_PROFILE_SCOPE;
 
 	m_type_counts.clear();
-	for (uint32_t set = 0; set < m_shader_descriptor_sets.size(); ++set)
+	for (u32 set = 0; set < m_shader_descriptor_sets.size(); ++set)
 	{
 		auto& shader_descriptor_set = m_shader_descriptor_sets[set];
 
@@ -742,21 +742,21 @@ void vulkan_shader::CreateDescriptors()
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.uniform_buffers.size());
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.uniform_buffers.size());
 		}
 
 		if (!shader_descriptor_set.storage_buffers.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_buffers.size());
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.storage_buffers.size());
 		}
 
 		if (!shader_descriptor_set.image_samplers.empty())
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.image_samplers.size());
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.image_samplers.size());
 		}
 
 
@@ -764,7 +764,7 @@ void vulkan_shader::CreateDescriptors()
 		{
 			VkDescriptorPoolSize& type_count = m_type_counts[set].emplace_back();
 			type_count.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			type_count.descriptorCount = static_cast<uint32_t>(shader_descriptor_set.storage_images.size());
+			type_count.descriptorCount = static_cast<u32>(shader_descriptor_set.storage_images.size());
 		}
 
 		// Uniform Buffers
@@ -835,7 +835,7 @@ void vulkan_shader::CreateDescriptors()
 			layout_binding.pImmutableSamplers = nullptr;
 
 			// mask
-			uint32_t binding = binding_and_set & 0xffffffff;
+			u32 binding = binding_and_set & 0xffffffff;
 			layout_binding.binding = binding;
 
 			KB_CORE_ASSERT(
@@ -862,7 +862,7 @@ void vulkan_shader::CreateDescriptors()
 		VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {};
 		descriptor_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		descriptor_layout_create_info.pNext = nullptr;
-		descriptor_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
+		descriptor_layout_create_info.bindingCount = static_cast<u32>(layout_bindings.size());
 		descriptor_layout_create_info.pBindings = layout_bindings.data();
 
 		KB_CORE_INFO("Vulkan creating descriptor set {0} with {1} ubo's, {2} ssbo's, {3} samplers and {4} storage images", set,
