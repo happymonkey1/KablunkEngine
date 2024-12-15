@@ -115,10 +115,12 @@ public:
         const std::filesystem::path& p_filepath
     ) const noexcept -> virtual_texture_handle;
     [[nodiscard]] auto create_texture(
+        std::string_view p_name,
         backend::texture_specification_t p_specification,
-        const void* p_data
+        const void* p_data,
+        bool p_is_atlas = false
     ) const noexcept -> virtual_texture_handle;
-    [[nodiscard]] auto get_texture(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&;
+    [[nodiscard]] auto get_texture_2d(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&;
 
     // ============
 

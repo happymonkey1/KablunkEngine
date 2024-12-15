@@ -40,9 +40,29 @@ void scene_renderer::init()
 	else
 		m_command_buffer = backend::render_command_buffer::create(0, "SceneRenderer");
 
-
-	m_bloom_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
-	m_bloom_dirt_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
+    constexpr u32 white_texture_data = 0xFFFFFFFF;
+    m_bloom_texture = get_texture_2d(create_texture(
+        "bloom_texture",
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA,
+            .m_width = 1,
+            .m_height = 1,
+            .m_generate_mips = false,
+        },
+        &white_texture_data,
+        false
+    ));
+	m_bloom_dirt_texture = get_texture_2d(create_texture(
+        "bloom_dirt_texture",
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA,
+            .m_width = 1,
+            .m_height = 1,
+            .m_generate_mips = false,
+        },
+        &white_texture_data,
+        false
+    ));
 
 	uint32_t frames_in_flight = render::get_frames_in_flight();
     m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);

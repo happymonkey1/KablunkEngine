@@ -143,6 +143,38 @@ inline auto get_renderer_pipeline_type() noexcept -> renderer_pipeline_type_t
     return Singleton<Renderer>::get().get_renderer_pipeline_type();
 }
 
+// Retrieve a texture from the renderer based on a virtual handle
+inline auto get_texture_2d(virtual_texture_handle p_handle) noexcept -> const arc<backend::texture_2d>&
+{
+    return Singleton<Renderer>::get().get_texture_2d(p_handle);
+}
+
+// Create a texture and return a virtual handle
+// Texture is stored in the renderer's texture registry
+inline auto create_texture(
+    std::string_view p_name,
+    const backend::texture_specification_t& p_specification,
+    const void* p_data,
+    const bool p_is_atlas = false
+) noexcept -> virtual_texture_handle
+{
+    return Singleton<Renderer>::get().create_texture(
+        p_name,
+        p_specification,
+        p_data,
+        p_is_atlas
+    );
+}
+
+// Create a texture and return a virtual handle
+// Texture is stored in the renderer's texture registry
+inline auto create_texture(
+    const std::filesystem::path& p_filepath
+) noexcept -> virtual_texture_handle
+{
+    return Singleton<Renderer>::get().create_texture(p_filepath);
+}
+
 // ======
 // Meshes
 // ======

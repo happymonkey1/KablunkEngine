@@ -95,16 +95,31 @@ void Renderer::init()
 
 	// ==========
 
+    m_virtual_texture_registry = virtual_texture_registry::create();
+
     // Load renderer's white texture
     constexpr u32 white_texture_data = 0xFFFFFFFF;
+    const auto handle = m_virtual_texture_registry->load_texture_from_memory(
+        "white_texture",
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA,
+            .m_width = 1,
+            .m_height = 1,
+            .m_generate_mips = false
+        },
+        &white_texture_data,
+        false
+    );
+    m_white_texture = m_virtual_texture_registry->get_texture_2d_by_virtual_handle(handle);
+
+#if 0
     m_white_texture = backend::texture_2d::create(
         backend::image_format_t::RGBA,
         1,
         1,
         &white_texture_data
     );
-
-    m_virtual_texture_registry = virtual_texture_registry::create();
+#endif
 
     const auto& application = Application::Get();
     if (application.get_render_thread().is_running())
@@ -206,15 +221,21 @@ auto Renderer::create_texture(
 }
 
 auto Renderer::create_texture(
+    std::string_view p_name,
     backend::texture_specification_t p_specification,
-    const void* p_data
+    const void* p_data,
+    const bool p_is_atlas /* = false */
 )  const noexcept -> virtual_texture_handle
 {
-    KB_CORE_ASSERT(false, "not implemented!");
-    return {};
+    return m_virtual_texture_registry->load_texture_from_memory(
+        p_name,
+        p_specification,
+        p_data,
+        p_is_atlas
+    );
 }
 
-auto Renderer::get_texture(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&
+auto Renderer::get_texture_2d(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&
 {
     return m_virtual_texture_registry->get_texture_2d_by_virtual_handle(p_handle);
 }

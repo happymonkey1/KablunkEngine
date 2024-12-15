@@ -248,7 +248,7 @@ void vulkan_render_backend::begin_render_pass(
                 render_pass_begin_info.renderArea.offset.y = 0;
                 render_pass_begin_info.renderArea.extent.width = width;
                 render_pass_begin_info.renderArea.extent.height = height;
-                render_pass_begin_info.framebuffer = swap_chain->get_current_vk_framebuffer();
+                render_pass_begin_info.framebuffer = swap_chain->get_current_vk_frame_buffer();
                 KB_CORE_ASSERT(render_pass_begin_info.framebuffer, "render pass swap chain framebuffer is null?");
 
                 viewport.x = 0.0f;

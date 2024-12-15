@@ -2,6 +2,7 @@
 #include "Kablunk/Renderer/Font/font.h"
 
 #include "Kablunk/Core/owning_buffer.h"
+#include "Kablunk/renderer/render_command.h"
 
 namespace kb::render
 { // start namespace kb::render
@@ -132,15 +133,43 @@ static auto create_and_cache_atlas(
     };
     cache_font_atlas(p_name, p_font_size, atlas_header, bitmap.pixels);
 
-    return backend::texture_2d::create(backend::image_format_t::RGBA32F, atlas_header.m_width, atlas_header.m_height, bitmap.pixels);
+    auto handle = render::create_texture(
+        p_name,
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA32F,
+            .m_width = atlas_header.m_width,
+            .m_height = atlas_header.m_height,
+            .m_generate_mips = false // TODO: mips?
+        },
+        bitmap.pixels,
+        true
+    );
+
+    // TODO: change font api to return by handle
+    return render::get_texture_2d(handle);
 }
 
 static auto create_atlas(
+    std::string_view p_name,
     const atlas_header p_atlas_header,
     const void* p_pixel_data
 ) noexcept -> arc<backend::texture_2d>
 {
-    return backend::texture_2d::create(backend::image_format_t::RGBA32F, p_atlas_header.m_width, p_atlas_header.m_height, p_pixel_data);
+    // backend::image_format_t::RGBA32F, p_atlas_header.m_width, p_atlas_header.m_height, p_pixel_data
+    const auto handle = render::create_texture(
+        p_name,
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA32F,
+            .m_width = p_atlas_header.m_width,
+            .m_height = p_atlas_header.m_height,
+            .m_generate_mips = false // TODO: mips?
+        },
+        p_pixel_data,
+        true
+    );
+
+    // TODO: change font api to return by handle
+    return render::get_texture_2d(handle);
 }
 
 } // end namespace ::details
@@ -318,7 +347,7 @@ auto font::generate_atlas(owning_buffer&& p_font_data_buffer) noexcept -> void
     void* pixel_data = nullptr;
     if (details::try_read_cached_font_atlas(m_name, static_cast<f32>(config.m_em_size), atlas_header, pixel_data, storage_buffer))
     {
-        m_texture_atlas = details::create_atlas(atlas_header, pixel_data);
+        m_texture_atlas = details::create_atlas(m_name, atlas_header, pixel_data);
         storage_buffer.release();
     }
     else

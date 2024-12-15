@@ -277,6 +277,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         const u32 height = ai_texture_embedded->mHeight;
                         // Create a texture that is handled owned by the renderer
                         texture_handle = Singleton<Renderer>::get().create_texture(
+                            // TODO: should just be file name
+                            std::string_view{ ai_texture_path.C_Str() },
                             backend::texture_specification_t{
                                 .m_format = backend::image_format_t::RGBA,
                                 .m_width = width,
@@ -298,7 +300,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                     }
 
                     // TODO: material asset should take a handle instead
-                    material_asset->SetAlbedoMap(Singleton<Renderer>::get().get_texture(texture_handle));
+                    material_asset->SetAlbedoMap(Singleton<Renderer>::get().get_texture_2d(texture_handle));
                     material_asset->SetAlbedoColor(glm::vec3{ 1.0f });
                 }
             }
@@ -317,6 +319,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         const u32 height = ai_texture_embedded->mHeight;
                         // Create a texture that is handled owned by the renderer
                         texture_handle = Singleton<Renderer>::get().create_texture(
+                            // TODO: should just be file name
+                            std::string_view{ ai_texture_path.C_Str() },
                             backend::texture_specification_t{
                                 .m_format = backend::image_format_t::RGBA,
                                 .m_width = width,
@@ -338,7 +342,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                     }
 
                     // TODO: material asset should take a handle instead
-                    material_asset->SetNormalMap(Singleton<Renderer>::get().get_texture(texture_handle));
+                    material_asset->SetNormalMap(Singleton<Renderer>::get().get_texture_2d(texture_handle));
                     material_asset->SetUseNormalMap(true);
                 }
             }

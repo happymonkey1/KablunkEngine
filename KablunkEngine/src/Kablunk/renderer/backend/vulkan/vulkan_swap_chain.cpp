@@ -118,24 +118,26 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	}
 
 	// Create swapchain
-	VkSwapchainCreateInfoKHR swap_chain_create_info{};
-	swap_chain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swap_chain_create_info.pNext = nullptr;
-	swap_chain_create_info.surface = m_vk_surface;
-	swap_chain_create_info.minImageCount = desired_number_of_swap_images;
-	swap_chain_create_info.imageFormat = m_vk_color_format;
-	swap_chain_create_info.imageColorSpace = m_vk_color_space;
-	swap_chain_create_info.imageExtent = { swap_chain_extent.width, swap_chain_extent.height };
-	swap_chain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swap_chain_create_info.preTransform = (VkSurfaceTransformFlagBitsKHR)pre_transform;
-	swap_chain_create_info.imageArrayLayers = 1;
-	swap_chain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	swap_chain_create_info.queueFamilyIndexCount = 0;
-	swap_chain_create_info.pQueueFamilyIndices = nullptr;
-	swap_chain_create_info.presentMode = swap_chain_present_mode;
-	swap_chain_create_info.oldSwapchain = old_swap_chain;
-	swap_chain_create_info.clipped = VK_TRUE; // discard rendering outside of surface
-	swap_chain_create_info.compositeAlpha = composite_alpha;
+	VkSwapchainCreateInfoKHR swap_chain_create_info{
+	    .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+	    .pNext = nullptr,
+        .flags = {},
+	    .surface = m_vk_surface,
+	    .minImageCount = desired_number_of_swap_images,
+	    .imageFormat = m_vk_color_format,
+	    .imageColorSpace = m_vk_color_space,
+	    .imageExtent = { swap_chain_extent.width, swap_chain_extent.height },
+        .imageArrayLayers = 1,
+	    .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+	    .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = {},
+	    .pQueueFamilyIndices = nullptr,
+	    .preTransform = (VkSurfaceTransformFlagBitsKHR)pre_transform,
+	    .compositeAlpha = composite_alpha,
+	    .presentMode = swap_chain_present_mode,
+        .clipped = VK_TRUE, // discard rendering outside of surface
+	    .oldSwapchain = old_swap_chain,
+	};
 
 	if (surface_cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
 		swap_chain_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -271,7 +273,6 @@ void vulkan_swap_chain::create(u32* width, u32* height, bool vsync) noexcept
 	fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-
 	m_wait_fences.resize(render::get_frames_in_flight());
 	for (auto& fence : m_wait_fences)
 		if (vkCreateFence(device, &fence_create_info, nullptr, &fence) != VK_SUCCESS)
@@ -386,12 +387,13 @@ void vulkan_swap_chain::begin_frame() noexcept
     KB_PROFILE_SCOPE;
 
 	// Make sure the frame we're requesting has finished rendering
+#if 0
 	const auto frames_in_flight = render::get_frames_in_flight();
     if (auto res = vkWaitForFences(m_device->get_vk_device(), 1, &m_wait_fences[(m_current_frame_index + 2) % frames_in_flight], VK_TRUE, UINT64_MAX); res != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to wait for fences, Error={}", static_cast<u32>(res));
+#endif
 
 	// execute resource release queue
-
 	auto& queue = render::get_render_resource_release_queue(m_current_frame_index);
 	queue.execute();
 

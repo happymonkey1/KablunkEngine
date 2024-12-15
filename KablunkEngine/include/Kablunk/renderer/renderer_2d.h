@@ -222,8 +222,6 @@ public:
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
 
-    auto set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void;
-
     arc<backend::texture_2d> get_white_texture();
 
 	void begin_scene(const camera& camera, const glm::mat4& transform, bool p_explicit_clear = false);
@@ -495,7 +493,6 @@ private:
 
 private:
     renderer_2d_data_t m_renderer_data{};
-    arc<asset::AssetManager> m_asset_manager{};
     bool m_explicit_render_pass_clear = false;
 };
 

@@ -105,17 +105,18 @@ struct TransformComponent
 
 struct SpriteRendererComponent
 {
-	// #TODO old "asset" class uses absolute path. 
-	asset::asset_id_t Texture{ asset::null_asset_id };
+    virtual_texture_handle m_texture_handle = virtual_texture_handle::into(
+        std::string_view{ "kb::texture::white_texture" }
+    );
 	glm::vec4 Color{ 1.0f };
 	float Tiling_factor{ 1.0f };
 	// #TODO should this be entity wide, instead of just on SpriteRenderers?
 	bool Visible = true;
 
-	glm::vec2 GetTextureDimensions() const 
-	{ 
-        const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(Texture);
-        return glm::vec2{ texture_asset->get_width(), texture_asset->get_height() };
+	glm::vec2 get_texture_dimensions() const
+	{
+        const auto& texture = Singleton<render::Renderer>::get().get_texture_2d(m_texture_handle);
+        return { texture->get_width(), texture->get_height() };
 	}
 
 	void SetVisible(bool v) { Visible = v; }
@@ -123,10 +124,12 @@ struct SpriteRendererComponent
 
 	SpriteRendererComponent() = default;
 	SpriteRendererComponent(const SpriteRendererComponent&) = default;
+
 	SpriteRendererComponent(glm::vec4 color) 
 		: Color{ color } { }
-	SpriteRendererComponent(const arc<render::backend::texture_2d>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
-		: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
+
+	SpriteRendererComponent(virtual_texture_handle p_texture_handle, glm::vec4 color, float tiling_factor = 1.0f)
+		: m_texture_handle{ p_texture_handle }, Color{ color }, Tiling_factor{ tiling_factor } { }
 };
 
 struct CircleRendererComponent

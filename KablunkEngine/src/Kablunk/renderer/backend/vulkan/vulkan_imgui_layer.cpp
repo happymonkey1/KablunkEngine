@@ -229,14 +229,14 @@ void vulkan_imgui_layer::End()
 	render_pass_begin_info.renderArea.extent.height = height;
 	render_pass_begin_info.clearValueCount = 2; // Color + depth
 	render_pass_begin_info.pClearValues = clear_values;
-	render_pass_begin_info.framebuffer = swap_chain->get_current_vk_framebuffer();
+	render_pass_begin_info.framebuffer = swap_chain->get_current_vk_frame_buffer();
 
 	vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 	VkCommandBufferInheritanceInfo inheritance_info = {};
 	inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 	inheritance_info.renderPass = swap_chain->get_vk_render_pass();
-	inheritance_info.framebuffer = swap_chain->get_current_vk_framebuffer();
+	inheritance_info.framebuffer = swap_chain->get_current_vk_frame_buffer();
 
 	VkCommandBufferBeginInfo cmd_buf_info = {};
 	cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

@@ -8,6 +8,16 @@
 
 #include <string>
 
+namespace kb::serialize
+{
+class virtual_texture_registry_yaml_serializer;
+}
+
+namespace kb::render
+{
+class virtual_texture_registry;
+}
+
 namespace kb::render::backend
 { // start namespace kb::render::backend
 
@@ -54,10 +64,15 @@ public:
 	// static method to get the asset type of the class
 	static asset::AssetType get_static_type() { return asset::AssetType::Texture; }
 
+private:
 	static arc<texture_2d> create(image_format_t format, u32 width, u32 height, const void* data = nullptr);
     static arc<texture_2d> create(const std::string& path);
+
 private:
 	virtual void invalidate() = 0;
+
+    friend class ::kb::render::virtual_texture_registry;
+    friend class ::kb::serialize::virtual_texture_registry_yaml_serializer;
 };
 
 class texture_cube : public texture

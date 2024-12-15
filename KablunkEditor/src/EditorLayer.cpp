@@ -60,9 +60,10 @@ namespace kb
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
         m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		m_icon_play = render::backend::texture_2d::create("Resources/icons/play_icon.png");
-		m_icon_stop = render::backend::texture_2d::create("Resources/icons/stop_icon.png");
-		m_icon_pause = render::backend::texture_2d::create("Resources/icons/pause_icon.png");
+        // TODO: clean up
+		m_icon_play = render::get_texture_2d(render::create_texture("Resources/icons/play_icon.png"));
+		m_icon_stop = render::get_texture_2d(render::create_texture("Resources/icons/stop_icon.png"));
+		m_icon_pause = render::get_texture_2d(render::create_texture("Resources/icons/pause_icon.png"));
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);

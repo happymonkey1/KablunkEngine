@@ -22,12 +22,12 @@ namespace kb
 ContentBrowserPanel::ContentBrowserPanel(const arc<AssetEditorPanel>& asset_editor_panel)
 	: m_current_directory{ ProjectManager::get().get_active() ? ProjectManager::get().get_active()->get_asset_directory_path() : "" }, m_asset_editor_panel{ asset_editor_panel }
 {
-	m_directory_icon = render::backend::texture_2d::create("resources/content_browser/icons/directoryicon.png");
-	m_file_icon = render::backend::texture_2d::create("resources/content_browser/icons/textfileicon.png");
-	m_back_button = render::backend::texture_2d::create("resources/content_browser/icons/back_button.png");
-	m_forward_button = render::backend::texture_2d::create("resources/content_browser/icons/forward_button.png");
-	m_refresh_button = render::backend::texture_2d::create("resources/content_browser/icons/refresh_button.png");
-	m_asset_icon = render::backend::texture_2d::create("resources/content_browser/icons/asset_icon.png");
+	m_directory_icon = render::get_texture_2d(render::create_texture("resources/content_browser/icons/directoryicon.png"));
+	m_file_icon = render::get_texture_2d(render::create_texture("resources/content_browser/icons/textfileicon.png"));
+	m_back_button = render::get_texture_2d(render::create_texture("resources/content_browser/icons/back_button.png"));
+	m_forward_button = render::get_texture_2d(render::create_texture("resources/content_browser/icons/forward_button.png"));
+	m_refresh_button = render::get_texture_2d(render::create_texture("resources/content_browser/icons/refresh_button.png"));
+	m_asset_icon = render::get_texture_2d(render::create_texture("resources/content_browser/icons/asset_icon.png"));
 
 	memset(m_search_buffer, 0, sizeof(char) * MAX_SEARCH_BUFFER_LENGTH);
 	Refresh();

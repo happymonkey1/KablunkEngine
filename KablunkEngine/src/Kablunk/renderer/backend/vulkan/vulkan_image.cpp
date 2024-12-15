@@ -328,10 +328,15 @@ VkImageView vulkan_image_2d::RT_GetMipImageView(uint32_t mip)
 void vulkan_image_2d::UpdateDescriptor()
 {
     KB_CORE_INFO("[VulkanImage2D]: Updating descriptor {}", static_cast<const void*>(&m_descriptor_image_info));
+
 	if (m_specification.format == image_format_t::DEPTH24STENCIL8 || m_specification.format == image_format_t::DEPTH32F || m_specification.format == image_format_t::DEPTH32FSTENCIL8UINT)
-		m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	{
+        m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	}
 	else if (m_specification.usage == image_usage_t::Storage)
-		m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+	{
+        m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+	}
 	else
 		m_descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 

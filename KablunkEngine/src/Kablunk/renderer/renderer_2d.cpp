@@ -138,8 +138,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
         );
     }
 
-	uint32_t white_texture_data = 0xFFFFFFFF;
-	m_renderer_data.white_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1, &white_texture_data);
+    m_renderer_data.white_texture = Singleton<Renderer>::get().get_white_texture();
 
 	// get references to pre-loaded shaders
 	m_renderer_data.quad_shader = get_shader("Renderer2D_Quad");
@@ -398,11 +397,6 @@ void renderer_2d::shutdown()
     m_renderer_data.text_vertex_buffer_base_ptrs.clear();
 
     m_renderer_data.white_texture.reset();
-}
-
-auto renderer_2d::set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void
-{
-    m_asset_manager = p_asset_manager;
 }
 
 arc<backend::texture_2d> renderer_2d::get_white_texture()
@@ -753,14 +747,12 @@ void renderer_2d::draw_entity(Entity entity) noexcept
         m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
         m_renderer_data.white_texture;
 #else
-    auto texture = m_asset_manager && sprite_renderer_comp.Texture != asset::null_asset_id ?
-        m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
-        m_renderer_data.white_texture;
+    auto texture = Singleton<Renderer>::get().get_texture_2d(sprite_renderer_comp.m_texture_handle);
 #endif
 
     if (!texture)
     {
-        KB_CORE_ERROR("[Renderer2D]: Failed to load texture from asset id '{}'. Defaulting to white texture.", sprite_renderer_comp.Texture);
+        KB_CORE_ERROR("[Renderer2D]: Failed to load texture from handle '{}'. Defaulting to white texture.", sprite_renderer_comp.m_texture_handle.as<u32>());
         texture = m_renderer_data.white_texture;
     }
 

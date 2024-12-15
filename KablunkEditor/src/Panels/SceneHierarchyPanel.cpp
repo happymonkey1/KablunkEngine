@@ -765,19 +765,21 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 				// panel specific ui elements
 				switch (panel->get_panel_type())
 				{
-
-					case ui::panel_type_t::ImageButton:
-						if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+				case ui::panel_type_t::ImageButton:
+					if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+					{
+						auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
+						if (!filepath.empty())
 						{
-							auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
-							if (!filepath.empty())
-							{
-								// #TODO go through asset manager
-                                KB_CORE_INFO("[SceneHeirarchyPanel]: Texture2D is not created through asset manager!");
-								panel->get_panel_style().image = render::backend::texture_2d::create(filepath);
-							}
+							// #TODO go through asset manager
+                            KB_CORE_INFO("[SceneHeirarchyPanel]: Texture2D is not created through asset manager!");
+                            // TODO: cleanup
+                            panel->get_panel_style().image = render::get_texture_2d(render::create_texture(
+                                std::filesystem::path{ filepath }
+                            ));
 						}
-						break;
+					}
+					break;
 				}
 
 			}
@@ -791,14 +793,15 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			UI::PropertyColorEdit4("Tint Color", component.Color);
 
-            const arc<render::backend::texture_2d>& white_texture = Singleton<render::Renderer>::get().get_white_texture();
-            arc<render::backend::texture_2d> texture_asset = component.Texture != asset::null_asset_id ?
-                asset::get_asset<render::backend::texture_2d>(component.Texture) : white_texture;
+            const auto& renderer = Singleton<render::Renderer>::get();
+
+            const arc<render::backend::texture_2d>& white_texture = renderer.get_white_texture();
+            arc<render::backend::texture_2d> texture_asset = renderer.get_texture_2d(component.m_texture_handle);
             if (!texture_asset)
             {
                 KB_CORE_ERROR(
-                    "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
-                    component.Texture
+                    "[SceneHeirarchyPanel]: Failed to load texture with handle '{}' for image button. Defaulting to white texture",
+                    component.m_texture_handle.as<u32>()
                 );
                 
                 texture_asset = white_texture;
@@ -809,8 +812,8 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 				auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
 				if (!filepath.empty())
 				{
-                    const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(filepath);
-					component.Texture = texture_asset->get_id();
+                    const auto texture_handle = renderer.create_texture(std::filesystem::path{ filepath });
+                    component.m_texture_handle = texture_handle;
 				}
 			}
 
@@ -823,16 +826,16 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 					auto path_str = path.string();
 					if (path.extension() == ".png")
                     {
-                        const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(path);
-                        if (texture_asset)
-                            component.Texture = texture_asset->get_id();
+                        const auto texture_handle = renderer.create_texture(path);
+                        if (texture_handle)
+                            component.m_texture_handle = texture_handle;
                         else
                         {
                             KB_CORE_ERROR(
                                 "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id",
                                 path_str
                             );
-                            component.Texture = asset::null_asset_id;
+                            component.m_texture_handle = virtual_texture_handle{ 0 };
                         }
                     }
 					else
@@ -986,10 +989,8 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 			arc<render::Mesh> mesh = component.Mesh;
 			if (mesh)
 			{
-				for (uint32_t submesh_index : mesh->GetSubmeshes())
-				{
-					UI::Property("Submesh Index", submesh_index);
-				}
+                const auto sub_mesh_count = static_cast<u64>(mesh->GetSubmeshes().size());
+				UI::PropertyReadOnlyUint64("Submesh Count", sub_mesh_count);
 
 				DrawMaterialTable<MeshComponent>(mesh->get_material_table());
 			}

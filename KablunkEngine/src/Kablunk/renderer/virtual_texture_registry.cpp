@@ -1,5 +1,6 @@
 #include "kablunkpch.h"
 
+#include "Kablunk/Core/KablunkAPI.h"
 #include "Kablunk/renderer/virtual_texture_registry.h"
 #include "Kablunk/serialize/kb-json/json_util.h"
 
@@ -40,7 +41,22 @@ auto virtual_texture_registry::load_texture(
     }
     case texture_registry_import_type_t::memory:
     {
-        KB_CORE_ASSERT(false, "[virtual_texture_registry]: 'memory' is not implemented yet!");
+#ifdef KB_DEBUG
+        KB_CORE_ASSERT(
+            !p_specification.m_in_memory_specification.m_name.empty(),
+            "[virtual_texture_registry]: Memory texture must define a raw texture handle in the import specification"
+        );
+#else
+        // In release builds, invalid specified texture handle will return missing texture
+        if (p_specification.m_in_memory_specification.m_name.empty())
+        {
+            KB_CORE_ERROR("[virtual_texture_registry]: Memory texture must define a raw texture handle in the import specification")
+            texture_handle = k_missing_texture_raw_handle;
+            break;
+        }
+#endif
+        texture_handle = import_texture_from_memory(p_specification);
+        break;
     }
     case texture_registry_import_type_t::none:
         KB_CORE_ASSERT(false, "[virtual_texture_registry]: 'none' is not a valid texture registry import type!");
@@ -49,6 +65,30 @@ auto virtual_texture_registry::load_texture(
     }
 
     return create_or_get_virtual_texture(p_specification, texture_handle);
+}
+
+auto virtual_texture_registry::load_texture_from_memory(
+    std::string_view p_texture_name,
+    const backend::texture_specification_t& p_texture_specification,
+    const void* p_data,
+    const bool p_is_atlas
+) noexcept -> virtual_texture_handle
+{
+    return load_texture(virtual_texture_specification_t{
+        .m_path = {},
+        .m_import_type = texture_registry_import_type_t::memory,
+        .m_raw_texture_asset_type = p_is_atlas ?
+            raw_texture_asset_type_t::texture_atlas :
+            raw_texture_asset_type_t::texture_2d,
+        .m_allow_to_be_packed = false, // TODO: we probably want to enable this?
+        .m_texture_dimensions = {},
+        .m_sprite_unpacker_dimensions = {},
+        .m_in_memory_specification = {
+            .m_name = std::string{ p_texture_name },
+            .m_memory_data_ptr = p_data,
+            .m_texture_specification = p_texture_specification
+        }
+    });
 }
 
 auto virtual_texture_registry::load_individual_texture(
@@ -61,7 +101,8 @@ auto virtual_texture_registry::load_individual_texture(
         .m_raw_texture_asset_type = raw_texture_asset_type_t::texture_2d,
         .m_allow_to_be_packed = true,
         .m_texture_dimensions = {},
-        .m_sprite_unpacker_dimensions = {}
+        .m_sprite_unpacker_dimensions = {},
+        .m_in_memory_specification = {}
     });
 }
 
@@ -77,6 +118,12 @@ auto virtual_texture_registry::create_virtual_texture_handle(
 {
     auto file_name = p_file_path.filename().stem().string();
     const auto virtual_texture_krn = fmt::format("kb::texture::{}", std::move(file_name));
+    return virtual_texture_handle::into(std::string_view{ virtual_texture_krn });
+}
+
+auto virtual_texture_registry::create_virtual_texture_handle(std::string_view p_name) noexcept -> virtual_texture_handle
+{
+    const auto virtual_texture_krn = fmt::format("kb::texture::{}", p_name);
     return virtual_texture_handle::into(std::string_view{ virtual_texture_krn });
 }
 
@@ -171,7 +218,7 @@ auto virtual_texture_registry::import_texture_from_disk(
     if (m_raw_textures.contains(new_texture_handle))
     {
 #ifdef KB_DEBUG
-        if (new_texture_handle != k_missing_texture_krn)
+        if (new_texture_handle != k_missing_texture_raw_handle)
         {
             KB_CORE_WARN(
                 "[virtual_texture_registry]: Loading texture '{}' with handle {} that is already contained in the registry?",
@@ -194,10 +241,82 @@ auto virtual_texture_registry::import_texture_from_disk(
         texture_metadata_t{
             .m_path = std::move(path_str),
             .m_is_atlas = p_specification.m_raw_texture_asset_type == raw_texture_asset_type_t::texture_atlas,
+            .m_is_memory_only = false
         }
     );
 
     return new_texture_handle;
+}
+
+auto virtual_texture_registry::import_texture_from_memory(
+    const virtual_texture_specification_t& p_specification
+) noexcept -> raw_texture_handle
+{
+    const auto raw_handle = raw_texture_handle::into(
+        std::string_view{ p_specification.m_in_memory_specification.m_name }
+    );
+
+
+    if (!p_specification.m_in_memory_specification.m_memory_data_ptr)
+    {
+        KB_CORE_ERROR(
+            "[virtual_texture_registry]: Cannot load in-memory texture for handle='{}', data pointer is null!",
+            raw_handle.as<u32>()
+        );
+        return k_missing_texture_raw_handle;
+    }
+
+
+    const auto& texture_specification = p_specification.m_in_memory_specification.m_texture_specification;
+
+    u32 width, height;
+    if (texture_specification.m_width != 0 && texture_specification.m_height != 0)
+    {
+        width = texture_specification.m_width;
+        height = texture_specification.m_height;
+    }
+    else if (p_specification.m_texture_dimensions != glm::uvec2{ 0 })
+    {
+        width = p_specification.m_texture_dimensions.x;
+        height = p_specification.m_texture_dimensions.y;
+    }
+    else
+    {
+#ifdef KB_DEBUG
+        KB_CORE_ASSERT(
+            false,
+            "[virtual_texture_registry]: Failed to load in-memory texture for handle='{}', width and height are not defined!",
+            raw_handle.as<u32>()
+        );
+#else
+        KB_CORE_ERROR(
+            "[virtual_texture_registry]: Failed to load in-memory texture for handle='{}', width and height are not defined!",
+            raw_handle.as<u32>()
+        );
+#endif
+        return k_missing_texture_raw_handle;
+    }
+
+    m_raw_textures.emplace(
+        raw_handle,
+        backend::texture_2d::create(
+            texture_specification.m_format,
+            width,
+            height,
+            p_specification.m_in_memory_specification.m_memory_data_ptr
+        )
+    );
+
+    m_texture_metadata_map.emplace(
+        raw_handle,
+        texture_metadata_t{
+            .m_path = {},
+            .m_is_atlas = false,
+            .m_is_memory_only = true,
+        }
+    );
+
+    return raw_handle;
 }
 
 auto virtual_texture_registry::import_missing_texture() noexcept -> void
@@ -254,6 +373,7 @@ auto virtual_texture_registry::import_missing_texture() noexcept -> void
         texture_metadata_t{
             .m_path = std::move(path_str),
             .m_is_atlas = false,
+            .m_is_memory_only = false,
         }
     );
 
@@ -278,14 +398,65 @@ auto virtual_texture_registry::create_or_get_virtual_texture(
     {
     case raw_texture_asset_type_t::texture_2d:
     {
-        const auto virtual_handle = create_virtual_texture_handle(p_specification.m_path);
+        virtual_texture_handle virtual_handle;
+        switch (p_specification.m_import_type)
+        {
+        case texture_registry_import_type_t::memory:
+        {
+#ifdef KB_DEBUG
+            KB_CORE_ASSERT(
+                !p_specification.m_in_memory_specification.m_name.empty(),
+                "[virtual_texture_registry]: Failed to create virtual texture handle for empty name!"
+            );
+#else
+            if (p_specification.m_path.empty())
+            {
+                KB_CORE_ERROR("[virtual_texture_registry]: Failed to create virtual texture handle for empty name!");
+                return k_missing_texture_virtual_handle;
+            }
+#endif
+            virtual_handle = create_virtual_texture_handle(std::string_view{
+                p_specification.m_in_memory_specification.m_name
+            });
+            break;
+        }
+        case texture_registry_import_type_t::disk:
+        {
+#ifdef KB_DEBUG
+            KB_CORE_ASSERT(
+                !p_specification.m_path.empty(),
+                "[virtual_texture_registry]: Failed to create virtual texture handle for empty file path!"
+            );
+#else
+            if (p_specification.m_path.empty())
+            {
+                KB_CORE_ERROR("[virtual_texture_registry]: Failed to create virtual texture handle for empty file path!");
+                return k_missing_texture_virtual_handle;
+            }
+#endif
+
+            virtual_handle = create_virtual_texture_handle(p_specification.m_path);
+
+            break;
+        }
+        case texture_registry_import_type_t::none:
+        {
+#ifdef KB_DEBUG
+            KB_CORE_ASSERT(false, "[virtual_texture_registry]: Unable to create virtual texture handle for import type 'none'!");
+#else
+            KB_CORE_ERROR("[virtual_texture_registry]: Unable to create virtual texture handle for import type 'none'!");
+            return k_missing_texture_virtual_handle;
+#endif
+            break;
+        }
+        }
 
         m_virtual_to_raw_handle_map.emplace(
             virtual_handle,
             p_raw_texture_handle
         );
 
-        const auto& raw_texture = m_raw_textures[p_raw_texture_handle];
+        const auto& raw_texture = m_raw_textures.at(p_raw_texture_handle);
 
         m_virtual_textures.emplace(
             virtual_handle,
