@@ -96,15 +96,19 @@ vulkan_vertex_buffer::vulkan_vertex_buffer(
 
 vulkan_vertex_buffer::~vulkan_vertex_buffer()
 {
+    if (!m_vk_buffer)
+        return;
+
 	VkBuffer buffer = m_vk_buffer;
 	VmaAllocation allocation = m_memory_allocation;
-	render::submit([buffer, allocation]() mutable
+	render::submit_resource_free([buffer, allocation]() mutable
 		{
 			vulkan_allocator allocator{ "VertexBuffer" };
 			allocator.destroy_buffer(buffer, allocation);
 		});
 
 	m_local_data.release();
+    m_vk_buffer = nullptr;
 }
 
 void vulkan_vertex_buffer::bind() const

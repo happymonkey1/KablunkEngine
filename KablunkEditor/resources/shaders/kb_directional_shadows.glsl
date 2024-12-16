@@ -12,10 +12,15 @@ layout(location = 5) in vec4 a_MRow0;
 layout(location = 6) in vec4 a_MRow1;
 layout(location = 7) in vec4 a_MRow2;
 
-layout (std140, set = 1, binding = 7) uniform DirShadowData 
+layout (std140, set = 1, binding = 7) uniform ShadowCascadesData
 {
-	mat4 DirLightMat;
-} u_DirShadowUniform;
+    mat4 DirLightViewMat[4];
+} u_DirShadowCascades;
+
+layout (push_constant) uniform Transform
+{
+	uint CascadeIndex;
+} u_Renderer;
 
 void main()
 {
@@ -26,7 +31,7 @@ void main()
 		vec4(a_MRow0.w, a_MRow1.w, a_MRow2.w, 1.0)
 	);
 
-	gl_Position = u_DirShadowUniform.DirLightMat * transform * vec4(a_Position, 1.0);
+	gl_Position = u_DirShadowCascades.DirLightViewMat[u_Renderer.CascadeIndex] * transform * vec4(a_Position, 1.0);
 }
 
 #type fragment

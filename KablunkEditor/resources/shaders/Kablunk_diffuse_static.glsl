@@ -20,10 +20,10 @@ layout(std140, set = 1, binding = 0) uniform Camera
     vec3 u_CameraPosition;
 };
 
-layout (std140, set = 1, binding = 7) uniform DirShadowData 
+layout (std140, set = 1, binding = 7) uniform ShadowCascadesData
 {
-	mat4 DirLightMat;
-} u_DirShadowUniform;
+    mat4 DirLightViewMat[4];
+} u_DirShadowCascades;
 
 struct VertexOutput
 {
@@ -38,11 +38,10 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
-    vec3 ShadowMapCoords;
+    vec3 ShadowMapCoords[4];
 };
 
 layout(location = 0) out VertexOutput v_Output;
-
 
 void main()
 {
@@ -65,8 +64,16 @@ void main()
     v_Output.CameraView = mat3(u_ViewMatrix);
     v_Output.CameraPosition = u_CameraPosition;
     v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
-    vec4 shadowProj = u_DirShadowUniform.DirLightMat * vec4(worldPosition.xyz, 1.0);
-    v_Output.ShadowMapCoords = shadowProj.xyz / (shadowProj.w + 0.0001f);
+
+    vec4 shadowCoords[4];
+    shadowCoords[0] = u_DirShadowCascades.DirLightViewMat[0] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
+    shadowCoords[1] = u_DirShadowCascades.DirLightViewMat[1] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
+    shadowCoords[2] = u_DirShadowCascades.DirLightViewMat[2] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
+    shadowCoords[3] = u_DirShadowCascades.DirLightViewMat[3] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
+    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / shadowCoords[0].w);
+    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / shadowCoords[1].w);
+    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / shadowCoords[2].w);
+    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / shadowCoords[3].w);
 
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
@@ -87,7 +94,7 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
-    vec3 ShadowMapCoords;
+    vec3 ShadowMapCoords[4];
 };
 
 layout(location = 0) in VertexOutput v_Input;
@@ -111,7 +118,7 @@ struct PointLight
 
 layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
 layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
-layout(set = 1, binding = 8) uniform sampler2D u_ShadowMapTexture;
+layout(set = 1, binding = 8) uniform sampler2DArray u_ShadowMapTexture;
 
 layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
@@ -131,6 +138,11 @@ layout(std140, set = 1, binding = 2) uniform DirectionalLightData
     // Whether the directional light is enabled
     bool Enabled;
 } u_DirectionalLight;
+
+layout(std140, set = 1, binding = 9) uniform RendererData
+{
+    uniform vec4 CascadeSplits;
+} u_RendererData;
 
 layout(std140, push_constant) uniform Material
 {
@@ -260,12 +272,15 @@ vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
     return normalize(TBN * normalMap);
 }
 
-float CalculateShadow(vec3 coords, sampler2D shadowMap) {
+float CalculateShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) {
     vec3 projectedCoords = coords * 0.5 + 0.5;
 
-
-    float closeDepth = texture(shadowMap, projectedCoords.xy).r;
+    float closeDepth = texture(shadowMap, vec3(projectedCoords.xy, cascadeIndex)).r;
     float currentDepth = projectedCoords.z;
+    if (currentDepth > 1.0 || currentDepth < 0.0) {
+        return 0.0;
+    }
+
     float shadow = currentDepth > closeDepth ? 1.0 : 0.0;
     return shadow;
 }
@@ -309,7 +324,16 @@ void main()
     // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    float shadow = CalculateShadow(v_Input.ShadowMapCoords, u_ShadowMapTexture);
+    uint cascadeIndex = 0;
+    const uint SHADOW_MAP_CASCADE_COUNT = 4;
+    for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+        if (v_Input.ViewPosition.z < u_RendererData.CascadeSplits[i]) {
+            cascadeIndex = i + 1;
+        }
+    }
+
+    vec3 shadowMapCoords = v_Input.ShadowMapCoords[cascadeIndex];
+    float shadow = CalculateShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
 
     o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
     // o_Color = vec4(vec3(gl_FragCoord.z), 1.0);

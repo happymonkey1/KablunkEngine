@@ -68,10 +68,30 @@ void scene_renderer::init()
     ));
 
 	uint32_t frames_in_flight = render::get_frames_in_flight();
-    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);
-    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(point_light_ub_t), frames_in_flight);
-    m_directional_light_set = backend::uniform_buffer_set::create(sizeof(directional_light_t), frames_in_flight);
-    m_shadow_data_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(shadow_data_ub_t), frames_in_flight);
+    m_renderer_data_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(renderer_data_ub_t),
+        frames_in_flight
+    );
+    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(camera_data_ub_t),
+        frames_in_flight
+    );
+    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(point_light_ub_t),
+        frames_in_flight
+    );
+    m_directional_light_set = backend::uniform_buffer_set::create(
+        sizeof(directional_light_t),
+        frames_in_flight
+    );
+    m_shadow_data_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(shadow_cascade_data_ub_t),
+        frames_in_flight
+    );
+    m_cascade_indices_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(f32) * k_max_cascades,
+        frames_in_flight
+    );
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
 
@@ -99,30 +119,34 @@ void scene_renderer::init()
             .width = shadow_map_resolution,
             .height = shadow_map_resolution,
             .mips = 1,
-            .layers = 1, // TODO: shadow cascade count
+            .layers = k_max_cascades,
             .deinterleaved = false,
             .m_transfer = false,
             .debug_name = "Depth"
         };
         auto dir_shadow_map_depth_image = backend::image_2d::create(depth_image_spec);
         dir_shadow_map_depth_image->invalidate();
+        if (k_max_cascades > 1) // TODO: should be configurable instead of max cascades
+        {
+            dir_shadow_map_depth_image->create_per_layer_image_views();
+        }
 
-        backend::frame_buffer_specification_t frame_buffer_spec{};
-        frame_buffer_spec.m_attachments = {
+        backend::frame_buffer_specification_t dir_shadow_frame_buffer_spec{};
+        dir_shadow_frame_buffer_spec.m_attachments = {
             backend::image_format_t::DEPTH32F
         };
-        frame_buffer_spec.m_width = shadow_map_resolution;
-        frame_buffer_spec.m_height = shadow_map_resolution;
-        frame_buffer_spec.m_clear_color = { 0.f, 0.f, 0.f, 0.f };
-        frame_buffer_spec.m_clear_depth_on_load = true;
-        frame_buffer_spec.m_no_resize = true;
-        frame_buffer_spec.m_depth_clear_value = 1.0f;
-        frame_buffer_spec.m_existing_image = dir_shadow_map_depth_image;
+        dir_shadow_frame_buffer_spec.m_width = shadow_map_resolution;
+        dir_shadow_frame_buffer_spec.m_height = shadow_map_resolution;
+        dir_shadow_frame_buffer_spec.m_clear_color = { 0.f, 0.f, 0.f, 0.f };
+        dir_shadow_frame_buffer_spec.m_clear_depth_on_load = true;
+        dir_shadow_frame_buffer_spec.m_no_resize = true;
+        dir_shadow_frame_buffer_spec.m_depth_clear_value = 1.0f;
+        dir_shadow_frame_buffer_spec.m_existing_image = dir_shadow_map_depth_image;
 
         const auto& dir_shadow_shader = get_shader(shader_library::k_directional_shadows_shader_name);
         backend::pipeline_specification_t dir_shadow_pipeline_spec{
             .shader = dir_shadow_shader,
-            .m_target_frame_buffer = backend::frame_buffer::create(frame_buffer_spec),
+            .m_target_frame_buffer = {}, // Set per cascade
             .layout = vertex_buffer_layout,
             .instance_layout = instance_buffer_layout,
             .topology = backend::primitive_topology_t::triangles,
@@ -135,14 +159,33 @@ void scene_renderer::init()
         };
 
         backend::render_pass_specification dir_shadow_render_pass_spec{
-            .m_pipeline = backend::pipeline::create(dir_shadow_pipeline_spec),
-            .m_debug_name = "scene_renderer::render_pass::geometry"
+            .m_pipeline = {}, // Set per cascade
+            .m_debug_name = "scene_renderer::render_pass::directional_shadow_map"
         };
 
-        m_directional_shadow_pass = backend::render_pass::create(dir_shadow_render_pass_spec);
-        m_directional_shadow_pass->set_input("DirShadowData", m_shadow_data_uniform_buffer_set);
-        KB_CORE_ASSERT(m_directional_shadow_pass->validate(), "[scene_renderer]: Directional shadow pass validation failed!");
-        m_directional_shadow_pass->bake();
+        size_t cascade_index = 0;
+        for (auto& directional_shadow_pass : m_directional_shadow_pass)
+        {
+            dir_shadow_frame_buffer_spec.m_existing_image_layers.clear();
+            dir_shadow_frame_buffer_spec.m_existing_image_layers.emplace_back(cascade_index);
+
+            dir_shadow_pipeline_spec.m_target_frame_buffer = backend::frame_buffer::create(dir_shadow_frame_buffer_spec);
+
+            dir_shadow_render_pass_spec.m_pipeline = backend::pipeline::create(dir_shadow_pipeline_spec);
+
+            directional_shadow_pass = backend::render_pass::create(dir_shadow_render_pass_spec);
+            directional_shadow_pass->set_input(
+                "ShadowCascadesData",
+                m_shadow_data_uniform_buffer_set
+            );
+            KB_CORE_ASSERT(
+                directional_shadow_pass->validate(),
+                "[scene_renderer]: Directional shadow pass validation failed!"
+            );
+            directional_shadow_pass->bake();
+
+            cascade_index++;
+        }
 
         m_dir_shadow_pass_material = backend::material::create(
             dir_shadow_shader,
@@ -204,8 +247,9 @@ void scene_renderer::init()
         m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
         m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
         m_geometry_pass->set_input("DirectionalLightData", m_directional_light_set);
-        m_geometry_pass->set_input("DirShadowData", m_shadow_data_uniform_buffer_set);
-        m_geometry_pass->set_input("u_ShadowMapTexture", m_directional_shadow_pass->get_depth_output());
+        m_geometry_pass->set_input("ShadowCascadesData", m_shadow_data_uniform_buffer_set);
+        m_geometry_pass->set_input("u_ShadowMapTexture", m_directional_shadow_pass[0]->get_depth_output());
+        m_geometry_pass->set_input("RendererData", m_renderer_data_uniform_buffer_set);
 
         KB_CORE_ASSERT(m_geometry_pass->validate(), "Geometry pass validation failed!");
         m_geometry_pass->bake();
@@ -300,69 +344,7 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 			m_command_buffer = backend::render_command_buffer::create_from_swap_chain("SceneRenderer");
 	}
 
-	const auto& scene_camera = m_scene_data.camera;
-	const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
-	const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
-	const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
-	const glm::vec3 camera_position = view_inverse[3];
-
-	const auto inverse_view_projection = glm::inverse(view_projection);
-
-	// Set camera uniform buffer
-	camera_data_ub_t camera_data = {
-		view_projection,
-		scene_camera.camera.GetProjection(),
-		scene_camera.view_mat,
-		camera_position
-	};
-
-    arc<scene_renderer> instance{ this };
-	render::submit([instance, camera_data]() mutable
-		{
-			instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
-		}
-	);
-
-	// Submit point lights uniform buffer
-	const auto light_environment_copy = m_scene_data.light_environment;
-	const std::vector<point_light_t>& point_lights_vec = light_environment_copy.m_point_lights;
-
-	m_point_lights_ub->count = static_cast<uint32_t>(point_lights_vec.size());
-	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_environment_copy.GetPointLightsSize());
-
-	render::submit([instance, point_lights = m_point_lights_ub]() mutable
-		{
-            constexpr size_t k_offset = 16;
-			instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
-                point_lights,
-                static_cast<uint32_t>(k_offset + sizeof(point_light_t) * point_lights->count)
-            );
-		}
-	);
-
-    // Submit directional light uniform buffer
-    render::submit([instance, directional_light_copy = light_environment_copy.m_directional_light]() mutable
-        {
-            instance->m_directional_light_set->rt_get()->rt_set_data(
-                &directional_light_copy,
-                sizeof(directional_light_copy)
-            );
-        });
-
-    const auto dir_light_vec3_packed = m_scene_data.light_environment.m_directional_light.m_direction;
-    calculate_shadow_map_data(
-        camera,
-        glm::vec3{ dir_light_vec3_packed.x, dir_light_vec3_packed.y, dir_light_vec3_packed.z }
-    );
-
-    // Submit directional light uniform buffer
-    render::submit([instance, shadow_data_ub = m_shadow_data]() mutable
-        {
-            instance->m_shadow_data_uniform_buffer_set->rt_get()->rt_set_data(
-                &shadow_data_ub,
-                sizeof(shadow_data_ub)
-            );
-        });
+    submit_uniform_buffers();
 }
 
 void scene_renderer::end_scene()
@@ -477,6 +459,114 @@ void scene_renderer::wait_for_threads()
 	s_thread_pool.clear();
 }
 
+auto scene_renderer::submit_uniform_buffers() noexcept -> void
+{
+    const auto& scene_camera = m_scene_data.camera;
+    const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
+    const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
+    const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
+    const glm::vec3 camera_position = view_inverse[3];
+
+    const auto inverse_view_projection = glm::inverse(view_projection);
+
+    arc<scene_renderer> instance{ this };
+
+    // Set renderer data uniform buffer
+    renderer_data_ub_t renderer_data{
+        .m_cascade_splits = m_shadow_cascade_data.m_cascade_splits
+    };
+    render::submit([instance, renderer_data]() mutable
+        {
+            instance->m_renderer_data_uniform_buffer_set->rt_get()->rt_set_data(&renderer_data, sizeof(renderer_data_ub_t));
+        }
+    );
+
+    // Set camera uniform buffer
+    camera_data_ub_t camera_data = {
+        view_projection,
+        scene_camera.camera.GetProjection(),
+        scene_camera.view_mat,
+        camera_position
+    };
+
+    render::submit([instance, camera_data]() mutable
+        {
+            instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
+        }
+    );
+
+    // Submit directional and point lights uniform buffers
+    {
+        const auto light_environment_copy = m_scene_data.light_environment;
+        const std::vector<point_light_t>& point_lights_vec = light_environment_copy.m_point_lights;
+
+        m_point_lights_ub->count = static_cast<uint32_t>(point_lights_vec.size());
+        std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_environment_copy.GetPointLightsSize());
+
+        // Submit point lights uniform buffer
+        render::submit([instance, point_lights = m_point_lights_ub]() mutable
+            {
+                constexpr size_t k_offset = 16;
+                instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
+                    point_lights,
+                    static_cast<uint32_t>(k_offset + sizeof(point_light_t) * point_lights->count)
+                );
+            }
+        );
+
+        // Submit directional light uniform buffer
+        render::submit([instance, directional_light_copy = light_environment_copy.m_directional_light]() mutable
+            {
+                instance->m_directional_light_set->rt_get()->rt_set_data(
+                    &directional_light_copy,
+                    sizeof(directional_light_copy)
+                );
+            });
+    }
+
+    // Submit shadow cascade ub data
+    {
+        const auto dir_light_vec3_packed = m_scene_data.light_environment.m_directional_light.m_direction;
+        shadow_cascade_data_t cascades_data[4];
+        calculate_shadow_map_data(
+            cascades_data,
+            scene_camera,
+            glm::vec3{ dir_light_vec3_packed.x, dir_light_vec3_packed.y, dir_light_vec3_packed.z }
+        );
+
+        render::submit([instance, cascades_data = cascades_data]() mutable
+            {
+                glm::mat4 mats[k_max_cascades];
+                for (size_t i = 0; i < k_max_cascades; ++i)
+                {
+                    mats[i] = cascades_data[i].m_view_projection;
+                }
+
+                instance->m_shadow_data_uniform_buffer_set->rt_get()->rt_set_data(
+                    mats,
+                    sizeof(glm::mat4) * k_max_cascades
+                );
+            });
+    }
+
+    // Submit cascade splits data
+    {
+        f32 cascades_split_copy[4];
+        std::memcpy(
+            cascades_split_copy,
+            m_shadow_cascade_data.m_shadow_cascade_splits,
+            sizeof(f32) * k_max_cascades
+        );
+        render::submit([instance, cascades_split_copy]() mutable
+            {
+                instance->m_cascade_indices_uniform_buffer_set->rt_get()->rt_set_data(
+                    cascades_split_copy,
+                    sizeof(f32) * k_max_cascades
+                );
+            });
+    }
+}
+
 void scene_renderer::flush_draw_list()
 {
     KB_PROFILE_SCOPE;
@@ -545,30 +635,38 @@ void scene_renderer::clear_pass(arc<backend::render_pass> render_pass, bool expl
 auto scene_renderer::shadow_pass() noexcept -> void
 {
     m_gpu_time_query_indices.m_shadow_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
-    begin_render_pass(m_command_buffer, m_directional_shadow_pass);
 
-    const auto& dir_shadow_pass_pipeline = m_directional_shadow_pass->get_pipeline();
-    for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
+    u32 cascade_index = 0;
+    for (auto& dir_shadow_render_pass : m_directional_shadow_pass)
     {
-        const auto& transform_data = m_transform_map[mesh_transform_handle];
-        const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
-            sizeof(transform_vertex_data_t);
-        KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
+        begin_render_pass(m_command_buffer, dir_shadow_render_pass);
 
-        Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh_with_material(
-            m_command_buffer,
-            dir_shadow_pass_pipeline,
-            draw_command_data.Mesh,
-            draw_command_data.Submesh_index,
-            m_dir_shadow_pass_material,
-            m_transform_buffer,
-            static_cast<u32>(transform_offset),
-            0ull,
-            draw_command_data.Instance_count
-        );
+        const owning_buffer cascade_ub{ &cascade_index, sizeof(u32) };
+        const auto& dir_shadow_pass_pipeline = dir_shadow_render_pass->get_pipeline();
+        for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
+        {
+            const auto& transform_data = m_transform_map[mesh_transform_handle];
+            const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
+                sizeof(transform_vertex_data_t);
+            KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
+
+            Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh_with_material(
+                m_command_buffer,
+                dir_shadow_pass_pipeline,
+                draw_command_data.Mesh,
+                draw_command_data.Submesh_index,
+                m_dir_shadow_pass_material,
+                m_transform_buffer,
+                static_cast<u32>(transform_offset),
+                0ull,
+                draw_command_data.Instance_count,
+                cascade_ub
+            );
+        }
+
+        end_render_pass(m_command_buffer);
     }
 
-    end_render_pass(m_command_buffer);
     m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_shadow_pass_query);
 }
 
@@ -651,6 +749,7 @@ void scene_renderer::composite_pass()
 }
 
 auto scene_renderer::calculate_shadow_map_data(
+    shadow_cascade_data_t* p_cascades_data,
     const scene_renderer_camera_t& p_scene_camera,
     const glm::vec3& p_light_direction
 ) noexcept -> void
@@ -665,10 +764,11 @@ auto scene_renderer::calculate_shadow_map_data(
 #endif
     const auto& light_direction = m_scene_data.light_environment.m_directional_light.m_direction;
 
-    glm::vec3 light_dir_vec3 = -glm::vec3{ light_direction.x, light_direction.y, light_direction.z };
+    glm::vec3 light_dir_vec3 = glm::vec3{ light_direction.x, light_direction.y, light_direction.z };
 #if 1
     glm::mat4 view_mat = glm::lookAt(
         light_dir_vec3,
+        //glm::vec3{ -2.f, 4.f, -1.f },
         glm::vec3{ 0.f },
         glm::vec3{ 0.f, 1.f, 0.f }
     );
@@ -677,21 +777,37 @@ auto scene_renderer::calculate_shadow_map_data(
     view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
 #endif
 
-    auto view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+    auto scene_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+    // Project frustum corners into world space
+    glm::mat4 inverse_camera = glm::inverse(scene_view_projection);
 
-    // calculate frustum ortho projection
-    glm::mat4 shadow_projection;
-    glm::mat4 light_view_projection;
+    const f32 near_clip = 0.1f; // TODO: pass in scene camera
+    const f32 far_clip = 1000.f; // TODO: pass in scene camera
+    const f32 clip_range = far_clip - near_clip;
+
+    f32 min_z = near_clip;
+    f32 max_z = near_clip + clip_range;
+
+    f32 range = max_z - min_z;
+    f32 ratio = max_z / min_z;
+
+    // Calculate split depths based on view camera frustum
+    for (u32 i = 0; i < k_max_cascades; ++i)
     {
-        const f32 near_clip = 0.1f; // TODO: pass in scene camera
-        const f32 far_clip = 1000.f; // TODO: pass in scene camera
-        const f32 clip_range = far_clip - near_clip;
+        f32 p = (static_cast<f32>(i) + 1.f) / static_cast<f32>(k_max_cascades);
+        f32 log = min_z * std::pow(ratio, p);
+        f32 uniform = min_z + range * p;
+        f32 d = m_shadow_cascade_data.m_cascade_split_lambda * (log - uniform) + uniform;
+        m_shadow_cascade_data.m_shadow_cascade_splits[i] = (d - near_clip) / clip_range;
+    }
 
-        f32 min_z = near_clip;
-        f32 max_z = near_clip + clip_range;
+    m_shadow_cascade_data.m_shadow_cascade_splits[3] = 0.3; // TODO: why?
 
-        f32 range = max_z - min_z;
-        f32 ratio = max_z / min_z;
+    f32 last_split_distance = 0.f;
+    for (size_t cascade_index = 0; cascade_index < k_max_cascades; ++cascade_index)
+    {
+        f32 split_distance = m_shadow_cascade_data.m_shadow_cascade_splits[cascade_index];
+        // last_split_distance = 0.f; // TODO: why?
 
         glm::vec3 frustum_corners[8] =
         {
@@ -705,13 +821,21 @@ auto scene_renderer::calculate_shadow_map_data(
             glm::vec3(-1.0f, -1.0f,  1.0f),
         };
 
-        glm::mat4 inverse_camera = glm::inverse(view_projection);
         for (u32 i = 0; i < 8; ++i)
         {
             glm::vec4 inv_corner = inverse_camera * glm::vec4(frustum_corners[i], 1.f);
             frustum_corners[i] = inv_corner / inv_corner.w;
         }
 
+        // TODO: wtf does this do
+        for (u32 i = 0; i < 4; ++i)
+        {
+            const glm::vec3 dist = frustum_corners[i + 4] - frustum_corners[i];
+            frustum_corners[i + 4] = frustum_corners[i] + (dist * split_distance);
+            frustum_corners[i] = frustum_corners[i] + dist * last_split_distance;
+        }
+
+        // Compute frustum centers
         glm::vec3 frustum_center = glm::vec3{ 0.f };
         for (u32 i = 0; i < 8; ++i)
             frustum_center += frustum_corners[i];
@@ -726,6 +850,7 @@ auto scene_renderer::calculate_shadow_map_data(
         }
 
         radius = std::ceil(radius * 16.f) / 16.f;
+        radius *= m_shadow_cascade_data.m_shadow_cascade_splits[cascade_index];
 
         glm::vec3 max_extents = glm::vec3(radius);
         glm::vec3 min_extents = -max_extents;
@@ -745,11 +870,11 @@ auto scene_renderer::calculate_shadow_map_data(
             max_extents.z - min_extents.z
         );
 
-        shadow_projection = light_ortho_mat * light_view_mat;
+        glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
 
-        float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass->get_target_frame_buffer()->get_width());
+        float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass[0]->get_target_frame_buffer()->get_width());
         glm::vec4 shadow_origin =
-            shadow_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
+            shadow_view_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
             shadow_map_resolution / 2.f;
         glm::vec4 rounded_origin = glm::round(shadow_origin);
         glm::vec4 round_offset = rounded_origin - shadow_origin;
@@ -757,17 +882,30 @@ auto scene_renderer::calculate_shadow_map_data(
         round_offset.w = 0.f;
 
         light_ortho_mat[3] = round_offset;
-        //light_view_projection = light_ortho_mat * light_view_mat;
+        const auto light_view_projection = light_ortho_mat * light_view_mat;
         //light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * light_view_mat;
+
+        // Update local cascade ub data
+        auto& cascade_data_ub = p_cascades_data[cascade_index];
+        cascade_data_ub.m_split_depth = split_distance;
+        cascade_data_ub.m_view_projection = light_view_projection;
+        cascade_data_ub.m_view = light_view_mat;
+
+        if (cascade_index >= 1)
+        {
+            last_split_distance = m_shadow_cascade_data.m_shadow_cascade_splits[cascade_index - 1];
+        }
     }
 
     // FIXME: testing
-    light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * view_mat;
-
+#if 0
+    f32 near_clip = 0.1f;
+    f32 far_clip = 1000.f;
+    light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_clip, far_clip) * view_mat;
+#endif
 
     //const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
 
-    m_shadow_data.m_view_projection = light_view_projection;
 }
 
 

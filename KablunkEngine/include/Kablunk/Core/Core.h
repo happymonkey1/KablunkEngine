@@ -40,9 +40,6 @@ namespace kb
 
 #define KABLUNK_BIND_EVENT_FN(x) [this](auto&&... args) -> decltype(auto) { return this->x(std::forward<decltype(args)>(args)...); }
 
-// force glm mats to use vulkan z range
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 namespace kb
 { // start namespace kb
 

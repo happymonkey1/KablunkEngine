@@ -83,7 +83,8 @@ public:
         const arc<vertex_buffer>& p_transform_buffer,
         u32 p_transform_offset,
         u32 p_bone_transforms_offset,
-        u32 p_instance_count
+        u32 p_instance_count,
+        owning_buffer p_push_constant_uniforms = owning_buffer{}
     ) noexcept override;
 
     void render_instanced_sub_mesh(

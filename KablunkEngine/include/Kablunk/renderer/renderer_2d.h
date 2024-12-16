@@ -6,8 +6,6 @@
 
 #include "Kablunk/Core/RefCounting.h"
 
-#include "Kablunk/Asset/AssetManager.h"
-
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/OrthographicCamera.h"
 #include "Kablunk/renderer/EditorCamera.h"

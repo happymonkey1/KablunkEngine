@@ -58,7 +58,10 @@ void render_thread::terminate()
 {
 	m_running = false;
 	// make sure we finish processing any submitted functions before termination
-	pump();
+
+    // TODO: Needing to pump multiple frames seems like a bug
+    for (size_t i = 0; i < render::get_frames_in_flight(); ++i)
+	    pump();
 
 	if (m_threading_policy == threading_policy_t::multi_threaded)
 		m_thread.join();

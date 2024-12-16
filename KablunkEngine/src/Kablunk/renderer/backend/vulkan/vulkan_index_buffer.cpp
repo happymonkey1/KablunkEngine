@@ -65,15 +65,20 @@ vulkan_index_buffer::vulkan_index_buffer(const void* data, uint32_t size /*= 0*/
 
 vulkan_index_buffer::~vulkan_index_buffer()
 {
+    if (!m_vk_buffer)
+        return;
+
 	VkBuffer buffer = m_vk_buffer;
 	VmaAllocation allocation = m_vk_allocation;
-	render::submit([buffer, allocation]() mutable
+	render::submit_resource_free([buffer, allocation]() mutable
 		{
 			vulkan_allocator allocator{ "IndexBuffer" };
 			allocator.destroy_buffer(buffer, allocation);
+            buffer = nullptr;
 		});
 
 	m_local_data.release();
+    m_vk_buffer = nullptr;
 }
 
 void vulkan_index_buffer::bind() const

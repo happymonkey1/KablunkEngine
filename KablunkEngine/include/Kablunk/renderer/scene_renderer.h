@@ -62,6 +62,8 @@ namespace kb::render
 // forward declaration
 class renderer_2d;
 
+constexpr size_t k_max_cascades = 4ull;
+
 struct scene_renderer_specification_t
 {
 	bool swap_chain_target = false;
@@ -87,9 +89,16 @@ struct scene_renderer_data_ub_t
 	LightEnvironmentData light_environment;
 };
 
-struct shadow_data_ub_t
+struct shadow_cascade_data_t
 {
+    f32 m_split_depth;
     glm::mat4 m_view_projection;
+    glm::mat4 m_view;
+};
+
+struct shadow_cascade_data_ub_t
+{
+    glm::mat4 m_view_projection[4];
 };
 
 struct point_light_ub_t
@@ -98,6 +107,11 @@ struct point_light_ub_t
     uint32_t count{ 0 };
     vec3_packed padding{};
     point_light_t point_lights[k_point_light_buffer_size]{};
+};
+
+struct renderer_data_ub_t
+{
+    glm::vec4 m_cascade_splits{ 0.f };
 };
 
 class scene_renderer final : public RefCounted
@@ -129,6 +143,7 @@ public:
     static void wait_for_threads();
 
 private:
+    auto submit_uniform_buffers() noexcept -> void;
     void flush_draw_list();
     void pre_render();
     void clear_pass();
@@ -139,6 +154,7 @@ private:
     void clear_pass(arc<backend::render_pass> render_pass, bool explicit_clear = false);
 
     auto calculate_shadow_map_data(
+        shadow_cascade_data_t* p_cascades_data,
         const scene_renderer_camera_t& p_scene_camera,
         const glm::vec3& p_light_direction
     ) noexcept -> void;
@@ -149,7 +165,7 @@ private:
 
     arc<backend::render_command_buffer> m_command_buffer;
 
-    arc<backend::render_pass> m_directional_shadow_pass;
+    arc<backend::render_pass> m_directional_shadow_pass[4];
     arc<backend::render_pass> m_geometry_pass;
     arc<backend::render_pass> m_composite_pass;
 
@@ -189,10 +205,12 @@ private:
 
     unordered_flat_map<mesh_transform_handle, transform_map_data_t> m_transform_map{};
 
+    arc<backend::uniform_buffer_set> m_renderer_data_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_camera_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_directional_light_set{};
     arc<backend::uniform_buffer_set> m_shadow_data_uniform_buffer_set{};
+    arc<backend::uniform_buffer_set> m_cascade_indices_uniform_buffer_set{};
 	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
     point_light_ub_t* m_point_lights_ub = new point_light_ub_t{};
@@ -207,9 +225,18 @@ private:
 	// flag for flushing scene data on a separate "job" thread
 	bool m_use_threads = false;
 
-    f32 m_shadow_scale_from_origin = 10.f;
+    struct
+    {
+        f32 m_shadow_scale_from_origin = 0.f;
+        f32 m_cascade_split_lambda = 0.92f;
+        glm::vec4 m_cascade_splits{};
+        f32 m_cascade_far_plane_offset = 50.0f;
+        f32 m_cascade_near_plane_offset = -50.f;
+        f32 m_shadow_cascade_splits[k_max_cascades];
+        f32 m_use_manual_cascade_splits = false;
+    } m_shadow_cascade_data;
+
 	scene_renderer_data_ub_t m_scene_data;
-    shadow_data_ub_t m_shadow_data;
 
 	struct draw_command_data_t
 	{

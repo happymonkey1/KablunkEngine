@@ -441,10 +441,13 @@ inline void submit_resource_free(auto func) noexcept
 		p_func->~func_t();
 	};
 
-	render::submit([render_cmd, func]()
+    const u32 frame_index = render_thread::is_current_thread_rt() ?
+        rt_get_current_frame_index() :
+        get_current_frame_index();
+
+	render::submit([render_cmd, func, frame_index]()
 		{
-			const uint32_t index = rt_get_current_frame_index();
-			auto storage_buffer = get_render_resource_release_queue(index).allocate(render_cmd, sizeof(func));
+			auto storage_buffer = get_render_resource_release_queue(frame_index).allocate(render_cmd, sizeof(func));
 			new (storage_buffer) func_t(std::forward<func_t>(static_cast<func_t>(func)));
 		});
 }

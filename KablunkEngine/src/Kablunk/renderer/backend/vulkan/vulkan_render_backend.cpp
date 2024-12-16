@@ -672,10 +672,25 @@ void vulkan_render_backend::render_static_mesh(
 }
 
 void vulkan_render_backend::render_instanced_sub_mesh_with_material(
-    const arc<render_command_buffer>& p_render_command_buffer, const arc<pipeline>& p_pipeline, const arc<Mesh>& p_mesh,
-    u32 p_sub_mesh_index, const arc<material>& p_material, const arc<vertex_buffer>& p_transform_buffer,
-    u32 p_transform_offset, u32 p_bone_transforms_offset, u32 p_instance_count) noexcept
+    const arc<render_command_buffer>& p_render_command_buffer,
+    const arc<pipeline>& p_pipeline,
+    const arc<Mesh>& p_mesh,
+    u32 p_sub_mesh_index,
+    const arc<material>& p_material,
+    const arc<vertex_buffer>& p_transform_buffer,
+    u32 p_transform_offset,
+    u32 p_bone_transforms_offset,
+    u32 p_instance_count,
+    owning_buffer p_push_constant_uniforms /* = owning_buffer{} */
+) noexcept
 {
+    owning_buffer push_constant_buffer{};
+    if (p_push_constant_uniforms.size())
+    {
+        push_constant_buffer.allocate(p_push_constant_uniforms.size());
+        push_constant_buffer.write(p_push_constant_uniforms.get(), p_push_constant_uniforms.size());
+    }
+
     submit([
         render_command_buffer = p_render_command_buffer,
         mesh = p_mesh,
@@ -683,10 +698,11 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
         vulkan_pipeline = p_pipeline.As<vulkan_pipeline>(),
         vulkan_material = p_material.As<vulkan_material>(),
         sub_mesh_index = p_sub_mesh_index,
-        instance_count = p_instance_count
+        instance_count = p_instance_count,
+        push_constant_buffer
     ]() mutable
         {
-            u32 current_frame_index = rt_get_current_frame_index();
+            const u32 current_frame_index = rt_get_current_frame_index();
             const auto vk_command_buffer = render_command_buffer
                 .As<vulkan_render_command_buffer>()
                 ->get_active_command_buffer();
@@ -706,6 +722,8 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
                 .As<vulkan_index_buffer>()
                 ->rt_vk_bind_buffer(vk_command_buffer);
 
+
+
             if (vulkan_material)
             {
                 const auto vk_layout = vulkan_pipeline->get_vk_pipeline_layout();
@@ -724,6 +742,20 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
                     );
                 }
 
+                u32 push_constant_offset = 0;
+                if (push_constant_buffer.size())
+                {
+                    vkCmdPushConstants(
+                        vk_command_buffer,
+                        vk_layout,
+                        VK_SHADER_STAGE_VERTEX_BIT,
+                        push_constant_offset,
+                        push_constant_buffer.size(),
+                        push_constant_buffer.get()
+                    );
+                    push_constant_offset += 16; // TODO: it's 16 because that happens to be the offset that is declared for the material push constants in the shaders.  Need a better way of doing this.  Cannot just use the size of the pushConstantBuffer, because you dont know what alignment the next push constant range might have
+                }
+
                 const auto& uniform_storage_buffer = vulkan_material->get_uniform_storage_buffer();
                 if (uniform_storage_buffer.size())
                 {
@@ -731,7 +763,7 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
                         vk_command_buffer,
                         vk_layout,
                         VK_SHADER_STAGE_FRAGMENT_BIT,
-                        0,
+                        push_constant_offset,
                         static_cast<u32>(uniform_storage_buffer.size()),
                         uniform_storage_buffer.get()
                     );

@@ -155,6 +155,9 @@ void Renderer::shutdown()
     delete m_backend;
     m_backend = nullptr;
 
+    for (auto& queue : m_resource_free_queue)
+        queue.execute();
+
 	for (size_t i = 0; i < k_render_command_queue_size; ++i)
         if (!m_command_queues[i].is_empty())
 			KB_CORE_WARN("[renderer]: renderer shutting down but command_queue[{}] is not empty?", i);
