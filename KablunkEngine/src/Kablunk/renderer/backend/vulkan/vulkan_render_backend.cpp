@@ -538,6 +538,7 @@ void vulkan_render_backend::render_geometry(
                     nullptr
                 );
             }
+#if 0
             else
             {
                 log::core::warn(
@@ -546,6 +547,7 @@ void vulkan_render_backend::render_geometry(
                     static_cast<const void*>(vk_descriptor_set)
                 );
             }
+#endif
 
             // push u_Renderer mat4
             // #TODO why do we still have this?

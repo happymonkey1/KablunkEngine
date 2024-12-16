@@ -281,7 +281,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
                 { backend::shader_data_type_t::Float4, "a_Color" }
             },
             .instance_layout = {},
-            .topology = backend::primitive_topology_t::triangles,
+            .topology = backend::primitive_topology_t::lines,
             .backface_culling = false,
             .depth_test = false,
             .depth_write = false,
@@ -576,7 +576,9 @@ void renderer_2d::flush()
             line_vertex_buffer->set_data(line_vertex_buffer_base_ptr, data_size);
 
             render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_line_pass, clear_pass);
-            render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.line_width);
+
+            render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.m_line_width);
+
             const auto& line_pipeline = m_renderer_data.m_line_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
@@ -672,6 +674,15 @@ void renderer_2d::set_target_frame_buffer(const arc<backend::frame_buffer>& p_ta
         render_pass_spec.m_pipeline = backend::pipeline::create(pipeline_spec);
     }
 
+    // Line pipeline
+    if (m_renderer_data.m_line_pass->get_target_frame_buffer() != p_target_frame_buffer)
+    {
+        auto pipeline_spec = m_renderer_data.m_line_pass->get_pipeline()->get_specification();
+        pipeline_spec.m_target_frame_buffer = p_target_frame_buffer;
+        auto& render_pass_spec = m_renderer_data.m_line_pass->get_specification();
+        render_pass_spec.m_pipeline = backend::pipeline::create(pipeline_spec);
+    }
+
     // Text Pipeline
     if (m_renderer_data.m_text_pass->get_target_frame_buffer() != p_target_frame_buffer)
     {
@@ -688,7 +699,7 @@ auto renderer_2d::get_target_frame_buffer() const noexcept -> const arc<backend:
     return m_renderer_data.m_quad_pass->get_pipeline()->get_specification().m_target_frame_buffer;
 }
 
-void renderer_2d::on_recreate_swapchain()
+void renderer_2d::on_recreate_swap_chain()
 {
     KB_PROFILE_SCOPE;
 
@@ -701,7 +712,7 @@ void renderer_2d::on_viewport_resize(const glm::vec2& p_viewport_dimensions)
     KB_PROFILE_SCOPE;
 
     if (m_renderer_data.specification.swap_chain_target)
-        on_recreate_swapchain();
+        on_recreate_swap_chain();
     else
     {
         // #TODO this may force recreation twice(?) depending on whether target render pass is externally managed...

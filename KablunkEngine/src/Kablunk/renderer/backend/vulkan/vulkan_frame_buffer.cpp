@@ -313,12 +313,13 @@ void vulkan_frame_buffer::rt_invalidate()
             attachment_description.initialLayout = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR ?
                 VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             // #TODO Separate layouts requires a "separate layouts" flag to be enabled
-			if (attachment_spec.format == image_format_t::DEPTH24STENCIL8 || true)
+			if (attachment_spec.format == image_format_t::DEPTH24STENCIL8)
 			{
                 // TODO: if not sampling
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 // TODO: if sampling
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			    attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
 				depth_attachment_reference = {
 				    attachment_index,
 				    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
@@ -509,13 +510,13 @@ void vulkan_frame_buffer::rt_invalidate()
 		{
 			KB_CORE_ASSERT(m_specification.m_existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
 			attachments.emplace_back(image->GetLayerImageView(m_specification.m_existing_image_layers[0]));
-			KB_CORE_ASSERT(attachments.back(), "error");
 		}
 		else
 		{
 			attachments.emplace_back(image->get_vk_image_info().image_view);
-			KB_CORE_ASSERT(attachments.back(), "error");
 		}
+
+        KB_CORE_ASSERT(attachments.back(), "error");
 	}
 
 	VkFramebufferCreateInfo frame_buffer_create_info = {};

@@ -93,6 +93,20 @@ void scene_renderer::init()
     {
         u32 shadow_map_resolution = 4096;
 
+        backend::image_specification_t depth_image_spec{
+            .format = backend::image_format_t::DEPTH32F,
+            .usage = backend::image_usage_t::Attachment,
+            .width = shadow_map_resolution,
+            .height = shadow_map_resolution,
+            .mips = 1,
+            .layers = 1, // TODO: shadow cascade count
+            .deinterleaved = false,
+            .m_transfer = false,
+            .debug_name = "Depth"
+        };
+        auto dir_shadow_map_depth_image = backend::image_2d::create(depth_image_spec);
+        dir_shadow_map_depth_image->invalidate();
+
         backend::frame_buffer_specification_t frame_buffer_spec{};
         frame_buffer_spec.m_attachments = {
             backend::image_format_t::DEPTH32F
@@ -100,9 +114,10 @@ void scene_renderer::init()
         frame_buffer_spec.m_width = shadow_map_resolution;
         frame_buffer_spec.m_height = shadow_map_resolution;
         frame_buffer_spec.m_clear_color = { 0.f, 0.f, 0.f, 0.f };
-        frame_buffer_spec.m_clear_depth_on_load = false;
+        frame_buffer_spec.m_clear_depth_on_load = true;
         frame_buffer_spec.m_no_resize = true;
         frame_buffer_spec.m_depth_clear_value = 1.0f;
+        frame_buffer_spec.m_existing_image = dir_shadow_map_depth_image;
 
         const auto& dir_shadow_shader = get_shader(shader_library::k_directional_shadows_shader_name);
         backend::pipeline_specification_t dir_shadow_pipeline_spec{
@@ -111,7 +126,7 @@ void scene_renderer::init()
             .layout = vertex_buffer_layout,
             .instance_layout = instance_buffer_layout,
             .topology = backend::primitive_topology_t::triangles,
-            .m_depth_compare_op = backend::depth_compare_op_t::less,
+            .m_depth_compare_op = backend::depth_compare_op_t::less_or_equal,
             .backface_culling = true,
             .depth_test = true,
             .depth_write = true,
@@ -648,15 +663,109 @@ auto scene_renderer::calculate_shadow_map_data(
     const glm::vec4 origin{ glm::vec3{ 0.0f }, 1.0f };
     view_mat[3] = glm::lerp(view_mat[3], origin, scale_to_origin);
 #endif
-    const auto& light_dir = m_scene_data.light_environment.m_directional_light.m_direction;
+    const auto& light_direction = m_scene_data.light_environment.m_directional_light.m_direction;
 
+    glm::vec3 light_dir_vec3 = -glm::vec3{ light_direction.x, light_direction.y, light_direction.z };
+#if 1
     glm::mat4 view_mat = glm::lookAt(
-        glm::vec3{ light_dir.x, light_dir.y, light_dir.z } * m_shadow_scale_from_origin * -1.f,
+        light_dir_vec3,
         glm::vec3{ 0.f },
         glm::vec3{ 0.f, 1.f, 0.f }
     );
+#else
+    glm::mat4 view_mat = p_scene_camera.view_mat;
+    view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
+#endif
 
-    const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+    auto view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+
+    // calculate frustum ortho projection
+    glm::mat4 shadow_projection;
+    glm::mat4 light_view_projection;
+    {
+        const f32 near_clip = 0.1f; // TODO: pass in scene camera
+        const f32 far_clip = 1000.f; // TODO: pass in scene camera
+        const f32 clip_range = far_clip - near_clip;
+
+        f32 min_z = near_clip;
+        f32 max_z = near_clip + clip_range;
+
+        f32 range = max_z - min_z;
+        f32 ratio = max_z / min_z;
+
+        glm::vec3 frustum_corners[8] =
+        {
+            glm::vec3(-1.0f,  1.0f, -1.0f),
+            glm::vec3(1.0f,  1.0f, -1.0f),
+            glm::vec3(1.0f, -1.0f, -1.0f),
+            glm::vec3(-1.0f, -1.0f, -1.0f),
+            glm::vec3(-1.0f,  1.0f,  1.0f),
+            glm::vec3(1.0f,  1.0f,  1.0f),
+            glm::vec3(1.0f, -1.0f,  1.0f),
+            glm::vec3(-1.0f, -1.0f,  1.0f),
+        };
+
+        glm::mat4 inverse_camera = glm::inverse(view_projection);
+        for (u32 i = 0; i < 8; ++i)
+        {
+            glm::vec4 inv_corner = inverse_camera * glm::vec4(frustum_corners[i], 1.f);
+            frustum_corners[i] = inv_corner / inv_corner.w;
+        }
+
+        glm::vec3 frustum_center = glm::vec3{ 0.f };
+        for (u32 i = 0; i < 8; ++i)
+            frustum_center += frustum_corners[i];
+
+        frustum_center /= 8.f;
+
+        f32 radius = 0.f;
+        for (u32 i = 0; i < 8; ++i)
+        {
+            f32 distance = glm::length(frustum_corners[i] - frustum_center);
+            radius = glm::max(radius, distance);
+        }
+
+        radius = std::ceil(radius * 16.f) / 16.f;
+
+        glm::vec3 max_extents = glm::vec3(radius);
+        glm::vec3 min_extents = -max_extents;
+
+        glm::vec3 light_dir = -light_dir_vec3;
+        glm::mat4 light_view_mat = glm::lookAt(
+            frustum_center - light_dir * -min_extents.z,
+            frustum_center,
+            glm::vec3{ 0.f, 0.f, 1.f }
+        );
+        glm::mat4 light_ortho_mat = glm::ortho(
+            min_extents.x,
+            max_extents.x,
+            min_extents.y,
+            max_extents.y,
+            0.f,
+            max_extents.z - min_extents.z
+        );
+
+        shadow_projection = light_ortho_mat * light_view_mat;
+
+        float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass->get_target_frame_buffer()->get_width());
+        glm::vec4 shadow_origin =
+            shadow_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
+            shadow_map_resolution / 2.f;
+        glm::vec4 rounded_origin = glm::round(shadow_origin);
+        glm::vec4 round_offset = rounded_origin - shadow_origin;
+        round_offset.z = 0.f;
+        round_offset.w = 0.f;
+
+        light_ortho_mat[3] = round_offset;
+        //light_view_projection = light_ortho_mat * light_view_mat;
+        //light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * light_view_mat;
+    }
+
+    // FIXME: testing
+    light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * view_mat;
+
+
+    //const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
 
     m_shadow_data.m_view_projection = light_view_projection;
 }

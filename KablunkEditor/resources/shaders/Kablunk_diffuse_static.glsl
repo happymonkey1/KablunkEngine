@@ -65,8 +65,8 @@ void main()
     v_Output.CameraView = mat3(u_ViewMatrix);
     v_Output.CameraPosition = u_CameraPosition;
     v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
-    vec4 shadowProj = u_DirShadowUniform.DirLightMat * vec4(v_Output.WorldPosition, 1.0);
-    v_Output.ShadowMapCoords = shadowProj.xyz / shadowProj.w;
+    vec4 shadowProj = u_DirShadowUniform.DirLightMat * vec4(worldPosition.xyz, 1.0);
+    v_Output.ShadowMapCoords = shadowProj.xyz / (shadowProj.w + 0.0001f);
 
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
@@ -111,7 +111,7 @@ struct PointLight
 
 layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
 layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
-layout(set = 0, binding = 8) uniform sampler2D u_ShadowMapTexture;
+layout(set = 1, binding = 8) uniform sampler2D u_ShadowMapTexture;
 
 layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
@@ -262,6 +262,8 @@ vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
 
 float CalculateShadow(vec3 coords, sampler2D shadowMap) {
     vec3 projectedCoords = coords * 0.5 + 0.5;
+
+
     float closeDepth = texture(shadowMap, projectedCoords.xy).r;
     float currentDepth = projectedCoords.z;
     float shadow = currentDepth > closeDepth ? 1.0 : 0.0;
@@ -310,4 +312,5 @@ void main()
     float shadow = CalculateShadow(v_Input.ShadowMapCoords, u_ShadowMapTexture);
 
     o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
+    // o_Color = vec4(vec3(gl_FragCoord.z), 1.0);
 }

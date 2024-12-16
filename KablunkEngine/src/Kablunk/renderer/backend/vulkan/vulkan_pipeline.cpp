@@ -270,7 +270,9 @@ void vulkan_pipeline::RT_Invalidate()
 	dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);
 	if (m_specification.topology == primitive_topology_t::lines || m_specification.topology == primitive_topology_t::line_strip || m_specification.wireframe)
-		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+	{
+        dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+	}
 
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

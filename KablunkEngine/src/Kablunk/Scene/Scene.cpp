@@ -781,7 +781,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 		}
 	}
 
-	scene_renderer->begin_scene({ camera, camera.GetViewMatrix() });
+    scene_renderer->begin_scene({ kb::camera{ camera.GetProjection(), camera.get_unreversed_projection() }, camera.GetViewMatrix()});
 
 	{
 		auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -814,9 +814,9 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 	// #TODO move to scene renderer
 	if (scene_renderer->get_final_render_pass_image())
 	{
-		p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
         auto target_frame_buffer = scene_renderer->get_external_composite_frame_buffer();
-		p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
+        p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
+		p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
 
 		auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 		for (auto entity : sprite_view)
@@ -874,6 +874,20 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
                     text_comp.m_tint_color
                 );
             }*/
+        }
+
+        // TODO: probably not the best place for this...
+        // Render editor gizmos
+        {
+            if (m_directional_light.m_enabled)
+            {
+                p_renderer_2d->set_line_width(2.f);
+                p_renderer_2d->draw_line(
+                    glm::vec3{ 0.f },
+                    -vec3_packed_to_glm_vec3(m_directional_light.m_direction),
+                    glm::vec4{ 1.f, 1.f, 0.f, 1.f }
+                );
+            }
         }
 
 		p_renderer_2d->end_scene();

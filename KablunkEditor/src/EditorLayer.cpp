@@ -57,7 +57,7 @@ namespace kb
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.01f, 10000.0f },
+		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
         m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
         // TODO: clean up
@@ -1338,56 +1338,54 @@ namespace kb
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (!m_viewport_renderer->get_final_render_pass_image())
+		if (!m_viewport_renderer->get_final_render_pass_image() || true)
 			return;
 
+        camera* camera = nullptr;
+        glm::mat4 transform = glm::mat4{ 1.0f };
+
+        switch (m_scene_state)
+        {
+        case SceneState::Play:
+        {
+            auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+            camera = &cam_entity.GetComponent<CameraComponent>().Camera;
+            transform = cam_entity.GetComponent<TransformComponent>().GetTransform();
+            if (!cam_entity.Valid())
+            {
+                KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+                return;
+            }
+            break;
+        }
+        case SceneState::Edit:
+        {
+            camera = &m_editor_camera;
+            transform = m_editor_camera.GetViewMatrix();
+            break;
+        }
+        case SceneState::Pause:
+        {
+            camera = &m_editor_camera;
+            transform = m_editor_camera.GetViewMatrix();
+            break;
+        }
+        }
+
+        if (!camera)
+        {
+            KB_CORE_ASSERT(false, "could not find camera!");
+            return;
+        }
+
+        m_renderer_2d->set_target_frame_buffer(
+            m_viewport_renderer->get_external_composite_frame_buffer()
+        );
+        m_renderer_2d->begin_scene(*camera, transform);
+        
 		if (m_show_physics_colliders)
 		{
-			
-			camera* camera = nullptr;
-			glm::mat4 transform = glm::mat4{ 1.0f };
-
-			switch (m_scene_state)
-			{
-				case SceneState::Play:
-				{
-					auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-					camera = &cam_entity.GetComponent<CameraComponent>().Camera;
-					transform = cam_entity.GetComponent<TransformComponent>().GetTransform();
-					if (!cam_entity.Valid())
-					{
-						KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
-						return;
-					}
-					break;
-				}
-				case SceneState::Edit:
-				{
-					camera = &m_editor_camera;
-					transform = m_editor_camera.GetViewMatrix();
-					break;
-				}
-				case SceneState::Pause:
-				{
-					camera = &m_editor_camera;
-					transform = m_editor_camera.GetViewMatrix();
-					break;
-				}
-			}
-
-			if (!camera)
-			{
-				KB_CORE_ASSERT(false, "could not find camera!");
-				return;
-			}
-
 			// #TODO move to scene renderer
-
-			m_renderer_2d->begin_scene(*camera, transform);
-			m_renderer_2d->set_target_frame_buffer(
-                m_viewport_renderer->get_external_composite_frame_buffer()
-            );
-
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
 			// Rectangles (Quads)
@@ -1417,11 +1415,10 @@ namespace kb
 					m_renderer_2d->draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
-
-
-			m_renderer_2d->end_scene();
-			
 		}
+
+        
+        m_renderer_2d->end_scene();
 	}
 
 	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)

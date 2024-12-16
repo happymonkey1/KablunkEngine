@@ -168,7 +168,8 @@ struct renderer_2d_data_t
 	uint32_t line_count = 0;
 	uint32_t line_index_count = 0;
     u32 m_line_write_index = 0;
-	float line_width = 1.0f;
+	float m_line_width = 1.0f;
+    bool m_line_width_dirty = true;
 
 	// text
     using text_per_frame_base_buffer = std::vector<text_vertex_t*>;
@@ -234,10 +235,15 @@ public:
 
 	void set_target_frame_buffer(const arc<backend::frame_buffer>& p_target_frame_buffer);
     [[nodiscard]] auto get_target_frame_buffer() const noexcept -> const arc<backend::frame_buffer>&;
-	void on_recreate_swapchain();
+	void on_recreate_swap_chain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
     void set_swap_chain_target(bool p_swap_chain_target = true);
+
+    auto set_line_width(f32 p_new_line_width) noexcept -> void
+    {
+        m_renderer_data.m_line_width = p_new_line_width;
+    }
 
     // ---draw commands-------------------------------------------------------------------------------------------------
 
