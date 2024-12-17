@@ -840,12 +840,14 @@ auto scene_renderer::calculate_shadow_map_data(
         cascade_splits[i] = (d - near_clip) / clip_range;
     }
 
+#if 0
     // TODO: remove debugging
     cascade_splits[0] = 0.01f;
     cascade_splits[1] = 0.017f;
     cascade_splits[2] = 0.02f;
     cascade_splits[3] = 0.2f;
     // cascade_splits[3] = 0.3f;
+#endif
 
     f32 last_split_distance = 0.0001f;
     for (size_t cascade_index = 0; cascade_index < k_max_cascades; ++cascade_index)
@@ -855,10 +857,10 @@ auto scene_renderer::calculate_shadow_map_data(
         glm::vec3 frustum_corners[8] =
         {
             // TODO: [-1,1] or [0, 1] for z?
-            glm::vec3(-1.0f,  1.0f, 0.f),
-            glm::vec3(1.0f,  1.0f, 0.f),
-            glm::vec3(1.0f, -1.0f, 0.f),
-            glm::vec3(-1.0f, -1.0f, 0.f),
+            glm::vec3(-1.0f,  1.0f, -1.f),
+            glm::vec3(1.0f,  1.0f, -1.f),
+            glm::vec3(1.0f, -1.0f, -1.f),
+            glm::vec3(-1.0f, -1.0f, -1.f),
             glm::vec3(-1.0f,  1.0f,  1.0f),
             glm::vec3(1.0f,  1.0f,  1.0f),
             glm::vec3(1.0f, -1.0f,  1.0f),
@@ -910,6 +912,7 @@ auto scene_renderer::calculate_shadow_map_data(
             max_extents.x,
             min_extents.y,
             max_extents.y,
+            // Uses [0, +x] range
             0.f + m_shadow_cascade_data.m_cascade_near_plane_offset,
             max_extents.z - min_extents.z + m_shadow_cascade_data.m_cascade_far_plane_offset
         );

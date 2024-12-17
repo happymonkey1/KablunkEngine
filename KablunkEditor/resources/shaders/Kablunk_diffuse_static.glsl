@@ -272,7 +272,7 @@ vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
     return normalize(TBN * normalMap);
 }
 
-float CalculateShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) {
+float CalculateShadow(vec3 coords, sampler2DArray shadowMap, int cascadeIndex) {
     vec3 projectedCoords = coords * 0.5 + 0.5;
 
     float closeDepth = texture(shadowMap, vec3(projectedCoords.xy, cascadeIndex)).r;
@@ -291,10 +291,10 @@ float GetShadowBias() {
     return bias;
 }
 
-float CalculateHardShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) {
+float CalculateHardShadow(vec3 coords, sampler2DArray shadowMap, int cascadeIndex) {
     float bias = GetShadowBias();
     float depth = texture(shadowMap, vec3(coords.xy * 0.5 + 0.5, cascadeIndex)).r;
-    return 1.0 - clamp(step(coords.z, depth + bias), 0.0, 1.0);
+    return clamp(step(depth + bias, coords.z), 0.0, 1.0);
 }
 
 void main()
@@ -336,9 +336,9 @@ void main()
     // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    uint cascadeIndex = -1;
-    const uint SHADOW_MAP_CASCADE_COUNT = 4;
-    for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) {
+    int cascadeIndex = -1;
+    const int SHADOW_MAP_CASCADE_COUNT = 4;
+    for (int i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
         // TODO: world position?
         if (abs(v_Input.ViewPosition.z) < u_RendererData.CascadeSplits[i]) {
             cascadeIndex = i;
@@ -353,6 +353,26 @@ void main()
     float shadow = CalculateHardShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
     // float shadow = CalculateShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
     
+    // TESTING
+    /*
+    switch (cascadeIndex)
+    {
+        case 0:
+            directionalLightColor = vec3(1.0, 0.0, 0.0);
+            break;
+        case 1:
+            directionalLightColor = vec3(0.0, 1.0, 0.0);
+            break;
+        case 2:
+            directionalLightColor = vec3(0.0, 0.0, 1.0);
+            break;
+        case 3:
+            directionalLightColor = vec3(1.0, 1.0, 0.0);
+            break;
+        case -1:
+            directionalLightColor = vec3(1.0, 0.0, 1.0); // pink
+            break;
+    }*/
 
     o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
     // o_Color = vec4(vec3(gl_FragCoord.z), 1.0);
