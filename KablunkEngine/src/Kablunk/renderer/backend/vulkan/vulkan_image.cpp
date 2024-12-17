@@ -143,13 +143,15 @@ void vulkan_image_2d::RT_Invalidate()
         static_cast<const void*>(&m_descriptor_image_info)
     );
 
+    const bool is_integer_format = ::kb::render::backend::util::is_integer_format(m_specification.format);
+
 	// #TODO: Renderer should contain some kind of sampler cache
 	VkSamplerCreateInfo sampler_create_info{};
 	sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	sampler_create_info.maxAnisotropy = 1.0f;
-	sampler_create_info.magFilter = VK_FILTER_LINEAR;
-	sampler_create_info.minFilter = VK_FILTER_LINEAR;
-	sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	sampler_create_info.magFilter = !is_integer_format ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
+	sampler_create_info.minFilter = !is_integer_format ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
+	sampler_create_info.mipmapMode = !is_integer_format ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_create_info.addressModeV = sampler_create_info.addressModeU;
 	sampler_create_info.addressModeW = sampler_create_info.addressModeU;

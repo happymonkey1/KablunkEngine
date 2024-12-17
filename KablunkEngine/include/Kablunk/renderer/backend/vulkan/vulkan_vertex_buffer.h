@@ -35,16 +35,16 @@ public:
 
     auto rt_vk_bind_buffer(
         const VkCommandBuffer p_vk_command_buffer,
-        const u32 p_binding
+        const u32 p_binding,
+        const VkDeviceSize p_offset
     ) const noexcept -> void
     {
-        constexpr VkDeviceSize k_offsets[1] = { 0 };
         vkCmdBindVertexBuffers(
             p_vk_command_buffer,
             p_binding,
             1,
             &m_vk_buffer,
-            k_offsets
+            &p_offset
         );
     }
 

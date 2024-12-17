@@ -5,6 +5,11 @@
 
 namespace kb
 {
+class scene_renderer_panel;
+}
+
+namespace kb
+{
 	class SceneCamera : public camera
 	{
 	public:
@@ -39,7 +44,7 @@ namespace kb
 		float GetPerspectiveVerticalFOV() const { return m_perspective_fov; }
 		float& GetPerspectiveVerticalFOV() { return m_perspective_fov; }
 		void SetPerspectiveVerticalFOV(float vertical_fov) { m_perspective_fov = vertical_fov; RecalculateProjection(); }
-		
+
 		float GetPerspectiveNearClip() const  { return m_perspective_near; }
 		float& GetPerspectiveNearClip() { return m_perspective_near; }
 		void SetPerspectiveNearClip(float near_clip) { m_perspective_near = near_clip; RecalculateProjection(); }
@@ -60,8 +65,15 @@ namespace kb
 		float GetOrthographicFarClip() const { return m_orthographic_far; }
 		float& GetOrthographicFarClip() { return m_orthographic_far; }
 		void SetOrthographicFarClip(float far_clip) { m_orthographic_far = far_clip; RecalculateProjection(); }
+
 	private:
 		void RecalculateProjection();
+
+        auto set_projection(const glm::mat4& p_projection) noexcept -> void
+        {
+            m_projection = p_projection;
+        }
+
 	private:
 		ProjectionType m_projection_type{ ProjectionType::Orthographic };
 		
@@ -73,6 +85,8 @@ namespace kb
 
 
 		float m_aspect_ratio{ 1.788f };
+
+        friend class ::kb::scene_renderer_panel;
 	};
 }
 #endif

@@ -295,98 +295,6 @@ void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	}
 }
 
-// #TODO move elsewhere
-
-static bool DrawVec3Control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float value_tuning = 0.1f, float column_width = 100.0f)
-{
-	// #TODO check values before clamping format to 2 decimal places.
-
-	ImGuiIO& io = ImGui::GetIO();
-	auto bold_font = io.Fonts->Fonts[0];
-
-	ImGui::PushID(label.c_str());
-
-	ImGui::Columns(2, 0, false);
-
-	ImGui::SetColumnWidth(0, column_width);
-	UI::ShiftCursorY(3.0f);
-	ImGui::Text(label.c_str());
-	UI::ShiftCursorY(-3.0f);
-	ImGui::NextColumn();
-
-	ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
-
-	float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-	auto button_size = ImVec2{ line_height + 3.0f, line_height };
-	bool updated = false;
-
-	// Red
-	ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.8f, 0.1f, 0.15f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered,	{ 0.9f, 0.2f, 0.2f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive,	{ 0.8f, 0.1f, 0.15f, 1.0f });
-	
-	ImGui::PushFont(bold_font);
-	if (ImGui::Button("X", button_size))
-	{
-		values.x = reset_value;
-		updated = true;
-	}
-	ImGui::PopFont();
-	ImGui::PopStyleColor(3);
-
-
-	ImGui::SameLine();
-	if (ImGui::DragFloat("##X", &values.x, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
-	ImGui::PopItemWidth();
-	ImGui::SameLine();
-
-	// Green
-	ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.2f, 0.7f, 0.3f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered,   { 0.3f, 0.8f, 0.4f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive,    { 0.2f, 0.7f, 0.3f, 1.0f });
-
-	ImGui::PushFont(bold_font);
-	if (ImGui::Button("Y", button_size))
-	{
-		values.y = reset_value;
-		updated = true;
-	}
-	ImGui::PopFont();
-	ImGui::PopStyleColor(3);
-
-	ImGui::SameLine();
-	if (ImGui::DragFloat("##Y", &values.y, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
-	ImGui::PopItemWidth();
-	ImGui::SameLine();
-
-	// Blue
-	ImGui::PushStyleColor(ImGuiCol_Button,			{ 0.1f, 0.25f, 0.8f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered,	{ 0.2f, 0.35f, 0.9f, 1.0f });
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive,	{ 0.1f, 0.25f, 0.8f, 1.0f });
-
-	ImGui::PushFont(bold_font);
-	if (ImGui::Button("Z", button_size))
-	{
-		values.z = reset_value;
-		updated = true;
-	}
-	ImGui::PopFont();
-	ImGui::PopStyleColor(3);
-
-	ImGui::SameLine();
-	if (ImGui::DragFloat("##Z", &values.z, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
-	ImGui::PopItemWidth();
-
-	ImGui::PopStyleVar();
-
-	ImGui::Columns(1);
-
-	ImGui::PopID();
-
-	return updated;
-}
-
 template <typename ComponentT>
 void DrawMaterialTable(arc<render::material_table> mesh_material_table)
 {
@@ -690,13 +598,13 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 	DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 		{
-			DrawVec3Control("Translation", component.Translation);
+			UI::DrawVec3Control("Translation", component.Translation);
 
 			auto rotation = glm::degrees(component.Rotation);
-			if (DrawVec3Control("Rotation", rotation, 0.0f, 1.0f))
+			if (UI::DrawVec3Control("Rotation", rotation, 0.0f, 1.0f))
 				component.Rotation = glm::radians(rotation);
 
-			DrawVec3Control("Scale", component.Scale, 1.0f);
+            UI::DrawVec3Control("Scale", component.Scale, 1.0f);
 		});
 
 	DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& component)

@@ -176,6 +176,33 @@ inline bool IsDepthFormat(image_format_t format)
     return false;
 }
 
+inline bool is_integer_format(image_format_t p_image_format)
+{
+    switch (p_image_format)
+    {
+    case image_format_t::DEPTH32FSTENCIL8UINT:
+    case image_format_t::RED32I:
+        return true;
+    case image_format_t::RED32F:
+    case image_format_t::RGB:
+    case image_format_t::RGBA:
+    case image_format_t::RGBA16F:
+    case image_format_t::RGBA32F:
+    case image_format_t::RG16F:
+    case image_format_t::RG32F:
+    case image_format_t::SRGB:
+    case image_format_t::DEPTH32F:
+    case image_format_t::DEPTH24STENCIL8:
+        return true;
+    case image_format_t::None:
+        KB_CORE_ASSERT(false, "[image]: Cannot determine number type for image_format_t=none!");
+    default:
+        KB_CORE_ASSERT(false, "[image]: Cannot determine number type for unknnown image_format_t!");
+    }
+
+    return false;
+}
+
 } // end namespace ::util
 
 } // end namespace kb::render::backend

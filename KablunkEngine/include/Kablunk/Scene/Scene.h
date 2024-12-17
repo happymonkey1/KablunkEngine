@@ -10,6 +10,11 @@
 #include "Kablunk/renderer/EditorCamera.h"
 #include "Kablunk/renderer/glsl_types.h"
 
+namespace kb
+{
+class scene_renderer_panel;
+}
+
 class b2World;
 
 namespace kb
@@ -168,6 +173,7 @@ private:
 	friend class SceneHierarchyPanel;
 	friend class render::scene_renderer;
 	friend class Prefab;
+    friend class ::kb::scene_renderer_panel;
 };
 
 } // end namespace kb

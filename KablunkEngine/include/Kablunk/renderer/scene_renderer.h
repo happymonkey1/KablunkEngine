@@ -246,7 +246,7 @@ private:
 	// flag for flushing scene data on a separate "job" thread
 	bool m_use_threads = false;
 
-    struct
+    struct scene_renderer_shadow_data_t
     {
         f32 m_shadow_scale_from_origin = 0.f;
         f32 m_cascade_split_lambda = 0.92f;
@@ -257,7 +257,14 @@ private:
         f32 m_use_manual_cascade_splits = false;
     } m_shadow_cascade_data;
 
-	scene_renderer_data_ub_t m_scene_data;
+    scene_renderer_data_ub_t m_scene_data;
+
+    // Debugging info
+    struct
+    {
+        glm::mat4 m_view_projections[4];
+        glm::mat4 m_views[4];
+    } m_shadow_cascade_mats;
 
 	struct draw_command_data_t
 	{

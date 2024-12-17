@@ -18,548 +18,637 @@
 
 namespace kb::UI
 {
-	constexpr uint32_t MAX_CHARS = 256;
-	static char s_id_buffer[MAX_CHARS];
-	static uint32_t s_ui_context_id = 0;
+constexpr uint32_t MAX_CHARS = 256;
+static char s_id_buffer[MAX_CHARS];
+static uint32_t s_ui_context_id = 0;
 
-	static const char* GenerateID()
+static const char* GenerateID()
+{
+	s_id_buffer[0] = '#';
+	s_id_buffer[1] = '#';
+	memset(s_id_buffer + 2, 0, 14);
+	sprintf_s(s_id_buffer + 2, 14, "%o", s_ui_context_id++);
+
+	return &s_id_buffer[0];
+}
+
+static void PushItemDisabled()
+{
+	ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+}
+
+static bool IsItemDisabled()
+{
+	return ImGui::GetItemFlags() & ImGuiItemFlags_Disabled;
+}
+
+static void PopItemDisabled()
+{
+	ImGui::PopItemFlag();
+}
+
+static bool IsMouseDownOnDockedWindow(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags hovered_flags = 0)
+{
+	return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
+}
+
+static bool IsMouseDownOnItem(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags flags = 0)
+{
+	return ImGui::IsMouseDown(mouse) && ImGui::IsItemHovered(flags);
+}
+
+static void ShiftCursor(ImVec2 distance)
+{
+	ImGui::SetCursorPos(ImGui::GetCursorPos() + distance);
+}
+
+static void ShiftCursorX(float distance)
+{
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + distance);
+}
+
+static void ShiftCursorY(float distance)
+{
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
+}
+
+static const char* GenerateLabelID(std::string_view label)
+{
+	*fmt::format_to_n(s_id_buffer, std::size(s_id_buffer), "{}##{}", label, s_ui_context_id++).out = 0;
+	return s_id_buffer;
+}
+
+namespace Internal
+{
+	template <typename FuncT>
+	static void CreateStaticProperty(const char* label, FuncT DrawUI)
 	{
-		s_id_buffer[0] = '#';
-		s_id_buffer[1] = '#';
-		memset(s_id_buffer + 2, 0, 14);
-		sprintf_s(s_id_buffer + 2, 14, "%o", s_ui_context_id++);
+		ShiftCursorY(3.0f);
 
-		return &s_id_buffer[0];
+		ImGui::Text(label);
+
+		ShiftCursorY(-3.0f);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		DrawUI(GenerateID());
+		ImGui::PopStyleVar();
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
 	}
 
-	static void PushItemDisabled()
+	template <typename FuncT>
+	static bool CreateProperty(const char* label, FuncT DrawUI)
 	{
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-	}
+		ShiftCursorY(3.0f);
 
-	static bool IsItemDisabled()
-	{
-		return ImGui::GetItemFlags() & ImGuiItemFlags_Disabled;
-	}
+		ImGui::Text(label);
 
-	static void PopItemDisabled()
-	{
-		ImGui::PopItemFlag();
-	}
+		ShiftCursorY(-3.0f);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
 
-	static bool IsMouseDownOnDockedWindow(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags hovered_flags = 0)
-	{
-		return ImGui::IsMouseDown(mouse) && ImGui::IsWindowHovered(hovered_flags);
-	}
-
-	static bool IsMouseDownOnItem(ImGuiMouseButton mouse = 0, ImGuiHoveredFlags flags = 0)
-	{
-		return ImGui::IsMouseDown(mouse) && ImGui::IsItemHovered(flags);
-	}
-
-	static void ShiftCursor(ImVec2 distance)
-	{
-		ImGui::SetCursorPos(ImGui::GetCursorPos() + distance);
-	}
-
-	static void ShiftCursorX(float distance)
-	{
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + distance);
-	}
-
-	static void ShiftCursorY(float distance)
-	{
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + distance);
-	}
-
-	static const char* GenerateLabelID(std::string_view label)
-	{
-		*fmt::format_to_n(s_id_buffer, std::size(s_id_buffer), "{}##{}", label, s_ui_context_id++).out = 0;
-		return s_id_buffer;
-	}
-
-	namespace Internal
-	{
-		template <typename FuncT>
-		static void CreateStaticProperty(const char* label, FuncT DrawUI)
-		{
-			ShiftCursorY(3.0f);
-
-			ImGui::Text(label);
-
-			ShiftCursorY(-3.0f);
-			ImGui::NextColumn();
-			ImGui::PushItemWidth(-1);
-			
+		if (IsItemDisabled())
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-			DrawUI(GenerateID());
+
+		bool modified = DrawUI(GenerateID());
+
+		if (IsItemDisabled())
 			ImGui::PopStyleVar();
 
-			ImGui::PopItemWidth();
-			ImGui::NextColumn();
-		}
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
 
-		template <typename FuncT>
-		static bool CreateProperty(const char* label, FuncT DrawUI)
+		return modified;
+	}
+}
+
+static void PushID()
+{
+	ImGui::PushID(s_ui_context_id++);
+	s_ui_context_id = 0;
+}
+
+static void PopID()
+{
+	ImGui::PopID();
+	s_ui_context_id--;
+}
+
+static void BeginProperties()
+{
+	PushID();
+	// #TODO update to table api before columns are deprecated
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 8.0f, 8.0f });
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
+	ImGui::Columns(2);
+}
+
+ImTextureID GetTextureID(arc<render::backend::texture_2d> texture);
+void Image(const arc<render::backend::image_2d>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+void Image(const arc<render::backend::image_2d>& image, const u32 p_layer, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+void Image(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
+bool ImageButton(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+
+// Use BeginProperties() before and EndProperties() after!
+static bool Property(const char* label, std::string& value)
+{
+	KB_CORE_ASSERT(strlen(label) + 1 < MAX_CHARS, "string is too long!");
+	return Internal::CreateProperty(label, [&value](const char* id_buffer) -> bool
 		{
-			ShiftCursorY(3.0f);
+			char buffer[MAX_CHARS];
+			strcpy_s(buffer, value.c_str());
 
-			ImGui::Text(label);
-
-			ShiftCursorY(-3.0f);
-			ImGui::NextColumn();
-			ImGui::PushItemWidth(-1);
-
-			if (IsItemDisabled())
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-
-			bool modified = DrawUI(GenerateID());
-
-			if (IsItemDisabled())
-				ImGui::PopStyleVar();
-
-			ImGui::PopItemWidth();
-			ImGui::NextColumn();
+			bool modified = false;
+			if (ImGui::InputText(id_buffer, buffer, MAX_CHARS))
+			{
+				value = buffer;
+				modified = true;
+			}
 
 			return modified;
-		}
-	}
+		});
+}
 
-	static void PushID()
-	{
-		ImGui::PushID(s_ui_context_id++);
-		s_ui_context_id = 0;
-	}
-
-	static void PopID()
-	{
-		ImGui::PopID();
-		s_ui_context_id--;
-	}
-
-	static void BeginProperties()
-	{
-		PushID();
-		// #TODO update to table api before columns are deprecated
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 8.0f, 8.0f });
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 4.0f, 4.0f });
-		ImGui::Columns(2);
-	}
-
-	ImTextureID GetTextureID(arc<render::backend::texture_2d> texture);
-	void Image(const arc<render::backend::image_2d>& image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-    void Image(const arc<render::backend::image_2d>& image, const u32 p_layer, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	void Image(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, const ImVec4& tint_col = { 1, 1, 1, 1 }, const ImVec4& border_col = { 0, 0, 0, 0 });
-	bool ImageButton(const arc<render::backend::texture_2d>& texture, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
-
-	// Use BeginProperties() before and EndProperties() after!
-	static bool Property(const char* label, std::string& value)
-	{
-		KB_CORE_ASSERT(strlen(label) + 1 < MAX_CHARS, "string is too long!");
-		return Internal::CreateProperty(label, [&value](const char* id_buffer) -> bool
-			{
-				char buffer[MAX_CHARS];
-				strcpy_s(buffer, value.c_str());
-
-				bool modified = false;
-				if (ImGui::InputText(id_buffer, buffer, MAX_CHARS))
-				{
-					value = buffer;
-					modified = true;
-				}
-
-				return modified;
-			});
-	}
-
-	// Use BeginProperties() before and EndProperties() after!
-	static void Property(const char* label, const std::string& value)
-	{
-		Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
-			{
-				ImGui::InputText(id_buffer, (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
-			});
-	}
-
-	static void PropertyWithHint(const char* label, const std::string& hint, std::string& value)
-	{
-		Internal::CreateStaticProperty(label, [&](const char* id_buffer)
-			{
-				ImGui::InputTextWithHint(id_buffer, hint.c_str(), (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
-			});
-	}
-
-	static void PropertyReadOnlyString(const char* label, const std::string& value)
-	{
-		Property(label, value);
-	}
-
-	static void PropertyReadOnlyStringWithHint(const char* label, const std::string& hint, std::string& value)
-	{
-		PropertyWithHint(label, hint, value);
-	}
-
-	// Use BeginProperties() before and EndProperties() after!
-	static bool Property(const char* label, char* value, size_t length)
-	{
-		return Internal::CreateProperty(label, [&value, &length](const char* id_buffer) -> bool
-			{
-				return ImGui::InputText(id_buffer, (char*)value, length);
-			});
-	}
-
-	static bool PropertyWithHint(const char* label, const char* hint, char* value, size_t length)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer) -> bool
-			{
-				return ImGui::InputTextWithHint(id_buffer, hint, (char*)value, length);
-			});
-	}
-
-	// Use BeginProperties() before and EndProperties() after!
-	static void Property(const char* label, const char* value)
-	{
-		Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
-			{
-				ImGui::InputText(id_buffer, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
-			});
-	}
-
-	static void PropertyWithHint(const char* label, const char* hint, const char* value)
-	{
-		Internal::CreateStaticProperty(label, [&](const char* id_buffer)
-			{
-				ImGui::InputTextWithHint(id_buffer, hint, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
-			});
-	}
-
-	static void PropertyReadOnlyChars(const char* label, const char* value)
-	{
-		Property(label, value);
-	}
-
-	static void PropertyReadOnlyCharsWithHint(const char* label, const char* hint, const char* value)
-	{
-		PropertyWithHint(label, hint, value);
-	}
-
-	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::DragFloat(id_buffer, &value, delta, min, max);
-			});
-	}
-
-	static void PropertyReadOnlyFloat(const char* label, const float& value)
-	{
-		Property(label, std::to_string(value));
-	}
-
-	static void PropertyReadOnlyDouble(const char* label, const double& value)
-	{
-		Property(label, std::to_string(value));
-	}
-
-	static bool Property(const char* label, int& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::DragInt(id_buffer, &value, delta, min, max);
-			});
-	}
-
-	static bool Property(const char* label, uint32_t& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				int casted_int = static_cast<int>(value);
-				return ImGui::DragInt(id_buffer, &casted_int, delta, min, max);
-			});
-	}
-
-	static void PropertyReadOnlyUint32(const char* label, const uint32_t& value)
-	{
-		Property(label, std::to_string(value));
-	}
-
-	static void PropertyReadOnlyUint64(const char* label, const uint64_t& value)
-	{
-		Property(label, std::to_string(value));
-	}
-
-	static void PropertyReadOnlyVec3(const char* label, const glm::vec3& value)
-	{
-		Property(label, fmt::format("{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z));
-	}
-
-	static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::DragFloat2(id_buffer, glm::value_ptr(value), delta, min, max);
-			});
-	}
-
-	static bool Property(const char* label, glm::vec3& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::DragFloat3(id_buffer, glm::value_ptr(value), delta, min, max);
-			});
-	}
-
-	static bool Property(const char* label, bool* value)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::Checkbox(id_buffer, value);
-			});
-	}
-
-	static bool Property(const char* label, glm::vec4& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::DragFloat4(id_buffer, glm::value_ptr(value), delta, min, max);
-			});
-	}
-
-	static bool PropertyColorEdit3(const char* label, glm::vec3& value)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::ColorEdit3(id_buffer, glm::value_ptr(value));
-			});
-	}
-
-	static bool PropertyColorEdit4(const char* label, glm::vec4& value)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				return ImGui::ColorEdit4(id_buffer, glm::value_ptr(value));
-			});
-	}
-
-	template <typename EnumT, typename UnderlyingT = int32_t>
-	static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT& selected)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				UnderlyingT selected_index = (UnderlyingT)selected;
-				const char* current = options[selected_index];
-				bool updated = false;
-
-				if (ImGui::BeginCombo(label, current))
-				{
-					for (size_t i = 0; i < option_count; ++i)
-					{
-						const bool is_selected = current == options[i];
-						if (ImGui::Selectable(options[i], is_selected))
-						{
-							current = options[i];
-							selected = (EnumT)i;
-							updated = true;
-						}
-
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-
-					ImGui::EndCombo();
-				}
-
-				return updated;
-			});
-	}
-
-	static bool PropertyDropdown(const char* label, const std::vector<std::string>& options, int32_t option_count, int32_t* selected_index)
-	{
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				const char* current = options[*selected_index].c_str();
-				bool updated = false;
-
-				if (ImGui::BeginCombo(label, current))
-				{
-					for (size_t i = 0; i < option_count; ++i)
-					{
-						const bool selected = current == options[i];
-						if (ImGui::Selectable(options[i].c_str(), selected))
-						{
-							current = options[i].c_str();
-							*selected_index = static_cast<int32_t>(i);
-							updated = true;
-						}
-
-						if (selected)
-							ImGui::SetItemDefaultFocus();
-					}
-
-					ImGui::EndCombo();
-				}
-
-				return updated;
-			});
-	}
-
-	static bool PropertyImageButton(const char* label, arc<render::backend::texture_2d> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
-	{
-		ShiftCursorY(size.y / 4.0f);
-		return Internal::CreateProperty(label, [&](const char* id_buffer)
-			{
-				//ShiftCursorY(-5.0f);
-				return ImageButton(image, size, uv0, uv1, frame_padding, bg_col, tint_col);
-			});
-	}
-
-	static bool Button(const char* label, const ImVec2& size = { 0, 0 }, bool next_column = true)
-	{
-		bool pressed = ImGui::Button(label, size);
-		if (next_column)
-			ImGui::NextColumn();
-		return pressed;
-	}
-
-	static bool PropertyFolderPathWithButton(const char* label, const char* path_buffer, size_t buffer_size)
-	{
-		bool pressed = false;
-
-		ImGui::EndColumns();
-		if (ImGui::BeginTable("##folder_path_with_button", 3))
+// Use BeginProperties() before and EndProperties() after!
+static void Property(const char* label, const std::string& value)
+{
+	Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
 		{
-			const auto& style = ImGui::GetStyle();
-			auto button_size = ImGui::CalcTextSize("...");
-			auto label_width = ImGui::GetWindowContentRegionWidth() / 2.0f - style.ColumnsMinSpacing - 1;
-			ImGui::TableSetupColumn("##label", ImGuiTableColumnFlags_NoHeaderLabel);
-			ImGui::TableSetupColumn("##path_preview", ImGuiTableColumnFlags_NoHeaderLabel);
-			ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_NoHeaderLabel);
-			ImGui::TableHeadersRow();
-			ImGui::TableNextColumn();
+			ImGui::InputText(id_buffer, (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
+		});
+}
 
-			ShiftCursorY(3.0f);
-			ImGui::Text(label);
-			ShiftCursorY(-3.0f);
+static void PropertyWithHint(const char* label, const std::string& hint, std::string& value)
+{
+	Internal::CreateStaticProperty(label, [&](const char* id_buffer)
+		{
+			ImGui::InputTextWithHint(id_buffer, hint.c_str(), (char*)value.c_str(), value.size(), ImGuiInputTextFlags_ReadOnly);
+		});
+}
 
-			ImGui::TableNextColumn();
+static void PropertyReadOnlyString(const char* label, const std::string& value)
+{
+	Property(label, value);
+}
 
-			ImGui::PushItemWidth(-1);
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+static void PropertyReadOnlyStringWithHint(const char* label, const std::string& hint, std::string& value)
+{
+	PropertyWithHint(label, hint, value);
+}
 
-			ImGui::InputText("##path_preview", (char*)path_buffer, buffer_size, ImGuiInputTextFlags_ReadOnly);
+// Use BeginProperties() before and EndProperties() after!
+static bool Property(const char* label, char* value, size_t length)
+{
+	return Internal::CreateProperty(label, [&value, &length](const char* id_buffer) -> bool
+		{
+			return ImGui::InputText(id_buffer, (char*)value, length);
+		});
+}
 
-			ImGui::PopStyleVar();
-			ImGui::PopItemWidth();
+static bool PropertyWithHint(const char* label, const char* hint, char* value, size_t length)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer) -> bool
+		{
+			return ImGui::InputTextWithHint(id_buffer, hint, (char*)value, length);
+		});
+}
 
-			ImGui::TableNextColumn();
+// Use BeginProperties() before and EndProperties() after!
+static void Property(const char* label, const char* value)
+{
+	Internal::CreateStaticProperty(label, [&value](const char* id_buffer)
+		{
+			ImGui::InputText(id_buffer, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
+		});
+}
 
-			pressed = Button("...", button_size, false);
+static void PropertyWithHint(const char* label, const char* hint, const char* value)
+{
+	Internal::CreateStaticProperty(label, [&](const char* id_buffer)
+		{
+			ImGui::InputTextWithHint(id_buffer, hint, (char*)value, MAX_CHARS, ImGuiInputTextFlags_ReadOnly);
+		});
+}
 
-			ImGui::EndTable();
-		}
+static void PropertyReadOnlyChars(const char* label, const char* value)
+{
+	Property(label, value);
+}
 
-		// #TODO remove when switching main properties layout to tables API
-		ImGui::BeginColumns("##properties", 2, ImGuiOldColumnFlags_NoResize | ImGuiOldColumnFlags_NoBorder);
+static void PropertyReadOnlyCharsWithHint(const char* label, const char* hint, const char* value)
+{
+	PropertyWithHint(label, hint, value);
+}
 
-		return pressed;
+static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::DragFloat(id_buffer, &value, delta, min, max);
+		});
+}
+
+static void PropertyReadOnlyFloat(const char* label, const float& value)
+{
+	Property(label, std::to_string(value));
+}
+
+static void PropertyReadOnlyDouble(const char* label, const double& value)
+{
+	Property(label, std::to_string(value));
+}
+
+static bool Property(const char* label, int& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::DragInt(id_buffer, &value, delta, min, max);
+		});
+}
+
+static bool Property(const char* label, uint32_t& value, float delta = 0.1f, int min = 0.0f, int max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			int casted_int = static_cast<int>(value);
+			return ImGui::DragInt(id_buffer, &casted_int, delta, min, max);
+		});
+}
+
+static void PropertyReadOnlyUint32(const char* label, const uint32_t& value)
+{
+	Property(label, std::to_string(value));
+}
+
+static void PropertyReadOnlyUint64(const char* label, const uint64_t& value)
+{
+	Property(label, std::to_string(value));
+}
+
+static void PropertyReadOnlyVec3(const char* label, const glm::vec3& value)
+{
+	Property(label, fmt::format("{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z));
+}
+
+static bool Property(const char* label, glm::vec2& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::DragFloat2(id_buffer, glm::value_ptr(value), delta, min, max);
+		});
+}
+
+static bool Property(const char* label, glm::vec3& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::DragFloat3(id_buffer, glm::value_ptr(value), delta, min, max);
+		});
+}
+
+static bool Property(const char* label, bool* value)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::Checkbox(id_buffer, value);
+		});
+}
+
+static bool Property(const char* label, glm::vec4& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::DragFloat4(id_buffer, glm::value_ptr(value), delta, min, max);
+		});
+}
+
+static bool PropertyColorEdit3(const char* label, glm::vec3& value)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::ColorEdit3(id_buffer, glm::value_ptr(value));
+		});
+}
+
+static bool PropertyColorEdit4(const char* label, glm::vec4& value)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			return ImGui::ColorEdit4(id_buffer, glm::value_ptr(value));
+		});
+}
+
+template <typename EnumT, typename UnderlyingT = int32_t>
+static bool PropertyDropdown(const char* label, const char** options, int32_t option_count, EnumT& selected)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			UnderlyingT selected_index = (UnderlyingT)selected;
+			const char* current = options[selected_index];
+			bool updated = false;
+
+			if (ImGui::BeginCombo(label, current))
+			{
+				for (size_t i = 0; i < option_count; ++i)
+				{
+					const bool is_selected = current == options[i];
+					if (ImGui::Selectable(options[i], is_selected))
+					{
+						current = options[i];
+						selected = (EnumT)i;
+						updated = true;
+					}
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
+			return updated;
+		});
+}
+
+static bool PropertyDropdown(const char* label, const std::vector<std::string>& options, int32_t option_count, int32_t* selected_index)
+{
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			const char* current = options[*selected_index].c_str();
+			bool updated = false;
+
+			if (ImGui::BeginCombo(label, current))
+			{
+				for (size_t i = 0; i < option_count; ++i)
+				{
+					const bool selected = current == options[i];
+					if (ImGui::Selectable(options[i].c_str(), selected))
+					{
+						current = options[i].c_str();
+						*selected_index = static_cast<int32_t>(i);
+						updated = true;
+					}
+
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
+			return updated;
+		});
+}
+
+static bool PropertyImageButton(const char* label, arc<render::backend::texture_2d> image, const ImVec2& size, const ImVec2& uv0 = { 0, 0 }, const ImVec2& uv1 = { 1, 1 }, int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1))
+{
+	ShiftCursorY(size.y / 4.0f);
+	return Internal::CreateProperty(label, [&](const char* id_buffer)
+		{
+			//ShiftCursorY(-5.0f);
+			return ImageButton(image, size, uv0, uv1, frame_padding, bg_col, tint_col);
+		});
+}
+
+static bool Button(const char* label, const ImVec2& size = { 0, 0 }, bool next_column = true)
+{
+	bool pressed = ImGui::Button(label, size);
+	if (next_column)
+		ImGui::NextColumn();
+	return pressed;
+}
+
+static bool PropertyFolderPathWithButton(const char* label, const char* path_buffer, size_t buffer_size)
+{
+	bool pressed = false;
+
+	ImGui::EndColumns();
+	if (ImGui::BeginTable("##folder_path_with_button", 3))
+	{
+		const auto& style = ImGui::GetStyle();
+		auto button_size = ImGui::CalcTextSize("...");
+		auto label_width = ImGui::GetWindowContentRegionWidth() / 2.0f - style.ColumnsMinSpacing - 1;
+		ImGui::TableSetupColumn("##label", ImGuiTableColumnFlags_NoHeaderLabel);
+		ImGui::TableSetupColumn("##path_preview", ImGuiTableColumnFlags_NoHeaderLabel);
+		ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_NoHeaderLabel);
+		ImGui::TableHeadersRow();
+		ImGui::TableNextColumn();
+
+		ShiftCursorY(3.0f);
+		ImGui::Text(label);
+		ShiftCursorY(-3.0f);
+
+		ImGui::TableNextColumn();
+
+		ImGui::PushItemWidth(-1);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
+		ImGui::InputText("##path_preview", (char*)path_buffer, buffer_size, ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::PopStyleVar();
+		ImGui::PopItemWidth();
+
+		ImGui::TableNextColumn();
+
+		pressed = Button("...", button_size, false);
+
+		ImGui::EndTable();
 	}
 
-	static void EndProperties()
-	{
-		ImGui::Columns(1);
-		ImGui::PopStyleVar(2);
-		UI::ShiftCursorY(18.0f);
-		PopID();
-	}
+	// #TODO remove when switching main properties layout to tables API
+	ImGui::BeginColumns("##properties", 2, ImGuiOldColumnFlags_NoResize | ImGuiOldColumnFlags_NoBorder);
 
-	static bool BeginTreeNode(const char* label, bool default_open = true)
-	{
-		auto flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
-		if (default_open)
-			flags |= ImGuiTreeNodeFlags_DefaultOpen;
+	return pressed;
+}
 
-		return ImGui::TreeNodeEx(label, flags);
-	}
+static void EndProperties()
+{
+	ImGui::Columns(1);
+	ImGui::PopStyleVar(2);
+	UI::ShiftCursorY(18.0f);
+	PopID();
+}
 
-	static void EndTreeNode()
-	{
-		ImGui::TreePop();
-	}
+static bool BeginTreeNode(const char* label, bool default_open = true)
+{
+	auto flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
+	if (default_open)
+		flags |= ImGuiTreeNodeFlags_DefaultOpen;
 
-	
-	// Button Images
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
-		ImVec2 rectMin, ImVec2 rectMax)
-	{
-		auto* drawList = ImGui::GetWindowDrawList();
-		if (ImGui::IsItemActive())
-			drawList->AddImage(GetTextureID(imagePressed), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintPressed);
-		else if (ImGui::IsItemHovered())
-			drawList->AddImage(GetTextureID(imageHovered), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintHovered);
-		else
-			drawList->AddImage(GetTextureID(imageNormal), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintNormal);
-	};
+	return ImGui::TreeNodeEx(label, flags);
+}
 
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
-		ImRect rectangle)
-	{
-		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
-	};
-
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
-		ImVec2 rectMin, ImVec2 rectMax)
-	{
-		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectMin, rectMax);
-	};
-
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
-		ImRect rectangle)
-	{
-		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
-	};
+static void EndTreeNode()
+{
+	ImGui::TreePop();
+}
 
 
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
-	{
-		DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-	};
+// Button Images
+static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+	ImVec2 rectMin, ImVec2 rectMax)
+{
+	auto* drawList = ImGui::GetWindowDrawList();
+	if (ImGui::IsItemActive())
+		drawList->AddImage(GetTextureID(imagePressed), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintPressed);
+	else if (ImGui::IsItemHovered())
+		drawList->AddImage(GetTextureID(imageHovered), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintHovered);
+	else
+		drawList->AddImage(GetTextureID(imageNormal), rectMin, rectMax, ImVec2(0, 0), ImVec2(1, 1), tintNormal);
+};
 
-	static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
-		ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
-	{
-		DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-	};
+static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+	ImRect rectangle)
+{
+	DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
+};
+
+static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+	ImVec2 rectMin, ImVec2 rectMax)
+{
+	DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectMin, rectMax);
+};
+
+static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed,
+	ImRect rectangle)
+{
+	DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, rectangle.Min, rectangle.Max);
+};
 
 
-	// Rectangle
-	static inline ImRect GetItemRect()
-	{
-		return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-	}
+static void DrawButtonImage(const arc<render::backend::texture_2d>& imageNormal, const arc<render::backend::texture_2d>& imageHovered, const arc<render::backend::texture_2d>& imagePressed,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
+{
+	DrawButtonImage(imageNormal, imageHovered, imagePressed, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+};
 
-	static inline ImRect RectExpanded(const ImRect& rect, float x, float y)
-	{
-		ImRect result = rect;
-		result.Min.x -= x;
-		result.Min.y -= y;
-		result.Max.x += x;
-		result.Max.y += y;
-		return result;
-	}
+static void DrawButtonImage(const arc<render::backend::texture_2d>& image,
+	ImU32 tintNormal, ImU32 tintHovered, ImU32 tintPressed)
+{
+	DrawButtonImage(image, image, image, tintNormal, tintHovered, tintPressed, ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+};
 
-	// Color
-	static ImU32 ColorWithMultipliedValue(const ImColor& color, float multiplier)
-	{
-		const ImVec4& colRow = color.Value;
-		float hue, sat, val;
-		ImGui::ColorConvertRGBtoHSV(colRow.x, colRow.y, colRow.z, hue, sat, val);
-		return ImColor::HSV(hue, sat, std::min(val * multiplier, 1.0f));
-	}
+static bool DrawVec3Control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float value_tuning = 0.1f, float column_width = 100.0f)
+{
+    // #TODO check values before clamping format to 2 decimal places.
+
+    ImGuiIO& io = ImGui::GetIO();
+    auto bold_font = io.Fonts->Fonts[0];
+
+    ImGui::PushID(label.c_str());
+
+    ImGui::Columns(2, 0, false);
+
+    ImGui::SetColumnWidth(0, column_width);
+    UI::ShiftCursorY(3.0f);
+    ImGui::Text(label.c_str());
+    UI::ShiftCursorY(-3.0f);
+    ImGui::NextColumn();
+
+    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
+
+    float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    auto button_size = ImVec2{ line_height + 3.0f, line_height };
+    bool updated = false;
+
+    // Red
+    ImGui::PushStyleColor(ImGuiCol_Button, { 0.8f, 0.1f, 0.15f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.9f, 0.2f, 0.2f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.8f, 0.1f, 0.15f, 1.0f });
+
+    ImGui::PushFont(bold_font);
+    if (ImGui::Button("X", button_size))
+    {
+        values.x = reset_value;
+        updated = true;
+    }
+    ImGui::PopFont();
+    ImGui::PopStyleColor(3);
+
+
+    ImGui::SameLine();
+    if (ImGui::DragFloat("##X", &values.x, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    // Green
+    ImGui::PushStyleColor(ImGuiCol_Button, { 0.2f, 0.7f, 0.3f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.3f, 0.8f, 0.4f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.2f, 0.7f, 0.3f, 1.0f });
+
+    ImGui::PushFont(bold_font);
+    if (ImGui::Button("Y", button_size))
+    {
+        values.y = reset_value;
+        updated = true;
+    }
+    ImGui::PopFont();
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    if (ImGui::DragFloat("##Y", &values.y, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    // Blue
+    ImGui::PushStyleColor(ImGuiCol_Button, { 0.1f, 0.25f, 0.8f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.2f, 0.35f, 0.9f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.1f, 0.25f, 0.8f, 1.0f });
+
+    ImGui::PushFont(bold_font);
+    if (ImGui::Button("Z", button_size))
+    {
+        values.z = reset_value;
+        updated = true;
+    }
+    ImGui::PopFont();
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    if (ImGui::DragFloat("##Z", &values.z, value_tuning, 0.0f, 0.0f, "%.2f")) updated = true;
+    ImGui::PopItemWidth();
+
+    ImGui::PopStyleVar();
+
+    ImGui::Columns(1);
+
+    ImGui::PopID();
+
+    return updated;
+}
+
+// Rectangle
+static inline ImRect GetItemRect()
+{
+	return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+}
+
+static inline ImRect RectExpanded(const ImRect& rect, float x, float y)
+{
+	ImRect result = rect;
+	result.Min.x -= x;
+	result.Min.y -= y;
+	result.Max.x += x;
+	result.Max.y += y;
+	return result;
+}
+
+// Color
+static ImU32 ColorWithMultipliedValue(const ImColor& color, float multiplier)
+{
+	const ImVec4& colRow = color.Value;
+	float hue, sat, val;
+	ImGui::ColorConvertRGBtoHSV(colRow.x, colRow.y, colRow.z, hue, sat, val);
+	return ImColor::HSV(hue, sat, std::min(val * multiplier, 1.0f));
+}
 
 }
 

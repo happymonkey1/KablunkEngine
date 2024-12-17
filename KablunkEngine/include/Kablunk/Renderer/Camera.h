@@ -19,6 +19,7 @@ public:
 
 	const glm::mat4& GetProjection() const { return m_projection; }
 	const glm::mat4& GetUnreversedProjection() const { return m_unreversed_projection; }
+
 protected:
 	glm::mat4 m_projection{ 1.0f };
 	// Needed for ImGuizmo

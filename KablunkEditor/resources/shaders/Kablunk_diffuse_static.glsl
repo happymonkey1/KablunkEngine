@@ -70,10 +70,10 @@ void main()
     shadowCoords[1] = (u_DirShadowCascades.DirLightViewMat[1] * vec4(worldPosition.xyz, 1.0));
     shadowCoords[2] = (u_DirShadowCascades.DirLightViewMat[2] * vec4(worldPosition.xyz, 1.0));
     shadowCoords[3] = (u_DirShadowCascades.DirLightViewMat[3] * vec4(worldPosition.xyz, 1.0));
-    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / (shadowCoords[0].w + 0.0001f));
-    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / (shadowCoords[1].w + 0.0001f));
-    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / (shadowCoords[2].w + 0.0001f));
-    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / (shadowCoords[3].w + 0.0001f));
+    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / (shadowCoords[0].w));
+    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / (shadowCoords[1].w));
+    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / (shadowCoords[2].w));
+    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / (shadowCoords[3].w));
 
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
@@ -277,12 +277,24 @@ float CalculateShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) 
 
     float closeDepth = texture(shadowMap, vec3(projectedCoords.xy, cascadeIndex)).r;
     float currentDepth = projectedCoords.z;
-    if (currentDepth > 1.0 || currentDepth < 0.0) {
+    if (currentDepth > 1.0) {
         return 0.0;
     }
 
     float shadow = currentDepth > closeDepth ? 1.0 : 0.0;
     return shadow;
+}
+
+float GetShadowBias() {
+    const float MIN_SHADOW_BIAS = 0.002;
+    float bias = max(MIN_SHADOW_BIAS * (1.0 - dot(v_Input.Normal, u_DirectionalLight.Direction)), MIN_SHADOW_BIAS);
+    return bias;
+}
+
+float CalculateHardShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) {
+    float bias = GetShadowBias();
+    float depth = texture(shadowMap, vec3(coords.xy * 0.5 + 0.5, cascadeIndex)).r;
+    return 1.0 - clamp(step(coords.z, depth + bias), 0.0, 1.0);
 }
 
 void main()
@@ -324,16 +336,22 @@ void main()
     // Calculate point lighting
     vec3 pLightsColor = CalculatePointLights(normal, viewDir);
 
-    uint cascadeIndex = 0;
+    uint cascadeIndex = -1;
     const uint SHADOW_MAP_CASCADE_COUNT = 4;
-    for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+    for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) {
         if (v_Input.ViewPosition.z < u_RendererData.CascadeSplits[i]) {
-            cascadeIndex = i + 1;
+            cascadeIndex = i;
+            break;
         }
     }
 
+    if (cascadeIndex == -1) {
+        cascadeIndex = SHADOW_MAP_CASCADE_COUNT;
+    }
     vec3 shadowMapCoords = v_Input.ShadowMapCoords[cascadeIndex];
-    float shadow = CalculateShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
+    float shadow = CalculateHardShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
+    // float shadow = CalculateShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
+    
 
     o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
     // o_Color = vec4(vec3(gl_FragCoord.z), 1.0);

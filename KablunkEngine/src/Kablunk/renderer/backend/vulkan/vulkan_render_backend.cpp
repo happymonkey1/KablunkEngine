@@ -602,6 +602,7 @@ void vulkan_render_backend::render_static_mesh(
         mesh = p_mesh,
         mesh_data = p_mesh_data,
         vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>(),
+        transform_offset = p_transform_offset,
         sub_mesh_index = p_sub_mesh_index,
         material_table = p_material_table,
         instance_count = p_instance_count
@@ -613,10 +614,10 @@ void vulkan_render_backend::render_static_mesh(
             // Bind mesh vertex buffer
             mesh_data->get_vertex_buffer()
                 .As<vulkan_vertex_buffer>()
-                ->rt_vk_bind_buffer(vk_command_buffer, 0);
+                ->rt_vk_bind_buffer(vk_command_buffer, 0, { 0 });
 
             // Bind transform buffer
-            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1);
+            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1, { transform_offset });
 
             // Bind mesh index buffer
             mesh_data->get_index_buffer()
@@ -695,6 +696,7 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
         render_command_buffer = p_render_command_buffer,
         mesh = p_mesh,
         vulkan_transform_buffer = p_transform_buffer.As<vulkan_vertex_buffer>(),
+        transform_offset = p_transform_offset,
         vulkan_pipeline = p_pipeline.As<vulkan_pipeline>(),
         vulkan_material = p_material.As<vulkan_material>(),
         sub_mesh_index = p_sub_mesh_index,
@@ -712,17 +714,15 @@ void vulkan_render_backend::render_instanced_sub_mesh_with_material(
             // Bind mesh vertex buffer
             mesh_data->get_vertex_buffer()
                 .As<vulkan_vertex_buffer>()
-                ->rt_vk_bind_buffer(vk_command_buffer, 0);
+                ->rt_vk_bind_buffer(vk_command_buffer, 0, 0);
 
             // Bind transform buffer
-            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1);
+            vulkan_transform_buffer->rt_vk_bind_buffer(vk_command_buffer, 1, transform_offset);
 
             // Bind mesh index buffer
             mesh_data->get_index_buffer()
                 .As<vulkan_index_buffer>()
                 ->rt_vk_bind_buffer(vk_command_buffer);
-
-
 
             if (vulkan_material)
             {
