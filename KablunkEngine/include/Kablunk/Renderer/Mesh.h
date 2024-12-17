@@ -117,7 +117,7 @@ struct Triangle
 	vertex_t V2;
 
 	Triangle(const vertex_t& v0, const vertex_t& v1, const vertex_t& v2)
-		: V0{ v0 }, V1{ v1 }, V2{ v2 } 
+		: V0{ v0 }, V1{ v1 }, V2{ v2 }
 	{ }
 };
 
@@ -167,6 +167,7 @@ public:
 	const std::vector<sub_mesh_t>& get_sub_meshes() const { return m_sub_meshes; }
 
 	const std::vector<Triangle>& get_triangle_cache(u32 index) const { return m_triangle_cache.at(index); }
+    auto get_triangle_count() const noexcept -> size_t { return m_triangle_count; }
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& node_name);
     u32 FindPosition(float animation_time, const aiNodeAnim* root_node_anim);
@@ -207,6 +208,7 @@ private:
 	std::vector<arc<material_asset>> m_materials;
 
 	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
+    size_t m_triangle_count = 0;
 
 	std::string m_filepath;
     mesh_handle m_handle{};

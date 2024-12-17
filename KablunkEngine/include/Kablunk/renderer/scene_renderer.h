@@ -49,7 +49,7 @@ struct std::hash<kb::render::mesh_transform_handle>
     std::size_t operator()(const kb::render::mesh_transform_handle& p_item_handle) const noexcept
     {
         kb::u64 hash = p_item_handle.m_mesh_handle.as<kb::u32>();
-        hash |= static_cast<kb::u64>(p_item_handle.m_sub_mesh_index) << sizeof(kb::u32) * 8;
+        hash |= static_cast<kb::u64>(p_item_handle.m_sub_mesh_index) << 32;
         return hash;
     }
 };
@@ -81,6 +81,8 @@ struct scene_renderer_camera_t
 {
 	camera camera;
 	glm::mat4 view_mat;
+    f32 m_near_clip = 0.1f;
+    f32 m_far_clip = 1000.f;
 };
 
 struct scene_renderer_data_ub_t
@@ -114,6 +116,14 @@ struct renderer_data_ub_t
     glm::vec4 m_cascade_splits{ 0.f };
 };
 
+struct scene_renderer_statistics_t
+{
+    u32 m_draw_call_count = 0;
+    u32 m_vertices_count = 0;
+    u32 m_indices_count = 0;
+    u32 m_triangle_count = 0;
+};
+
 class scene_renderer final : public RefCounted
 {
 public:
@@ -127,7 +137,12 @@ public:
     void begin_scene(const scene_renderer_camera_t& camera);
     void end_scene();
 
-    void submit_mesh(arc<Mesh> mesh, uint32_t p_sub_mesh_index, arc<material_table> material_table, const glm::mat4& transform = glm::mat4{ 1.0f }, arc<backend::material> override_material = {});
+    void submit_mesh(
+        const arc<Mesh>& mesh,
+        const arc<material_table>& material_table,
+        const glm::mat4& transform = glm::mat4{ 1.0f },
+        const arc<backend::material>& override_material = {}
+    );
 
     void set_multi_threaded(bool threaded) { m_use_threads = threaded; }
     bool is_multi_threaded() const { return m_use_threads; }
@@ -177,7 +192,7 @@ private:
     arc<render::frame_buffer> m_external_composite_frame_buffer{};
 #endif
 
-    struct GPUTimeQueryIndices
+    struct gpu_time_query_indices_t
     {
         u32 m_shadow_pass_query;
         uint32_t m_geometry_pass_query;
@@ -210,12 +225,13 @@ private:
     arc<backend::uniform_buffer_set> m_point_lights_uniform_buffer_set{};
     arc<backend::uniform_buffer_set> m_directional_light_set{};
     arc<backend::uniform_buffer_set> m_shadow_data_uniform_buffer_set{};
-    arc<backend::uniform_buffer_set> m_cascade_indices_uniform_buffer_set{};
 	arc<backend::storage_buffer_set> m_storage_buffer_set;
 
     point_light_ub_t* m_point_lights_ub = new point_light_ub_t{};
 
-	GPUTimeQueryIndices m_gpu_time_query_indices;
+    // statistics
+	gpu_time_query_indices_t m_gpu_time_query_indices;
+    scene_renderer_statistics_t m_statistics;
 
     u32 m_viewport_width = 0, m_viewport_height = 0;
 	bool m_active = false;

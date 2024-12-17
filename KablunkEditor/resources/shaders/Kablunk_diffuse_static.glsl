@@ -66,14 +66,14 @@ void main()
     v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
 
     vec4 shadowCoords[4];
-    shadowCoords[0] = u_DirShadowCascades.DirLightViewMat[0] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
-    shadowCoords[1] = u_DirShadowCascades.DirLightViewMat[1] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
-    shadowCoords[2] = u_DirShadowCascades.DirLightViewMat[2] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
-    shadowCoords[3] = u_DirShadowCascades.DirLightViewMat[3] * vec4(worldPosition.xyz, 1.0) + 0.0001f;
-    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / shadowCoords[0].w);
-    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / shadowCoords[1].w);
-    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / shadowCoords[2].w);
-    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / shadowCoords[3].w);
+    shadowCoords[0] = (u_DirShadowCascades.DirLightViewMat[0] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[1] = (u_DirShadowCascades.DirLightViewMat[1] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[2] = (u_DirShadowCascades.DirLightViewMat[2] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[3] = (u_DirShadowCascades.DirLightViewMat[3] * vec4(worldPosition.xyz, 1.0));
+    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / (shadowCoords[0].w + 0.0001f));
+    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / (shadowCoords[1].w + 0.0001f));
+    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / (shadowCoords[2].w + 0.0001f));
+    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / (shadowCoords[3].w + 0.0001f));
 
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }

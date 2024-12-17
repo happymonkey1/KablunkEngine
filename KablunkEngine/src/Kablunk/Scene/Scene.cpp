@@ -585,15 +585,11 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 			auto& transform = entity.GetComponent<TransformComponent>();
             if (mesh_comp.Mesh)
             {
-                for (const auto& sub_mesh : mesh_comp.Mesh->GetSubmeshes())
-                {
-                    scene_renderer->submit_mesh(
-                        mesh_comp.Mesh,
-                        sub_mesh,
-                        mesh_comp.Material_table,
-                        get_world_space_transform_matrix(entity)
-                    );
-                }
+                scene_renderer->submit_mesh(
+                    mesh_comp.Mesh,
+                    mesh_comp.Material_table,
+                    get_world_space_transform_matrix(entity)
+                );
             }
 		}
 	}
@@ -792,15 +788,11 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 			auto& transform = entity.GetComponent<TransformComponent>();
 			if (mesh_comp.Mesh)
 			{
-                for (const auto& sub_mesh : mesh_comp.Mesh->GetSubmeshes())
-                {
-                    scene_renderer->submit_mesh(
-                        mesh_comp.Mesh,
-                        sub_mesh,
-                        mesh_comp.Material_table,
-                        get_world_space_transform_matrix(entity)
-                    );
-                }
+                scene_renderer->submit_mesh(
+                    mesh_comp.Mesh,
+                    mesh_comp.Material_table,
+                    get_world_space_transform_matrix(entity)
+                );
 			}
 		}
 

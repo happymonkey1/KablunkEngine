@@ -47,6 +47,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	KB_CORE_TRACE("Loading mesh: '{0}'", filepath.c_str());
 
 	m_importer = create_box<Assimp::Importer>();
+    m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
 	const aiScene* scene = m_importer->ReadFile(m_filepath, s_mesh_import_flags);
 	if (!scene || !scene->HasMeshes())
@@ -165,6 +166,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 					m_static_vertices[index.V2 + sub_mesh.BaseVertex],
 					m_static_vertices[index.V3 + sub_mesh.BaseVertex]
 				);
+                m_triangle_count++;
 			}
 		}
 	}
