@@ -304,6 +304,14 @@ struct PointLightComponent
 	PointLightComponent(const PointLightComponent&) = default;
 };
 
+struct directional_light_component_t
+{
+    glm::vec3 m_radiance = { 1.0f, 1.0f, 1.0f };
+    f32 m_multiplier = 1.0f;
+    bool m_enabled = true;
+    bool m_is_primary = false;
+};
+
 struct RigidBody2DComponent
 {
 	enum class RigidBodyType { Static = 0, Dynamic, Kinematic };

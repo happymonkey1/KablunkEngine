@@ -158,8 +158,6 @@ public:
 	std::vector<arc<material_asset>>& get_materials() { return m_materials; }
 	const std::vector<arc<material_asset>>& get_materials() const { return m_materials; }
 
-	const std::vector<arc<backend::texture_2d>>& get_textures() const { return m_textures; }
-	const std::vector<arc<backend::texture_2d>>& get_normal_maps() const { return m_normal_map; }
 	const std::string& get_filepath() const { return m_filepath; }
 
 	void set_sub_meshes(const std::vector<sub_mesh_t>& p_sub_meshes);
@@ -177,7 +175,12 @@ public:
 	glm::quat InterpolateRotation(float animation_time, const aiNodeAnim* node_anim);
 	glm::vec3 InterpolateScale(float animation_time, const aiNodeAnim* node_anim);
 
-	void ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform);
+	void ReadNodeHierarchy(
+        const aiScene* p_scene,
+        float animation_time,
+        const aiNode* root,
+        const glm::mat4& parent_transform
+    );
 
 private:
 	void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, u32 level = 0);
@@ -198,13 +201,9 @@ private:
 	std::vector<bone_info_t> m_bone_info;
 	std::vector<sub_mesh_t> m_sub_meshes;
 
-	const aiScene* m_scene;
-
 	glm::mat4 m_inverse_transform{ 1.0f };
 
 	arc<backend::shader> m_mesh_shader;
-	std::vector<arc<backend::texture_2d>> m_textures;
-	std::vector<arc<backend::texture_2d>> m_normal_map;
 	std::vector<arc<material_asset>> m_materials;
 
 	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
@@ -249,13 +248,39 @@ public:
 	const arc<material_table>& get_material_table() const { return m_material_table; }
 
 private:
-    auto init_material_table(const std::vector<arc<material_asset>>& p_materials) noexcept -> void;
-
-private:
 	arc<MeshData> m_mesh_data;
 	std::vector<u32> m_submeshes;
 
 	arc<material_table> m_material_table;
+};
+
+class StaticMesh : public RefCounted
+{
+public:
+    StaticMesh(arc<MeshData> mesh_data);
+    StaticMesh(const arc<StaticMesh>& other);
+    StaticMesh(arc<MeshData> mesh_data, const std::vector<u32>& sub_meshes);
+    virtual ~StaticMesh() noexcept override = default;
+
+    auto get_handle() const noexcept -> mesh_handle { return m_mesh_data->get_handle(); }
+
+    std::vector<u32>& get_sub_meshes() { return m_submeshes; }
+    const std::vector<u32>& get_sub_meshes() const { return m_submeshes; }
+
+    void set_sub_meshes(const std::vector<u32>& p_sub_meshes);
+
+    auto get_mesh_data() noexcept -> arc<MeshData>& { return m_mesh_data; }
+    auto get_mesh_data() const noexcept -> const arc<MeshData>& { return m_mesh_data; }
+    auto set_mesh_data(const arc<MeshData>& mesh_data) noexcept -> void { m_mesh_data = mesh_data; }
+
+    auto get_material_table() noexcept -> arc<material_table>& { return m_material_table; }
+    auto get_material_table() const noexcept -> const arc<material_table>& { return m_material_table; }
+
+private:
+    arc<MeshData> m_mesh_data;
+    std::vector<u32> m_submeshes;
+
+    arc<material_table> m_material_table;
 };
 
 // #TODO move elsewhere

@@ -11,6 +11,7 @@
 #include "Panels/ProjectPropertiesPanel.h"
 #include "Panels/AssetRegistryPanel.h"
 #include "Panels/AssetEditorPanel.h"
+#include "Panels/scene_renderer_panel.h"
 
 namespace kb
 {
@@ -100,6 +101,7 @@ private:
 	ContentBrowserPanel m_content_browser_panel;
 	ProjectPropertiesPanel m_project_properties_panel;
 	AssetRegistryPanel m_asset_registry_panel;
+    scene_renderer_panel m_scene_renderer_panel;
 	// temporary "panel" for memory statistics
 	bool m_show_memory_statistics_window = false;
 

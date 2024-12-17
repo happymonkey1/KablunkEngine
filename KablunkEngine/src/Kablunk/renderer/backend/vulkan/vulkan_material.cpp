@@ -15,6 +15,8 @@
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
 
+// TODO: can we re-use descriptor set for same shader?
+
 vulkan_material::vulkan_material(
     const arc<shader>& shader,
     const std::string& name /*= ""*/

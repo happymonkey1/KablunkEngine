@@ -186,15 +186,30 @@ void SceneHierarchyPanel::OnImGuiRender()
 				auto& mesh_comp = entity.AddComponent<MeshComponent>(render::MeshFactory::CreateCube(1.0f, entity));
 				m_selection_context = entity;
 			}
-
-			if (ImGui::MenuItem("Create Point Light"))
-			{
-				auto entity = m_context->CreateEntity("Point Light");
-				auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
-				m_selection_context = entity;
-			}
 			ImGui::EndMenu();
 		}
+
+        if (ImGui::BeginMenu("Light"))
+        {
+            if (ImGui::MenuItem("Create Directional Light"))
+            {
+                auto entity = m_context->CreateEntity("Directional Light");
+                auto& dir_light_comp = entity.AddComponent<directional_light_component_t>();
+                auto& transform_comp = entity.GetComponent<TransformComponent>();
+                transform_comp.Rotation = glm::radians(glm::vec3{ -10.0f, -10.0f, -10.0f });
+
+                m_selection_context = entity;
+            }
+
+            if (ImGui::MenuItem("Create Point Light"))
+            {
+                auto entity = m_context->CreateEntity("Point Light");
+                auto& plight_comp = entity.AddComponent<PointLightComponent>(1.0f, glm::vec3{ 1.0f }, 10.0f, 1.0f, 1.0f);
+                m_selection_context = entity;
+            }
+
+            ImGui::EndMenu();
+        }
 
 		ImGui::EndPopup();
 	}
@@ -1014,6 +1029,22 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			UI::EndProperties();
 		});
+
+    DrawComponent<directional_light_component_t>("Point Light", entity, [&](directional_light_component_t& component)
+        {
+            UI::BeginProperties();
+
+            UI::Property("Multiplier", component.m_multiplier);
+            UI::PropertyColorEdit3("Radiance", component.m_radiance);
+
+            bool* enabled = &component.m_enabled;
+            UI::Property("Enabled", enabled);
+
+            bool* primary = &component.m_is_primary;
+            UI::Property("Primary Directional Light", primary);
+
+            UI::EndProperties();
+        });
 
 	DrawComponent<RigidBody2DComponent>("RigidBody 2D", entity, [&](RigidBody2DComponent& component)
 		{

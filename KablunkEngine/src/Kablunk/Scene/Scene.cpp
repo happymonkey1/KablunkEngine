@@ -148,6 +148,7 @@ arc<Scene> Scene::Copy(arc<Scene> src_scene)
 	CopyComponent<BoxCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 	CopyComponent<CircleCollider2DComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 	CopyComponent<UIPanelComponent>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
+	CopyComponent<directional_light_component_t>(dest_scene_reg, src_scene_reg, dest_scene->m_entity_map);
 
 	const auto& entity_instance_map = CSharpScriptEngine::GetEntityInstanceMap();
 	if (entity_instance_map.find(dest_scene->GetUUID()) != entity_instance_map.end())
@@ -546,8 +547,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 
 	// Lights
 	{
-		m_light_environment = LightEnvironmentData{};
-        m_light_environment.m_directional_light = m_directional_light;
+		m_light_environment = light_environment_data_t{};
 
 		// Point Lights
 		{
@@ -572,6 +572,39 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
+
+        // Directional lights
+        auto dir_lights = m_registry.group<directional_light_component_t>(entt::get<TransformComponent>);
+
+        for (auto id : dir_lights)
+        {
+            auto entity = Entity{ id, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& dir_light_comp = entity.GetComponent<directional_light_component_t>();
+
+            vec3_packed unit_dir{
+                static_cast<f32>(static_cast<u32>(transform.Rotation.x) % 360),
+                static_cast<f32>(static_cast<u32>(transform.Rotation.y) % 360),
+                static_cast<f32>(static_cast<u32>(transform.Rotation.z) % 360),
+            };
+
+            directional_light_t dir_light_data{
+                .m_direction = unit_dir,
+                .m_multiplier = dir_light_comp.m_multiplier,
+                .m_radiance = dir_light_comp.m_radiance,
+                .m_enabled = dir_light_comp.m_enabled,
+                .padding = {}
+            };
+
+            if (dir_light_comp.m_is_primary)
+            {
+                m_light_environment.m_directional_light = std::move(dir_light_data);
+            }
+            else
+            {
+                // TODO: add to directional lights
+            }
+        }
 	}
 
 	scene_renderer->begin_scene({ *main_camera, main_camera_transform });
@@ -749,8 +782,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 	// Lights
 	// #TODO move to scene renderer?
 	{
-		m_light_environment = LightEnvironmentData{};
-        m_light_environment.m_directional_light = m_directional_light;
+		m_light_environment = light_environment_data_t{};
 
 		// Point Lights
 		{
@@ -775,6 +807,42 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
+
+        auto dir_lights = m_registry.group<directional_light_component_t>(entt::get<TransformComponent>);
+        for (auto id : dir_lights)
+        {
+            auto entity = Entity{ id, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& dir_light_comp = entity.GetComponent<directional_light_component_t>();
+
+            auto rotation = glm::normalize(glm::degrees(transform.Rotation));
+            //rotation.x = static_cast<f32>(static_cast<u32>(rotation.x) % 360) / 360.f;
+            //rotation.y = static_cast<f32>(static_cast<u32>(rotation.y) % 360) / 360.f;
+            //rotation.z = static_cast<f32>(static_cast<u32>(rotation.z) % 360) / 360.f;
+
+            vec3_packed unit_dir{
+                rotation.x,
+                rotation.y,
+                rotation.z,
+            };
+
+            directional_light_t dir_light_data{
+                .m_direction = unit_dir,
+                .m_multiplier = dir_light_comp.m_multiplier,
+                .m_radiance = dir_light_comp.m_radiance,
+                .m_enabled = dir_light_comp.m_enabled,
+                .padding = {}
+            };
+
+            if (dir_light_comp.m_is_primary)
+            {
+                m_light_environment.m_directional_light = std::move(dir_light_data);
+            }
+            else
+            {
+                // TODO: add to directional lights
+            }
+        }
 	}
 
     scene_renderer->begin_scene({ kb::camera{ camera.GetProjection(), camera.get_unreversed_projection() }, camera.GetViewMatrix()});
@@ -871,12 +939,13 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
         // TODO: probably not the best place for this...
         // Render editor gizmos
         {
-            if (m_directional_light.m_enabled)
+            const auto& primary_dir_light = m_light_environment.m_directional_light;
+            if (primary_dir_light.m_enabled)
             {
                 p_renderer_2d->set_line_width(2.f);
                 p_renderer_2d->draw_line(
                     glm::vec3{ 0.f },
-                    -vec3_packed_to_glm_vec3(m_directional_light.m_direction),
+                    -vec3_packed_to_glm_vec3(primary_dir_light.m_direction),
                     glm::vec4{ 1.f, 1.f, 0.f, 1.f }
                 );
             }
@@ -1165,6 +1234,9 @@ void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& compon
 
 template <>
 void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component) { }
+
+template <>
+void Scene::OnComponentAdded<directional_light_component_t>(Entity entity, directional_light_component_t& component) {}
 
 template <>
 void Scene::OnComponentAdded<ParentingComponent>(Entity entity, ParentingComponent& component) { }

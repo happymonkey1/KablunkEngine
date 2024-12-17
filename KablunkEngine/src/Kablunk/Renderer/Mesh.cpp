@@ -27,7 +27,7 @@ namespace kb::render
 static constexpr u32 s_mesh_import_flags =
 	aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 
-namespace Utils
+namespace util
 {
 	glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix)
 	{
@@ -39,6 +39,18 @@ namespace Utils
 		result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
 		return result;
 	}
+
+    auto init_material_table(
+        arc<material_table>& p_material_table,
+        const std::vector<arc<material_asset>>& p_materials
+    ) noexcept -> void
+    {
+        p_material_table = arc<material_table>::Create(p_materials.size());
+        for (size_t i = 0; i < p_materials.size(); ++i)
+        {
+            p_material_table->SetMaterial(static_cast<u32>(i), p_materials[i]);
+        }
+    }
 }
 
 MeshData::MeshData(const std::string& filepath, Entity entity)
@@ -56,9 +68,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		return;
 	}
 
-	m_scene = scene;
-
-	m_is_animated = m_scene->mAnimations != nullptr;
+	m_is_animated = scene->mAnimations != nullptr;
 	if (m_is_animated)
 		KB_CORE_INFO("ANIMATED MESH!");
 
@@ -80,29 +90,33 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
         KB_CORE_ASSERT(false, "[mesh]: Unable to determine mesh shader for unknown renderer pipeline!");
     }
 
-	
-
-	m_inverse_transform = glm::inverse(Utils::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
+	m_inverse_transform = glm::inverse(util::Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 	size_t vertex_count = 0;
 	size_t index_count = 0;
 
+    constexpr bool k_use_submesh_batching = true;
+
 	m_sub_meshes.reserve(scene->mNumMeshes);
-	for (size_t m = 0; m < scene->mNumMeshes; ++m)
+	for (size_t ai_mesh_index = 0; ai_mesh_index < scene->mNumMeshes; ++ai_mesh_index)
 	{
-		aiMesh* mesh = scene->mMeshes[m];
+		aiMesh* mesh = scene->mMeshes[ai_mesh_index];
 
-		sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
-		sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
-		sub_mesh.BaseIndex = static_cast<u32>(index_count);
-		sub_mesh.Material_index = mesh->mMaterialIndex;
-        // KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
-		sub_mesh.VertexCount = mesh->mNumVertices;
-		sub_mesh.IndexCount = mesh->mNumFaces * 3;
-		sub_mesh.mesh_name = mesh->mName.C_Str();
+        if constexpr (k_use_submesh_batching)
+        {
+            sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
+            sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
+            sub_mesh.BaseIndex = static_cast<u32>(index_count);
+            sub_mesh.Material_index = mesh->mMaterialIndex;
+            // KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
+            sub_mesh.VertexCount = mesh->mNumVertices;
+            sub_mesh.IndexCount = mesh->mNumFaces * 3;
+            sub_mesh.mesh_name = mesh->mName.C_Str();
 
-		vertex_count += mesh->mNumVertices;
-		index_count += sub_mesh.IndexCount;
+            vertex_count += mesh->mNumVertices;
+            index_count += sub_mesh.IndexCount;
+        }
+		
 
 		if (m_is_animated)
 		{
@@ -161,7 +175,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 
 			if (!m_is_animated)
 			{
-				m_triangle_cache[static_cast<u32>(m)].emplace_back(
+                const auto& sub_mesh = m_sub_meshes[ai_mesh_index];
+				m_triangle_cache[static_cast<u32>(ai_mesh_index)].emplace_back(
 					m_static_vertices[index.V1 + sub_mesh.BaseVertex],
 					m_static_vertices[index.V2 + sub_mesh.BaseVertex],
 					m_static_vertices[index.V3 + sub_mesh.BaseVertex]
@@ -191,7 +206,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 				{
 					bone_index = m_bone_count++;
 					bone_info_t& bone_info = m_bone_info.emplace_back();
-					bone_info.Bone_offset = Utils::Mat4FromAssimpMat4(bone->mOffsetMatrix);
+					bone_info.Bone_offset = util::Mat4FromAssimpMat4(bone->mOffsetMatrix);
 					m_bone_mapping[bone_name] = bone_index;
 				}
 				else
@@ -385,8 +400,6 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
         KB_CORE_ASSERT(false, "[mesh]: Unhandled renderer pipeline type!");
     }
 
-
-
 	if (m_is_animated)
 		m_vertex_buffer = backend::vertex_buffer::create(m_animated_vertices.data(), static_cast<u32>(m_animated_vertices.size()) * sizeof(animated_vertex_t));
 	else
@@ -396,6 +409,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
     m_importer.reset();
+    m_node_map.clear();
 }
 
 MeshData::MeshData(
@@ -404,7 +418,7 @@ MeshData::MeshData(
     const std::vector<Index>& indices,
     const glm::mat4& transform
 )
-    : m_static_vertices{ p_vertices }, m_indices{ indices }, m_scene{ nullptr }, m_handle{ p_handle }
+    : m_static_vertices{ p_vertices }, m_indices{ indices }, m_handle{ p_handle }
 {
     sub_mesh_t sub_mesh;
     sub_mesh.BaseVertex = 0;
@@ -523,11 +537,16 @@ glm::vec3 MeshData::InterpolateScale(float animation_time, const aiNodeAnim* nod
 	return glm::vec3{ 1.0f };
 }
 
-void MeshData::ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform)
+void MeshData::ReadNodeHierarchy(
+    const aiScene* p_scene,
+    float animation_time,
+    const aiNode* root,
+    const glm::mat4& parent_transform
+)
 {
     const std::string name = root->mName.data;
-	const aiAnimation* animation = m_scene->mAnimations[0];
-	auto node_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
+	const aiAnimation* animation = p_scene->mAnimations[0];
+	auto node_transform = util::Mat4FromAssimpMat4(root->mTransformation);
 	const aiNodeAnim* node_anim = FindNodeAnim(animation, name);
 
 	if (node_anim)
@@ -553,12 +572,12 @@ void MeshData::ReadNodeHierarchy(float animation_time, const aiNode* root, const
 	}
 
 	for (u32 i = 0; i < root->mNumChildren; ++i)
-		ReadNodeHierarchy(animation_time, root->mChildren[i], transform);
+		ReadNodeHierarchy(p_scene, animation_time, root->mChildren[i], transform);
 }
 
 void MeshData::TraverseNodes(aiNode* root, const glm::mat4& parent_transform, u32 level)
 {
-    const auto local_transform = Utils::Mat4FromAssimpMat4(root->mTransformation);
+    const auto local_transform = util::Mat4FromAssimpMat4(root->mTransformation);
     const auto transform = parent_transform * local_transform;
 	m_node_map[root].resize(root->mNumMeshes);
 	for (u32 i = 0; i < root->mNumMeshes; ++i)
@@ -579,21 +598,21 @@ Mesh::Mesh(arc<MeshData> mesh_data)
 	: m_mesh_data{ std::move(mesh_data) }
 {
 	set_sub_meshes({});
-    init_material_table(m_mesh_data->get_materials());
+    util::init_material_table(m_material_table, m_mesh_data->get_materials());
 }
 
 Mesh::Mesh(const arc<Mesh>& other)
 	: m_mesh_data{ other->m_mesh_data }
 {
 	set_sub_meshes({});
-    init_material_table(m_mesh_data->get_materials());
+    util::init_material_table(m_material_table, m_mesh_data->get_materials());
 }
 
 Mesh::Mesh(arc<MeshData> mesh_data, const std::vector<u32>& sub_meshes)
     : m_mesh_data{ std::move(mesh_data) }
 {
 	set_sub_meshes(sub_meshes);
-    init_material_table(m_mesh_data->get_materials());
+    util::init_material_table(m_material_table, m_mesh_data->get_materials());
 }
 
 void Mesh::OnUpdate(Timestep ts)
@@ -612,15 +631,6 @@ void Mesh::set_sub_meshes(const std::vector<u32>& p_sub_meshes)
 		for (u32 i = 0; i < sub_meshes.size(); ++i)
 			m_submeshes[i] = i;
 	}
-}
-
-auto Mesh::init_material_table(const std::vector<arc<material_asset>>& p_materials) noexcept -> void
-{
-    m_material_table = arc<material_table>::Create(p_materials.size());
-    for (size_t i = 0; i < p_materials.size(); ++i)
-    {
-        m_material_table->SetMaterial(static_cast<u32>(i), p_materials[i]);
-    }
 }
 
 arc<Mesh> MeshFactory::CreateCube(float side_length, Entity entity)

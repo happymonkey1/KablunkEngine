@@ -56,7 +56,7 @@ struct directional_light_t
 
 static_assert(sizeof(directional_light_t) == 32);
 
-struct LightEnvironmentData
+struct light_environment_data_t
 {
 	// #TODO Directional Lights
 
@@ -129,9 +129,6 @@ public:
 
 	glm::mat4 get_world_space_transform_matrix(Entity entity) const;
 	TransformComponent get_world_space_transform(Entity entity) const;
-
-    auto get_directional_light_data() const noexcept -> const directional_light_t& { return m_directional_light; }
-    auto get_directional_light_data() noexcept -> directional_light_t& { return m_directional_light; }
 private:
 	template <typename T>
 	void OnComponentAdded(Entity entity, T& component);
@@ -156,8 +153,7 @@ private:
 
 	b2World* m_box2D_world = nullptr;
 
-    directional_light_t m_directional_light;
-	LightEnvironmentData m_light_environment;
+	light_environment_data_t m_light_environment;
 
 	// reference to primary camera entity. set when a CameraComponent is created that is tagged with primary, 
 	// or when the reference is null and GetPrimaryCameraEntity is called for the first time.

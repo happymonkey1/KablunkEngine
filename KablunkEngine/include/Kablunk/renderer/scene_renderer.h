@@ -19,6 +19,11 @@
 
 #include <string_view>
 
+namespace kb
+{
+class scene_renderer_panel;
+}
+
 // forward declaration
 namespace kb::ui
 {
@@ -88,7 +93,7 @@ struct scene_renderer_camera_t
 struct scene_renderer_data_ub_t
 {
 	scene_renderer_camera_t camera;
-	LightEnvironmentData light_environment;
+	light_environment_data_t light_environment;
 };
 
 struct shadow_cascade_data_t
@@ -270,6 +275,7 @@ private:
 	// =================
 
 	friend class VulkanRenderer2D;
+    friend class ::kb::scene_renderer_panel;
 };
 
 } // end namespace kb::render

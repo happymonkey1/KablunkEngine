@@ -47,7 +47,7 @@ public:
 	void RT_CreatePerLayerImageViews();
 	void RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layer_indices);
 
-	VkImageView GetLayerImageView(uint32_t layer)
+	VkImageView get_layer_vk_image_view(uint32_t layer) const noexcept
 	{
 		KB_CORE_ASSERT(layer < m_per_layer_image_views.size(), "out of bounds!");
 		return m_per_layer_image_views[layer];

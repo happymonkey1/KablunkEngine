@@ -57,17 +57,18 @@ namespace kb
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
-        m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
-	{
+        : Layer("EditorLayer"), m_editor_camera{45.0f, 1.778f, 0.1f, 1000.0f},
+        m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_scene_renderer_panel{},
+          m_asset_editor_panel{arc<AssetEditorPanel>::Create()}, m_content_browser_panel{m_asset_editor_panel}
+    {
         // TODO: clean up
-		m_icon_play = render::get_texture_2d(render::create_texture("Resources/icons/play_icon.png"));
-		m_icon_stop = render::get_texture_2d(render::create_texture("Resources/icons/stop_icon.png"));
-		m_icon_pause = render::get_texture_2d(render::create_texture("Resources/icons/pause_icon.png"));
+        m_icon_play = render::get_texture_2d(render::create_texture("Resources/icons/play_icon.png"));
+        m_icon_stop = render::get_texture_2d(render::create_texture("Resources/icons/stop_icon.png"));
+        m_icon_pause = render::get_texture_2d(render::create_texture("Resources/icons/pause_icon.png"));
 
-		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
-		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
-	}
+        memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
+        memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
+    }
 
 	void EditorLayer::OnAttach()
 	{
@@ -92,6 +93,8 @@ namespace kb
 #endif
 
 		m_scene_hierarchy_panel.SetContext(m_active_scene);
+        m_scene_renderer_panel.set_scene_renderer(m_viewport_renderer);
+
 		NativeScriptEngine::get().set_scene(m_active_scene);
 
 		s_kablunk_install_path = FileSystem::GetEnvironmentVar("KABLUNK_DIR");
@@ -228,6 +231,7 @@ namespace kb
 		m_content_browser_panel.OnImGuiRender();
 		m_asset_registry_panel.on_imgui_render();
 		m_asset_editor_panel->on_imgui_render();
+        m_scene_renderer_panel.on_imgui_render();
 
 		if (ProjectManager::get().get_active().get() != nullptr)
 			m_project_properties_panel.OnImGuiRender(m_show_project_properties_panel);
@@ -258,42 +262,7 @@ namespace kb
 			UI::PropertyReadOnlyUint64("Editor Scene UUID", m_editor_scene->GetUUID());
 			UI::PropertyReadOnlyUint64("Runtime Scene UUID", m_runtime_scene.get() ? m_runtime_scene->GetUUID() : 0ull);
 
-            // Scene directional light
-			{
-                auto& directional_light = m_active_scene->get_directional_light_data();
-
-                bool enabled = directional_light.m_enabled;
-                if (UI::Property("Directional Light Enabled", &enabled))
-                {
-                    directional_light.m_enabled = enabled;
-                }
-
-                auto& direction = directional_light.m_direction;
-                glm::vec3 dir{
-                    direction.x,
-                    direction.y,
-                    direction.z,
-                };
-                if (UI::Property("Directional Light Direction", dir, 0.1f, -1.0f, 1.0f))
-                {
-                    direction.x = dir.x;
-                    direction.y = dir.y;
-                    direction.z = dir.z;
-                }
-
-                auto& radiance = directional_light.m_radiance;
-                glm::vec3 rad{
-                    radiance.x,
-                    radiance.y,
-                    radiance.z,
-                };
-                if (UI::Property("Directional Light Radiance", rad, 0.1f, 0.0f, 1.0f))
-                {
-                    radiance.x = rad.x;
-                    radiance.y = rad.y;
-                    radiance.z = rad.z;
-                }
-			}
+            
 
 			UI::EndProperties();
 
@@ -657,6 +626,9 @@ namespace kb
 
 				if (ImGui::MenuItem("Asset Registry", nullptr, m_asset_registry_panel.get_visible()))
 					m_asset_registry_panel.set_visible(!m_asset_registry_panel.get_visible());
+
+                if (ImGui::MenuItem("Scene Renderer", nullptr, m_scene_renderer_panel.get_active()))
+                    m_scene_renderer_panel.set_active(!m_scene_renderer_panel.get_active());
 
 				ImGui::EndMenu();
 			}

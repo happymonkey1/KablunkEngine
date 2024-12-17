@@ -16,7 +16,6 @@ namespace kb::UI
 using Texture2D = kb::render::backend::texture_2d;
 using Image2D = kb::render::backend::image_2d;
 using VulkanTexture2D = kb::render::backend::vk::vulkan_texture_2d;
-using VulkanImage2D = kb::render::backend::vk::vulkan_image_2d;
 
 
 ImTextureID GetTextureID(arc<Texture2D> texture)
@@ -34,14 +33,34 @@ ImTextureID GetTextureID(arc<Texture2D> texture)
 
 void Image(const arc<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
-	const render::backend::vk::VulkanImageInfo& vulkan_image_info = image.As<VulkanImage2D>()->get_vk_image_info();
-	auto image_info = image.As<VulkanImage2D>()->get_vk_image_info();
+	const render::backend::vk::VulkanImageInfo& vulkan_image_info = image.As<render::backend::vk::vulkan_image_2d>()->get_vk_image_info();
+	auto image_info = image.As<render::backend::vk::vulkan_image_2d>()->get_vk_image_info();
 
 	if (!image_info.image_view)
 		return;
 
-	const auto texture_id = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<VulkanImage2D>()->get_vk_image_info_descriptor().imageLayout);
+	const auto texture_id = ImGui_ImplVulkan_AddTexture(vulkan_image_info.sampler, image_info.image_view, image.As<render::backend::vk::vulkan_image_2d>()->get_vk_image_info_descriptor().imageLayout);
 	ImGui::Image(texture_id, size, uv0, uv1, tint_col, border_col);
+}
+
+void Image(const arc<Image2D>& image, const u32 p_layer, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+{
+    const auto vulkan_image = image.As<render::backend::vk::vulkan_image_2d>();
+    const render::backend::vk::VulkanImageInfo& vulkan_image_info = vulkan_image->get_vk_image_info();
+
+    const VkImageView vk_image_view = vulkan_image->get_layer_vk_image_view(p_layer);
+
+    if (!vk_image_view)
+        return;
+
+    const auto vk_image_layout = image.As<render::backend::vk::vulkan_image_2d>()->get_vk_image_info_descriptor().imageLayout;
+
+    const auto texture_id = ImGui_ImplVulkan_AddTexture(
+        vulkan_image_info.sampler,
+        vk_image_view,
+        vk_image_layout
+    );
+    ImGui::Image(texture_id, size, uv0, uv1, tint_col, border_col);
 }
 
 void Image(const arc<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)

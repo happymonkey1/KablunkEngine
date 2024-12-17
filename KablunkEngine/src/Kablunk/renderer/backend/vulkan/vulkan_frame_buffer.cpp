@@ -134,7 +134,7 @@ vulkan_frame_buffer::~vulkan_frame_buffer()
 
             // Only destroy de-interleaved image once and prevent clearing layer views on second frame buffer invalidation
 			if (arc<vulkan_image_2d> vk_image = image.As<vulkan_image_2d>(); !vk_image->get_specification().deinterleaved ||
-                attachment_index == 0 && !vk_image->GetLayerImageView(0))
+                attachment_index == 0 && !vk_image->get_layer_vk_image_view(0))
 			{
                 vk_image->release();
 			}
@@ -244,7 +244,7 @@ void vulkan_frame_buffer::rt_invalidate()
 					continue;
 
                 // Only destroy de-interleaved image once and prevent clearing layer views on second frame buffer invalidation
-				if (arc vk_image = image.As<vulkan_image_2d>(); !vk_image->get_specification().deinterleaved || attachment_index == 0 && !vk_image->GetLayerImageView(0))
+				if (arc vk_image = image.As<vulkan_image_2d>(); !vk_image->get_specification().deinterleaved || attachment_index == 0 && !vk_image->get_layer_vk_image_view(0))
 				{
                     vk_image->release();
 				}
@@ -493,7 +493,7 @@ void vulkan_frame_buffer::rt_invalidate()
 		arc<vulkan_image_2d> image = m_attachment_images[i].As<vulkan_image_2d>();
 		if (image->get_specification().deinterleaved)
 		{
-			attachments[i] = image->GetLayerImageView(m_specification.m_existing_image_layers[i]);
+			attachments[i] = image->get_layer_vk_image_view(m_specification.m_existing_image_layers[i]);
 			KB_CORE_ASSERT(attachments[i], "Attachment invalid!");
 		}
 		else
@@ -509,7 +509,7 @@ void vulkan_frame_buffer::rt_invalidate()
 		if (m_specification.m_existing_image && image->get_specification().layers > 1)
 		{
 			KB_CORE_ASSERT(m_specification.m_existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
-			attachments.emplace_back(image->GetLayerImageView(m_specification.m_existing_image_layers[0]));
+			attachments.emplace_back(image->get_layer_vk_image_view(m_specification.m_existing_image_layers[0]));
 		}
 		else
 		{
