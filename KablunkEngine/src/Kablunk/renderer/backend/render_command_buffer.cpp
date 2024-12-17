@@ -11,8 +11,7 @@ namespace kb::render::backend
 
 arc<render_command_buffer> render_command_buffer::create(uint32_t count /*= 0*/, const std::string& debug_name /*= ""*/)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
     {
@@ -31,6 +30,8 @@ arc<render_command_buffer> render_command_buffer::create(uint32_t count /*= 0*/,
             debug_name
         ));
     }
+    case render_backend_type_t::none:
+        return arc<render_command_buffer>{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<render_command_buffer>{};
@@ -40,8 +41,7 @@ arc<render_command_buffer> render_command_buffer::create(uint32_t count /*= 0*/,
 
 arc<render_command_buffer> render_command_buffer::create_from_swap_chain(const std::string& debug_name /*= ""*/)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
     {
@@ -56,6 +56,8 @@ arc<render_command_buffer> render_command_buffer::create_from_swap_chain(const s
             debug_name
         ));
     }
+    case render_backend_type_t::none:
+        return arc<render_command_buffer>{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<render_command_buffer>{};

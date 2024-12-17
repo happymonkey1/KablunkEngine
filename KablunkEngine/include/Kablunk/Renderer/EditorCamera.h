@@ -40,6 +40,7 @@ namespace kb
 		const glm::mat4& GetViewMatrix() const { return m_view_matrix; }
 		glm::mat4 GetViewProjectionMatrix() const { return m_projection * m_view_matrix; }
 		glm::mat4 GetUnreversedViewProjectionMatrix() const { return m_unreversed_projection * m_view_matrix; }
+        auto get_unreversed_projection() const noexcept -> const glm::mat4& { return m_unreversed_projection; }
 
 		void Focus(const glm::vec3& focus_point);
 

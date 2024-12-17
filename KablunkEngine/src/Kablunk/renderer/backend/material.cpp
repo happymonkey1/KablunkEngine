@@ -10,11 +10,12 @@ namespace kb::render::backend
 
 arc<material> material::create(const arc<shader>& shader, const std::string& name /* = "" */)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (const auto backend = Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
         return static_cast<arc<material>>(arc<vk::vulkan_material>::Create(shader, name));
+    case render_backend_type_t::none:
+        return arc<material>{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<material>{};
@@ -24,11 +25,12 @@ arc<material> material::create(const arc<shader>& shader, const std::string& nam
 
 arc<material> material::copy(const arc<material>& p_material, const std::string& p_name /* = "" */)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (const auto backend = Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
         return static_cast<arc<material>>(arc<vk::vulkan_material>::Create(p_material, p_name));
+    case render_backend_type_t::none:
+        return arc<material>{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<material>{};

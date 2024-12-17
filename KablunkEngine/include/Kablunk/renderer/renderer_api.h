@@ -10,7 +10,7 @@
 #include "Kablunk/renderer/backend/material.h"
 #include "Kablunk/renderer/backend/render_pass.h"
 #include "Kablunk/renderer/Mesh.h"
-#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/material_asset.h"
 
 #include <glm/glm.hpp>
 

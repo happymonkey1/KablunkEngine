@@ -8,7 +8,7 @@
 #include "Kablunk/renderer/backend/uniform_buffer_set.h"
 #include "Kablunk/renderer/backend/storage_buffer_set.h"
 #include "Kablunk/renderer/Mesh.h"
-#include "Kablunk/renderer/MaterialAsset.h"
+#include "Kablunk/renderer/material_asset.h"
 #include "Kablunk/renderer/backend/compute_pipeline.h"
 
 #include <mutex>
@@ -61,11 +61,11 @@ inline void shutdown() noexcept
 inline void begin_frame() noexcept
 {
     auto& renderer = Singleton<Renderer>::get();
-    renderer.get_render_backend().begin_frame(renderer.get_graphics_context());
+    renderer.get_render_backend()->begin_frame();
 }
 
 // end renderering frame
-inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend().end_frame(); }
+inline void end_frame() noexcept { Singleton<Renderer>::get().get_render_backend()->end_frame(); }
 
 // begin render pass
 inline void begin_render_pass(
@@ -75,30 +75,28 @@ inline void begin_render_pass(
 ) noexcept
 {
     auto& renderer = Singleton<Renderer>::get();
-	renderer.get_render_backend()
-        .begin_render_pass(
-            renderer.get_graphics_context(),
-            p_render_command_buffer,
-            p_render_pass,
-            explicit_clear
-        );
+	renderer.get_render_backend()->begin_render_pass(
+        p_render_command_buffer,
+        p_render_pass,
+        explicit_clear
+    );
 }
 
 inline void end_render_pass(const arc<backend::render_command_buffer>& p_render_command_buffer) noexcept
 {
-	Singleton<Renderer>::get().get_render_backend().end_render_pass(p_render_command_buffer);
+	Singleton<Renderer>::get().get_render_backend()->end_render_pass(p_render_command_buffer);
 }
 
 // return a reference to the shader library
 inline arc<shader_library> get_shader_library() noexcept
 {
-	return Singleton<Renderer>::get().GetShaderLibrary();
+	return Singleton<Renderer>::get().get_shader_library();
 }
 
 // get a specific shader by name
 inline arc<backend::shader> get_shader(const std::string& name) noexcept
 {
-	return Singleton<Renderer>::get().GetShader(name);
+	return Singleton<Renderer>::get().get_shader(name);
 }
 
 inline void register_shader_dependency(arc<backend::shader> shader, arc<backend::material> material) noexcept
@@ -137,6 +135,44 @@ inline void swap_queues() noexcept
 inline auto get_white_texture() noexcept
 {
     return Singleton<Renderer>::get().get_white_texture();
+}
+
+// Retrieve current renderer pipeline state
+inline auto get_renderer_pipeline_type() noexcept -> renderer_pipeline_type_t
+{
+    return Singleton<Renderer>::get().get_renderer_pipeline_type();
+}
+
+// Retrieve a texture from the renderer based on a virtual handle
+inline auto get_texture_2d(virtual_texture_handle p_handle) noexcept -> const arc<backend::texture_2d>&
+{
+    return Singleton<Renderer>::get().get_texture_2d(p_handle);
+}
+
+// Create a texture and return a virtual handle
+// Texture is stored in the renderer's texture registry
+inline auto create_texture(
+    std::string_view p_name,
+    const backend::texture_specification_t& p_specification,
+    const void* p_data,
+    const bool p_is_atlas = false
+) noexcept -> virtual_texture_handle
+{
+    return Singleton<Renderer>::get().create_texture(
+        p_name,
+        p_specification,
+        p_data,
+        p_is_atlas
+    );
+}
+
+// Create a texture and return a virtual handle
+// Texture is stored in the renderer's texture registry
+inline auto create_texture(
+    const std::filesystem::path& p_filepath
+) noexcept -> virtual_texture_handle
+{
+    return Singleton<Renderer>::get().create_texture(p_filepath);
 }
 
 // ======
@@ -321,7 +357,7 @@ inline void render_geometry(
     uint32_t p_index_count = 0
 ) noexcept
 {
-    Singleton<Renderer>::get().get_render_backend().render_geometry(
+    Singleton<Renderer>::get().get_render_backend()->render_geometry(
         p_render_command_buffer,
         p_pipeline,
         p_material,
@@ -338,7 +374,7 @@ inline void submit_fullscreen_quad(
     const arc<backend::material>& p_material
 ) noexcept
 {
-    Singleton<Renderer>::get().get_render_backend().submit_fullscreen_quad(
+    Singleton<Renderer>::get().get_render_backend()->submit_fullscreen_quad(
         p_render_command_buffer,
         p_pipeline,
         p_material
@@ -351,7 +387,7 @@ inline void submit_fullscreen_quad(
 
 inline void set_line_width(const arc<backend::render_command_buffer>& p_render_command_buffer, f32 p_line_width) noexcept
 {
-	Singleton<Renderer>::get().get_render_backend().set_line_width(p_render_command_buffer, p_line_width);
+	Singleton<Renderer>::get().get_render_backend()->set_line_width(p_render_command_buffer, p_line_width);
 }
 
 // get the number of frames in flight that will be rendered
@@ -405,10 +441,13 @@ inline void submit_resource_free(auto func) noexcept
 		p_func->~func_t();
 	};
 
-	render::submit([render_cmd, func]()
+    const u32 frame_index = render_thread::is_current_thread_rt() ?
+        rt_get_current_frame_index() :
+        get_current_frame_index();
+
+	render::submit([render_cmd, func, frame_index]()
 		{
-			const uint32_t index = rt_get_current_frame_index();
-			auto storage_buffer = get_render_resource_release_queue(index).allocate(render_cmd, sizeof(func));
+			auto storage_buffer = get_render_resource_release_queue(frame_index).allocate(render_cmd, sizeof(func));
 			new (storage_buffer) func_t(std::forward<func_t>(static_cast<func_t>(func)));
 		});
 }

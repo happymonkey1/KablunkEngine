@@ -7,8 +7,9 @@ namespace kb
 
 enum class lua_error_t
 {
-
-    internal_key_access_error
+    internal_engine_error,
+    script_not_found,
+    script_error,
 };
 
 } // end namespace kb

@@ -304,7 +304,7 @@ void vulkan_frame_buffer::rt_invalidate()
 
 			VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 			attachment_description.flags = 0;
-			attachment_description.format = util::VulkanImageFormat(attachment_spec.format);
+			attachment_description.format = util::get_vk_image_format(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
             attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
@@ -313,12 +313,13 @@ void vulkan_frame_buffer::rt_invalidate()
             attachment_description.initialLayout = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR ?
                 VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             // #TODO Separate layouts requires a "separate layouts" flag to be enabled
-			if (attachment_spec.format == image_format_t::DEPTH24STENCIL8 || true)
+			if (attachment_spec.format == image_format_t::DEPTH24STENCIL8)
 			{
                 // TODO: if not sampling
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 // TODO: if sampling
-				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			    attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
 				depth_attachment_reference = {
 				    attachment_index,
 				    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
@@ -330,7 +331,7 @@ void vulkan_frame_buffer::rt_invalidate()
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 				depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 			}
-			m_clear_values[attachment_index].depthStencil = { 1.0f, 0 };
+			m_clear_values[attachment_index].depthStencil = { m_specification.m_depth_clear_value, 0 };
 		}
 		else
 		{
@@ -394,7 +395,7 @@ void vulkan_frame_buffer::rt_invalidate()
 
 			VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 			attachment_description.flags = 0;
-			attachment_description.format = util::VulkanImageFormat(attachment_spec.format);
+			attachment_description.format = util::get_vk_image_format(attachment_spec.format);
 			attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
             attachment_description.loadOp = utils::get_vk_attachment_load_op(m_specification, attachment_spec);
 			attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
@@ -505,17 +506,17 @@ void vulkan_frame_buffer::rt_invalidate()
 	if (m_depth_attachment_image)
 	{
 		arc<vulkan_image_2d> image = m_depth_attachment_image.As<vulkan_image_2d>();
-		if (m_specification.m_existing_image)
+		if (m_specification.m_existing_image && image->get_specification().layers > 1)
 		{
 			KB_CORE_ASSERT(m_specification.m_existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
 			attachments.emplace_back(image->GetLayerImageView(m_specification.m_existing_image_layers[0]));
-			KB_CORE_ASSERT(attachments.back(), "error");
 		}
 		else
 		{
 			attachments.emplace_back(image->get_vk_image_info().image_view);
-			KB_CORE_ASSERT(attachments.back(), "error");
 		}
+
+        KB_CORE_ASSERT(attachments.back(), "error");
 	}
 
 	VkFramebufferCreateInfo frame_buffer_create_info = {};

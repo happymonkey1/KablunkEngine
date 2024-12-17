@@ -52,6 +52,8 @@ auto virtual_texture_registry_yaml_serializer::serialize_version_1() const noexc
     {
         out << YAML::Key << raw_texture_handle.as<u32>() << YAML::BeginMap;
         out << YAML::Key << "filepath" << YAML::Value << texture_metadata.m_path;
+        out << YAML::Key << "is_atlas" << YAML::Value << texture_metadata.m_is_atlas;
+        out << YAML::Key << "is_memory_only" << YAML::Value << texture_metadata.m_is_memory_only;
         out << YAML::EndMap; // End individual raw_texture map
     }
     out << YAML::EndMap; // End raw_textures
@@ -196,7 +198,7 @@ auto virtual_texture_registry_yaml_serializer::deserialize_version_1(YAML::Node&
             {
                 KB_CORE_ASSERT(
                     false,
-                    "[virtual_texture_registry_yaml_serializer]: Failed to read filepath from raw texture handle data for raw_texture_handle='{}'",
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read filepath from raw texture metadata for raw_texture_handle='{}'",
                     raw_texture_handle_value
                 );
 
@@ -206,15 +208,51 @@ auto virtual_texture_registry_yaml_serializer::deserialize_version_1(YAML::Node&
 
             auto filepath = raw_texture_data_node["filepath"].as<std::string>();
 
+            if (!raw_texture_data_node["is_atlas"])
+            {
+                KB_CORE_ASSERT(
+                    false,
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read 'is_atlas' from texture metadata for raw_texture_handle='{}'",
+                    raw_texture_handle_value
+                );
+
+                m_valid = false;
+                return;
+            }
+
+            const auto is_atlas = raw_texture_data_node["is_atlas"].as<bool>();
+
+            if (!raw_texture_data_node["is_memory_only"])
+            {
+                KB_CORE_ASSERT(
+                    false,
+                    "[virtual_texture_registry_yaml_serializer]: Failed to read 'is_memory_only' from texture metadata for raw_texture_handle='{}'",
+                    raw_texture_handle_value
+                );
+
+                m_valid = false;
+                return;
+            }
+
+            const auto is_memory_only = raw_texture_data_node["is_memory_only"].as<bool>();
+
+            if (is_memory_only)
+            {
+                KB_CORE_ASSERT(false, "[virtual_texture_registry_yaml_serializer]: Found in-memory texture, not implemented!");
+                continue;
+            }
+
             m_virtual_texture_registry->m_raw_textures.emplace(
-                kb::raw_texture_handle{ raw_texture_handle_value },
+                raw_texture_handle{ raw_texture_handle_value },
                 render::backend::texture_2d::create(filepath)
             );
 
             m_virtual_texture_registry->m_texture_metadata_map.emplace(
-                kb::raw_texture_handle{ raw_texture_handle_value },
+                raw_texture_handle{ raw_texture_handle_value },
                 render::texture_metadata_t{
-                    .m_path = std::move(filepath)
+                    .m_path = std::move(filepath),
+                    .m_is_atlas = is_atlas,
+                    .m_is_memory_only = is_memory_only,
                 }
             );
         }

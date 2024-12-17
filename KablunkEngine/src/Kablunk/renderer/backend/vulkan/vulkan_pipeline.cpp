@@ -40,6 +40,26 @@ static VkFormat KbShaderDataTypeToVulkanFormat(shader_data_type_t type)
 	default:						KB_CORE_ASSERT(false, "Unknown ShaderDataType"); return VK_FORMAT_UNDEFINED;
 	}
 }
+
+static auto get_vk_compare_op(depth_compare_op_t p_depth_compare_op) noexcept -> VkCompareOp
+{
+    switch (p_depth_compare_op)
+    {
+    case depth_compare_op_t::never:             return VK_COMPARE_OP_NEVER;
+    case depth_compare_op_t::not_equal:         return VK_COMPARE_OP_NOT_EQUAL;
+    case depth_compare_op_t::less:              return VK_COMPARE_OP_LESS;
+    case depth_compare_op_t::less_or_equal:     return VK_COMPARE_OP_LESS_OR_EQUAL;
+    case depth_compare_op_t::equal:             return VK_COMPARE_OP_EQUAL;
+    case depth_compare_op_t::greater:           return VK_COMPARE_OP_GREATER;
+    case depth_compare_op_t::greater_or_equal:  return VK_COMPARE_OP_GREATER_OR_EQUAL;
+    case depth_compare_op_t::always:            return VK_COMPARE_OP_ALWAYS;
+    default:
+    {
+        KB_CORE_ASSERT(false, "[vulkan_pipeline]: Unknown depth compare op type!");
+    }
+    }
+}
+
 }
 
 vulkan_pipeline::vulkan_pipeline(const VkDevice p_vk_device, const pipeline_specification_t& specification)
@@ -250,7 +270,9 @@ void vulkan_pipeline::RT_Invalidate()
 	dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);
 	if (m_specification.topology == primitive_topology_t::lines || m_specification.topology == primitive_topology_t::line_strip || m_specification.wireframe)
-		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+	{
+        dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+	}
 
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -263,13 +285,15 @@ void vulkan_pipeline::RT_Invalidate()
 	depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depth_stencil_state.depthTestEnable = m_specification.depth_test ? VK_TRUE : VK_FALSE;
 	depth_stencil_state.depthWriteEnable = m_specification.depth_write ? VK_TRUE : VK_FALSE;
-	depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    depth_stencil_state.depthCompareOp = Utils::get_vk_compare_op(m_specification.m_depth_compare_op);
 	depth_stencil_state.depthBoundsTestEnable = VK_FALSE;
 	depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
 	depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
 	depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
 	depth_stencil_state.stencilTestEnable = VK_FALSE;
 	depth_stencil_state.front = depth_stencil_state.back;
+    depth_stencil_state.minDepthBounds = 0.0f;
+    depth_stencil_state.maxDepthBounds = 1.0f;
 
 	// Multi sampling state
 	// This example does not make use of multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline

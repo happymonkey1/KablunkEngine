@@ -20,6 +20,11 @@ layout(std140, set = 1, binding = 0) uniform Camera
     vec3 u_CameraPosition;
 };
 
+layout (std140, set = 1, binding = 7) uniform ShadowCascadesData
+{
+    mat4 DirLightViewMat[4];
+} u_DirShadowCascades;
+
 struct VertexOutput
 {
     vec3 WorldPosition;
@@ -33,6 +38,7 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
+    vec3 ShadowMapCoords[4];
 };
 
 layout(location = 0) out VertexOutput v_Output;
@@ -59,6 +65,16 @@ void main()
     v_Output.CameraPosition = u_CameraPosition;
     v_Output.ViewPosition = vec3(u_ViewMatrix * vec4(v_Output.WorldPosition, 1.0));
 
+    vec4 shadowCoords[4];
+    shadowCoords[0] = (u_DirShadowCascades.DirLightViewMat[0] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[1] = (u_DirShadowCascades.DirLightViewMat[1] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[2] = (u_DirShadowCascades.DirLightViewMat[2] * vec4(worldPosition.xyz, 1.0));
+    shadowCoords[3] = (u_DirShadowCascades.DirLightViewMat[3] * vec4(worldPosition.xyz, 1.0));
+    v_Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / (shadowCoords[0].w + 0.0001f));
+    v_Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / (shadowCoords[1].w + 0.0001f));
+    v_Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / (shadowCoords[2].w + 0.0001f));
+    v_Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / (shadowCoords[3].w + 0.0001f));
+
     gl_Position = u_ViewProjectionMatrix * worldPosition;
 }
 
@@ -78,6 +94,7 @@ struct VertexOutput
     vec3 CameraPosition;
 
     vec3 ViewPosition;
+    vec3 ShadowMapCoords[4];
 };
 
 layout(location = 0) in VertexOutput v_Input;
@@ -88,13 +105,20 @@ struct PointLight
 {
     vec3 Position;
     float Multiplier;
+    // Color
     vec3 Radiance;
     float Radius;
     float MinRadius;
     float Falloff;
 
+    // TODO: angles
+
     vec2 Padding;
 };
+
+layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
+layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
+layout(set = 1, binding = 8) uniform sampler2DArray u_ShadowMapTexture;
 
 layout(std140, set = 1, binding = 1) uniform PointLightsData
 {
@@ -102,11 +126,34 @@ layout(std140, set = 1, binding = 1) uniform PointLightsData
     PointLight Lights[128];
 } u_PointLights;
 
+// Directional light represents an "infintely" far away sun
+layout(std140, set = 1, binding = 2) uniform DirectionalLightData
+{
+    // Light direction
+    vec3 Direction;
+    // Multiplier for the radiance
+    float Multiplier;
+    // Color
+    vec3 Radiance;
+    // Whether the directional light is enabled
+    bool Enabled;
+} u_DirectionalLight;
+
+layout(std140, set = 1, binding = 9) uniform RendererData
+{
+    uniform vec4 CascadeSplits;
+} u_RendererData;
+
 layout(std140, push_constant) uniform Material
 {
 	float AmbientStrength;
     float DiffuseStrength;
     float SpecularStrength;
+    vec3 AlbedoColor;
+    float Metalness;
+	float Roughness;
+	float Emission;
+    bool UseNormalMap;
 } u_MaterialUniforms;
 
 vec3 GetPointLightAttenuationValues(in float distance)
@@ -165,7 +212,9 @@ vec3 GetPointLightAttenuationValues(in float distance)
 
 vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 {
-    vec3 result = vec3(0.33); // set default ambience to .33
+    vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
+
+    vec3 result = vec3(0.0);
     for (int i = 0; i < u_PointLights.Count; i++)
     {
         PointLight light = u_PointLights.Lights[i];
@@ -175,12 +224,9 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         float linear = attenuationValues.y;
         float quadratic = attenuationValues.z;
 
-        //float attenuation = clamp(1.0 / (constant + linear * distance + quadratic * distance * distance), 0.0, 1.0);
         float attenuation = clamp(1.0 / (1 + (2.0 / light.Radius) * distance + (1.0 / (light.Radius * light.Radius)) * (distance * distance)), 0.0, 1.0);
-        vec3 radiance = light.Radiance * light.Multiplier;
 
-        // Ambient
-        vec3 ambient = u_MaterialUniforms.AmbientStrength * radiance;
+        vec3 radiance = light.Radiance * light.Multiplier * albedoColor;
 
         // Diffuse
         vec3 lightDir = normalize(light.Position - v_Input.WorldPosition);
@@ -190,24 +236,105 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
         // Specular
         float shininess = 32;
         // Blinn-Phong 
-        //vec3 reflectDir = reflect(-lightDir, normal);
         vec3 halfDir = normalize(lightDir + viewDir);
         float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
         vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * radiance;
 
-        result += (ambient + diffuse + specular) * attenuation;
+        result += (diffuse + specular) * attenuation;
         //result += vec3(light.MinRadius);
     }
 
     return result;
 }
 
+mat3 cotangent(vec3 N, vec3 p, vec2 uv)
+{
+  // get edge vectors of the pixel triangle
+  vec3 dp1 = dFdx(p);
+  vec3 dp2 = dFdy(p);
+  vec2 duv1 = dFdx(uv);
+  vec2 duv2 = dFdy(uv);
+
+  // solve the linear system
+  vec3 dp2perp = cross(dp2, N);
+  vec3 dp1perp = cross(N, dp1);
+  vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+  vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+  // construct a scale-invariant frame 
+  float invmax = 1.0 / sqrt(max(dot(T,T), dot(B,B)));
+  return mat3(normalize(T * invmax), normalize(B * invmax), N);
+}
+
+vec3 perturb(vec3 normalMap, vec3 normal, vec3 view, vec2 texCoord)
+{
+    mat3 TBN = cotangent(normal, -view, texCoord);
+    return normalize(TBN * normalMap);
+}
+
+float CalculateShadow(vec3 coords, sampler2DArray shadowMap, uint cascadeIndex) {
+    vec3 projectedCoords = coords * 0.5 + 0.5;
+
+    float closeDepth = texture(shadowMap, vec3(projectedCoords.xy, cascadeIndex)).r;
+    float currentDepth = projectedCoords.z;
+    if (currentDepth > 1.0 || currentDepth < 0.0) {
+        return 0.0;
+    }
+
+    float shadow = currentDepth > closeDepth ? 1.0 : 0.0;
+    return shadow;
+}
+
 void main()
 {
-    vec3 color = vec3(1.0);
-    vec3 normal = normalize(v_Input.Normal);
-    vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
-    vec4 pLightsColor = vec4(CalculatePointLights(normal, viewDir), 1.0);
+    // Ambient
+    vec4 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord) * vec4(u_MaterialUniforms.AlbedoColor, 1.0);
+    float alpha = albedoColor.a;
+    vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor.rgb;
 
-    o_Color = vec4(color, 1.0) * (pLightsColor);
+    vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
+
+    vec3 normal = normalize(v_Input.Normal);
+    if (u_MaterialUniforms.UseNormalMap) {
+        normal = normalize(texture(u_NormalTexture, v_Input.TexCoord).rgb * 2.0f - 1.0f);
+    }
+
+    // ===========================
+    // Calculate directional light
+    // ===========================
+    vec3 dirLightDirection = normalize(-u_DirectionalLight.Direction);
+    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * albedoColor.rgb;
+
+    // Diffuse
+    float diffuseImpact = max(dot(normal, dirLightDirection), 0.0);
+    vec3 diffuse = diffuseImpact * u_MaterialUniforms.DiffuseStrength * dirLightRadiance;
+
+    // Specular
+    float shininess = 32;
+    // Blinn-Phong 
+    vec3 halfDir = normalize(dirLightDirection + viewDir);
+    float specularImpact = pow(max(dot(normal, halfDir), 0.0), shininess);
+    vec3 specular = u_MaterialUniforms.SpecularStrength * specularImpact * dirLightRadiance;
+    vec3 directionalLightColor = vec3(0.0);
+    if (u_DirectionalLight.Enabled) {
+        directionalLightColor = diffuse + specular;
+    }
+    // ===========================
+
+    // Calculate point lighting
+    vec3 pLightsColor = CalculatePointLights(normal, viewDir);
+
+    uint cascadeIndex = 0;
+    const uint SHADOW_MAP_CASCADE_COUNT = 4;
+    for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+        if (v_Input.ViewPosition.z < u_RendererData.CascadeSplits[i]) {
+            cascadeIndex = i + 1;
+        }
+    }
+
+    vec3 shadowMapCoords = v_Input.ShadowMapCoords[cascadeIndex];
+    float shadow = CalculateShadow(shadowMapCoords, u_ShadowMapTexture, cascadeIndex);
+
+    o_Color = vec4(ambient + (1.0 - shadow) * (directionalLightColor + pLightsColor), alpha);
+    // o_Color = vec4(vec3(gl_FragCoord.z), 1.0);
 }

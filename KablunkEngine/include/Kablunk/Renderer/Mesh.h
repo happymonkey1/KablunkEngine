@@ -8,12 +8,14 @@
 #include "Kablunk/Renderer/backend/buffer.h"
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/backend/shader.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/material_asset.h"
 #include "Kablunk/Math/vec.hpp"
 
 #include <vector>
 #include <string>
 #include <unordered_map>
+
+#include "Kablunk/renderer/mesh_handle.h"
 
 
 // Forward decs
@@ -34,7 +36,7 @@ class Entity;
 
 namespace kb::render
 { // start namespace kb::render
-struct Vertex
+struct vertex_t
 {
 	vec3_packed Position;
 	vec3_packed Normal;
@@ -43,7 +45,7 @@ struct Vertex
 	vec2_packed TexCoord;
 };
 
-struct AnimatedVertex
+struct animated_vertex_t
 {
 	vec3_packed Position;
 	vec3_packed Normal;
@@ -54,7 +56,7 @@ struct AnimatedVertex
 	uint32_t Ids[4] = { 0, 0, 0, 0 };
 	float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	void AddBoneData(uint32_t bone_id, float weight)
+	void add_bone_data(uint32_t bone_id, float weight)
 	{
 		for (size_t i = 0; i < 4; ++i)
 		{
@@ -72,7 +74,7 @@ struct AnimatedVertex
 	int32_t EntityID;
 };
 
-struct BoneInfo
+struct bone_info_t
 {
 	glm::mat4 Bone_offset;
 	glm::mat4 Final_transformation;
@@ -110,23 +112,22 @@ struct Index
 
 struct Triangle
 {
-	Vertex V0;
-	Vertex V1;
-	Vertex V2;
+	vertex_t V0;
+	vertex_t V1;
+	vertex_t V2;
 
-	Triangle(const Vertex& v0, const Vertex& v1, const Vertex& v2)
-		: V0{ v0 }, V1{ v1 }, V2{ v2 } 
+	Triangle(const vertex_t& v0, const vertex_t& v1, const vertex_t& v2)
+		: V0{ v0 }, V1{ v1 }, V2{ v2 }
 	{ }
 };
 
-class Submesh
+struct sub_mesh_t
 {
-public:
-	uint32_t BaseVertex;
-	uint32_t BaseIndex;
-	uint32_t Material_index;
-	uint32_t IndexCount;
-	uint32_t VertexCount;
+    u32 BaseVertex;
+    u32 BaseIndex;
+    u32 Material_index;
+    u32 IndexCount;
+    u32 VertexCount;
 
 	glm::mat4 Transform{ 1.0f };
 	glm::mat4 Local_transform{ 1.0f };
@@ -138,54 +139,64 @@ class MeshData : public RefCounted
 {
 public:
 	MeshData(const std::string& filename, kb::Entity entity);
-	MeshData(const std::vector<Vertex>& verticies, const std::vector<Index>& indices, const glm::mat4& transform);
+	MeshData(
+        mesh_handle p_handle,
+        const std::vector<vertex_t>& p_vertices,
+        const std::vector<Index>& indices,
+        const glm::mat4& transform
+    );
 	virtual ~MeshData() override;
 
-	const std::vector<Vertex>& GetVertices() const { return m_static_vertices; }
-	const std::vector<Index>& GetIndicies() const { return m_indices; }
-	arc<backend::shader> GetShader() { return m_mesh_shader; }
-	arc<backend::vertex_buffer> GetVertexBuffer() const { return m_vertex_buffer; }
-	arc<backend::index_buffer> GetIndexBuffer() const { return m_index_buffer; }
+    auto get_handle() const noexcept -> mesh_handle { return m_handle; }
 
-	std::vector<arc<backend::material>>& GetMaterials() { return m_materials; }
-	const std::vector<arc<backend::material>>& GetMaterials() const { return m_materials; }
+	const std::vector<vertex_t>& get_vertices() const { return m_static_vertices; }
+	const std::vector<Index>& get_indices() const { return m_indices; }
+	arc<backend::shader> get_shader() { return m_mesh_shader; }
+	arc<backend::vertex_buffer> get_vertex_buffer() const { return m_vertex_buffer; }
+	arc<backend::index_buffer> get_index_buffer() const { return m_index_buffer; }
 
-	const std::vector<arc<backend::texture_2d>>& GetTextures() const { return m_textures; }
-	const std::vector<arc<backend::texture_2d>>& GetNormalMaps() const { return m_normal_map; }
-	const std::string& GetFilepath() const { return m_filepath; }
+	std::vector<arc<material_asset>>& get_materials() { return m_materials; }
+	const std::vector<arc<material_asset>>& get_materials() const { return m_materials; }
 
-	void SetSubmeshes(const std::vector<Submesh>& submeshes);
-	std::vector<Submesh>& GetSubmeshes() { return m_sub_meshes; }
-	const std::vector<Submesh>& GetSubmeshes() const { return m_sub_meshes; }
+	const std::vector<arc<backend::texture_2d>>& get_textures() const { return m_textures; }
+	const std::vector<arc<backend::texture_2d>>& get_normal_maps() const { return m_normal_map; }
+	const std::string& get_filepath() const { return m_filepath; }
 
-	const std::vector<Triangle>& GetTriangleCache(uint32_t index) const { return m_triangle_cache.at(index); }
+	void set_sub_meshes(const std::vector<sub_mesh_t>& p_sub_meshes);
+	std::vector<sub_mesh_t>& get_sub_meshes() { return m_sub_meshes; }
+	const std::vector<sub_mesh_t>& get_sub_meshes() const { return m_sub_meshes; }
+
+	const std::vector<Triangle>& get_triangle_cache(u32 index) const { return m_triangle_cache.at(index); }
+    auto get_triangle_count() const noexcept -> size_t { return m_triangle_count; }
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& node_name);
-	uint32_t FindPosition(float animation_time, const aiNodeAnim* root_node_anim);
-	uint32_t FindRotation(float animation_time, const aiNodeAnim* root_node_anim);
-	uint32_t FindScaling(float animation_time, const aiNodeAnim* root_node_anim);
+    u32 FindPosition(float animation_time, const aiNodeAnim* root_node_anim);
+    u32 FindRotation(float animation_time, const aiNodeAnim* root_node_anim);
+    u32 FindScaling(float animation_time, const aiNodeAnim* root_node_anim);
 	glm::vec3 InterpolateTranslation(float animation_time, const aiNodeAnim* node_anim);
 	glm::quat InterpolateRotation(float animation_time, const aiNodeAnim* node_anim);
 	glm::vec3 InterpolateScale(float animation_time, const aiNodeAnim* node_anim);
 
 	void ReadNodeHierarchy(float animation_time, const aiNode* root, const glm::mat4& parent_transform);
+
 private:
-	void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, uint32_t level = 0);
+	void TraverseNodes(aiNode* root, const glm::mat4& parent_transform = glm::mat4{ 1.0f }, u32 level = 0);
+
 private:
 	box<Assimp::Importer> m_importer;
 
 	arc<backend::vertex_buffer> m_vertex_buffer;
 	arc<backend::index_buffer> m_index_buffer;
 
-	std::vector<Vertex> m_static_vertices;
-	std::vector<AnimatedVertex> m_animated_vertices;
+	std::vector<vertex_t> m_static_vertices;
+	std::vector<animated_vertex_t> m_animated_vertices;
 	std::vector<Index> m_indices;
-	kb::unordered_flat_map<std::string, uint32_t> m_bone_mapping;
-	kb::unordered_flat_map<aiNode*, std::vector<uint32_t>> m_node_map;
+	unordered_flat_map<std::string, u32> m_bone_mapping;
+	unordered_flat_map<aiNode*, std::vector<u32>> m_node_map;
 
-	uint32_t m_bone_count = 0;
-	std::vector<BoneInfo> m_bone_info;
-	std::vector<Submesh> m_sub_meshes;
+    u32 m_bone_count = 0;
+	std::vector<bone_info_t> m_bone_info;
+	std::vector<sub_mesh_t> m_sub_meshes;
 
 	const aiScene* m_scene;
 
@@ -194,11 +205,13 @@ private:
 	arc<backend::shader> m_mesh_shader;
 	std::vector<arc<backend::texture_2d>> m_textures;
 	std::vector<arc<backend::texture_2d>> m_normal_map;
-	std::vector<arc<backend::material>> m_materials;
+	std::vector<arc<material_asset>> m_materials;
 
-	kb::unordered_flat_map<uint32_t, std::vector<Triangle>> m_triangle_cache;
+	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
+    size_t m_triangle_count = 0;
 
 	std::string m_filepath;
+    mesh_handle m_handle{};
 
 	// Animation
 	bool m_is_animated = false;
@@ -216,32 +229,42 @@ class Mesh : public RefCounted
 public:
 	Mesh(arc<MeshData> mesh_data);
 	Mesh(const arc<Mesh>& other);
-	Mesh(arc<MeshData> mesh_data, const std::vector<uint32_t>& submeshes);
-	virtual ~Mesh();
+	Mesh(arc<MeshData> mesh_data, const std::vector<u32>& sub_meshes);
+	virtual ~Mesh() noexcept = default;
+
+    auto get_handle() const noexcept -> mesh_handle { return m_mesh_data->get_handle(); }
 
 	void OnUpdate(Timestep ts);
 
-	std::vector<uint32_t>& GetSubmeshes() { return m_submeshes; }
-	const std::vector<uint32_t>& GetSubmeshes() const { return m_submeshes; }
+	std::vector<u32>& GetSubmeshes() { return m_submeshes; }
+	const std::vector<u32>& GetSubmeshes() const { return m_submeshes; }
 
-	void SetSubmeshes(const std::vector<uint32_t>& submeshes);
+	void set_sub_meshes(const std::vector<u32>& p_sub_meshes);
 
 	arc<MeshData> GetMeshData() { return m_mesh_data; }
 	arc<MeshData> GetMeshData() const { return m_mesh_data; }
 	void SetMeshData(arc<MeshData> mesh_data) { m_mesh_data = mesh_data; }
 
-	arc<MaterialTable>& GetMaterials() { return m_material_table; }
-	const arc<MaterialTable>& GetMaterials() const { return m_material_table; }
+	arc<material_table>& get_material_table() { return m_material_table; }
+	const arc<material_table>& get_material_table() const { return m_material_table; }
+
+private:
+    auto init_material_table(const std::vector<arc<material_asset>>& p_materials) noexcept -> void;
+
 private:
 	arc<MeshData> m_mesh_data;
-	std::vector<uint32_t> m_submeshes;
+	std::vector<u32> m_submeshes;
 
-	arc<MaterialTable> m_material_table;
+	arc<material_table> m_material_table;
 };
 
 // #TODO move elsewhere
 class MeshFactory
 {
+public:
+    // Kablunk resource notation (krn) used to construct the mesh handle
+    inline static constexpr const char* k_cube_mesh_krn = "kb::mesh::cube";
+    inline static constexpr mesh_handle k_cube_mesh_handle = mesh_handle::into(std::string_view{ k_cube_mesh_krn });
 public:
 	static arc<Mesh> CreateCube(float side_length, Entity entity);
 };

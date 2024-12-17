@@ -10,7 +10,7 @@ namespace kb::render::backend
 
 arc<shader> shader::create(const std::string& file_path, bool p_force_compile)
 {
-	switch (Renderer::get_render_backend_type())
+	switch (const auto backend = Singleton<Renderer>::get().get_render_backend_type())
 	{
 	case render_backend_type_t::vulkan:
 	{
@@ -21,11 +21,13 @@ arc<shader> shader::create(const std::string& file_path, bool p_force_compile)
             p_force_compile
         ));
 	}
+	case render_backend_type_t::none:
+        return arc<shader>{};
 	default:
         KB_CORE_ASSERT(
             false,
             "[Shader::Create]: Unhandled render backend {}!",
-            static_cast<std::underlying_type_t<backend::render_backend_type_t>>(render::Renderer::get_render_backend_type())
+            static_cast<std::underlying_type_t<backend::render_backend_type_t>>(backend)
         );
 	    return arc<shader>{};
 	}

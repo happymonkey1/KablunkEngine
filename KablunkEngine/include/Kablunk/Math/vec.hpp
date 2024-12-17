@@ -157,6 +157,15 @@ static_assert(sizeof(uvec2_packed) == 8ull);
 static_assert(sizeof(uvec3_packed) == 12ull);
 static_assert(sizeof(uvec4_packed) == 16ull);
 
+// utility function to translate from kb vec to glm vec
+inline auto vec3_packed_to_glm_vec3(const vec3_packed& p_vec) noexcept -> glm::vec3
+{
+    return {
+        p_vec.x,
+        p_vec.y,
+        p_vec.z
+    };
+}
 
 #else
 using vec2_packed = glm::vec2;

@@ -48,7 +48,7 @@ public:
     u64 begin_timestamp_query() override;
 	void end_timestamp_query(u64 query_index) override;
 
-	VkCommandBuffer GetCommandBuffer(u32 frame_index) const
+	VkCommandBuffer get_vk_command_buffer(u32 frame_index) const
 	{
 		KB_CORE_ASSERT(frame_index < m_command_buffers.size(), "index out of range!");
 		return m_command_buffers[frame_index];

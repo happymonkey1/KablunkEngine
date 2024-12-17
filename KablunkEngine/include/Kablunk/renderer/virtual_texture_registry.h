@@ -49,16 +49,29 @@ struct virtual_texture_specification_t
     bool m_allow_to_be_packed = false;
     // dimensions of the entire texture
     // optional if the texture import type is not atlas (`!raw_texture_asset_type_t::texture_atlas`)
-    glm::vec2 m_texture_dimensions{};
+    glm::uvec2 m_texture_dimensions{};
     // dimensions of a sprite to extract from a texture atlas
     // value does not matter if the texture import type is not atlas (`!raw_texture_asset_type_t::texture_atlas`)
-    glm::vec2 m_sprite_unpacker_dimensions{};
+    glm::uvec2 m_sprite_unpacker_dimensions{};
+    // Specification for loading a texture from memory
+    // Not required if loading a texture from disk
+    struct in_memory_specification_t
+    {
+        // Resource name used to generate the raw and virtual handles
+        std::string m_name;
+        // Pointer to image loaded into memory for an in-memory texture
+        // Used when loading textures from memory
+        const void* m_memory_data_ptr = nullptr;
+        // Texture specification which contains details like image format
+        backend::texture_specification_t m_texture_specification{};
+    } m_in_memory_specification{};
 };
 
 struct texture_metadata_t
 {
     std::string m_path{};
     bool m_is_atlas = false;
+    bool m_is_memory_only = false;
 
     // return the size (in bytes) of the memory allocated
     [[nodiscard]] auto get_allocated_bytes() const noexcept -> size_t
@@ -90,6 +103,10 @@ public:
 
     inline static constexpr const char* k_missing_texture_file_path = "resources/textures/missing_texture.png";
     inline static constexpr const char* k_missing_texture_krn_cstr = "kb::texture::missing_texture";
+    inline static constexpr raw_texture_handle k_missing_texture_raw_handle = raw_texture_handle::into(std::string_view{ k_missing_texture_file_path });
+    inline static constexpr virtual_texture_handle k_missing_texture_virtual_handle = virtual_texture_handle::into(
+        std::string_view{ k_missing_texture_krn_cstr }
+    );
 
 public:
     virtual_texture_registry() noexcept = default;
@@ -100,6 +117,12 @@ public:
     [[nodiscard]] auto load_texture(
         const virtual_texture_specification_t& p_specification
     ) noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto load_texture_from_memory(
+        std::string_view p_texture_name,
+        const backend::texture_specification_t& p_texture_specification,
+        const void* p_data,
+        bool p_is_atlas
+    ) noexcept -> virtual_texture_handle;
     [[nodiscard]] auto load_individual_texture(
         std::filesystem::path p_texture_path
     ) noexcept -> virtual_texture_handle;
@@ -107,8 +130,16 @@ public:
         std::filesystem::path p_atlas_path
     ) noexcept -> virtual_texture_handle;
 
+    auto release_texture(virtual_texture_handle p_handle) noexcept -> void;
+
+    // Create a virtual texture handle from a filepath
     [[nodiscard]] static auto create_virtual_texture_handle(
         const std::filesystem::path& p_file_path
+    ) noexcept -> virtual_texture_handle;
+
+    // Create a virtual texture handle from a resource name
+    [[nodiscard]] static auto create_virtual_texture_handle(
+        std::string_view p_name
     ) noexcept -> virtual_texture_handle;
 
     // process all imported textures
@@ -183,6 +214,8 @@ private:
     auto create_texture_atlases() noexcept -> void;
     // handler for importing textures from disk
     auto import_texture_from_disk(const virtual_texture_specification_t& p_specification) noexcept -> raw_texture_handle;
+    // handler for importing in-memory textures
+    auto import_texture_from_memory(const virtual_texture_specification_t& p_specification) noexcept -> raw_texture_handle;
     // load missing texture data
     auto import_missing_texture() noexcept -> void;
 

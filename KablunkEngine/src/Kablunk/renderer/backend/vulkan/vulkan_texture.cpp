@@ -36,7 +36,7 @@ vulkan_texture_2d::vulkan_texture_2d(
 	spec.debug_name = "FIXME";
 	//if (properties.Storage)
 	//	spec.usage = ImageUsage::Storage;
-	m_image = image_2d::create(spec);
+	m_image = image_2d::create(spec).As<vulkan_image_2d>();
 
     arc instance{ this };
 	render::submit([instance]() mutable
@@ -64,7 +64,7 @@ vulkan_texture_2d::vulkan_texture_2d(weak_ptr<vulkan_logical_device> p_device, s
 	spec.height = m_height;
 	spec.mips = 1; // #TODO mipmaps
 	spec.debug_name = "UNKNOWN_DEBUG_IMG_NAME";
-	m_image = image_2d::create(spec);
+	m_image = image_2d::create(spec).As<vulkan_image_2d>();
 
 
     arc instance{ this };
@@ -92,6 +92,18 @@ void vulkan_texture_2d::resize(u32 width, u32 height)
 		{
 			instance->invalidate();
 		});
+}
+
+u32 vulkan_texture_2d::get_mip_level_count() const noexcept
+{
+    KB_CORE_ASSERT(false, "[vulkan_texture_2d]: Not implemented!");
+    return 0;
+}
+
+std::pair<u32, u32> vulkan_texture_2d::get_mip_size(u32 p_mip) const noexcept
+{
+    KB_CORE_ASSERT(false, "[vulkan_texture_2d]: Not implemented!");
+    return {};
 }
 
 owning_buffer& vulkan_texture_2d::get_writeable_buffer()
@@ -283,7 +295,7 @@ void vulkan_texture_2d::invalidate()
 	VkImageViewCreateInfo view_create_info{};
 	view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	view_create_info.format = util::VulkanImageFormat(m_format);
+	view_create_info.format = util::get_vk_image_format(m_format);
 	view_create_info.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
 	// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
@@ -319,7 +331,7 @@ bool vulkan_texture_2d::load_image(const std::string& filepath)
 	}
 	else
 	{
-        stbi_set_flip_vertically_on_load(1);
+        // stbi_set_flip_vertically_on_load(1);
 		data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 		const auto size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4ull;
 		m_image_data.allocate(size);

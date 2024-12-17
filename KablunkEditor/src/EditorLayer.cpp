@@ -60,9 +60,10 @@ namespace kb
 		: Layer("EditorLayer"), m_editor_camera{ 45.0f, 1.778f, 0.1f, 1000.0f },
         m_project_properties_panel{ arc<Project>{} }, m_asset_registry_panel{}, m_asset_editor_panel{ arc<AssetEditorPanel>::Create() }, m_content_browser_panel{ m_asset_editor_panel }
 	{
-		m_icon_play = render::backend::texture_2d::create("Resources/icons/play_icon.png");
-		m_icon_stop = render::backend::texture_2d::create("Resources/icons/stop_icon.png");
-		m_icon_pause = render::backend::texture_2d::create("Resources/icons/pause_icon.png");
+        // TODO: clean up
+		m_icon_play = render::get_texture_2d(render::create_texture("Resources/icons/play_icon.png"));
+		m_icon_stop = render::get_texture_2d(render::create_texture("Resources/icons/stop_icon.png"));
+		m_icon_pause = render::get_texture_2d(render::create_texture("Resources/icons/pause_icon.png"));
 
 		memset(s_project_filepath_buffer, 0, MAX_PROJECT_FILEPATH_LENGTH);
 		memset(s_project_name_buffer, 0, MAX_PROJECT_NAME_LENGTH);
@@ -257,6 +258,43 @@ namespace kb
 			UI::PropertyReadOnlyUint64("Editor Scene UUID", m_editor_scene->GetUUID());
 			UI::PropertyReadOnlyUint64("Runtime Scene UUID", m_runtime_scene.get() ? m_runtime_scene->GetUUID() : 0ull);
 
+            // Scene directional light
+			{
+                auto& directional_light = m_active_scene->get_directional_light_data();
+
+                bool enabled = directional_light.m_enabled;
+                if (UI::Property("Directional Light Enabled", &enabled))
+                {
+                    directional_light.m_enabled = enabled;
+                }
+
+                auto& direction = directional_light.m_direction;
+                glm::vec3 dir{
+                    direction.x,
+                    direction.y,
+                    direction.z,
+                };
+                if (UI::Property("Directional Light Direction", dir, 0.1f, -1.0f, 1.0f))
+                {
+                    direction.x = dir.x;
+                    direction.y = dir.y;
+                    direction.z = dir.z;
+                }
+
+                auto& radiance = directional_light.m_radiance;
+                glm::vec3 rad{
+                    radiance.x,
+                    radiance.y,
+                    radiance.z,
+                };
+                if (UI::Property("Directional Light Radiance", rad, 0.1f, 0.0f, 1.0f))
+                {
+                    radiance.x = rad.x;
+                    radiance.y = rad.y;
+                    radiance.z = rad.z;
+                }
+			}
+
 			UI::EndProperties();
 
 			ImGui::End();
@@ -286,14 +324,16 @@ namespace kb
 			m_editor_camera.OnViewportResize(width, height);
 			m_viewport_renderer->set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 			m_active_scene->OnViewportResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-			
 
-			// present the viewport (image) using imgui
+			// Present the viewport (image) using imgui
+            // Flip UV coordinates to convert from right-handed (Vulkan) to left-handed (OpenGL)
 			UI::Image(
 				m_viewport_renderer->get_final_render_pass_image(),
-				{ m_viewport_size.x, m_viewport_size.y }
+				{ m_viewport_size.x, m_viewport_size.y },
+                { 0, 1 },
+                { 1, 0 }
 			);
-			
+
 			// store viewport size and position in renderer
 			ImVec2 viewport_pos = ImGui::GetWindowPos();
 			Singleton<render::Renderer>::get().m_viewport_pos = glm::vec2{ viewport_pos.x, viewport_pos.y };
@@ -353,9 +393,8 @@ namespace kb
 
 				float snap_values[3] = { snap_value, snap_value, snap_value };
 
-
 				ImGuizmo::Manipulate(glm::value_ptr(m_editor_camera.GetViewMatrix()),
-					glm::value_ptr(m_editor_camera.GetUnreversedProjection()),
+					glm::value_ptr(m_editor_camera.GetProjection()),
 					static_cast<ImGuizmo::OPERATION>(m_gizmo_type),
 					ImGuizmo::LOCAL,
 					glm::value_ptr(transform),
@@ -779,7 +818,7 @@ namespace kb
 	{
 		m_scene_state = SceneState::Play;
 		//m_active_scene->OnStartRuntime();
-		
+
 		if (ProjectManager::get().get_active())
 			if (ProjectManager::get().get_active()->GetConfig().Reload_csharp_script_assemblies_on_play)
 				CSharpScriptEngine::ReloadAssembly(ProjectManager::get().get_active()->get_csharp_script_module_file_path());
@@ -927,7 +966,6 @@ namespace kb
 			{
 				m_scene_hierarchy_panel.SetSelectionContext(m_selected_entity);
 				// #TODO ray cast mouse picking?
-
 			}
 
 		return false;
@@ -1290,7 +1328,7 @@ namespace kb
 		{
 			if (pixel_data != -1)
 			{
-				EntityHandle handle{ static_cast<uint64_t>(pixel_data) };
+				entity_handle_t handle{ static_cast<uint64_t>(pixel_data) };
 				m_selected_entity = { handle, m_active_scene.get() };
 			}
 			else // Make sure we are not trying to use a gizmo and we are not using the editor camera
@@ -1300,56 +1338,54 @@ namespace kb
 
 	void EditorLayer::OnOverlayRender()
 	{
-		if (!m_viewport_renderer->get_final_render_pass_image())
+		if (!m_viewport_renderer->get_final_render_pass_image() || true)
 			return;
 
+        camera* camera = nullptr;
+        glm::mat4 transform = glm::mat4{ 1.0f };
+
+        switch (m_scene_state)
+        {
+        case SceneState::Play:
+        {
+            auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
+            camera = &cam_entity.GetComponent<CameraComponent>().Camera;
+            transform = cam_entity.GetComponent<TransformComponent>().GetTransform();
+            if (!cam_entity.Valid())
+            {
+                KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
+                return;
+            }
+            break;
+        }
+        case SceneState::Edit:
+        {
+            camera = &m_editor_camera;
+            transform = m_editor_camera.GetViewMatrix();
+            break;
+        }
+        case SceneState::Pause:
+        {
+            camera = &m_editor_camera;
+            transform = m_editor_camera.GetViewMatrix();
+            break;
+        }
+        }
+
+        if (!camera)
+        {
+            KB_CORE_ASSERT(false, "could not find camera!");
+            return;
+        }
+
+        m_renderer_2d->set_target_frame_buffer(
+            m_viewport_renderer->get_external_composite_frame_buffer()
+        );
+        m_renderer_2d->begin_scene(*camera, transform);
+        
 		if (m_show_physics_colliders)
 		{
-			
-			camera* camera = nullptr;
-			glm::mat4 transform = glm::mat4{ 1.0f };
-
-			switch (m_scene_state)
-			{
-				case SceneState::Play:
-				{
-					auto cam_entity = m_active_scene->GetPrimaryCameraEntity();
-					camera = &cam_entity.GetComponent<CameraComponent>().Camera;
-					transform = cam_entity.GetComponent<TransformComponent>().GetTransform();
-					if (!cam_entity.Valid())
-					{
-						KB_CORE_ERROR("Cannot render overlay in runtime scene because there is no main camera!");
-						return;
-					}
-					break;
-				}
-				case SceneState::Edit:
-				{
-					camera = &m_editor_camera;
-					transform = m_editor_camera.GetViewMatrix();
-					break;
-				}
-				case SceneState::Pause:
-				{
-					camera = &m_editor_camera;
-					transform = m_editor_camera.GetViewMatrix();
-					break;
-				}
-			}
-
-			if (!camera)
-			{
-				KB_CORE_ASSERT(false, "could not find camera!");
-				return;
-			}
-
 			// #TODO move to scene renderer
-
-			m_renderer_2d->begin_scene(*camera, transform);
-			m_renderer_2d->set_target_frame_buffer(
-                m_viewport_renderer->get_external_composite_frame_buffer()
-            );
-
 			const glm::vec4 LIGHT_GREEN_COL = glm::vec4{ 0.1f, 0.9f, 0.1f, 1.0f };
 
 			// Rectangles (Quads)
@@ -1364,7 +1400,6 @@ namespace kb
 
 					//auto transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
 					m_renderer_2d->draw_rect(translate, scale, 0, LIGHT_GREEN_COL);
-
 				}
 			}
 			// Circles
@@ -1380,11 +1415,10 @@ namespace kb
 					m_renderer_2d->draw_circle(transform, LIGHT_GREEN_COL, cc2D_comp.Radius, 0.025f);
 				}
 			}
-
-
-			m_renderer_2d->end_scene();
-			
 		}
+
+        
+        m_renderer_2d->end_scene();
 	}
 
 	std::pair<glm::vec3, glm::vec3> EditorLayer::RayCast(const EditorCamera& camera, float mx, float my)

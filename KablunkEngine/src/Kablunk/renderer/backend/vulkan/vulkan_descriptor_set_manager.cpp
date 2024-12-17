@@ -423,7 +423,7 @@ auto vulkan_descriptor_set_manager::bake() noexcept -> void
                         for (size_t i = 0; i < input.m_input.size(); ++i)
                         {
                             auto texture = input.m_input[i].As<vulkan_texture_2d>();
-                            image_info_storage[image_info_storage_index][i] = texture->GetVulkanDescriptorInfo();
+                            image_info_storage[image_info_storage_index][i] = texture->get_vk_descriptor_image_info();
                         }
 
                         vk_write_descriptor.pImageInfo = image_info_storage[image_info_storage_index].data();
@@ -432,7 +432,7 @@ auto vulkan_descriptor_set_manager::bake() noexcept -> void
                     else
                     {
                         auto texture = input.m_input[0].As<vulkan_texture_2d>();
-                        vk_write_descriptor.pImageInfo = &texture->GetVulkanDescriptorInfo();
+                        vk_write_descriptor.pImageInfo = &texture->get_vk_descriptor_image_info();
                     }
                     stored_write_descriptor.m_resource_handles[0] = vk_write_descriptor.pImageInfo->imageView;
 
@@ -610,10 +610,11 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                     if (vulkan_texture == arc<vulkan_texture_2d>{})
                     {
                         // #TODO should be a missing texture
-                        vulkan_texture = Singleton<Renderer>::get().get_white_texture()
+                        vulkan_texture = Singleton<Renderer>::get()
+                            .get_white_texture()
                             .As<vulkan_texture_2d>();
                     }
-                    const auto& image_info = vulkan_texture->GetVulkanDescriptorInfo();
+                    const auto& image_info = vulkan_texture->get_vk_descriptor_image_info();
 
                     if (image_info.imageView !=
                         m_write_descriptor_map[frame_index].at(set).at(binding).m_resource_handles.at(i))
@@ -725,7 +726,7 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                     for (size_t i = 0; i < input.m_input.size(); ++i)
                     {
                         auto texture = input.m_input[i].As<vulkan_texture_2d>();
-                        image_info_storage[image_info_storage_index][i] = texture->GetVulkanDescriptorInfo();
+                        image_info_storage[image_info_storage_index][i] = texture->get_vk_descriptor_image_info();
                         write_descriptor.m_resource_handles[i] =
                             image_info_storage[image_info_storage_index][i].imageView;
                     }
@@ -735,7 +736,7 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                 else
                 {
                     auto texture = input.m_input.at(0).As<vulkan_texture_2d>();
-                    vk_write_descriptor_set.pImageInfo = &texture->GetVulkanDescriptorInfo();
+                    vk_write_descriptor_set.pImageInfo = &texture->get_vk_descriptor_image_info();
                     write_descriptor.m_resource_handles.at(0) = vk_write_descriptor_set.pImageInfo->imageView;
                 }
 

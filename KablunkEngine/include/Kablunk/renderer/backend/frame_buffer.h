@@ -69,6 +69,8 @@ struct frame_buffer_specification_t
 	bool m_clear_color_on_load = true;
     // flag to set the frame buffer to clear depth during the beginning of a render apss
     bool m_clear_depth_on_load = true;
+    // depth clear value
+    f32 m_depth_clear_value = 0.0f;
     // flag to allow frame buffer resizing
 	bool m_no_resize = false;
     // flag to allow transparency blending should be enabled

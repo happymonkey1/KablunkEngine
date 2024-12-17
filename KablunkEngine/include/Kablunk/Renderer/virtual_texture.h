@@ -20,4 +20,6 @@ struct virtual_texture_t
     [[nodiscard]] auto get_height() const noexcept -> u32 { return m_dimensions.m_storage.m_data[1]; }
 };
 
+static_assert(sizeof(virtual_texture_t) <= 64);
+
 } // end namespace kb::render

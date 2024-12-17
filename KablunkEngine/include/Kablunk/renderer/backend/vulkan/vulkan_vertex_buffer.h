@@ -32,12 +32,28 @@ public:
 	~vulkan_vertex_buffer() override;
 
 	void bind() const override;
+
+    auto rt_vk_bind_buffer(
+        const VkCommandBuffer p_vk_command_buffer,
+        const u32 p_binding
+    ) const noexcept -> void
+    {
+        constexpr VkDeviceSize k_offsets[1] = { 0 };
+        vkCmdBindVertexBuffers(
+            p_vk_command_buffer,
+            p_binding,
+            1,
+            &m_vk_buffer,
+            k_offsets
+        );
+    }
+
 	void unbind() const override;
 
 	void set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
 	void rt_set_data(const void* data, uint32_t size, uint32_t offset = 0) override;
 
-	VkBuffer GetVkBuffer() const { return m_vk_buffer; }
+	VkBuffer get_vk_buffer() const { return m_vk_buffer; }
 
 	void set_layout(const buffer_layout& layout) override;
 	const buffer_layout& get_layout() const override;

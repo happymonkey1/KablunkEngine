@@ -21,6 +21,7 @@ namespace kb::asset
 
 bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IAsset>& asset) const
 {
+#if 0
 	asset = render::backend::texture_2d::create(m_asset_manager->get_absolute_path(metadata).string()).As<IAsset>();
 	asset->set_id(metadata.id);
 
@@ -29,6 +30,9 @@ bool TextureAssetSerializer::try_load_data(const AssetMetadata& metadata, arc<IA
 		asset->set_flag(AssetFlag::Invalid, true);
 
 	return success;
+#endif
+    KB_CORE_ASSERT(false, "[TextureAssetSerializer]: Deprecated!");
+    return false;
 }
 
 // ======================

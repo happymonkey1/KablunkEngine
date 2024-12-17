@@ -8,6 +8,7 @@
 #include "Kablunk/renderer/shader_library.h"
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/Mesh.h"
+#include "Kablunk/renderer/virtual_texture_registry.h"
 #include "Kablunk/renderer/backend/pipeline.h"
 #include "Kablunk/renderer/backend/material.h"
 #include "Kablunk/renderer/backend/render_command_queue.h"
@@ -19,7 +20,6 @@
 
 #include "Kablunk/Renderer/backend/backend_type.h"
 #include "Kablunk/renderer/backend/graphics_context.h"
-#include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
 namespace kb
 { // start namespace kb
@@ -33,9 +33,18 @@ namespace kb::render
 
 constexpr uint32_t MAX_POINT_LIGHTS = 16;
 
+enum class renderer_pipeline_type_t
+{
+    // Physically based rendering pipeline
+    pbr,
+    // Basic diffuse (phong shading) rendering pipeline
+    basic
+};
+
 struct renderer_options_t
 {
     uint32_t frames_in_flight = 3;
+    renderer_pipeline_type_t m_renderer_pipeline_type = renderer_pipeline_type_t::basic;
 };
 
 class Renderer
@@ -43,11 +52,6 @@ class Renderer
 public:
     // type alias for main render thread function
     using render_thread_func_t = void(*)(Renderer*, render_thread*);
-
-    // #TODO expose compile time backend switch
-    inline static constexpr backend::render_backend_type_t k_render_backend_type = backend::render_backend_type_t::vulkan;
-    using underlying_render_backend_t = backend::vk::vulkan_render_backend;
-    using render_backend_t = backend::render_backend<underlying_render_backend_t>;
 
 public:
     void init();
@@ -63,23 +67,36 @@ public:
 
     uint32_t get_current_frame_index() const noexcept;
 
-    arc<shader_library> GetShaderLibrary();
-    arc<backend::shader> GetShader(const std::string& name);
+    // Retrieve an immutable arc to the shader library
+    const arc<shader_library>& get_shader_library();
+    // Retrieve (and load if not already in the shader library) a shader
+    const arc<backend::shader>& get_shader(const std::string& name);
+
+    // Retrieve an immutable reference to the virtual texture registry
+    auto get_virtual_texture_registry() const noexcept -> const virtual_texture_registry&
+    {
+        return *m_virtual_texture_registry;
+    }
+
+    // Retrieve a mutable reference to the virtual texture registry
+    auto get_virtual_texture_registry() noexcept -> virtual_texture_registry&
+    {
+        return *m_virtual_texture_registry;
+    }
 
     const renderer_options_t& get_config() const noexcept { return m_options; }
+    auto get_renderer_pipeline_type() const noexcept -> renderer_pipeline_type_t { return m_options.m_renderer_pipeline_type; }
 
     // \brief get the viewport's os screen position within the application
     const glm::vec2& get_viewport_pos() const { return m_viewport_pos; }
     // \brief get the viewport's size
     const glm::vec2& get_viewport_size() const { return m_viewport_size; }
 
-    static constexpr auto get_render_backend_type() noexcept -> backend::render_backend_type_t
-    {
-        return k_render_backend_type;
-    }
+    // Retrieve the render backend type
+    auto get_render_backend_type() const noexcept -> backend::render_backend_type_t { return m_backend_type; }
 
-    auto get_render_backend() const noexcept -> const render_backend_t& { return m_backend; }
-    auto get_render_backend() noexcept -> render_backend_t& { return m_backend; }
+    auto get_render_backend() const noexcept -> weak_ptr<const backend::render_backend> { return m_backend; }
+    auto get_render_backend() noexcept -> weak_ptr<backend::render_backend> { return m_backend; }
 
     // Retrieves a weak arc to the graphics context
     auto get_graphics_context() const noexcept -> weak_ptr<backend::graphics_context>
@@ -90,18 +107,35 @@ public:
     // Retrieves a mutable reference arc to the graphics context
     auto get_graphics_context() noexcept -> weak_ptr<backend::graphics_context> { return m_context; }
 
-	// ==============
-	// multithreading
-	// ==============
+    // ============
+    //   Textures
+    // ============
+
+    [[nodiscard]] auto create_texture(
+        const std::filesystem::path& p_filepath
+    ) const noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto create_texture(
+        std::string_view p_name,
+        backend::texture_specification_t p_specification,
+        const void* p_data,
+        bool p_is_atlas = false
+    ) const noexcept -> virtual_texture_handle;
+    [[nodiscard]] auto get_texture_2d(virtual_texture_handle p_handle) const noexcept -> const arc<backend::texture_2d>&;
+
+    // ============
+
+	// ==================
+	//   multithreading
+	// ==================
 
 	// wait for frame data to finish rendering
-	void wait_and_render(render_thread* rendering_thread);
+	void wait_and_render(render_thread* p_rendering_thread);
 	// main render function which runs on render thread
 	void render_thread_func(render_thread* rendering_thread);
 	// swap rendering command queues
 	void swap_queues();
 	// get the current render queue index
-	u32 get_render_command_queue_index() const { return (m_render_command_queue_submission_index + 1) % s_render_command_queue_size; }
+	u32 get_render_command_queue_index() const { return (m_render_command_queue_submission_index + 1) % k_render_command_queue_size; }
 	// get the current render queue submission index
 	u32 get_render_command_queue_submission_index() const { return m_render_command_queue_submission_index; }
 
@@ -114,7 +148,7 @@ public:
 	// get a mutable reference to a resource release queue
     backend::render_command_queue& get_resource_free_queue(size_t index)
 	{
-	    KB_CORE_ASSERT(index < s_resource_free_queue_size, "index out of bounds!");
+	    KB_CORE_ASSERT(index < k_resource_free_queue_size, "index out of bounds!");
 	    return m_resource_free_queue[index];
 	}
 
@@ -184,13 +218,15 @@ private:
         std::vector<arc<backend::compute_pipeline>> compute_pipelines;
 	};
 
-	unordered_flat_map<uint64_t, shader_dependencies_t> m_shader_dependencies;
-	renderer_options_t m_options = { };
-	arc<shader_library> m_shader_library;
-    // #TODO expose changing render backend at compile time...
-    render_backend_t m_backend{};
+	unordered_flat_map<uint64_t, shader_dependencies_t> m_shader_dependencies{};
+	renderer_options_t m_options = {};
+	arc<shader_library> m_shader_library{};
+    std::unique_ptr<virtual_texture_registry> m_virtual_texture_registry{};
 
-    arc<backend::graphics_context> m_context;
+    arc<backend::graphics_context> m_context{};
+
+    backend::render_backend* m_backend{};
+    backend::render_backend_type_t m_backend_type = backend::render_backend_type_t::vulkan;
 
 	// store the viewport's os screen position within the application
 	// used for calculating screen to world space in the editor
@@ -201,15 +237,15 @@ private:
 	// submission index of render command queue
 	std::atomic<u32> m_render_command_queue_submission_index = 0;
 	// number of render command queues
-	constexpr static u32 s_render_command_queue_size = 3;
-	constexpr static u32 s_resource_free_queue_size = 3;
+	constexpr static u32 k_render_command_queue_size = 3;
+	constexpr static u32 k_resource_free_queue_size = 3;
     // White 1x1 texture in memory, usually used for default or uninitialized textures
     arc<backend::texture_2d> m_white_texture{};
 
 	// resource freeing queues
-    backend::render_command_queue m_resource_free_queue[s_resource_free_queue_size]{};
+    backend::render_command_queue m_resource_free_queue[k_resource_free_queue_size]{};
 	// render command queues
-    backend::render_command_queue m_command_queues[s_render_command_queue_size];
+    backend::render_command_queue m_command_queues[k_render_command_queue_size]{};
 
 	friend class ::kb::EditorLayer;
 };

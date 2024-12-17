@@ -41,7 +41,7 @@ void SetImageLayout(
 );
 
 // Convert between Kablunk image format and vulkan image format
-inline VkFormat VulkanImageFormat(image_format_t format)
+inline VkFormat get_vk_image_format(image_format_t format)
 {
     switch (format)
     {

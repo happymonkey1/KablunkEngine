@@ -10,6 +10,7 @@
 #include "kablunk/renderer/backend/vulkan/vulkan_texture.h"
 #include "kablunk/renderer/backend/vulkan/vulkan_api.h"
 #include "kablunk/renderer/backend/vulkan/VulkanRendererAPI.h"
+#include "Kablunk/renderer/backend/vulkan/vulkan_render_backend.h"
 
 namespace kb::render::backend::vk
 { // start namespace kb::render::backend::vk
@@ -30,6 +31,7 @@ vulkan_material::vulkan_material(arc<material> p_material, const std::string& na
 	if (name.empty())
 		m_name = p_material->get_name();
 
+    Init();
 	render::register_shader_dependency(m_shader.As<shader>(), arc<material>{ this });
 
 	auto vk_material = p_material.As<vulkan_material>();

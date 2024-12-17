@@ -6,7 +6,7 @@
 namespace kb
 { // start namespace kb
 
-Entity::Entity(EntityHandle handle, weak_ptr<Scene> scene)
+Entity::Entity(entity_handle_t handle, weak_ptr<Scene> scene)
 	: m_entity_handle{ handle }, m_scene{ scene }
 {
 }

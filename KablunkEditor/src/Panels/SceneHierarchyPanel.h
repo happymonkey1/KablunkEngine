@@ -17,19 +17,21 @@ namespace kb
 		SceneHierarchyPanel(const arc<Scene>& context);
 
 		void SetContext(const arc<Scene>& context);
-		
+
 		void OnImGuiRender();
-		
+
 		Entity GetSelectedEntity() const { return m_selection_context; }
-		
-		void SetSelectionContext(EntityHandle handle) { m_selection_context = Entity{ handle, m_context.get() }; }
+
+		void SetSelectionContext(entity_handle_t handle) { m_selection_context = Entity{ handle, m_context.get() }; }
 		void SetSelectionContext(Entity entity) { m_selection_context = entity; }
 
 		void ClearSelectionContext() { m_selection_context = {}; }
+
 	private:
 		void UI_DrawEntityNode(Entity entity, bool draw_child_node = false);
 		void UI_DrawComponents(Entity entity);
 		void UI_RenameScenePopup();
+
 	private:
 		arc<Scene> m_context;
 		Entity m_selection_context;

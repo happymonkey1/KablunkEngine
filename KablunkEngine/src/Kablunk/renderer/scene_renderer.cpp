@@ -15,6 +15,9 @@
 
 #include "Kablunk/Core/Application.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/compatibility.hpp>
+
 namespace kb::render
 { // start namespace kb::render
 
@@ -40,15 +43,151 @@ void scene_renderer::init()
 	else
 		m_command_buffer = backend::render_command_buffer::create(0, "SceneRenderer");
 
-
-	m_bloom_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
-	m_bloom_dirt_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1);
+    constexpr u32 white_texture_data = 0xFFFFFFFF;
+    m_bloom_texture = get_texture_2d(create_texture(
+        "bloom_texture",
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA,
+            .m_width = 1,
+            .m_height = 1,
+            .m_generate_mips = false,
+        },
+        &white_texture_data,
+        false
+    ));
+	m_bloom_dirt_texture = get_texture_2d(create_texture(
+        "bloom_dirt_texture",
+        backend::texture_specification_t{
+            .m_format = backend::image_format_t::RGBA,
+            .m_width = 1,
+            .m_height = 1,
+            .m_generate_mips = false,
+        },
+        &white_texture_data,
+        false
+    ));
 
 	uint32_t frames_in_flight = render::get_frames_in_flight();
-    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(camera_data_ub_t), frames_in_flight);
-    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(sizeof(point_light_ub_t), frames_in_flight);
+    m_renderer_data_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(renderer_data_ub_t),
+        frames_in_flight
+    );
+    m_camera_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(camera_data_ub_t),
+        frames_in_flight
+    );
+    m_point_lights_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(point_light_ub_t),
+        frames_in_flight
+    );
+    m_directional_light_set = backend::uniform_buffer_set::create(
+        sizeof(directional_light_t),
+        frames_in_flight
+    );
+    m_shadow_data_uniform_buffer_set = backend::uniform_buffer_set::create(
+        sizeof(shadow_cascade_data_ub_t),
+        frames_in_flight
+    );
 
 	m_storage_buffer_set = nullptr;//StorageBufferSet::Create(frames_in_flight);
+
+    backend::buffer_layout vertex_buffer_layout = {
+        { backend::shader_data_type_t::Float3, "a_Position" },
+        { backend::shader_data_type_t::Float3, "a_Normal" },
+        { backend::shader_data_type_t::Float3, "a_Tangent" },
+        { backend::shader_data_type_t::Float3, "a_Binormal" },
+        { backend::shader_data_type_t::Float2, "a_TexCoord" }
+    };
+
+    backend::buffer_layout instance_buffer_layout = {
+        { backend::shader_data_type_t::Float4, "a_MRow0" },
+        { backend::shader_data_type_t::Float4, "a_MRow1" },
+        { backend::shader_data_type_t::Float4, "a_MRow2" },
+    };
+
+    // Directional shadow pass
+    {
+        u32 shadow_map_resolution = 4096;
+
+        backend::image_specification_t depth_image_spec{
+            .format = backend::image_format_t::DEPTH32F,
+            .usage = backend::image_usage_t::Attachment,
+            .width = shadow_map_resolution,
+            .height = shadow_map_resolution,
+            .mips = 1,
+            .layers = k_max_cascades,
+            .deinterleaved = false,
+            .m_transfer = false,
+            .debug_name = "Depth"
+        };
+        auto dir_shadow_map_depth_image = backend::image_2d::create(depth_image_spec);
+        dir_shadow_map_depth_image->invalidate();
+        if (k_max_cascades > 1) // TODO: should be configurable instead of max cascades
+        {
+            dir_shadow_map_depth_image->create_per_layer_image_views();
+        }
+
+        backend::frame_buffer_specification_t dir_shadow_frame_buffer_spec{};
+        dir_shadow_frame_buffer_spec.m_attachments = {
+            backend::image_format_t::DEPTH32F
+        };
+        dir_shadow_frame_buffer_spec.m_width = shadow_map_resolution;
+        dir_shadow_frame_buffer_spec.m_height = shadow_map_resolution;
+        dir_shadow_frame_buffer_spec.m_clear_color = { 0.f, 0.f, 0.f, 0.f };
+        dir_shadow_frame_buffer_spec.m_clear_depth_on_load = true;
+        dir_shadow_frame_buffer_spec.m_no_resize = true;
+        dir_shadow_frame_buffer_spec.m_depth_clear_value = 1.0f;
+        dir_shadow_frame_buffer_spec.m_existing_image = dir_shadow_map_depth_image;
+
+        const auto& dir_shadow_shader = get_shader(shader_library::k_directional_shadows_shader_name);
+        backend::pipeline_specification_t dir_shadow_pipeline_spec{
+            .shader = dir_shadow_shader,
+            .m_target_frame_buffer = {}, // Set per cascade
+            .layout = vertex_buffer_layout,
+            .instance_layout = instance_buffer_layout,
+            .topology = backend::primitive_topology_t::triangles,
+            .m_depth_compare_op = backend::depth_compare_op_t::less_or_equal,
+            .backface_culling = true,
+            .depth_test = true,
+            .depth_write = true,
+            .wireframe = false,
+            .debug_name = "scene_renderer::pipeline::directional_shadow_map"
+        };
+
+        backend::render_pass_specification dir_shadow_render_pass_spec{
+            .m_pipeline = {}, // Set per cascade
+            .m_debug_name = "scene_renderer::render_pass::directional_shadow_map"
+        };
+
+        size_t cascade_index = 0;
+        for (auto& directional_shadow_pass : m_directional_shadow_pass)
+        {
+            dir_shadow_frame_buffer_spec.m_existing_image_layers.clear();
+            dir_shadow_frame_buffer_spec.m_existing_image_layers.emplace_back(cascade_index);
+
+            dir_shadow_pipeline_spec.m_target_frame_buffer = backend::frame_buffer::create(dir_shadow_frame_buffer_spec);
+
+            dir_shadow_render_pass_spec.m_pipeline = backend::pipeline::create(dir_shadow_pipeline_spec);
+
+            directional_shadow_pass = backend::render_pass::create(dir_shadow_render_pass_spec);
+            directional_shadow_pass->set_input(
+                "ShadowCascadesData",
+                m_shadow_data_uniform_buffer_set
+            );
+            KB_CORE_ASSERT(
+                directional_shadow_pass->validate(),
+                "[scene_renderer]: Directional shadow pass validation failed!"
+            );
+            directional_shadow_pass->bake();
+
+            cascade_index++;
+        }
+
+        m_dir_shadow_pass_material = backend::material::create(
+            dir_shadow_shader,
+            "scene_renderer::material::dir_shadow_pass"
+        );
+    }
 
     // Geometry
 	{
@@ -56,31 +195,40 @@ void scene_renderer::init()
         geometry_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
         geometry_frame_buffer_spec.m_samples = 1;
         geometry_frame_buffer_spec.m_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+        geometry_frame_buffer_spec.m_depth_clear_value = 0.0f;
         geometry_frame_buffer_spec.m_debug_name = "Geometry";
         //geometry_frame_buffer_spec.m_transfer = true;
         geometry_frame_buffer_spec.m_clear_color_on_load = true;
         geometry_frame_buffer_spec.m_clear_depth_on_load = true;
         arc<backend::frame_buffer> frame_buffer = backend::frame_buffer::create(geometry_frame_buffer_spec);
 
+        arc<backend::shader> geo_shader;
+        switch (get_renderer_pipeline_type())
+        {
+        case renderer_pipeline_type_t::basic:
+        {
+            geo_shader = get_shader(shader_library::k_diffuse_static_shader_name);
+            break;
+        }
+        case renderer_pipeline_type_t::pbr:
+        {
+            geo_shader = get_shader(shader_library::k_pbr_static_shader_name);
+            break;
+        }
+        default:
+            KB_CORE_ASSERT(false, "[scene_renderer]: Cannot select geometry shader for unhandled renderer pipeline type!");
+        }
+
         backend::pipeline_specification_t pipeline_spec{
-            .shader = render::get_shader("Kablunk_diffuse_static"),
+            .shader = geo_shader,
             .m_target_frame_buffer = frame_buffer,
-            .layout = {
-                { backend::shader_data_type_t::Float3, "a_Position" },
-                { backend::shader_data_type_t::Float3, "a_Normal" },
-                { backend::shader_data_type_t::Float3, "a_Tangent" },
-                { backend::shader_data_type_t::Float3, "a_Binormal" },
-                { backend::shader_data_type_t::Float2, "a_TexCoord" }
-            },
-            .instance_layout = {
-                { backend::shader_data_type_t::Float4, "a_MRow0" },
-                { backend::shader_data_type_t::Float4, "a_MRow1" },
-                { backend::shader_data_type_t::Float4, "a_MRow2" },
-            },
+            .layout = vertex_buffer_layout,
+            .instance_layout = instance_buffer_layout,
             .topology = backend::primitive_topology_t::triangles,
-            .backface_culling = false,
-            .depth_test = false,
-            .depth_write = false,
+            .m_depth_compare_op = backend::depth_compare_op_t::greater_or_equal,
+            .backface_culling = true,
+            .depth_test = true,
+            .depth_write = true,
             .wireframe = false,
             .debug_name = "scene_renderer::pipeline::geometry"
 		};
@@ -94,6 +242,10 @@ void scene_renderer::init()
 
         m_geometry_pass->set_input("Camera", m_camera_uniform_buffer_set);
         m_geometry_pass->set_input("PointLightsData", m_point_lights_uniform_buffer_set);
+        m_geometry_pass->set_input("DirectionalLightData", m_directional_light_set);
+        m_geometry_pass->set_input("ShadowCascadesData", m_shadow_data_uniform_buffer_set);
+        m_geometry_pass->set_input("u_ShadowMapTexture", m_directional_shadow_pass[0]->get_depth_output());
+        m_geometry_pass->set_input("RendererData", m_renderer_data_uniform_buffer_set);
 
         KB_CORE_ASSERT(m_geometry_pass->validate(), "Geometry pass validation failed!");
         m_geometry_pass->bake();
@@ -102,7 +254,7 @@ void scene_renderer::init()
 	// Composite
 	{
         backend::frame_buffer_specification_t composite_frame_buffer_spec{};
-        composite_frame_buffer_spec.m_attachments = {backend::image_format_t::RGBA, backend::image_format_t::Depth };
+        composite_frame_buffer_spec.m_attachments = { backend::image_format_t::RGBA, backend::image_format_t::Depth };
         composite_frame_buffer_spec.m_samples = 1;
         composite_frame_buffer_spec.m_clear_color_on_load = false;
         composite_frame_buffer_spec.m_clear_depth_on_load = false;
@@ -146,49 +298,11 @@ void scene_renderer::init()
         m_composite_pass->bake();
 	}
 
-#if 0
-    render::frame_buffer_specification composite_frame_buffer{};
-    composite_frame_buffer.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-    composite_frame_buffer.m_samples = 1;
-    composite_frame_buffer.m_clear_on_load = false;
-    composite_frame_buffer.m_transfer = false;
-    composite_frame_buffer.m_existing_images[0] = m_composite_pass->get_output_image(0);
-    composite_frame_buffer.m_existing_images[1] = m_geometry_pass->get_depth_output();
-    composite_frame_buffer.m_debug_name = "scene_renderer::frame_buffer::composite";
-
-    m_external_composite_frame_buffer = render::frame_buffer::create(composite_frame_buffer);
-#endif
-
-	// external compositing
-	if (!m_specification.swap_chain_target)
-	{
-#if 0
-		frame_buffer_specification external_composite_framebuffer_spec;
-		external_composite_framebuffer_spec.m_attachments = { ImageFormat::RGBA, ImageFormat::Depth };
-		external_composite_framebuffer_spec.m_clear_color = { 1.0f, 0.1f, 0.1f, 1.0f };
-		external_composite_framebuffer_spec.m_clear_on_load  = false;
-		external_composite_framebuffer_spec.m_debug_name = "External Composite";
-
-		// Use the color buffer from the final compositing pass, but the depth buffer from
-		// the actual 3D geometry pass, in case we want to composite elements behind meshes
-		// in the scene
-		external_composite_framebuffer_spec.m_existing_images[0] = m_composite_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetImage();
-		external_composite_framebuffer_spec.m_existing_images[1] = m_geometry_pipeline->GetSpecification().render_pass->GetSpecification().target_frame_buffer->GetDepthImage();
-
-		arc<Framebuffer> framebuffer = Framebuffer::Create(external_composite_framebuffer_spec);
-
-		render_pass_specification render_pass_spec;
-		render_pass_spec.target_frame_buffer = framebuffer;
-		render_pass_spec.m_debug_name = "External Composite";
-		m_external_composite_render_pass = RenderPass::Create(render_pass_spec);
-#endif
-	}
-
     constexpr size_t transform_buffer_count = 1024;
-	m_transform_buffer = backend::vertex_buffer::create(sizeof(TransformVertexData) * transform_buffer_count);
-	m_transform_vertex_data = new TransformVertexData[transform_buffer_count];
+	m_transform_buffer = backend::vertex_buffer::create(sizeof(transform_vertex_data_t) * transform_buffer_count);
+	m_transform_vertex_data = new transform_vertex_data_t[transform_buffer_count];
 
-    arc<scene_renderer> instance{ this };
+    arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->m_resources_created = true;
@@ -208,6 +322,8 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 	KB_CORE_ASSERT(m_context, "No scene context set!");
 	KB_CORE_ASSERT(!m_active, "Already active!");
 	m_active = true;
+    // reset statistics per frame
+    m_statistics = {};
 
 	if (!m_resources_created)
 		return;
@@ -220,69 +336,13 @@ void scene_renderer::begin_scene(const scene_renderer_camera_t& camera)
 		m_geometry_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 		m_composite_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
 
-#if 0
-		if (m_external_composite_render_pass)
-		{
-            m_external_composite_render_pass->get_target_frame_buffer()->resize(m_viewport_width, m_viewport_height);
-		}
-#endif
-
 		m_needs_resize = false;
 
 		if (m_specification.swap_chain_target)
 			m_command_buffer = backend::render_command_buffer::create_from_swap_chain("SceneRenderer");
 	}
 
-	const auto& scene_camera = m_scene_data.camera;
-	const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
-	const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
-	const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
-	const glm::vec3 camera_position = view_inverse[3];
-
-	const auto inverse_view_projection = glm::inverse(view_projection);
-
-	// Set camera uniform buffer
-	camera_data_ub_t camera_data = {
-		view_projection,
-		scene_camera.camera.GetProjection(),
-		scene_camera.view_mat,
-		camera_position
-	};
-
-    arc<scene_renderer> instance{ this };
-	render::submit([instance, camera_data]() mutable
-		{
-			instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
-		}
-	);
-
-	// Set Renderer Transform
-#if 0
-	render::submit([instance]() mutable
-		{
-			uint32_t buffer_index = render::rt_get_current_frame_index();
-			glm::mat4 transform = glm::mat4{ 1.0f };
-			instance->m_uniform_buffer_set->Get(1, 0, buffer_index)->RT_SetData(&transform, sizeof(glm::mat4));
-		}
-	);
-#endif
-
-	// Submit point lights uniform buffer
-	const auto light_enviornment_copy = m_scene_data.light_environment;
-	const std::vector<PointLight>& point_lights_vec = light_enviornment_copy.point_lights;
-
-	m_point_lights_ub->count = static_cast<uint32_t>(light_enviornment_copy.GetPointLightsSize() / sizeof(PointLight));
-	std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_enviornment_copy.GetPointLightsSize());
-
-	render::submit([instance, point_lights = m_point_lights_ub]() mutable
-		{
-            constexpr size_t point_light_vec_offset = 16ull;
-			instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
-                point_lights,
-                static_cast<uint32_t>(point_light_vec_offset + sizeof(PointLight) * point_lights->count)
-            );
-		}
-	);
+    submit_uniform_buffers();
 }
 
 void scene_renderer::end_scene()
@@ -308,22 +368,46 @@ void scene_renderer::end_scene()
 	m_active = false;
 }
 
-void scene_renderer::submit_mesh(arc<Mesh> mesh, uint32_t submesh_index, arc<MaterialTable> material_table, const glm::mat4& transform /*= glm::mat4{ 1.0f }*/, arc<backend::material> override_material/* = nullptr */)
+void scene_renderer::submit_mesh(
+    const arc<Mesh>& mesh,
+    const arc<material_table>& material_table,
+    const glm::mat4& transform /*= glm::mat4{ 1.0f }*/,
+    const arc<backend::material>& override_material/* = nullptr */
+)
 {
     KB_PROFILE_SCOPE;
 
-	//IntrusiveRef<MeshData> mesh_data = mesh->GetMeshData();
-	//uint32_t material_index = 0; // #TODO fix
-	const auto& submeshes = mesh->GetMeshData()->GetSubmeshes();
-	uint32_t material_index = submeshes[submesh_index].Material_index;
+    const size_t sub_mesh_count = mesh->GetSubmeshes().size();
+    for (size_t sub_mesh_index = 0; sub_mesh_index < sub_mesh_count; ++sub_mesh_index)
+    {
+        const auto& sub_meshes = mesh->GetMeshData()->get_sub_meshes();
+        uint32_t material_index = sub_meshes[sub_mesh_index].Material_index;
 
-	m_transform_vertex_data[m_draw_list.size()].MRow[0] = {transform[0][0], transform[1][0], transform[2][0], transform[3][0]};
-	m_transform_vertex_data[m_draw_list.size()].MRow[1] = {transform[0][1], transform[1][1], transform[2][1], transform[3][1]};
-	m_transform_vertex_data[m_draw_list.size()].MRow[2] = {transform[0][2], transform[1][2], transform[2][2], transform[3][2]};
+        const auto mesh_handle = mesh->get_handle();
+        const mesh_transform_handle mesh_transform_handle{
+            .m_mesh_handle = mesh_handle,
+            .m_sub_mesh_index = static_cast<u32>(sub_mesh_index),
+        };
 
+        // Submit transform
+        auto& transform_data = m_transform_map[mesh_transform_handle].m_transforms.emplace_back();
+        transform_data.MRow[0] = { transform[0][0], transform[1][0], transform[2][0], transform[3][0] };
+        transform_data.MRow[1] = { transform[0][1], transform[1][1], transform[2][1], transform[3][1] };
+        transform_data.MRow[2] = { transform[0][2], transform[1][2], transform[2][2], transform[3][2] };
 
-	// #TODO fix instancing implementation
-	m_draw_list.emplace_back(DrawCommandData{ mesh, submesh_index, material_table, override_material, 1, 0, transform });
+        // Submit draw command
+        auto& draw_command = m_draw_list[mesh_transform_handle];
+        draw_command.Mesh = mesh;
+        draw_command.Submesh_index = sub_mesh_index;
+        draw_command.Material_table = material_table;
+        draw_command.Override_material = override_material;
+        draw_command.Instance_count++;
+    }
+
+    // TODO: I don't think it is correct to count statistics here
+    m_statistics.m_vertices_count += mesh->GetMeshData()->get_vertices().size();
+    m_statistics.m_indices_count += mesh->GetMeshData()->get_indices().size();
+    m_statistics.m_triangle_count += mesh->GetMeshData()->get_triangle_count();
 }
 
 void scene_renderer::set_viewport_size(uint32_t width, uint32_t height)
@@ -360,8 +444,16 @@ void scene_renderer::on_imgui_render(const arc<renderer_2d>& p_renderer_2d)
 
 	uint32_t current_frame_index = rt_get_current_frame_index();
 	ImGui::Text("GPU time: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index));
-	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.geometry_pass_query));
-	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.composite_pass_query));
+    ImGui::Text("Shadow Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_shadow_pass_query));
+	ImGui::Text("Geometry Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_geometry_pass_query));
+	ImGui::Text("Composite Pass: %.3fms", m_command_buffer->get_execution_gpu_time(current_frame_index, m_gpu_time_query_indices.m_composite_pass_query));
+
+    ImGui::Spacing();
+
+    ImGui::Text("Total Draw Calls: %u", m_statistics.m_draw_call_count);
+    ImGui::Text("Vertex Count: %u", m_statistics.m_vertices_count);
+    ImGui::Text("Index Count: %u", m_statistics.m_indices_count);
+    ImGui::Text("Triangle Count: %u", m_statistics.m_triangle_count);
 
     p_renderer_2d->on_imgui_render();
 
@@ -378,9 +470,119 @@ void scene_renderer::wait_for_threads()
 	s_thread_pool.clear();
 }
 
-void scene_renderer::submit_ui_panel(ui::IPanel* panel)
+auto scene_renderer::submit_uniform_buffers() noexcept -> void
 {
-	m_ui_panels_list.push_back(panel);
+    const auto& scene_camera = m_scene_data.camera;
+    const auto view_projection = scene_camera.camera.GetProjection() * scene_camera.view_mat;
+    const glm::mat4 view_inverse = glm::inverse(scene_camera.view_mat);
+    const glm::mat4 projection_inverse = glm::inverse(scene_camera.camera.GetProjection());
+    const glm::vec3 camera_position = view_inverse[3];
+
+    const auto inverse_view_projection = glm::inverse(view_projection);
+
+    arc instance{ this };
+
+    // Set renderer data uniform buffer
+    {
+        renderer_data_ub_t renderer_data{
+        .m_cascade_splits = m_shadow_cascade_data.m_cascade_splits
+        };
+        render::submit([instance, renderer_data]() mutable
+            {
+                instance->m_renderer_data_uniform_buffer_set->rt_get()->rt_set_data(&renderer_data, sizeof(renderer_data_ub_t));
+            }
+        );
+    }
+
+    // Set camera uniform buffer
+    {
+        camera_data_ub_t camera_data = {
+        view_projection,
+        scene_camera.camera.GetProjection(),
+        scene_camera.view_mat,
+        camera_position
+        };
+
+        render::submit([instance, camera_data]() mutable
+            {
+                instance->m_camera_uniform_buffer_set->rt_get()->rt_set_data(&camera_data, sizeof(camera_data));
+            }
+        );
+    }
+
+    // Submit directional and point lights uniform buffers
+    {
+        const auto light_environment_copy = m_scene_data.light_environment;
+        const std::vector<point_light_t>& point_lights_vec = light_environment_copy.m_point_lights;
+
+        m_point_lights_ub->count = static_cast<uint32_t>(point_lights_vec.size());
+        std::memcpy(m_point_lights_ub->point_lights, point_lights_vec.data(), light_environment_copy.GetPointLightsSize());
+
+        // Submit point lights uniform buffer
+        render::submit([instance, point_lights = m_point_lights_ub]() mutable
+            {
+                constexpr size_t k_offset = 16;
+                instance->m_point_lights_uniform_buffer_set->rt_get()->rt_set_data(
+                    point_lights,
+                    static_cast<uint32_t>(k_offset + sizeof(point_light_t) * point_lights->count)
+                );
+            }
+        );
+
+        // Submit directional light uniform buffer
+        render::submit([instance, directional_light_copy = light_environment_copy.m_directional_light]() mutable
+            {
+                instance->m_directional_light_set->rt_get()->rt_set_data(
+                    &directional_light_copy,
+                    sizeof(directional_light_copy)
+                );
+            });
+    }
+
+    // Submit shadow cascade ub data
+    {
+        const auto dir_light_vec3_packed = m_scene_data.light_environment.m_directional_light.m_direction;
+        std::array<shadow_cascade_data_t, k_max_cascades> cascades_data;
+        calculate_shadow_map_data(
+            cascades_data.data(),
+            scene_camera,
+            glm::vec3{ dir_light_vec3_packed.x, dir_light_vec3_packed.y, dir_light_vec3_packed.z }
+        );
+
+        render::submit([instance, cascades_data]() mutable
+            {
+                glm::mat4 mats[k_max_cascades];
+                for (size_t i = 0; i < k_max_cascades; ++i)
+                {
+                    mats[i] = cascades_data[i].m_view_projection;
+                }
+
+                instance->m_shadow_data_uniform_buffer_set->rt_get()->rt_set_data(
+                    mats,
+                    sizeof(glm::mat4) * k_max_cascades
+                );
+            });
+    }
+
+    // Submit cascade splits data
+    {
+        KB_CORE_ASSERT(k_max_cascades == 4, "[scene_renderer]: Max cascades must be 4!");
+        renderer_data_ub_t renderer_data{
+            .m_cascade_splits = {
+                m_shadow_cascade_data.m_shadow_cascade_splits[0],
+                m_shadow_cascade_data.m_shadow_cascade_splits[1],
+                m_shadow_cascade_data.m_shadow_cascade_splits[2],
+                m_shadow_cascade_data.m_shadow_cascade_splits[3],
+            }
+        };
+        render::submit([instance, renderer_data]() mutable
+            {
+                instance->m_renderer_data_uniform_buffer_set->rt_get()->rt_set_data(
+                    &renderer_data,
+                    sizeof(renderer_data_ub_t)
+                );
+            });
+    }
 }
 
 void scene_renderer::flush_draw_list()
@@ -394,9 +596,10 @@ void scene_renderer::flush_draw_list()
 		pre_render();
 
 		// draw 3d geometry
+        shadow_pass();
 		geometry_pass();
 
-		// composite and post processing pass
+		// composite and post-processing pass
 		composite_pass();
 	}
 	else
@@ -409,48 +612,29 @@ void scene_renderer::flush_draw_list()
 
 	m_scene_data = {};
 	m_draw_list = {};
-}
-
-void scene_renderer::flush_2d_draw_list()
-{
-    // disabled when refactoring renderer2d singleton
-    // #TODO refactor
-#if 0
-	// 2d composite and ui pass
-	if (get_final_render_pass_image())
-	{
-		// #TODO assert that the camera is orthographic for screen space panels
-
-		// get camera from scene renderer data
-		const glm::mat4& main_camera_proj = m_scene_data.camera.camera.GetProjection();
-		const glm::mat4& main_camera_transform = m_scene_data.camera.view_mat;
-
-		// start 2d scene rendering
-		render2d::begin_scene(m_scene_data.camera.camera, main_camera_transform);
-		render2d::set_target_render_pass(get_external_composite_render_pass());
-
-		if (m_resources_created && m_viewport_width > 0 && m_viewport_height > 0)
-		{
-			// draw 2d elements
-			two_dimensional_pass();
-
-			// draw ui elements
-			ui_pass();
-		}
-
-		render2d::end_scene();
-	}
-	else
-		KB_CORE_ERROR("[SceneRenderer]: final composite image was not ready for 2d compositing, but renderer is not multithreaded!");
-#endif
-
-	m_entity_list.clear();
-	m_ui_panels_list.clear();
+    m_transform_map.clear();
 }
 
 void scene_renderer::pre_render()
 {
-	// #TODO
+    // Submit transform data
+    {
+        u32 count = 0;
+        for (auto& [mesh_transform_handle, transform_data] : m_transform_map)
+        {
+            transform_data.m_transform_offset = count * sizeof(transform_vertex_data_t);
+            for (const auto& transform : transform_data.m_transforms)
+            {
+                m_transform_vertex_data[count] = transform;
+                count++;
+            }
+        }
+
+        m_transform_buffer->set_data(
+            m_transform_vertex_data,
+            count * static_cast<u32>(sizeof(transform_vertex_data_t))
+        );
+    }
 }
 
 void scene_renderer::clear_pass()
@@ -466,73 +650,87 @@ void scene_renderer::clear_pass(arc<backend::render_pass> render_pass, bool expl
 	render::end_render_pass(m_command_buffer);
 }
 
-void scene_renderer::ui_pass()
+auto scene_renderer::shadow_pass() noexcept -> void
 {
-	if (m_ui_panels_list.empty())
-		return;
+    m_gpu_time_query_indices.m_shadow_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
 
-	for (ui::IPanel* panel : m_ui_panels_list)
-		panel->on_render(m_scene_data.camera);
-}
+    u32 cascade_index = 0;
+    for (auto& dir_shadow_render_pass : m_directional_shadow_pass)
+    {
+        begin_render_pass(m_command_buffer, dir_shadow_render_pass);
 
-void scene_renderer::two_dimensional_pass()
-{
-    // disabled when refactoring renderer2d singleton
-    // #TODO refactor
-#if 0
-	for (Entity entity : m_entity_list)
-		render2d::draw_sprite(entity);
-#endif
+        const owning_buffer cascade_ub{ &cascade_index, sizeof(u32) };
+        const auto& dir_shadow_pass_pipeline = dir_shadow_render_pass->get_pipeline();
+        for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
+        {
+            const auto& transform_data = m_transform_map[mesh_transform_handle];
+            const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
+                sizeof(transform_vertex_data_t);
+            KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
 
-	// #TODO circles, lines, rectangles, text
+            Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh_with_material(
+                m_command_buffer,
+                dir_shadow_pass_pipeline,
+                draw_command_data.Mesh,
+                draw_command_data.Submesh_index,
+                m_dir_shadow_pass_material,
+                m_transform_buffer,
+                static_cast<u32>(transform_offset),
+                0ull,
+                draw_command_data.Instance_count,
+                cascade_ub
+            );
 
+            m_statistics.m_draw_call_count++;
+        }
+
+        end_render_pass(m_command_buffer);
+
+        cascade_index++;
+    }
+
+    m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_shadow_pass_query);
 }
 
 void scene_renderer::geometry_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.geometry_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
-	render::begin_render_pass(m_command_buffer, m_geometry_pass);
+	m_gpu_time_query_indices.m_geometry_pass_query = static_cast<u32>(m_command_buffer->begin_timestamp_query());
+	begin_render_pass(m_command_buffer, m_geometry_pass);
 
-	// submit transform data
-	m_transform_buffer->set_data(m_transform_vertex_data, static_cast<uint32_t>(sizeof(TransformVertexData) * m_draw_list.size()), 0);
-	/*render::submit([transform_buffer = m_transform_buffer, transform_data = m_transform_vertex_data, transform_count = m_draw_list.size()]() mutable
-		{
-			transform_buffer->rt_set_data(transform_data, static_cast<uint32_t>(sizeof(TransformVertexData) * transform_count));
-		}
-	);*/
-
-	size_t transform_offset_ind = 0;
     const auto& geometry_pipeline = m_geometry_pass->get_pipeline();
-	for (const auto& draw_command_data : m_draw_list)
+	for (const auto& [mesh_transform_handle, draw_command_data] : m_draw_list)
 	{
-        KB_CORE_ASSERT(false, "not implemented!");
-#if 0
-		render::
-#endif
-        Singleton<render::Renderer>::get().get_render_backend().render_instanced_submesh(
+        const auto& transform_data = m_transform_map[mesh_transform_handle];
+        const auto transform_offset = transform_data.m_transform_offset + draw_command_data.Instance_offset *
+            sizeof(transform_vertex_data_t);
+        KB_CORE_ASSERT(transform_offset < std::numeric_limits<u32>::max(), "[scene_renderer]: transform offset overflow!");
+
+	    Singleton<Renderer>::get().get_render_backend()->render_instanced_sub_mesh(
             m_command_buffer,
             geometry_pipeline,
             draw_command_data.Mesh,
             draw_command_data.Submesh_index,
             draw_command_data.Material_table,
             m_transform_buffer,
-            static_cast<uint32_t>(transform_offset_ind++),
+            static_cast<u32>(transform_offset),
             0ull,
-            1ul
+            draw_command_data.Instance_count
         );
+
+        m_statistics.m_draw_call_count++;
 	}
 
-	render::end_render_pass(m_command_buffer);
-	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.geometry_pass_query);
+	end_render_pass(m_command_buffer);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_geometry_pass_query);
 }
 
 void scene_renderer::composite_pass()
 {
     KB_PROFILE_SCOPE;
 
-	m_gpu_time_query_indices.composite_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
+	m_gpu_time_query_indices.m_composite_pass_query = static_cast<uint32_t>(m_command_buffer->begin_timestamp_query());
 	render::begin_render_pass(m_command_buffer, m_composite_pass, true);
 
 	constexpr float exposure = 1.0f; // #TODO dynamic based off camera
@@ -571,7 +769,164 @@ void scene_renderer::composite_pass()
     );
 
 	render::end_render_pass(m_command_buffer);
-	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.composite_pass_query);
+	m_command_buffer->end_timestamp_query(m_gpu_time_query_indices.m_composite_pass_query);
 }
+
+auto scene_renderer::calculate_shadow_map_data(
+    shadow_cascade_data_t* p_cascades_data,
+    const scene_renderer_camera_t& p_scene_camera,
+    const glm::vec3& p_light_direction
+) noexcept -> void
+{
+    glm::vec3 light_dir_vec3 = glm::vec3{
+        p_light_direction.x,
+        p_light_direction.y,
+        p_light_direction.z
+    };
+#if 0
+    glm::mat4 view_mat = glm::lookAt(
+        light_dir_vec3,
+        //glm::vec3{ -2.f, 4.f, -1.f },
+        glm::vec3{ 0.f },
+        glm::vec3{ 0.f, 1.f, 0.f }
+    );
+#else
+    // calculate view projection matrix from directional light's perspective
+    glm::mat4 view_mat = p_scene_camera.view_mat;
+    view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
+#endif
+
+    auto scene_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+    // Project frustum corners into world space
+    glm::mat4 inverse_camera = glm::inverse(scene_view_projection);
+
+    const f32 near_clip = p_scene_camera.m_near_clip;
+    const f32 far_clip = p_scene_camera.m_far_clip;
+    const f32 clip_range = far_clip - near_clip;
+
+    f32 min_z = near_clip;
+    f32 max_z = near_clip + clip_range;
+
+    f32 range = max_z - min_z;
+    f32 ratio = max_z / min_z;
+
+    f32 cascade_splits[k_max_cascades];
+
+    // Calculate split depths based on view camera frustum
+    for (u32 i = 0; i < k_max_cascades; ++i)
+    {
+        f32 p = (static_cast<f32>(i) + 1.f) / static_cast<f32>(k_max_cascades);
+        f32 log = min_z * std::pow(ratio, p);
+        f32 uniform = min_z + range * p;
+        f32 d = m_shadow_cascade_data.m_cascade_split_lambda * (log - uniform) + uniform;
+        cascade_splits[i] = (d - near_clip) / clip_range;
+    }
+
+    cascade_splits[3] = 0.3f; // TODO: why?
+
+    f32 last_split_distance = 0.f;
+    for (size_t cascade_index = 0; cascade_index < k_max_cascades; ++cascade_index)
+    {
+        f32 split_distance = cascade_splits[cascade_index];
+
+        glm::vec3 frustum_corners[8] =
+        {
+            glm::vec3(-1.0f,  1.0f, -1.0f),
+            glm::vec3(1.0f,  1.0f, -1.0f),
+            glm::vec3(1.0f, -1.0f, -1.0f),
+            glm::vec3(-1.0f, -1.0f, -1.0f),
+            glm::vec3(-1.0f,  1.0f,  1.0f),
+            glm::vec3(1.0f,  1.0f,  1.0f),
+            glm::vec3(1.0f, -1.0f,  1.0f),
+            glm::vec3(-1.0f, -1.0f,  1.0f),
+        };
+
+        for (u32 i = 0; i < 8; ++i)
+        {
+            glm::vec4 inv_corner = inverse_camera * glm::vec4(frustum_corners[i], 1.f);
+            frustum_corners[i] = inv_corner / inv_corner.w;
+        }
+
+        // TODO: wtf does this do
+        for (u32 i = 0; i < 4; ++i)
+        {
+            const glm::vec3 dist = frustum_corners[i + 4] - frustum_corners[i];
+            frustum_corners[i + 4] = frustum_corners[i] + dist * split_distance;
+            frustum_corners[i] = frustum_corners[i] + dist * last_split_distance;
+        }
+
+        // Compute frustum centers
+        glm::vec3 frustum_center = glm::vec3{ 0.f };
+        for (u32 i = 0; i < 8; ++i)
+            frustum_center += frustum_corners[i];
+
+        frustum_center /= 8.f;
+
+        f32 radius = 0.f;
+        for (u32 i = 0; i < 8; ++i)
+        {
+            f32 distance = glm::length(frustum_corners[i] - frustum_center);
+            radius = glm::max(radius, distance);
+        }
+
+        radius = std::ceil(radius * 16.f) / 16.f;
+
+        glm::vec3 max_extents = glm::vec3{ radius };
+        glm::vec3 min_extents = -max_extents;
+
+        glm::vec3 light_dir = -light_dir_vec3;
+        glm::mat4 light_view_mat = glm::lookAt(
+            frustum_center - light_dir * -min_extents.z,
+            frustum_center,
+            glm::vec3{ 0.f, 0.f, 1.f }
+        );
+        glm::mat4 light_ortho_mat = glm::ortho(
+            min_extents.x,
+            max_extents.x,
+            min_extents.y,
+            max_extents.y,
+            0.f + m_shadow_cascade_data.m_cascade_near_plane_offset,
+            max_extents.z - min_extents.z + m_shadow_cascade_data.m_cascade_far_plane_offset
+        );
+
+        glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
+
+        float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass[0]->get_target_frame_buffer()->get_width());
+        glm::vec4 shadow_origin =
+            shadow_view_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
+            shadow_map_resolution / 2.f;
+        glm::vec4 rounded_origin = glm::round(shadow_origin);
+        glm::vec4 round_offset = rounded_origin - shadow_origin;
+        round_offset.z = 0.f;
+        round_offset.w = 0.f;
+
+        light_ortho_mat[3] = round_offset;
+        const auto light_view_projection = light_ortho_mat * light_view_mat;
+        //light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * light_view_mat;
+
+        // Update local cascade ub data
+        auto& cascade_data_ub = p_cascades_data[cascade_index];
+        cascade_data_ub.m_split_depth = split_distance;
+        cascade_data_ub.m_view_projection = light_view_projection;
+        cascade_data_ub.m_view = light_view_mat;
+
+        last_split_distance = split_distance;
+    }
+
+    for (size_t i = 0; i < k_max_cascades; ++i)
+    {
+        m_shadow_cascade_data.m_shadow_cascade_splits[i] = cascade_splits[i];
+    }
+
+    // FIXME: testing
+#if 0
+    f32 near_clip = 0.1f;
+    f32 far_clip = 1000.f;
+    light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_clip, far_clip) * view_mat;
+#endif
+
+    //const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+}
+
 
 } // end namespace kb::render

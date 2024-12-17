@@ -65,20 +65,25 @@ vulkan_index_buffer::vulkan_index_buffer(const void* data, uint32_t size /*= 0*/
 
 vulkan_index_buffer::~vulkan_index_buffer()
 {
+    if (!m_vk_buffer)
+        return;
+
 	VkBuffer buffer = m_vk_buffer;
 	VmaAllocation allocation = m_vk_allocation;
-	render::submit([buffer, allocation]() mutable
+	render::submit_resource_free([buffer, allocation]() mutable
 		{
 			vulkan_allocator allocator{ "IndexBuffer" };
 			allocator.destroy_buffer(buffer, allocation);
+            buffer = nullptr;
 		});
 
 	m_local_data.release();
+    m_vk_buffer = nullptr;
 }
 
 void vulkan_index_buffer::bind() const
 {
-	KB_CORE_WARN("VulkanIndexBuffer Bind not implemented!");
+    KB_CORE_WARN("VulkanIndexBuffer Bind not implemented!");
 }
 
 void vulkan_index_buffer::unbind() const
@@ -89,6 +94,22 @@ void vulkan_index_buffer::unbind() const
 void vulkan_index_buffer::set_data(const void* buffer, uint32_t size, uint32_t offset /*= 0*/)
 {
 	KB_CORE_WARN("VulkanIndexBuffer SetData not implemented!");
+}
+
+auto vulkan_index_buffer::get_vk_index_type() const noexcept -> VkIndexType
+{
+    switch (m_index_type)
+    {
+    case index_type_t::u8:
+        return VK_INDEX_TYPE_UINT8_EXT;
+    case index_type_t::u16:
+        return VK_INDEX_TYPE_UINT16;
+    case index_type_t::u32:
+        return VK_INDEX_TYPE_UINT32;
+    default:
+        KB_CORE_ASSERT(false, "[vulkan_index_buffer]: Unknown index buffer index type!");
+        return VK_INDEX_TYPE_NONE_KHR;
+    }
 }
 
 } // end namespace kb::render::backend::vk

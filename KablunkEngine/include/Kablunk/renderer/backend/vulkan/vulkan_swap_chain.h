@@ -32,19 +32,19 @@ public:
 
     u32 get_image_count() const { return m_image_count; }
 
-	VkRenderPass get_vk_render_pass() const { return m_render_pass; }
+	VkRenderPass get_vk_render_pass() const { return m_vk_render_pass; }
 
-	VkFramebuffer get_current_vk_framebuffer() const { return get_vk_framebuffer(m_current_image_index); }
-	VkCommandBuffer get_current_vk_draw_command_buffer() const { return get_vk_draw_command_buffer(m_current_buffer_index); }
+	VkFramebuffer get_current_vk_frame_buffer() const { return get_vk_frame_buffer(m_current_image_index); }
+	VkCommandBuffer get_current_vk_draw_command_buffer() const { return get_vk_draw_command_buffer(m_current_frame_index); }
 
-	VkFormat get_vk_color_format() const { return m_color_format; }
+	VkFormat get_vk_color_format() const { return m_vk_color_format; }
 
-	u32 get_current_buffer_index() const noexcept override { return m_current_buffer_index; }
+	u32 get_current_buffer_index() const noexcept override { return m_current_frame_index; }
 
-	VkFramebuffer get_vk_framebuffer(u32 index) const
+	VkFramebuffer get_vk_frame_buffer(u32 index) const
     {
-		KB_CORE_ASSERT(index < m_framebuffers.size(), "index out of bounds");
-		return m_framebuffers[index];
+		KB_CORE_ASSERT(index < m_frame_buffers.size(), "index out of bounds");
+		return m_frame_buffers[index];
 	}
 
 	VkCommandBuffer get_vk_draw_command_buffer(u32 index) const
@@ -53,7 +53,7 @@ public:
 		return m_command_buffers[index].m_command_buffer;
 	}
 
-	VkSemaphore get_render_complete_semaphore() const { return m_semaphores.render_complete; }
+	VkSemaphore get_render_complete_semaphore() const { return m_semaphores.m_render_complete_semaphores[m_current_frame_index]; }
 
 	void destroy() noexcept override;
 
@@ -66,7 +66,7 @@ private:
 
 	void find_image_format_and_color_space();
 
-	void create_framebuffer();
+	void create_frame_buffer();
 	void create_depth_stencil();
 
 private:
@@ -74,31 +74,31 @@ private:
 	arc<vulkan_logical_device> m_device;
 	bool m_vsync = false;
 
-	VkSwapchainKHR m_swapchain = nullptr;
+	VkSwapchainKHR m_vk_swap_chain = nullptr;
 	u32 m_image_count = 0;
-	std::vector<VkImage> m_images;
+	std::vector<VkImage> m_vk_images;
 
 	struct SwapChainBufferData
 	{
-		VkImage image;
-		VkImageView view;
+		VkImage m_vk_image;
+		VkImageView m_vk_image_view;
 	};
 
 	std::vector<SwapChainBufferData> m_buffers;
 
-	VkFormat m_color_format;
-	VkColorSpaceKHR m_color_space;
+	VkFormat m_vk_color_format;
+	VkColorSpaceKHR m_vk_color_space;
 
 	struct DepthStencilData
 	{
-		VkImage image;
-		VkImageView image_view;
-		VmaAllocation memory_allocation;
+		VkImage m_vk_image;
+		VkImageView m_vk_image_view;
+		VmaAllocation m_vk_memory_allocation;
 	};
 
 	DepthStencilData m_depth_stencil{};
 
-	std::vector<VkFramebuffer> m_framebuffers;
+	std::vector<VkFramebuffer> m_frame_buffers;
 
     struct swapchain_command_buffer_t
     {
@@ -108,26 +108,24 @@ private:
 
 	std::vector<swapchain_command_buffer_t> m_command_buffers;
 
-	struct Semaphores
-	{
-		VkSemaphore present_complete;
-		VkSemaphore render_complete;
-	};
-
-	Semaphores m_semaphores;
-
-	VkSubmitInfo m_submit_info;
+    struct semaphores_t
+    {
+        // Semaphore to signal image is available for each frame in flight
+        std::vector<VkSemaphore> m_image_available_semaphores;
+        // Semaphore to signal image has finished rendered for each frame in flight
+        std::vector<VkSemaphore> m_render_complete_semaphores;
+    } m_semaphores;
 
 	std::vector<VkFence> m_wait_fences;
 
-	VkRenderPass m_render_pass;
-    u32 m_current_buffer_index = 0;
+	VkRenderPass m_vk_render_pass;
+    u32 m_current_frame_index = 0;
     u32 m_current_image_index = 0;
 
     u32 m_queue_node_index = UINT32_MAX;
     u32 m_width = 0, m_height = 0;
 
-	VkSurfaceKHR m_surface;
+	VkSurfaceKHR m_vk_surface;
 
 	friend class vulkan_context;
 };

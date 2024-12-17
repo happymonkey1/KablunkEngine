@@ -547,11 +547,12 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 	// Lights
 	{
 		m_light_environment = LightEnvironmentData{};
+        m_light_environment.m_directional_light = m_directional_light;
 
 		// Point Lights
 		{
 			auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
-			m_light_environment.point_lights.resize(point_lights.size());
+			m_light_environment.m_point_lights.resize(point_lights.size());
 			size_t point_light_index = 0;
 			for (auto id : point_lights)
 			{
@@ -559,7 +560,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 				auto& transform = entity.GetComponent<TransformComponent>();
 				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				PointLight plight_data = {
+				point_light_t plight_data = {
 					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
 					plight_comp.Multiplier,
 					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
@@ -568,7 +569,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 					plight_comp.Falloff
 				};
 
-				m_light_environment.point_lights[point_light_index++] = plight_data;
+				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
 	}
@@ -582,8 +583,14 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 			auto entity = Entity{ entity_id, this };
 			auto& mesh_comp = entity.GetComponent<MeshComponent>();
 			auto& transform = entity.GetComponent<TransformComponent>();
-			if (mesh_comp.Mesh)
-				scene_renderer->submit_mesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
+            if (mesh_comp.Mesh)
+            {
+                scene_renderer->submit_mesh(
+                    mesh_comp.Mesh,
+                    mesh_comp.Material_table,
+                    get_world_space_transform_matrix(entity)
+                );
+            }
 		}
 	}
 
@@ -743,11 +750,12 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 	// #TODO move to scene renderer?
 	{
 		m_light_environment = LightEnvironmentData{};
+        m_light_environment.m_directional_light = m_directional_light;
 
 		// Point Lights
 		{
 			auto point_lights = m_registry.group<PointLightComponent>(entt::get<TransformComponent>);
-			m_light_environment.point_lights.resize(point_lights.size());
+			m_light_environment.m_point_lights.resize(point_lights.size());
 			size_t point_light_index = 0;
 			for (auto id : point_lights)
 			{
@@ -755,7 +763,7 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 				auto& transform = entity.GetComponent<TransformComponent>();
 				auto& plight_comp = entity.GetComponent<PointLightComponent>();
 
-				PointLight plight_data = {
+				point_light_t plight_data = {
 					transform.Translation, //{ transform.Translation.x, transform.Translation.y, transform.Translation.z },
 					plight_comp.Multiplier,
 					plight_comp.Radiance, //{ plight_comp.Radiance.x, plight_comp.Radiance.y, plight_comp.Radiance.z },
@@ -764,12 +772,12 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 					plight_comp.Falloff
 				};
 
-				m_light_environment.point_lights[point_light_index++] = plight_data;
+				m_light_environment.m_point_lights[point_light_index++] = plight_data;
 			}
 		}
 	}
 
-	scene_renderer->begin_scene({ camera, camera.GetViewMatrix() });
+    scene_renderer->begin_scene({ kb::camera{ camera.GetProjection(), camera.get_unreversed_projection() }, camera.GetViewMatrix()});
 
 	{
 		auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -779,7 +787,13 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 			auto& mesh_comp = entity.GetComponent<MeshComponent>();
 			auto& transform = entity.GetComponent<TransformComponent>();
 			if (mesh_comp.Mesh)
-				scene_renderer->submit_mesh(mesh_comp.Mesh, 0, mesh_comp.Material_table, get_world_space_transform_matrix(entity));
+			{
+                scene_renderer->submit_mesh(
+                    mesh_comp.Mesh,
+                    mesh_comp.Material_table,
+                    get_world_space_transform_matrix(entity)
+                );
+			}
 		}
 
 		//Renderer::EndScene();
@@ -792,9 +806,9 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
 	// #TODO move to scene renderer
 	if (scene_renderer->get_final_render_pass_image())
 	{
-		p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
         auto target_frame_buffer = scene_renderer->get_external_composite_frame_buffer();
-		p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
+        p_renderer_2d->set_target_frame_buffer(target_frame_buffer);
+		p_renderer_2d->begin_scene(camera, camera.GetViewMatrix());
 
 		auto sprite_view = m_registry.view<TransformComponent, SpriteRendererComponent>();
 		for (auto entity : sprite_view)
@@ -852,6 +866,20 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
                     text_comp.m_tint_color
                 );
             }*/
+        }
+
+        // TODO: probably not the best place for this...
+        // Render editor gizmos
+        {
+            if (m_directional_light.m_enabled)
+            {
+                p_renderer_2d->set_line_width(2.f);
+                p_renderer_2d->draw_line(
+                    glm::vec3{ 0.f },
+                    -vec3_packed_to_glm_vec3(m_directional_light.m_direction),
+                    glm::vec4{ 1.f, 1.f, 0.f, 1.f }
+                );
+            }
         }
 
 		p_renderer_2d->end_scene();

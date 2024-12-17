@@ -14,10 +14,11 @@
 
 #include "Kablunk/Scene/Entity.h"
 #include "Kablunk/Scene/SceneCamera.h"
+#include "Kablunk/Scene/component/script_component.h"
 
 #include "Kablunk/Renderer/backend/texture.h"
 #include "Kablunk/Renderer/Mesh.h"
-#include "Kablunk/Renderer/MaterialAsset.h"
+#include "Kablunk/Renderer/material_asset.h"
 #include "kablunk/renderer/render_command.h"
 
 #include "Kablunk/Project/ProjectManager.h"
@@ -104,17 +105,18 @@ struct TransformComponent
 
 struct SpriteRendererComponent
 {
-	// #TODO old "asset" class uses absolute path. 
-	asset::asset_id_t Texture{ asset::null_asset_id };
+    virtual_texture_handle m_texture_handle = virtual_texture_handle::into(
+        std::string_view{ "kb::texture::white_texture" }
+    );
 	glm::vec4 Color{ 1.0f };
 	float Tiling_factor{ 1.0f };
 	// #TODO should this be entity wide, instead of just on SpriteRenderers?
 	bool Visible = true;
 
-	glm::vec2 GetTextureDimensions() const 
-	{ 
-        const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(Texture);
-        return glm::vec2{ texture_asset->get_width(), texture_asset->get_height() };
+	glm::vec2 get_texture_dimensions() const
+	{
+        const auto& texture = Singleton<render::Renderer>::get().get_texture_2d(m_texture_handle);
+        return { texture->get_width(), texture->get_height() };
 	}
 
 	void SetVisible(bool v) { Visible = v; }
@@ -122,10 +124,12 @@ struct SpriteRendererComponent
 
 	SpriteRendererComponent() = default;
 	SpriteRendererComponent(const SpriteRendererComponent&) = default;
+
 	SpriteRendererComponent(glm::vec4 color) 
 		: Color{ color } { }
-	SpriteRendererComponent(const arc<render::backend::texture_2d>& texture, glm::vec4 color, float tiling_factor = 1.0f) 
-		: Texture{ texture }, Color{ color }, Tiling_factor{ tiling_factor } { }
+
+	SpriteRendererComponent(virtual_texture_handle p_texture_handle, glm::vec4 color, float tiling_factor = 1.0f)
+		: m_texture_handle{ p_texture_handle }, Color{ color }, Tiling_factor{ tiling_factor } { }
 };
 
 struct CircleRendererComponent
@@ -265,14 +269,14 @@ struct NativeScriptComponent
 struct MeshComponent
 {
 	arc<render::Mesh> Mesh;
-	arc<render::MaterialTable> Material_table = arc<render::MaterialTable>::Create();
+	arc<render::material_table> Material_table = arc<render::material_table>::Create();
 	std::string Filepath = "";
 
 	MeshComponent() = default;
 	MeshComponent(const arc<render::Mesh>& mesh)
 		: Mesh{ mesh } { }
 	MeshComponent(const MeshComponent& other)
-		: Mesh{ other.Mesh }, Material_table{ arc<render::MaterialTable>::Create(other.Material_table) } {};
+		: Mesh{ other.Mesh }, Material_table{ arc<render::material_table>::Create(other.Material_table) } {};
 
 	void LoadMeshFromFileEditor(const std::string& filepath, Entity entity)
 	{

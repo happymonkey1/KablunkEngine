@@ -10,13 +10,14 @@ namespace kb::render::backend
 
 auto swap_chain::create() noexcept -> std::unique_ptr<swap_chain>
 {
-    const auto backend_type = Renderer::get_render_backend_type();
-    switch (backend_type)
+    switch (const auto backend_type = Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
     {
         return std::make_unique<vk::vulkan_swap_chain>();
     }
+    case render_backend_type_t::none:
+        return nullptr;
     default:
     {
         KB_CORE_ASSERT(

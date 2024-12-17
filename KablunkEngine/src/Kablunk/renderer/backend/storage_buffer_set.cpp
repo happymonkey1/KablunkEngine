@@ -11,11 +11,12 @@ namespace kb::render::backend
 
 arc<storage_buffer_set> storage_buffer_set::create(uint32_t p_frames)
 {
-    constexpr auto backend = Renderer::get_render_backend_type();
-    switch (backend)
+    switch (Singleton<Renderer>::get().get_render_backend_type())
     {
     case render_backend_type_t::vulkan:
         return static_cast<arc<storage_buffer_set>>(arc<vk::vulkan_storage_buffer_set>::Create(p_frames));
+    case render_backend_type_t::none:
+        return arc<storage_buffer_set>{};
     default:
     {
         KB_CORE_ASSERT(false, "Unhandled render backend type!"); return arc<storage_buffer_set>{};

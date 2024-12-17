@@ -50,7 +50,7 @@ void WindowsWindow::Init(const WindowProps& props, render::backend::swap_chain* 
     if (s_glfw_window_count == 0)
 	{
 		// Hint to glfw that this will be rendered with Vulkan
-		if (render::Renderer::get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
+		if (Singleton<render::Renderer>::get().get_render_backend_type() == render::backend::render_backend_type_t::vulkan)
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// #TODO resizing at runtime

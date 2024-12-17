@@ -150,7 +150,6 @@ void SceneHierarchyPanel::OnImGuiRender()
 
 		ImGui::EndDragDropTarget();
 	}
-	
 
 	if (UI::IsMouseDownOnDockedWindow()) m_selection_context = {};
 
@@ -162,7 +161,7 @@ void SceneHierarchyPanel::OnImGuiRender()
 			auto entity = m_context->CreateEntity();
 			m_selection_context = entity;
 		}
-		
+
 		if (ImGui::MenuItem("Create Sprite"))
 		{
 			auto entity = m_context->CreateEntity("Blank Sprite");
@@ -200,13 +199,11 @@ void SceneHierarchyPanel::OnImGuiRender()
 		ImGui::EndPopup();
 	}
 
-	
-
 	ImGui::End();
 
 	ImGui::Begin("Properties");
 
-	if (m_selection_context)
+	if (m_selection_context.Valid())
 		UI_DrawComponents(m_selection_context);
 
 	ImGui::End();
@@ -217,7 +214,6 @@ void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	auto& tag = entity.GetComponent<TagComponent>().Tag;
 	ImGuiTreeNodeFlags node_flags = ((m_selection_context == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen;
 	node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-	
 
 	if (entity.GetChildren().empty())
 		node_flags |= ImGuiTreeNodeFlags_Leaf;
@@ -280,7 +276,7 @@ void SceneHierarchyPanel::UI_DrawEntityNode(Entity entity, bool draw_child_node)
 	{
 		m_context->DestroyEntity(entity);
 
-		if (m_selection_context == entity) m_selection_context = { };
+		if (m_selection_context == entity) m_selection_context = {};
 	}
 }
 
@@ -377,16 +373,16 @@ static bool DrawVec3Control(const std::string& label, glm::vec3& values, float r
 }
 
 template <typename ComponentT>
-void DrawMaterialTable(arc<render::MaterialTable> mesh_material_table)
+void DrawMaterialTable(arc<render::material_table> mesh_material_table)
 {
 	if (UI::BeginTreeNode("Materials"))
 	{
 
-		for (size_t i = 0; i < mesh_material_table->GetMaterialCount(); i++)
+		for (size_t i = 0; i < mesh_material_table->get_material_count(); i++)
 		{
 			UI::BeginProperties();
 
-			if (i == mesh_material_table->GetMaterialCount())
+			if (i == mesh_material_table->get_material_count())
 				ImGui::Separator();
 
 
@@ -395,14 +391,82 @@ void DrawMaterialTable(arc<render::MaterialTable> mesh_material_table)
 			std::string id = fmt::format("{0}-{1}", label, i);
 			ImGui::PushID(id.c_str());
 
-			arc<render::MaterialAsset> mesh_material_asset = mesh_material_table->GetMaterial(i);
-			std::string mesh_material_name = mesh_material_asset->GetMaterial()->get_name();
+			arc<render::material_asset> mesh_material_asset = mesh_material_table->GetMaterial(i);
+            auto& render_material = mesh_material_asset->get_material();
+			std::string mesh_material_name = render_material->get_name();
 			if (mesh_material_name.empty())
 				mesh_material_name = "Unnamed Material";
 
 			UI::PushItemDisabled();
 			UI::Property("Name", mesh_material_name);
-			UI::PopItemDisabled();
+            UI::PopItemDisabled();
+
+            // TODO: we should be able to determine properties based on loaded uniforms...
+            auto shader = render_material->get_shader();
+            const auto& resources = shader->get_resources();
+
+            for (const auto& [name, decl] : resources)
+            {
+                std::string foo = "";
+
+#if 0
+                UI::PropertyImageButton(name.c_str(), render_material->get_texture_2d(name), { 32, 32 });
+#endif
+                UI::PropertyReadOnlyChars(name.c_str(), decl.get_name().c_str());
+            }
+
+            const auto& shader_buffers = shader->get_shader_buffers();
+            for (const auto& [buffer_name, buffer] : shader_buffers)
+            {
+                UI::PushItemDisabled();
+                UI::Property(buffer_name.c_str(), "");
+                UI::PopItemDisabled();
+
+                for (const auto& [uniform_name, uniform] : buffer.uniforms)
+                {
+                    const auto stripped_name = uniform_name.substr(uniform_name.find(".") + 1);
+
+                    switch (uniform.get_type())
+                    {
+                    case render::backend::shader_uniform_type_t::Bool:
+                    {
+                        bool uniform_value = render_material->get_bool(
+                            uniform_name
+                        );
+                        if (UI::Property(stripped_name.c_str(), &uniform_value))
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    case render::backend::shader_uniform_type_t::Vec3:
+                    {
+                        glm::vec3 uniform_value = render_material->get_vec3(uniform_name);
+                        if (UI::Property(stripped_name.c_str(), uniform_value))
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    case render::backend::shader_uniform_type_t::Float:
+                    {
+                        f32 uniform_value = render_material->get_float(uniform_name);
+                        if (UI::Property(stripped_name.c_str(), uniform_value, 0.01f, 0.0f, 1.0f))
+                        {
+                            render_material->set(uniform_name, uniform_value);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        UI::PushItemDisabled();
+                        UI::Property(stripped_name.c_str(), "");
+                        UI::PopItemDisabled();
+                    }
+                    }
+                }
+            }
+
 
 #if 0
 			if (render::get_render_pipeline() == RendererPipelineDescriptor::PHONG_DIFFUSE)
@@ -705,19 +769,21 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 				// panel specific ui elements
 				switch (panel->get_panel_type())
 				{
-
-					case ui::panel_type_t::ImageButton:
-						if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+				case ui::panel_type_t::ImageButton:
+					if (UI::PropertyImageButton("Texture", panel->get_panel_style().image, { 32, 32 }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+					{
+						auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
+						if (!filepath.empty())
 						{
-							auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
-							if (!filepath.empty())
-							{
-								// #TODO go through asset manager
-                                KB_CORE_INFO("[SceneHeirarchyPanel]: Texture2D is not created through asset manager!");
-								panel->get_panel_style().image = render::backend::texture_2d::create(filepath);
-							}
+							// #TODO go through asset manager
+                            KB_CORE_INFO("[SceneHeirarchyPanel]: Texture2D is not created through asset manager!");
+                            // TODO: cleanup
+                            panel->get_panel_style().image = render::get_texture_2d(render::create_texture(
+                                std::filesystem::path{ filepath }
+                            ));
 						}
-						break;
+					}
+					break;
 				}
 
 			}
@@ -731,14 +797,15 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			UI::PropertyColorEdit4("Tint Color", component.Color);
 
-            const arc<render::backend::texture_2d>& white_texture = Singleton<render::Renderer>::get().get_white_texture();
-            arc<render::backend::texture_2d> texture_asset = component.Texture != asset::null_asset_id ?
-                asset::get_asset<render::backend::texture_2d>(component.Texture) : white_texture;
+            const auto& renderer = Singleton<render::Renderer>::get();
+
+            const arc<render::backend::texture_2d>& white_texture = renderer.get_white_texture();
+            arc<render::backend::texture_2d> texture_asset = renderer.get_texture_2d(component.m_texture_handle);
             if (!texture_asset)
             {
                 KB_CORE_ERROR(
-                    "[SceneHeirarchyPanel]: Failed to load texture with asset id '{}' for image button. Defaulting to white texture",
-                    component.Texture
+                    "[SceneHeirarchyPanel]: Failed to load texture with handle '{}' for image button. Defaulting to white texture",
+                    component.m_texture_handle.as<u32>()
                 );
                 
                 texture_asset = white_texture;
@@ -749,8 +816,8 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 				auto filepath = FileDialog::OpenFile("Image File (*.png)\0*.png\0");
 				if (!filepath.empty())
 				{
-                    const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(filepath);
-					component.Texture = texture_asset->get_id();
+                    const auto texture_handle = renderer.create_texture(std::filesystem::path{ filepath });
+                    component.m_texture_handle = texture_handle;
 				}
 			}
 
@@ -763,16 +830,16 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 					auto path_str = path.string();
 					if (path.extension() == ".png")
                     {
-                        const auto& texture_asset = asset::get_asset<render::backend::texture_2d>(path);
-                        if (texture_asset)
-                            component.Texture = texture_asset->get_id();
+                        const auto texture_handle = renderer.create_texture(path);
+                        if (texture_handle)
+                            component.m_texture_handle = texture_handle;
                         else
                         {
                             KB_CORE_ERROR(
                                 "[SceneHeirarchyPanel]: Failed to load texture2d asset from filepath '{}'. Defaulting to null texture id",
                                 path_str
                             );
-                            component.Texture = asset::null_asset_id;
+                            component.m_texture_handle = virtual_texture_handle{ 0 };
                         }
                     }
 					else
@@ -912,7 +979,7 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 
 			if (ImGui::Button(add_or_change_button_text))
 			{
-				auto filepath = FileDialog::OpenFile("Mesh (*.fbx)\0*.fbx\0");
+				auto filepath = FileDialog::OpenFile("Mesh FBX (*.fbx)\0*.fbx\0Mesh OBJ (*.obj)\0*.obj\0Mesh GLFT (*.gltf)\0*.gltf");
 				if (!filepath.empty())
 					component.LoadMeshFromFileEditor(filepath, entity);
 			}
@@ -926,12 +993,10 @@ void SceneHierarchyPanel::UI_DrawComponents(Entity entity)
 			arc<render::Mesh> mesh = component.Mesh;
 			if (mesh)
 			{
-				for (uint32_t submesh_index : mesh->GetSubmeshes())
-				{
-					UI::Property("Submesh Index", submesh_index);
-				}
+                const auto sub_mesh_count = static_cast<u64>(mesh->GetSubmeshes().size());
+				UI::PropertyReadOnlyUint64("Submesh Count", sub_mesh_count);
 
-				DrawMaterialTable<MeshComponent>(mesh->GetMaterials());
+				DrawMaterialTable<MeshComponent>(mesh->get_material_table());
 			}
 
 			UI::EndProperties();

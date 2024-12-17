@@ -138,15 +138,14 @@ void renderer_2d::init(renderer_2d_specification_t spec)
         );
     }
 
-	uint32_t white_texture_data = 0xFFFFFFFF;
-	m_renderer_data.white_texture = backend::texture_2d::create(backend::image_format_t::RGBA, 1, 1, &white_texture_data);
+    m_renderer_data.white_texture = Singleton<Renderer>::get().get_white_texture();
 
 	// get references to pre-loaded shaders
-	m_renderer_data.quad_shader = render::get_shader("Renderer2D_Quad");
-	m_renderer_data.circle_shader = render::get_shader("Renderer2D_Circle");
-	m_renderer_data.line_shader = render::get_shader("Renderer2D_Line");
-	m_renderer_data.ui_shader = render::get_shader("Renderer2D_UI");
-	m_renderer_data.text_shader = render::get_shader("Renderer2D_Text");
+	m_renderer_data.quad_shader = get_shader("Renderer2D_Quad");
+	m_renderer_data.circle_shader = get_shader("Renderer2D_Circle");
+	m_renderer_data.line_shader = get_shader("Renderer2D_Line");
+	m_renderer_data.ui_shader = get_shader("Renderer2D_UI");
+	m_renderer_data.text_shader = get_shader("Renderer2D_Text");
 
 	// Set all the texture slots to zero
 	//memset(s_RendererData.TextureSlots.data(), 0, s_RendererData.TextureSlots.size() * sizeof(uint32_t));
@@ -282,7 +281,7 @@ void renderer_2d::init(renderer_2d_specification_t spec)
                 { backend::shader_data_type_t::Float4, "a_Color" }
             },
             .instance_layout = {},
-            .topology = backend::primitive_topology_t::triangles,
+            .topology = backend::primitive_topology_t::lines,
             .backface_culling = false,
             .depth_test = false,
             .depth_write = false,
@@ -400,11 +399,6 @@ void renderer_2d::shutdown()
     m_renderer_data.white_texture.reset();
 }
 
-auto renderer_2d::set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void
-{
-    m_asset_manager = p_asset_manager;
-}
-
 arc<backend::texture_2d> renderer_2d::get_white_texture()
 {
 	return m_renderer_data.white_texture;
@@ -503,7 +497,7 @@ void renderer_2d::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.texture_slots;
-            for (uint32_t j = 0; j < renderer_2d_data_t::max_texture_slots; j++)
+            for (uint32_t j = 0; j < renderer_2d_data_t::k_max_texture_slots; j++)
             {
                 if (textures[j])
                     m_renderer_data.quad_material->set("u_Textures", textures[j], j);
@@ -582,7 +576,9 @@ void renderer_2d::flush()
             line_vertex_buffer->set_data(line_vertex_buffer_base_ptr, data_size);
 
             render::begin_render_pass(m_renderer_data.render_command_buffer, m_renderer_data.m_line_pass, clear_pass);
-            render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.line_width);
+
+            render::set_line_width(m_renderer_data.render_command_buffer, m_renderer_data.m_line_width);
+
             const auto& line_pipeline = m_renderer_data.m_line_pass->get_pipeline();
             render::render_geometry(
                 m_renderer_data.render_command_buffer,
@@ -616,7 +612,7 @@ void renderer_2d::flush()
 
             // Set Textures
             auto& textures = m_renderer_data.text_texture_atlas_slots;
-            for (uint32_t j = 0; j < renderer_2d_data_t::max_texture_slots; j++)
+            for (uint32_t j = 0; j < renderer_2d_data_t::k_max_texture_slots; j++)
             {
                 if (textures[j])
                     m_renderer_data.text_material->set("u_FontAtlases", textures[j], j);
@@ -678,6 +674,15 @@ void renderer_2d::set_target_frame_buffer(const arc<backend::frame_buffer>& p_ta
         render_pass_spec.m_pipeline = backend::pipeline::create(pipeline_spec);
     }
 
+    // Line pipeline
+    if (m_renderer_data.m_line_pass->get_target_frame_buffer() != p_target_frame_buffer)
+    {
+        auto pipeline_spec = m_renderer_data.m_line_pass->get_pipeline()->get_specification();
+        pipeline_spec.m_target_frame_buffer = p_target_frame_buffer;
+        auto& render_pass_spec = m_renderer_data.m_line_pass->get_specification();
+        render_pass_spec.m_pipeline = backend::pipeline::create(pipeline_spec);
+    }
+
     // Text Pipeline
     if (m_renderer_data.m_text_pass->get_target_frame_buffer() != p_target_frame_buffer)
     {
@@ -694,7 +699,7 @@ auto renderer_2d::get_target_frame_buffer() const noexcept -> const arc<backend:
     return m_renderer_data.m_quad_pass->get_pipeline()->get_specification().m_target_frame_buffer;
 }
 
-void renderer_2d::on_recreate_swapchain()
+void renderer_2d::on_recreate_swap_chain()
 {
     KB_PROFILE_SCOPE;
 
@@ -707,7 +712,7 @@ void renderer_2d::on_viewport_resize(const glm::vec2& p_viewport_dimensions)
     KB_PROFILE_SCOPE;
 
     if (m_renderer_data.specification.swap_chain_target)
-        on_recreate_swapchain();
+        on_recreate_swap_chain();
     else
     {
         // #TODO this may force recreation twice(?) depending on whether target render pass is externally managed...
@@ -753,14 +758,12 @@ void renderer_2d::draw_entity(Entity entity) noexcept
         m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
         m_renderer_data.white_texture;
 #else
-    auto texture = m_asset_manager && sprite_renderer_comp.Texture != asset::null_asset_id ?
-        m_asset_manager->get_asset<backend::texture_2d>(sprite_renderer_comp.Texture) :
-        m_renderer_data.white_texture;
+    auto texture = Singleton<Renderer>::get().get_texture_2d(sprite_renderer_comp.m_texture_handle);
 #endif
 
     if (!texture)
     {
-        KB_CORE_ERROR("[Renderer2D]: Failed to load texture from asset id '{}'. Defaulting to white texture.", sprite_renderer_comp.Texture);
+        KB_CORE_ERROR("[Renderer2D]: Failed to load texture from handle '{}'. Defaulting to white texture.", sprite_renderer_comp.m_texture_handle.as<u32>());
         texture = m_renderer_data.white_texture;
     }
 
@@ -793,7 +796,7 @@ void renderer_2d::draw_quad(const glm::mat4& transform, const arc<backend::textu
         {
             texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots, "texture slot overflow!");
         }
     }
 
@@ -843,7 +846,7 @@ void renderer_2d::draw_quad_from_texture_atlas(
             texture_index = static_cast<float>(m_renderer_data.texture_slot_index);
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = texture;
             KB_CORE_ASSERT(
-                m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots,
+                m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots,
                 "texture slot overflow!"
             );
         }
@@ -1061,7 +1064,7 @@ void renderer_2d::draw_text_string(
 	{
 		texture_index = static_cast<float>(m_renderer_data.text_texture_atlas_slot_index);
 		m_renderer_data.text_texture_atlas_slots[m_renderer_data.text_texture_atlas_slot_index++] = font_texture_atlas;
-		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.max_texture_slots, "font texture atlas slot overflow!");
+		KB_CORE_ASSERT(m_renderer_data.text_texture_atlas_slot_index < m_renderer_data.k_max_texture_slots, "font texture atlas slot overflow!");
 	}
 
     // #TODO hopefully c++23 has officially supported method that isn't deprecated...
@@ -1365,13 +1368,13 @@ void renderer_2d::start_new_batch() noexcept
 
 	m_renderer_data.texture_slot_index = 1;
 	m_renderer_data.text_texture_atlas_slot_index = 0;
-	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::k_max_texture_slots; ++i)
 	{
 		if (i != 0)
 			m_renderer_data.texture_slots[i] = nullptr;
 	}
 
-	for (size_t i = 0; i < renderer_2d_data_t::max_texture_slots; ++i)
+	for (size_t i = 0; i < renderer_2d_data_t::k_max_texture_slots; ++i)
 	{
 		m_renderer_data.text_texture_atlas_slots[i] = nullptr;
 	}

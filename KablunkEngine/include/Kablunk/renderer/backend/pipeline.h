@@ -21,6 +21,19 @@ enum class primitive_topology_t
 	triangle_fan
 };
 
+enum class depth_compare_op_t
+{
+    none = 0,
+    never,
+    not_equal,
+    less,
+    less_or_equal,
+    equal,
+    greater,
+    greater_or_equal,
+    always
+};
+
 struct pipeline_specification_t
 {
 	arc<shader> shader;
@@ -28,6 +41,7 @@ struct pipeline_specification_t
 	buffer_layout layout;
 	buffer_layout instance_layout;
 	primitive_topology_t topology = primitive_topology_t::triangles;
+    depth_compare_op_t m_depth_compare_op = depth_compare_op_t::greater_or_equal;
 	bool backface_culling = true;
 	bool depth_test = true;
 	bool depth_write = true;

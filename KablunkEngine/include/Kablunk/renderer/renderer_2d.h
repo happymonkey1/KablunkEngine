@@ -6,8 +6,6 @@
 
 #include "Kablunk/Core/RefCounting.h"
 
-#include "Kablunk/Asset/AssetManager.h"
-
 #include "Kablunk/renderer/backend/texture.h"
 #include "Kablunk/renderer/OrthographicCamera.h"
 #include "Kablunk/renderer/EditorCamera.h"
@@ -101,7 +99,7 @@ struct renderer_2d_data_t
     static constexpr uint32_t max_lines = 10'000;
 	static constexpr uint32_t max_line_vertices = max_lines * 2;
 	static constexpr uint32_t max_line_indices = max_lines * 6;
-	static constexpr uint32_t max_texture_slots = 32;
+	static constexpr uint32_t k_max_texture_slots = 32;
     static constexpr std::array<vec2_packed, 4> k_texture_coords = {
         vec2_packed{0.0f, 0.0f},
         vec2_packed{ 1.0f, 0.0f },
@@ -168,7 +166,8 @@ struct renderer_2d_data_t
 	uint32_t line_count = 0;
 	uint32_t line_index_count = 0;
     u32 m_line_write_index = 0;
-	float line_width = 1.0f;
+	float m_line_width = 1.0f;
+    bool m_line_width_dirty = true;
 
 	// text
     using text_per_frame_base_buffer = std::vector<text_vertex_t*>;
@@ -182,8 +181,8 @@ struct renderer_2d_data_t
 	u32 text_texture_atlas_slot_index = 0;
 
 	// TODO: change to asset handle when implemented
-	std::array<arc<backend::texture_2d>, max_texture_slots> texture_slots;
-	std::array<arc<backend::texture_2d>, max_texture_slots> text_texture_atlas_slots;
+	std::array<arc<backend::texture_2d>, k_max_texture_slots> texture_slots;
+	std::array<arc<backend::texture_2d>, k_max_texture_slots> text_texture_atlas_slots;
 
 	arc<backend::render_command_buffer> render_command_buffer;
 
@@ -217,12 +216,10 @@ class renderer_2d : public RefCounted
 {
 public:
 	renderer_2d() = default;
-	~renderer_2d();
+	~renderer_2d() override;
 
 	void init(renderer_2d_specification_t spec = {});
 	void shutdown();
-
-    auto set_asset_manager(const arc<asset::AssetManager>& p_asset_manager) -> void;
 
     arc<backend::texture_2d> get_white_texture();
 
@@ -236,10 +233,15 @@ public:
 
 	void set_target_frame_buffer(const arc<backend::frame_buffer>& p_target_frame_buffer);
     [[nodiscard]] auto get_target_frame_buffer() const noexcept -> const arc<backend::frame_buffer>&;
-	void on_recreate_swapchain();
+	void on_recreate_swap_chain();
     void on_viewport_resize(const glm::vec2& p_viewport_dimensions);
 
     void set_swap_chain_target(bool p_swap_chain_target = true);
+
+    auto set_line_width(f32 p_new_line_width) noexcept -> void
+    {
+        m_renderer_data.m_line_width = p_new_line_width;
+    }
 
     // ---draw commands-------------------------------------------------------------------------------------------------
 
@@ -466,7 +468,7 @@ public:
         {
             texture_index = m_renderer_data.texture_slot_index;
             m_renderer_data.texture_slots[m_renderer_data.texture_slot_index++] = p_texture;
-            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.max_texture_slots, "texture slot overflow!");
+            KB_CORE_ASSERT(m_renderer_data.texture_slot_index < m_renderer_data.k_max_texture_slots, "texture slot overflow!");
         }
 
         return texture_index;
@@ -495,7 +497,6 @@ private:
 
 private:
     renderer_2d_data_t m_renderer_data{};
-    arc<asset::AssetManager> m_asset_manager{};
     bool m_explicit_render_pass_clear = false;
 };
 

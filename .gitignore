@@ -3,7 +3,9 @@ bin/
 bin-int/
 KablunkEditor/resources/scripts/*.dll
 
-/kablunk-games/
+/KablunkEngine/vendor/sol2/single/
+
+/kablunk-sandbox/
 
 JSON/
 profiling/
