@@ -572,27 +572,29 @@ auto scene_renderer::submit_uniform_buffers() noexcept -> void
                     sizeof(glm::mat4) * k_max_cascades
                 );
             });
+
+        // Submit cascade splits data
+        {
+            KB_CORE_ASSERT(k_max_cascades == 4, "[scene_renderer]: Max cascades must be 4!");
+            renderer_data_ub_t renderer_data{
+                .m_cascade_splits = {
+                    cascades_data[0].m_split_depth,
+                    cascades_data[1].m_split_depth,
+                    cascades_data[2].m_split_depth,
+                    cascades_data[3].m_split_depth,
+                }
+            };
+            render::submit([instance, renderer_data]() mutable
+                {
+                    instance->m_renderer_data_uniform_buffer_set->rt_get()->rt_set_data(
+                        &renderer_data,
+                        sizeof(renderer_data_ub_t)
+                    );
+                });
+        }
     }
 
-    // Submit cascade splits data
-    {
-        KB_CORE_ASSERT(k_max_cascades == 4, "[scene_renderer]: Max cascades must be 4!");
-        renderer_data_ub_t renderer_data{
-            .m_cascade_splits = {
-                m_shadow_cascade_data.m_shadow_cascade_splits[0],
-                m_shadow_cascade_data.m_shadow_cascade_splits[1],
-                m_shadow_cascade_data.m_shadow_cascade_splits[2],
-                m_shadow_cascade_data.m_shadow_cascade_splits[3],
-            }
-        };
-        render::submit([instance, renderer_data]() mutable
-            {
-                instance->m_renderer_data_uniform_buffer_set->rt_get()->rt_set_data(
-                    &renderer_data,
-                    sizeof(renderer_data_ub_t)
-                );
-            });
-    }
+    
 }
 
 void scene_renderer::flush_draw_list()
@@ -783,7 +785,7 @@ void scene_renderer::composite_pass()
 }
 
 auto scene_renderer::calculate_shadow_map_data(
-    shadow_cascade_data_t* p_cascades_data,
+    shadow_cascade_data_t* p_cascades_data, // in-out param
     const scene_renderer_camera_t& p_scene_camera,
     const glm::vec3& p_light_direction
 ) noexcept -> void
@@ -803,15 +805,21 @@ auto scene_renderer::calculate_shadow_map_data(
 #else
     // calculate view projection matrix from directional light's perspective
     glm::mat4 view_mat = p_scene_camera.view_mat;
-    view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
+    //view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
 #endif
 
     auto scene_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
     // Project frustum corners into world space
     glm::mat4 inverse_camera = glm::inverse(scene_view_projection);
 
-    const f32 near_clip = p_scene_camera.m_near_clip;
-    const f32 far_clip = p_scene_camera.m_far_clip;
+    f32 near_clip = p_scene_camera.m_near_clip;
+    f32 far_clip = p_scene_camera.m_far_clip;
+    if (near_clip > far_clip)
+    {
+        near_clip = p_scene_camera.m_far_clip;
+        far_clip = p_scene_camera.m_near_clip;
+    }
+
     const f32 clip_range = far_clip - near_clip;
 
     f32 min_z = near_clip;
@@ -832,19 +840,25 @@ auto scene_renderer::calculate_shadow_map_data(
         cascade_splits[i] = (d - near_clip) / clip_range;
     }
 
-    cascade_splits[3] = 0.3f; // TODO: why?
+    // TODO: remove debugging
+    cascade_splits[0] = 0.01f;
+    cascade_splits[1] = 0.017f;
+    cascade_splits[2] = 0.02f;
+    cascade_splits[3] = 0.2f;
+    // cascade_splits[3] = 0.3f;
 
-    f32 last_split_distance = 0.f;
+    f32 last_split_distance = 0.0001f;
     for (size_t cascade_index = 0; cascade_index < k_max_cascades; ++cascade_index)
     {
         f32 split_distance = cascade_splits[cascade_index];
 
         glm::vec3 frustum_corners[8] =
         {
-            glm::vec3(-1.0f,  1.0f, -1.0f),
-            glm::vec3(1.0f,  1.0f, -1.0f),
-            glm::vec3(1.0f, -1.0f, -1.0f),
-            glm::vec3(-1.0f, -1.0f, -1.0f),
+            // TODO: [-1,1] or [0, 1] for z?
+            glm::vec3(-1.0f,  1.0f, 0.f),
+            glm::vec3(1.0f,  1.0f, 0.f),
+            glm::vec3(1.0f, -1.0f, 0.f),
+            glm::vec3(-1.0f, -1.0f, 0.f),
             glm::vec3(-1.0f,  1.0f,  1.0f),
             glm::vec3(1.0f,  1.0f,  1.0f),
             glm::vec3(1.0f, -1.0f,  1.0f),
@@ -884,6 +898,7 @@ auto scene_renderer::calculate_shadow_map_data(
         glm::vec3 max_extents = glm::vec3{ radius };
         glm::vec3 min_extents = -max_extents;
 
+        
         glm::vec3 light_dir = light_dir_vec3;
         glm::mat4 light_view_mat = glm::lookAt(
             frustum_center - light_dir * -min_extents.z,
@@ -899,24 +914,28 @@ auto scene_renderer::calculate_shadow_map_data(
             max_extents.z - min_extents.z + m_shadow_cascade_data.m_cascade_far_plane_offset
         );
 
-        glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
+        // offset to avoid shimmering
+        {
+            glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
+            float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass[0]->get_target_frame_buffer()->get_width());
+            glm::vec4 shadow_origin =
+                shadow_view_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
+                shadow_map_resolution / 2.f;
+            glm::vec4 rounded_origin = glm::round(shadow_origin);
+            glm::vec4 round_offset = rounded_origin - shadow_origin;
+            round_offset.z = 0.f;
+            round_offset.w = 0.f;
 
-        float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass[0]->get_target_frame_buffer()->get_width());
-        glm::vec4 shadow_origin =
-            shadow_view_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
-            shadow_map_resolution / 2.f;
-        glm::vec4 rounded_origin = glm::round(shadow_origin);
-        glm::vec4 round_offset = rounded_origin - shadow_origin;
-        round_offset.z = 0.f;
-        round_offset.w = 0.f;
+            // TODO: enable
+            // light_ortho_mat[3] += round_offset;
+        }
 
-        // light_ortho_mat[3] += round_offset;
         const auto light_view_projection = light_ortho_mat * light_view_mat;
         //light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * light_view_mat;
 
         // Update local cascade ub data
         auto& cascade_data_ub = p_cascades_data[cascade_index];
-        cascade_data_ub.m_split_depth = split_distance;// (near_clip + split_distance * clip_range);
+        cascade_data_ub.m_split_depth = (near_clip + split_distance * clip_range);
         cascade_data_ub.m_view_projection = light_view_projection;
         cascade_data_ub.m_view = light_view_mat;
 

@@ -339,7 +339,8 @@ void main()
     uint cascadeIndex = -1;
     const uint SHADOW_MAP_CASCADE_COUNT = 4;
     for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) {
-        if (v_Input.ViewPosition.z < u_RendererData.CascadeSplits[i]) {
+        // TODO: world position?
+        if (abs(v_Input.ViewPosition.z) < u_RendererData.CascadeSplits[i]) {
             cascadeIndex = i;
             break;
         }

@@ -53,6 +53,9 @@ namespace kb
 		float GetPitch() const { return m_pitch; }
 		float GetYaw() const { return m_yaw; }
 
+        auto get_near_clip() const noexcept -> f32 { return m_near_clip; }
+        auto get_far_clip() const noexcept -> f32 { return m_far_clip; }
+
 		static constexpr int Camera_control_key = Key::LeftAlt;
 	private:
 		void EnableMouse() const;

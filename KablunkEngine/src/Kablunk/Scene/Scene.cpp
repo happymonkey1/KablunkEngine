@@ -510,6 +510,7 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 	camera*		main_camera{ nullptr };
 	glm::mat4	main_camera_proj = glm::mat4{ 1.0f };
 	glm::mat4   main_camera_transform = glm::mat4{ 1.0f };
+    f32 near_clip, far_clip;
 
 	// editor cam is used during runtime when paused
 	if (editor_cam)
@@ -517,6 +518,8 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 		main_camera = editor_cam;
 		main_camera_proj = editor_cam->GetProjection();
 		main_camera_transform = editor_cam->GetViewMatrix();
+        near_clip = editor_cam->get_near_clip();
+        far_clip = editor_cam->get_far_clip();
 	}
 	else
 	{
@@ -533,6 +536,23 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
 				main_camera_proj = main_camera->GetProjection();
 				// why is this inverse?
 				main_camera_transform = glm::inverse(get_world_space_transform_matrix(camera_entity));
+
+                switch (camera.Camera.GetProjectionType())
+                {
+                case SceneCamera::ProjectionType::Perspective:
+                    near_clip = camera.Camera.GetOrthographicNearClip();
+                    far_clip = camera.Camera.GetOrthographicFarClip();
+                    break;
+                case SceneCamera::ProjectionType::Orthographic:
+                    near_clip = camera.Camera.GetPerspectiveNearClip();
+                    far_clip = camera.Camera.GetPerspectiveFarClip();
+                    break;
+                default:
+                {
+                    KB_CORE_ASSERT(false, "[scene]: Unable to retrieve scene camera near and far clip for unknown Camera projection type!");
+                }
+                }
+
 				break;
 			}
 		}
@@ -607,7 +627,12 @@ void Scene::OnRenderRuntime(arc<render::scene_renderer> scene_renderer, arc<rend
         }
 	}
 
-	scene_renderer->begin_scene({ *main_camera, main_camera_transform });
+	scene_renderer->begin_scene({ 
+        .camera = *main_camera,
+	    .view_mat = main_camera_transform,
+        .m_near_clip = near_clip,
+        .m_far_clip = far_clip,
+	});
 
 	{
 		auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();
@@ -845,7 +870,12 @@ void Scene::OnRenderEditor(arc<render::scene_renderer> scene_renderer, arc<rende
         }
 	}
 
-    scene_renderer->begin_scene({ kb::camera{ camera.GetProjection(), camera.get_unreversed_projection() }, camera.GetViewMatrix()});
+    scene_renderer->begin_scene({
+        .camera = kb::camera{ camera.GetProjection(), camera.get_unreversed_projection() },
+        .view_mat = camera.GetViewMatrix(),
+        .m_near_clip = camera.get_near_clip(),
+        .m_far_clip = camera.get_far_clip(),
+    });
 
 	{
 		auto mesh_group = m_registry.view<TransformComponent, MeshComponent>();

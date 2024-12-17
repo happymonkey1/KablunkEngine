@@ -249,7 +249,7 @@ private:
     struct scene_renderer_shadow_data_t
     {
         f32 m_shadow_scale_from_origin = 0.f;
-        f32 m_cascade_split_lambda = 0.92f;
+        f32 m_cascade_split_lambda = 0.69f; // = 0.92f;
         glm::vec4 m_cascade_splits{};
         f32 m_cascade_far_plane_offset = 50.0f;
         f32 m_cascade_near_plane_offset = -50.f;

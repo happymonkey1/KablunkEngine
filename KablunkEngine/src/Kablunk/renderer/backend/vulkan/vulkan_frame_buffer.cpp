@@ -491,7 +491,7 @@ void vulkan_frame_buffer::rt_invalidate()
 	for (u32 i = 0; i < m_attachment_images.size(); i++)
 	{
 		arc<vulkan_image_2d> image = m_attachment_images[i].As<vulkan_image_2d>();
-		if (image->get_specification().deinterleaved)
+		if (image->get_specification().layers > 1)
 		{
 			attachments[i] = image->get_layer_vk_image_view(m_specification.m_existing_image_layers[i]);
 			KB_CORE_ASSERT(attachments[i], "Attachment invalid!");
