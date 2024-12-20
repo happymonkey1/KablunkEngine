@@ -633,7 +633,7 @@ void vulkan_render_backend::render_static_mesh(
             const auto& material = material_table->HasMaterial(sub_mesh.Material_index) ?
                 material_table->GetMaterial(sub_mesh.Material_index) :
                 mesh_material_table->GetMaterial(sub_mesh.Material_index);
-            auto vulkan_material = material->get_material().As<vk::vulkan_material>();
+            auto vulkan_material = material.As<vk::vulkan_material>();
 
             const auto vk_pipeline_layout = vulkan_pipeline->get_vk_pipeline_layout();
             const auto vk_descriptor_set = vulkan_material->get_vk_descriptor_set(current_frame_index);
@@ -828,10 +828,10 @@ void vulkan_render_backend::render_instanced_sub_mesh(
             const sub_mesh_t& sub_mesh = mesh_data->get_sub_meshes()[p_index];
             const auto& mesh_material_table = p_mesh->get_material_table();
             // uint32_t material_count = mesh_material_table->GetMaterialCount();
-            arc<material_asset> material = p_material_table->HasMaterial(sub_mesh.Material_index) ?
+            const auto material = p_material_table->HasMaterial(sub_mesh.Material_index) ?
                 p_material_table->GetMaterial(sub_mesh.Material_index) :
                 mesh_material_table->GetMaterial(sub_mesh.Material_index);
-            arc<vulkan_material> vulkan_material = material->get_material().As<vk::vulkan_material>();
+            arc<vulkan_material> vulkan_material = material.As<vk::vulkan_material>();
 
             // Bind vulkan pipeline
             arc<vulkan_pipeline> pipeline = p_pipeline.As<vk::vulkan_pipeline>();

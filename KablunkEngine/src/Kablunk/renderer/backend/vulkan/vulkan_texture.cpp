@@ -66,12 +66,16 @@ vulkan_texture_2d::vulkan_texture_2d(weak_ptr<vulkan_logical_device> p_device, s
 	spec.debug_name = "UNKNOWN_DEBUG_IMG_NAME";
 	m_image = image_2d::create(spec).As<vulkan_image_2d>();
 
-
+    // TODO: investigate why this causes VkImageView to be nullptr when binding in descriptor set manager...
+#if 0
     arc instance{ this };
 	render::submit([instance]() mutable
 		{
 			instance->invalidate();
 		});
+#endif
+
+    invalidate();
 }
 
 vulkan_texture_2d::~vulkan_texture_2d()
@@ -308,9 +312,10 @@ void vulkan_texture_2d::invalidate()
 	if (vkCreateImageView(vk_device, &view_create_info, nullptr, &info.image_view) != VK_SUCCESS)
 		KB_CORE_ASSERT(false, "Vulkan failed to create image view!");
 
-	image->UpdateDescriptor();
+	image->update_vk_descriptor_image_info();
 
 	KB_CORE_ASSERT(image->get_vk_image_info_descriptor().imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "layout still undefined!");
+	KB_CORE_ASSERT(image->get_vk_image_info_descriptor().imageView, "[vulkan_texture_2d]: VkImageView is still undefined!");
 
 	// Release local storage
 	m_image_data.release();

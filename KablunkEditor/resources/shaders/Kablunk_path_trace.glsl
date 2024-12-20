@@ -20,12 +20,6 @@ layout(std140, binding = 0) uniform Camera
     vec3 u_CameraPosition;
 };
 
-// This is prob really bad performance wise
-layout(std140, binding = 1) uniform Renderer
-{
-    uniform mat4 u_Transform;
-};
-
 struct VertexOutput
 {
     vec3 WorldPosition;
@@ -247,8 +241,7 @@ void main()
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
     vec4 directLightContribution = vec4(CalculatePointLights(normal, viewDir), 1.0);
 
-
-    vec3 indirectLightApprox = rayCast(v_Input.WorldPosition, , 0)
+    vec3 indirectLightApprox = rayCast(v_Input.ViewPosition, viewDir, 0)
 
     vec4 indirectLightContribution = vec4(indirectLightApprox, 1.0);
     o_Color = vec4(color, 1.0) * (directLightContribution + indirectLightContribution);

@@ -28,30 +28,31 @@ static constexpr u32 s_mesh_import_flags =
 	aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_GenUVCoords | aiProcess_ValidateDataStructure;
 
 namespace util
+{ // start namespace ::util
+glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix)
 {
-	glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix)
-	{
-		glm::mat4 result;
-		//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-		result[0][0] = matrix.a1; result[1][0] = matrix.a2; result[2][0] = matrix.a3; result[3][0] = matrix.a4;
-		result[0][1] = matrix.b1; result[1][1] = matrix.b2; result[2][1] = matrix.b3; result[3][1] = matrix.b4;
-		result[0][2] = matrix.c1; result[1][2] = matrix.c2; result[2][2] = matrix.c3; result[3][2] = matrix.c4;
-		result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
-		return result;
-	}
+	glm::mat4 result;
+	//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+	result[0][0] = matrix.a1; result[1][0] = matrix.a2; result[2][0] = matrix.a3; result[3][0] = matrix.a4;
+	result[0][1] = matrix.b1; result[1][1] = matrix.b2; result[2][1] = matrix.b3; result[3][1] = matrix.b4;
+	result[0][2] = matrix.c1; result[1][2] = matrix.c2; result[2][2] = matrix.c3; result[3][2] = matrix.c4;
+	result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
+	return result;
+}
 
-    auto init_material_table(
-        arc<material_table>& p_material_table,
-        const std::vector<arc<material_asset>>& p_materials
-    ) noexcept -> void
+auto init_material_table(
+    arc<material_table>& p_material_table,
+    const std::vector<arc<backend::material>>& p_materials
+) noexcept -> void
+{
+    p_material_table = arc<material_table>::Create(p_materials.size());
+    for (size_t i = 0; i < p_materials.size(); ++i)
     {
-        p_material_table = arc<material_table>::Create(p_materials.size());
-        for (size_t i = 0; i < p_materials.size(); ++i)
-        {
-            p_material_table->SetMaterial(static_cast<u32>(i), p_materials[i]);
-        }
+        p_material_table->SetMaterial(static_cast<u32>(i), p_materials[i]);
     }
 }
+
+} // end namespace ::util
 
 MeshData::MeshData(const std::string& filepath, Entity entity)
 	: m_filepath{ filepath }, m_handle{ mesh_handle::into(std::string_view{ filepath }) }
@@ -72,8 +73,8 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	if (m_is_animated)
 		KB_CORE_INFO("ANIMATED MESH!");
 
-    const auto renderer_pipeline = get_renderer_pipeline_type();
-    switch (renderer_pipeline)
+    const auto renderer_pipeline_type = get_renderer_pipeline_type();
+    switch (renderer_pipeline_type)
     {
     case renderer_pipeline_type_t::pbr:
     {
@@ -95,28 +96,23 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 	size_t vertex_count = 0;
 	size_t index_count = 0;
 
-    constexpr bool k_use_submesh_batching = true;
 
 	m_sub_meshes.reserve(scene->mNumMeshes);
 	for (size_t ai_mesh_index = 0; ai_mesh_index < scene->mNumMeshes; ++ai_mesh_index)
 	{
 		aiMesh* mesh = scene->mMeshes[ai_mesh_index];
 
-        if constexpr (k_use_submesh_batching)
-        {
-            sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
-            sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
-            sub_mesh.BaseIndex = static_cast<u32>(index_count);
-            sub_mesh.Material_index = mesh->mMaterialIndex;
-            // KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
-            sub_mesh.VertexCount = mesh->mNumVertices;
-            sub_mesh.IndexCount = mesh->mNumFaces * 3;
-            sub_mesh.mesh_name = mesh->mName.C_Str();
+        sub_mesh_t& sub_mesh = m_sub_meshes.emplace_back();
+        sub_mesh.BaseVertex = static_cast<u32>(vertex_count);
+        sub_mesh.BaseIndex = static_cast<u32>(index_count);
+        sub_mesh.Material_index = mesh->mMaterialIndex;
+        // KB_CORE_ASSERT(mesh->mMaterialIndex > 0, "[mesh]: Material_index={} out of bounds!", sub_mesh.Material_index);
+        sub_mesh.VertexCount = mesh->mNumVertices;
+        sub_mesh.IndexCount = mesh->mNumFaces * 3;
+        sub_mesh.mesh_name = mesh->mName.C_Str();
 
-            vertex_count += mesh->mNumVertices;
-            index_count += sub_mesh.IndexCount;
-        }
-		
+        vertex_count += mesh->mNumVertices;
+        index_count += sub_mesh.IndexCount;
 
 		if (m_is_animated)
 		{
@@ -194,7 +190,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 		for (size_t i = 0; i < scene->mNumMeshes; ++i)
 		{
 			aiMesh* mesh = scene->mMeshes[i];
-			sub_mesh_t& submesh = m_sub_meshes[i];
+			sub_mesh_t& sub_mesh = m_sub_meshes[i];
 
 			for (size_t b = 0; b < mesh->mNumBones; ++b)
 			{
@@ -217,7 +213,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
 
 				for (size_t j = 0; j < bone->mNumWeights; ++j)
 				{
-					uint32_t vertex_id = submesh.BaseVertex + bone->mWeights[j].mVertexId;
+					uint32_t vertex_id = sub_mesh.BaseVertex + bone->mWeights[j].mVertexId;
 					float weight = bone->mWeights[j].mWeight;
 					m_animated_vertices[vertex_id].add_bone_data(bone_index, weight);
 				}
@@ -239,7 +235,6 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                 m_mesh_shader,
                 ai_material_name.data
             );
-            auto material_asset = material_asset::create(material);
 
             KB_CORE_INFO("[mesh]: Adding material {} '{}'", i, ai_material_name.data);
 
@@ -268,8 +263,22 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                 emission = ai_emission.r;
             }
 
-            material_asset->SetAlbedoColor(albedo_color);
-            material_asset->SetEmission(emission);
+            switch (renderer_pipeline_type)
+            {
+            case renderer_pipeline_type_t::basic:
+            {
+                material->set("u_MaterialUniforms.DiffuseColor", albedo_color);
+                break;
+            }
+            case renderer_pipeline_type_t::pbr:
+            {
+                material->set("u_MaterialUniforms.AlbedoColor", albedo_color);
+                material->set("u_MaterialUniforms.Emission", emission);
+                break;
+            }
+            default:
+                KB_CORE_ASSERT(false, "[mesh]: Unhandled renderer pipeline type!");
+            }
 
             // TODO: roughness
             // TODO: relfectivity
@@ -293,7 +302,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         const u32 width = ai_texture_embedded->mWidth;
                         const u32 height = ai_texture_embedded->mHeight;
                         // Create a texture that is handled owned by the renderer
-                        texture_handle = Singleton<Renderer>::get().create_texture(
+                        texture_handle = create_texture(
                             // TODO: should just be file name
                             std::string_view{ ai_texture_path.C_Str() },
                             backend::texture_specification_t{
@@ -311,14 +320,27 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                             ai_texture_path.C_Str()
                         );
                         // Create a texture that is owned by the renderer
-                        texture_handle = Singleton<Renderer>::get().create_texture(
+                        texture_handle = create_texture(
                             parent_path / std::filesystem::path{ ai_texture_path.C_Str() }
                         );
                     }
 
-                    // TODO: material asset should take a handle instead
-                    material_asset->SetAlbedoMap(Singleton<Renderer>::get().get_texture_2d(texture_handle));
-                    material_asset->SetAlbedoColor(glm::vec3{ 1.0f });
+                    const auto& albedo_texture = get_texture_2d(texture_handle);
+                    switch (renderer_pipeline_type)
+                    {
+                    case renderer_pipeline_type_t::basic:
+                    {
+                        material->set("u_DiffuseTexture", albedo_texture);
+                        break;
+                    }
+                    case renderer_pipeline_type_t::pbr:
+                    {
+                        material->set("u_AlbedoTexture", albedo_texture);
+                        break;
+                    }
+                    default:
+                        KB_CORE_ASSERT(false, "[mesh]: Unhandled renderer pipeline type!");
+                    }
                 }
             }
 
@@ -335,7 +357,7 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                         const u32 width = ai_texture_embedded->mWidth;
                         const u32 height = ai_texture_embedded->mHeight;
                         // Create a texture that is handled owned by the renderer
-                        texture_handle = Singleton<Renderer>::get().create_texture(
+                        texture_handle = create_texture(
                             // TODO: should just be file name
                             std::string_view{ ai_texture_path.C_Str() },
                             backend::texture_specification_t{
@@ -353,43 +375,43 @@ MeshData::MeshData(const std::string& filepath, Entity entity)
                             ai_texture_path.C_Str()
                         );
                         // Create a texture that is owned by the renderer
-                        texture_handle = Singleton<Renderer>::get().create_texture(
+                        texture_handle = create_texture(
                             parent_path / std::filesystem::path{ ai_texture_path.C_Str() }
                         );
                     }
 
-                    // TODO: material asset should take a handle instead
-                    material_asset->SetNormalMap(Singleton<Renderer>::get().get_texture_2d(texture_handle));
-                    material_asset->SetUseNormalMap(true);
+                    const auto& normal_texture = get_texture_2d(texture_handle);
+                    material->set("u_NormalTexture", normal_texture);
+                    material->set("u_MaterialUniforms.UseNormalMap", true);
                 }
             }
 
             // TODO: roughness map
             // TODO: metalness map
 
-            m_materials[i] = material_asset;
+            m_materials[i] = material;
         }
     }
     else
     {
         if (scene->HasMeshes())
         {
-            m_materials.push_back(material_asset::create(backend::material::create(m_mesh_shader)));
+            m_materials.push_back(backend::material::create(m_mesh_shader));
         }
     }
 
-    switch (renderer_pipeline)
+    switch (renderer_pipeline_type)
     {
     case renderer_pipeline_type_t::pbr:
     {
+        // TODO: set default values
         break;
     }
     case renderer_pipeline_type_t::basic:
     {
         KB_CORE_INFO("[mesh]: Setting default material values for basic pipeline");
-        for (auto& material_asset : m_materials)
+        for (auto& material : m_materials)
         {
-            auto& material = material_asset->get_material();
             material->set("u_MaterialUniforms.AmbientStrength", 0.05f);
             material->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
             material->set("u_MaterialUniforms.SpecularStrength", 0.3f);
@@ -433,32 +455,29 @@ MeshData::MeshData(
     KB_CORE_TRACE("sizeof Index {0}", sizeof(Index));
     m_index_buffer = backend::index_buffer::create(m_indices.data(), static_cast<u32>(m_indices.size() * sizeof(Index)));
 
-    arc<material_asset> material_asset;
+    arc<backend::material> material;
     switch (get_renderer_pipeline_type())
     {
     case renderer_pipeline_type_t::pbr:
     {
         m_mesh_shader = get_shader_library()->get(shader_library::k_pbr_static_shader_name);
-        auto mat = backend::material::create(m_mesh_shader, "default-pbr-material");
-        // TODO: set default values
-        material_asset = material_asset::create(mat);
+        material = backend::material::create(m_mesh_shader, "default-pbr-material");
         break;
     }
     case renderer_pipeline_type_t::basic:
     {
         m_mesh_shader = get_shader_library()->get(shader_library::k_diffuse_static_shader_name);
-        auto mat = backend::material::create(m_mesh_shader, "default-basic-material");
-        mat->set("u_MaterialUniforms.AmbientStrength", 0.05f);
-        mat->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
-        mat->set("u_MaterialUniforms.SpecularStrength", 0.5f);
-        mat->set("u_MaterialUniforms.AlbedoColor", glm::vec3{ 1.0f });
-        material_asset = material_asset::create(mat);
+        material = backend::material::create(m_mesh_shader, "default-basic-material");
+        material->set("u_MaterialUniforms.AmbientStrength", 0.05f);
+        material->set("u_MaterialUniforms.DiffuseStrength", 1.0f);
+        material->set("u_MaterialUniforms.SpecularStrength", 0.5f);
+        material->set("u_MaterialUniforms.DiffuseColor", glm::vec3{ 1.0f });
         break;
     }
     }
 
-    KB_CORE_ASSERT(material_asset, "[mesh_data]: Material asset must be set!");
-	m_materials.push_back(material_asset);
+    KB_CORE_ASSERT(material, "[mesh_data]: Material asset must be set!");
+	m_materials.push_back(material);
 }
 
 MeshData::~MeshData()

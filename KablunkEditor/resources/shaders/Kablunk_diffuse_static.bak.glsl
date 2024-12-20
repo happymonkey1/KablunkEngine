@@ -52,6 +52,7 @@ void main()
             vec4(a_MRow0.w, a_MRow1.w, a_MRow2.w, 1.0)
         );
 
+
     vec4 worldPosition = transform * vec4(a_Position, 1.0);
     v_Output.WorldPosition = worldPosition.xyz;
     v_Output.Normal = a_Normal;
@@ -115,7 +116,7 @@ struct PointLight
     vec2 Padding;
 };
 
-layout(set = 0, binding = 5) uniform sampler2D u_DiffuseTexture;
+layout(set = 0, binding = 5) uniform sampler2D u_AlbedoTexture;
 layout(set = 0, binding = 6) uniform sampler2D u_NormalTexture;
 layout(set = 1, binding = 8) uniform sampler2DArray u_ShadowMapTexture;
 
@@ -148,7 +149,10 @@ layout(std140, push_constant) uniform Material
 	float AmbientStrength;
     float DiffuseStrength;
     float SpecularStrength;
-    vec3 DiffuseColor;
+    vec3 AlbedoColor;
+    float Metalness;
+	float Roughness;
+	float Emission;
     bool UseNormalMap;
 } u_MaterialUniforms;
 
@@ -208,7 +212,7 @@ vec3 GetPointLightAttenuationValues(in float distance)
 
 vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 {
-    vec3 diffuseColor = texture(u_DiffuseTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.DiffuseColor;
+    vec3 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord).rgb * u_MaterialUniforms.AlbedoColor;
 
     vec3 result = vec3(0.0);
     for (int i = 0; i < u_PointLights.Count; i++)
@@ -222,7 +226,7 @@ vec3 CalculatePointLights(in vec3 normal, in vec3 viewDir)
 
         float attenuation = clamp(1.0 / (1 + (2.0 / light.Radius) * distance + (1.0 / (light.Radius * light.Radius)) * (distance * distance)), 0.0, 1.0);
 
-        vec3 radiance = light.Radiance * light.Multiplier * diffuseColor;
+        vec3 radiance = light.Radiance * light.Multiplier * albedoColor;
 
         // Diffuse
         vec3 lightDir = normalize(light.Position - v_Input.WorldPosition);
@@ -296,9 +300,9 @@ float CalculateHardShadow(vec3 coords, sampler2DArray shadowMap, int cascadeInde
 void main()
 {
     // Ambient
-    vec4 diffuseColor = texture(u_DiffuseTexture, v_Input.TexCoord) * vec4(u_MaterialUniforms.DiffuseColor, 1.0);
-    float alpha = diffuseColor.a;
-    vec3 ambient = u_MaterialUniforms.AmbientStrength * diffuseColor.rgb;
+    vec4 albedoColor = texture(u_AlbedoTexture, v_Input.TexCoord) * vec4(u_MaterialUniforms.AlbedoColor, 1.0);
+    float alpha = albedoColor.a;
+    vec3 ambient = u_MaterialUniforms.AmbientStrength * albedoColor.rgb;
 
     vec3 viewDir = normalize(v_Input.CameraPosition - v_Input.WorldPosition);
 
@@ -311,7 +315,7 @@ void main()
     // Calculate directional light
     // ===========================
     vec3 dirLightDirection = normalize(-u_DirectionalLight.Direction);
-    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * diffuseColor.rgb;
+    vec3 dirLightRadiance = u_DirectionalLight.Multiplier * u_DirectionalLight.Radiance * albedoColor.rgb;
 
     // Diffuse
     float diffuseImpact = max(dot(normal, dirLightDirection), 0.0);

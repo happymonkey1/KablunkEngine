@@ -155,8 +155,8 @@ public:
 	arc<backend::vertex_buffer> get_vertex_buffer() const { return m_vertex_buffer; }
 	arc<backend::index_buffer> get_index_buffer() const { return m_index_buffer; }
 
-	std::vector<arc<material_asset>>& get_materials() { return m_materials; }
-	const std::vector<arc<material_asset>>& get_materials() const { return m_materials; }
+	std::vector<arc<backend::material>>& get_materials() { return m_materials; }
+	const std::vector<arc<backend::material>>& get_materials() const { return m_materials; }
 
 	const std::string& get_filepath() const { return m_filepath; }
 
@@ -204,7 +204,7 @@ private:
 	glm::mat4 m_inverse_transform{ 1.0f };
 
 	arc<backend::shader> m_mesh_shader;
-	std::vector<arc<material_asset>> m_materials;
+	std::vector<arc<backend::material>> m_materials;
 
 	unordered_flat_map<u32, std::vector<Triangle>> m_triangle_cache;
     size_t m_triangle_count = 0;

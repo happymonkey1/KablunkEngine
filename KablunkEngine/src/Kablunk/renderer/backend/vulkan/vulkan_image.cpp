@@ -25,10 +25,7 @@ vulkan_image_2d::~vulkan_image_2d()
 void vulkan_image_2d::invalidate()
 {
     arc instance{ this };
-	render::submit([instance]() mutable
-		{
-			instance->RT_Invalidate();
-		});
+	render::submit([instance]() mutable { instance->RT_Invalidate(); });
 }
 
 void vulkan_image_2d::release()
@@ -37,7 +34,7 @@ void vulkan_image_2d::release()
 		return;
 
     arc instance{ this };
-	render::submit_resource_free([device = m_device, info = m_info, layer_views = m_per_layer_image_views]() mutable
+	render::submit_resource_free([device = m_device, info = m_info, layer_views = m_per_layer_image_views, instance]() mutable
 		{
 			const auto vk_device = device->get_vk_device();
             KB_CORE_INFO("[VulkanImage2D]: destroying image view {}", static_cast<void*>(info.image_view));
@@ -58,12 +55,11 @@ void vulkan_image_2d::release()
 			s_image_refs.erase(info.image);
 		});
 
-	m_info.image = nullptr;
-	m_info.image_view = nullptr;
-	m_info.sampler = nullptr;
-	m_per_layer_image_views.clear();
-
-	m_mip_image_views.clear();
+    m_info.image = nullptr;
+    m_info.image_view = nullptr;
+    m_info.sampler = nullptr;
+    m_per_layer_image_views.clear();
+    m_mip_image_views.clear();
 }
 
 void vulkan_image_2d::RT_Invalidate()
@@ -188,7 +184,7 @@ void vulkan_image_2d::RT_Invalidate()
         m_device->flush_command_buffer(command_buffer);
 	}
 
-	UpdateDescriptor();
+	update_vk_descriptor_image_info();
 
 	KB_CORE_ASSERT(m_descriptor_image_info.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED, "image layout undefined!");
     KB_CORE_ASSERT(m_descriptor_image_info.imageView, "[VulkanImage2D]: Image view is null?");
@@ -201,7 +197,6 @@ void vulkan_image_2d::create_per_layer_image_views()
 		{
 			instance->RT_CreatePerLayerImageViews();
 		});
-
 }
 
 void vulkan_image_2d::RT_CreatePerLayerImageViews()
@@ -327,7 +322,7 @@ VkImageView vulkan_image_2d::RT_GetMipImageView(uint32_t mip)
 
 }
 
-void vulkan_image_2d::UpdateDescriptor()
+void vulkan_image_2d::update_vk_descriptor_image_info()
 {
     KB_CORE_INFO("[VulkanImage2D]: Updating descriptor {}", static_cast<const void*>(&m_descriptor_image_info));
 
@@ -344,6 +339,10 @@ void vulkan_image_2d::UpdateDescriptor()
 
 	m_descriptor_image_info.imageView = m_info.image_view;
 	m_descriptor_image_info.sampler = m_info.sampler;
+
+#ifdef KB_DEBUG
+    KB_CORE_ASSERT(m_descriptor_image_info.imageView, "[vulkan_image_2d]: VkImageView cannot be null!");
+#endif
 }
 
 const std::map<VkImage, weak_ptr<vulkan_image_2d>>& vulkan_image_2d::GetImageRefs() const

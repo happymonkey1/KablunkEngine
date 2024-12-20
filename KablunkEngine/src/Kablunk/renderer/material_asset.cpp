@@ -19,7 +19,7 @@ static const std::string s_normal_map_uniform_str = "u_NormalTexture";
 static const std::string s_metalness_map_uniform_str = "u_MetalnessTexture";
 static const std::string s_roughness_map_uniform_str = "u_RoughnessTexture";
 
-
+#if 0
 material_asset::material_asset()
 {
 	m_material = backend::material::create(get_shader_library()->get(
@@ -166,6 +166,7 @@ void material_asset::ClearRoughnessMap()
 {
 	m_material->set(s_roughness_map_uniform_str, Singleton<Renderer>::get().get_white_texture());
 }
+#endif
 
 material_table::material_table(uint32_t material_count /*= 1*/)
 	: m_material_count{ material_count }
@@ -180,7 +181,7 @@ material_table::material_table(arc<material_table> other)
 		SetMaterial(index, material_asset);
 }
 
-void material_table::SetMaterial(uint32_t index, arc<material_asset> material)
+void material_table::SetMaterial(uint32_t index, arc<backend::material> material)
 {
 	m_materials[index] = std::move(material);
 	if (index >= m_material_count)

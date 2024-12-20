@@ -790,7 +790,7 @@ auto scene_renderer::calculate_shadow_map_data(
     const glm::vec3& p_light_direction
 ) noexcept -> void
 {
-    glm::vec3 light_dir_vec3 = glm::vec3{
+    const glm::vec3 light_dir{
         p_light_direction.x,
         p_light_direction.y,
         p_light_direction.z
@@ -804,13 +804,13 @@ auto scene_renderer::calculate_shadow_map_data(
     );
 #else
     // calculate view projection matrix from directional light's perspective
-    glm::mat4 view_mat = p_scene_camera.view_mat;
+    const glm::mat4 view_mat = p_scene_camera.view_mat;
     //view_mat[3] = glm::lerp(view_mat[3], glm::vec4{ 0.f, 0.f, 0.f, 1.f }, 0.f);
 #endif
 
-    auto scene_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
+    const auto scene_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
     // Project frustum corners into world space
-    glm::mat4 inverse_camera = glm::inverse(scene_view_projection);
+    const glm::mat4 inverse_camera = glm::inverse(scene_view_projection);
 
     f32 near_clip = p_scene_camera.m_near_clip;
     f32 far_clip = p_scene_camera.m_far_clip;
@@ -822,11 +822,11 @@ auto scene_renderer::calculate_shadow_map_data(
 
     const f32 clip_range = far_clip - near_clip;
 
-    f32 min_z = near_clip;
-    f32 max_z = near_clip + clip_range;
+    const f32 min_z = near_clip;
+    const f32 max_z = near_clip + clip_range;
 
-    f32 range = max_z - min_z;
-    f32 ratio = max_z / min_z;
+    const f32 range = max_z - min_z;
+    const f32 ratio = max_z / min_z;
 
     f32 cascade_splits[k_max_cascades];
 
@@ -854,7 +854,8 @@ auto scene_renderer::calculate_shadow_map_data(
     {
         f32 split_distance = cascade_splits[cascade_index];
 
-        glm::vec3 frustum_corners[8] =
+        constexpr size_t k_frustum_corners_count = 8;
+        glm::vec3 frustum_corners[k_frustum_corners_count] =
         {
             // TODO: [-1,1] or [0, 1] for z?
             glm::vec3(-1.0f,  1.0f, -1.f),
@@ -867,14 +868,15 @@ auto scene_renderer::calculate_shadow_map_data(
             glm::vec3(-1.0f, -1.0f,  1.0f),
         };
 
-        for (u32 i = 0; i < 8; ++i)
+        // Calculate base frustum from light perspective
+        for (u32 i = 0; i < k_frustum_corners_count; ++i)
         {
-            glm::vec4 inv_corner = inverse_camera * glm::vec4(frustum_corners[i], 1.f);
+            const glm::vec4 inv_corner = inverse_camera * glm::vec4(frustum_corners[i], 1.f);
             frustum_corners[i] = inv_corner / inv_corner.w;
         }
 
-        // TODO: wtf does this do
-        for (u32 i = 0; i < 4; ++i)
+        // Split frustum by cascades
+        for (u32 i = 0; i < k_frustum_corners_count / 2; ++i)
         {
             const glm::vec3 dist = frustum_corners[i + 4] - frustum_corners[i];
             frustum_corners[i + 4] = frustum_corners[i] + dist * split_distance;
@@ -882,26 +884,25 @@ auto scene_renderer::calculate_shadow_map_data(
         }
 
         // Compute frustum centers
-        glm::vec3 frustum_center = glm::vec3{ 0.f };
-        for (u32 i = 0; i < 8; ++i)
+        glm::vec3 frustum_center{ 0.f };
+        for (u32 i = 0; i < k_frustum_corners_count; ++i)
             frustum_center += frustum_corners[i];
 
         frustum_center /= 8.f;
 
+        // Calculate bounding radius for frustum
         f32 radius = 0.f;
-        for (u32 i = 0; i < 8; ++i)
+        for (u32 i = 0; i < k_frustum_corners_count; ++i)
         {
-            f32 distance = glm::length(frustum_corners[i] - frustum_center);
+            const f32 distance = glm::length(frustum_corners[i] - frustum_center);
             radius = glm::max(radius, distance);
         }
 
         radius = std::ceil(radius * 16.f) / 16.f;
 
-        glm::vec3 max_extents = glm::vec3{ radius };
-        glm::vec3 min_extents = -max_extents;
+        const glm::vec3 max_extents{ radius };
+        const glm::vec3 min_extents{ -max_extents };
 
-        
-        glm::vec3 light_dir = light_dir_vec3;
         glm::mat4 light_view_mat = glm::lookAt(
             frustum_center - light_dir * -min_extents.z,
             frustum_center,
@@ -919,9 +920,9 @@ auto scene_renderer::calculate_shadow_map_data(
 
         // offset to avoid shimmering
         {
-            glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
+            const glm::mat4 shadow_view_projection = light_ortho_mat * light_view_mat;
             float shadow_map_resolution = static_cast<float>(m_directional_shadow_pass[0]->get_target_frame_buffer()->get_width());
-            glm::vec4 shadow_origin =
+            const glm::vec4 shadow_origin =
                 shadow_view_projection * glm::vec4{ 0.f, 0.f, 0.f, 1.f } *
                 shadow_map_resolution / 2.f;
             glm::vec4 rounded_origin = glm::round(shadow_origin);
@@ -934,7 +935,6 @@ auto scene_renderer::calculate_shadow_map_data(
         }
 
         const auto light_view_projection = light_ortho_mat * light_view_mat;
-        //light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 1000.f) * light_view_mat;
 
         // Update local cascade ub data
         auto& cascade_data_ub = p_cascades_data[cascade_index];
@@ -945,19 +945,12 @@ auto scene_renderer::calculate_shadow_map_data(
         last_split_distance = split_distance;
     }
 
+
+    // TODO: maybe make function static so we don't have this crap here
     for (size_t i = 0; i < k_max_cascades; ++i)
     {
         m_shadow_cascade_data.m_shadow_cascade_splits[i] = p_cascades_data[i].m_split_depth;
     }
-
-    // FIXME: testing
-#if 0
-    f32 near_clip = 0.1f;
-    f32 far_clip = 1000.f;
-    light_view_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_clip, far_clip) * view_mat;
-#endif
-
-    //const auto light_view_projection = p_scene_camera.camera.GetUnreversedProjection() * view_mat;
 }
 
 

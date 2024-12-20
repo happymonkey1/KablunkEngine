@@ -21,7 +21,6 @@ struct VulkanImageInfo
 	VmaAllocation memory_allcation = nullptr;
 };
 
-
 class vulkan_image_2d final : public image_2d
 {
 public:
@@ -71,19 +70,24 @@ public:
 
 	uint64_t get_hash() const override { return reinterpret_cast<uint64_t>(m_info.image); }
 
-	void UpdateDescriptor();
 
 private:
+    void update_vk_descriptor_image_info();
+
 	image_specification_t m_specification;
     weak_ptr<vulkan_logical_device> m_device;
-	VulkanImageInfo m_info;
 
+    // TODO: why duplicated?
+	VulkanImageInfo m_info;
 	VkDescriptorImageInfo m_descriptor_image_info;
+
     // local buffer for the image, deleted after the image is transfered to the gpu
 	owning_buffer m_image_data;
 
 	std::vector<VkImageView> m_per_layer_image_views;
 	std::map<uint32_t, VkImageView> m_mip_image_views;
+
+    friend class vulkan_texture_2d;
 };
 
 class vulkan_image_view final : public image_view

@@ -12,6 +12,7 @@
 namespace kb::render
 { // start namespace kb::render
 
+#if 0
 // TODO: this should not be with rendering...
 class material_asset : public RefCounted
 {
@@ -58,34 +59,35 @@ public:
 private:
 	arc<backend::material> m_material;
 };
+#endif
 
 class material_table : public RefCounted
 {
 public:
-	material_table(uint32_t material_count = 1);
+	material_table(u32 material_count = 1);
 	material_table(arc<material_table> other);
 	~material_table() = default;
 
-	bool HasMaterial(uint32_t material_index) const { return m_materials.find(material_index) != m_materials.end(); }
-	void SetMaterial(uint32_t index, arc<material_asset> material);
-	void ClearMaterial(uint32_t index);
+	bool HasMaterial(u32 material_index) const { return m_materials.find(material_index) != m_materials.end(); }
+	void SetMaterial(u32 index, arc<backend::material> material);
+	void ClearMaterial(u32 index);
 
-	const arc<material_asset>& GetMaterial(uint32_t index) const
+	const arc<backend::material>& GetMaterial(u32 index) const
 	{
 		KB_CORE_ASSERT(HasMaterial(index), "Material not found in map!");
 		return m_materials.at(index);
 	}
 
-	std::map<uint32_t, arc<material_asset>>& GetMaterials() { return m_materials; }
-	const std::map<uint32_t, arc<material_asset>>& GetMaterials() const { return m_materials; }
+	std::map<u32, arc<backend::material>>& GetMaterials() { return m_materials; }
+	const std::map<u32, arc<backend::material>>& GetMaterials() const { return m_materials; }
 
-	uint32_t get_material_count() const { return m_material_count; }
-	void SetMaterialCount(uint32_t new_count) { m_material_count = new_count; }
+    u32 get_material_count() const { return m_material_count; }
+	void SetMaterialCount(u32 new_count) { m_material_count = new_count; }
 
 	void Clear();
 private:
-	std::map<uint32_t, arc<material_asset>> m_materials;
-	uint32_t m_material_count;
+	std::map<u32, arc<backend::material>> m_materials;
+    u32 m_material_count;
 };
 
 } // end namespace kb::render

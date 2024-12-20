@@ -32,8 +32,8 @@ class RefCounted
 public:
     RefCounted() = default;
 
-	KB_FORCE_INLINE auto inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
-	KB_FORCE_INLINE auto dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release) - 1; }
+	KB_FORCE_INLINE auto atomic_inc_ref() const -> void { m_ref_count.fetch_add(1, std::memory_order_relaxed); }
+	KB_FORCE_INLINE auto atomic_dec_ref() const -> u32 { return m_ref_count.fetch_sub(1, std::memory_order_release) - 1; }
 
 protected:
     virtual ~RefCounted() = default;
@@ -63,6 +63,7 @@ concept is_ref_counted = std::is_base_of_v<RefCounted, T>;
 } // end namespace ::concepts
 
 template <typename T>
+// requires (std::is_base_of_v<RefCounted, T>)
 class KB_TRIVIAL_ABI arc
 {
 public:
@@ -71,23 +72,27 @@ public:
 
     explicit constexpr arc(T* ptr) : m_ptr{ ptr }
 	{
+#ifndef KB_DISTRIBUTION
 		static_assert(std::is_base_of_v<RefCounted, T>, "Class is not RefCounted!");
+#endif
 
-		IncRef();
+		inc_ref_count();
 	}
 
     constexpr arc(const arc& other) noexcept
         : m_ptr{ other.m_ptr }
     {
         if (this != &other)
-            IncRef();
+	        inc_ref_count();
     }
 
 #if KB_REF_MOVE_DEFINED
     constexpr arc(arc&& p_other) noexcept
         : m_ptr{ p_other.m_ptr }
 	{
+#ifndef KB_DISTRIBUTION
         static_assert(std::is_base_of_v<RefCounted, T>, "Class is not RefCounted!");
+#endif
 
         p_other.m_ptr = nullptr;
 	}
@@ -99,7 +104,7 @@ public:
 	{
 		m_ptr = static_cast<T*>(other.m_ptr);
 
-		IncRef();
+		inc_ref_count();
 	}
 
 	template <typename T2>
@@ -120,13 +125,13 @@ public:
 
     constexpr ~arc() noexcept
 	{
-		DecRef();
+		dec_ref_count();
 	}
 
 
     constexpr arc& operator=(std::nullptr_t) noexcept
 	{
-		DecRef();
+		dec_ref_count();
 		m_ptr = nullptr;
 		return *this;
 	}
@@ -136,8 +141,8 @@ public:
         if (this == &other)
             return *this;
 
-		other.IncRef();
-		DecRef();
+		other.inc_ref_count();
+		dec_ref_count();
 
 		m_ptr = other.m_ptr;
 		return *this;
@@ -192,7 +197,7 @@ public:
 
     constexpr void reset(T* ptr = nullptr) noexcept
 	{
-		DecRef();
+		dec_ref_count();
 		m_ptr = ptr;
 	}
 
@@ -229,23 +234,23 @@ public:
 	}
 
 private:
-    constexpr KB_FORCE_INLINE auto IncRef() const noexcept -> void
+    constexpr KB_FORCE_INLINE auto inc_ref_count() const noexcept -> void
 	{
         if (!m_ptr)
             return;
 
-        m_ptr->inc_ref();
+        m_ptr->atomic_inc_ref();
 #if KB_LIVE_REFERENCES
         Internal::AddToLiveReferences((void*)m_ptr);
 #endif
 	}
 
-    constexpr KB_FORCE_INLINE auto DecRef() const noexcept -> void
+    constexpr KB_FORCE_INLINE auto dec_ref_count() const noexcept -> void
 	{
 		if (!m_ptr)
 			return;
 
-		if (!m_ptr->dec_ref())
+		if (!m_ptr->atomic_dec_ref())
 		{
             std::atomic_thread_fence(std::memory_order_acquire);
 			delete m_ptr;
@@ -263,7 +268,7 @@ private:
 	template <typename T2>
 	friend class weak_ptr;
 
-	mutable T* m_ptr;
+	mutable T* m_ptr = nullptr;
 };
 
 template <typename T>

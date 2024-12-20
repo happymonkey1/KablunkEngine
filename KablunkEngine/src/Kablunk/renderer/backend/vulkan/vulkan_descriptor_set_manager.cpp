@@ -613,6 +613,9 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                         vulkan_texture = Singleton<Renderer>::get()
                             .get_white_texture()
                             .As<vulkan_texture_2d>();
+#if KB_DEBUG
+                        KB_CORE_ASSERT(vulkan_texture->get_vk_descriptor_image_info().imageView, "[vulkan_descriptor_set_manager]: Renderer white image VkImageView is null?");
+#endif
                     }
                     const auto& image_info = vulkan_texture->get_vk_descriptor_image_info();
 
@@ -726,7 +729,18 @@ auto vulkan_descriptor_set_manager::rt_invalidate_and_update() noexcept -> void
                     for (size_t i = 0; i < input.m_input.size(); ++i)
                     {
                         auto texture = input.m_input[i].As<vulkan_texture_2d>();
+#ifdef KB_DEBUG
+                        const auto& vk_descriptor_image_info = texture->get_vk_descriptor_image_info();
+                        KB_CORE_ASSERT(
+                            vk_descriptor_image_info.imageView,
+                            "[vulkan_descriptor_set_manager]: Dirty texture2D '{}' with VkDescriptorImageInfo '{}' cannot have null VkImageInfo!",
+                            static_cast<const void*>(texture.get()),
+                            static_cast<const void*>(&vk_descriptor_image_info)
+                        );
+                        image_info_storage[image_info_storage_index][i] = vk_descriptor_image_info;
+#else
                         image_info_storage[image_info_storage_index][i] = texture->get_vk_descriptor_image_info();
+#endif
                         write_descriptor.m_resource_handles[i] =
                             image_info_storage[image_info_storage_index][i].imageView;
                     }

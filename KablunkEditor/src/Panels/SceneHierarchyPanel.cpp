@@ -314,9 +314,8 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
 			std::string id = fmt::format("{0}-{1}", label, i);
 			ImGui::PushID(id.c_str());
 
-			arc<render::material_asset> mesh_material_asset = mesh_material_table->GetMaterial(i);
-            auto& render_material = mesh_material_asset->get_material();
-			std::string mesh_material_name = render_material->get_name();
+			arc<render::backend::material> mesh_material = mesh_material_table->GetMaterial(i);
+			std::string mesh_material_name = mesh_material->get_name();
 			if (mesh_material_name.empty())
 				mesh_material_name = "Unnamed Material";
 
@@ -325,7 +324,7 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
             UI::PopItemDisabled();
 
             // TODO: we should be able to determine properties based on loaded uniforms...
-            auto shader = render_material->get_shader();
+            auto shader = mesh_material->get_shader();
             const auto& resources = shader->get_resources();
 
             for (const auto& [name, decl] : resources)
@@ -353,30 +352,30 @@ void DrawMaterialTable(arc<render::material_table> mesh_material_table)
                     {
                     case render::backend::shader_uniform_type_t::Bool:
                     {
-                        bool uniform_value = render_material->get_bool(
+                        bool uniform_value = mesh_material->get_bool(
                             uniform_name
                         );
                         if (UI::Property(stripped_name.c_str(), &uniform_value))
                         {
-                            render_material->set(uniform_name, uniform_value);
+                            mesh_material->set(uniform_name, uniform_value);
                         }
                         break;
                     }
                     case render::backend::shader_uniform_type_t::Vec3:
                     {
-                        glm::vec3 uniform_value = render_material->get_vec3(uniform_name);
+                        glm::vec3 uniform_value = mesh_material->get_vec3(uniform_name);
                         if (UI::Property(stripped_name.c_str(), uniform_value))
                         {
-                            render_material->set(uniform_name, uniform_value);
+                            mesh_material->set(uniform_name, uniform_value);
                         }
                         break;
                     }
                     case render::backend::shader_uniform_type_t::Float:
                     {
-                        f32 uniform_value = render_material->get_float(uniform_name);
+                        f32 uniform_value = mesh_material->get_float(uniform_name);
                         if (UI::Property(stripped_name.c_str(), uniform_value, 0.01f, 0.0f, 1.0f))
                         {
-                            render_material->set(uniform_name, uniform_value);
+                            mesh_material->set(uniform_name, uniform_value);
                         }
                         break;
                     }
